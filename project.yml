@@ -1,0 +1,40 @@
+name: SmartKitchen
+options:
+  bundleIdPrefix: com.smartkitchen
+  deploymentTarget:
+    iOS: "18.0"
+  createIntermediateGroups: true
+  groupSortPosition: top
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+
+targets:
+  SmartKitchen:
+    type: application
+    platform: iOS
+    sources:
+      - path: SmartKitchen
+    resources:
+      - path: icons/images-128
+        buildPhase: resources
+    info:
+      path: SmartKitchen/Resources/Info.plist
+      properties:
+        UIAppFonts:
+          - PlayfairDisplay.ttf
+          - PlayfairDisplay-Italic.ttf
+        UILaunchScreen: {}
+        NSCameraUsageDescription: O Smart Kitchen usa a câmera para tirar fotos das suas receitas.
+        NSPhotoLibraryUsageDescription: O Smart Kitchen acessa a galeria para anexar fotos às suas receitas.
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        ITSAppUsesNonExemptEncryption: false
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.smartkitchen.app
+        MARKETING_VERSION: "1.0.0"
+        CURRENT_PROJECT_VERSION: "1"
+        CODE_SIGN_STYLE: Automatic
+        TARGETED_DEVICE_FAMILY: "1"
