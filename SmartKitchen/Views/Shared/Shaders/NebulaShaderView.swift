@@ -372,7 +372,12 @@ class CPPNSceneRenderer: NSObject, SCNSceneRendererDelegate {
     func updateUniforms() {
         guard let material = material else { return }
         var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        #if os(macOS)
+        let convertedColor = tintColor.usingColorSpace(.deviceRGB) ?? tintColor
+        convertedColor.getRed(&r, green: &g, blue: &b, alpha: &a)
+        #else
         tintColor.getRed(&r, green: &g, blue: &b, alpha: &a)
+        #endif
         material.setValue(SCNVector3(Float(r), Float(g), Float(b)), forKey: "tintColor")
         material.setValue(tintStrength, forKey: "tintStrength")
     }

@@ -307,7 +307,12 @@ extension TexturedGradientSceneView {
     private func colorToVector(_ color: Color) -> SCNVector3 {
         let platformColor = PlatformColor(color)
         var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        #if os(macOS)
+        let convertedColor = platformColor.usingColorSpace(.deviceRGB) ?? platformColor
+        convertedColor.getRed(&r, green: &g, blue: &b, alpha: &a)
+        #else
         platformColor.getRed(&r, green: &g, blue: &b, alpha: &a)
+        #endif
         return SCNVector3(Float(r), Float(g), Float(b))
     }
 }
