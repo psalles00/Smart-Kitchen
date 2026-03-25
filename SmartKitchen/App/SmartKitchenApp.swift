@@ -1,6 +1,9 @@
 import SwiftUI
 import SwiftData
+
+#if canImport(UIKit)
 import UIKit
+#endif
 
 @main
 struct SmartKitchenApp: App {
@@ -30,7 +33,9 @@ struct SmartKitchenApp: App {
         DataSeeder.seedIfNeeded(context: context)
 
         // Must be called after all stored properties are initialized
+        #if os(iOS)
         Self.configureNavigationAppearance()
+        #endif
     }
 
     var body: some Scene {
@@ -38,10 +43,18 @@ struct SmartKitchenApp: App {
             ContentView()
         }
         .modelContainer(modelContainer)
+        #if os(macOS)
+        .defaultSize(width: 1100, height: 750)
+        .windowResizability(.contentMinSize)
+        .commands {
+            CommandGroup(replacing: .newItem) { }
+        }
+        #endif
     }
 
     // MARK: - Appearance
 
+    #if os(iOS)
     private static func configureNavigationAppearance() {
         // Variable font registered as "PlayfairDisplay-Regular" — use UIFontDescriptor for weights
         let baseName = "PlayfairDisplay-Regular"
@@ -67,4 +80,5 @@ struct SmartKitchenApp: App {
         UINavigationBar.appearance().largeTitleTextAttributes = [.font: largeTitleFont]
         UINavigationBar.appearance().titleTextAttributes = [.font: titleFont]
     }
+    #endif
 }

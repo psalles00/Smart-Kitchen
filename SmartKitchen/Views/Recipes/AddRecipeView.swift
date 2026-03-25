@@ -2,7 +2,9 @@ import SwiftUI
 import SwiftData
 import PhotosUI
 import UniformTypeIdentifiers
+#if canImport(UIKit)
 import UIKit
+#endif
 
 struct AddRecipeView: View {
     @Environment(\.modelContext) private var modelContext
@@ -64,7 +66,9 @@ struct AddRecipeView: View {
             stepsSection
         }
         .navigationTitle("Nova Receita")
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancelar") { dismiss() }
@@ -74,7 +78,7 @@ struct AddRecipeView: View {
                     .fontWeight(.semibold)
                     .disabled(!isValid)
             }
-            ToolbarItem(placement: .topBarTrailing) {
+            ToolbarItem(placement: .adaptiveTrailing) {
                 Button {
                     showCategoryManager = true
                 } label: {
@@ -89,6 +93,7 @@ struct AddRecipeView: View {
             loadPreparationMedia()
         }
         .confirmationDialog("Adicionar Foto", isPresented: $showPhotoOptions, titleVisibility: .visible) {
+            #if os(iOS)
             Button("Tirar Foto") {
                 if UIImagePickerController.isSourceTypeAvailable(.camera) {
                     showCameraPicker = true
@@ -96,6 +101,7 @@ struct AddRecipeView: View {
                     showCameraUnavailableAlert = true
                 }
             }
+            #endif
 
             Button("Selecionar da Galeria") {
                 showPhotoLibrary = true
@@ -119,14 +125,17 @@ struct AddRecipeView: View {
         ) { result in
             handleCoverFileImport(result)
         }
+        #if os(iOS)
         .sheet(isPresented: $showCameraPicker) {
             CameraMediaPicker(mode: .photoOnly) { media in
                 imageData = media.data
             }
         }
+        #endif
         .sheet(isPresented: $showCategoryManager) {
             CategoryManagementView(initialType: .recipe)
         }
+        #if os(iOS)
         .sheet(isPresented: $showPreparationCameraPicker) {
             CameraMediaPicker(mode: .photoOrVideo) { media in
                 preparationMedia.append(
@@ -138,6 +147,7 @@ struct AddRecipeView: View {
                 )
             }
         }
+        #endif
         .photosPicker(
             isPresented: $showPreparationPhotoLibrary,
             selection: $selectedPreparationItems,
@@ -157,6 +167,7 @@ struct AddRecipeView: View {
             Text("Este dispositivo não permite capturar fotos no momento.")
         }
         .confirmationDialog("Adicionar Mídia", isPresented: $showPreparationMediaOptions, titleVisibility: .visible) {
+            #if os(iOS)
             Button("Tirar Foto ou Vídeo") {
                 if UIImagePickerController.isSourceTypeAvailable(.camera) {
                     showPreparationCameraPicker = true
@@ -164,6 +175,7 @@ struct AddRecipeView: View {
                     showCameraUnavailableAlert = true
                 }
             }
+            #endif
 
             Button("Selecionar da Galeria") {
                 showPreparationPhotoLibrary = true
@@ -183,8 +195,8 @@ struct AddRecipeView: View {
                 showPhotoOptions = true
             } label: {
                 ZStack(alignment: .bottomLeading) {
-                    if let imageData, let uiImage = UIImage(data: imageData) {
-                        Image(uiImage: uiImage)
+                    if let imageData, let image = PlatformImage(data: imageData) {
+                        Image(platformImage: image)
                             .resizable()
                             .scaledToFill()
                             .frame(height: 180)
@@ -233,14 +245,18 @@ struct AddRecipeView: View {
     private var basicInfoSection: some View {
         Section("Informações") {
             TextField("Nome da receita", text: $name)
+                #if os(iOS)
                 .textInputAutocapitalization(.words)
+                #endif
 
             TextField("Descrição (opcional)", text: $descriptionText, axis: .vertical)
                 .lineLimit(2...5)
 
             TextField("Link externo (URL)", text: $externalURLString)
+                #if os(iOS)
                 .textInputAutocapitalization(.never)
                 .keyboardType(.URL)
+                #endif
                 .autocorrectionDisabled()
 
             Picker("Categoria", selection: $selectedCategory) {
@@ -303,7 +319,9 @@ struct AddRecipeView: View {
                 Text("Calorias")
                 Spacer()
                 TextField("kcal", text: $calories)
+                    #if os(iOS)
                     .keyboardType(.numberPad)
+                    #endif
                     .multilineTextAlignment(.trailing)
                     .frame(width: 80)
             }
@@ -317,10 +335,14 @@ struct AddRecipeView: View {
             ForEach($ingredientRows) { $row in
                 VStack(spacing: 8) {
                     TextField("Ingrediente", text: $row.name)
+                        #if os(iOS)
                         .textInputAutocapitalization(.words)
+                        #endif
                     HStack {
                         TextField("Qtd", text: $row.quantity)
+                            #if os(iOS)
                             .keyboardType(.decimalPad)
+                            #endif
                             .frame(width: 60)
                         TextField("Unidade (g, ml, xícara...)", text: $row.unit)
                     }
@@ -481,8 +503,8 @@ struct AddRecipeView: View {
     private func preparationMediaPreview(for media: DraftPreparationMedia) -> some View {
         switch media.type {
         case .photo:
-            if let image = UIImage(data: media.data) {
-                Image(uiImage: image)
+            if let image = PlatformImage(data: media.data) {
+                Image(platformImage: image)
                     .resizable()
                     .scaledToFill()
             } else {

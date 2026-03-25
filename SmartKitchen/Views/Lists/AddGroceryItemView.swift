@@ -22,7 +22,9 @@ struct AddGroceryItemView: View {
         Form {
             Section("Item") {
                 TextField("Nome", text: $name)
+                    #if os(iOS)
                     .textInputAutocapitalization(.words)
+                    #endif
 
                 Picker("Categoria", selection: $selectedCategory) {
                     ForEach(categories) { cat in
@@ -34,7 +36,9 @@ struct AddGroceryItemView: View {
             Section("Quantidade") {
                 HStack {
                     TextField("Qtd", value: $quantity, format: .number)
+                        #if os(iOS)
                         .keyboardType(.decimalPad)
+                        #endif
                         .frame(width: 80)
                     TextField("Unidade (kg, L, un...)", text: $unit)
                 }
@@ -47,7 +51,9 @@ struct AddGroceryItemView: View {
             }
         }
         .navigationTitle("Novo Item")
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancelar") { dismiss() }
@@ -56,7 +62,7 @@ struct AddGroceryItemView: View {
                 Button("Salvar") { save() }
                     .disabled(!isValid)
             }
-            ToolbarItem(placement: .topBarTrailing) {
+            ToolbarItem(placement: .adaptiveTrailing) {
                 Button {
                     showCategoryManager = true
                 } label: {
@@ -98,7 +104,9 @@ struct EditGroceryItemView: View {
         Form {
             Section("Item") {
                 TextField("Nome", text: $item.name)
+                    #if os(iOS)
                     .textInputAutocapitalization(.words)
+                    #endif
 
                 Picker("Categoria", selection: $item.category) {
                     ForEach(categories) { cat in
@@ -110,7 +118,9 @@ struct EditGroceryItemView: View {
             Section("Quantidade") {
                 HStack {
                     TextField("Qtd", value: $item.quantity, format: .number)
+                        #if os(iOS)
                         .keyboardType(.decimalPad)
+                        #endif
                         .frame(width: 80)
                     TextField("Unidade", text: Binding(
                         get: { item.unit ?? "" },
@@ -124,12 +134,14 @@ struct EditGroceryItemView: View {
             }
         }
         .navigationTitle("Editar Item")
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
                 Button("OK") { dismiss() }
             }
-            ToolbarItem(placement: .topBarTrailing) {
+            ToolbarItem(placement: .adaptiveTrailing) {
                 Button {
                     showCategoryManager = true
                 } label: {

@@ -30,8 +30,8 @@ struct RecipeCardMessage: View {
     private func recipeCard(_ recipe: Recipe) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Group {
-                if let data = recipe.imageData, let uiImage = UIImage(data: data) {
-                    Image(uiImage: uiImage)
+                if let data = recipe.imageData, let image = PlatformImage(data: data) {
+                    Image(platformImage: image)
                         .resizable()
                         .scaledToFill()
                 } else {

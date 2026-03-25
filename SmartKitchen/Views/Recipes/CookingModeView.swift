@@ -36,15 +36,17 @@ struct CookingModeView: View {
                     .padding(.bottom, 24)
             }
             .navigationTitle(recipe.name)
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
+                ToolbarItem(placement: .adaptiveLeading) {
                     Button("Fechar", systemImage: "xmark.circle.fill") {
                         dismiss()
                     }
                     .tint(.secondary)
                 }
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItem(placement: .adaptiveTrailing) {
                     Text("\(currentStep + 1)/\(sortedSteps.count)")
                         .font(.subheadline.monospacedDigit())
                         .foregroundStyle(.secondary)

@@ -128,46 +128,51 @@ struct RecipesView: View {
     ]
 
     var body: some View {
-        Group {
-            if allRecipes.isEmpty {
-                emptyState
-            } else if recipes.isEmpty {
-                searchEmptyState
-            } else {
-                recipeContent
-            }
-        }
-        .navigationTitle("Receitas")
-        .navigationBarTitleDisplayMode(.large)
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text("Receitas")
-                    .font(.headline.weight(.semibold))
-                    .opacity(showsInlineTitle ? 1 : 0)
-                    .animation(.easeInOut(duration: 0.18), value: showsInlineTitle)
-            }
-
-            ToolbarItemGroup(placement: .topBarTrailing) {
-                Button {
-                    withAnimation(.spring(response: 0.28, dampingFraction: 0.88)) {
-                        showSearch.toggle()
-                        if !showSearch {
-                            searchText = ""
+        ExpandedPageLayout(
+            pageTheme: .recipes,
+            header: { isInverted in
+                PageHeader(title: "Receitas", isInverted: isInverted) {
+                    HStack(spacing: 16) {
+                        Button {
+                            withAnimation(.spring(response: 0.28, dampingFraction: 0.88)) {
+                                showSearch.toggle()
+                                if !showSearch { searchText = "" }
+                            }
+                        } label: {
+                            Image(systemName: "magnifyingglass")
                         }
-                    }
-                } label: {
-                    Image(systemName: "magnifyingglass")
-                }
 
-                optionsMenu
-                Button {
-                    showCategoryManager = true
-                } label: {
-                    Image(systemName: "slider.horizontal.3")
+                        optionsMenu
+
+                        Button {
+                            showCategoryManager = true
+                        } label: {
+                            Image(systemName: "slider.horizontal.3")
+                        }
+
+                        SettingsButton()
+                    }
+                    .foregroundStyle(isInverted ? Color.primary : Color.white)
                 }
-                SettingsButton()
+            },
+            content: {
+                Group {
+                    if allRecipes.isEmpty {
+                        emptyState
+                    } else if recipes.isEmpty {
+                        searchEmptyState
+                    } else {
+                        recipeContent
+                    }
+                }
+            },
+            infoContent: {
+                RecipesInfoContent()
             }
-        }
+        )
+        #if os(iOS)
+        .toolbar(.hidden, for: .navigationBar)
+        #endif
         .sheet(isPresented: $showAddRecipe) {
             NavigationStack {
                 AddRecipeView()

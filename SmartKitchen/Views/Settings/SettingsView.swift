@@ -136,7 +136,9 @@ struct SettingsView: View {
             }
         }
         .navigationTitle("Configurações")
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
                 Button("OK") { dismiss() }

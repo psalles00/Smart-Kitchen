@@ -83,9 +83,11 @@ struct AssistantView: View {
             inputBar
         }
         .navigationTitle("Assistente")
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
+        #endif
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
+            ToolbarItem(placement: .adaptiveTrailing) {
                 HStack(spacing: 12) {
                     if !messages.isEmpty {
                         Button("Novo chat", systemImage: "square.and.pencil") {

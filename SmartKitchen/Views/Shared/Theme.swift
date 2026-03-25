@@ -1,7 +1,10 @@
 import SwiftUI
 import SwiftData
 import UniformTypeIdentifiers
+
+#if canImport(UIKit)
 import UIKit
+#endif
 
 // MARK: - Typography
 
@@ -41,7 +44,9 @@ struct CollapsibleSearchBar: View {
                     .foregroundStyle(.secondary)
 
                 TextField(placeholder, text: $text)
+                    #if os(iOS)
                     .textInputAutocapitalization(.never)
+                    #endif
                     .disableAutocorrection(true)
                     .focused($isFocused)
                     .submitLabel(.search)
@@ -219,6 +224,7 @@ func pickedRecipeMedia(from data: Data, contentType: UTType?) -> PickedRecipeMed
     return PickedRecipeMedia(type: type, data: data, fileExtension: fileExtension)
 }
 
+#if os(iOS)
 struct CameraMediaPicker: UIViewControllerRepresentable {
     @Environment(\.dismiss) private var dismiss
 
@@ -269,6 +275,7 @@ struct CameraMediaPicker: UIViewControllerRepresentable {
         }
     }
 }
+#endif
 
 struct CategoryManagementView: View {
     @Environment(\.dismiss) private var dismiss
@@ -318,7 +325,9 @@ struct CategoryManagementView: View {
                             get: { category.name },
                             set: { category.name = $0 }
                         ))
+                        #if os(iOS)
                         .textInputAutocapitalization(.words)
+                        #endif
                     }
                     .onMove(perform: moveCategories)
                     .onDelete(perform: deleteCategories)
@@ -327,7 +336,9 @@ struct CategoryManagementView: View {
                 Section("Nova categoria") {
                     HStack(spacing: 12) {
                         TextField("Adicionar categoria", text: $newCategoryName)
+                            #if os(iOS)
                             .textInputAutocapitalization(.words)
+                            #endif
 
                         Button("Adicionar") {
                             addCategory()
@@ -337,12 +348,16 @@ struct CategoryManagementView: View {
                 }
             }
             .navigationTitle("Categorias")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
+                #if os(iOS)
                 ToolbarItem(placement: .topBarLeading) {
                     EditButton()
                 }
-                ToolbarItem(placement: .topBarTrailing) {
+                #endif
+                ToolbarItem(placement: .adaptiveTrailing) {
                     Button("OK") { dismiss() }
                 }
             }

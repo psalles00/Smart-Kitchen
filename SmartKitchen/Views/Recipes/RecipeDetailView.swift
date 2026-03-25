@@ -55,9 +55,11 @@ struct RecipeDetailView: View {
             }
         }
         .navigationTitle(recipe.name)
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
+            ToolbarItem(placement: .adaptiveTrailing) {
                 Menu {
                     Button("Editar", systemImage: "pencil") {
                         showEditRecipe = true
@@ -73,9 +75,15 @@ struct RecipeDetailView: View {
                 }
             }
         }
+        #if os(iOS)
         .fullScreenCover(isPresented: $showCookingMode) {
             CookingModeView(recipe: recipe)
         }
+        #else
+        .sheet(isPresented: $showCookingMode) {
+            CookingModeView(recipe: recipe)
+        }
+        #endif
         .sheet(isPresented: $showEditRecipe) {
             NavigationStack {
                 EditRecipeView(recipe: recipe)
@@ -93,8 +101,8 @@ struct RecipeDetailView: View {
 
     @ViewBuilder
     private var heroImage: some View {
-        if let data = recipe.imageData, let uiImage = UIImage(data: data) {
-            Image(uiImage: uiImage)
+        if let data = recipe.imageData, let image = PlatformImage(data: data) {
+            Image(platformImage: image)
                 .resizable()
                 .scaledToFill()
                 .frame(height: 280)
@@ -336,8 +344,8 @@ struct RecipeDetailView: View {
             RoundedRectangle(cornerRadius: 26, style: .continuous)
                 .fill(Color(.secondarySystemBackground))
 
-            if media.mediaType == .photo, let image = UIImage(data: media.data) {
-                Image(uiImage: image)
+            if media.mediaType == .photo, let image = PlatformImage(data: media.data) {
+                Image(platformImage: image)
                     .resizable()
                     .scaledToFill()
             } else {
@@ -535,7 +543,9 @@ private struct PreparationMediaDeckView: View {
             }
         }
         .frame(height: 250)
+        #if os(iOS)
         .tabViewStyle(.page(indexDisplayMode: .automatic))
+        #endif
         .animation(.spring(response: 0.42, dampingFraction: 0.88), value: selectedIndex)
     }
 
@@ -562,8 +572,8 @@ private struct RecipeMediaDeckCard: View {
             RoundedRectangle(cornerRadius: 28, style: .continuous)
                 .fill(Color(.secondarySystemBackground))
 
-            if media.mediaType == .photo, let image = UIImage(data: media.data) {
-                Image(uiImage: image)
+            if media.mediaType == .photo, let image = PlatformImage(data: media.data) {
+                Image(platformImage: image)
                     .resizable()
                     .scaledToFill()
             } else {
@@ -628,10 +638,12 @@ private struct PreparationMediaPreviewView: View {
                             .tag(index)
                     }
                 }
+                #if os(iOS)
                 .tabViewStyle(.page(indexDisplayMode: .always))
+                #endif
             }
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
+                ToolbarItem(placement: .adaptiveLeading) {
                     Button("Fechar") {
                         dismiss()
                     }
@@ -644,8 +656,10 @@ private struct PreparationMediaPreviewView: View {
                         .foregroundStyle(.white)
                 }
             }
+            #if os(iOS)
             .toolbarBackground(.hidden, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
+            #endif
             .onAppear {
                 if let index = mediaItems.firstIndex(where: { $0.id == selectedMediaID }) {
                     selectedIndex = index
@@ -658,7 +672,7 @@ private struct PreparationMediaPreviewView: View {
     private func previewPage(for media: RecipePreparationMedia) -> some View {
         switch media.mediaType {
         case .photo:
-            if let image = UIImage(data: media.data) {
+            if let image = PlatformImage(data: media.data) {
                 ZoomablePhotoView(image: image)
             } else {
                 ContentUnavailableView("Foto indisponível", systemImage: "photo")
@@ -690,14 +704,14 @@ private struct PreparationMediaPreviewView: View {
 }
 
 private struct ZoomablePhotoView: View {
-    let image: UIImage
+    let image: PlatformImage
     @State private var scale: CGFloat = 1
     @State private var lastScale: CGFloat = 1
 
     var body: some View {
         GeometryReader { proxy in
             ScrollView([.horizontal, .vertical], showsIndicators: false) {
-                Image(uiImage: image)
+                Image(platformImage: image)
                     .resizable()
                     .scaledToFit()
                     .frame(width: proxy.size.width)

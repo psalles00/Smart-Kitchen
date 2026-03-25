@@ -50,8 +50,8 @@ struct RecipeRowView: View {
 
     @ViewBuilder
     private var recipeThumb: some View {
-        if let data = recipe.imageData, let uiImage = UIImage(data: data) {
-            Image(uiImage: uiImage)
+        if let data = recipe.imageData, let image = PlatformImage(data: data) {
+            Image(platformImage: image)
                 .resizable()
                 .scaledToFill()
         } else {

@@ -84,94 +84,97 @@ struct ListsTabView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            CollapsibleSearchBar(
-                text: $searchText,
-                isPresented: $showSearch,
-                placeholder: selectedSubtab == .pantry ? "Buscar na despensa" : "Buscar no mercado"
-            )
+        ExpandedPageLayout(
+            pageTheme: .lists,
+            header: { isInverted in
+                PageHeader(title: "Listas", isInverted: isInverted) {
+                    HStack(spacing: 16) {
+                        Button {
+                            withAnimation(.spring(response: 0.28, dampingFraction: 0.88)) {
+                                showSearch.toggle()
+                                if !showSearch { searchText = "" }
+                            }
+                        } label: {
+                            Image(systemName: "magnifyingglass")
+                        }
 
-            subtabPicker
-                .padding(.horizontal)
-                .padding(.top, 8)
+                        optionsMenu
 
-            switch selectedSubtab {
-            case .pantry:
-                PantryView(
-                    searchText: searchText,
-                    sortOption: sortOption,
-                    filterOption: pantryFilter,
-                    expiringLeadDays: settings?.expiringItemsLeadDays ?? 30,
-                    onSentToGrocery: {
-                        withAnimation(.spring(response: 0.35)) {
-                            groceryBadge += 1
+                        Button {
+                            if selectedSubtab == .pantry {
+                                showAddPantry = true
+                            } else {
+                                showAddGrocery = true
+                            }
+                        } label: {
+                            Image(systemName: "plus")
                         }
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                            withAnimation { groceryBadge = 0 }
-                        }
-                    },
-                    onScrollOffsetChange: updateInlineTitle
-                )
-            case .grocery:
-                GroceryListView(
-                    searchText: searchText,
-                    sortOption: sortOption,
-                    filterOption: groceryFilter,
-                    onAcquired: {
-                        withAnimation(.spring(response: 0.35)) {
-                            pantryBadge += 1
-                        }
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                            withAnimation { pantryBadge = 0 }
-                        }
-                    },
-                    onScrollOffsetChange: updateInlineTitle
-                )
-            }
-        }
-        .navigationTitle("Listas")
-        .navigationBarTitleDisplayMode(.large)
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text("Listas")
-                    .font(.headline.weight(.semibold))
-                    .opacity(showsInlineTitle ? 1 : 0)
-                    .animation(.easeInOut(duration: 0.18), value: showsInlineTitle)
-            }
 
-            ToolbarItemGroup(placement: .topBarTrailing) {
-                Button {
-                    withAnimation(.spring(response: 0.28, dampingFraction: 0.88)) {
-                        showSearch.toggle()
-                        if !showSearch {
-                            searchText = ""
+                        Button {
+                            showCategoryManager = true
+                        } label: {
+                            Image(systemName: "slider.horizontal.3")
                         }
+
+                        SettingsButton()
                     }
-                } label: {
-                    Image(systemName: "magnifyingglass")
+                    .foregroundStyle(isInverted ? Color.primary : Color.white)
                 }
+            },
+            content: {
+                VStack(spacing: 0) {
+                    CollapsibleSearchBar(
+                        text: $searchText,
+                        isPresented: $showSearch,
+                        placeholder: selectedSubtab == .pantry ? "Buscar na despensa" : "Buscar no mercado"
+                    )
 
-                optionsMenu
+                    subtabPicker
+                        .padding(.horizontal)
+                        .padding(.top, 8)
 
-                Button {
-                    if selectedSubtab == .pantry {
-                        showAddPantry = true
-                    } else {
-                        showAddGrocery = true
+                    switch selectedSubtab {
+                    case .pantry:
+                        PantryView(
+                            searchText: searchText,
+                            sortOption: sortOption,
+                            filterOption: pantryFilter,
+                            expiringLeadDays: settings?.expiringItemsLeadDays ?? 30,
+                            onSentToGrocery: {
+                                withAnimation(.spring(response: 0.35)) {
+                                    groceryBadge += 1
+                                }
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                                    withAnimation { groceryBadge = 0 }
+                                }
+                            },
+                            onScrollOffsetChange: updateInlineTitle
+                        )
+                    case .grocery:
+                        GroceryListView(
+                            searchText: searchText,
+                            sortOption: sortOption,
+                            filterOption: groceryFilter,
+                            onAcquired: {
+                                withAnimation(.spring(response: 0.35)) {
+                                    pantryBadge += 1
+                                }
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                                    withAnimation { pantryBadge = 0 }
+                                }
+                            },
+                            onScrollOffsetChange: updateInlineTitle
+                        )
                     }
-                } label: {
-                    Image(systemName: "plus")
                 }
-
-                Button {
-                    showCategoryManager = true
-                } label: {
-                    Image(systemName: "slider.horizontal.3")
-                }
-
-                SettingsButton()
+            },
+            infoContent: {
+                ListsInfoContent()
             }
-        }
+        )
+        #if os(iOS)
+        .toolbar(.hidden, for: .navigationBar)
+        #endif
         .onChange(of: selectedSubtab) {
             searchText = ""
             showsInlineTitle = false

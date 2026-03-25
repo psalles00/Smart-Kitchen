@@ -25,7 +25,9 @@ struct AddPantryItemView: View {
         Form {
             Section("Item") {
                 TextField("Nome", text: $name)
+                    #if os(iOS)
                     .textInputAutocapitalization(.words)
+                    #endif
 
                 Picker("Categoria", selection: $selectedCategory) {
                     ForEach(categories) { cat in
@@ -38,7 +40,9 @@ struct AddPantryItemView: View {
                 Section("Quantidade") {
                     HStack {
                         TextField("Qtd", value: $quantity, format: .number)
+                            #if os(iOS)
                             .keyboardType(.decimalPad)
+                            #endif
                             .frame(width: 80)
                         TextField("Unidade (kg, L, x...)", text: $unit)
                     }
@@ -60,7 +64,9 @@ struct AddPantryItemView: View {
             }
         }
         .navigationTitle("Novo Item")
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancelar") { dismiss() }
@@ -69,7 +75,7 @@ struct AddPantryItemView: View {
                 Button("Salvar") { save() }
                     .disabled(!isValid)
             }
-            ToolbarItem(placement: .topBarTrailing) {
+            ToolbarItem(placement: .adaptiveTrailing) {
                 Button {
                     showCategoryManager = true
                 } label: {
@@ -114,7 +120,9 @@ struct EditPantryItemView: View {
         Form {
             Section("Item") {
                 TextField("Nome", text: $item.name)
+                    #if os(iOS)
                     .textInputAutocapitalization(.words)
+                    #endif
 
                 Picker("Categoria", selection: $item.category) {
                     ForEach(categories) { cat in
@@ -127,7 +135,9 @@ struct EditPantryItemView: View {
                 Section("Quantidade") {
                     HStack {
                         TextField("Qtd", value: $item.quantity, format: .number)
+                            #if os(iOS)
                             .keyboardType(.decimalPad)
+                            #endif
                             .frame(width: 80)
                         TextField("Unidade", text: Binding(
                             get: { item.unit ?? "" },
@@ -162,12 +172,14 @@ struct EditPantryItemView: View {
             }
         }
         .navigationTitle("Editar Item")
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
                 Button("OK") { dismiss() }
             }
-            ToolbarItem(placement: .topBarTrailing) {
+            ToolbarItem(placement: .adaptiveTrailing) {
                 Button {
                     showCategoryManager = true
                 } label: {

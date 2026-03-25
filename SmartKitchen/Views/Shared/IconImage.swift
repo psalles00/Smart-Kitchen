@@ -8,8 +8,8 @@ struct IconImage: View {
 
     var body: some View {
         Group {
-            if let uiImage = IconResolver.image(for: name) {
-                Image(uiImage: uiImage)
+            if let platformImage = IconResolver.image(for: name) {
+                Image(platformImage: platformImage)
                     .resizable()
                     .scaledToFit()
             } else {

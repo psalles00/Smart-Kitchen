@@ -1,4 +1,4 @@
-import UIKit
+import Foundation
 
 /// Resolves ingredient/item names to icon image filenames from the bundled icon library.
 /// Uses a keyword → filename mapping for common kitchen items, with a fuzzy fallback.
@@ -6,8 +6,8 @@ enum IconResolver {
 
     // MARK: - Public
 
-    /// Returns a UIImage for a given item name, or nil if no match.
-    static func image(for name: String) -> UIImage? {
+    /// Returns a PlatformImage for a given item name, or nil if no match.
+    static func image(for name: String) -> PlatformImage? {
         guard let filename = resolve(name) else { return nil }
         return loadBundledIcon(filename)
     }
@@ -52,15 +52,15 @@ enum IconResolver {
 
     // MARK: - Bundle Loading
 
-    private static func loadBundledIcon(_ filename: String) -> UIImage? {
+    private static func loadBundledIcon(_ filename: String) -> PlatformImage? {
         guard let path = Bundle.main.path(forResource: filename, ofType: nil, inDirectory: "images-128") else {
             // Try without directory (flat copy)
             guard let path2 = Bundle.main.path(forResource: filename, ofType: nil) else {
                 return nil
             }
-            return UIImage(contentsOfFile: path2)
+            return PlatformImage(contentsOfFile: path2)
         }
-        return UIImage(contentsOfFile: path)
+        return PlatformImage(contentsOfFile: path)
     }
 
     // MARK: - Keyword Map (PT-BR → icon filename)

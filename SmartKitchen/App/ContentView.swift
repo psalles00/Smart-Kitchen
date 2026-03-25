@@ -79,7 +79,7 @@ struct ContentView: View {
 
     private var mainTabView: some View {
         Group {
-            if #available(iOS 26, *) {
+            if #available(iOS 26, macOS 26, *) {
                 TabView(selection: tabSelection) {
                     Tab(value: AppTab.assistant) {
                         NavigationStack {
@@ -277,29 +277,35 @@ private struct HomeView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                assistantLauncher
-                actionDeck
-                if !expiringItems.isEmpty {
-                    expiringSection
+        ExpandedPageLayout(
+            pageTheme: .home,
+            header: { isInverted in
+                PageHeader(title: "Início", isInverted: isInverted) {
+                    SettingsButton()
+                        .foregroundStyle(isInverted ? Color.primary : Color.white)
                 }
-                dessertShelf
+            },
+            content: {
+                VStack(alignment: .leading, spacing: 24) {
+                    assistantLauncher
+                    actionDeck
+                    if !expiringItems.isEmpty {
+                        expiringSection
+                    }
+                    dessertShelf
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 16)
+                .padding(.top, 12)
+                .padding(.bottom, 28)
+            },
+            infoContent: {
+                HomeInfoContent()
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 16)
-            .padding(.top, 12)
-            .padding(.bottom, 28)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(Color(.systemBackground))
-        .navigationTitle("Início")
-        .navigationBarTitleDisplayMode(.large)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                SettingsButton()
-            }
-        }
+        )
+        #if os(iOS)
+        .toolbar(.hidden, for: .navigationBar)
+        #endif
         .sheet(isPresented: $showAssistant) {
             NavigationStack {
                 AssistantView()
@@ -675,8 +681,8 @@ private struct HomeRecipeMatchCard: View {
 
     @ViewBuilder
     private var recipeImage: some View {
-        if let data = match.recipe.imageData, let uiImage = UIImage(data: data) {
-            Image(uiImage: uiImage)
+        if let data = match.recipe.imageData, let image = PlatformImage(data: data) {
+            Image(platformImage: image)
                 .resizable()
                 .scaledToFill()
         } else {

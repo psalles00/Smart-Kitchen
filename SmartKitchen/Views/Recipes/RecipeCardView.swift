@@ -66,9 +66,9 @@ struct RecipeCardView: View {
 
     @ViewBuilder
     private var recipeImage: some View {
-        if let data = recipe.imageData, let uiImage = UIImage(data: data) {
+        if let data = recipe.imageData, let image = PlatformImage(data: data) {
             GeometryReader { geo in
-                Image(uiImage: uiImage)
+                Image(platformImage: image)
                     .resizable()
                     .scaledToFill()
                     .frame(width: geo.size.width, height: geo.size.height)
