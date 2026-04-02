@@ -9,6 +9,8 @@ struct AddUtensilItemView: View {
 
     @State private var name = ""
     @State private var selectedCategory = "Outros"
+    @State private var iconName: String?
+    @State private var userChangedCategory = false
 
     private var categories: [Category] { allCategories.filter { $0.type == .utensil } }
     private var isValid: Bool { !name.trimmingCharacters(in: .whitespaces).isEmpty }
@@ -16,15 +18,21 @@ struct AddUtensilItemView: View {
     var body: some View {
         Form {
             Section("Utensílio") {
-                TextField("Nome", text: $name)
-                    #if os(iOS)
-                    .textInputAutocapitalization(.words)
-                    #endif
+                ItemSearchField(text: $name) { entry in
+                    iconName = entry.nomeDoArquivo
+                    if categories.contains(where: { $0.name == entry.categoria }) {
+                        selectedCategory = entry.categoria
+                    }
+                    userChangedCategory = true
+                }
 
                 Picker("Categoria", selection: $selectedCategory) {
                     ForEach(categories) { cat in
                         Text(cat.name).tag(cat.name)
                     }
+                }
+                .onChange(of: selectedCategory) { _, _ in
+                    userChangedCategory = true
                 }
             }
         }
@@ -47,10 +55,22 @@ struct AddUtensilItemView: View {
         let trimmed = name.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return }
 
+        var finalIcon = iconName
+        var finalCategory = selectedCategory
+
+        if finalIcon == nil, let match = ItemDatabase.shared.exactMatch(for: trimmed) {
+            finalIcon = match.nomeDoArquivo
+            if !userChangedCategory,
+               categories.contains(where: { $0.name == match.categoria }) {
+                finalCategory = match.categoria
+            }
+        }
+
         let nextOrder = (allItems.map(\.sortOrder).max() ?? -1) + 1
         let item = UtensilItem(
             name: trimmed,
-            category: selectedCategory,
+            category: finalCategory,
+            iconName: finalIcon,
             sortOrder: nextOrder
         )
         modelContext.insert(item)

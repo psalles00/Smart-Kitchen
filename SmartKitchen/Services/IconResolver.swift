@@ -12,6 +12,11 @@ enum IconResolver {
         return loadBundledIcon(filename)
     }
 
+    /// Returns a PlatformImage directly from an icon filename (e.g. "apple.png").
+    static func image(forFilename filename: String) -> PlatformImage? {
+        loadBundledIcon(filename)
+    }
+
     /// Returns the filename (without path) for a given item name.
     static func resolve(_ name: String) -> String? {
         let lower = name.lowercased()

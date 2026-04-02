@@ -9,6 +9,8 @@ struct AddGroceryItemView: View {
 
     @State private var name = ""
     @State private var selectedCategory = "Outros"
+    @State private var iconName: String?
+    @State private var userChangedCategory = false
 
     private var categories: [Category] { allCategories.filter { $0.type == .pantry } }
     @State private var quantity: Double?
@@ -21,15 +23,21 @@ struct AddGroceryItemView: View {
     var body: some View {
         Form {
             Section("Item") {
-                TextField("Nome", text: $name)
-                    #if os(iOS)
-                    .textInputAutocapitalization(.words)
-                    #endif
+                ItemSearchField(text: $name) { entry in
+                    iconName = entry.nomeDoArquivo
+                    if categories.contains(where: { $0.name == entry.categoria }) {
+                        selectedCategory = entry.categoria
+                    }
+                    userChangedCategory = true
+                }
 
                 Picker("Categoria", selection: $selectedCategory) {
                     ForEach(categories) { cat in
                         Text(cat.name).tag(cat.name)
                     }
+                }
+                .onChange(of: selectedCategory) { _, _ in
+                    userChangedCategory = true
                 }
             }
 
@@ -76,11 +84,25 @@ struct AddGroceryItemView: View {
     }
 
     private func save() {
+        let trimmed = name.trimmingCharacters(in: .whitespaces)
+        var finalIcon = iconName
+        var finalCategory = selectedCategory
+
+        // Auto-match: if user typed a name but didn't pick from autocomplete
+        if finalIcon == nil, let match = ItemDatabase.shared.exactMatch(for: trimmed) {
+            finalIcon = match.nomeDoArquivo
+            if !userChangedCategory,
+               categories.contains(where: { $0.name == match.categoria }) {
+                finalCategory = match.categoria
+            }
+        }
+
         let item = GroceryItem(
-            name: name.trimmingCharacters(in: .whitespaces),
-            category: selectedCategory,
+            name: trimmed,
+            category: finalCategory,
             quantity: quantity,
             unit: unit.isEmpty ? nil : unit,
+            iconName: finalIcon,
             isFixed: isFixed,
             sortOrder: (allItems.map(\.sortOrder).max() ?? -1) + 1
         )

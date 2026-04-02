@@ -10,6 +10,8 @@ struct AddPantryItemView: View {
 
     @State private var name = ""
     @State private var selectedCategory = "Outros"
+    @State private var iconName: String?
+    @State private var userChangedCategory = false
     @State private var quantity: Double?
     @State private var unit = ""
     @State private var isLinkedToGrocery = false
@@ -24,15 +26,21 @@ struct AddPantryItemView: View {
     var body: some View {
         Form {
             Section("Item") {
-                TextField("Nome", text: $name)
-                    #if os(iOS)
-                    .textInputAutocapitalization(.words)
-                    #endif
+                ItemSearchField(text: $name) { entry in
+                    iconName = entry.nomeDoArquivo
+                    if categories.contains(where: { $0.name == entry.categoria }) {
+                        selectedCategory = entry.categoria
+                    }
+                    userChangedCategory = true
+                }
 
                 Picker("Categoria", selection: $selectedCategory) {
                     ForEach(categories) { cat in
                         Text(cat.name).tag(cat.name)
                     }
+                }
+                .onChange(of: selectedCategory) { _, _ in
+                    userChangedCategory = true
                 }
             }
 
@@ -89,11 +97,24 @@ struct AddPantryItemView: View {
     }
 
     private func save() {
+        let trimmed = name.trimmingCharacters(in: .whitespaces)
+        var finalIcon = iconName
+        var finalCategory = selectedCategory
+
+        if finalIcon == nil, let match = ItemDatabase.shared.exactMatch(for: trimmed) {
+            finalIcon = match.nomeDoArquivo
+            if !userChangedCategory,
+               categories.contains(where: { $0.name == match.categoria }) {
+                finalCategory = match.categoria
+            }
+        }
+
         let item = PantryItem(
-            name: name.trimmingCharacters(in: .whitespaces),
-            category: selectedCategory,
+            name: trimmed,
+            category: finalCategory,
             quantity: isDetailed ? quantity : nil,
             unit: isDetailed ? (unit.isEmpty ? nil : unit) : nil,
+            iconName: finalIcon,
             isLinkedToGrocery: isLinkedToGrocery,
             expirationDate: hasExpirationDate ? expirationDate : nil,
             sortOrder: (allItems.map(\.sortOrder).max() ?? -1) + 1

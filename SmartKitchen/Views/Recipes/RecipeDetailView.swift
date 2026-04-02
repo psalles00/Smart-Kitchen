@@ -233,7 +233,7 @@ struct RecipeDetailView: View {
                 let isInGrocery = ingredientIsInGrocery(ingredient)
 
                 HStack(spacing: 12) {
-                    IconImage(name: ingredient.name, fallbackSymbol: "leaf")
+                    IconImage(name: ingredient.name, iconFileName: ingredient.iconName, fallbackSymbol: "leaf", showBalloon: true)
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text(ingredient.name)

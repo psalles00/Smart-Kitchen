@@ -331,7 +331,7 @@ struct PantryItemRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            IconImage(name: item.name, fallbackSymbol: "leaf", size: 32)
+            IconImage(name: item.name, iconFileName: item.iconName, fallbackSymbol: "leaf", size: 32, showBalloon: true)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.name)

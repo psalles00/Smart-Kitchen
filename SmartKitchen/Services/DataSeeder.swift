@@ -44,12 +44,22 @@ struct DataSeeder {
         let pantryCategories = [
             ("Frutas", "apple.png", 0),
             ("Vegetais", "broccoli.png", 1),
-            ("Carnes", "steak.png", 2),
+            ("Proteínas", "chicken-raw.png", 2),
             ("Laticínios", "milk.png", 3),
-            ("Grãos", "rice.png", 4),
-            ("Bebidas", "water-bottle.png", 5),
-            ("Temperos", "salt.png", 6),
-            ("Outros", nil as String?, 7),
+            ("Grãos e Massas", "rice.png", 4),
+            ("Padaria", "bread-white.png", 5),
+            ("Temperos e Condimentos", "salt.png", 6),
+            ("Bebidas", "water-bottle.png", 7),
+            ("Doces e Sobremesas", "cake.png", 8),
+            ("Snacks", "chips.png", 9),
+            ("Enlatados e Conservas", "canned-tuna.png", 10),
+            ("Pratos Prontos", "lunch-box.png", 11),
+            ("Utensílios de Cozinha", "frying-pan.png", 12),
+            ("Eletrodomésticos", "blender.png", 13),
+            ("Limpeza", "dish-soap.png", 14),
+            ("Higiene Pessoal", "hand-soap-dispenser.png", 15),
+            ("Saúde e Bem-estar", "healthy-food.png", 16),
+            ("Outros", nil as String?, 17),
         ]
 
         for (name, icon, order) in pantryCategories {

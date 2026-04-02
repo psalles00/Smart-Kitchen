@@ -118,7 +118,7 @@ struct UtensilItemRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            IconImage(name: item.name, fallbackSymbol: "fork.knife", size: 32)
+            IconImage(name: item.name, iconFileName: item.iconName, fallbackSymbol: "fork.knife", size: 32, showBalloon: true)
 
             Text(item.name)
                 .font(.body)
