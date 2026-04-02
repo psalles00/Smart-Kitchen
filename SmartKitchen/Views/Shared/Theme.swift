@@ -74,6 +74,25 @@ struct GlassGroupDivider: View {
     }
 }
 
+struct ItemListDivider: View {
+    var body: some View {
+        Capsule(style: .continuous)
+            .strokeBorder(
+                Color.white.opacity(0.34),
+                style: StrokeStyle(lineWidth: 0.9, lineCap: .round, dash: [1.0, 3.6])
+            )
+            .background(
+                Capsule(style: .continuous)
+                    .strokeBorder(
+                        Color.primary.opacity(0.1),
+                        style: StrokeStyle(lineWidth: 0.9, lineCap: .round, dash: [1.0, 3.6], dashPhase: 1.8)
+                    )
+            )
+            .frame(height: 1)
+            .accessibilityHidden(true)
+    }
+}
+
 // MARK: - Glass / Material Helpers
 
 extension View {
@@ -194,6 +213,118 @@ struct NeutralItemActionButton: View {
                 .background(Color(.tertiarySystemFill), in: .circle)
         }
         .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Animated Item Action Button (LifeOS-style)
+
+/// An animated circular button that fills with color and reveals an icon when tapped.
+struct AnimatedItemActionButton: View {
+    let systemImage: String
+    let color: Color
+    let action: () -> Void
+
+    private let size: CGFloat = 32
+    private let lineWidth: CGFloat = 4.5
+    private let uncheckedColor = Color(red: 243/255, green: 243/255, blue: 244/255)
+
+    @State private var strokeProgress: CGFloat = 0
+    @State private var fillOpacity: CGFloat = 0
+    @State private var showIcon: Bool = false
+    @State private var iconScale: CGFloat = 0
+    @State private var isAnimating: Bool = false
+
+    var body: some View {
+        Button {
+            guard !isAnimating else { return }
+            HapticManager.impact(style: .medium)
+            animateAndPerform()
+        } label: {
+            ZStack {
+                Circle()
+                    .stroke(lineWidth: lineWidth)
+                    .foregroundColor(uncheckedColor)
+                    .frame(width: size, height: size)
+
+                Circle()
+                    .trim(from: 0, to: strokeProgress)
+                    .stroke(
+                        AngularGradient(
+                            gradient: Gradient(colors: [color, color.opacity(0.7), color]),
+                            center: .center,
+                            startAngle: .degrees(-90),
+                            endAngle: .degrees(270)
+                        ),
+                        style: StrokeStyle(lineWidth: lineWidth, lineCap: .round)
+                    )
+                    .frame(width: size, height: size)
+                    .rotationEffect(.degrees(-90))
+
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [color, color.opacity(0.8)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: size, height: size)
+                    .opacity(fillOpacity)
+
+                Image(systemName: systemImage)
+                    .font(.system(size: size * 0.4, weight: .bold))
+                    .foregroundColor(uncheckedColor)
+                    .opacity(showIcon ? 0 : 1)
+
+                Image(systemName: systemImage)
+                    .font(.system(size: size * 0.4, weight: .bold))
+                    .foregroundColor(.white)
+                    .opacity(showIcon ? 1 : 0)
+                    .scaleEffect(iconScale)
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func animateAndPerform() {
+        isAnimating = true
+        strokeProgress = 0
+        fillOpacity = 0
+        showIcon = false
+        iconScale = 0
+
+        withAnimation(.easeInOut(duration: 0.25)) {
+            strokeProgress = 1
+        }
+
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(200))
+            withAnimation(.easeIn(duration: 0.1)) {
+                fillOpacity = 1
+            }
+            try? await Task.sleep(for: .milliseconds(50))
+            showIcon = true
+            withAnimation(.spring(response: 0.2, dampingFraction: 0.6, blendDuration: 0)) {
+                iconScale = 1
+            }
+            HapticManager.impact(style: .light)
+
+            try? await Task.sleep(for: .milliseconds(400))
+            action()
+
+            try? await Task.sleep(for: .milliseconds(200))
+            withAnimation(.easeOut(duration: 0.2)) {
+                iconScale = 0
+                fillOpacity = 0
+            }
+            try? await Task.sleep(for: .milliseconds(150))
+            showIcon = false
+            withAnimation(.easeOut(duration: 0.2)) {
+                strokeProgress = 0
+            }
+            try? await Task.sleep(for: .milliseconds(250))
+            isAnimating = false
+        }
     }
 }
 

@@ -61,7 +61,7 @@ struct UtensilsView: View {
                     let (categoryName, items) = group
                     Section {
                         ForEach(Array(items.enumerated()), id: \.1.id) { itemIndex, item in
-                            UtensilItemRow(item: item)
+                            UtensilItemRow(item: item, showsDivider: itemIndex > 0)
                                 .contentShape(Rectangle())
                                 .background(alignment: .top) {
                                     if categoryIndex == 0, itemIndex == 0 {
@@ -95,8 +95,8 @@ struct UtensilsView: View {
                                     .foregroundStyle(.secondary)
                                 Spacer()
                             }
-                            .padding(.horizontal)
-                            .padding(.vertical, 6)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 4)
                             .background(Color(.systemBackground))
                         }
                     }
@@ -115,17 +115,27 @@ struct UtensilsView: View {
 
 struct UtensilItemRow: View {
     let item: UtensilItem
+    let showsDivider: Bool
 
     var body: some View {
-        HStack(spacing: 12) {
-            IconImage(name: item.name, iconFileName: item.iconName, fallbackSymbol: "fork.knife", size: 32, showBalloon: true)
+        VStack(spacing: 0) {
+            if showsDivider {
+                ItemListDivider()
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 4)
+            }
 
-            Text(item.name)
-                .font(.body)
+            HStack(alignment: .center, spacing: 12) {
+                IconImage(name: item.name, iconFileName: item.iconName, fallbackSymbol: "fork.knife", size: 28, showBalloon: true)
 
-            Spacer()
+                Text(item.name)
+                    .font(.system(size: 16, weight: .medium))
+                    .lineLimit(1)
+
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 7)
         }
-        .padding(.horizontal)
-        .padding(.vertical, 4)
     }
 }

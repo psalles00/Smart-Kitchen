@@ -4,6 +4,7 @@ struct NutrientsPlaceholderView: View {
     var body: some View {
         ExpandedPageLayout(
             pageTheme: .nutrients,
+            startsWithInfoCollapsed: true,
             header: { isInverted in
                 PageHeader(title: "Nutrientes", isInverted: isInverted) {
                     SettingsButton()

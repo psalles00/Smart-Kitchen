@@ -97,6 +97,7 @@ struct ListsTabView: View {
     var body: some View {
         ExpandedPageLayout(
             pageTheme: .lists,
+            startsWithInfoCollapsed: true,
             header: { isInverted in
                 PageHeader(title: "Listas", isInverted: isInverted) {
                     HStack(spacing: 8) {
@@ -290,7 +291,15 @@ struct ListsTabView: View {
     }
 
     private func badgeText(for tab: ListSubtab) -> String? {
-        let badgeValue = tab == .pantry ? pantryBadge : groceryBadge
+        let badgeValue: Int
+        switch tab {
+        case .pantry:
+            badgeValue = pantryBadge
+        case .grocery:
+            badgeValue = groceryBadge
+        case .utensils:
+            badgeValue = 0
+        }
         return badgeValue > 0 ? "+\(badgeValue)" : nil
     }
     private func moveDraggedItem(_ payload: ListsDragPayload, to destination: ListSubtab) {

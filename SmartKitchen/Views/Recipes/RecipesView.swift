@@ -121,6 +121,7 @@ struct RecipesView: View {
     var body: some View {
         ExpandedPageLayout(
             pageTheme: .recipes,
+            startsWithInfoCollapsed: true,
             header: { isInverted in
                 PageHeader(title: "Receitas", isInverted: isInverted) {
                     HStack(spacing: 8) {

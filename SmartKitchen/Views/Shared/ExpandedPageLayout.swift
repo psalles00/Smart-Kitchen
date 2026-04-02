@@ -27,6 +27,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
     let header: (_ isInverted: Bool) -> Header
     let content: () -> Content
     let infoContent: () -> InfoContent
+    let startsWithInfoCollapsed: Bool
     var onRefresh: (() async -> Void)? = nil
 
     private var backgroundManager = BackgroundManager.shared
@@ -46,6 +47,10 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
         headerHeight + infoAreaHeight
     }
 
+    private var initialTopSpacerHeight: CGFloat {
+        startsWithInfoCollapsed ? headerHeight : totalRevealHeight
+    }
+
     private var trailingPanelInset: CGFloat {
         #if os(macOS)
         4
@@ -56,12 +61,14 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
 
     init(
         pageTheme: PageTheme,
+        startsWithInfoCollapsed: Bool = false,
         @ViewBuilder header: @escaping (_ isInverted: Bool) -> Header,
         @ViewBuilder content: @escaping () -> Content,
         @ViewBuilder infoContent: @escaping () -> InfoContent,
         onRefresh: (() async -> Void)? = nil
     ) {
         self.pageTheme = pageTheme
+        self.startsWithInfoCollapsed = startsWithInfoCollapsed
         self.header = header
         self.content = content
         self.infoContent = infoContent
@@ -84,6 +91,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
                     .padding(.leading, leadingPanelInset)
                     .padding(.trailing, trailingPanelInset)
             }
+            .ignoresSafeArea(.container, edges: .bottom)
             .allowsHitTesting(false)
             .zIndex(1)
 
@@ -101,7 +109,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
                 ScrollView {
                     VStack(spacing: 0) {
                         Color.clear
-                            .frame(height: totalRevealHeight)
+                            .frame(height: initialTopSpacerHeight)
                             .allowsHitTesting(false)
                             .id("expandedScrollTop")
 
@@ -109,8 +117,9 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
                             Color.clear
                                 .frame(height: topMargin)
                             content()
+                            Spacer(minLength: 0)
                         }
-                        .frame(maxWidth: .infinity)
+                        .frame(maxWidth: .infinity, alignment: .top)
                         .frame(minHeight: max(0, viewHeight - headerHeight))
                         .background(Color(.systemBackground))
                         .clipShape(

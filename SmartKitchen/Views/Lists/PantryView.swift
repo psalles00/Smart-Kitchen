@@ -84,6 +84,7 @@ struct PantryView: View {
             }
         }
         .listStyle(.plain)
+        .scrollContentBackground(.hidden)
         .coordinateSpace(name: "lists_scroll")
         .onScrollOffsetChange(perform: onScrollOffsetChange)
     }
@@ -104,7 +105,8 @@ struct PantryView: View {
         PantryItemRow(
             item: item,
             isDetailed: isDetailed,
-            onSendToGrocery: { sendToGrocery(item) }
+            onSendToGrocery: { sendToGrocery(item) },
+            showsDivider: itemIndex > 0
         )
         .contentShape(Rectangle())
         .overlay {
@@ -168,18 +170,28 @@ struct PantryView: View {
                 }
             }
         )
+        .listRowInsets(EdgeInsets())
+        .listRowSeparator(.hidden)
+        .listRowBackground(Color.clear)
     }
 
     private func pantryHeader(for category: String) -> some View {
-        Text(category)
-            .font(.cardTitle)
-            .foregroundStyle(.secondary)
-            .textCase(nil)
-            .padding(.vertical, 4)
-            .padding(.horizontal, 8)
-            .background {
-                DropTargetHighlight(isActive: targetedCategoryName == category)
+        HStack(spacing: 6) {
+            let catIcon = allCategories.first(where: { $0.name == category && $0.type == .pantry })
+            if let iconName = catIcon?.iconName {
+                IconImage(name: iconName, fallbackSymbol: "leaf", size: 16)
             }
+            Text(category)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.primary.opacity(0.72))
+            Spacer()
+        }
+        .textCase(nil)
+        .padding(.vertical, 4)
+        .padding(.horizontal, 16)
+        .background {
+            DropTargetHighlight(isActive: targetedCategoryName == category)
+        }
             .dropDestination(
                 for: ListsDragPayload.self,
                 action: { droppedItems, _ in
@@ -195,6 +207,9 @@ struct PantryView: View {
                     }
                 }
             )
+            .listRowInsets(EdgeInsets())
+            .listRowSeparator(.hidden)
+            .listRowBackground(Color.clear)
     }
 
     private var emptyState: some View {
@@ -328,36 +343,51 @@ struct PantryItemRow: View {
     let item: PantryItem
     let isDetailed: Bool
     let onSendToGrocery: () -> Void
+    let showsDivider: Bool
 
     var body: some View {
-        HStack(spacing: 12) {
-            IconImage(name: item.name, iconFileName: item.iconName, fallbackSymbol: "leaf", size: 32, showBalloon: true)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(item.name)
-                    .font(.body)
-                if isDetailed, !item.formattedQuantity.isEmpty {
-                    Text(item.formattedQuantity)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                if let expiration = item.formattedExpirationDate {
-                    Text("Validade \(expiration)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
+        VStack(spacing: 0) {
+            if showsDivider {
+                ItemListDivider()
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 4)
             }
 
-            Spacer()
+            HStack(alignment: .center, spacing: 12) {
+                IconImage(name: item.name, iconFileName: item.iconName, fallbackSymbol: "leaf", size: 28, showBalloon: true)
 
-            if item.isLinkedToGrocery {
-                Image(systemName: "pin.fill")
-                    .font(.caption)
-                    .foregroundStyle(.orange)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(item.name)
+                        .font(.system(size: 16, weight: .medium))
+                        .lineLimit(1)
+                    if isDetailed, !item.formattedQuantity.isEmpty {
+                        Text(item.formattedQuantity)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    if let expiration = item.formattedExpirationDate {
+                        Text("Validade \(expiration)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Spacer()
+
+                if item.isLinkedToGrocery {
+                    Image(systemName: "pin.fill")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                }
+
+                AnimatedItemActionButton(
+                    systemImage: "cart",
+                    color: Color(red: 0.20, green: 0.48, blue: 0.67),
+                    action: onSendToGrocery
+                )
             }
-
-            NeutralItemActionButton(systemImage: "arrow.2.squarepath", action: onSendToGrocery)
+            .padding(.vertical, 7)
+            .padding(.horizontal, 16)
         }
-        .padding(.vertical, 4)
     }
 }

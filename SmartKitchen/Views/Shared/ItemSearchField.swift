@@ -39,35 +39,32 @@ struct ItemSearchField: View {
     private var suggestionsList: some View {
         VStack(alignment: .leading, spacing: 0) {
             ForEach(suggestions, id: \.nomeDoArquivo) { entry in
-                Button {
-                    selectItem(entry)
-                } label: {
-                    HStack(spacing: 10) {
-                        IconImage(
-                            name: "",
-                            iconFileName: entry.nomeDoArquivo,
-                            fallbackSymbol: "leaf",
-                            size: 28,
-                            showBalloon: true
-                        )
+                HStack(spacing: 10) {
+                    IconImage(
+                        name: "",
+                        iconFileName: entry.nomeDoArquivo,
+                        fallbackSymbol: "leaf",
+                        size: 28,
+                        showBalloon: true
+                    )
 
-                        VStack(alignment: .leading, spacing: 1) {
-                            // Show the best matching title
-                            Text(bestTitle(for: entry))
-                                .font(.subheadline)
-                                .foregroundStyle(.primary)
-                            Text(entry.categoria)
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                        }
-
-                        Spacer()
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(bestTitle(for: entry))
+                            .font(.subheadline)
+                            .foregroundStyle(.primary)
+                        Text(entry.categoria)
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
                     }
-                    .padding(.vertical, 6)
-                    .padding(.horizontal, 4)
-                    .contentShape(Rectangle())
+
+                    Spacer()
                 }
-                .buttonStyle(.plain)
+                .padding(.vertical, 6)
+                .padding(.horizontal, 4)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    selectItem(entry)
+                }
 
                 if entry.nomeDoArquivo != suggestions.last?.nomeDoArquivo {
                     Divider()

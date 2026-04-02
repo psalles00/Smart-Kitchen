@@ -16,7 +16,7 @@ struct IconImage: View {
                 iconContent
                     .frame(width: size, height: size)
                     .padding(size * 0.175)
-                    .background(Color(.systemGray5), in: Circle())
+                    .background(Color(red: 243/255, green: 243/255, blue: 244/255), in: Circle())
                     .frame(width: balloonSize, height: balloonSize)
             } else {
                 iconContent

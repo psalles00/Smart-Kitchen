@@ -80,6 +80,7 @@ struct GroceryListView: View {
             }
         }
         .listStyle(.plain)
+        .scrollContentBackground(.hidden)
         .coordinateSpace(name: "lists_scroll")
         .onScrollOffsetChange(perform: onScrollOffsetChange)
     }
@@ -97,7 +98,7 @@ struct GroceryListView: View {
 
     @ViewBuilder
     private func groceryRow(categoryIndex: Int, itemIndex: Int, category: String, item: GroceryItem) -> some View {
-        GroceryItemRow(item: item) {
+        GroceryItemRow(item: item, showsDivider: itemIndex > 0) {
             acquireItem(item)
         }
         .contentShape(Rectangle())
@@ -153,18 +154,28 @@ struct GroceryListView: View {
                 }
             }
         )
+        .listRowInsets(EdgeInsets())
+        .listRowSeparator(.hidden)
+        .listRowBackground(Color.clear)
     }
 
     private func groceryHeader(for category: String) -> some View {
-        Text(category)
-            .font(.cardTitle)
-            .foregroundStyle(.secondary)
-            .textCase(nil)
-            .padding(.vertical, 4)
-            .padding(.horizontal, 8)
-            .background {
-                DropTargetHighlight(isActive: targetedCategoryName == category)
+        HStack(spacing: 6) {
+            let catIcon = allCategories.first(where: { $0.name == category && $0.type == .pantry })
+            if let iconName = catIcon?.iconName {
+                IconImage(name: iconName, fallbackSymbol: "cart", size: 16)
             }
+            Text(category)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.primary.opacity(0.72))
+            Spacer()
+        }
+        .textCase(nil)
+        .padding(.vertical, 4)
+        .padding(.horizontal, 16)
+        .background {
+            DropTargetHighlight(isActive: targetedCategoryName == category)
+        }
             .dropDestination(
                 for: ListsDragPayload.self,
                 action: { droppedItems, _ in
@@ -180,6 +191,9 @@ struct GroceryListView: View {
                     }
                 }
             )
+            .listRowInsets(EdgeInsets())
+            .listRowSeparator(.hidden)
+            .listRowBackground(Color.clear)
     }
 
     @ViewBuilder
@@ -322,37 +336,52 @@ struct GroceryListView: View {
 
 struct GroceryItemRow: View {
     let item: GroceryItem
+    let showsDivider: Bool
     let onAcquire: () -> Void
 
     var body: some View {
-        HStack(spacing: 12) {
-            IconImage(name: item.name, iconFileName: item.iconName, fallbackSymbol: "basket", size: 32, showBalloon: true)
+        VStack(spacing: 0) {
+            if showsDivider {
+                ItemListDivider()
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 4)
+            }
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(item.name)
-                    .font(.body)
+            HStack(alignment: .center, spacing: 12) {
+                IconImage(name: item.name, iconFileName: item.iconName, fallbackSymbol: "basket", size: 28, showBalloon: true)
 
-                if let qty = item.quantity {
-                    let num = qty.truncatingRemainder(dividingBy: 1) == 0
-                        ? String(format: "%.0f", qty)
-                        : String(format: "%.1f", qty)
-                    let text = item.unit.map { u in u.isEmpty ? "\(num)x" : "\(num) \(u)" } ?? "\(num)x"
-                    Text(text)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(item.name)
+                        .font(.system(size: 16, weight: .medium))
+                        .lineLimit(1)
+
+                    if let qty = item.quantity {
+                        let num = qty.truncatingRemainder(dividingBy: 1) == 0
+                            ? String(format: "%.0f", qty)
+                            : String(format: "%.1f", qty)
+                        let text = item.unit.map { u in u.isEmpty ? "\(num)x" : "\(num) \(u)" } ?? "\(num)x"
+                        Text(text)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                 }
+
+                Spacer()
+
+                if item.isFixed {
+                    Image(systemName: "pin.fill")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                }
+
+                AnimatedItemActionButton(
+                    systemImage: "refrigerator",
+                    color: Color(red: 0.36, green: 0.60, blue: 0.42),
+                    action: onAcquire
+                )
             }
-
-            Spacer()
-
-            if item.isFixed {
-                Image(systemName: "pin.fill")
-                    .font(.caption)
-                    .foregroundStyle(.orange)
-            }
-
-            NeutralItemActionButton(systemImage: "arrow.2.squarepath", action: onAcquire)
+            .padding(.vertical, 7)
+            .padding(.horizontal, 16)
         }
-        .padding(.vertical, 4)
     }
 }
