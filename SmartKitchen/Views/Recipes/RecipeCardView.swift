@@ -35,9 +35,15 @@ struct RecipeCardView: View {
                 .foregroundStyle(.white.opacity(0.85))
 
                 if let compatibility {
-                    Text(compatibility.longText)
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(.white.opacity(0.92))
+                    HStack(spacing: 4) {
+                        if compatibility.ratio >= 1.0 {
+                            Image(systemName: "checkmark.seal.fill")
+                                .foregroundStyle(.green)
+                        }
+                        Text(compatibility.longText)
+                    }
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.white.opacity(0.92))
                 }
             }
             .padding(12)

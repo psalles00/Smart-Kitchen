@@ -264,7 +264,7 @@ struct AITools {
             $0.name.lowercased().contains(q) ||
             $0.category.lowercased().contains(q) ||
             $0.tags.contains(where: { $0.lowercased().contains(q) }) ||
-            $0.ingredients.contains(where: { $0.name.lowercased().contains(q) })
+            ($0.ingredients ?? []).contains(where: { $0.name.lowercased().contains(q) })
         }
         let results = matches.prefix(10).map { r in
             ["name": r.name, "category": r.category, "difficulty": r.difficulty.rawValue,
@@ -302,6 +302,7 @@ struct AITools {
         context.insert(recipe)
 
         if let ingredientsArray = args["ingredients"] as? [[String: Any]] {
+            var newIngredients: [RecipeIngredient] = []
             for (i, ingDict) in ingredientsArray.enumerated() {
                 let ing = RecipeIngredient(
                     name: ingDict["name"] as? String ?? "",
@@ -311,15 +312,20 @@ struct AITools {
                 )
                 ing.recipe = recipe
                 context.insert(ing)
+                newIngredients.append(ing)
             }
+            recipe.ingredients = newIngredients
         }
 
         if let stepsArray = args["steps"] as? [String] {
+            var newSteps: [RecipeStep] = []
             for (i, instruction) in stepsArray.enumerated() {
                 let step = RecipeStep(order: i + 1, instruction: instruction)
                 step.recipe = recipe
                 context.insert(step)
+                newSteps.append(step)
             }
+            recipe.steps = newSteps
         }
 
         try? context.save()
@@ -354,9 +360,10 @@ struct AITools {
         if args.keys.contains("calories") { recipe.calories = args["calories"] as? Int }
 
         if let ingredientsArray = args["ingredients"] as? [[String: Any]] {
-            for ingredient in recipe.ingredients {
+            for ingredient in (recipe.ingredients ?? []) {
                 context.delete(ingredient)
             }
+            var newIngredients: [RecipeIngredient] = []
             for (i, ingDict) in ingredientsArray.enumerated() {
                 let ingredient = RecipeIngredient(
                     name: ingDict["name"] as? String ?? "",
@@ -366,18 +373,23 @@ struct AITools {
                 )
                 ingredient.recipe = recipe
                 context.insert(ingredient)
+                newIngredients.append(ingredient)
             }
+            recipe.ingredients = newIngredients
         }
 
         if let stepsArray = args["steps"] as? [String] {
-            for step in recipe.steps {
+            for step in (recipe.steps ?? []) {
                 context.delete(step)
             }
+            var newSteps: [RecipeStep] = []
             for (i, instruction) in stepsArray.enumerated() {
                 let step = RecipeStep(order: i + 1, instruction: instruction)
                 step.recipe = recipe
                 context.insert(step)
+                newSteps.append(step)
             }
+            recipe.steps = newSteps
         }
 
         recipe.updatedAt = .now
@@ -678,6 +690,11 @@ struct AITools {
             let descriptor = FetchDescriptor<Recipe>()
             for recipe in (try? context.fetch(descriptor)) ?? [] where recipe.category == oldName {
                 recipe.category = newName
+            }
+        case .utensil:
+            let descriptor = FetchDescriptor<UtensilItem>()
+            for item in (try? context.fetch(descriptor)) ?? [] where item.category == oldName {
+                item.category = newName
             }
         }
     }

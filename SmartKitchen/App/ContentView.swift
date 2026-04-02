@@ -10,10 +10,24 @@ struct ContentView: View {
     @State private var addSheetType: AddSheetType?
     @State private var showAssistant = false
     @State private var showSettings = false
+    @State private var isBouncingBackFromAdd = false
+    @State private var scrollToTopTrigger: Int = 0
 
     private var settings: AppSettings? { settingsArray.first }
     private var addMenuOptions: [AddSheetType] {
         [.pantryItem, .groceryItem, .recipe, .assistantConversation]
+    }
+
+    private var tabSelectionBinding: Binding<AppTab> {
+        Binding(
+            get: { selectedTab },
+            set: { newValue in
+                if newValue == selectedTab && newValue != .add && !isBouncingBackFromAdd {
+                    scrollToTopTrigger += 1
+                }
+                selectedTab = newValue
+            }
+        )
     }
 
     var body: some View {
@@ -46,6 +60,8 @@ struct ContentView: View {
                 }
             }
         }
+        .environment(\.openSettings, { showSettings = true })
+        .environment(\.scrollToTopTrigger, scrollToTopTrigger)
         .preferredColorScheme(settings?.appearanceMode.colorScheme)
         .tint(settings?.accentColorChoice.color)
         .sheet(isPresented: $showSettings) {
@@ -66,7 +82,7 @@ struct ContentView: View {
     private var mainTabView: some View {
         Group {
             #if os(macOS)
-            TabView(selection: $selectedTab) {
+            TabView(selection: tabSelectionBinding) {
                 NavigationStack {
                     HomeView(onSettingsTap: { showSettings = true })
                 }
@@ -101,7 +117,7 @@ struct ContentView: View {
             }
             #else
             if #available(iOS 26, macOS 26, *) {
-                TabView(selection: $selectedTab) {
+                TabView(selection: tabSelectionBinding) {
                     Tab(value: AppTab.assistant) {
                         NavigationStack {
                             HomeView(onSettingsTap: { showSettings = true })
@@ -141,7 +157,7 @@ struct ContentView: View {
                     }
                 }
             } else {
-                TabView(selection: $selectedTab) {
+                TabView(selection: tabSelectionBinding) {
                     NavigationStack {
                         HomeView(onSettingsTap: { showSettings = true })
                     }
@@ -187,8 +203,14 @@ struct ContentView: View {
 
     private func handleTabSelectionChange(_ newValue: AppTab) {
         if newValue == .add {
+            isBouncingBackFromAdd = true
             selectedTab = lastContentTab
             openAddOptionsFromTab()
+            return
+        }
+
+        if isBouncingBackFromAdd {
+            isBouncingBackFromAdd = false
             return
         }
 
@@ -216,7 +238,6 @@ struct ContentView: View {
     }
 
     private func openAddOptionsFromTab() {
-        selectedTab = lastContentTab
         withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) {
             showAddOptions.toggle()
         }
@@ -419,7 +440,7 @@ private struct HomeView: View {
 
                     Spacer(minLength: 12)
 
-                    Image(systemName: "sparkles.bubble")
+                    Image(systemName: "sparkles")
                         .font(.title2.weight(.semibold))
                         .foregroundStyle(Color.accentColor)
                         .frame(width: 46, height: 46)

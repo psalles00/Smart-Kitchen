@@ -38,6 +38,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
     private let refreshThreshold: CGFloat = 80
     private let leadingPanelInset: CGFloat = 8
 
+    @Environment(\.scrollToTopTrigger) private var scrollToTopTrigger
     @State private var scrollState = _ExpandedScrollState()
     @State private var viewHeight: CGFloat = 800
 
@@ -74,69 +75,89 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
                 .ignoresSafeArea()
                 .allowsHitTesting(false) // Previne interações com o shader
 
-            // 2. INFO AREA (behind scroll)
+            // 2. BOTTOM FILL (prevents shader from showing on bottom overscroll)
+            VStack(spacing: 0) {
+                Spacer()
+                Color(.systemBackground)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 200)
+                    .padding(.leading, leadingPanelInset)
+                    .padding(.trailing, trailingPanelInset)
+            }
+            .allowsHitTesting(false)
+            .zIndex(1)
+
+            // 3. INFO AREA (behind scroll)
             _InfoAreaLayer(
                 scrollState: scrollState,
                 headerHeight: headerHeight,
                 infoAreaHeight: infoAreaHeight,
                 infoAreaView: buildInfoArea()
             )
-            .zIndex(1)
+            .zIndex(1.5)
 
-            // 3. SCROLL CONTENT
-            ScrollView {
-                VStack(spacing: 0) {
-                    Color.clear
-                        .frame(height: totalRevealHeight)
-                        .allowsHitTesting(false)
-
+            // 4. SCROLL CONTENT
+            ScrollViewReader { scrollProxy in
+                ScrollView {
                     VStack(spacing: 0) {
                         Color.clear
-                            .frame(height: topMargin)
-                        content()
-                    }
-                    .frame(maxWidth: .infinity)
-                    .frame(minHeight: max(0, viewHeight - headerHeight))
-                    .background(Color(.systemBackground))
-                    .clipShape(
-                        UnevenRoundedRectangle(
-                            topLeadingRadius: cornerRadius,
-                            bottomLeadingRadius: 0,
-                            bottomTrailingRadius: 0,
-                            topTrailingRadius: cornerRadius
-                        )
-                    )
-                    .padding(.leading, leadingPanelInset)
-                    .padding(.trailing, trailingPanelInset)
-                }
-                .background(
-                    GeometryReader { scrollGeo in
-                        Color.clear
-                            .preference(
-                                key: ExpandedScrollOffsetKey.self,
-                                value: -scrollGeo.frame(in: .named("expanded_scroll")).minY
+                            .frame(height: totalRevealHeight)
+                            .allowsHitTesting(false)
+                            .id("expandedScrollTop")
+
+                        VStack(spacing: 0) {
+                            Color.clear
+                                .frame(height: topMargin)
+                            content()
+                        }
+                        .frame(maxWidth: .infinity)
+                        .frame(minHeight: max(0, viewHeight - headerHeight))
+                        .background(Color(.systemBackground))
+                        .clipShape(
+                            UnevenRoundedRectangle(
+                                topLeadingRadius: cornerRadius,
+                                bottomLeadingRadius: 0,
+                                bottomTrailingRadius: 0,
+                                topTrailingRadius: cornerRadius
                             )
+                        )
+                        .padding(.leading, leadingPanelInset)
+                        .padding(.trailing, trailingPanelInset)
                     }
-                )
-            }
-            .scrollIndicators(.hidden)
-            #if os(macOS)
-            .background(_OverlayScrollerConfigurator())
-            #endif
-            .coordinateSpace(name: "expanded_scroll")
-            .onPreferenceChange(ExpandedScrollOffsetKey.self) { newOffset in
-                handleScrollChange(newOffset)
+                    .background(
+                        GeometryReader { scrollGeo in
+                            Color.clear
+                                .preference(
+                                    key: ExpandedScrollOffsetKey.self,
+                                    value: -scrollGeo.frame(in: .named("expanded_scroll")).minY
+                                )
+                        }
+                    )
+                }
+                .scrollIndicators(.hidden)
+                #if os(macOS)
+                .background(_OverlayScrollerConfigurator())
+                #endif
+                .coordinateSpace(name: "expanded_scroll")
+                .onPreferenceChange(ExpandedScrollOffsetKey.self) { newOffset in
+                    handleScrollChange(newOffset)
+                }
+                .onChange(of: scrollToTopTrigger) {
+                    withAnimation(.easeOut(duration: 0.35)) {
+                        scrollProxy.scrollTo("expandedScrollTop", anchor: .top)
+                    }
+                }
             }
             .zIndex(2)
 
-            // 4. PULL INDICATOR (reads safeAreaTop from scrollState)
+            // 5. PULL INDICATOR (reads safeAreaTop from scrollState)
             _PullIndicatorLayer(
                 scrollState: scrollState,
                 refreshThreshold: refreshThreshold
             )
             .zIndex(3)
 
-            // 5. FLOATING TOP HEADER (on top of scroll to capture taps)
+            // 6. FLOATING TOP HEADER (on top of scroll to capture taps)
             _FloatingTopHeaderLayer(
                 scrollState: scrollState,
                 headerHeight: headerHeight,
@@ -145,7 +166,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
             )
             .zIndex(4)
 
-            // 6. INVERTED HEADER (reads safeAreaTop from scrollState)
+            // 7. INVERTED HEADER (reads safeAreaTop from scrollState)
             _InvertedHeaderLayer(
                 scrollState: scrollState,
                 headerHeight: headerHeight,
@@ -260,11 +281,20 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
                 progress: 1.0
             )
         case .lists:
-            TexturedGradientView(preset: .ocean, progress: 1.0)
+            NebulaShaderView(
+                theme: .lists,
+                progress: 1.0
+            )
         case .recipes:
-            TexturedGradientView(preset: .sunset, progress: 1.0)
+            NebulaShaderView(
+                theme: .recipes,
+                progress: 1.0
+            )
         case .nutrients:
-            MeshGradientShaderView(progress: 1.0)
+            NebulaShaderView(
+                theme: .nutrients,
+                progress: 1.0
+            )
         }
     }
 

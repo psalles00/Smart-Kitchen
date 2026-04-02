@@ -47,6 +47,10 @@ struct RecipesView: View {
     @State private var showCompatibleOnly = false
     @State private var showCategoryManager = false
 
+    // Cached expensive computations
+    @State private var cachedPantryNames: [String] = []
+    @State private var cachedCompatibilities: [UUID: RecipeCompatibility] = [:]
+
     private var settings: AppSettings? { settingsArray.first }
     private var viewMode: RecipeViewMode { settings?.recipeViewMode ?? .gallery }
     private var compatibilityThreshold: Double {
@@ -57,22 +61,7 @@ struct RecipesView: View {
         allCategories.filter { $0.type == .recipe }
     }
 
-    private var pantryNames: [String] {
-        pantryItems.map {
-            $0.name
-                .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
-                .lowercased()
-        }
-    }
-
-    private var compatibilities: [UUID: RecipeCompatibility] {
-        Dictionary(
-            uniqueKeysWithValues: allRecipes.compactMap { recipe in
-                guard let compatibility = recipe.compatibility(against: pantryNames) else { return nil }
-                return (recipe.id, compatibility)
-            }
-        )
-    }
+    private var compatibilities: [UUID: RecipeCompatibility] { cachedCompatibilities }
 
     /// Filtered & sorted recipes.
     private var recipes: [Recipe] {
@@ -93,13 +82,13 @@ struct RecipesView: View {
         }
 
         if showCompatibleOnly {
-            result = result.filter { compatibilityGroup(for: $0) != .incompatible }
+            result = result.filter { (compatibilities[$0.id]?.matchedIngredients ?? 0) > 0 }
         }
 
         return sortRecipes(result)
     }
 
-    private var groupedRecipes: [(category: String, compatible: [Recipe], partial: [Recipe], other: [Recipe])] {
+    private var groupedRecipes: [(category: String, recipes: [Recipe])] {
         let grouped = Dictionary(grouping: recipes) { $0.category }
 
         let categoryNames: [String]
@@ -113,12 +102,8 @@ struct RecipesView: View {
 
         return categoryNames.compactMap { categoryName in
             let categoryRecipes = grouped[categoryName, default: []]
-            let compatible = categoryRecipes.filter { compatibilityGroup(for: $0) == .compatible }
-            let partial = categoryRecipes.filter { compatibilityGroup(for: $0) == .partial }
-            let other = categoryRecipes.filter { compatibilityGroup(for: $0) == .incompatible }
-
-            guard !compatible.isEmpty || !partial.isEmpty || !other.isEmpty else { return nil }
-            return (categoryName, compatible, partial, other)
+            guard !categoryRecipes.isEmpty else { return nil }
+            return (categoryName, categoryRecipes)
         }
     }
 
@@ -191,6 +176,24 @@ struct RecipesView: View {
         .sheet(isPresented: $showCategoryManager) {
             CategoryManagementView(initialType: .recipe)
         }
+        .onAppear { recomputeCompatibilities() }
+        .onChange(of: pantryItems) { _, _ in recomputeCompatibilities() }
+        .onChange(of: allRecipes) { _, _ in recomputeCompatibilities() }
+    }
+
+    private func recomputeCompatibilities() {
+        let names = pantryItems.map {
+            $0.name
+                .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
+                .lowercased()
+        }
+        cachedPantryNames = names
+        cachedCompatibilities = Dictionary(
+            uniqueKeysWithValues: allRecipes.compactMap { recipe in
+                guard let compatibility = recipe.compatibility(against: names) else { return nil }
+                return (recipe.id, compatibility)
+            }
+        )
     }
 
     // MARK: - Content
@@ -253,7 +256,19 @@ struct RecipesView: View {
     private var galleryView: some View {
         LazyVStack(alignment: .leading, spacing: 18) {
             ForEach(groupedRecipes, id: \.category) { group in
-                recipeGalleryCategorySection(group: group)
+                VStack(alignment: .leading, spacing: 14) {
+                    if selectedCategory == nil {
+                        Text(group.category)
+                            .font(.sectionTitle)
+                            .padding(.horizontal, 2)
+                    }
+
+                    LazyVGrid(columns: galleryColumns, spacing: 12) {
+                        ForEach(group.recipes) { recipe in
+                            recipeGalleryCard(recipe)
+                        }
+                    }
+                }
             }
         }
         .padding(.horizontal, 8)
@@ -278,12 +293,7 @@ struct RecipesView: View {
                             .padding(.horizontal, 2)
                     }
 
-                    recipeListSubsection(title: "Compatíveis com a Despensa", recipes: group.compatible)
-                    recipeListSubsection(title: "Parcialmente Compatíveis", recipes: group.partial)
-
-                    if !showCompatibleOnly {
-                        recipeListSubsection(title: "Outras Receitas", recipes: group.other)
-                    }
+                    recipeRows(group.recipes)
                 }
             }
         }
@@ -298,55 +308,6 @@ struct RecipesView: View {
     }
 
     // MARK: - Context Menu
-
-    @ViewBuilder
-    private func recipeGalleryCategorySection(group: (category: String, compatible: [Recipe], partial: [Recipe], other: [Recipe])) -> some View {
-        VStack(alignment: .leading, spacing: 14) {
-            if selectedCategory == nil {
-                Text(group.category)
-                    .font(.sectionTitle)
-                    .padding(.horizontal, 2)
-            }
-
-            recipeGallerySubsection(title: "Compatíveis com a Despensa", recipes: group.compatible)
-            recipeGallerySubsection(title: "Parcialmente Compatíveis", recipes: group.partial)
-
-            if !showCompatibleOnly {
-                recipeGallerySubsection(title: "Outras Receitas", recipes: group.other)
-            }
-        }
-    }
-
-    @ViewBuilder
-    private func recipeGallerySubsection(title: String, recipes: [Recipe]) -> some View {
-        if !recipes.isEmpty {
-            VStack(alignment: .leading, spacing: 10) {
-                Text(title)
-                    .font(.cardTitle)
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 2)
-
-                LazyVGrid(columns: galleryColumns, spacing: 12) {
-                    ForEach(recipes) { recipe in
-                        recipeGalleryCard(recipe)
-                    }
-                }
-            }
-        }
-    }
-
-    @ViewBuilder
-    private func recipeListSubsection(title: String, recipes: [Recipe]) -> some View {
-        if !recipes.isEmpty {
-            VStack(alignment: .leading, spacing: 10) {
-                Text(title)
-                    .font(.cardTitle)
-                    .foregroundStyle(.secondary)
-
-                recipeRows(recipes)
-            }
-        }
-    }
 
     private func recipeGalleryCard(_ recipe: Recipe) -> some View {
         NavigationLink(value: recipe.id) {
@@ -479,14 +440,12 @@ struct RecipesView: View {
             let left = compatibilities[lhs.id]
             let right = compatibilities[rhs.id]
 
-            let leftGroup = compatibilityGroup(for: lhs).sortPriority
-            let rightGroup = compatibilityGroup(for: rhs).sortPriority
-            if leftGroup != rightGroup { return leftGroup < rightGroup }
-            if left?.ratio != right?.ratio { return (left?.ratio ?? 0) > (right?.ratio ?? 0) }
-            if left?.matchedIngredients != right?.matchedIngredients {
-                return (left?.matchedIngredients ?? 0) > (right?.matchedIngredients ?? 0)
-            }
+            // Primary: sort by pantry availability ratio (descending)
+            let leftRatio = left?.ratio ?? 0
+            let rightRatio = right?.ratio ?? 0
+            if leftRatio != rightRatio { return leftRatio > rightRatio }
 
+            // Secondary: sort by user-chosen option
             switch sortOption {
             case .name:
                 return lhs.name.localizedCompare(rhs.name) == .orderedAscending
@@ -503,35 +462,10 @@ struct RecipesView: View {
         return result
     }
 
-    private func compatibilityGroup(for recipe: Recipe) -> RecipeCompatibilityGroup {
-        guard let compatibility = compatibilities[recipe.id] else { return .incompatible }
-        if compatibility.ratio >= compatibilityThreshold {
-            return .compatible
-        }
-        if compatibility.matchedIngredients > 0 {
-            return .partial
-        }
-        return .incompatible
-    }
-
     private func updateInlineTitle(_ offset: CGFloat) {
         let shouldShow = offset < -24
         if showsInlineTitle != shouldShow {
             showsInlineTitle = shouldShow
-        }
-    }
-}
-
-private enum RecipeCompatibilityGroup {
-    case compatible
-    case partial
-    case incompatible
-
-    var sortPriority: Int {
-        switch self {
-        case .compatible: 0
-        case .partial: 1
-        case .incompatible: 2
         }
     }
 }

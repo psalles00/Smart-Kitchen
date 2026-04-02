@@ -11,6 +11,7 @@ struct EditRecipeView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \Category.sortOrder) private var allCategories: [Category]
+    @Query private var settingsArray: [AppSettings]
 
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var ingredientRows: [EditIngredientRow] = []
@@ -367,7 +368,7 @@ struct EditRecipeView: View {
         guard !initialized else { return }
         initialized = true
 
-        ingredientRows = recipe.ingredients
+        ingredientRows = (recipe.ingredients ?? [])
             .sorted { $0.sortOrder < $1.sortOrder }
             .map { ing in
                 EditIngredientRow(
@@ -381,13 +382,13 @@ struct EditRecipeView: View {
                 )
             }
 
-        stepRows = recipe.steps
+        stepRows = (recipe.steps ?? [])
             .sorted { $0.order < $1.order }
             .map { step in
                 EditStepRow(existingId: step.id, order: step.order, instruction: step.instruction)
             }
 
-        preparationMediaRows = recipe.preparationMedia
+        preparationMediaRows = (recipe.preparationMedia ?? [])
             .sorted { $0.sortOrder < $1.sortOrder }
             .map { media in
                 EditPreparationMediaRow(
@@ -403,9 +404,10 @@ struct EditRecipeView: View {
         recipe.updatedAt = .now
 
         // Update ingredients — remove old, insert new
-        for ing in recipe.ingredients {
+        for ing in (recipe.ingredients ?? []) {
             modelContext.delete(ing)
         }
+        var newIngredients: [RecipeIngredient] = []
         for (index, row) in ingredientRows.enumerated() {
             let trimmed = row.name.trimmingCharacters(in: .whitespaces)
             guard !trimmed.isEmpty else { continue }
@@ -417,23 +419,29 @@ struct EditRecipeView: View {
             )
             ingredient.recipe = recipe
             modelContext.insert(ingredient)
+            newIngredients.append(ingredient)
         }
+        recipe.ingredients = newIngredients
 
         // Update steps
-        for step in recipe.steps {
+        for step in (recipe.steps ?? []) {
             modelContext.delete(step)
         }
+        var newSteps: [RecipeStep] = []
         for row in stepRows {
             let trimmed = row.instruction.trimmingCharacters(in: .whitespaces)
             guard !trimmed.isEmpty else { continue }
             let step = RecipeStep(order: row.order, instruction: trimmed)
             step.recipe = recipe
             modelContext.insert(step)
+            newSteps.append(step)
         }
+        recipe.steps = newSteps
 
-        for media in recipe.preparationMedia {
+        for media in (recipe.preparationMedia ?? []) {
             modelContext.delete(media)
         }
+        var newMedia: [RecipePreparationMedia] = []
         for (index, media) in preparationMediaRows.enumerated() {
             let attachment = RecipePreparationMedia(
                 mediaType: media.type,
@@ -443,7 +451,9 @@ struct EditRecipeView: View {
             )
             attachment.recipe = recipe
             modelContext.insert(attachment)
+            newMedia.append(attachment)
         }
+        recipe.preparationMedia = newMedia
 
         dismiss()
     }

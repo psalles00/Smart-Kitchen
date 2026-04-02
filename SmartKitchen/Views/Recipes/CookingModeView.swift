@@ -6,7 +6,7 @@ struct CookingModeView: View {
     @State private var currentStep = 0
 
     private var sortedSteps: [RecipeStep] {
-        recipe.steps.sorted { $0.order < $1.order }
+        (recipe.steps ?? []).sorted { $0.order < $1.order }
     }
 
     private var isFirstStep: Bool { currentStep == 0 }

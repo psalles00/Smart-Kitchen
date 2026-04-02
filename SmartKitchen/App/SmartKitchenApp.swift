@@ -7,33 +7,11 @@ import UIKit
 
 @main
 struct SmartKitchenApp: App {
-    let modelContainer: ModelContainer
+    @State private var cloudSync = CloudSyncService.shared
 
     init() {
-        let schema = Schema([
-            Recipe.self,
-            RecipeIngredient.self,
-            RecipeStep.self,
-            RecipePreparationMedia.self,
-            PantryItem.self,
-            GroceryItem.self,
-            Category.self,
-            ChatMessage.self,
-            AppSettings.self,
-        ])
-        let config = ModelConfiguration(
-            schema: schema,
-            isStoredInMemoryOnly: false,
-            cloudKitDatabase: .automatic
-        )
-        do {
-            modelContainer = try ModelContainer(for: schema, configurations: [config])
-        } catch {
-            fatalError("Failed to create ModelContainer: \(error)")
-        }
-
         // Seed demo data on first launch
-        let context = ModelContext(modelContainer)
+        let context = ModelContext(CloudSyncService.shared.container)
         DataSeeder.seedIfNeeded(context: context)
 
         // Must be called after all stored properties are initialized
@@ -45,8 +23,9 @@ struct SmartKitchenApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .modelContainer(cloudSync.container)
+                .id(cloudSync.containerID)
         }
-        .modelContainer(modelContainer)
         #if os(macOS)
         .defaultSize(width: 1100, height: 750)
         .windowResizability(.contentMinSize)

@@ -6,11 +6,13 @@ import UniformTypeIdentifiers
 enum ListSubtab: String, CaseIterable, Codable {
     case pantry
     case grocery
+    case utensils
 
     var title: LocalizedStringKey {
         switch self {
         case .pantry:  "Despensa"
         case .grocery: "Mercado"
+        case .utensils: "Utensílios"
         }
     }
 }
@@ -65,6 +67,7 @@ struct ListsTabView: View {
     @State private var selectedSubtab: ListSubtab
     @State private var showAddPantry = false
     @State private var showAddGrocery = false
+    @State private var showAddUtensil = false
     @State private var showCategoryManager = false
     @State private var showSearch = false
     @State private var searchText = ""
@@ -78,6 +81,14 @@ struct ListsTabView: View {
     @State private var groceryBadge: Int = 0
 
     private var settings: AppSettings? { settingsArray.first }
+
+    private var visibleTabs: [ListSubtab] {
+        var tabs: [ListSubtab] = [.pantry, .grocery]
+        if settings?.showUtensils == true {
+            tabs.append(.utensils)
+        }
+        return tabs
+    }
 
     init(initialSubtab: ListSubtab = .pantry) {
         _selectedSubtab = State(initialValue: initialSubtab)
@@ -110,6 +121,8 @@ struct ListsTabView: View {
                             GlassGroupButton(systemImage: "plus") {
                                 if selectedSubtab == .pantry {
                                     showAddPantry = true
+                                } else if selectedSubtab == .utensils {
+                                    showAddUtensil = true
                                 } else {
                                     showAddGrocery = true
                                 }
@@ -125,7 +138,7 @@ struct ListsTabView: View {
                     CollapsibleSearchBar(
                         text: $searchText,
                         isPresented: $showSearch,
-                        placeholder: selectedSubtab == .pantry ? "Buscar na despensa" : "Buscar no mercado"
+                        placeholder: selectedSubtab == .pantry ? "Buscar na despensa" : selectedSubtab == .utensils ? "Buscar utensílios" : "Buscar no mercado"
                     )
 
                     subtabPicker
@@ -164,6 +177,12 @@ struct ListsTabView: View {
                             },
                             onScrollOffsetChange: updateInlineTitle
                         )
+                    case .utensils:
+                        UtensilsView(
+                            searchText: searchText,
+                            sortOption: sortOption,
+                            onScrollOffsetChange: updateInlineTitle
+                        )
                     }
                 }
             },
@@ -188,8 +207,16 @@ struct ListsTabView: View {
                 AddGroceryItemView()
             }
         }
+        .sheet(isPresented: $showAddUtensil) {
+            NavigationStack {
+                AddUtensilItemView()
+            }
+        }
         .sheet(isPresented: $showCategoryManager) {
-            CategoryManagementView(initialType: .pantry, allowedTypes: [.pantry])
+            CategoryManagementView(
+                initialType: selectedSubtab == .utensils ? .utensil : .pantry,
+                allowedTypes: settings?.showUtensils == true ? [.pantry, .utensil] : [.pantry]
+            )
         }
     }
 
@@ -238,7 +265,7 @@ struct ListsTabView: View {
 
     private var subtabPicker: some View {
         HStack(spacing: 0) {
-            ForEach(ListSubtab.allCases, id: \.self) { tab in
+            ForEach(visibleTabs, id: \.self) { tab in
                 ListsSubtabDropButton(
                     tab: tab,
                     isSelected: selectedSubtab == tab,

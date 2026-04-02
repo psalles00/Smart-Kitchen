@@ -13,6 +13,11 @@ struct AssistantView: View {
     @State private var pendingToolExecution: PendingToolExecution?
     @FocusState private var isInputFocused: Bool
 
+    // Cached RAG context to avoid rebuilding on every message
+    @State private var cachedInventoryContext: String?
+    @State private var cachedInventoryDate: Date?
+    private let contextCacheTTL: TimeInterval = 10  // seconds
+
     private var apiKey: String { APIConfig.openAIAPIKey }
     private let confirmPrompt = "__confirm_pending_ai_change__"
     private let cancelPrompt = "__cancel_pending_ai_change__"
@@ -356,6 +361,10 @@ struct AssistantView: View {
                 ])
             }
 
+            // Invalidate context cache after tool execution (data may have changed)
+            cachedInventoryContext = nil
+            cachedInventoryDate = nil
+
             try await continueConversation(with: apiMessages)
             return
         }
@@ -385,6 +394,10 @@ struct AssistantView: View {
                     "content": result
                 ])
             }
+
+            // Invalidate context cache after tool execution
+            cachedInventoryContext = nil
+            cachedInventoryDate = nil
 
             try await continueConversation(with: apiMessages)
         } catch {
@@ -445,14 +458,25 @@ struct AssistantView: View {
             return parts.joined(separator: "\n\n")
         }
 
+        // Use cached context if still fresh
+        if let cached = cachedInventoryContext,
+           let cacheDate = cachedInventoryDate,
+           Date().timeIntervalSince(cacheDate) < contextCacheTTL {
+            parts.append(cached)
+            return parts.joined(separator: "\n\n")
+        }
+
+        // Build and cache inventory context
+        var inventoryParts = [String]()
+
         // Full RAG context: Pantry
         let pantryDescriptor = FetchDescriptor<PantryItem>(sortBy: [SortDescriptor(\.category)])
         if let pantryItems = try? modelContext.fetch(pantryDescriptor) {
             if pantryItems.isEmpty {
-                parts.append("## Despensa atual\nA despensa está vazia.")
+                inventoryParts.append("## Despensa atual\nA despensa está vazia.")
             } else {
                 let itemDescriptions = pantryItems.map { $0.aiReadableDescription }
-                parts.append("## Despensa atual (\(pantryItems.count) itens)\n\(itemDescriptions.joined(separator: "\n"))")
+                inventoryParts.append("## Despensa atual (\(pantryItems.count) itens)\n\(itemDescriptions.joined(separator: "\n"))")
             }
         }
 
@@ -460,32 +484,37 @@ struct AssistantView: View {
         let groceryDescriptor = FetchDescriptor<GroceryItem>(sortBy: [SortDescriptor(\.category)])
         if let groceryItems = try? modelContext.fetch(groceryDescriptor) {
             if groceryItems.isEmpty {
-                parts.append("## Lista de compras\nA lista de compras está vazia.")
+                inventoryParts.append("## Lista de compras\nA lista de compras está vazia.")
             } else {
                 let itemDescriptions = groceryItems.map { $0.aiReadableDescription }
-                parts.append("## Lista de compras (\(groceryItems.count) itens)\n\(itemDescriptions.joined(separator: "\n"))")
+                inventoryParts.append("## Lista de compras (\(groceryItems.count) itens)\n\(itemDescriptions.joined(separator: "\n"))")
             }
         }
 
-        // Full RAG context: Recipes
+        // Full RAG context: Recipes (summary only to save tokens)
         let recipeDescriptor = FetchDescriptor<Recipe>(sortBy: [SortDescriptor(\.name)])
         if let recipes = try? modelContext.fetch(recipeDescriptor) {
             if recipes.isEmpty {
-                parts.append("## Receitas\nNão há receitas salvas.")
+                inventoryParts.append("## Receitas\nNão há receitas salvas.")
             } else {
                 var recipeLines = [String]()
                 for r in recipes {
                     var line = "- \(r.name) [\(r.category)] (\(r.difficulty.rawValue), \(r.totalTime) min, \(r.servings) porções)"
-                    let ingredientNames = r.ingredients.map(\.name)
+                    let ingredientNames = (r.ingredients ?? []).map(\.name)
                     if !ingredientNames.isEmpty {
                         line += " — Ingredientes: \(ingredientNames.joined(separator: ", "))"
                     }
                     recipeLines.append(line)
                 }
-                parts.append("## Receitas salvas (\(recipes.count))\n\(recipeLines.joined(separator: "\n"))")
+                inventoryParts.append("## Receitas salvas (\(recipes.count))\n\(recipeLines.joined(separator: "\n"))")
             }
         }
 
+        let inventoryContext = inventoryParts.joined(separator: "\n\n")
+        cachedInventoryContext = inventoryContext
+        cachedInventoryDate = Date()
+
+        parts.append(inventoryContext)
         return parts.joined(separator: "\n\n")
     }
 
@@ -522,7 +551,9 @@ struct AssistantView: View {
                     tags.contains(where: { $0.contains("sobremesa") || $0.contains("doce") })
             }
             .compactMap { recipe -> (Recipe, Int)? in
-                let ingredientNames = recipe.ingredients.map { normalized($0.name) }
+                let ingredientNames = (recipe.ingredients ?? []).map { normalized($0.name) }
+                guard !ingredientNames.isEmpty else { return nil }
+                
                 let score = ingredientNames.reduce(into: 0) { partialResult, ingredient in
                     if pantryNames.contains(where: { pantry in
                         pantry == ingredient || pantry.contains(ingredient) || ingredient.contains(pantry)

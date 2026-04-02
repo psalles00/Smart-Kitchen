@@ -21,7 +21,7 @@ extension Font {
 
 // MARK: - Glass Header Button Group
 
-/// Groups multiple header buttons into a single pill with a dark glass background
+/// Groups multiple header buttons into a single pill
 struct GlassButtonGroup<Content: View>: View {
     @ViewBuilder let content: () -> Content
 
@@ -30,13 +30,6 @@ struct GlassButtonGroup<Content: View>: View {
             content()
         }
         .foregroundStyle(.white)
-        .background(Color.black.opacity(0.6))
-        .environment(\.colorScheme, .dark)
-        #if os(iOS)
-        .glassEffect(.regular, in: .capsule)
-        #endif
-        .clipShape(Capsule())
-        .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
     }
 }
 
@@ -77,9 +70,7 @@ struct GlassGroupMenu<Content: View>: View {
 /// A visual separator for styling within GlassButtonGroup
 struct GlassGroupDivider: View {
     var body: some View {
-        Divider()
-            .background(Color.white.opacity(0.3))
-            .frame(width: 0.5, height: 20)
+        EmptyView()
     }
 }
 
@@ -348,6 +339,7 @@ struct CategoryManagementView: View {
     @Query private var pantryItems: [PantryItem]
     @Query private var groceryItems: [GroceryItem]
     @Query private var recipes: [Recipe]
+    @Query private var utensilItems: [UtensilItem]
 
     let allowedTypes: [CategoryType]
     @State private var selectedType: CategoryType
@@ -356,7 +348,7 @@ struct CategoryManagementView: View {
     init(initialType: CategoryType, allowedTypes: [CategoryType]? = nil) {
         let resolvedTypes = Array(Set((allowedTypes ?? [initialType]).map(\.canonicalType)))
             .sorted { lhs, rhs in
-                let order: [CategoryType] = [.pantry, .recipe]
+                let order: [CategoryType] = [.pantry, .recipe, .utensil]
                 return (order.firstIndex(of: lhs) ?? 0) < (order.firstIndex(of: rhs) ?? 0)
             }
         self.allowedTypes = resolvedTypes
@@ -495,6 +487,10 @@ struct CategoryManagementView: View {
         case .recipe:
             for recipe in recipes where recipe.category == oldName {
                 recipe.category = newName
+            }
+        case .utensil:
+            for item in utensilItems where item.category == oldName {
+                item.category = newName
             }
         }
     }

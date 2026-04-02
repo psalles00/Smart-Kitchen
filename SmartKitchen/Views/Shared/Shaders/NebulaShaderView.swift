@@ -443,8 +443,8 @@ struct CPPNSceneView: NSViewRepresentable {
 extension CPPNSceneView {
     func createView(context: Context) -> SCNView {
         let scnView = SCNView()
-        scnView.antialiasingMode = .multisampling4X
-        scnView.preferredFramesPerSecond = 60
+        scnView.antialiasingMode = .multisampling2X
+        scnView.preferredFramesPerSecond = 30
         context.coordinator.setup(in: scnView)
         let scale = scnView.displayScale
         context.coordinator.updateParams(

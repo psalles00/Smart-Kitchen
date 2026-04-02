@@ -104,8 +104,7 @@ struct PantryView: View {
         PantryItemRow(
             item: item,
             isDetailed: isDetailed,
-            onSendToGrocery: { sendToGrocery(item) },
-            onRemove: { deleteItem(item) }
+            onSendToGrocery: { sendToGrocery(item) }
         )
         .contentShape(Rectangle())
         .overlay {
@@ -291,6 +290,8 @@ struct PantryView: View {
             modelContext.delete(groceryItem)
             reorderPantryItem(pantryItem, in: targetCategory, before: targetItem)
             return true
+        case .utensils:
+            return false
         }
     }
 
@@ -307,8 +308,8 @@ struct PantryView: View {
 
         items.insert(movingItem, at: insertIndex)
         for (index, item) in items.enumerated() {
-            item.sortOrder = index
-            item.category = category
+            if item.sortOrder != index { item.sortOrder = index }
+            if item.category != category { item.category = category }
         }
     }
 
@@ -318,7 +319,7 @@ struct PantryView: View {
             .sorted { $0.sortOrder < $1.sortOrder }
 
         for (index, item) in items.enumerated() {
-            item.sortOrder = index
+            if item.sortOrder != index { item.sortOrder = index }
         }
     }
 }
@@ -327,7 +328,6 @@ struct PantryItemRow: View {
     let item: PantryItem
     let isDetailed: Bool
     let onSendToGrocery: () -> Void
-    let onRemove: () -> Void
 
     var body: some View {
         HStack(spacing: 12) {
@@ -356,8 +356,7 @@ struct PantryItemRow: View {
                     .foregroundStyle(.orange)
             }
 
-            NeutralItemActionButton(systemImage: "cart.badge.plus", action: onSendToGrocery)
-            NeutralItemActionButton(systemImage: "trash", action: onRemove)
+            NeutralItemActionButton(systemImage: "arrow.2.squarepath", action: onSendToGrocery)
         }
         .padding(.vertical, 4)
     }

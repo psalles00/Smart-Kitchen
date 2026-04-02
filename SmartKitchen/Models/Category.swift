@@ -6,6 +6,7 @@ enum CategoryType: String, Codable, CaseIterable, Identifiable {
     case pantry
     case grocery
     case recipe
+    case utensil
 
     var id: String { rawValue }
 
@@ -13,12 +14,13 @@ enum CategoryType: String, Codable, CaseIterable, Identifiable {
         switch self {
         case .pantry, .grocery: .pantry
         case .recipe: .recipe
+        case .utensil: .utensil
         }
     }
 
     var isListType: Bool {
         switch self {
-        case .pantry, .grocery: true
+        case .pantry, .grocery, .utensil: true
         case .recipe: false
         }
     }
@@ -28,6 +30,7 @@ enum CategoryType: String, Codable, CaseIterable, Identifiable {
         case .pantry: "Despensa"
         case .grocery: "Mercado"
         case .recipe: "Receitas"
+        case .utensil: "Utensílios"
         }
     }
 }

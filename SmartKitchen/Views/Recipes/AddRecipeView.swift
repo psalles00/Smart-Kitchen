@@ -10,6 +10,7 @@ struct AddRecipeView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \Category.sortOrder) private var allCategories: [Category]
+    @Query private var settingsArray: [AppSettings]
 
     // Basic info
     @State private var name = ""
@@ -44,6 +45,12 @@ struct AddRecipeView: View {
     // Dynamic steps
     @State private var stepRows: [StepRow] = [StepRow(order: 1)]
 
+    // Dynamic utensils
+    @State private var utensilNames: [IdentifiedUtensil] = []
+    @State private var newUtensilName = ""
+
+    private var settings: AppSettings? { settingsArray.first }
+
     private var recipeCategories: [Category] {
         allCategories.filter { $0.type == .recipe }
     }
@@ -63,6 +70,9 @@ struct AddRecipeView: View {
             detailsSection
             preparationMediaSection
             ingredientsSection
+            if settings?.showUtensils == true {
+                RecipeUtensilsEditor(utensilNames: $utensilNames, newUtensilName: $newUtensilName)
+            }
             stepsSection
         }
         .navigationTitle("Nova Receita")
@@ -416,6 +426,8 @@ struct AddRecipeView: View {
             difficulty: difficulty
         )
         modelContext.insert(recipe)
+
+        recipe.requiredUtensils = utensilNames.map(\.name).filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
 
         for (index, row) in ingredientRows.enumerated() {
             let trimmedName = row.name.trimmingCharacters(in: .whitespaces)

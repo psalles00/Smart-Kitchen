@@ -286,6 +286,8 @@ struct GroceryListView: View {
             modelContext.delete(pantryItem)
             reorderGroceryItem(groceryItem, in: targetCategory, before: targetItem)
             return true
+        case .utensils:
+            return false
         }
     }
 
@@ -302,8 +304,8 @@ struct GroceryListView: View {
 
         items.insert(movingItem, at: insertIndex)
         for (index, item) in items.enumerated() {
-            item.sortOrder = index
-            item.category = category
+            if item.sortOrder != index { item.sortOrder = index }
+            if item.category != category { item.category = category }
         }
     }
 
@@ -313,7 +315,7 @@ struct GroceryListView: View {
             .sorted { $0.sortOrder < $1.sortOrder }
 
         for (index, item) in items.enumerated() {
-            item.sortOrder = index
+            if item.sortOrder != index { item.sortOrder = index }
         }
     }
 }
@@ -349,7 +351,7 @@ struct GroceryItemRow: View {
                     .foregroundStyle(.orange)
             }
 
-            NeutralItemActionButton(systemImage: "arrow.down.circle", action: onAcquire)
+            NeutralItemActionButton(systemImage: "arrow.2.squarepath", action: onAcquire)
         }
         .padding(.vertical, 4)
     }

@@ -23,6 +23,20 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
+            // MARK: - iCloud
+            Section {
+                NavigationLink {
+                    iCloudSettingsView()
+                } label: {
+                    Label {
+                        Text("iCloud")
+                    } icon: {
+                        Image(systemName: "icloud")
+                            .foregroundStyle(.blue)
+                    }
+                }
+            }
+
             // MARK: - Geral
             Section("Geral") {
                 if let settings {
@@ -81,6 +95,11 @@ struct SettingsView: View {
                         ),
                         in: 1...180
                     )
+
+                    Toggle("Utensílios", isOn: Binding(
+                        get: { settings.showUtensils },
+                        set: { settings.showUtensils = $0 }
+                    ))
                 }
             }
 
@@ -282,13 +301,13 @@ private struct AppBackupSnapshot: Codable {
         let recipeList = try context.fetch(FetchDescriptor<Recipe>())
         recipes = recipeList.map(RecipeRecord.init)
         recipeIngredients = recipeList
-            .flatMap { $0.ingredients }
+            .flatMap { $0.ingredients ?? [] }
             .map(RecipeIngredientRecord.init)
         recipeSteps = recipeList
-            .flatMap { $0.steps }
+            .flatMap { $0.steps ?? [] }
             .map(RecipeStepRecord.init)
         recipePreparationMedia = recipeList
-            .flatMap { $0.preparationMedia }
+            .flatMap { $0.preparationMedia ?? [] }
             .map(RecipePreparationMediaRecord.init)
 
         chatMessages = try context.fetch(FetchDescriptor<ChatMessage>()).map(ChatMessageRecord.init)

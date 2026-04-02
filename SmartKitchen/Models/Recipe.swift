@@ -1,6 +1,13 @@
 import Foundation
 import SwiftData
 
+// MARK: - Identified Utensil (for Form ForEach)
+
+struct IdentifiedUtensil: Identifiable {
+    let id = UUID()
+    var name: String
+}
+
 // MARK: - Recipe
 
 @Model
@@ -9,12 +16,12 @@ final class Recipe {
     var name: String = ""
     var descriptionText: String = ""
     @Relationship(deleteRule: .cascade, inverse: \RecipeIngredient.recipe)
-    var ingredients: [RecipeIngredient] = []
+    var ingredients: [RecipeIngredient]? = []
     @Relationship(deleteRule: .cascade, inverse: \RecipeStep.recipe)
-    var steps: [RecipeStep] = []
+    var steps: [RecipeStep]? = []
     var imageData: Data? = nil
     @Relationship(deleteRule: .cascade, inverse: \RecipePreparationMedia.recipe)
-    var preparationMedia: [RecipePreparationMedia] = []
+    var preparationMedia: [RecipePreparationMedia]? = []
     var externalURLString: String = ""
     var category: String = ""
     var tags: [String] = []
@@ -24,6 +31,7 @@ final class Recipe {
     var calories: Int? = nil
     var difficulty: Difficulty = Difficulty.easy
     var isFavorite: Bool = false
+    var requiredUtensils: [String]? = []
     var createdAt: Date = Date()
     var updatedAt: Date = Date()
 
@@ -80,7 +88,7 @@ final class Recipe {
         if let cal = calories { parts.append("Calorias: \(cal) kcal") }
         if !tags.isEmpty { parts.append("Tags: \(tags.joined(separator: ", "))") }
 
-        let ingredientList = ingredients
+        let ingredientList = (ingredients ?? [])
             .sorted { $0.sortOrder < $1.sortOrder }
             .map { ing in
                 if let qty = ing.quantity, !ing.unit.isEmpty {
@@ -94,22 +102,22 @@ final class Recipe {
             parts.append("Ingredientes:\n\(ingredientList.joined(separator: "\n"))")
         }
 
-        let stepList = steps
+        let stepList = (steps ?? [])
             .sorted { $0.order < $1.order }
             .map { "  \($0.order). \($0.instruction)" }
         if !stepList.isEmpty {
             parts.append("Passos:\n\(stepList.joined(separator: "\n"))")
         }
 
-        if !preparationMedia.isEmpty {
-            parts.append("Mídias de preparo: \(preparationMedia.count)")
+        if let media = preparationMedia, !media.isEmpty {
+            parts.append("Mídias de preparo: \(media.count)")
         }
 
         return parts.joined(separator: "\n")
     }
 
     func compatibility(against pantryNames: [String]) -> RecipeCompatibility? {
-        let normalizedIngredients = ingredients
+        let normalizedIngredients = (ingredients ?? [])
             .sorted { $0.sortOrder < $1.sortOrder }
             .map(\.name)
             .map(Self.normalizedIngredient)
@@ -124,7 +132,6 @@ final class Recipe {
             }
         }
 
-        guard matchedIngredients > 0 else { return nil }
         return RecipeCompatibility(matchedIngredients: matchedIngredients, totalIngredients: normalizedIngredients.count)
     }
 

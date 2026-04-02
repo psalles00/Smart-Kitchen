@@ -8,22 +8,26 @@ struct RecipeDetailView: View {
     @Query(sort: \GroceryItem.sortOrder) private var groceryItems: [GroceryItem]
     @Query(sort: \PantryItem.sortOrder) private var pantryListItems: [PantryItem]
     @Query(sort: \Category.sortOrder) private var allCategories: [Category]
+    @Query private var settingsArray: [AppSettings]
+    @Query(sort: \UtensilItem.name) private var utensilItems: [UtensilItem]
     @Bindable var recipe: Recipe
     @State private var showCookingMode = false
     @State private var showEditRecipe = false
     @State private var previewSelection: PreparationMediaSelection?
 
     private var sortedIngredients: [RecipeIngredient] {
-        recipe.ingredients.sorted { $0.sortOrder < $1.sortOrder }
+        (recipe.ingredients ?? []).sorted { $0.sortOrder < $1.sortOrder }
     }
 
     private var sortedSteps: [RecipeStep] {
-        recipe.steps.sorted { $0.order < $1.order }
+        (recipe.steps ?? []).sorted { $0.order < $1.order }
     }
 
     private var sortedPreparationMedia: [RecipePreparationMedia] {
-        recipe.preparationMedia.sorted { $0.sortOrder < $1.sortOrder }
+        (recipe.preparationMedia ?? []).sorted { $0.sortOrder < $1.sortOrder }
     }
+
+    private var settings: AppSettings? { settingsArray.first }
 
     private var externalURL: URL? {
         let trimmed = recipe.externalURLString.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -158,6 +162,11 @@ struct RecipeDetailView: View {
                 ingredientsSection
             }
 
+            // Utensils
+            if !(recipe.requiredUtensils ?? []).isEmpty, settings?.showUtensils == true {
+                utensilsSection
+            }
+
             // Steps
             if !sortedSteps.isEmpty {
                 stepsSection
@@ -281,6 +290,37 @@ struct RecipeDetailView: View {
                 if ingredient.id != sortedIngredients.last?.id {
                     Divider()
                 }
+            }
+        }
+    }
+
+    // MARK: - Utensils
+
+    private var utensilsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Utensílios")
+                .font(.sectionTitle)
+
+            ForEach(recipe.requiredUtensils ?? [], id: \.self) { utensil in
+                let isAvailable = utensilItems.contains { $0.name.localizedCaseInsensitiveCompare(utensil) == .orderedSame }
+
+                HStack(spacing: 12) {
+                    IconImage(name: utensil, fallbackSymbol: "fork.knife")
+
+                    Text(utensil)
+                        .font(.body)
+
+                    Spacer()
+
+                    Image(systemName: isAvailable ? "checkmark.circle.fill" : "circle")
+                        .foregroundStyle(isAvailable ? .green : .secondary)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 10)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color(.secondarySystemBackground))
+                )
             }
         }
     }

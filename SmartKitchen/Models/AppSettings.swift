@@ -96,6 +96,7 @@ final class AppSettings {
     /// Embedded API key for OpenAI.
     var openAIAPIKey: String = ""
     var hasCompletedOnboarding: Bool = false
+    var showUtensils: Bool = false
 
     init() {
         self.id = UUID()
@@ -107,6 +108,7 @@ final class AppSettings {
         self.recipeCompatibilityThresholdPercentValue = 80
         self.openAIAPIKey = ""
         self.hasCompletedOnboarding = false
+        self.showUtensils = false
     }
 
     @Transient

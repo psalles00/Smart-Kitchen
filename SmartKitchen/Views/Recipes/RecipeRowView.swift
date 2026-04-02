@@ -31,9 +31,15 @@ struct RecipeRowView: View {
                 .foregroundStyle(.secondary)
 
                 if let compatibility {
-                    Text(compatibility.longText)
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(Color.accentColor)
+                    HStack(spacing: 4) {
+                        if compatibility.ratio >= 1.0 {
+                            Image(systemName: "checkmark.seal.fill")
+                                .foregroundStyle(.green)
+                        }
+                        Text(compatibility.longText)
+                    }
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Color.accentColor)
                 }
             }
 

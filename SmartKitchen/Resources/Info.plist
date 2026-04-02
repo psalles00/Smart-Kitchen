@@ -35,6 +35,10 @@
 		<string>Boska-Regular.otf</string>
 		<string>Boska-Light.otf</string>
 	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 	<key>UILaunchScreen</key>
 	<dict/>
 	<key>UISupportedInterfaceOrientations</key>

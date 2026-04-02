@@ -71,6 +71,19 @@ struct DataSeeder {
             let cat = Category(name: name, type: .recipe, iconName: icon, sortOrder: order)
             context.insert(cat)
         }
+
+        let utensilCategories = [
+            ("Panelas", "cooking-pot.png", 0),
+            ("Talheres", "cutlery.png", 1),
+            ("Utensílios de preparo", "spatula.png", 2),
+            ("Eletrodomésticos", "blender.png", 3),
+            ("Outros", nil as String?, 4),
+        ]
+
+        for (name, icon, order) in utensilCategories {
+            let cat = Category(name: name, type: .utensil, iconName: icon, sortOrder: order)
+            context.insert(cat)
+        }
     }
 
     // MARK: - Pantry Items
