@@ -15,23 +15,6 @@ struct ContentView: View {
     private var addMenuOptions: [AddSheetType] {
         [.pantryItem, .groceryItem, .recipe, .assistantConversation]
     }
-    private var tabSelection: Binding<AppTab> {
-        Binding(
-            get: { selectedTab },
-            set: { newValue in
-                if newValue == .add {
-                    openAddOptionsFromTab()
-                    return
-                }
-
-                selectedTab = newValue
-                lastContentTab = newValue
-                if showAddOptions {
-                    closeAddMenu()
-                }
-            }
-        )
-    }
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
@@ -75,15 +58,53 @@ struct ContentView: View {
                 AssistantView()
             }
         }
+        .onChange(of: selectedTab) { _, newValue in
+            handleTabSelectionChange(newValue)
+        }
     }
 
     private var mainTabView: some View {
         Group {
+            #if os(macOS)
+            TabView(selection: $selectedTab) {
+                NavigationStack {
+                    HomeView(onSettingsTap: { showSettings = true })
+                }
+                .tabItem {
+                    Label("Início", systemImage: AppTab.assistant.icon)
+                }
+                .tag(AppTab.assistant)
+
+                NavigationStack {
+                    ListsTabView()
+                }
+                .tabItem {
+                    Label("Listas", systemImage: AppTab.lists.icon)
+                }
+                .tag(AppTab.lists)
+
+                NavigationStack {
+                    RecipesView()
+                }
+                .tabItem {
+                    Label("Receitas", systemImage: AppTab.recipes.icon)
+                }
+                .tag(AppTab.recipes)
+
+                NavigationStack {
+                    NutrientsPlaceholderView()
+                }
+                .tabItem {
+                    Label("Nutrientes", systemImage: AppTab.nutrients.icon)
+                }
+                .tag(AppTab.nutrients)
+            }
+            #else
             if #available(iOS 26, macOS 26, *) {
-                TabView(selection: tabSelection) {
+                TabView(selection: $selectedTab) {
                     Tab(value: AppTab.assistant) {
                         NavigationStack {
-                            HomeView()
+                            HomeView(onSettingsTap: { showSettings = true })
                         }
                     } label: {
                         Label("Início", systemImage: AppTab.assistant.icon)
@@ -120,9 +141,9 @@ struct ContentView: View {
                     }
                 }
             } else {
-                TabView(selection: tabSelection) {
+                TabView(selection: $selectedTab) {
                     NavigationStack {
-                        HomeView()
+                        HomeView(onSettingsTap: { showSettings = true })
                     }
                     .tabItem {
                         Label("Início", systemImage: AppTab.assistant.icon)
@@ -160,6 +181,20 @@ struct ContentView: View {
                         .tag(AppTab.add)
                 }
             }
+            #endif
+        }
+    }
+
+    private func handleTabSelectionChange(_ newValue: AppTab) {
+        if newValue == .add {
+            selectedTab = lastContentTab
+            openAddOptionsFromTab()
+            return
+        }
+
+        lastContentTab = newValue
+        if showAddOptions {
+            closeAddMenu()
         }
     }
 
@@ -214,13 +249,35 @@ struct ContentView: View {
                     )
                 }
             }
+
+            #if os(macOS)
+            Button {
+                openAddOptionsFromButton()
+            } label: {
+                Image(systemName: showAddOptions ? "xmark" : "plus")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 52, height: 52)
+                    .background(Color.accentColor, in: Circle())
+                    .shadow(color: .black.opacity(0.18), radius: 18, y: 8)
+            }
+            .buttonStyle(.plain)
+            #endif
         }
         .padding(.trailing, 14)
         .padding(.bottom, 88)
     }
+
+    private func openAddOptionsFromButton() {
+        withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) {
+            showAddOptions.toggle()
+        }
+    }
 }
 
 private struct HomeView: View {
+    // Corrigido ciclo do AttributeGraph separando dependências reativas de SwiftData em @State com atualização manual para evitar travamentos no macOS.
+
     @Query(sort: \PantryItem.name) private var pantryItems: [PantryItem]
     @Query(sort: \Recipe.name) private var recipes: [Recipe]
     @Query(sort: \Category.sortOrder) private var categories: [Category]
@@ -231,65 +288,27 @@ private struct HomeView: View {
     @State private var showAddPantry = false
     @State private var selectedCompatibleCategory: String? = nil
 
+    @State private var recipeCategoriesState: [Category] = []
+    @State private var compatibleMatchesState: [HomeRecipeMatch] = []
+    @State private var expiringItemsState: [PantryItem] = []
+
     private var settings: AppSettings? { settingsArray.first }
-
-    private var recipeCategories: [Category] {
-        categories.filter { $0.type == .recipe }
-    }
-
-    private var compatibleMatches: [HomeRecipeMatch] {
-        let pantryNames = pantryItems.map { normalized($0.name) }
-
-        return recipes
-            .filter { recipe in
-                guard let selectedCompatibleCategory else { return true }
-                return recipe.category == selectedCompatibleCategory
-            }
-            .compactMap { recipe -> HomeRecipeMatch? in
-                guard let compatibility = recipe.compatibility(against: pantryNames) else { return nil }
-                return HomeRecipeMatch(recipe: recipe, compatibilityInfo: compatibility)
-            }
-            .sorted {
-                if $0.compatibility != $1.compatibility { return $0.compatibility > $1.compatibility }
-                if $0.compatibilityInfo.matchedIngredients != $1.compatibilityInfo.matchedIngredients {
-                    return $0.compatibilityInfo.matchedIngredients > $1.compatibilityInfo.matchedIngredients
-                }
-                if $0.recipe.isFavorite != $1.recipe.isFavorite { return $0.recipe.isFavorite && !$1.recipe.isFavorite }
-                return $0.recipe.name.localizedCaseInsensitiveCompare($1.recipe.name) == .orderedAscending
-            }
-    }
-
-    private var expiringItems: [PantryItem] {
-        let leadDays = settings?.expiringItemsLeadDays ?? 30
-        let now = Calendar.current.startOfDay(for: .now)
-        let limit = Calendar.current.date(byAdding: .day, value: leadDays, to: now) ?? now
-
-        return pantryItems
-            .filter {
-                guard let expirationDate = $0.expirationDate else { return false }
-                let day = Calendar.current.startOfDay(for: expirationDate)
-                return day >= now && day <= limit
-            }
-            .sorted {
-                guard let lhs = $0.expirationDate, let rhs = $1.expirationDate else { return false }
-                return lhs < rhs
-            }
-    }
+    
+    let onSettingsTap: () -> Void
 
     var body: some View {
         ExpandedPageLayout(
             pageTheme: .home,
             header: { isInverted in
                 PageHeader(title: "Início", isInverted: isInverted) {
-                    SettingsButton()
-                        .foregroundStyle(isInverted ? Color.primary : Color.white)
+                    SettingsButton(onTap: onSettingsTap)
                 }
             },
             content: {
                 VStack(alignment: .leading, spacing: 24) {
                     assistantLauncher
                     actionDeck
-                    if !expiringItems.isEmpty {
+                    if !expiringItemsState.isEmpty {
                         expiringSection
                     }
                     dessertShelf
@@ -321,6 +340,64 @@ private struct HomeView: View {
                 AddPantryItemView()
             }
         }
+        .onAppear {
+            updateRecipeCategories()
+            updateCompatibleMatches()
+            updateExpiringItems()
+        }
+        .onChange(of: pantryItems) { _, _ in
+            updateCompatibleMatches()
+            updateExpiringItems()
+        }
+        .onChange(of: recipes) { _, _ in
+            updateCompatibleMatches()
+            updateRecipeCategories()
+        }
+        .onChange(of: categories) { _, _ in
+            updateRecipeCategories()
+        }
+        .onChange(of: selectedCompatibleCategory) { _, _ in
+            updateCompatibleMatches()
+        }
+    }
+
+    private func updateRecipeCategories() {
+        recipeCategoriesState = categories.filter { $0.type == .recipe }
+    }
+    private func updateCompatibleMatches() {
+        let pantryNames = pantryItems.map { normalized($0.name) }
+        compatibleMatchesState = recipes
+            .filter { recipe in
+                guard let selectedCompatibleCategory = selectedCompatibleCategory else { return true }
+                return recipe.category == selectedCompatibleCategory
+            }
+            .compactMap { recipe -> HomeRecipeMatch? in
+                guard let compatibility = recipe.compatibility(against: pantryNames) else { return nil }
+                return HomeRecipeMatch(recipe: recipe, compatibilityInfo: compatibility)
+            }
+            .sorted {
+                if $0.compatibility != $1.compatibility { return $0.compatibility > $1.compatibility }
+                if $0.compatibilityInfo.matchedIngredients != $1.compatibilityInfo.matchedIngredients {
+                    return $0.compatibilityInfo.matchedIngredients > $1.compatibilityInfo.matchedIngredients
+                }
+                if $0.recipe.isFavorite != $1.recipe.isFavorite { return $0.recipe.isFavorite && !$1.recipe.isFavorite }
+                return $0.recipe.name.localizedCaseInsensitiveCompare($1.recipe.name) == .orderedAscending
+            }
+    }
+    private func updateExpiringItems() {
+        let leadDays = settings?.expiringItemsLeadDays ?? 30
+        let now = Calendar.current.startOfDay(for: .now)
+        let limit = Calendar.current.date(byAdding: .day, value: leadDays, to: now) ?? now
+        expiringItemsState = pantryItems
+            .filter {
+                guard let expirationDate = $0.expirationDate else { return false }
+                let day = Calendar.current.startOfDay(for: expirationDate)
+                return day >= now && day <= limit
+            }
+            .sorted {
+                guard let lhs = $0.expirationDate, let rhs = $1.expirationDate else { return false }
+                return lhs < rhs
+            }
     }
 
     private var assistantLauncher: some View {
@@ -436,7 +513,7 @@ private struct HomeView: View {
 
                 Spacer()
 
-                Text("\(expiringItems.count)")
+                Text("\(expiringItemsState.count)")
                     .font(.caption.weight(.bold))
                     .foregroundStyle(.orange)
                     .padding(.horizontal, 10)
@@ -445,7 +522,7 @@ private struct HomeView: View {
             }
 
             VStack(spacing: 10) {
-                ForEach(expiringItems.prefix(5)) { item in
+                ForEach(expiringItemsState.prefix(5)) { item in
                     HStack(spacing: 12) {
                         IconImage(name: item.name, fallbackSymbol: "clock.badge.exclamationmark", size: 28)
 
@@ -487,8 +564,8 @@ private struct HomeView: View {
 
                 Spacer()
 
-                if !compatibleMatches.isEmpty {
-                    Text("\(compatibleMatches.count)")
+                if !compatibleMatchesState.isEmpty {
+                    Text("\(compatibleMatchesState.count)")
                         .font(.caption.weight(.bold))
                         .foregroundStyle(Color.accentColor)
                         .padding(.horizontal, 10)
@@ -499,7 +576,7 @@ private struct HomeView: View {
 
             compatibleCategoryFilter
 
-            if compatibleMatches.isEmpty {
+            if compatibleMatchesState.isEmpty {
                 ContentUnavailableView(
                     "Sem receitas compatíveis",
                     systemImage: "fork.knife",
@@ -510,7 +587,7 @@ private struct HomeView: View {
             } else {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 12) {
-                        ForEach(compatibleMatches.prefix(8)) { match in
+                        ForEach(compatibleMatchesState.prefix(8)) { match in
                             NavigationLink {
                                 RecipeDetailView(recipe: match.recipe)
                             } label: {
@@ -532,7 +609,7 @@ private struct HomeView: View {
                     selectedCompatibleCategory = nil
                 }
 
-                ForEach(recipeCategories) { category in
+                ForEach(recipeCategoriesState) { category in
                     filterChip(label: category.name, isSelected: selectedCompatibleCategory == category.name) {
                         selectedCompatibleCategory = category.name
                     }

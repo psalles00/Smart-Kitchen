@@ -34,11 +34,11 @@ enum CategoryType: String, Codable, CaseIterable, Identifiable {
 
 @Model
 final class Category {
-    var id: UUID
-    var name: String
-    var type: CategoryType
-    var iconName: String?
-    var sortOrder: Int
+    var id: UUID = UUID()
+    var name: String = ""
+    var type: CategoryType = CategoryType.pantry
+    var iconName: String? = nil
+    var sortOrder: Int = 0
 
     init(name: String, type: CategoryType, iconName: String? = nil, sortOrder: Int = 0) {
         self.id = UUID()

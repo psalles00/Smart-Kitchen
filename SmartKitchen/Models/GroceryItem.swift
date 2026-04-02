@@ -3,18 +3,18 @@ import SwiftData
 
 @Model
 final class GroceryItem {
-    var id: UUID
-    var name: String
-    var category: String
-    var quantity: Double?
-    var unit: String?
-    var iconName: String?
-    var isChecked: Bool
+    var id: UUID = UUID()
+    var name: String = ""
+    var category: String = "Outros"
+    var quantity: Double? = nil
+    var unit: String? = nil
+    var iconName: String? = nil
+    var isChecked: Bool = false
     /// Fixed items are auto-added back when the linked pantry item is depleted.
-    var isFixed: Bool
-    var linkedPantryItemId: UUID?
-    var sortOrder: Int
-    var addedAt: Date
+    var isFixed: Bool = false
+    var linkedPantryItemId: UUID? = nil
+    var sortOrder: Int = 0
+    var addedAt: Date = Date()
 
     init(
         name: String,

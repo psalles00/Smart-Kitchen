@@ -1,4 +1,22 @@
 import SwiftUI
+#if os(macOS)
+import AppKit
+#endif
+
+// MARK: - Observable Scroll State (avoids AttributeGraph cycles)
+
+/// Holds scroll offset in an @Observable class so that only child views
+/// that *read* the offset re-evaluate — the parent view (which contains
+/// the GeometryReader that *writes* the offset) never re-evaluates,
+/// breaking the read → write → re-evaluate → read cycle.
+@Observable
+private final class _ExpandedScrollState {
+    var scrollOffset: CGFloat = 0
+    var isRefreshing: Bool = false
+    var safeAreaTop: CGFloat = 0
+    @ObservationIgnored var previousOffset: CGFloat = 0
+    @ObservationIgnored var isRefreshingInternal: Bool = false
+}
 
 // MARK: - Expanded Page Layout
 
@@ -17,12 +35,23 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
     private let headerHeight: CGFloat = 60
     private let cornerRadius: CGFloat = 24
     private let topMargin: CGFloat = 10
-
-    @State private var scrollOffset: CGFloat = 0
-
-    @State private var isRefreshing: Bool = false
-    @State private var pullOffset: CGFloat = 0
     private let refreshThreshold: CGFloat = 80
+    private let leadingPanelInset: CGFloat = 8
+
+    @State private var scrollState = _ExpandedScrollState()
+    @State private var viewHeight: CGFloat = 800
+
+    private var totalRevealHeight: CGFloat {
+        headerHeight + infoAreaHeight
+    }
+
+    private var trailingPanelInset: CGFloat {
+        #if os(macOS)
+        4
+        #else
+        leadingPanelInset
+        #endif
+    }
 
     init(
         pageTheme: PageTheme,
@@ -38,159 +67,128 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
         self.onRefresh = onRefresh
     }
 
-    private var totalRevealHeight: CGFloat {
-        headerHeight + infoAreaHeight
-    }
-
-    private var headerCoverProgress: CGFloat {
-        let progress = (scrollOffset - infoAreaHeight) / headerHeight
-        return min(max(progress, 0), 1)
-    }
-
-    private var pullProgress: CGFloat {
-        guard pullOffset > 0 else { return 0 }
-        return min(pullOffset / refreshThreshold, 1.0)
-    }
-
     var body: some View {
-        GeometryReader { geometry in
-            ZStack(alignment: .top) {
-                // 1. FIXED BACKGROUND LAYER
+        ZStack(alignment: .top) {
+            // 1. FIXED BACKGROUND
+            backgroundLayer
+                .ignoresSafeArea()
+                .allowsHitTesting(false) // Previne interações com o shader
+
+            // 2. INFO AREA (behind scroll)
+            _InfoAreaLayer(
+                scrollState: scrollState,
+                headerHeight: headerHeight,
+                infoAreaHeight: infoAreaHeight,
+                infoAreaView: buildInfoArea()
+            )
+            .zIndex(1)
+
+            // 3. SCROLL CONTENT
+            ScrollView {
                 VStack(spacing: 0) {
-                    backgroundLayer
-                        .frame(height: geometry.size.height * 0.75)
-                    Spacer()
-                }
-                .ignoresSafeArea(edges: .top)
+                    Color.clear
+                        .frame(height: totalRevealHeight)
+                        .allowsHitTesting(false)
 
-                // 2. SCROLL LAYER
-                ScrollView {
                     VStack(spacing: 0) {
-                        // Pull-to-refresh trigger zone
-                        GeometryReader { pullGeo in
-                            let pullOffset = pullGeo.frame(in: .global).minY - geometry.safeAreaInsets.top
-                            Color.clear
-                                .preference(key: ExpandedPullToRefreshKey.self, value: pullOffset)
-                        }
-                        .frame(height: 0)
-
-                        // Transparent spacer that pushes content down
                         Color.clear
-                            .frame(height: totalRevealHeight)
-                            .overlay(alignment: .top) {
-                                GeometryReader { geo in
-                                    let minY = geo.frame(in: .named("expanded_scroll")).minY
-
-                                    VStack(spacing: 0) {
-                                        header(false)
-                                            .frame(height: headerHeight)
-                                            .opacity(1 - headerCoverProgress)
-
-                                        infoArea
-                                            .frame(height: infoAreaHeight)
-                                            .opacity(max(0.0, 1.0 - (scrollOffset / (infoAreaHeight * 0.5))))
-                                    }
-                                    .offset(y: -minY)
-                                }
-                            }
-
-                        VStack(spacing: 0) {
-                            Color.clear
-                                .frame(height: topMargin + (headerCoverProgress * headerHeight))
-
-                            content()
-                        }
-                        .frame(maxWidth: .infinity)
-                        .frame(minHeight: geometry.size.height - headerHeight)
-                        .background(Color(.systemBackground))
-                        .clipShape(
-                            UnevenRoundedRectangle(
-                                topLeadingRadius: cornerRadius,
-                                bottomLeadingRadius: 0,
-                                bottomTrailingRadius: 0,
-                                topTrailingRadius: cornerRadius
-                            )
+                            .frame(height: topMargin)
+                        content()
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(minHeight: max(0, viewHeight - headerHeight))
+                    .background(Color(.systemBackground))
+                    .clipShape(
+                        UnevenRoundedRectangle(
+                            topLeadingRadius: cornerRadius,
+                            bottomLeadingRadius: 0,
+                            bottomTrailingRadius: 0,
+                            topTrailingRadius: cornerRadius
                         )
-                    }
-                    .background(
-                        GeometryReader { scrollGeo in
-                            Color.clear
-                                .preference(
-                                    key: ExpandedScrollOffsetKey.self,
-                                    value: -scrollGeo.frame(in: .named("expanded_scroll")).minY
-                                )
-                        }
                     )
+                    .padding(.leading, leadingPanelInset)
+                    .padding(.trailing, trailingPanelInset)
                 }
-                .scrollIndicators(.hidden)
-                .coordinateSpace(name: "expanded_scroll")
-                .onPreferenceChange(ExpandedScrollOffsetKey.self) { value in
-                    scrollOffset = value
-                }
-                .onPreferenceChange(ExpandedPullToRefreshKey.self) { value in
-                    let previousPull = pullOffset
-                    pullOffset = max(0, value)
-
-                    if let _ = onRefresh, !isRefreshing {
-                        if previousPull >= refreshThreshold && value < previousPull {
-                            triggerRefresh()
-                        }
+                .background(
+                    GeometryReader { scrollGeo in
+                        Color.clear
+                            .preference(
+                                key: ExpandedScrollOffsetKey.self,
+                                value: -scrollGeo.frame(in: .named("expanded_scroll")).minY
+                            )
                     }
-                }
-
-                // Refresh indicator overlay
-                if pullProgress > 0 || isRefreshing {
-                    VStack {
-                        if isRefreshing {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                .scaleEffect(1.2)
-                        } else {
-                            Image(systemName: "arrow.down")
-                                .font(.system(size: 20, weight: .medium))
-                                .foregroundColor(.white)
-                                .rotationEffect(.degrees(pullProgress >= 1.0 ? 180 : 0))
-                                .animation(.easeInOut(duration: 0.2), value: pullProgress >= 1.0)
-                        }
-                    }
-                    .frame(width: 40, height: 40)
-                    .opacity(isRefreshing ? 1.0 : pullProgress)
-                    .offset(y: geometry.safeAreaInsets.top + 20)
-                }
-
-                // 3. INVERTED HEADER (appears when scrolling past)
-                if headerCoverProgress > 0 {
-                    VStack(spacing: 0) {
-                        Color(.systemBackground)
-                            .frame(height: geometry.safeAreaInsets.top)
-                            .ignoresSafeArea()
-
-                        header(true)
-                            .frame(height: headerHeight)
-                            .background(Color(.systemBackground))
-
-                        Divider().opacity(headerCoverProgress)
-                    }
-                    .opacity(headerCoverProgress)
-                    .zIndex(10)
-                }
+                )
             }
+            .scrollIndicators(.hidden)
+            #if os(macOS)
+            .background(_OverlayScrollerConfigurator())
+            #endif
+            .coordinateSpace(name: "expanded_scroll")
+            .onPreferenceChange(ExpandedScrollOffsetKey.self) { newOffset in
+                handleScrollChange(newOffset)
+            }
+            .zIndex(2)
+
+            // 4. PULL INDICATOR (reads safeAreaTop from scrollState)
+            _PullIndicatorLayer(
+                scrollState: scrollState,
+                refreshThreshold: refreshThreshold
+            )
+            .zIndex(3)
+
+            // 5. FLOATING TOP HEADER (on top of scroll to capture taps)
+            _FloatingTopHeaderLayer(
+                scrollState: scrollState,
+                headerHeight: headerHeight,
+                infoAreaHeight: infoAreaHeight,
+                headerView: header(false)
+            )
+            .zIndex(4)
+
+            // 6. INVERTED HEADER (reads safeAreaTop from scrollState)
+            _InvertedHeaderLayer(
+                scrollState: scrollState,
+                headerHeight: headerHeight,
+                infoAreaHeight: infoAreaHeight,
+                headerView: header(true)
+            )
+            .zIndex(10)
+        }
+        .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) { newHeight in
+            viewHeight = newHeight
+        }
+        .onGeometryChange(for: CGFloat.self, of: { $0.safeAreaInsets.top }) { newTop in
+            scrollState.safeAreaTop = newTop
         }
     }
 
-    // MARK: - Refresh Logic
+    // MARK: - Scroll Handler (closure — no body dependency)
 
-    private func triggerRefresh() {
-        guard let onRefresh = onRefresh, !isRefreshing else { return }
+    private func handleScrollChange(_ newOffset: CGFloat) {
+        let oldOffset = scrollState.previousOffset
+        scrollState.previousOffset = newOffset
 
-        isRefreshing = true
-        HapticManager.impact(style: .medium)
+        // Only notify observers when the offset meaningfully changes.
+        // Prevents redundant @Observable notifications and breaks the
+        // preference → write → re-render → preference cycle.
+        guard abs(oldOffset - newOffset) > 0.1 else { return }
+        scrollState.scrollOffset = newOffset
 
-        Task {
-            await onRefresh()
-            await MainActor.run {
-                withAnimation(.easeOut(duration: 0.3)) {
-                    isRefreshing = false
+        // Pull-to-refresh using non-observed backing flag
+        guard let onRefresh, !scrollState.isRefreshingInternal else { return }
+        let oldPull = max(0, -oldOffset)
+        let newPull = max(0, -newOffset)
+        if oldPull >= refreshThreshold && newPull < oldPull {
+            scrollState.isRefreshingInternal = true
+            scrollState.isRefreshing = true
+            HapticManager.impact(style: .medium)
+            Task {
+                await onRefresh()
+                await MainActor.run {
+                    withAnimation(.easeOut(duration: 0.3)) {
+                        scrollState.isRefreshingInternal = false
+                        scrollState.isRefreshing = false
+                    }
                 }
             }
         }
@@ -198,8 +196,44 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
 
     // MARK: - Subviews
 
+    private func buildInfoArea() -> some View {
+        VStack(spacing: 0) {
+            infoContent()
+                .padding(.horizontal, 20)
+                .padding(.top, 12)
+
+            Spacer()
+
+            Image(systemName: "chevron.compact.up")
+                .font(.system(size: 24, weight: .semibold))
+                .foregroundColor(.white.opacity(0.6))
+                .padding(.bottom, 8)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
     @ViewBuilder
     private var backgroundLayer: some View {
+        #if os(macOS)
+        if pageTheme == .home {
+            macHomeBackground
+        } else {
+            let selection = backgroundManager.background(for: pageTheme)
+
+            switch selection.type {
+            case .texturedGradient:
+                if let preset = selection.texturedPreset {
+                    TexturedGradientView(preset: preset, progress: 1.0)
+                } else {
+                    originalBackground
+                }
+            case .original:
+                originalBackground
+            case .waves:
+                WavesShaderView(progress: 1.0)
+            }
+        }
+        #else
         let selection = backgroundManager.background(for: pageTheme)
 
         switch selection.type {
@@ -214,6 +248,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
         case .waves:
             WavesShaderView(progress: 1.0)
         }
+        #endif
     }
 
     @ViewBuilder
@@ -233,20 +268,143 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
         }
     }
 
-    private var infoArea: some View {
-        VStack(spacing: 0) {
-            infoContent()
-                .padding(.horizontal, 20)
-                .padding(.top, 12)
+    #if os(macOS)
+    private var macHomeBackground: some View {
+        ZStack {
+            LinearGradient(
+                colors: [
+                    Color(red: 0.19, green: 0.09, blue: 0.05),
+                    Color(red: 0.47, green: 0.17, blue: 0.09),
+                    Color(red: 0.86, green: 0.42, blue: 0.14)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
 
-            Spacer()
+            RadialGradient(
+                colors: [
+                    Color.white.opacity(0.22),
+                    Color.orange.opacity(0.12),
+                    Color.clear
+                ],
+                center: .topLeading,
+                startRadius: 20,
+                endRadius: 360
+            )
 
-            Image(systemName: "chevron.compact.up")
-                .font(.system(size: 24, weight: .semibold))
-                .foregroundColor(.white.opacity(0.6))
-                .padding(.bottom, 8)
+            RadialGradient(
+                colors: [
+                    Color.yellow.opacity(0.18),
+                    Color.clear
+                ],
+                center: .bottomTrailing,
+                startRadius: 10,
+                endRadius: 320
+            )
         }
-        .frame(maxWidth: .infinity)
+        .ignoresSafeArea()
+    }
+    #endif
+}
+
+// MARK: - Overlay Child Views (read scrollState — only THEY re-render)
+
+/// Info area that sits behind the scroll content.
+private struct _InfoAreaLayer<I: View>: View {
+    let scrollState: _ExpandedScrollState
+    let headerHeight: CGFloat
+    let infoAreaHeight: CGFloat
+    let infoAreaView: I
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Color.clear.frame(height: headerHeight)
+
+            infoAreaView
+                .frame(height: infoAreaHeight)
+                .opacity(max(0.0, 1.0 - (scrollState.scrollOffset / (infoAreaHeight * 0.5))))
+        }
+    }
+}
+
+/// Floating header on top of the scroll content to ensure taps are caught.
+private struct _FloatingTopHeaderLayer<H: View>: View {
+    let scrollState: _ExpandedScrollState
+    let headerHeight: CGFloat
+    let infoAreaHeight: CGFloat
+    let headerView: H
+
+    private var headerCoverProgress: CGFloat {
+        let p = (scrollState.scrollOffset - infoAreaHeight) / headerHeight
+        return min(max(p, 0), 1)
+    }
+
+    var body: some View {
+        headerView
+            .frame(height: headerHeight)
+            .opacity(1 - headerCoverProgress)
+            .allowsHitTesting(headerCoverProgress < 0.5)
+    }
+}
+
+/// Pull-to-refresh indicator shown when pulling past the top.
+private struct _PullIndicatorLayer: View {
+    let scrollState: _ExpandedScrollState
+    let refreshThreshold: CGFloat
+
+    private var pullProgress: CGFloat {
+        let pull = max(0, -scrollState.scrollOffset)
+        guard pull > 0 else { return 0 }
+        return min(pull / refreshThreshold, 1.0)
+    }
+
+    var body: some View {
+        VStack {
+            if scrollState.isRefreshing {
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                    .scaleEffect(1.2)
+            } else {
+                Image(systemName: "arrow.down")
+                    .font(.system(size: 20, weight: .medium))
+                    .foregroundColor(.white)
+                    .rotationEffect(.degrees(pullProgress >= 1.0 ? 180 : 0))
+                    .animation(.easeInOut(duration: 0.2), value: pullProgress >= 1.0)
+            }
+        }
+        .frame(width: 40, height: 40)
+        .opacity(scrollState.isRefreshing ? 1.0 : pullProgress)
+        .offset(y: scrollState.safeAreaTop + 20)
+        .allowsHitTesting(false)
+    }
+}
+
+/// Inverted header that slides in when the user scrolls past the info area.
+private struct _InvertedHeaderLayer<H: View>: View {
+    let scrollState: _ExpandedScrollState
+    let headerHeight: CGFloat
+    let infoAreaHeight: CGFloat
+    let headerView: H
+
+    private var headerCoverProgress: CGFloat {
+        let p = (scrollState.scrollOffset - infoAreaHeight) / headerHeight
+        return min(max(p, 0), 1)
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Color(.systemBackground)
+                .frame(height: scrollState.safeAreaTop)
+                .ignoresSafeArea()
+
+            headerView
+                .frame(height: headerHeight)
+                .background(Color(.systemBackground))
+
+            Divider().opacity(headerCoverProgress)
+        }
+        .opacity(headerCoverProgress)
+        .allowsHitTesting(headerCoverProgress >= 0.5)
     }
 }
 
@@ -259,9 +417,30 @@ private struct ExpandedScrollOffsetKey: PreferenceKey {
     }
 }
 
-private struct ExpandedPullToRefreshKey: PreferenceKey {
-    nonisolated(unsafe) static var defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = nextValue()
+#if os(macOS)
+private struct _OverlayScrollerConfigurator: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        DispatchQueue.main.async {
+            configure(from: view)
+        }
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        DispatchQueue.main.async {
+            configure(from: nsView)
+        }
+    }
+
+    private func configure(from view: NSView) {
+        guard let scrollView = view.enclosingScrollView else { return }
+        scrollView.scrollerStyle = .overlay
+        scrollView.verticalScroller?.controlSize = .small
+        scrollView.horizontalScroller?.controlSize = .small
+        scrollView.verticalScroller?.alphaValue = 0.28
+        scrollView.horizontalScroller?.alphaValue = 0.28
+        scrollView.drawsBackground = false
     }
 }
+#endif

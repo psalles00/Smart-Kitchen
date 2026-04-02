@@ -2,7 +2,7 @@ name: SmartKitchen
 options:
   bundleIdPrefix: com.smartkitchen
   deploymentTarget:
-    iOS: "18.0"
+    iOS: "26.0"
     macOS: "26.0"
   createIntermediateGroups: true
   groupSortPosition: top
@@ -26,15 +26,29 @@ targets:
         UIAppFonts:
           - PlayfairDisplay.ttf
           - PlayfairDisplay-Italic.ttf
+          - Boska-Black.otf
+          - Boska-Medium.otf
+          - Boska-Regular.otf
+          - Boska-Light.otf
+        ATSApplicationFontsPath: "."
         UILaunchScreen: {}
         NSCameraUsageDescription: O Smart Kitchen usa a câmera para tirar fotos das suas receitas.
         NSPhotoLibraryUsageDescription: O Smart Kitchen acessa a galeria para anexar fotos às suas receitas.
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
         ITSAppUsesNonExemptEncryption: false
+    entitlements:
+      path: SmartKitchen/SmartKitchen.entitlements
+    capabilities:
+      - iCloud:
+          cloudKit: true
+          containerIdentifiers: [iCloud.com.pedrosalles.smartkitchen.sync]
+      - pushNotifications: {}
+      - backgroundModes:
+          modes: [remote-notification]
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.smartkitchen.app
+        PRODUCT_BUNDLE_IDENTIFIER: com.pedrosalles.smartkitchen.sync
         MARKETING_VERSION: "1.0.0"
         CURRENT_PROJECT_VERSION: "1"
         CODE_SIGN_STYLE: Automatic

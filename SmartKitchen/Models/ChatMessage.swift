@@ -23,14 +23,14 @@ struct QuickAction: Codable, Identifiable {
 
 @Model
 final class ChatMessage {
-    var id: UUID
-    var role: MessageRole
-    var content: String
-    var timestamp: Date
+    var id: UUID = UUID()
+    var role: MessageRole = MessageRole.user
+    var content: String = ""
+    var timestamp: Date = Date()
     /// Recipe IDs attached to this message (rendered as inline cards).
-    var attachedRecipeIds: [UUID]
+    var attachedRecipeIds: [UUID] = []
     /// Quick-action buttons the assistant suggests.
-    var quickActions: [QuickAction]
+    var quickActions: [QuickAction] = []
 
     init(
         role: MessageRole,

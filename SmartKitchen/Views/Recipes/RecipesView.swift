@@ -122,37 +122,42 @@ struct RecipesView: View {
         }
     }
 
-    private let galleryColumns = [
-        GridItem(.flexible(), spacing: 12),
-        GridItem(.flexible(), spacing: 12),
-    ]
+    private var galleryColumns: [GridItem] {
+        #if os(macOS)
+        [GridItem(.adaptive(minimum: 150, maximum: 150), spacing: 12)]
+        #else
+        [
+            GridItem(.flexible(), spacing: 12),
+            GridItem(.flexible(), spacing: 12),
+        ]
+        #endif
+    }
 
     var body: some View {
         ExpandedPageLayout(
             pageTheme: .recipes,
             header: { isInverted in
                 PageHeader(title: "Receitas", isInverted: isInverted) {
-                    HStack(spacing: 16) {
-                        Button {
-                            withAnimation(.spring(response: 0.28, dampingFraction: 0.88)) {
-                                showSearch.toggle()
-                                if !showSearch { searchText = "" }
+                    HStack(spacing: 8) {
+                        GlassButtonGroup {
+                            GlassGroupButton(systemImage: "magnifyingglass") {
+                                withAnimation(.spring(response: 0.28, dampingFraction: 0.88)) {
+                                    showSearch.toggle()
+                                    if !showSearch { searchText = "" }
+                                }
                             }
-                        } label: {
-                            Image(systemName: "magnifyingglass")
                         }
 
-                        optionsMenu
-
-                        Button {
-                            showCategoryManager = true
-                        } label: {
-                            Image(systemName: "slider.horizontal.3")
+                        GlassButtonGroup {
+                            optionsMenu
+                            GlassGroupDivider()
+                            GlassGroupButton(systemImage: "slider.horizontal.3") {
+                                showCategoryManager = true
+                            }
                         }
 
                         SettingsButton()
                     }
-                    .foregroundStyle(isInverted ? Color.primary : Color.white)
                 }
             },
             content: {
@@ -193,6 +198,8 @@ struct RecipesView: View {
     @ViewBuilder
     private var recipeContent: some View {
         VStack(spacing: 0) {
+            ScrollOffsetReader(coordinateSpace: "expanded_scroll")
+
             CollapsibleSearchBar(
                 text: $searchText,
                 isPresented: $showSearch,
@@ -224,7 +231,7 @@ struct RecipesView: View {
                     }
                 }
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 8)
             .padding(.vertical, 8)
         }
     }
@@ -244,18 +251,13 @@ struct RecipesView: View {
     // MARK: - Gallery
 
     private var galleryView: some View {
-        ScrollView {
-            ScrollOffsetReader(coordinateSpace: "recipes_scroll")
-
-            LazyVStack(alignment: .leading, spacing: 18) {
-                ForEach(groupedRecipes, id: \.category) { group in
-                    recipeGalleryCategorySection(group: group)
-                }
+        LazyVStack(alignment: .leading, spacing: 18) {
+            ForEach(groupedRecipes, id: \.category) { group in
+                recipeGalleryCategorySection(group: group)
             }
-            .padding(.horizontal)
-            .padding(.bottom, 20)
         }
-        .coordinateSpace(name: "recipes_scroll")
+        .padding(.horizontal, 8)
+        .padding(.bottom, 20)
         .onScrollOffsetChange(perform: updateInlineTitle)
         .navigationDestination(for: UUID.self) { id in
             if let recipe = allRecipes.first(where: { $0.id == id }) {
@@ -267,19 +269,26 @@ struct RecipesView: View {
     // MARK: - List
 
     private var listView: some View {
-        List {
-            Section {
-                ScrollOffsetReader(coordinateSpace: "recipes_scroll")
-                    .listRowInsets(.init())
-                    .listRowSeparator(.hidden)
-            }
-
+        LazyVStack(alignment: .leading, spacing: 18) {
             ForEach(groupedRecipes, id: \.category) { group in
-                recipeListCategorySection(group: group)
+                VStack(alignment: .leading, spacing: 12) {
+                    if selectedCategory == nil {
+                        Text(group.category)
+                            .font(.sectionTitle)
+                            .padding(.horizontal, 2)
+                    }
+
+                    recipeListSubsection(title: "Compatíveis com a Despensa", recipes: group.compatible)
+                    recipeListSubsection(title: "Parcialmente Compatíveis", recipes: group.partial)
+
+                    if !showCompatibleOnly {
+                        recipeListSubsection(title: "Outras Receitas", recipes: group.other)
+                    }
+                }
             }
         }
-        .listStyle(.plain)
-        .coordinateSpace(name: "recipes_scroll")
+        .padding(.horizontal, 8)
+        .padding(.bottom, 20)
         .onScrollOffsetChange(perform: updateInlineTitle)
         .navigationDestination(for: UUID.self) { id in
             if let recipe = allRecipes.first(where: { $0.id == id }) {
@@ -313,7 +322,7 @@ struct RecipesView: View {
         if !recipes.isEmpty {
             VStack(alignment: .leading, spacing: 10) {
                 Text(title)
-                    .font(.headline.weight(.semibold))
+                    .font(.cardTitle)
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 2)
 
@@ -327,28 +336,15 @@ struct RecipesView: View {
     }
 
     @ViewBuilder
-    private func recipeListCategorySection(group: (category: String, compatible: [Recipe], partial: [Recipe], other: [Recipe])) -> some View {
-        Section {
-            recipeListSubsection(title: "Compatíveis com a Despensa", recipes: group.compatible)
-            recipeListSubsection(title: "Parcialmente Compatíveis", recipes: group.partial)
-
-            if !showCompatibleOnly {
-                recipeListSubsection(title: "Outras Receitas", recipes: group.other)
-            }
-        } header: {
-            if selectedCategory == nil {
-                Text(group.category)
-            }
-        }
-    }
-
-    @ViewBuilder
     private func recipeListSubsection(title: String, recipes: [Recipe]) -> some View {
         if !recipes.isEmpty {
-            Text(title)
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.secondary)
-            recipeRows(recipes)
+            VStack(alignment: .leading, spacing: 10) {
+                Text(title)
+                    .font(.cardTitle)
+                    .foregroundStyle(.secondary)
+
+                recipeRows(recipes)
+            }
         }
     }
 
@@ -367,33 +363,18 @@ struct RecipesView: View {
 
     @ViewBuilder
     private func recipeRows(_ recipes: [Recipe]) -> some View {
-        ForEach(recipes) { recipe in
-            NavigationLink(value: recipe.id) {
-                RecipeRowView(
-                    recipe: recipe,
-                    compatibility: compatibilities[recipe.id]
-                )
-            }
-            .contextMenu {
-                recipeContextMenu(for: recipe)
-            }
-            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                Button(role: .destructive) {
-                    deleteRecipe(recipe)
-                } label: {
-                    Label("Excluir", systemImage: "trash")
-                }
-            }
-            .swipeActions(edge: .leading) {
-                Button {
-                    recipe.isFavorite.toggle()
-                } label: {
-                    Label(
-                        recipe.isFavorite ? "Desfavoritar" : "Favoritar",
-                        systemImage: recipe.isFavorite ? "heart.slash" : "heart"
+        VStack(spacing: 10) {
+            ForEach(recipes) { recipe in
+                NavigationLink(value: recipe.id) {
+                    RecipeRowView(
+                        recipe: recipe,
+                        compatibility: compatibilities[recipe.id]
                     )
                 }
-                .tint(.red)
+                .buttonStyle(.plain)
+                .contextMenu {
+                    recipeContextMenu(for: recipe)
+                }
             }
         }
     }
@@ -418,7 +399,7 @@ struct RecipesView: View {
     // MARK: - Options Menu
 
     private var optionsMenu: some View {
-        Menu {
+        GlassGroupMenu(systemImage: "line.3.horizontal.decrease.circle") {
             Button("Categorias", systemImage: "slider.horizontal.3") {
                 showCategoryManager = true
             }
@@ -453,8 +434,6 @@ struct RecipesView: View {
                     Label("Mostrar só compatíveis", systemImage: showCompatibleOnly ? "checkmark.circle.fill" : "circle")
                 }
             }
-        } label: {
-            Image(systemName: "line.3.horizontal.decrease.circle")
         }
     }
 

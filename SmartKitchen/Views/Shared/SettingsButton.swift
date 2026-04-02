@@ -1,19 +1,16 @@
 import SwiftUI
 
-/// Reusable toolbar button that opens the Settings sheet.
+/// Reusable toolbar button that triggers an external action when tapped.
 struct SettingsButton: View {
-    @State private var showSettings = false
+    let onTap: () -> Void
+
+    init(onTap: @escaping () -> Void = {}) {
+        self.onTap = onTap
+    }
 
     var body: some View {
-        Button {
-            showSettings = true
-        } label: {
-            Image(systemName: "gearshape")
-        }
-        .sheet(isPresented: $showSettings) {
-            NavigationStack {
-                SettingsView()
-            }
+        GlassButtonGroup {
+            GlassGroupButton(systemImage: "gearshape", action: onTap)
         }
     }
 }

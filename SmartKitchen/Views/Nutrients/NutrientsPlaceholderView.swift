@@ -7,7 +7,6 @@ struct NutrientsPlaceholderView: View {
             header: { isInverted in
                 PageHeader(title: "Nutrientes", isInverted: isInverted) {
                     SettingsButton()
-                        .foregroundStyle(isInverted ? Color.primary : Color.white)
                 }
             },
             content: {
@@ -43,7 +42,8 @@ struct NutrientsPlaceholderView: View {
             },
             infoContent: {
                 NutrientsInfoContent()
-            }
+            },
+            onRefresh: nil
         )
         #if os(iOS)
         .toolbar(.hidden, for: .navigationBar)

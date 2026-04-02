@@ -42,7 +42,11 @@ struct RecipeCardView: View {
             }
             .padding(12)
         }
+        #if os(macOS)
+        .frame(width: 150, height: 150)
+        #else
         .frame(height: 190)
+        #endif
         .background(Color(.secondarySystemBackground))
         .clipShape(.rect(cornerRadius: 16))
         .overlay {

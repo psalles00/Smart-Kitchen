@@ -5,27 +5,27 @@ import SwiftData
 
 @Model
 final class Recipe {
-    var id: UUID
-    var name: String
-    var descriptionText: String
+    var id: UUID = UUID()
+    var name: String = ""
+    var descriptionText: String = ""
     @Relationship(deleteRule: .cascade, inverse: \RecipeIngredient.recipe)
-    var ingredients: [RecipeIngredient]
+    var ingredients: [RecipeIngredient] = []
     @Relationship(deleteRule: .cascade, inverse: \RecipeStep.recipe)
-    var steps: [RecipeStep]
-    var imageData: Data?
+    var steps: [RecipeStep] = []
+    var imageData: Data? = nil
     @Relationship(deleteRule: .cascade, inverse: \RecipePreparationMedia.recipe)
-    var preparationMedia: [RecipePreparationMedia]
-    var externalURLString: String
-    var category: String
-    var tags: [String]
-    var prepTime: Int       // minutes
-    var cookTime: Int       // minutes
-    var servings: Int
-    var calories: Int?
-    var difficulty: Difficulty
-    var isFavorite: Bool
-    var createdAt: Date
-    var updatedAt: Date
+    var preparationMedia: [RecipePreparationMedia] = []
+    var externalURLString: String = ""
+    var category: String = ""
+    var tags: [String] = []
+    var prepTime: Int = 0       // minutes
+    var cookTime: Int = 0       // minutes
+    var servings: Int = 1
+    var calories: Int? = nil
+    var difficulty: Difficulty = Difficulty.easy
+    var isFavorite: Bool = false
+    var createdAt: Date = Date()
+    var updatedAt: Date = Date()
 
     init(
         name: String,
@@ -149,12 +149,12 @@ enum RecipePreparationMediaType: String, Codable, CaseIterable {
 
 @Model
 final class RecipePreparationMedia {
-    var id: UUID
-    var mediaTypeRaw: String
-    var data: Data
-    var fileExtension: String
-    var sortOrder: Int
-    var recipe: Recipe?
+    var id: UUID = UUID()
+    var mediaTypeRaw: String = RecipePreparationMediaType.photo.rawValue
+    var data: Data = Data()
+    var fileExtension: String = ""
+    var sortOrder: Int = 0
+    var recipe: Recipe? = nil
 
     init(
         mediaType: RecipePreparationMediaType,
@@ -206,13 +206,13 @@ enum Difficulty: String, Codable, CaseIterable, Identifiable {
 
 @Model
 final class RecipeIngredient {
-    var id: UUID
-    var name: String
-    var quantity: Double?
-    var unit: String
-    var iconName: String?
-    var sortOrder: Int
-    var recipe: Recipe?
+    var id: UUID = UUID()
+    var name: String = ""
+    var quantity: Double? = nil
+    var unit: String = ""
+    var iconName: String? = nil
+    var sortOrder: Int = 0
+    var recipe: Recipe? = nil
 
     init(
         name: String,
@@ -243,11 +243,11 @@ final class RecipeIngredient {
 
 @Model
 final class RecipeStep {
-    var id: UUID
-    var order: Int
-    var instruction: String
-    var durationMinutes: Int?
-    var recipe: Recipe?
+    var id: UUID = UUID()
+    var order: Int = 0
+    var instruction: String = ""
+    var durationMinutes: Int? = nil
+    var recipe: Recipe? = nil
 
     init(order: Int, instruction: String, durationMinutes: Int? = nil) {
         self.id = UUID()

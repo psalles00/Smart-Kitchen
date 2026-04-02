@@ -3,17 +3,17 @@ import SwiftData
 
 @Model
 final class PantryItem {
-    var id: UUID
-    var name: String
-    var category: String
-    var quantity: Double?
-    var unit: String?
-    var iconName: String?
+    var id: UUID = UUID()
+    var name: String = ""
+    var category: String = "Outros"
+    var quantity: Double? = nil
+    var unit: String? = nil
+    var iconName: String? = nil
     /// When true, depleting this item auto-adds it to the grocery list.
-    var isLinkedToGrocery: Bool
-    var expirationDate: Date?
-    var sortOrder: Int
-    var addedAt: Date
+    var isLinkedToGrocery: Bool = false
+    var expirationDate: Date? = nil
+    var sortOrder: Int = 0
+    var addedAt: Date = Date()
 
     init(
         name: String,

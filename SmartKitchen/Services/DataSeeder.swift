@@ -5,10 +5,18 @@ import SwiftData
 struct DataSeeder {
 
     static func seedIfNeeded(context: ModelContext) {
-        // Check if already seeded by looking for any settings object
+        // Use a local flag to prevent re-seeding when CloudKit sync
+        // delivers data from another device before local queries resolve.
+        let hasSeededKey = "SmartKitchen.hasSeeded"
+        if UserDefaults.standard.bool(forKey: hasSeededKey) { return }
+
+        // Also check if settings already exist (e.g. synced from another device)
         let settingsDescriptor = FetchDescriptor<AppSettings>()
         let existing = (try? context.fetch(settingsDescriptor))?.first
-        if existing != nil { return }
+        if existing != nil {
+            UserDefaults.standard.set(true, forKey: hasSeededKey)
+            return
+        }
 
         // Create default settings
         let settings = AppSettings()
@@ -27,6 +35,7 @@ struct DataSeeder {
         seedRecipes(context: context)
 
         try? context.save()
+        UserDefaults.standard.set(true, forKey: hasSeededKey)
     }
 
     // MARK: - Categories

@@ -21,7 +21,11 @@ struct SmartKitchenApp: App {
             ChatMessage.self,
             AppSettings.self,
         ])
-        let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        let config = ModelConfiguration(
+            schema: schema,
+            isStoredInMemoryOnly: false,
+            cloudKitDatabase: .automatic
+        )
         do {
             modelContainer = try ModelContainer(for: schema, configurations: [config])
         } catch {

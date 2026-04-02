@@ -88,37 +88,36 @@ struct ListsTabView: View {
             pageTheme: .lists,
             header: { isInverted in
                 PageHeader(title: "Listas", isInverted: isInverted) {
-                    HStack(spacing: 16) {
-                        Button {
-                            withAnimation(.spring(response: 0.28, dampingFraction: 0.88)) {
-                                showSearch.toggle()
-                                if !showSearch { searchText = "" }
+                    HStack(spacing: 8) {
+                        GlassButtonGroup {
+                            GlassGroupButton(systemImage: "magnifyingglass") {
+                                withAnimation(.spring(response: 0.28, dampingFraction: 0.88)) {
+                                    showSearch.toggle()
+                                    if !showSearch { searchText = "" }
+                                }
                             }
-                        } label: {
-                            Image(systemName: "magnifyingglass")
                         }
 
-                        optionsMenu
-
-                        Button {
-                            if selectedSubtab == .pantry {
-                                showAddPantry = true
-                            } else {
-                                showAddGrocery = true
+                        GlassButtonGroup {
+                            optionsMenu
+                            GlassGroupDivider()
+                            GlassGroupButton(systemImage: "slider.horizontal.3") {
+                                showCategoryManager = true
                             }
-                        } label: {
-                            Image(systemName: "plus")
                         }
 
-                        Button {
-                            showCategoryManager = true
-                        } label: {
-                            Image(systemName: "slider.horizontal.3")
+                        GlassButtonGroup {
+                            GlassGroupButton(systemImage: "plus") {
+                                if selectedSubtab == .pantry {
+                                    showAddPantry = true
+                                } else {
+                                    showAddGrocery = true
+                                }
+                            }
                         }
 
                         SettingsButton()
                     }
-                    .foregroundStyle(isInverted ? Color.primary : Color.white)
                 }
             },
             content: {
@@ -195,7 +194,7 @@ struct ListsTabView: View {
     }
 
     private var optionsMenu: some View {
-        Menu {
+        GlassGroupMenu(systemImage: "line.3.horizontal.decrease.circle") {
             Section("Ordenar por") {
                 ForEach(ListsSortOption.allCases) { option in
                     Button {
@@ -234,8 +233,6 @@ struct ListsTabView: View {
                     }
                 }
             }
-        } label: {
-            Image(systemName: "line.3.horizontal.decrease.circle")
         }
     }
 

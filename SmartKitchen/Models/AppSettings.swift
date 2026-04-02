@@ -85,17 +85,17 @@ enum ListsSortOption: String, Codable, CaseIterable, Identifiable {
 
 @Model
 final class AppSettings {
-    var id: UUID
-    var pantryDetailLevel: PantryDetailLevel
+    var id: UUID = UUID()
+    var pantryDetailLevel: PantryDetailLevel = PantryDetailLevel.simple
     /// Stored as the raw string of AccentColorChoice.
-    var accentColorRaw: String
-    var appearanceMode: AppearanceMode
-    var recipeViewMode: RecipeViewMode
-    var expiringItemsLeadDays: Int
-    var recipeCompatibilityThresholdPercentValue: Int?
+    var accentColorRaw: String = AccentColorChoice.green.rawValue
+    var appearanceMode: AppearanceMode = AppearanceMode.system
+    var recipeViewMode: RecipeViewMode = RecipeViewMode.gallery
+    var expiringItemsLeadDays: Int = 30
+    var recipeCompatibilityThresholdPercentValue: Int? = 80
     /// Embedded API key for OpenAI.
-    var openAIAPIKey: String
-    var hasCompletedOnboarding: Bool
+    var openAIAPIKey: String = ""
+    var hasCompletedOnboarding: Bool = false
 
     init() {
         self.id = UUID()

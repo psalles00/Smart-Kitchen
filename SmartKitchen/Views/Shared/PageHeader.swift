@@ -19,6 +19,9 @@ struct PageHeader: View {
 
             if let trailing = trailingContent {
                 trailing()
+                    #if os(macOS)
+                    .buttonStyle(.plain)
+                    #endif
             }
         }
         .padding(.horizontal)

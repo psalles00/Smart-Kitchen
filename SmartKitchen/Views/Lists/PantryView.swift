@@ -173,7 +173,7 @@ struct PantryView: View {
 
     private func pantryHeader(for category: String) -> some View {
         Text(category)
-            .font(.subheadline.weight(.semibold))
+            .font(.cardTitle)
             .foregroundStyle(.secondary)
             .textCase(nil)
             .padding(.vertical, 4)

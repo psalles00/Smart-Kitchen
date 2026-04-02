@@ -9,14 +9,78 @@ import UIKit
 // MARK: - Typography
 
 extension Font {
-    /// Playfair Display Bold — page titles (H1)
-    static let pageTitle: Font = .custom("Playfair Display", size: 34, relativeTo: .largeTitle).weight(.bold)
-    /// Playfair Display SemiBold — section titles (H2)
-    static let sectionTitle: Font = .custom("Playfair Display", size: 24, relativeTo: .title).weight(.semibold)
-    /// Playfair Display SemiBold — card & inline titles (H3)
-    static let cardTitle: Font = .custom("Playfair Display", size: 18, relativeTo: .title3).weight(.semibold)
-    /// Playfair Display Regular — decorative subtitle
-    static let serifBody: Font = .custom("Playfair Display", size: 16, relativeTo: .body)
+    /// Boska Black — page titles (H1)
+    static let pageTitle: Font = .custom("Boska-Black", size: 34, relativeTo: .largeTitle)
+    /// Boska Medium — section titles (H2)
+    static let sectionTitle: Font = .custom("Boska-Medium", size: 24, relativeTo: .title)
+    /// Boska Medium — card & inline titles (H3)
+    static let cardTitle: Font = .custom("Boska-Medium", size: 18, relativeTo: .title3)
+    /// Boska Regular — decorative subtitle
+    static let serifBody: Font = .custom("Boska-Regular", size: 16, relativeTo: .body)
+}
+
+// MARK: - Glass Header Button Group
+
+/// Groups multiple header buttons into a single pill with a dark glass background
+struct GlassButtonGroup<Content: View>: View {
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        HStack(spacing: 0) {
+            content()
+        }
+        .foregroundStyle(.white)
+        .background(Color.black.opacity(0.6))
+        .environment(\.colorScheme, .dark)
+        #if os(iOS)
+        .glassEffect(.regular, in: .capsule)
+        #endif
+        .clipShape(Capsule())
+        .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
+    }
+}
+
+/// An inner button for GlassButtonGroup
+struct GlassGroupButton: View {
+    let systemImage: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .font(.system(size: 16, weight: .semibold))
+                .frame(width: 44, height: 36)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+/// An inner menu for GlassButtonGroup
+struct GlassGroupMenu<Content: View>: View {
+    let systemImage: String
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        Menu {
+            content()
+        } label: {
+            Image(systemName: systemImage)
+                .font(.system(size: 16, weight: .semibold))
+                .frame(width: 44, height: 36)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+/// A visual separator for styling within GlassButtonGroup
+struct GlassGroupDivider: View {
+    var body: some View {
+        Divider()
+            .background(Color.white.opacity(0.3))
+            .frame(width: 0.5, height: 20)
+    }
 }
 
 // MARK: - Glass / Material Helpers
