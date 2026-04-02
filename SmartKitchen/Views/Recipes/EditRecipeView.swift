@@ -29,6 +29,10 @@ struct EditRecipeView: View {
     @State private var showPreparationPhotoLibrary = false
     @State private var showPreparationCameraPicker = false
     @State private var showPreparationFileImporter = false
+    @State private var utensilNames: [IdentifiedUtensil] = []
+    @State private var newUtensilName = ""
+
+    private var settings: AppSettings? { settingsArray.first }
 
     private var recipeCategories: [Category] {
         allCategories.filter { $0.type == .recipe }
@@ -45,6 +49,9 @@ struct EditRecipeView: View {
             detailsSection
             preparationMediaSection
             ingredientsSection
+            if settings?.showUtensils == true {
+                RecipeUtensilsEditor(utensilNames: $utensilNames, newUtensilName: $newUtensilName)
+            }
             stepsSection
         }
         .navigationTitle("Editar Receita")
@@ -302,10 +309,9 @@ struct EditRecipeView: View {
         Section {
             ForEach($ingredientRows) { $row in
                 VStack(spacing: 8) {
-                    TextField("Ingrediente", text: $row.name)
-                        #if os(iOS)
-                        .textInputAutocapitalization(.words)
-                        #endif
+                    ItemSearchField(text: $row.name, placeholder: "Ingrediente") { entry in
+                        row.iconName = entry.nomeDoArquivo
+                    }
                     HStack {
                         TextField("Qtd", text: $row.quantity)
                             #if os(iOS)
@@ -378,7 +384,8 @@ struct EditRecipeView: View {
                         $0.truncatingRemainder(dividingBy: 1) == 0
                             ? String(format: "%.0f", $0) : String(format: "%.1f", $0)
                     } ?? "",
-                    unit: ing.unit
+                    unit: ing.unit,
+                    iconName: ing.iconName
                 )
             }
 
@@ -398,10 +405,13 @@ struct EditRecipeView: View {
                     fileExtension: media.fileExtension
                 )
             }
+
+        utensilNames = (recipe.requiredUtensils ?? []).map { IdentifiedUtensil(name: $0) }
     }
 
     private func save() {
         recipe.updatedAt = .now
+        recipe.requiredUtensils = utensilNames.map { $0.name }.filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
 
         // Update ingredients — remove old, insert new
         for ing in (recipe.ingredients ?? []) {
@@ -415,6 +425,7 @@ struct EditRecipeView: View {
                 name: trimmed,
                 quantity: Double(row.quantity),
                 unit: row.unit.trimmingCharacters(in: .whitespaces),
+                iconName: row.iconName ?? ItemDatabase.shared.exactMatch(for: trimmed)?.nomeDoArquivo,
                 sortOrder: index
             )
             ingredient.recipe = recipe
@@ -545,6 +556,7 @@ private struct EditIngredientRow: Identifiable {
     var name = ""
     var quantity = ""
     var unit = ""
+    var iconName: String?
 }
 
 private struct EditStepRow: Identifiable {

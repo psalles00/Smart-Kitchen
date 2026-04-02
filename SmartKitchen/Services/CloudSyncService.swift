@@ -201,10 +201,14 @@ final class CloudSyncService: @unchecked Sendable {
         #if targetEnvironment(simulator)
         return false
         #else
+        let task = SecTaskCreateFromSelf(nil)
+        let keys = ["com.apple.developer.icloud-services" as CFString] as CFArray
+        var error: Unmanaged<CFError>?
+        
         guard let entitlements = SecTaskCopyValuesForEntitlements(
-            SecTaskCreateFromSelf(nil),
-            ["com.apple.developer.icloud-services" as CFString] as CFArray,
-            nil
+            task,
+            keys,
+            &error
         ) as? [String: Any] else {
             return false
         }

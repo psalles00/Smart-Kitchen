@@ -344,10 +344,9 @@ struct AddRecipeView: View {
         Section {
             ForEach($ingredientRows) { $row in
                 VStack(spacing: 8) {
-                    TextField("Ingrediente", text: $row.name)
-                        #if os(iOS)
-                        .textInputAutocapitalization(.words)
-                        #endif
+                    ItemSearchField(text: $row.name, placeholder: "Ingrediente") { entry in
+                        row.iconName = entry.nomeDoArquivo
+                    }
                     HStack {
                         TextField("Qtd", text: $row.quantity)
                             #if os(iOS)
@@ -436,6 +435,7 @@ struct AddRecipeView: View {
                 name: trimmedName,
                 quantity: Double(row.quantity),
                 unit: row.unit.trimmingCharacters(in: .whitespaces),
+                iconName: row.iconName ?? ItemDatabase.shared.exactMatch(for: trimmedName)?.nomeDoArquivo,
                 sortOrder: index
             )
             ingredient.recipe = recipe
@@ -557,6 +557,7 @@ private struct IngredientRow: Identifiable {
     var name = ""
     var quantity = ""
     var unit = ""
+    var iconName: String?
 }
 
 private struct StepRow: Identifiable {
