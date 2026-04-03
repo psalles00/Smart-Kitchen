@@ -11,6 +11,7 @@ final class ItemDatabase: Sendable {
 
     /// All entries keyed by filename for direct lookup.
     private let byFilename: [String: ItemEntry]
+    private let entries: [ItemEntry]
 
     private init() {
         let entries = Self.loadEntries()
@@ -28,15 +29,20 @@ final class ItemDatabase: Sendable {
 
         self.index = idx
         self.byFilename = byFile
+        self.entries = entries.sorted {
+            $0.preferredTitle().localizedCaseInsensitiveCompare($1.preferredTitle()) == .orderedAscending
+        }
         self.allCategories = Array(Set(byFile.values.map(\.categoria))).sorted()
     }
 
     // MARK: - Public
 
     /// Search by prefix. Returns up to `limit` unique entries matching the query.
-    func search(query: String, limit: Int = 12) -> [ItemEntry] {
+    func search(query: String, limit: Int = 12, fallbackToFeatured: Bool = false) -> [ItemEntry] {
         let q = Self.normalize(query)
-        guard q.count >= 2 else { return [] }
+        guard q.count >= 2 else {
+            return fallbackToFeatured ? featuredEntries(limit: limit) : []
+        }
 
         var seen = Set<String>()
         var results: [ItemEntry] = []
@@ -58,6 +64,10 @@ final class ItemDatabase: Sendable {
         }
 
         return results
+    }
+
+    func featuredEntries(limit: Int = 12) -> [ItemEntry] {
+        Array(entries.prefix(limit))
     }
 
     /// Returns an entry if any of its titles match the given name exactly

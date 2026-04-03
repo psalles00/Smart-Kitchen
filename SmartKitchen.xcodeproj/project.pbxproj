@@ -33,6 +33,7 @@
 		34C4D9EBC144B792537D7BA5 /* SmartKitchenApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0E510B072AA05179DF44BD5 /* SmartKitchenApp.swift */; };
 		3C03E83003EA4DD33E4E1852 /* PlayfairDisplay-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 8C144A56063311B85CEF7DBB /* PlayfairDisplay-Italic.ttf */; };
 		3ED8A02C0BF87FE8112BD6DA /* IconResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 075F230C33AAE3A5989E9EBE /* IconResolver.swift */; };
+		455BE43233D1853B7E3E1AD8 /* ItemIconPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B18CA8A7141908734CA7123 /* ItemIconPickerView.swift */; };
 		46817A4977D35BB88599CF30 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 600EDD530C0ABD3D8C83E88F /* Theme.swift */; };
 		46A9E7C4E7D39DC5B4775AEE /* IconImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = C97DDE84F26B0242CD107962 /* IconImage.swift */; };
 		4B3DA7067DB683837533E8D8 /* images-128 in Resources */ = {isa = PBXBuildFile; fileRef = E5AEE72295DDF210EBDBBF9A /* images-128 */; };
@@ -80,6 +81,7 @@
 		CDFBBC3641BD11F559489BF9 /* HomeInfoContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 120985F96B2DA713EDC2E4F5 /* HomeInfoContent.swift */; };
 		D491FC1396340EEE950526AE /* RecipeDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8B6E051BE66B1366C2A927F /* RecipeDetailView.swift */; };
 		DB33E0071171446065A58EF1 /* RecipeCardMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A614ED31B6BC753A6994689 /* RecipeCardMessage.swift */; };
+		DD22E465513D8F5944EE372B /* ItemEntry+Display.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EEFD07FFC5E5CD8A5B51DE2 /* ItemEntry+Display.swift */; };
 		E034BA5DE7A1642710C3E0A7 /* Boska-Light.otf in Resources */ = {isa = PBXBuildFile; fileRef = D1EE932494B1EDF61333EA76 /* Boska-Light.otf */; };
 		E0AB94A0EC88F1D1329C0340 /* Boska-Black.otf in Resources */ = {isa = PBXBuildFile; fileRef = 772BF40F89C4381662F3C806 /* Boska-Black.otf */; };
 		E80A4E368BCF6480A0BD8C6A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4F184AD67349E7E2277F0BE7 /* Assets.xcassets */; };
@@ -106,6 +108,7 @@
 		382D66BD301AABE81FA0E3A3 /* WavesShaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WavesShaderView.swift; sourceTree = "<group>"; };
 		39E3D008679762441FBCD92E /* HapticManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticManager.swift; sourceTree = "<group>"; };
 		3A2B9A25959E9E24FA72DBF7 /* ItemEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemEntry.swift; sourceTree = "<group>"; };
+		3EEFD07FFC5E5CD8A5B51DE2 /* ItemEntry+Display.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ItemEntry+Display.swift"; sourceTree = "<group>"; };
 		45656677AD3714E163ED9011 /* Telma-Bold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Telma-Bold.otf"; sourceTree = "<group>"; };
 		4C5880CFC6DCD2F43D3FA289 /* Boska-BlackItalic.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Boska-BlackItalic.otf"; sourceTree = "<group>"; };
 		4F184AD67349E7E2277F0BE7 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -125,6 +128,7 @@
 		71EA39E201D01426855B0453 /* ExpandedPageLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpandedPageLayout.swift; sourceTree = "<group>"; };
 		75728DA118DDAF7AFE520AFD /* NutrientsInfoContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutrientsInfoContent.swift; sourceTree = "<group>"; };
 		772BF40F89C4381662F3C806 /* Boska-Black.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Boska-Black.otf"; sourceTree = "<group>"; };
+		7B18CA8A7141908734CA7123 /* ItemIconPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemIconPickerView.swift; sourceTree = "<group>"; };
 		8553574E6585FF064B4CDA62 /* PageTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageTheme.swift; sourceTree = "<group>"; };
 		85EAF5921660EEAB83572103 /* UtensilItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UtensilItem.swift; sourceTree = "<group>"; };
 		88169FAA4B287DCB9C18EC8D /* SuggestionChipsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestionChipsView.swift; sourceTree = "<group>"; };
@@ -146,7 +150,7 @@
 		B0BA783D43E37794EE28298C /* PlatformImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformImage.swift; sourceTree = "<group>"; };
 		B8E44E925C852E9239F7790A /* ListsInfoContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListsInfoContent.swift; sourceTree = "<group>"; };
 		B970691AA2D626F97231E533 /* PageHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageHeader.swift; sourceTree = "<group>"; };
-		B9A8A000ACD1E665B07A06D4 /* SmartKitchen.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SmartKitchen.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B9A8A000ACD1E665B07A06D4 /* SmartKitchen.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = SmartKitchen.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BD63B6313209711B5CC7C9BC /* AddGroceryItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddGroceryItemView.swift; sourceTree = "<group>"; };
 		BD8EFA8D0DF90B9B35DF27A4 /* items_database.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = items_database.json; sourceTree = "<group>"; };
 		C1613EA3D56DD17FDE15B699 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
@@ -238,6 +242,7 @@
 				ED9E5DCCA2E69888B6028F28 /* ChatMessage.swift */,
 				E0DB3612494917CB802BC7CC /* GroceryItem.swift */,
 				3A2B9A25959E9E24FA72DBF7 /* ItemEntry.swift */,
+				3EEFD07FFC5E5CD8A5B51DE2 /* ItemEntry+Display.swift */,
 				8553574E6585FF064B4CDA62 /* PageTheme.swift */,
 				F99E9F25BA500C5491E82BB8 /* PantryItem.swift */,
 				0D96FF55EC995E9D208E9D21 /* Recipe.swift */,
@@ -339,6 +344,7 @@
 				A3B7A648AEF9EAE5E0D5F601 /* Shaders */,
 				71EA39E201D01426855B0453 /* ExpandedPageLayout.swift */,
 				C97DDE84F26B0242CD107962 /* IconImage.swift */,
+				7B18CA8A7141908734CA7123 /* ItemIconPickerView.swift */,
 				DB768039F88F9878E87FABA4 /* ItemSearchField.swift */,
 				B970691AA2D626F97231E533 /* PageHeader.swift */,
 				AFCEEBA0F45A1486F9EE603B /* SettingsButton.swift */,
@@ -519,7 +525,9 @@
 				46A9E7C4E7D39DC5B4775AEE /* IconImage.swift in Sources */,
 				3ED8A02C0BF87FE8112BD6DA /* IconResolver.swift in Sources */,
 				0629B3BEB7C2B43ACB8A6607 /* ItemDatabase.swift in Sources */,
+				DD22E465513D8F5944EE372B /* ItemEntry+Display.swift in Sources */,
 				5EEC1B0DA5DA071C0FF43DED /* ItemEntry.swift in Sources */,
+				455BE43233D1853B7E3E1AD8 /* ItemIconPickerView.swift in Sources */,
 				B6B6BE5B4609DA4ABFA089E8 /* ItemSearchField.swift in Sources */,
 				F9B5F8BE086B893D8E6CE905 /* ListsInfoContent.swift in Sources */,
 				6EA5A2627DE82F481520CAEF /* ListsTabView.swift in Sources */,

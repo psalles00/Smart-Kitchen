@@ -1,10 +1,13 @@
 import SwiftUI
 
 /// A text field with autocomplete suggestions from the item database.
-/// When the user types ≥2 characters, matching items appear in a dropdown.
 struct ItemSearchField: View {
     @Binding var text: String
     var placeholder: String = "Nome"
+    var iconFileName: String? = nil
+    var fallbackSymbol: String = "leaf"
+    var showsLeadingIcon = false
+    var onIconTapped: (() -> Void)? = nil
     var onItemSelected: ((ItemEntry) -> Void)?
 
     @State private var suggestions: [ItemEntry] = []
@@ -13,22 +16,39 @@ struct ItemSearchField: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            TextField(placeholder, text: $text)
-                #if os(iOS)
-                .textInputAutocapitalization(.words)
-                #endif
-                .focused($isFocused)
-                .onChange(of: text) { _, newValue in
-                    updateSuggestions(for: newValue)
+            HStack(spacing: 10) {
+                if showsLeadingIcon {
+                    iconView
                 }
-                .onChange(of: isFocused) { _, focused in
-                    if !focused {
-                        // Small delay so tap on suggestion can register
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                            if !isFocused { showSuggestions = false }
+
+                TextField(placeholder, text: $text)
+                    #if os(iOS)
+                    .textInputAutocapitalization(.words)
+                    #endif
+                    .focused($isFocused)
+                    .onChange(of: text) { _, newValue in
+                        updateSuggestions(for: newValue)
+                    }
+                    .onChange(of: isFocused) { _, focused in
+                        if !focused {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                if !isFocused { showSuggestions = false }
+                            }
                         }
                     }
+
+                Button {
+                    toggleSuggestions()
+                } label: {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(showSuggestions ? Color.accentColor : .secondary)
+                        .frame(width: 28, height: 28)
+                        .background(Color(.tertiarySystemFill), in: Circle())
                 }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Mostrar sugestões")
+            }
 
             if showSuggestions && !suggestions.isEmpty {
                 suggestionsList
@@ -36,35 +56,60 @@ struct ItemSearchField: View {
         }
     }
 
+    @ViewBuilder
+    private var iconView: some View {
+        if let onIconTapped {
+            Button(action: onIconTapped) {
+                itemIcon
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Escolher ícone")
+        } else {
+            itemIcon
+        }
+    }
+
+    private var itemIcon: some View {
+        IconImage(
+            name: text,
+            iconFileName: iconFileName,
+            fallbackSymbol: fallbackSymbol,
+            size: 28,
+            showBalloon: true
+        )
+    }
+
     private var suggestionsList: some View {
         VStack(alignment: .leading, spacing: 0) {
             ForEach(suggestions, id: \.nomeDoArquivo) { entry in
-                HStack(spacing: 10) {
-                    IconImage(
-                        name: "",
-                        iconFileName: entry.nomeDoArquivo,
-                        fallbackSymbol: "leaf",
-                        size: 28,
-                        showBalloon: true
-                    )
-
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text(bestTitle(for: entry))
-                            .font(.subheadline)
-                            .foregroundStyle(.primary)
-                        Text(entry.categoria)
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
-
-                    Spacer()
-                }
-                .padding(.vertical, 6)
-                .padding(.horizontal, 4)
-                .contentShape(Rectangle())
-                .onTapGesture {
+                Button {
                     selectItem(entry)
+                } label: {
+                    HStack(spacing: 10) {
+                        IconImage(
+                            name: "",
+                            iconFileName: entry.nomeDoArquivo,
+                            fallbackSymbol: fallbackSymbol,
+                            size: 28,
+                            showBalloon: true
+                        )
+
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(entry.preferredTitle(matching: text))
+                                .font(.subheadline)
+                                .foregroundStyle(.primary)
+                            Text(entry.categoria)
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+
+                        Spacer()
+                    }
+                    .padding(.vertical, 6)
+                    .padding(.horizontal, 4)
+                    .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
 
                 if entry.nomeDoArquivo != suggestions.last?.nomeDoArquivo {
                     Divider()
@@ -78,43 +123,35 @@ struct ItemSearchField: View {
         .padding(.top, 4)
     }
 
-    private func updateSuggestions(for query: String) {
+    private func updateSuggestions(for query: String, fallbackToFeatured: Bool = false) {
         let trimmed = query.trimmingCharacters(in: .whitespaces)
-        if trimmed.count >= 2 {
-            suggestions = ItemDatabase.shared.search(query: trimmed)
-            showSuggestions = !suggestions.isEmpty
-        } else {
+        suggestions = ItemDatabase.shared.search(
+            query: trimmed,
+            fallbackToFeatured: fallbackToFeatured
+        )
+        showSuggestions = !suggestions.isEmpty
+
+        if trimmed.isEmpty && !fallbackToFeatured {
             suggestions = []
             showSuggestions = false
         }
     }
 
     private func selectItem(_ entry: ItemEntry) {
-        text = bestTitle(for: entry)
+        text = entry.preferredTitle(matching: text)
+        isFocused = false
         showSuggestions = false
         suggestions = []
         onItemSelected?(entry)
     }
 
-    /// Find the best title to display — prefer the PT-BR one that starts with query.
-    private func bestTitle(for entry: ItemEntry) -> String {
-        let query = text.lowercased()
-            .folding(options: .diacriticInsensitive, locale: .current)
-
-        // Prefer titles that start with the query
-        if let match = entry.titulos.first(where: {
-            $0.lowercased()
-                .folding(options: .diacriticInsensitive, locale: .current)
-                .hasPrefix(query)
-        }) {
-            return match
+    private func toggleSuggestions() {
+        if showSuggestions {
+            showSuggestions = false
+            return
         }
 
-        // Prefer non-ASCII titles (Portuguese) over English
-        if let pt = entry.titulos.first(where: { $0.unicodeScalars.contains(where: { $0.value > 127 }) }) {
-            return pt
-        }
-
-        return entry.titulos.first ?? ""
+        isFocused = true
+        updateSuggestions(for: text, fallbackToFeatured: true)
     }
 }

@@ -18,6 +18,7 @@ struct AddPantryItemView: View {
     @State private var hasExpirationDate = false
     @State private var expirationDate = Date()
     @State private var showCategoryManager = false
+    @State private var showIconPicker = false
 
     private var categories: [Category] { allCategories.filter { $0.type == .pantry } }
     private var isDetailed: Bool { settingsArray.first?.pantryDetailLevel == .detailed }
@@ -26,12 +27,14 @@ struct AddPantryItemView: View {
     var body: some View {
         Form {
             Section("Item") {
-                ItemSearchField(text: $name) { entry in
-                    iconName = entry.nomeDoArquivo
-                    if categories.contains(where: { $0.name == entry.categoria }) {
-                        selectedCategory = entry.categoria
-                    }
-                    userChangedCategory = true
+                ItemSearchField(
+                    text: $name,
+                    iconFileName: iconName,
+                    fallbackSymbol: "leaf",
+                    showsLeadingIcon: true,
+                    onIconTapped: { showIconPicker = true }
+                ) { entry in
+                    applySelectedEntry(entry)
                 }
 
                 Picker("Categoria", selection: $selectedCategory) {
@@ -94,6 +97,24 @@ struct AddPantryItemView: View {
         .sheet(isPresented: $showCategoryManager) {
             CategoryManagementView(initialType: .pantry)
         }
+        .sheet(isPresented: $showIconPicker) {
+            ItemIconPickerView(
+                initialQuery: name,
+                currentIconFileName: iconName,
+                fallbackSymbol: "leaf"
+            ) { entry in
+                applySelectedEntry(entry)
+            }
+        }
+    }
+
+    private func applySelectedEntry(_ entry: ItemEntry) {
+        name = entry.preferredTitle(matching: name)
+        iconName = entry.nomeDoArquivo
+        if categories.contains(where: { $0.name == entry.categoria }) {
+            selectedCategory = entry.categoria
+        }
+        userChangedCategory = true
     }
 
     private func save() {
@@ -133,6 +154,7 @@ struct EditPantryItemView: View {
 
     @Bindable var item: PantryItem
     @State private var showCategoryManager = false
+    @State private var showIconPicker = false
 
     private var categories: [Category] { allEditCategories.filter { $0.type == .pantry } }
     private var isDetailed: Bool { settingsArray.first?.pantryDetailLevel == .detailed }
@@ -140,10 +162,15 @@ struct EditPantryItemView: View {
     var body: some View {
         Form {
             Section("Item") {
-                TextField("Nome", text: $item.name)
-                    #if os(iOS)
-                    .textInputAutocapitalization(.words)
-                    #endif
+                ItemSearchField(
+                    text: $item.name,
+                    iconFileName: item.iconName,
+                    fallbackSymbol: "leaf",
+                    showsLeadingIcon: true,
+                    onIconTapped: { showIconPicker = true }
+                ) { entry in
+                    applySelectedEntry(entry)
+                }
 
                 Picker("Categoria", selection: $item.category) {
                     ForEach(categories) { cat in
@@ -210,6 +237,23 @@ struct EditPantryItemView: View {
         }
         .sheet(isPresented: $showCategoryManager) {
             CategoryManagementView(initialType: .pantry)
+        }
+        .sheet(isPresented: $showIconPicker) {
+            ItemIconPickerView(
+                initialQuery: item.name,
+                currentIconFileName: item.iconName,
+                fallbackSymbol: "leaf"
+            ) { entry in
+                applySelectedEntry(entry)
+            }
+        }
+    }
+
+    private func applySelectedEntry(_ entry: ItemEntry) {
+        item.name = entry.preferredTitle(matching: item.name)
+        item.iconName = entry.nomeDoArquivo
+        if categories.contains(where: { $0.name == entry.categoria }) {
+            item.category = entry.categoria
         }
     }
 }

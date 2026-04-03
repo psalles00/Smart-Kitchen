@@ -30,7 +30,7 @@ struct EditRecipeView: View {
     @State private var showPreparationCameraPicker = false
     @State private var showPreparationFileImporter = false
     @State private var utensilNames: [IdentifiedUtensil] = []
-    @State private var newUtensilName = ""
+    @State private var activeIngredientPicker: EditIngredientPickerTarget?
 
     private var settings: AppSettings? { settingsArray.first }
 
@@ -50,7 +50,7 @@ struct EditRecipeView: View {
             preparationMediaSection
             ingredientsSection
             if settings?.showUtensils == true {
-                RecipeUtensilsEditor(utensilNames: $utensilNames, newUtensilName: $newUtensilName)
+                RecipeUtensilsEditor(utensilNames: $utensilNames)
             }
             stepsSection
         }
@@ -119,6 +119,15 @@ struct EditRecipeView: View {
         #endif
         .sheet(isPresented: $showCategoryManager) {
             CategoryManagementView(initialType: .recipe)
+        }
+        .sheet(item: $activeIngredientPicker) { target in
+            ItemIconPickerView(
+                initialQuery: ingredientName(for: target.id),
+                currentIconFileName: ingredientIconName(for: target.id),
+                fallbackSymbol: "leaf"
+            ) { entry in
+                applyIngredientEntry(entry, to: target.id)
+            }
         }
         #if os(iOS)
         .sheet(isPresented: $showPreparationCameraPicker) {
@@ -308,10 +317,27 @@ struct EditRecipeView: View {
     private var ingredientsSection: some View {
         Section {
             ForEach($ingredientRows) { $row in
-                VStack(spacing: 8) {
-                    ItemSearchField(text: $row.name, placeholder: "Ingrediente") { entry in
+                VStack(alignment: .leading, spacing: 8) {
+                    ItemSearchField(
+                        text: $row.name,
+                        placeholder: "Ingrediente",
+                        iconFileName: row.iconName,
+                        fallbackSymbol: "leaf",
+                        showsLeadingIcon: true,
+                        onIconTapped: { activeIngredientPicker = EditIngredientPickerTarget(id: row.id) }
+                    ) { entry in
+                        row.name = entry.preferredTitle(matching: row.name)
                         row.iconName = entry.nomeDoArquivo
+                        row.category = entry.categoria
                     }
+
+                    if let category = row.category, !category.isEmpty {
+                        Text(category)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .padding(.leading, 50)
+                    }
+
                     HStack {
                         TextField("Qtd", text: $row.quantity)
                             #if os(iOS)
@@ -385,6 +411,7 @@ struct EditRecipeView: View {
                             ? String(format: "%.0f", $0) : String(format: "%.1f", $0)
                     } ?? "",
                     unit: ing.unit,
+                    category: ItemDatabase.shared.entry(forFilename: ing.iconName ?? "")?.categoria ?? ItemDatabase.shared.exactMatch(for: ing.name)?.categoria,
                     iconName: ing.iconName
                 )
             }
@@ -406,7 +433,14 @@ struct EditRecipeView: View {
                 )
             }
 
-        utensilNames = (recipe.requiredUtensils ?? []).map { IdentifiedUtensil(name: $0) }
+        utensilNames = (recipe.requiredUtensils ?? []).map { name in
+            let match = ItemDatabase.shared.exactMatch(for: name)
+            return IdentifiedUtensil(
+                name: name,
+                category: match?.categoria,
+                iconName: match?.nomeDoArquivo
+            )
+        }
     }
 
     private func save() {
@@ -483,6 +517,21 @@ struct EditRecipeView: View {
         }
     }
 
+    private func applyIngredientEntry(_ entry: ItemEntry, to rowID: UUID) {
+        guard let index = ingredientRows.firstIndex(where: { $0.id == rowID }) else { return }
+        ingredientRows[index].name = entry.preferredTitle(matching: ingredientRows[index].name)
+        ingredientRows[index].iconName = entry.nomeDoArquivo
+        ingredientRows[index].category = entry.categoria
+    }
+
+    private func ingredientName(for rowID: UUID) -> String {
+        ingredientRows.first(where: { $0.id == rowID })?.name ?? ""
+    }
+
+    private func ingredientIconName(for rowID: UUID) -> String? {
+        ingredientRows.first(where: { $0.id == rowID })?.iconName
+    }
+
     private func loadPreparationMedia() {
         let items = selectedPreparationItems
         selectedPreparationItems = []
@@ -556,6 +605,7 @@ private struct EditIngredientRow: Identifiable {
     var name = ""
     var quantity = ""
     var unit = ""
+    var category: String?
     var iconName: String?
 }
 
@@ -585,4 +635,8 @@ private struct EditPreparationMediaRow: Identifiable {
         self.data = data
         self.fileExtension = fileExtension
     }
+}
+
+private struct EditIngredientPickerTarget: Identifiable {
+    let id: UUID
 }

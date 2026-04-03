@@ -41,13 +41,13 @@ struct AddRecipeView: View {
 
     // Dynamic ingredients
     @State private var ingredientRows: [IngredientRow] = [IngredientRow()]
+    @State private var activeIngredientPicker: IngredientPickerTarget?
 
     // Dynamic steps
     @State private var stepRows: [StepRow] = [StepRow(order: 1)]
 
     // Dynamic utensils
     @State private var utensilNames: [IdentifiedUtensil] = []
-    @State private var newUtensilName = ""
 
     private var settings: AppSettings? { settingsArray.first }
 
@@ -71,7 +71,7 @@ struct AddRecipeView: View {
             preparationMediaSection
             ingredientsSection
             if settings?.showUtensils == true {
-                RecipeUtensilsEditor(utensilNames: $utensilNames, newUtensilName: $newUtensilName)
+                RecipeUtensilsEditor(utensilNames: $utensilNames)
             }
             stepsSection
         }
@@ -144,6 +144,15 @@ struct AddRecipeView: View {
         #endif
         .sheet(isPresented: $showCategoryManager) {
             CategoryManagementView(initialType: .recipe)
+        }
+        .sheet(item: $activeIngredientPicker) { target in
+            ItemIconPickerView(
+                initialQuery: ingredientName(for: target.id),
+                currentIconFileName: ingredientIconName(for: target.id),
+                fallbackSymbol: "leaf"
+            ) { entry in
+                applyIngredientEntry(entry, to: target.id)
+            }
         }
         #if os(iOS)
         .sheet(isPresented: $showPreparationCameraPicker) {
@@ -343,10 +352,27 @@ struct AddRecipeView: View {
     private var ingredientsSection: some View {
         Section {
             ForEach($ingredientRows) { $row in
-                VStack(spacing: 8) {
-                    ItemSearchField(text: $row.name, placeholder: "Ingrediente") { entry in
+                VStack(alignment: .leading, spacing: 8) {
+                    ItemSearchField(
+                        text: $row.name,
+                        placeholder: "Ingrediente",
+                        iconFileName: row.iconName,
+                        fallbackSymbol: "leaf",
+                        showsLeadingIcon: true,
+                        onIconTapped: { activeIngredientPicker = IngredientPickerTarget(id: row.id) }
+                    ) { entry in
+                        row.name = entry.preferredTitle(matching: row.name)
                         row.iconName = entry.nomeDoArquivo
+                        row.category = entry.categoria
                     }
+
+                    if let category = row.category, !category.isEmpty {
+                        Text(category)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .padding(.leading, 50)
+                    }
+
                     HStack {
                         TextField("Qtd", text: $row.quantity)
                             #if os(iOS)
@@ -478,6 +504,21 @@ struct AddRecipeView: View {
         }
     }
 
+    private func applyIngredientEntry(_ entry: ItemEntry, to rowID: UUID) {
+        guard let index = ingredientRows.firstIndex(where: { $0.id == rowID }) else { return }
+        ingredientRows[index].name = entry.preferredTitle(matching: ingredientRows[index].name)
+        ingredientRows[index].iconName = entry.nomeDoArquivo
+        ingredientRows[index].category = entry.categoria
+    }
+
+    private func ingredientName(for rowID: UUID) -> String {
+        ingredientRows.first(where: { $0.id == rowID })?.name ?? ""
+    }
+
+    private func ingredientIconName(for rowID: UUID) -> String? {
+        ingredientRows.first(where: { $0.id == rowID })?.iconName
+    }
+
     private func loadPreparationMedia() {
         let items = selectedPreparationItems
         selectedPreparationItems = []
@@ -557,6 +598,7 @@ private struct IngredientRow: Identifiable {
     var name = ""
     var quantity = ""
     var unit = ""
+    var category: String?
     var iconName: String?
 }
 
@@ -564,4 +606,8 @@ private struct StepRow: Identifiable {
     let id = UUID()
     var order: Int
     var instruction = ""
+}
+
+private struct IngredientPickerTarget: Identifiable {
+    let id: UUID
 }

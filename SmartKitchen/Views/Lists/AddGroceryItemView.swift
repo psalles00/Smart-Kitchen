@@ -17,18 +17,21 @@ struct AddGroceryItemView: View {
     @State private var unit = ""
     @State private var isFixed = false
     @State private var showCategoryManager = false
+    @State private var showIconPicker = false
 
     private var isValid: Bool { !name.trimmingCharacters(in: .whitespaces).isEmpty }
 
     var body: some View {
         Form {
             Section("Item") {
-                ItemSearchField(text: $name) { entry in
-                    iconName = entry.nomeDoArquivo
-                    if categories.contains(where: { $0.name == entry.categoria }) {
-                        selectedCategory = entry.categoria
-                    }
-                    userChangedCategory = true
+                ItemSearchField(
+                    text: $name,
+                    iconFileName: iconName,
+                    fallbackSymbol: "basket",
+                    showsLeadingIcon: true,
+                    onIconTapped: { showIconPicker = true }
+                ) { entry in
+                    applySelectedEntry(entry)
                 }
 
                 Picker("Categoria", selection: $selectedCategory) {
@@ -81,6 +84,24 @@ struct AddGroceryItemView: View {
         .sheet(isPresented: $showCategoryManager) {
             CategoryManagementView(initialType: .pantry)
         }
+        .sheet(isPresented: $showIconPicker) {
+            ItemIconPickerView(
+                initialQuery: name,
+                currentIconFileName: iconName,
+                fallbackSymbol: "basket"
+            ) { entry in
+                applySelectedEntry(entry)
+            }
+        }
+    }
+
+    private func applySelectedEntry(_ entry: ItemEntry) {
+        name = entry.preferredTitle(matching: name)
+        iconName = entry.nomeDoArquivo
+        if categories.contains(where: { $0.name == entry.categoria }) {
+            selectedCategory = entry.categoria
+        }
+        userChangedCategory = true
     }
 
     private func save() {
@@ -119,16 +140,22 @@ struct EditGroceryItemView: View {
 
     @Bindable var item: GroceryItem
     @State private var showCategoryManager = false
+    @State private var showIconPicker = false
 
     private var categories: [Category] { allEditCategories.filter { $0.type == .pantry } }
 
     var body: some View {
         Form {
             Section("Item") {
-                TextField("Nome", text: $item.name)
-                    #if os(iOS)
-                    .textInputAutocapitalization(.words)
-                    #endif
+                ItemSearchField(
+                    text: $item.name,
+                    iconFileName: item.iconName,
+                    fallbackSymbol: "basket",
+                    showsLeadingIcon: true,
+                    onIconTapped: { showIconPicker = true }
+                ) { entry in
+                    applySelectedEntry(entry)
+                }
 
                 Picker("Categoria", selection: $item.category) {
                     ForEach(categories) { cat in
@@ -173,6 +200,23 @@ struct EditGroceryItemView: View {
         }
         .sheet(isPresented: $showCategoryManager) {
             CategoryManagementView(initialType: .pantry)
+        }
+        .sheet(isPresented: $showIconPicker) {
+            ItemIconPickerView(
+                initialQuery: item.name,
+                currentIconFileName: item.iconName,
+                fallbackSymbol: "basket"
+            ) { entry in
+                applySelectedEntry(entry)
+            }
+        }
+    }
+
+    private func applySelectedEntry(_ entry: ItemEntry) {
+        item.name = entry.preferredTitle(matching: item.name)
+        item.iconName = entry.nomeDoArquivo
+        if categories.contains(where: { $0.name == entry.categoria }) {
+            item.category = entry.categoria
         }
     }
 }

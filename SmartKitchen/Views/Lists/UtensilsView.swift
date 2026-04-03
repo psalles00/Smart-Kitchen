@@ -5,6 +5,7 @@ struct UtensilsView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \UtensilItem.sortOrder) private var allItems: [UtensilItem]
     @Query(sort: \Category.sortOrder) private var allCategories: [Category]
+    @State private var editingItem: UtensilItem?
 
     let searchText: String
     let sortOption: ListsSortOption
@@ -48,61 +49,74 @@ struct UtensilsView: View {
     }
 
     var body: some View {
-        if filteredItems.isEmpty {
-            ContentUnavailableView(
-                searchText.isEmpty ? "Nenhum utensílio" : "Sem resultados",
-                systemImage: searchText.isEmpty ? "fork.knife" : "magnifyingglass",
-                description: Text(searchText.isEmpty ? "Adicione seus utensílios de cozinha" : "Nenhum utensílio encontrado para \"\(searchText)\"")
-            )
-            .padding(.top, 40)
-        } else {
-            LazyVStack(spacing: 0, pinnedViews: .sectionHeaders) {
-                ForEach(Array(groupedItems.enumerated()), id: \.1.0) { categoryIndex, group in
-                    let (categoryName, items) = group
-                    Section {
-                        ForEach(Array(items.enumerated()), id: \.1.id) { itemIndex, item in
-                            UtensilItemRow(item: item, showsDivider: itemIndex > 0)
-                                .contentShape(Rectangle())
-                                .background(alignment: .top) {
-                                    if categoryIndex == 0, itemIndex == 0 {
-                                        ScrollOffsetReader(coordinateSpace: "lists_scroll")
+        Group {
+            if filteredItems.isEmpty {
+                ContentUnavailableView(
+                    searchText.isEmpty ? "Nenhum utensílio" : "Sem resultados",
+                    systemImage: searchText.isEmpty ? "fork.knife" : "magnifyingglass",
+                    description: Text(searchText.isEmpty ? "Adicione seus utensílios de cozinha" : "Nenhum utensílio encontrado para \"\(searchText)\"")
+                )
+                .padding(.top, 40)
+            } else {
+                LazyVStack(spacing: 0, pinnedViews: .sectionHeaders) {
+                    ForEach(Array(groupedItems.enumerated()), id: \.1.0) { categoryIndex, group in
+                        let (categoryName, items) = group
+                        Section {
+                            ForEach(Array(items.enumerated()), id: \.1.id) { itemIndex, item in
+                                UtensilItemRow(item: item, showsDivider: itemIndex > 0)
+                                    .contentShape(Rectangle())
+                                    .background(alignment: .top) {
+                                        if categoryIndex == 0, itemIndex == 0 {
+                                            ScrollOffsetReader(coordinateSpace: "lists_scroll")
+                                        }
                                     }
-                                }
-                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                    Button(role: .destructive) {
-                                        deleteItem(item)
-                                    } label: {
-                                        Label("Remover", systemImage: "trash")
+                                    .onTapGesture {
+                                        editingItem = item
                                     }
-                                }
-                                .contextMenu {
-                                    Button(role: .destructive) {
-                                        deleteItem(item)
-                                    } label: {
-                                        Label("Remover", systemImage: "trash")
+                                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                        Button(role: .destructive) {
+                                            deleteItem(item)
+                                        } label: {
+                                            Label("Remover", systemImage: "trash")
+                                        }
                                     }
-                                }
-                        }
-                    } header: {
-                        if groupedItems.count > 1 {
-                            HStack {
-                                let catIcon = utensilCategories.first(where: { $0.name == categoryName })
-                                if let iconName = catIcon?.iconName {
-                                    IconImage(name: iconName, fallbackSymbol: "fork.knife", size: 18)
-                                }
-                                Text(categoryName)
-                                    .font(.subheadline.weight(.semibold))
-                                    .foregroundStyle(.secondary)
-                                Spacer()
+                                    .contextMenu {
+                                        Button("Editar", systemImage: "pencil") {
+                                            editingItem = item
+                                        }
+                                        Button(role: .destructive) {
+                                            deleteItem(item)
+                                        } label: {
+                                            Label("Remover", systemImage: "trash")
+                                        }
+                                    }
                             }
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 4)
-                            .background(Color(.systemBackground))
+                        } header: {
+                            if groupedItems.count > 1 {
+                                HStack {
+                                    let catIcon = utensilCategories.first(where: { $0.name == categoryName })
+                                    if let iconName = catIcon?.iconName {
+                                        IconImage(name: iconName, fallbackSymbol: "fork.knife", size: 18)
+                                    }
+                                    Text(categoryName)
+                                        .font(.subheadline.weight(.semibold))
+                                        .foregroundStyle(.secondary)
+                                    Spacer()
+                                }
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 4)
+                                .background(Color(.systemBackground))
+                            }
                         }
                     }
                 }
+                .padding(.top, 8)
             }
-            .padding(.top, 8)
+        }
+        .sheet(item: $editingItem) { item in
+            NavigationStack {
+                EditUtensilItemView(item: item)
+            }
         }
     }
 

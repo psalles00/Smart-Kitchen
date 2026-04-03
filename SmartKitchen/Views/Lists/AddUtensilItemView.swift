@@ -11,6 +11,7 @@ struct AddUtensilItemView: View {
     @State private var selectedCategory = "Outros"
     @State private var iconName: String?
     @State private var userChangedCategory = false
+    @State private var showIconPicker = false
 
     private var categories: [Category] { allCategories.filter { $0.type == .utensil } }
     private var isValid: Bool { !name.trimmingCharacters(in: .whitespaces).isEmpty }
@@ -18,12 +19,14 @@ struct AddUtensilItemView: View {
     var body: some View {
         Form {
             Section("Utensílio") {
-                ItemSearchField(text: $name) { entry in
-                    iconName = entry.nomeDoArquivo
-                    if categories.contains(where: { $0.name == entry.categoria }) {
-                        selectedCategory = entry.categoria
-                    }
-                    userChangedCategory = true
+                ItemSearchField(
+                    text: $name,
+                    iconFileName: iconName,
+                    fallbackSymbol: "fork.knife",
+                    showsLeadingIcon: true,
+                    onIconTapped: { showIconPicker = true }
+                ) { entry in
+                    applySelectedEntry(entry)
                 }
 
                 Picker("Categoria", selection: $selectedCategory) {
@@ -49,6 +52,24 @@ struct AddUtensilItemView: View {
                     .disabled(!isValid)
             }
         }
+        .sheet(isPresented: $showIconPicker) {
+            ItemIconPickerView(
+                initialQuery: name,
+                currentIconFileName: iconName,
+                fallbackSymbol: "fork.knife"
+            ) { entry in
+                applySelectedEntry(entry)
+            }
+        }
+    }
+
+    private func applySelectedEntry(_ entry: ItemEntry) {
+        name = entry.preferredTitle(matching: name)
+        iconName = entry.nomeDoArquivo
+        if categories.contains(where: { $0.name == entry.categoria }) {
+            selectedCategory = entry.categoria
+        }
+        userChangedCategory = true
     }
 
     private func save() {
@@ -75,5 +96,63 @@ struct AddUtensilItemView: View {
         )
         modelContext.insert(item)
         dismiss()
+    }
+}
+
+struct EditUtensilItemView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Query(sort: \Category.sortOrder) private var allEditCategories: [Category]
+
+    @Bindable var item: UtensilItem
+    @State private var showIconPicker = false
+
+    private var categories: [Category] { allEditCategories.filter { $0.type == .utensil } }
+
+    var body: some View {
+        Form {
+            Section("Utensílio") {
+                ItemSearchField(
+                    text: $item.name,
+                    iconFileName: item.iconName,
+                    fallbackSymbol: "fork.knife",
+                    showsLeadingIcon: true,
+                    onIconTapped: { showIconPicker = true }
+                ) { entry in
+                    applySelectedEntry(entry)
+                }
+
+                Picker("Categoria", selection: $item.category) {
+                    ForEach(categories) { cat in
+                        Text(cat.name).tag(cat.name)
+                    }
+                }
+            }
+        }
+        .navigationTitle("Editar Utensílio")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
+        .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+                Button("OK") { dismiss() }
+            }
+        }
+        .sheet(isPresented: $showIconPicker) {
+            ItemIconPickerView(
+                initialQuery: item.name,
+                currentIconFileName: item.iconName,
+                fallbackSymbol: "fork.knife"
+            ) { entry in
+                applySelectedEntry(entry)
+            }
+        }
+    }
+
+    private func applySelectedEntry(_ entry: ItemEntry) {
+        item.name = entry.preferredTitle(matching: item.name)
+        item.iconName = entry.nomeDoArquivo
+        if categories.contains(where: { $0.name == entry.categoria }) {
+            item.category = entry.categoria
+        }
     }
 }

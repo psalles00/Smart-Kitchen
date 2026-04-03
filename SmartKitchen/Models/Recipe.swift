@@ -6,6 +6,14 @@ import SwiftData
 struct IdentifiedUtensil: Identifiable {
     let id = UUID()
     var name: String
+    var category: String?
+    var iconName: String?
+
+    init(name: String = "", category: String? = nil, iconName: String? = nil) {
+        self.name = name
+        self.category = category
+        self.iconName = iconName
+    }
 }
 
 // MARK: - Recipe
