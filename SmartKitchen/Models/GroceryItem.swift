@@ -5,6 +5,8 @@ import SwiftData
 final class GroceryItem {
     var id: UUID = UUID()
     var name: String = ""
+    var descriptionText: String = ""
+    var imageData: Data? = nil
     var category: String = "Outros"
     var quantity: Double? = nil
     var unit: String? = nil
@@ -18,6 +20,8 @@ final class GroceryItem {
 
     init(
         name: String,
+        descriptionText: String = "",
+        imageData: Data? = nil,
         category: String = "Outros",
         quantity: Double? = nil,
         unit: String? = nil,
@@ -29,6 +33,8 @@ final class GroceryItem {
     ) {
         self.id = UUID()
         self.name = name
+        self.descriptionText = descriptionText
+        self.imageData = imageData
         self.category = category
         self.quantity = quantity
         self.unit = unit
@@ -54,6 +60,9 @@ final class GroceryItem {
             }
         }
         text += " [\(category)]"
+        if !descriptionText.isEmpty {
+            text += " - \(descriptionText)"
+        }
         if isChecked { text += " ✓" }
         if isFixed { text += " 📌" }
         return text

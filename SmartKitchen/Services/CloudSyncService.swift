@@ -235,6 +235,8 @@ final class CloudSyncService: @unchecked Sendable {
     private static func copyPantryItem(_ source: PantryItem) -> PantryItem {
         let copy = PantryItem(
             name: source.name,
+            descriptionText: source.descriptionText,
+            imageData: source.imageData,
             category: source.category,
             quantity: source.quantity,
             unit: source.unit,
@@ -251,6 +253,8 @@ final class CloudSyncService: @unchecked Sendable {
     private static func copyGroceryItem(_ source: GroceryItem) -> GroceryItem {
         let copy = GroceryItem(
             name: source.name,
+            descriptionText: source.descriptionText,
+            imageData: source.imageData,
             category: source.category,
             quantity: source.quantity,
             unit: source.unit,
@@ -258,6 +262,20 @@ final class CloudSyncService: @unchecked Sendable {
             isChecked: source.isChecked,
             isFixed: source.isFixed,
             linkedPantryItemId: source.linkedPantryItemId,
+            sortOrder: source.sortOrder
+        )
+        copy.id = source.id
+        copy.addedAt = source.addedAt
+        return copy
+    }
+
+    private static func copyUtensilItem(_ source: UtensilItem) -> UtensilItem {
+        let copy = UtensilItem(
+            name: source.name,
+            descriptionText: source.descriptionText,
+            imageData: source.imageData,
+            category: source.category,
+            iconName: source.iconName,
             sortOrder: source.sortOrder
         )
         copy.id = source.id

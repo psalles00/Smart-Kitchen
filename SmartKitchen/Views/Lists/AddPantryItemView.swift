@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import PhotosUI
 
 struct AddPantryItemView: View {
     @Environment(\.modelContext) private var modelContext
@@ -9,6 +10,8 @@ struct AddPantryItemView: View {
     @Query(sort: \Category.sortOrder) private var allCategories: [Category]
 
     @State private var name = ""
+    @State private var descriptionText = ""
+    @State private var imageData: Data?
     @State private var selectedCategory = "Outros"
     @State private var iconName: String?
     @State private var userChangedCategory = false
@@ -20,6 +23,8 @@ struct AddPantryItemView: View {
     @State private var showCategoryManager = false
     @State private var showIconPicker = false
     @State private var focusNameField = false
+    @State private var selectedPhoto: PhotosPickerItem?
+    @State private var showPhotoPreview = false
 
     private var categories: [Category] { allCategories.filter { $0.type == .pantry } }
     private var isDetailed: Bool { settingsArray.first?.pantryDetailLevel == .detailed }
@@ -46,6 +51,36 @@ struct AddPantryItemView: View {
                 }
                 .onChange(of: selectedCategory) { _, _ in
                     userChangedCategory = true
+                }
+            }
+
+            Section("Detalhes") {
+                TextField("Descrição (opcional)", text: $descriptionText, axis: .vertical)
+                    .lineLimit(3...5)
+
+                if let imageData, let image = PlatformImage(data: imageData) {
+                    Button {
+                        showPhotoPreview = true
+                    } label: {
+                        Image(platformImage: image)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(height: 160)
+                            .frame(maxWidth: .infinity)
+                            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                PhotosPicker(selection: $selectedPhoto, matching: .images) {
+                    Label(imageData == nil ? "Adicionar Foto" : "Alterar Foto", systemImage: "photo")
+                }
+
+                if imageData != nil {
+                    Button("Remover Foto", role: .destructive) {
+                        imageData = nil
+                        selectedPhoto = nil
+                    }
                 }
             }
 
@@ -109,6 +144,14 @@ struct AddPantryItemView: View {
                 iconName = entry.nomeDoArquivo
             }
         }
+        .sheet(isPresented: $showPhotoPreview) {
+            if let imageData, let image = PlatformImage(data: imageData) {
+                PhotoPreviewSheetView(image: image)
+            }
+        }
+        .onChange(of: selectedPhoto) {
+            loadPhoto()
+        }
         .onAppear {
             DispatchQueue.main.async {
                 focusNameField = true
@@ -140,6 +183,8 @@ struct AddPantryItemView: View {
 
         let item = PantryItem(
             name: trimmed,
+            descriptionText: descriptionText.trimmingCharacters(in: .whitespacesAndNewlines),
+            imageData: imageData,
             category: finalCategory,
             quantity: isDetailed ? quantity : nil,
             unit: isDetailed ? (unit.isEmpty ? nil : unit) : nil,
@@ -150,6 +195,16 @@ struct AddPantryItemView: View {
         )
         modelContext.insert(item)
         dismiss()
+    }
+
+    private func loadPhoto() {
+        guard let selectedPhoto else { return }
+        Task {
+            guard let data = try? await selectedPhoto.loadTransferable(type: Data.self) else { return }
+            await MainActor.run {
+                imageData = data
+            }
+        }
     }
 }
 
@@ -163,6 +218,8 @@ struct EditPantryItemView: View {
     @Bindable var item: PantryItem
     @State private var showCategoryManager = false
     @State private var showIconPicker = false
+    @State private var selectedPhoto: PhotosPickerItem?
+    @State private var showPhotoPreview = false
 
     private var categories: [Category] { allEditCategories.filter { $0.type == .pantry } }
     private var isDetailed: Bool { settingsArray.first?.pantryDetailLevel == .detailed }
@@ -183,6 +240,36 @@ struct EditPantryItemView: View {
                 Picker("Categoria", selection: $item.category) {
                     ForEach(categories) { cat in
                         Text(cat.name).tag(cat.name)
+                    }
+                }
+            }
+
+            Section("Detalhes") {
+                TextField("Descrição (opcional)", text: $item.descriptionText, axis: .vertical)
+                    .lineLimit(3...5)
+
+                if let imageData = item.imageData, let image = PlatformImage(data: imageData) {
+                    Button {
+                        showPhotoPreview = true
+                    } label: {
+                        Image(platformImage: image)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(height: 160)
+                            .frame(maxWidth: .infinity)
+                            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                PhotosPicker(selection: $selectedPhoto, matching: .images) {
+                    Label(item.imageData == nil ? "Adicionar Foto" : "Alterar Foto", systemImage: "photo")
+                }
+
+                if item.imageData != nil {
+                    Button("Remover Foto", role: .destructive) {
+                        item.imageData = nil
+                        selectedPhoto = nil
                     }
                 }
             }
@@ -256,6 +343,14 @@ struct EditPantryItemView: View {
                 item.iconName = entry.nomeDoArquivo
             }
         }
+        .sheet(isPresented: $showPhotoPreview) {
+            if let imageData = item.imageData, let image = PlatformImage(data: imageData) {
+                PhotoPreviewSheetView(image: image)
+            }
+        }
+        .onChange(of: selectedPhoto) {
+            loadPhoto()
+        }
     }
 
     private func applySelectedEntry(_ entry: ItemEntry) {
@@ -263,6 +358,16 @@ struct EditPantryItemView: View {
         item.iconName = entry.nomeDoArquivo
         if categories.contains(where: { $0.name == entry.categoria }) {
             item.category = entry.categoria
+        }
+    }
+
+    private func loadPhoto() {
+        guard let selectedPhoto else { return }
+        Task {
+            guard let data = try? await selectedPhoto.loadTransferable(type: Data.self) else { return }
+            await MainActor.run {
+                item.imageData = data
+            }
         }
     }
 }

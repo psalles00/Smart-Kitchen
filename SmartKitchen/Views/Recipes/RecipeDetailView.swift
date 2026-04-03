@@ -14,6 +14,9 @@ struct RecipeDetailView: View {
     @State private var showCookingMode = false
     @State private var showEditRecipe = false
     @State private var previewSelection: PreparationMediaSelection?
+    @State private var editingPantryItem: PantryItem?
+    @State private var editingGroceryItem: GroceryItem?
+    @State private var editingUtensilItem: UtensilItem?
 
     private var sortedIngredients: [RecipeIngredient] {
         (recipe.ingredients ?? []).sorted { $0.sortOrder < $1.sortOrder }
@@ -98,6 +101,21 @@ struct RecipeDetailView: View {
         .sheet(isPresented: $showEditRecipe) {
             NavigationStack {
                 EditRecipeView(recipe: recipe)
+            }
+        }
+        .sheet(item: $editingPantryItem) { item in
+            NavigationStack {
+                EditPantryItemView(item: item)
+            }
+        }
+        .sheet(item: $editingGroceryItem) { item in
+            NavigationStack {
+                EditGroceryItemView(item: item)
+            }
+        }
+        .sheet(item: $editingUtensilItem) { item in
+            NavigationStack {
+                EditUtensilItemView(item: item)
             }
         }
         .sheet(item: $previewSelection) { selection in
@@ -279,6 +297,10 @@ struct RecipeDetailView: View {
                     isAvailable ? Color.green.opacity(0.08) : Color(.secondarySystemBackground),
                     in: .rect(cornerRadius: 16)
                 )
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    openIngredientItem(ingredient)
+                }
                 .contextMenu {
                     Button(
                         isInGrocery ? "Já adicionado ao Mercado" : "Adicionar ao Mercado",
@@ -339,6 +361,10 @@ struct RecipeDetailView: View {
                     RoundedRectangle(cornerRadius: 12)
                         .fill(Color(.secondarySystemBackground))
                 )
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    openUtensilItem(utensil)
+                }
             }
         }
     }
@@ -578,6 +604,21 @@ struct RecipeDetailView: View {
         return defaultUtensilCategory
     }
 
+    private func openIngredientItem(_ ingredient: RecipeIngredient) {
+        if let pantryItem = pantryListItems.first(where: { sameName($0.name, ingredient.name) }) {
+            editingPantryItem = pantryItem
+            return
+        }
+
+        if let groceryItem = groceryItems.first(where: { sameName($0.name, ingredient.name) }) {
+            editingGroceryItem = groceryItem
+        }
+    }
+
+    private func openUtensilItem(_ utensilName: String) {
+        editingUtensilItem = utensilItems.first(where: { sameName($0.name, utensilName) })
+    }
+
     private func sameName(_ lhs: String, _ rhs: String) -> Bool {
         lhs.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
             .lowercased() ==
@@ -797,45 +838,6 @@ private struct PreparationMediaPreviewView: View {
             return url
         } catch {
             return nil
-        }
-    }
-}
-
-private struct ZoomablePhotoView: View {
-    let image: PlatformImage
-    @State private var scale: CGFloat = 1
-    @State private var lastScale: CGFloat = 1
-
-    var body: some View {
-        GeometryReader { proxy in
-            ScrollView([.horizontal, .vertical], showsIndicators: false) {
-                Image(platformImage: image)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: proxy.size.width)
-                    .scaleEffect(scale)
-                    .gesture(
-                        MagnificationGesture()
-                            .onChanged { value in
-                                scale = max(1, min(lastScale * value, 4))
-                            }
-                            .onEnded { _ in
-                                lastScale = scale
-                            }
-                    )
-                    .onTapGesture(count: 2) {
-                        withAnimation(.spring(response: 0.28, dampingFraction: 0.85)) {
-                            if scale > 1 {
-                                scale = 1
-                                lastScale = 1
-                            } else {
-                                scale = 2
-                                lastScale = 2
-                            }
-                        }
-                    }
-            }
-            .contentMargins(.vertical, 32)
         }
     }
 }

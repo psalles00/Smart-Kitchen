@@ -410,6 +410,71 @@ func pickedRecipeMedia(from data: Data, contentType: UTType?) -> PickedRecipeMed
     return PickedRecipeMedia(type: type, data: data, fileExtension: fileExtension)
 }
 
+struct PhotoPreviewSheetView: View {
+    @Environment(\.dismiss) private var dismiss
+    let image: PlatformImage
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                Color.black.ignoresSafeArea()
+                ZoomablePhotoView(image: image)
+            }
+            .toolbar {
+                ToolbarItem(placement: .adaptiveLeading) {
+                    Button("Fechar") {
+                        dismiss()
+                    }
+                    .foregroundStyle(.white)
+                }
+            }
+            #if os(iOS)
+            .toolbarBackground(.hidden, for: .navigationBar)
+            .toolbarColorScheme(.dark, for: .navigationBar)
+            #endif
+        }
+    }
+}
+
+struct ZoomablePhotoView: View {
+    let image: PlatformImage
+    @State private var scale: CGFloat = 1
+    @State private var lastScale: CGFloat = 1
+
+    var body: some View {
+        GeometryReader { proxy in
+            ScrollView([.horizontal, .vertical], showsIndicators: false) {
+                Image(platformImage: image)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: proxy.size.width)
+                    .scaleEffect(scale)
+                    .gesture(
+                        MagnificationGesture()
+                            .onChanged { value in
+                                scale = min(max(lastScale * value, 1), 4)
+                            }
+                            .onEnded { _ in
+                                lastScale = scale
+                            }
+                    )
+                    .onTapGesture(count: 2) {
+                        withAnimation(.spring(response: 0.24, dampingFraction: 0.82)) {
+                            if scale > 1 {
+                                scale = 1
+                                lastScale = 1
+                            } else {
+                                scale = 2
+                                lastScale = 2
+                            }
+                        }
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+        }
+    }
+}
+
 #if os(iOS)
 struct CameraMediaPicker: UIViewControllerRepresentable {
     @Environment(\.dismiss) private var dismiss

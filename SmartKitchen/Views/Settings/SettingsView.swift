@@ -348,6 +348,8 @@ private struct AppBackupSnapshot: Codable {
         for record in pantryItems {
             let item = PantryItem(
                 name: record.name,
+                descriptionText: record.descriptionText,
+                imageData: record.imageData,
                 category: record.category,
                 quantity: record.quantity,
                 unit: record.unit,
@@ -364,6 +366,8 @@ private struct AppBackupSnapshot: Codable {
         for record in groceryItems {
             let item = GroceryItem(
                 name: record.name,
+                descriptionText: record.descriptionText,
+                imageData: record.imageData,
                 category: record.category,
                 quantity: record.quantity,
                 unit: record.unit,
@@ -509,6 +513,8 @@ private struct CategoryRecord: Codable {
 private struct PantryItemRecord: Codable {
     let id: UUID
     let name: String
+    let descriptionText: String
+    let imageData: Data?
     let category: String
     let quantity: Double?
     let unit: String?
@@ -521,6 +527,8 @@ private struct PantryItemRecord: Codable {
     init(_ item: PantryItem) {
         id = item.id
         name = item.name
+        descriptionText = item.descriptionText
+        imageData = item.imageData
         category = item.category
         quantity = item.quantity
         unit = item.unit
@@ -535,6 +543,8 @@ private struct PantryItemRecord: Codable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(UUID.self, forKey: .id)
         name = try container.decode(String.self, forKey: .name)
+        descriptionText = try container.decodeIfPresent(String.self, forKey: .descriptionText) ?? ""
+        imageData = try container.decodeIfPresent(Data.self, forKey: .imageData)
         category = try container.decode(String.self, forKey: .category)
         quantity = try container.decodeIfPresent(Double.self, forKey: .quantity)
         unit = try container.decodeIfPresent(String.self, forKey: .unit)
@@ -549,6 +559,8 @@ private struct PantryItemRecord: Codable {
 private struct GroceryItemRecord: Codable {
     let id: UUID
     let name: String
+    let descriptionText: String
+    let imageData: Data?
     let category: String
     let quantity: Double?
     let unit: String?
@@ -562,6 +574,8 @@ private struct GroceryItemRecord: Codable {
     init(_ item: GroceryItem) {
         id = item.id
         name = item.name
+        descriptionText = item.descriptionText
+        imageData = item.imageData
         category = item.category
         quantity = item.quantity
         unit = item.unit
@@ -571,6 +585,23 @@ private struct GroceryItemRecord: Codable {
         linkedPantryItemId = item.linkedPantryItemId
         sortOrder = item.sortOrder
         addedAt = item.addedAt
+    }
+
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        descriptionText = try container.decodeIfPresent(String.self, forKey: .descriptionText) ?? ""
+        imageData = try container.decodeIfPresent(Data.self, forKey: .imageData)
+        category = try container.decode(String.self, forKey: .category)
+        quantity = try container.decodeIfPresent(Double.self, forKey: .quantity)
+        unit = try container.decodeIfPresent(String.self, forKey: .unit)
+        iconName = try container.decodeIfPresent(String.self, forKey: .iconName)
+        isChecked = try container.decodeIfPresent(Bool.self, forKey: .isChecked) ?? false
+        isFixed = try container.decodeIfPresent(Bool.self, forKey: .isFixed) ?? false
+        linkedPantryItemId = try container.decodeIfPresent(UUID.self, forKey: .linkedPantryItemId)
+        sortOrder = try container.decodeIfPresent(Int.self, forKey: .sortOrder) ?? 0
+        addedAt = try container.decode(Date.self, forKey: .addedAt)
     }
 }
 
