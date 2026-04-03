@@ -204,17 +204,17 @@ struct ContentView: View {
                 Section("Navegação") {
                     ForEach(SidebarItem.allCases.filter { $0 != .settings }) { item in
                         Label(item.title, systemImage: item.systemImage)
-                            .tag(Optional(item))
+                            .tag(item)
                     }
                 }
                 Section("Preferências") {
                     Label(SidebarItem.settings.title, systemImage: SidebarItem.settings.systemImage)
-                        .tag(Optional(SidebarItem.settings))
+                        .tag(SidebarItem.settings)
                 }
             }
             .listStyle(.sidebar)
             .scrollContentBackground(.hidden)
-            .background(Color.clear)
+            .background(.ultraThinMaterial)
             .environment(\.colorScheme, .dark)
             .navigationTitle("Smart Kitchen")
         } detail: {
@@ -235,6 +235,42 @@ struct ContentView: View {
                 NavigationStack { MacDetailCard { SettingsView() } }
                     .background(Color.clear)
             }
+        }
+        .background {
+            macAppBackground
+                .ignoresSafeArea()
+        }
+    }
+
+    @ViewBuilder
+    private var macAppBackground: some View {
+        let selection = BackgroundManager.shared.background(for: macActivePageTheme)
+
+        switch selection.type {
+        case .texturedGradient:
+            if let preset = selection.texturedPreset {
+                TexturedGradientView(preset: preset, progress: 1.0)
+            } else {
+                macOriginalBackground
+            }
+        case .original:
+            macOriginalBackground
+        case .waves:
+            WavesShaderView(progress: 1.0)
+        }
+    }
+
+    @ViewBuilder
+    private var macOriginalBackground: some View {
+        switch macActivePageTheme {
+        case .home:
+            NebulaShaderView(theme: .home, progress: 1.0)
+        case .lists:
+            NebulaShaderView(theme: .lists, progress: 1.0)
+        case .recipes:
+            NebulaShaderView(theme: .recipes, progress: 1.0)
+        case .nutrients:
+            NebulaShaderView(theme: .nutrients, progress: 1.0)
         }
     }
     #endif
@@ -324,33 +360,21 @@ private struct MacDetailCard<Content: View>: View {
     }
 
     var body: some View {
-        GeometryReader { proxy in
-            let size = proxy.size
-            let corner: CGFloat = 18
-
-            ZStack {
-                RoundedRectangle(cornerRadius: corner, style: .continuous)
+        content
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .background(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
                     .fill(Color(nsColor: .windowBackgroundColor))
-
-                ScrollView {
-                    content
-                        .frame(maxWidth: .infinity, alignment: .topLeading)
-                        .padding(12)
-                }
-                .frame(width: max(0, size.width - 24), height: max(0, size.height - 24))
-                .clipShape(RoundedRectangle(cornerRadius: corner, style: .continuous))
-            }
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: corner, style: .continuous)
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
                     .strokeBorder(
                         (colorScheme == .dark ? Color.white.opacity(0.12) : Color.black.opacity(0.06)),
                         lineWidth: 1
                     )
             )
-            .padding(12)
-            .frame(width: size.width, height: size.height, alignment: .center)
-            .background(Color.clear)
-        }
+            .padding(16)
     }
 }
 #endif
