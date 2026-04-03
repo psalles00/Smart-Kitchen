@@ -16,6 +16,122 @@ struct IdentifiedUtensil: Identifiable {
     }
 }
 
+struct RecipeOptionDefinition: Hashable {
+    let fullName: String
+    let abbreviation: String?
+
+    init(_ fullName: String, abbreviation: String? = nil) {
+        self.fullName = fullName
+        self.abbreviation = abbreviation?.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    var menuLabel: String {
+        guard let abbreviation, !abbreviation.isEmpty else { return fullName }
+        return "\(fullName) (\(abbreviation))"
+    }
+
+    var ingredientLabel: String {
+        guard let abbreviation, !abbreviation.isEmpty else { return fullName }
+        return abbreviation
+    }
+
+    func matches(_ rawValue: String) -> Bool {
+        let normalizedValue = RecipeOptionCatalog.normalized(rawValue)
+        guard !normalizedValue.isEmpty else { return false }
+
+        if RecipeOptionCatalog.normalized(fullName) == normalizedValue {
+            return true
+        }
+
+        if let abbreviation, RecipeOptionCatalog.normalized(abbreviation) == normalizedValue {
+            return true
+        }
+
+        return false
+    }
+}
+
+enum RecipeOptionCatalog {
+    static let stateOptions: [RecipeOptionDefinition] = [
+        RecipeOptionDefinition("Ralado"),
+        RecipeOptionDefinition("Desfiado"),
+        RecipeOptionDefinition("Grelhado"),
+        RecipeOptionDefinition("Assado"),
+        RecipeOptionDefinition("Frito"),
+        RecipeOptionDefinition("Cozido"),
+        RecipeOptionDefinition("Refogado"),
+        RecipeOptionDefinition("Picado"),
+        RecipeOptionDefinition("Fatiado"),
+        RecipeOptionDefinition("Em cubos"),
+        RecipeOptionDefinition("Moído"),
+        RecipeOptionDefinition("Triturado"),
+        RecipeOptionDefinition("Amassado"),
+        RecipeOptionDefinition("Derretido"),
+        RecipeOptionDefinition("Temperado"),
+        RecipeOptionDefinition("Gelado"),
+        RecipeOptionDefinition("Congelado"),
+        RecipeOptionDefinition("Inteiro"),
+        RecipeOptionDefinition("Sem casca"),
+        RecipeOptionDefinition("Com casca")
+    ]
+
+    static let unitOptions: [RecipeOptionDefinition] = [
+        RecipeOptionDefinition("Unidade", abbreviation: "un"),
+        RecipeOptionDefinition("Colher de Sopa", abbreviation: "c.s."),
+        RecipeOptionDefinition("Colher de Chá", abbreviation: "c.c."),
+        RecipeOptionDefinition("Gramas", abbreviation: "g"),
+        RecipeOptionDefinition("Quilogramas", abbreviation: "kg"),
+        RecipeOptionDefinition("Xícara", abbreviation: "xic"),
+        RecipeOptionDefinition("Copo"),
+        RecipeOptionDefinition("Mililitros", abbreviation: "mL"),
+        RecipeOptionDefinition("Litros", abbreviation: "L"),
+        RecipeOptionDefinition("Pé"),
+        RecipeOptionDefinition("Pitada"),
+        RecipeOptionDefinition("Lata", abbreviation: "lat"),
+        RecipeOptionDefinition("Pacote", abbreviation: "pct"),
+        RecipeOptionDefinition("Fatia", abbreviation: "fat"),
+        RecipeOptionDefinition("Ramo", abbreviation: "ram"),
+        RecipeOptionDefinition("Dente", abbreviation: "dte"),
+        RecipeOptionDefinition("Caixa", abbreviation: "cx"),
+        RecipeOptionDefinition("Garrafa"),
+        RecipeOptionDefinition("Tablete", abbreviation: "tbl")
+    ]
+
+    static func options(for kind: RecipeCustomOptionKind) -> [RecipeOptionDefinition] {
+        switch kind {
+        case .state:
+            return stateOptions
+        case .unit:
+            return unitOptions
+        }
+    }
+
+    static func resolve(_ rawValue: String, for kind: RecipeCustomOptionKind) -> RecipeOptionDefinition? {
+        let trimmed = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        return options(for: kind).first { $0.matches(trimmed) }
+    }
+
+    static func menuLabel(for rawValue: String, kind: RecipeCustomOptionKind) -> String {
+        let trimmed = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return "" }
+        return resolve(trimmed, for: kind)?.menuLabel ?? trimmed
+    }
+
+    static func ingredientLabel(for rawValue: String, kind: RecipeCustomOptionKind) -> String {
+        let trimmed = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return "" }
+        return resolve(trimmed, for: kind)?.ingredientLabel ?? trimmed
+    }
+
+    static func normalized(_ text: String) -> String {
+        text
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
+            .lowercased()
+    }
+}
+
 // MARK: - Recipe
 
 @Model
@@ -99,12 +215,13 @@ final class Recipe {
         let ingredientList = (ingredients ?? [])
             .sorted { $0.sortOrder < $1.sortOrder }
             .map { ing in
+                let labeledName = ing.preparationState.isEmpty ? ing.name : "\(ing.name) \(ing.preparationState)"
                 if let qty = ing.quantity, !ing.unit.isEmpty {
-                    return "- \(ing.name): \(qty) \(ing.unit)"
+                    return "- \(labeledName): \(qty) \(ing.unit)"
                 } else if let qty = ing.quantity {
-                    return "- \(ing.name): \(qty)"
+                    return "- \(labeledName): \(qty)"
                 }
-                return "- \(ing.name)"
+                return "- \(labeledName)"
             }
         if !ingredientList.isEmpty {
             parts.append("Ingredientes:\n\(ingredientList.joined(separator: "\n"))")
@@ -225,6 +342,7 @@ final class RecipeIngredient {
     var name: String = ""
     var quantity: Double? = nil
     var unit: String = ""
+    var preparationState: String = ""
     var iconName: String? = nil
     var sortOrder: Int = 0
     var recipe: Recipe? = nil
@@ -233,6 +351,7 @@ final class RecipeIngredient {
         name: String,
         quantity: Double? = nil,
         unit: String = "",
+        preparationState: String = "",
         iconName: String? = nil,
         sortOrder: Int = 0
     ) {
@@ -240,6 +359,7 @@ final class RecipeIngredient {
         self.name = name
         self.quantity = quantity
         self.unit = unit
+        self.preparationState = preparationState
         self.iconName = iconName
         self.sortOrder = sortOrder
     }
@@ -250,7 +370,21 @@ final class RecipeIngredient {
         let num = qty.truncatingRemainder(dividingBy: 1) == 0
             ? String(format: "%.0f", qty)
             : String(format: "%.1f", qty)
-        return unit.isEmpty ? num : "\(num) \(unit)"
+        let resolvedUnit = RecipeOptionCatalog.ingredientLabel(for: unit, kind: .unit)
+        return resolvedUnit.isEmpty ? num : "\(num) \(resolvedUnit)"
+    }
+
+    var formattedState: String {
+        RecipeOptionCatalog.ingredientLabel(for: preparationState, kind: .state)
+    }
+
+    var formattedQuantityAndState: String {
+        let quantityText = formattedQuantity
+        let stateText = formattedState
+
+        if quantityText.isEmpty { return stateText }
+        if stateText.isEmpty { return quantityText }
+        return "\(quantityText) \(stateText)"
     }
 }
 

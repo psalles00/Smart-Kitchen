@@ -308,6 +308,7 @@ struct AITools {
                     name: ingDict["name"] as? String ?? "",
                     quantity: ingDict["quantity"] as? Double,
                     unit: ingDict["unit"] as? String ?? "",
+                    preparationState: ingDict["state"] as? String ?? "",
                     sortOrder: i
                 )
                 ing.recipe = recipe
@@ -369,6 +370,7 @@ struct AITools {
                     name: ingDict["name"] as? String ?? "",
                     quantity: ingDict["quantity"] as? Double,
                     unit: ingDict["unit"] as? String ?? "",
+                    preparationState: ingDict["state"] as? String ?? "",
                     sortOrder: i
                 )
                 ingredient.recipe = recipe

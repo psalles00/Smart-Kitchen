@@ -290,6 +290,7 @@ final class CloudSyncService: @unchecked Sendable {
                 name: ing.name,
                 quantity: ing.quantity,
                 unit: ing.unit,
+                preparationState: ing.preparationState,
                 iconName: ing.iconName,
                 sortOrder: ing.sortOrder
             )

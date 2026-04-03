@@ -423,6 +423,7 @@ private struct AppBackupSnapshot: Codable {
                 name: record.name,
                 quantity: record.quantity,
                 unit: record.unit,
+                preparationState: record.preparationState,
                 iconName: record.iconName,
                 sortOrder: record.sortOrder
             )
@@ -668,8 +669,20 @@ private struct RecipeIngredientRecord: Codable {
     let name: String
     let quantity: Double?
     let unit: String
+    let preparationState: String
     let iconName: String?
     let sortOrder: Int
+
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case recipeID
+        case name
+        case quantity
+        case unit
+        case preparationState
+        case iconName
+        case sortOrder
+    }
 
     init(_ ingredient: RecipeIngredient) {
         id = ingredient.id
@@ -677,8 +690,21 @@ private struct RecipeIngredientRecord: Codable {
         name = ingredient.name
         quantity = ingredient.quantity
         unit = ingredient.unit
+        preparationState = ingredient.preparationState
         iconName = ingredient.iconName
         sortOrder = ingredient.sortOrder
+    }
+
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        recipeID = try container.decode(UUID.self, forKey: .recipeID)
+        name = try container.decode(String.self, forKey: .name)
+        quantity = try container.decodeIfPresent(Double.self, forKey: .quantity)
+        unit = try container.decodeIfPresent(String.self, forKey: .unit) ?? ""
+        preparationState = try container.decodeIfPresent(String.self, forKey: .preparationState) ?? ""
+        iconName = try container.decodeIfPresent(String.self, forKey: .iconName)
+        sortOrder = try container.decode(Int.self, forKey: .sortOrder)
     }
 }
 

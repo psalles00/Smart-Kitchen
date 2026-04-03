@@ -47,6 +47,10 @@ struct RecipeDetailView: View {
         allCategories.first(where: { $0.type == .pantry })?.name ?? "Outros"
     }
 
+    private var defaultUtensilCategory: String {
+        allCategories.first(where: { $0.type == .utensil })?.name ?? "Outros"
+    }
+
     private var hasMissingIngredientsInGrocery: Bool {
         sortedIngredients.contains { !ingredientIsInGrocery($0) }
     }
@@ -227,6 +231,7 @@ struct RecipeDetailView: View {
                 .font(.caption.weight(.semibold))
                 .disabled(!hasMissingIngredientsInGrocery)
             }
+            .padding(.top, 8)
 
             ForEach(sortedIngredients) { ingredient in
                 let isAvailable = ingredientIsAvailable(ingredient)
@@ -237,7 +242,7 @@ struct RecipeDetailView: View {
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text(ingredient.name)
-                            .font(.body)
+                            .font(.subheadline.weight(.semibold))
 
                         if isAvailable {
                             Text("Disponível na despensa")
@@ -252,10 +257,11 @@ struct RecipeDetailView: View {
 
                     Spacer()
 
-                    if !ingredient.formattedQuantity.isEmpty {
-                        Text(ingredient.formattedQuantity)
-                            .font(.subheadline)
+                    if !ingredient.formattedQuantityAndState.isEmpty {
+                        Text(ingredient.formattedQuantityAndState)
+                            .font(.footnote)
                             .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.trailing)
                     }
 
                     NeutralItemActionButton(systemImage: isInGrocery ? "checkmark" : "cart.badge.plus") {
@@ -300,20 +306,29 @@ struct RecipeDetailView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Utensílios")
                 .font(.sectionTitle)
+                .padding(.top, 8)
 
             ForEach(recipe.requiredUtensils ?? [], id: \.self) { utensil in
-                let isAvailable = utensilItems.contains { $0.name.localizedCaseInsensitiveCompare(utensil) == .orderedSame }
+                let isAvailable = utensilIsAvailable(utensil)
+                let iconName = utensilItems.first(where: { sameName($0.name, utensil) })?.iconName
+                    ?? ItemDatabase.shared.exactMatch(for: utensil)?.nomeDoArquivo
 
                 HStack(spacing: 12) {
-                    IconImage(name: utensil, fallbackSymbol: "fork.knife")
+                    IconImage(name: utensil, iconFileName: iconName, fallbackSymbol: "fork.knife", showBalloon: true)
 
                     Text(utensil)
                         .font(.body)
 
                     Spacer()
 
-                    Image(systemName: isAvailable ? "checkmark.circle.fill" : "circle")
-                        .foregroundStyle(isAvailable ? .green : .secondary)
+                    Button {
+                        toggleUtensilAvailability(utensil)
+                    } label: {
+                        Image(systemName: isAvailable ? "checkmark.circle.fill" : "circle")
+                            .font(.title3)
+                            .foregroundStyle(isAvailable ? .green : .secondary)
+                    }
+                    .buttonStyle(.plain)
                 }
                 .padding(.horizontal, 10)
                 .padding(.vertical, 10)
@@ -331,6 +346,7 @@ struct RecipeDetailView: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Modo de Preparo")
                 .font(.sectionTitle)
+                .padding(.top, 8)
 
             ForEach(sortedSteps) { step in
                 HStack(alignment: .top, spacing: 14) {
@@ -360,6 +376,7 @@ struct RecipeDetailView: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Mídias da Receita")
                 .font(.sectionTitle)
+                .padding(.top, 8)
 
             if sortedPreparationMedia.count == 1, let media = sortedPreparationMedia.first {
                 Button {
@@ -431,6 +448,7 @@ struct RecipeDetailView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Link da Receita")
                 .font(.sectionTitle)
+                .padding(.top, 8)
 
             Link(destination: url) {
                 HStack(spacing: 12) {
@@ -464,6 +482,10 @@ struct RecipeDetailView: View {
         groceryItems.contains { sameName($0.name, ingredient.name) }
     }
 
+    private func utensilIsAvailable(_ utensilName: String) -> Bool {
+        utensilItems.contains { sameName($0.name, utensilName) }
+    }
+
     private func addAllIngredientsToGrocery() {
         withAnimation(.spring(response: 0.28, dampingFraction: 0.9)) {
             for ingredient in sortedIngredients {
@@ -488,6 +510,26 @@ struct RecipeDetailView: View {
             )
             modelContext.insert(item)
         }
+        try? modelContext.save()
+    }
+
+    private func toggleUtensilAvailability(_ utensilName: String) {
+        withAnimation(.spring(response: 0.28, dampingFraction: 0.9)) {
+            let existingItems = utensilItems.filter { sameName($0.name, utensilName) }
+
+            if existingItems.isEmpty {
+                let item = UtensilItem(
+                    name: utensilName,
+                    category: resolvedUtensilCategory(for: utensilName),
+                    iconName: ItemDatabase.shared.exactMatch(for: utensilName)?.nomeDoArquivo,
+                    sortOrder: (utensilItems.map(\.sortOrder).max() ?? -1) + 1
+                )
+                modelContext.insert(item)
+            } else {
+                existingItems.forEach(modelContext.delete)
+            }
+        }
+
         try? modelContext.save()
     }
 
@@ -518,6 +560,19 @@ struct RecipeDetailView: View {
         return allCategories.contains(where: { $0.type == .pantry && sameName($0.name, recipe.category) })
             ? recipe.category
             : defaultListCategory
+    }
+
+    private func resolvedUtensilCategory(for utensilName: String) -> String {
+        if let existingMatch = utensilItems.first(where: { sameName($0.name, utensilName) }) {
+            return existingMatch.category
+        }
+
+        if let databaseCategory = ItemDatabase.shared.exactMatch(for: utensilName)?.categoria,
+           allCategories.contains(where: { $0.type == .utensil && sameName($0.name, databaseCategory) }) {
+            return databaseCategory
+        }
+
+        return defaultUtensilCategory
     }
 
     private func sameName(_ lhs: String, _ rhs: String) -> Bool {

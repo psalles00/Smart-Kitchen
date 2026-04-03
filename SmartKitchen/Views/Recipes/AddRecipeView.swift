@@ -48,6 +48,7 @@ struct AddRecipeView: View {
 
     // Dynamic utensils
     @State private var utensilNames: [IdentifiedUtensil] = []
+    @State private var activeUtensilPicker: RecipeUtensilPickerTarget?
 
     private var settings: AppSettings? { settingsArray.first }
 
@@ -71,7 +72,10 @@ struct AddRecipeView: View {
             preparationMediaSection
             ingredientsSection
             if settings?.showUtensils == true {
-                RecipeUtensilsEditor(utensilNames: $utensilNames)
+                RecipeUtensilsEditor(
+                    utensilNames: $utensilNames,
+                    onIconTapped: { activeUtensilPicker = RecipeUtensilPickerTarget(id: $0) }
+                )
             }
             stepsSection
         }
@@ -152,6 +156,15 @@ struct AddRecipeView: View {
                 fallbackSymbol: "leaf"
             ) { entry in
                 applyIngredientEntry(entry, to: target.id)
+            }
+        }
+        .sheet(item: $activeUtensilPicker) { target in
+            ItemIconPickerView(
+                initialQuery: utensilName(for: target.id),
+                currentIconFileName: utensilIconName(for: target.id),
+                fallbackSymbol: "fork.knife"
+            ) { entry in
+                applyUtensilEntry(entry, to: target.id)
             }
         }
         #if os(iOS)
@@ -366,23 +379,7 @@ struct AddRecipeView: View {
                         row.category = entry.categoria
                     }
 
-                    if let category = row.category, !category.isEmpty {
-                        Text(category)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .padding(.leading, 50)
-                    }
-
-                    HStack {
-                        TextField("Qtd", text: $row.quantity)
-                            #if os(iOS)
-                            .keyboardType(.decimalPad)
-                            #endif
-                            .frame(width: 60)
-                        TextField("Unidade (g, ml, xícara...)", text: $row.unit)
-                    }
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    ingredientMetadataRow(for: $row)
                 }
                 .padding(.vertical, 4)
             }
@@ -461,6 +458,7 @@ struct AddRecipeView: View {
                 name: trimmedName,
                 quantity: Double(row.quantity),
                 unit: row.unit.trimmingCharacters(in: .whitespaces),
+                preparationState: row.preparationState.trimmingCharacters(in: .whitespacesAndNewlines),
                 iconName: row.iconName ?? ItemDatabase.shared.exactMatch(for: trimmedName)?.nomeDoArquivo,
                 sortOrder: index
             )
@@ -511,12 +509,51 @@ struct AddRecipeView: View {
         ingredientRows[index].category = entry.categoria
     }
 
+    @ViewBuilder
+    private func ingredientMetadataRow(for row: Binding<IngredientRow>) -> some View {
+        HStack(spacing: 12) {
+            HStack(spacing: 8) {
+                TextField("Qtd", text: row.quantity)
+                    #if os(iOS)
+                    .keyboardType(.decimalPad)
+                    #endif
+                    .frame(width: 44)
+
+                RecipeOptionMenuField(kind: .unit, selection: row.unit)
+                    .frame(maxWidth: .infinity)
+            }
+            .frame(maxWidth: .infinity)
+
+            Divider()
+                .frame(height: 34)
+
+            RecipeOptionMenuField(kind: .state, selection: row.preparationState)
+                .frame(maxWidth: .infinity)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
     private func ingredientName(for rowID: UUID) -> String {
         ingredientRows.first(where: { $0.id == rowID })?.name ?? ""
     }
 
     private func ingredientIconName(for rowID: UUID) -> String? {
         ingredientRows.first(where: { $0.id == rowID })?.iconName
+    }
+
+    private func applyUtensilEntry(_ entry: ItemEntry, to utensilID: UUID) {
+        guard let index = utensilNames.firstIndex(where: { $0.id == utensilID }) else { return }
+        utensilNames[index].name = entry.preferredTitle(matching: utensilNames[index].name)
+        utensilNames[index].category = entry.categoria
+        utensilNames[index].iconName = entry.nomeDoArquivo
+    }
+
+    private func utensilName(for utensilID: UUID) -> String {
+        utensilNames.first(where: { $0.id == utensilID })?.name ?? ""
+    }
+
+    private func utensilIconName(for utensilID: UUID) -> String? {
+        utensilNames.first(where: { $0.id == utensilID })?.iconName
     }
 
     private func loadPreparationMedia() {
@@ -598,6 +635,7 @@ private struct IngredientRow: Identifiable {
     var name = ""
     var quantity = ""
     var unit = ""
+    var preparationState = ""
     var category: String?
     var iconName: String?
 }
@@ -609,5 +647,9 @@ private struct StepRow: Identifiable {
 }
 
 private struct IngredientPickerTarget: Identifiable {
+    let id: UUID
+}
+
+private struct RecipeUtensilPickerTarget: Identifiable {
     let id: UUID
 }

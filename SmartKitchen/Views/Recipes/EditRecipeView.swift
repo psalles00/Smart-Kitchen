@@ -31,6 +31,7 @@ struct EditRecipeView: View {
     @State private var showPreparationFileImporter = false
     @State private var utensilNames: [IdentifiedUtensil] = []
     @State private var activeIngredientPicker: EditIngredientPickerTarget?
+    @State private var activeUtensilPicker: EditUtensilPickerTarget?
 
     private var settings: AppSettings? { settingsArray.first }
 
@@ -50,7 +51,10 @@ struct EditRecipeView: View {
             preparationMediaSection
             ingredientsSection
             if settings?.showUtensils == true {
-                RecipeUtensilsEditor(utensilNames: $utensilNames)
+                RecipeUtensilsEditor(
+                    utensilNames: $utensilNames,
+                    onIconTapped: { activeUtensilPicker = EditUtensilPickerTarget(id: $0) }
+                )
             }
             stepsSection
         }
@@ -127,6 +131,15 @@ struct EditRecipeView: View {
                 fallbackSymbol: "leaf"
             ) { entry in
                 applyIngredientEntry(entry, to: target.id)
+            }
+        }
+        .sheet(item: $activeUtensilPicker) { target in
+            ItemIconPickerView(
+                initialQuery: utensilName(for: target.id),
+                currentIconFileName: utensilIconName(for: target.id),
+                fallbackSymbol: "fork.knife"
+            ) { entry in
+                applyUtensilEntry(entry, to: target.id)
             }
         }
         #if os(iOS)
@@ -331,23 +344,7 @@ struct EditRecipeView: View {
                         row.category = entry.categoria
                     }
 
-                    if let category = row.category, !category.isEmpty {
-                        Text(category)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .padding(.leading, 50)
-                    }
-
-                    HStack {
-                        TextField("Qtd", text: $row.quantity)
-                            #if os(iOS)
-                            .keyboardType(.decimalPad)
-                            #endif
-                            .frame(width: 60)
-                        TextField("Unidade", text: $row.unit)
-                    }
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    ingredientMetadataRow(for: $row)
                 }
                 .padding(.vertical, 4)
             }
@@ -411,6 +408,7 @@ struct EditRecipeView: View {
                             ? String(format: "%.0f", $0) : String(format: "%.1f", $0)
                     } ?? "",
                     unit: ing.unit,
+                    preparationState: ing.preparationState,
                     category: ItemDatabase.shared.entry(forFilename: ing.iconName ?? "")?.categoria ?? ItemDatabase.shared.exactMatch(for: ing.name)?.categoria,
                     iconName: ing.iconName
                 )
@@ -459,6 +457,7 @@ struct EditRecipeView: View {
                 name: trimmed,
                 quantity: Double(row.quantity),
                 unit: row.unit.trimmingCharacters(in: .whitespaces),
+                preparationState: row.preparationState.trimmingCharacters(in: .whitespacesAndNewlines),
                 iconName: row.iconName ?? ItemDatabase.shared.exactMatch(for: trimmed)?.nomeDoArquivo,
                 sortOrder: index
             )
@@ -524,12 +523,51 @@ struct EditRecipeView: View {
         ingredientRows[index].category = entry.categoria
     }
 
+    @ViewBuilder
+    private func ingredientMetadataRow(for row: Binding<EditIngredientRow>) -> some View {
+        HStack(spacing: 12) {
+            HStack(spacing: 8) {
+                TextField("Qtd", text: row.quantity)
+                    #if os(iOS)
+                    .keyboardType(.decimalPad)
+                    #endif
+                    .frame(width: 44)
+
+                RecipeOptionMenuField(kind: .unit, selection: row.unit)
+                    .frame(maxWidth: .infinity)
+            }
+            .frame(maxWidth: .infinity)
+
+            Divider()
+                .frame(height: 34)
+
+            RecipeOptionMenuField(kind: .state, selection: row.preparationState)
+                .frame(maxWidth: .infinity)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
     private func ingredientName(for rowID: UUID) -> String {
         ingredientRows.first(where: { $0.id == rowID })?.name ?? ""
     }
 
     private func ingredientIconName(for rowID: UUID) -> String? {
         ingredientRows.first(where: { $0.id == rowID })?.iconName
+    }
+
+    private func applyUtensilEntry(_ entry: ItemEntry, to utensilID: UUID) {
+        guard let index = utensilNames.firstIndex(where: { $0.id == utensilID }) else { return }
+        utensilNames[index].name = entry.preferredTitle(matching: utensilNames[index].name)
+        utensilNames[index].category = entry.categoria
+        utensilNames[index].iconName = entry.nomeDoArquivo
+    }
+
+    private func utensilName(for utensilID: UUID) -> String {
+        utensilNames.first(where: { $0.id == utensilID })?.name ?? ""
+    }
+
+    private func utensilIconName(for utensilID: UUID) -> String? {
+        utensilNames.first(where: { $0.id == utensilID })?.iconName
     }
 
     private func loadPreparationMedia() {
@@ -605,6 +643,7 @@ private struct EditIngredientRow: Identifiable {
     var name = ""
     var quantity = ""
     var unit = ""
+    var preparationState = ""
     var category: String?
     var iconName: String?
 }
@@ -638,5 +677,9 @@ private struct EditPreparationMediaRow: Identifiable {
 }
 
 private struct EditIngredientPickerTarget: Identifiable {
+    let id: UUID
+}
+
+private struct EditUtensilPickerTarget: Identifiable {
     let id: UUID
 }
