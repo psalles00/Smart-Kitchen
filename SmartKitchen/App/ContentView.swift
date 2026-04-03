@@ -15,7 +15,12 @@ struct ContentView: View {
 
     private var settings: AppSettings? { settingsArray.first }
     private var addMenuOptions: [AddSheetType] {
-        [.pantryItem, .groceryItem, .recipe, .assistantConversation]
+        var options: [AddSheetType] = [.pantryItem, .groceryItem, .recipe]
+        if settings?.showUtensils == true {
+            options.append(.utensil)
+        }
+        options.append(.assistantConversation)
+        return options
     }
 
     private var tabSelectionBinding: Binding<AppTab> {
@@ -55,6 +60,8 @@ struct ContentView: View {
                     AddGroceryItemView()
                 case .recipe:
                     AddRecipeView()
+                case .utensil:
+                    AddUtensilItemView()
                 case .assistantConversation:
                     Color.clear
                 }
@@ -226,7 +233,7 @@ struct ContentView: View {
         case .assistantConversation:
             clearChatMessages()
             showAssistant = true
-        case .recipe, .pantryItem, .groceryItem:
+        case .recipe, .pantryItem, .groceryItem, .utensil:
             addSheetType = type
         }
     }
@@ -804,6 +811,7 @@ enum AddSheetType: String, Identifiable, CaseIterable {
     case recipe
     case pantryItem
     case groceryItem
+    case utensil
     case assistantConversation
 
     var id: String { rawValue }
@@ -813,6 +821,7 @@ enum AddSheetType: String, Identifiable, CaseIterable {
         case .recipe:      "Nova Receita"
         case .pantryItem:  "Item da Despensa"
         case .groceryItem: "Item do Mercado"
+        case .utensil:     "Utensílio"
         case .assistantConversation: "Nova Conversa"
         }
     }
@@ -822,6 +831,7 @@ enum AddSheetType: String, Identifiable, CaseIterable {
         case .recipe:      "Crie e salve uma receita"
         case .pantryItem:  "Adicione algo que você já tem"
         case .groceryItem: "Inclua algo para comprar"
+        case .utensil:     "Adicione um utensílio"
         case .assistantConversation: "Comece um novo chat com o assistente"
         }
     }
@@ -831,6 +841,7 @@ enum AddSheetType: String, Identifiable, CaseIterable {
         case .recipe:      "book.badge.plus"
         case .pantryItem:  "refrigerator"
         case .groceryItem: "cart.badge.plus"
+        case .utensil:     "fork.knife"
         case .assistantConversation: "square.and.pencil"
         }
     }

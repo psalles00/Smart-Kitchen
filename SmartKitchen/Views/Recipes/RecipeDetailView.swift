@@ -62,9 +62,11 @@ struct RecipeDetailView: View {
                 content
             }
         }
+        .ignoresSafeArea(edges: .top)
         .navigationTitle(recipe.name)
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(.hidden, for: .navigationBar)
         #endif
         .toolbar {
             ToolbarItem(placement: .adaptiveTrailing) {
@@ -113,7 +115,7 @@ struct RecipeDetailView: View {
             Image(platformImage: image)
                 .resizable()
                 .scaledToFill()
-                .frame(height: 280)
+                .frame(height: 420)
                 .clipped()
         } else {
             ZStack {
@@ -122,7 +124,7 @@ struct RecipeDetailView: View {
                     .font(.system(size: 48))
                     .foregroundStyle(.quaternary)
             }
-            .frame(height: 200)
+            .frame(height: 300)
         }
     }
 
@@ -241,8 +243,8 @@ struct RecipeDetailView: View {
                     IconImage(name: ingredient.name, iconFileName: ingredient.iconName, fallbackSymbol: "leaf", showBalloon: true)
 
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(ingredient.name)
-                            .font(.subheadline.weight(.semibold))
+                        Text("\(Text(ingredient.name).fontWeight(.semibold))\(ingredient.formattedState.isEmpty ? Text("") : Text(" \(ingredient.formattedState)"))")
+                            .font(.subheadline)
 
                         if isAvailable {
                             Text("Disponível na despensa")
@@ -257,8 +259,8 @@ struct RecipeDetailView: View {
 
                     Spacer()
 
-                    if !ingredient.formattedQuantityAndState.isEmpty {
-                        Text(ingredient.formattedQuantityAndState)
+                    if !ingredient.formattedQuantity.isEmpty {
+                        Text(ingredient.formattedQuantity)
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.trailing)
@@ -317,7 +319,7 @@ struct RecipeDetailView: View {
                     IconImage(name: utensil, iconFileName: iconName, fallbackSymbol: "fork.knife", showBalloon: true)
 
                     Text(utensil)
-                        .font(.body)
+                        .font(.subheadline)
 
                     Spacer()
 
@@ -359,7 +361,7 @@ struct RecipeDetailView: View {
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text(step.instruction)
-                            .font(.body)
+                            .font(.subheadline)
 
                         if let duration = step.durationMinutes, duration > 0 {
                             Label("\(duration) min", systemImage: "clock")

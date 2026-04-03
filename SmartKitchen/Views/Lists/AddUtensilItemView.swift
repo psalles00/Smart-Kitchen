@@ -12,6 +12,7 @@ struct AddUtensilItemView: View {
     @State private var iconName: String?
     @State private var userChangedCategory = false
     @State private var showIconPicker = false
+    @State private var focusNameField = false
 
     private var categories: [Category] { allCategories.filter { $0.type == .utensil } }
     private var isValid: Bool { !name.trimmingCharacters(in: .whitespaces).isEmpty }
@@ -23,6 +24,7 @@ struct AddUtensilItemView: View {
                     text: $name,
                     iconFileName: iconName,
                     fallbackSymbol: "fork.knife",
+                    isFocusedBinding: $focusNameField,
                     showsLeadingIcon: true,
                     onIconTapped: { showIconPicker = true }
                 ) { entry in
@@ -58,7 +60,12 @@ struct AddUtensilItemView: View {
                 currentIconFileName: iconName,
                 fallbackSymbol: "fork.knife"
             ) { entry in
-                applySelectedEntry(entry)
+                iconName = entry.nomeDoArquivo
+            }
+        }
+        .onAppear {
+            DispatchQueue.main.async {
+                focusNameField = true
             }
         }
     }
@@ -143,7 +150,7 @@ struct EditUtensilItemView: View {
                 currentIconFileName: item.iconName,
                 fallbackSymbol: "fork.knife"
             ) { entry in
-                applySelectedEntry(entry)
+                item.iconName = entry.nomeDoArquivo
             }
         }
     }

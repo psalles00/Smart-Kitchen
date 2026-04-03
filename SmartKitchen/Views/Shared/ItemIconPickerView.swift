@@ -2,6 +2,9 @@ import SwiftUI
 
 struct ItemIconPickerView: View {
     @Environment(\.dismiss) private var dismiss
+    private let gridColumns = [
+        GridItem(.adaptive(minimum: 64, maximum: 80), spacing: 14)
+    ]
 
     let title: String
     let currentIconFileName: String?
@@ -50,39 +53,39 @@ struct ItemIconPickerView: View {
                         description: Text("Tente buscar com outro termo.")
                     )
                 } else {
-                    List(results, id: \.nomeDoArquivo) { entry in
-                        Button {
-                            onItemSelected(entry)
-                            dismiss()
-                        } label: {
-                            HStack(spacing: 12) {
-                                IconImage(
-                                    name: entry.preferredTitle(matching: searchText),
-                                    iconFileName: entry.nomeDoArquivo,
-                                    fallbackSymbol: fallbackSymbol,
-                                    size: 28,
-                                    showBalloon: true
-                                )
+                    ScrollView {
+                        LazyVGrid(columns: gridColumns, spacing: 14) {
+                            ForEach(results, id: \.nomeDoArquivo) { entry in
+                                Button {
+                                    onItemSelected(entry)
+                                    dismiss()
+                                } label: {
+                                    ZStack(alignment: .topTrailing) {
+                                        IconImage(
+                                            name: entry.preferredTitle(matching: searchText),
+                                            iconFileName: entry.nomeDoArquivo,
+                                            fallbackSymbol: fallbackSymbol,
+                                            size: 40,
+                                            showBalloon: true
+                                        )
+                                        .frame(width: 66, height: 66)
+                                        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
 
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(entry.preferredTitle(matching: searchText))
-                                        .foregroundStyle(.primary)
-                                    Text(entry.categoria)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
+                                        if entry.nomeDoArquivo == currentIconFileName {
+                                            Image(systemName: "checkmark.circle.fill")
+                                                .font(.caption.weight(.bold))
+                                                .foregroundStyle(Color.accentColor)
+                                                .background(Color(.systemBackground), in: Circle())
+                                                .offset(x: 4, y: -4)
+                                        }
+                                    }
                                 }
-
-                                Spacer()
-
-                                if entry.nomeDoArquivo == currentIconFileName {
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .foregroundStyle(Color.accentColor)
-                                }
+                                .buttonStyle(.plain)
                             }
                         }
-                        .buttonStyle(.plain)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 16)
                     }
-                    .listStyle(.plain)
                 }
             }
             .navigationTitle(title)
@@ -96,6 +99,8 @@ struct ItemIconPickerView: View {
                 }
             }
         }
+        .presentationDetents([.fraction(0.45)])
+        .presentationDragIndicator(.visible)
     }
 }
 

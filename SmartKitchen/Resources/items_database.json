@@ -5156,7 +5156,10 @@
   {
     "titulos": [
       "Empty Bowl",
-      "Tigela Vazia"
+      "Bowl",
+      "Tigela",
+      "Tigela Vazia",
+      "Cumbuca"
     ],
     "nome_do_arquivo": "empty-bowl.png",
     "categoria": "Utensílios de Cozinha"

@@ -130,7 +130,7 @@ struct EditRecipeView: View {
                 currentIconFileName: ingredientIconName(for: target.id),
                 fallbackSymbol: "leaf"
             ) { entry in
-                applyIngredientEntry(entry, to: target.id)
+                applyIngredientIcon(entry, to: target.id)
             }
         }
         .sheet(item: $activeUtensilPicker) { target in
@@ -139,7 +139,7 @@ struct EditRecipeView: View {
                 currentIconFileName: utensilIconName(for: target.id),
                 fallbackSymbol: "fork.knife"
             ) { entry in
-                applyUtensilEntry(entry, to: target.id)
+                applyUtensilIcon(entry, to: target.id)
             }
         }
         #if os(iOS)
@@ -523,6 +523,11 @@ struct EditRecipeView: View {
         ingredientRows[index].category = entry.categoria
     }
 
+    private func applyIngredientIcon(_ entry: ItemEntry, to rowID: UUID) {
+        guard let index = ingredientRows.firstIndex(where: { $0.id == rowID }) else { return }
+        ingredientRows[index].iconName = entry.nomeDoArquivo
+    }
+
     @ViewBuilder
     private func ingredientMetadataRow(for row: Binding<EditIngredientRow>) -> some View {
         HStack(spacing: 12) {
@@ -555,10 +560,8 @@ struct EditRecipeView: View {
         ingredientRows.first(where: { $0.id == rowID })?.iconName
     }
 
-    private func applyUtensilEntry(_ entry: ItemEntry, to utensilID: UUID) {
+    private func applyUtensilIcon(_ entry: ItemEntry, to utensilID: UUID) {
         guard let index = utensilNames.firstIndex(where: { $0.id == utensilID }) else { return }
-        utensilNames[index].name = entry.preferredTitle(matching: utensilNames[index].name)
-        utensilNames[index].category = entry.categoria
         utensilNames[index].iconName = entry.nomeDoArquivo
     }
 

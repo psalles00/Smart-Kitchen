@@ -18,6 +18,7 @@ struct AddGroceryItemView: View {
     @State private var isFixed = false
     @State private var showCategoryManager = false
     @State private var showIconPicker = false
+    @State private var focusNameField = false
 
     private var isValid: Bool { !name.trimmingCharacters(in: .whitespaces).isEmpty }
 
@@ -28,6 +29,7 @@ struct AddGroceryItemView: View {
                     text: $name,
                     iconFileName: iconName,
                     fallbackSymbol: "basket",
+                    isFocusedBinding: $focusNameField,
                     showsLeadingIcon: true,
                     onIconTapped: { showIconPicker = true }
                 ) { entry in
@@ -90,7 +92,12 @@ struct AddGroceryItemView: View {
                 currentIconFileName: iconName,
                 fallbackSymbol: "basket"
             ) { entry in
-                applySelectedEntry(entry)
+                iconName = entry.nomeDoArquivo
+            }
+        }
+        .onAppear {
+            DispatchQueue.main.async {
+                focusNameField = true
             }
         }
     }
@@ -207,7 +214,7 @@ struct EditGroceryItemView: View {
                 currentIconFileName: item.iconName,
                 fallbackSymbol: "basket"
             ) { entry in
-                applySelectedEntry(entry)
+                item.iconName = entry.nomeDoArquivo
             }
         }
     }

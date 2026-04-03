@@ -11,6 +11,7 @@ struct AddRecipeView: View {
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \Category.sortOrder) private var allCategories: [Category]
     @Query private var settingsArray: [AppSettings]
+    @FocusState private var isNameFieldFocused: Bool
 
     // Basic info
     @State private var name = ""
@@ -106,6 +107,11 @@ struct AddRecipeView: View {
         .onChange(of: selectedPreparationItems) {
             loadPreparationMedia()
         }
+        .onAppear {
+            DispatchQueue.main.async {
+                isNameFieldFocused = true
+            }
+        }
         .confirmationDialog("Adicionar Foto", isPresented: $showPhotoOptions, titleVisibility: .visible) {
             #if os(iOS)
             Button("Tirar Foto") {
@@ -155,7 +161,7 @@ struct AddRecipeView: View {
                 currentIconFileName: ingredientIconName(for: target.id),
                 fallbackSymbol: "leaf"
             ) { entry in
-                applyIngredientEntry(entry, to: target.id)
+                applyIngredientIcon(entry, to: target.id)
             }
         }
         .sheet(item: $activeUtensilPicker) { target in
@@ -164,7 +170,7 @@ struct AddRecipeView: View {
                 currentIconFileName: utensilIconName(for: target.id),
                 fallbackSymbol: "fork.knife"
             ) { entry in
-                applyUtensilEntry(entry, to: target.id)
+                applyUtensilIcon(entry, to: target.id)
             }
         }
         #if os(iOS)
@@ -280,6 +286,7 @@ struct AddRecipeView: View {
                 #if os(iOS)
                 .textInputAutocapitalization(.words)
                 #endif
+                .focused($isNameFieldFocused)
 
             TextField("Descrição (opcional)", text: $descriptionText, axis: .vertical)
                 .lineLimit(2...5)
@@ -509,6 +516,11 @@ struct AddRecipeView: View {
         ingredientRows[index].category = entry.categoria
     }
 
+    private func applyIngredientIcon(_ entry: ItemEntry, to rowID: UUID) {
+        guard let index = ingredientRows.firstIndex(where: { $0.id == rowID }) else { return }
+        ingredientRows[index].iconName = entry.nomeDoArquivo
+    }
+
     @ViewBuilder
     private func ingredientMetadataRow(for row: Binding<IngredientRow>) -> some View {
         HStack(spacing: 12) {
@@ -541,10 +553,8 @@ struct AddRecipeView: View {
         ingredientRows.first(where: { $0.id == rowID })?.iconName
     }
 
-    private func applyUtensilEntry(_ entry: ItemEntry, to utensilID: UUID) {
+    private func applyUtensilIcon(_ entry: ItemEntry, to utensilID: UUID) {
         guard let index = utensilNames.firstIndex(where: { $0.id == utensilID }) else { return }
-        utensilNames[index].name = entry.preferredTitle(matching: utensilNames[index].name)
-        utensilNames[index].category = entry.categoria
         utensilNames[index].iconName = entry.nomeDoArquivo
     }
 

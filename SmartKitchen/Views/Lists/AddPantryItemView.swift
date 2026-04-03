@@ -19,6 +19,7 @@ struct AddPantryItemView: View {
     @State private var expirationDate = Date()
     @State private var showCategoryManager = false
     @State private var showIconPicker = false
+    @State private var focusNameField = false
 
     private var categories: [Category] { allCategories.filter { $0.type == .pantry } }
     private var isDetailed: Bool { settingsArray.first?.pantryDetailLevel == .detailed }
@@ -31,6 +32,7 @@ struct AddPantryItemView: View {
                     text: $name,
                     iconFileName: iconName,
                     fallbackSymbol: "leaf",
+                    isFocusedBinding: $focusNameField,
                     showsLeadingIcon: true,
                     onIconTapped: { showIconPicker = true }
                 ) { entry in
@@ -103,7 +105,12 @@ struct AddPantryItemView: View {
                 currentIconFileName: iconName,
                 fallbackSymbol: "leaf"
             ) { entry in
-                applySelectedEntry(entry)
+                iconName = entry.nomeDoArquivo
+            }
+        }
+        .onAppear {
+            DispatchQueue.main.async {
+                focusNameField = true
             }
         }
     }
@@ -244,7 +251,7 @@ struct EditPantryItemView: View {
                 currentIconFileName: item.iconName,
                 fallbackSymbol: "leaf"
             ) { entry in
-                applySelectedEntry(entry)
+                item.iconName = entry.nomeDoArquivo
             }
         }
     }

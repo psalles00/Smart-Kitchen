@@ -6,6 +6,7 @@ struct ItemSearchField: View {
     var placeholder: String = "Nome"
     var iconFileName: String? = nil
     var fallbackSymbol: String = "leaf"
+    var isFocusedBinding: Binding<Bool>? = nil
     var showsLeadingIcon = false
     var onIconTapped: (() -> Void)? = nil
     var onItemSelected: ((ItemEntry) -> Void)?
@@ -36,6 +37,9 @@ struct ItemSearchField: View {
                             }
                         }
                     }
+                    .onChange(of: isFocused) { _, focused in
+                        isFocusedBinding?.wrappedValue = focused
+                    }
 
                 Button {
                     toggleSuggestions()
@@ -53,6 +57,17 @@ struct ItemSearchField: View {
             if showSuggestions && !suggestions.isEmpty {
                 suggestionsList
             }
+        }
+        .onAppear {
+            if isFocusedBinding?.wrappedValue == true {
+                DispatchQueue.main.async {
+                    isFocused = true
+                }
+            }
+        }
+        .onChange(of: isFocusedBinding?.wrappedValue ?? false) { _, shouldFocus in
+            guard shouldFocus != isFocused else { return }
+            isFocused = shouldFocus
         }
     }
 
@@ -138,11 +153,16 @@ struct ItemSearchField: View {
     }
 
     private func selectItem(_ entry: ItemEntry) {
-        text = entry.preferredTitle(matching: text)
+        let resolvedTitle = entry.preferredTitle(matching: text)
         isFocused = false
         showSuggestions = false
         suggestions = []
-        onItemSelected?(entry)
+
+        if let onItemSelected {
+            onItemSelected(entry)
+        } else {
+            text = resolvedTitle
+        }
     }
 
     private func toggleSuggestions() {
