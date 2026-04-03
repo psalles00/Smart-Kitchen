@@ -1,6 +1,36 @@
 import SwiftUI
 import SwiftData
 
+enum SidebarItem: String, CaseIterable, Identifiable {
+    case home
+    case lists
+    case recipes
+    case nutrients
+    case settings
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .home: return "Início"
+        case .lists: return "Listas"
+        case .recipes: return "Receitas"
+        case .nutrients: return "Nutrientes"
+        case .settings: return "Configurações"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .home: return "house"
+        case .lists: return "list.bullet.clipboard"
+        case .recipes: return "book"
+        case .nutrients: return "leaf"
+        case .settings: return "gearshape"
+        }
+    }
+}
+
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var settingsArray: [AppSettings]
@@ -12,6 +42,19 @@ struct ContentView: View {
     @State private var showSettings = false
     @State private var isBouncingBackFromAdd = false
     @State private var scrollToTopTrigger: Int = 0
+
+    #if os(macOS)
+    @State private var selectedSidebar: SidebarItem? = .home
+
+    private var macActivePageTheme: PageTheme {
+        switch selectedSidebar ?? .home {
+        case .recipes:
+            return .recipes
+        default:
+            return .home
+        }
+    }
+    #endif
 
     private var settings: AppSettings? { settingsArray.first }
     private var activePageTheme: PageTheme { selectedTab.pageTheme ?? lastContentTab.pageTheme ?? .home }
@@ -68,14 +111,31 @@ struct ContentView: View {
                 }
             }
         }
-        .environment(\.openSettings, { showSettings = true })
+        .environment(\.openSettings, {
+            #if os(macOS)
+            selectedSidebar = .settings
+            #else
+            showSettings = true
+            #endif
+        })
         .environment(\.scrollToTopTrigger, scrollToTopTrigger)
         .preferredColorScheme(settings?.appearanceMode.colorScheme)
+        #if os(macOS)
+        .tint(macActivePageTheme.accentColor)
+        #else
         .tint(activePageTheme.accentColor)
+        #endif
         .sheet(isPresented: $showSettings) {
             NavigationStack {
                 SettingsView()
             }
+        }
+        .onAppear {
+            // TODO: Re-enable daily backup once BackupManager.swift is included in this target.
+            // BackupManager.shared.performDailyBackupIfNeeded(context: modelContext)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .openSettings)) { _ in
+            showSettings = true
         }
         .sheet(isPresented: $showAssistant) {
             NavigationStack {
@@ -88,10 +148,11 @@ struct ContentView: View {
     }
 
     private var mainTabView: some View {
+        #if os(macOS)
+        macSidebarView
+        #else
         nativeTabView
-            #if os(macOS)
-            .tabViewStyle(.tabBarOnly)
-            #endif
+        #endif
     }
 
     private var nativeTabView: some View {
@@ -135,6 +196,48 @@ struct ContentView: View {
             }
         }
     }
+
+    #if os(macOS)
+    private var macSidebarView: some View {
+        NavigationSplitView {
+            List(selection: $selectedSidebar) {
+                Section("Navegação") {
+                    ForEach(SidebarItem.allCases.filter { $0 != .settings }) { item in
+                        Label(item.title, systemImage: item.systemImage)
+                            .tag(Optional(item))
+                    }
+                }
+                Section("Preferências") {
+                    Label(SidebarItem.settings.title, systemImage: SidebarItem.settings.systemImage)
+                        .tag(Optional(SidebarItem.settings))
+                }
+            }
+            .listStyle(.sidebar)
+            .scrollContentBackground(.hidden)
+            .background(Color.clear)
+            .environment(\.colorScheme, .dark)
+            .navigationTitle("Smart Kitchen")
+        } detail: {
+            switch selectedSidebar ?? .home {
+            case .home:
+                NavigationStack { MacDetailCard { HomeView(onSettingsTap: { selectedSidebar = .settings }) } }
+                    .background(Color.clear)
+            case .lists:
+                NavigationStack { MacDetailCard { ListsTabView() } }
+                    .background(Color.clear)
+            case .recipes:
+                NavigationStack { MacDetailCard { RecipesView() } }
+                    .background(Color.clear)
+            case .nutrients:
+                NavigationStack { MacDetailCard { NutrientsPlaceholderView() } }
+                    .background(Color.clear)
+            case .settings:
+                NavigationStack { MacDetailCard { SettingsView() } }
+                    .background(Color.clear)
+            }
+        }
+    }
+    #endif
 
     private func handleTabSelectionChange(_ newValue: AppTab) {
         if newValue == .add {
@@ -210,6 +313,47 @@ struct ContentView: View {
         .padding(.bottom, 88)
     }
 }
+
+#if os(macOS)
+private struct MacDetailCard<Content: View>: View {
+    @Environment(\.colorScheme) private var colorScheme
+    private let content: Content
+
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+
+    var body: some View {
+        GeometryReader { proxy in
+            let size = proxy.size
+            let corner: CGFloat = 18
+
+            ZStack {
+                RoundedRectangle(cornerRadius: corner, style: .continuous)
+                    .fill(Color(nsColor: .windowBackgroundColor))
+
+                ScrollView {
+                    content
+                        .frame(maxWidth: .infinity, alignment: .topLeading)
+                        .padding(12)
+                }
+                .frame(width: max(0, size.width - 24), height: max(0, size.height - 24))
+                .clipShape(RoundedRectangle(cornerRadius: corner, style: .continuous))
+            }
+            .overlay(
+                RoundedRectangle(cornerRadius: corner, style: .continuous)
+                    .strokeBorder(
+                        (colorScheme == .dark ? Color.white.opacity(0.12) : Color.black.opacity(0.06)),
+                        lineWidth: 1
+                    )
+            )
+            .padding(12)
+            .frame(width: size.width, height: size.height, alignment: .center)
+            .background(Color.clear)
+        }
+    }
+}
+#endif
 
 private struct HomeView: View {
     // Corrigido ciclo do AttributeGraph separando dependências reativas de SwiftData em @State com atualização manual para evitar travamentos no macOS.
@@ -786,3 +930,4 @@ private struct AddOptionButton: View {
         .buttonStyle(.plain)
     }
 }
+

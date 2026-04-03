@@ -63,6 +63,8 @@
 		8F8C1AF93D9EDD6AAE8A210C /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED9E5DCCA2E69888B6028F28 /* ChatMessage.swift */; };
 		90A040866250128A00CB6B74 /* Boska-Italic.otf in Resources */ = {isa = PBXBuildFile; fileRef = 51B3504E5B6AEC4327A2CE73 /* Boska-Italic.otf */; };
 		A17E29B2E7808DFDB7AAA704 /* DataSeeder.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD5ABCE32502F5BC5C5CB4DF /* DataSeeder.swift */; };
+		A1B2C3D4E5F60001A1B2C3D4 /* BackupManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60002A1B2C3D4 /* BackupManager.swift */; };
+		A1B2C3D4E5F60003A1B2C3D4 /* BackupSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60004A1B2C3D4 /* BackupSettingsView.swift */; };
 		A4CAD1B30B35902A833F5162 /* RecipeUtensilsEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1792100BD21DE048AA48B9B3 /* RecipeUtensilsEditor.swift */; };
 		A91BB979A0DB9D2E8595B207 /* PantryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 021D59E8DBF140C2A6411386 /* PantryView.swift */; };
 		AA387922D9FD1D499A1CDD89 /* AITools.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F2855F679DBAC07AFEDF7A0 /* AITools.swift */; };
@@ -143,6 +145,8 @@
 		9FADD1260C9C0A0C0A036CB1 /* Boska-Extralight.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Boska-Extralight.otf"; sourceTree = "<group>"; };
 		A01C258879867293F931BB38 /* AddUtensilItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddUtensilItemView.swift; sourceTree = "<group>"; };
 		A0E510B072AA05179DF44BD5 /* SmartKitchenApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartKitchenApp.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60002A1B2C3D4 /* BackupManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupManager.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60004A1B2C3D4 /* BackupSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupSettingsView.swift; sourceTree = "<group>"; };
 		A4524078F523E665278B2F59 /* Telma-Light.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Telma-Light.otf"; sourceTree = "<group>"; };
 		A8B6E051BE66B1366C2A927F /* RecipeDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeDetailView.swift; sourceTree = "<group>"; };
 		AB394495821B8AC8F358A0D8 /* Boska-Medium.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Boska-Medium.otf"; sourceTree = "<group>"; };
@@ -213,6 +217,7 @@
 		49E9EB2CDB10B04E9C8ED301 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
+				A1B2C3D4E5F60004A1B2C3D4 /* BackupSettingsView.swift */,
 				EE34761A8547DB1BC47F0FF5 /* iCloudSettingsView.swift */,
 				6CD351710E6E853F0407AB7E /* SettingsView.swift */,
 			);
@@ -253,6 +258,7 @@
 			path = Models;
 			sourceTree = "<group>";
 		};
+
 		6690C6AFEAC3F53F3E6FC924 /* Lists */ = {
 			isa = PBXGroup;
 			children = (
@@ -400,6 +406,7 @@
 				5F2855F679DBAC07AFEDF7A0 /* AITools.swift */,
 				980285F2E9866A086F1FC846 /* APIConfig.swift */,
 				6F314FDF85CDEEA7ECC9062D /* BackgroundManager.swift */,
+				A1B2C3D4E5F60002A1B2C3D4 /* BackupManager.swift */,
 				11B3CB2DD186ABB8A9CA1D36 /* CloudSyncService.swift */,
 				FD5ABCE32502F5BC5C5CB4DF /* DataSeeder.swift */,
 				39E3D008679762441FBCD92E /* HapticManager.swift */,
@@ -512,6 +519,8 @@
 				2D12344F1A1A00945862F5F9 /* AppTab.swift in Sources */,
 				8BD3A7886E9C8480138D016E /* AssistantView.swift in Sources */,
 				5F2A19DDE4598020BC3256E3 /* BackgroundManager.swift in Sources */,
+				A1B2C3D4E5F60001A1B2C3D4 /* BackupManager.swift in Sources */,
+				A1B2C3D4E5F60003A1B2C3D4 /* BackupSettingsView.swift in Sources */,
 				58D2D6BBDF7D05B19AA79AF0 /* Category.swift in Sources */,
 				2A2F635024C73FC5AA58F4B2 /* ChatBubbleView.swift in Sources */,
 				8F8C1AF93D9EDD6AAE8A210C /* ChatMessage.swift in Sources */,

@@ -5,6 +5,10 @@ import SwiftData
 import UIKit
 #endif
 
+extension Notification.Name {
+    static let openSettings = Notification.Name("com.smartkitchen.openSettings")
+}
+
 @main
 struct SmartKitchenApp: App {
     @State private var cloudSync = CloudSyncService.shared
@@ -31,6 +35,12 @@ struct SmartKitchenApp: App {
         .windowResizability(.contentMinSize)
         .commands {
             CommandGroup(replacing: .newItem) { }
+            CommandGroup(replacing: .appSettings) {
+                Button("Configurações…") {
+                    NotificationCenter.default.post(name: .openSettings, object: nil)
+                }
+                .keyboardShortcut(",", modifiers: .command)
+            }
         }
         #endif
     }
