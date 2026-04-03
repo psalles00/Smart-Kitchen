@@ -14,6 +14,7 @@ struct ContentView: View {
     @State private var scrollToTopTrigger: Int = 0
 
     private var settings: AppSettings? { settingsArray.first }
+    private var activePageTheme: PageTheme { selectedTab.pageTheme ?? lastContentTab.pageTheme ?? .home }
     private var addMenuOptions: [AddSheetType] {
         var options: [AddSheetType] = [.pantryItem, .groceryItem, .recipe]
         if settings?.showUtensils == true {
@@ -70,7 +71,7 @@ struct ContentView: View {
         .environment(\.openSettings, { showSettings = true })
         .environment(\.scrollToTopTrigger, scrollToTopTrigger)
         .preferredColorScheme(settings?.appearanceMode.colorScheme)
-        .tint(settings?.accentColorChoice.color)
+        .tint(activePageTheme.accentColor)
         .sheet(isPresented: $showSettings) {
             NavigationStack {
                 SettingsView()
@@ -353,6 +354,7 @@ private struct HomeView: View {
         #if os(iOS)
         .toolbar(.hidden, for: .navigationBar)
         #endif
+        .tint(PageTheme.home.accentColor)
         .sheet(isPresented: $showAssistant) {
             NavigationStack {
                 AssistantView()
@@ -449,9 +451,9 @@ private struct HomeView: View {
 
                     Image(systemName: "sparkles")
                         .font(.title2.weight(.semibold))
-                        .foregroundStyle(Color.accentColor)
+                        .foregroundStyle(PageTheme.home.accentColor)
                         .frame(width: 46, height: 46)
-                        .background(Color.accentColor.opacity(0.14), in: .circle)
+                        .background(PageTheme.home.accentColor.opacity(0.14), in: .circle)
                 }
 
                 HStack(spacing: 8) {
@@ -462,11 +464,7 @@ private struct HomeView: View {
             .padding(18)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
-                LinearGradient(
-                    colors: [Color.accentColor.opacity(0.16), Color.orange.opacity(0.08)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                ),
+                PageTheme.home.cardGradient,
                 in: .rect(cornerRadius: 24)
             )
             .overlay {
@@ -595,10 +593,10 @@ private struct HomeView: View {
                 if !compatibleMatchesState.isEmpty {
                     Text("\(compatibleMatchesState.count)")
                         .font(.caption.weight(.bold))
-                        .foregroundStyle(Color.accentColor)
+                        .foregroundStyle(PageTheme.home.accentColor)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 5)
-                        .background(Color.accentColor.opacity(0.12), in: .capsule)
+                        .background(PageTheme.home.accentColor.opacity(0.12), in: .capsule)
                 }
             }
 
@@ -653,10 +651,10 @@ private struct HomeView: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 7)
                 .background(
-                    isSelected ? Color.accentColor.opacity(0.16) : Color(.tertiarySystemBackground),
+                    isSelected ? PageTheme.home.accentColor.opacity(0.16) : Color(.tertiarySystemBackground),
                     in: .capsule
                 )
-                .foregroundStyle(isSelected ? Color.accentColor : .primary)
+                .foregroundStyle(isSelected ? PageTheme.home.accentColor : .primary)
         }
         .buttonStyle(.plain)
     }
@@ -776,7 +774,7 @@ private struct HomeRecipeMatchCard: View {
 
                 Text(match.compatibilityInfo.longText)
                     .font(.caption.weight(.medium))
-                    .foregroundStyle(Color.accentColor)
+                    .foregroundStyle(PageTheme.home.accentColor)
             }
         }
         .frame(width: 210, alignment: .leading)

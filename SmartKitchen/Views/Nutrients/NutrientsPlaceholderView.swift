@@ -49,6 +49,7 @@ struct NutrientsPlaceholderView: View {
         #if os(iOS)
         .toolbar(.hidden, for: .navigationBar)
         #endif
+        .tint(PageTheme.nutrients.accentColor)
     }
 
     private func featureRow(icon: String, title: String, description: String) -> some View {

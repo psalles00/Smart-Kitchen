@@ -17,4 +17,19 @@ enum AppTab: String, Hashable {
         case .add:       "plus"
         }
     }
+
+    var pageTheme: PageTheme? {
+        switch self {
+        case .assistant:
+            .home
+        case .lists:
+            .lists
+        case .recipes:
+            .recipes
+        case .nutrients:
+            .nutrients
+        case .add:
+            nil
+        }
+    }
 }

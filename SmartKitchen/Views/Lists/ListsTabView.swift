@@ -194,6 +194,7 @@ struct ListsTabView: View {
         #if os(iOS)
         .toolbar(.hidden, for: .navigationBar)
         #endif
+        .tint(PageTheme.lists.accentColor)
         .onChange(of: selectedSubtab) {
             searchText = ""
             showsInlineTitle = false

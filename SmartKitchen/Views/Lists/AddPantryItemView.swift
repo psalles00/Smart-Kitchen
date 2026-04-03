@@ -80,6 +80,7 @@ struct AddPantryItemView: View {
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
+        .tint(PageTheme.lists.accentColor)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancelar") { dismiss() }
@@ -230,6 +231,7 @@ struct EditPantryItemView: View {
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
+        .tint(PageTheme.lists.accentColor)
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
                 Button("OK") { dismiss() }

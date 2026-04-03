@@ -164,6 +164,7 @@ struct RecipesView: View {
         #if os(iOS)
         .toolbar(.hidden, for: .navigationBar)
         #endif
+        .tint(PageTheme.recipes.accentColor)
         .sheet(isPresented: $showAddRecipe) {
             NavigationStack {
                 AddRecipeView()

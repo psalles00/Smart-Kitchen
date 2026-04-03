@@ -382,7 +382,7 @@ struct PantryItemRow: View {
 
                 AnimatedItemActionButton(
                     systemImage: "cart",
-                    color: Color(red: 0.20, green: 0.48, blue: 0.67),
+                    color: PageTheme.lists.accentColor,
                     action: onSendToGrocery
                 )
             }

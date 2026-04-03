@@ -376,7 +376,7 @@ struct GroceryItemRow: View {
 
                 AnimatedItemActionButton(
                     systemImage: "refrigerator",
-                    color: Color(red: 0.36, green: 0.60, blue: 0.42),
+                    color: PageTheme.lists.accentColor,
                     action: onAcquire
                 )
             }

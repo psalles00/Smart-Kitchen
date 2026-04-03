@@ -45,6 +45,7 @@ struct AddUtensilItemView: View {
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
+        .tint(PageTheme.lists.accentColor)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancelar") { dismiss() }
@@ -139,6 +140,7 @@ struct EditUtensilItemView: View {
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
+        .tint(PageTheme.lists.accentColor)
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
                 Button("OK") { dismiss() }

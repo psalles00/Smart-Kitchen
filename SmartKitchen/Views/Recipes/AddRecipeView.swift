@@ -84,6 +84,7 @@ struct AddRecipeView: View {
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
+        .tint(PageTheme.recipes.accentColor)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancelar") { dismiss() }

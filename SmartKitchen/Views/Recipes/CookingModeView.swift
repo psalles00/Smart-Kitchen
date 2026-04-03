@@ -39,6 +39,7 @@ struct CookingModeView: View {
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
+            .tint(PageTheme.recipes.accentColor)
             .toolbar {
                 ToolbarItem(placement: .adaptiveLeading) {
                     Button("Fechar", systemImage: "xmark.circle.fill") {

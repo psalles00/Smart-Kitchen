@@ -48,22 +48,6 @@ struct SettingsView: View {
                             Text(mode.displayName).tag(mode)
                         }
                     }
-
-                    Picker("Cor de destaque", selection: Binding(
-                        get: { settings.accentColorChoice },
-                        set: { settings.accentColorChoice = $0 }
-                    )) {
-                        ForEach(AccentColorChoice.allCases) { choice in
-                            Label {
-                                Text(choice.displayName)
-                            } icon: {
-                                Circle()
-                                    .fill(choice.color)
-                                    .frame(width: 14, height: 14)
-                            }
-                            .tag(choice)
-                        }
-                    }
                 }
             }
 

@@ -68,6 +68,7 @@ struct RecipeDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
         #endif
+        .tint(PageTheme.recipes.accentColor)
         .toolbar {
             ToolbarItem(placement: .adaptiveTrailing) {
                 Menu {
