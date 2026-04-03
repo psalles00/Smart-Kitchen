@@ -70,6 +70,7 @@ struct AddPantryItemView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                     }
                     .buttonStyle(.plain)
+                    .padding(.vertical, 4)
                 }
 
                 PhotosPicker(selection: $selectedPhoto, matching: .images) {
@@ -111,6 +112,13 @@ struct AddPantryItemView: View {
                 Text("Quando ativado, o item aparece automaticamente na lista de mercado ao ser removido da despensa.")
             }
         }
+        .formStyle(.grouped)
+        #if os(macOS)
+        .padding(.horizontal, 20)
+        .padding(.top, 10)
+        .padding(.bottom, 20)
+        .frame(minWidth: 500, minHeight: 600)
+        #endif
         .navigationTitle("Novo Item")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
@@ -314,6 +322,13 @@ struct EditPantryItemView: View {
                 Toggle("Fixo no mercado", isOn: $item.isLinkedToGrocery)
             }
         }
+        .formStyle(.grouped)
+        #if os(macOS)
+        .padding(.horizontal, 20)
+        .padding(.top, 10)
+        .padding(.bottom, 20)
+        .frame(minWidth: 500, minHeight: 600)
+        #endif
         .navigationTitle("Editar Item")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)

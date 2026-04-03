@@ -1,6 +1,9 @@
 import SwiftUI
 import SwiftData
 import AVKit
+#if os(macOS)
+import AppKit
+#endif
 
 struct RecipeDetailView: View {
     @Environment(\.modelContext) private var modelContext
@@ -96,6 +99,14 @@ struct RecipeDetailView: View {
         #else
         .sheet(isPresented: $showCookingMode) {
             CookingModeView(recipe: recipe)
+                .presentationSizing(.page)
+                .onAppear {
+                    DispatchQueue.main.async {
+                        if let window = NSApplication.shared.windows.last {
+                            window.toggleFullScreen(nil)
+                        }
+                    }
+                }
         }
         #endif
         .sheet(isPresented: $showEditRecipe) {
@@ -685,6 +696,38 @@ private struct PreparationMediaDeckView: View {
         #if os(iOS)
         .tabViewStyle(.page(indexDisplayMode: .automatic))
         #endif
+        .overlay(alignment: .bottom) {
+            #if os(macOS)
+            if mediaItems.count > 1 {
+                HStack(spacing: 16) {
+                    Button {
+                        withAnimation { selectedIndex = max(0, selectedIndex - 1) }
+                    } label: {
+                        Image(systemName: "chevron.left.circle.fill")
+                            .font(.title2)
+                            .foregroundStyle(.white.opacity(0.8))
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(selectedIndex == 0)
+
+                    Text("\(selectedIndex + 1)/\(mediaItems.count)")
+                        .font(.caption.monospacedDigit())
+                        .foregroundStyle(.white.opacity(0.8))
+
+                    Button {
+                        withAnimation { selectedIndex = min(mediaItems.count - 1, selectedIndex + 1) }
+                    } label: {
+                        Image(systemName: "chevron.right.circle.fill")
+                            .font(.title2)
+                            .foregroundStyle(.white.opacity(0.8))
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(selectedIndex >= mediaItems.count - 1)
+                }
+                .padding(.bottom, 4)
+            }
+            #endif
+        }
         .animation(.spring(response: 0.42, dampingFraction: 0.88), value: selectedIndex)
     }
 

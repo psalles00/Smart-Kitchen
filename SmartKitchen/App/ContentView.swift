@@ -88,124 +88,51 @@ struct ContentView: View {
     }
 
     private var mainTabView: some View {
-        Group {
+        nativeTabView
             #if os(macOS)
-            TabView(selection: tabSelectionBinding) {
+            .tabViewStyle(.tabBarOnly)
+            #endif
+    }
+
+    private var nativeTabView: some View {
+        TabView(selection: tabSelectionBinding) {
+            Tab(value: AppTab.assistant) {
                 NavigationStack {
                     HomeView(onSettingsTap: { showSettings = true })
                 }
-                .tabItem {
-                    Label("Início", systemImage: AppTab.assistant.icon)
-                }
-                .tag(AppTab.assistant)
+            } label: {
+                Label("Início", systemImage: AppTab.assistant.icon)
+            }
 
+            Tab(value: AppTab.lists) {
                 NavigationStack {
                     ListsTabView()
                 }
-                .tabItem {
-                    Label("Listas", systemImage: AppTab.lists.icon)
-                }
-                .tag(AppTab.lists)
+            } label: {
+                Label("Listas", systemImage: AppTab.lists.icon)
+            }
 
+            Tab(value: AppTab.recipes) {
                 NavigationStack {
                     RecipesView()
                 }
-                .tabItem {
-                    Label("Receitas", systemImage: AppTab.recipes.icon)
-                }
-                .tag(AppTab.recipes)
+            } label: {
+                Label("Receitas", systemImage: AppTab.recipes.icon)
+            }
 
+            Tab(value: AppTab.nutrients) {
                 NavigationStack {
                     NutrientsPlaceholderView()
                 }
-                .tabItem {
-                    Label("Nutrientes", systemImage: AppTab.nutrients.icon)
-                }
-                .tag(AppTab.nutrients)
+            } label: {
+                Label("Nutrientes", systemImage: AppTab.nutrients.icon)
             }
-            #else
-            if #available(iOS 26, macOS 26, *) {
-                TabView(selection: tabSelectionBinding) {
-                    Tab(value: AppTab.assistant) {
-                        NavigationStack {
-                            HomeView(onSettingsTap: { showSettings = true })
-                        }
-                    } label: {
-                        Label("Início", systemImage: AppTab.assistant.icon)
-                    }
 
-                    Tab(value: AppTab.lists) {
-                        NavigationStack {
-                            ListsTabView()
-                        }
-                    } label: {
-                        Label("Listas", systemImage: AppTab.lists.icon)
-                    }
-
-                    Tab(value: AppTab.recipes) {
-                        NavigationStack {
-                            RecipesView()
-                        }
-                    } label: {
-                        Label("Receitas", systemImage: AppTab.recipes.icon)
-                    }
-
-                    Tab(value: AppTab.nutrients) {
-                        NavigationStack {
-                            NutrientsPlaceholderView()
-                        }
-                    } label: {
-                        Label("Nutrientes", systemImage: AppTab.nutrients.icon)
-                    }
-
-                    Tab(value: AppTab.add, role: .search) {
-                        Color.clear
-                    } label: {
-                        Label("Adicionar", systemImage: AppTab.add.icon)
-                    }
-                }
-            } else {
-                TabView(selection: tabSelectionBinding) {
-                    NavigationStack {
-                        HomeView(onSettingsTap: { showSettings = true })
-                    }
-                    .tabItem {
-                        Label("Início", systemImage: AppTab.assistant.icon)
-                    }
-                    .tag(AppTab.assistant)
-
-                    NavigationStack {
-                        ListsTabView()
-                    }
-                    .tabItem {
-                        Label("Listas", systemImage: AppTab.lists.icon)
-                    }
-                    .tag(AppTab.lists)
-
-                    NavigationStack {
-                        RecipesView()
-                    }
-                    .tabItem {
-                        Label("Receitas", systemImage: AppTab.recipes.icon)
-                    }
-                    .tag(AppTab.recipes)
-
-                    NavigationStack {
-                        NutrientsPlaceholderView()
-                    }
-                    .tabItem {
-                        Label("Nutrientes", systemImage: AppTab.nutrients.icon)
-                    }
-                    .tag(AppTab.nutrients)
-
-                    Color.clear
-                        .tabItem {
-                            Label("Adicionar", systemImage: AppTab.add.icon)
-                        }
-                        .tag(AppTab.add)
-                }
+            Tab(value: AppTab.add, role: .search) {
+                Color.clear
+            } label: {
+                Label("Adicionar", systemImage: AppTab.add.icon)
             }
-            #endif
         }
     }
 
@@ -278,29 +205,9 @@ struct ContentView: View {
                     )
                 }
             }
-
-            #if os(macOS)
-            Button {
-                openAddOptionsFromButton()
-            } label: {
-                Image(systemName: showAddOptions ? "xmark" : "plus")
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundStyle(.white)
-                    .frame(width: 52, height: 52)
-                    .background(Color.accentColor, in: Circle())
-                    .shadow(color: .black.opacity(0.18), radius: 18, y: 8)
-            }
-            .buttonStyle(.plain)
-            #endif
         }
         .padding(.trailing, 14)
         .padding(.bottom, 88)
-    }
-
-    private func openAddOptionsFromButton() {
-        withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) {
-            showAddOptions.toggle()
-        }
     }
 }
 

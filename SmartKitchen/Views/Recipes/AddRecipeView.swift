@@ -63,6 +63,13 @@ struct AddRecipeView: View {
 
     var body: some View {
         rootContent
+            .formStyle(.grouped)
+            #if os(macOS)
+            .padding(.horizontal, 20)
+            .padding(.top, 10)
+            .padding(.bottom, 20)
+            .frame(minWidth: 700, minHeight: 800)
+            #endif
     }
 
     private var rootContent: some View {
@@ -114,15 +121,17 @@ struct AddRecipeView: View {
             }
         }
         .confirmationDialog("Adicionar Foto", isPresented: $showPhotoOptions, titleVisibility: .visible) {
-            #if os(iOS)
             Button("Tirar Foto") {
+                #if os(iOS)
                 if UIImagePickerController.isSourceTypeAvailable(.camera) {
                     showCameraPicker = true
                 } else {
                     showCameraUnavailableAlert = true
                 }
+                #else
+                showCameraPicker = true
+                #endif
             }
-            #endif
 
             Button("Selecionar da Galeria") {
                 showPhotoLibrary = true
@@ -146,13 +155,18 @@ struct AddRecipeView: View {
         ) { result in
             handleCoverFileImport(result)
         }
-        #if os(iOS)
         .sheet(isPresented: $showCameraPicker) {
+            #if os(iOS)
             CameraMediaPicker(mode: .photoOnly) { media in
                 imageData = media.data
             }
+            #else
+            MacCameraMediaPicker(mode: .photoOnly) { media in
+                imageData = media.data
+            }
+            .frame(minWidth: 640, minHeight: 520)
+            #endif
         }
-        #endif
         .sheet(isPresented: $showCategoryManager) {
             CategoryManagementView(initialType: .recipe)
         }
@@ -174,8 +188,8 @@ struct AddRecipeView: View {
                 applyUtensilIcon(entry, to: target.id)
             }
         }
-        #if os(iOS)
         .sheet(isPresented: $showPreparationCameraPicker) {
+            #if os(iOS)
             CameraMediaPicker(mode: .photoOrVideo) { media in
                 preparationMedia.append(
                     DraftPreparationMedia(
@@ -185,8 +199,19 @@ struct AddRecipeView: View {
                     )
                 )
             }
+            #else
+            MacCameraMediaPicker(mode: .photoOnly) { media in
+                preparationMedia.append(
+                    DraftPreparationMedia(
+                        type: media.type,
+                        data: media.data,
+                        fileExtension: media.fileExtension
+                    )
+                )
+            }
+            .frame(minWidth: 640, minHeight: 520)
+            #endif
         }
-        #endif
         .photosPicker(
             isPresented: $showPreparationPhotoLibrary,
             selection: $selectedPreparationItems,
@@ -206,15 +231,17 @@ struct AddRecipeView: View {
             Text("Este dispositivo não permite capturar fotos no momento.")
         }
         .confirmationDialog("Adicionar Mídia", isPresented: $showPreparationMediaOptions, titleVisibility: .visible) {
-            #if os(iOS)
             Button("Tirar Foto ou Vídeo") {
+                #if os(iOS)
                 if UIImagePickerController.isSourceTypeAvailable(.camera) {
                     showPreparationCameraPicker = true
                 } else {
                     showCameraUnavailableAlert = true
                 }
+                #else
+                showPreparationCameraPicker = true
+                #endif
             }
-            #endif
 
             Button("Selecionar da Galeria") {
                 showPreparationPhotoLibrary = true
@@ -585,14 +612,22 @@ struct AddRecipeView: View {
     }
 
     private func handleCoverFileImport(_ result: Result<URL, Error>) {
-        guard case let .success(url) = result,
-              let data = try? Data(contentsOf: url) else { return }
-        imageData = data
+        guard case let .success(url) = result else { return }
+        
+        guard url.startAccessingSecurityScopedResource() else { return }
+        defer { url.stopAccessingSecurityScopedResource() }
+        
+        if let data = try? Data(contentsOf: url) {
+            imageData = data
+        }
     }
 
     private func handlePreparationFileImport(_ result: Result<[URL], Error>) {
         guard case let .success(urls) = result else { return }
         let importedMedia = urls.compactMap { url -> DraftPreparationMedia? in
+            guard url.startAccessingSecurityScopedResource() else { return nil }
+            defer { url.stopAccessingSecurityScopedResource() }
+            
             guard let data = try? Data(contentsOf: url) else { return nil }
             let media = pickedRecipeMedia(from: data, contentType: UTType(filenameExtension: url.pathExtension))
             return DraftPreparationMedia(type: media.type, data: media.data, fileExtension: media.fileExtension)

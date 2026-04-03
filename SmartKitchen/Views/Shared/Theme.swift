@@ -599,13 +599,18 @@ struct CategoryManagementView: View {
                     }
                 }
             }
+            #if os(macOS)
+            .padding(.top, 10)
+            .padding(.bottom, 10)
+            .frame(minWidth: 400, minHeight: 450)
+            #endif
             .navigationTitle("Categorias")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
                 #if os(iOS)
-                ToolbarItem(placement: .topBarLeading) {
+                ToolbarItem(placement: .cancellationAction) {
                     EditButton()
                 }
                 #endif

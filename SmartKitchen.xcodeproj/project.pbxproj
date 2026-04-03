@@ -68,6 +68,7 @@
 		AA387922D9FD1D499A1CDD89 /* AITools.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F2855F679DBAC07AFEDF7A0 /* AITools.swift */; };
 		AA703EA790F6B67C41881A7E /* PlayfairDisplay.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 05D613E901D79A196998A3C7 /* PlayfairDisplay.ttf */; };
 		AB3B06A6A7827DA0150A8FB4 /* TexturedGradientView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 223EEEC2E6E5C6F3572B0A85 /* TexturedGradientView.swift */; };
+		AC4DD1B6FCADCFDC1504D7E3 /* MacCameraMediaPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3D1EB5B18D19836B0A5C38 /* MacCameraMediaPicker.swift */; };
 		AFC3471AAA45729E4EA43EE4 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1613EA3D56DD17FDE15B699 /* AppSettings.swift */; };
 		B2EB6743F49EB2E169D2AB56 /* RecipeRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C901446BD6E1A569FBFCE82E /* RecipeRowView.swift */; };
 		B6B6BE5B4609DA4ABFA089E8 /* ItemSearchField.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB768039F88F9878E87FABA4 /* ItemSearchField.swift */; };
@@ -150,7 +151,7 @@
 		B0BA783D43E37794EE28298C /* PlatformImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformImage.swift; sourceTree = "<group>"; };
 		B8E44E925C852E9239F7790A /* ListsInfoContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListsInfoContent.swift; sourceTree = "<group>"; };
 		B970691AA2D626F97231E533 /* PageHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageHeader.swift; sourceTree = "<group>"; };
-		B9A8A000ACD1E665B07A06D4 /* SmartKitchen.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = SmartKitchen.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B9A8A000ACD1E665B07A06D4 /* SmartKitchen.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SmartKitchen.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BD63B6313209711B5CC7C9BC /* AddGroceryItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddGroceryItemView.swift; sourceTree = "<group>"; };
 		BD8EFA8D0DF90B9B35DF27A4 /* items_database.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = items_database.json; sourceTree = "<group>"; };
 		C1613EA3D56DD17FDE15B699 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
@@ -158,6 +159,7 @@
 		C54310018082C8F6F3CE3FE1 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		C901446BD6E1A569FBFCE82E /* RecipeRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeRowView.swift; sourceTree = "<group>"; };
 		C97DDE84F26B0242CD107962 /* IconImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconImage.swift; sourceTree = "<group>"; };
+		CE3D1EB5B18D19836B0A5C38 /* MacCameraMediaPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacCameraMediaPicker.swift; sourceTree = "<group>"; };
 		D1A3DA22AFF6E8F87CDA9CB5 /* SmartKitchen.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SmartKitchen.entitlements; sourceTree = "<group>"; };
 		D1EE932494B1EDF61333EA76 /* Boska-Light.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Boska-Light.otf"; sourceTree = "<group>"; };
 		D2D194C91AB19D58E1F0BEB6 /* Boska-ExtralightItalic.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Boska-ExtralightItalic.otf"; sourceTree = "<group>"; };
@@ -346,6 +348,7 @@
 				C97DDE84F26B0242CD107962 /* IconImage.swift */,
 				7B18CA8A7141908734CA7123 /* ItemIconPickerView.swift */,
 				DB768039F88F9878E87FABA4 /* ItemSearchField.swift */,
+				CE3D1EB5B18D19836B0A5C38 /* MacCameraMediaPicker.swift */,
 				B970691AA2D626F97231E533 /* PageHeader.swift */,
 				AFCEEBA0F45A1486F9EE603B /* SettingsButton.swift */,
 				600EDD530C0ABD3D8C83E88F /* Theme.swift */,
@@ -531,6 +534,7 @@
 				B6B6BE5B4609DA4ABFA089E8 /* ItemSearchField.swift in Sources */,
 				F9B5F8BE086B893D8E6CE905 /* ListsInfoContent.swift in Sources */,
 				6EA5A2627DE82F481520CAEF /* ListsTabView.swift in Sources */,
+				AC4DD1B6FCADCFDC1504D7E3 /* MacCameraMediaPicker.swift in Sources */,
 				6039479CF7B8E9B97514EBD8 /* MeshGradientShaderView.swift in Sources */,
 				BCE0FE3A1390E8016772474C /* NebulaShaderView.swift in Sources */,
 				858A164AAC6170BD3F7B4942 /* NutrientsInfoContent.swift in Sources */,

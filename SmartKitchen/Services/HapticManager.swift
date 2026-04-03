@@ -2,6 +2,8 @@ import Foundation
 
 #if os(iOS)
 import UIKit
+#elseif os(macOS)
+import AppKit
 #endif
 
 enum HapticStyle {
@@ -17,6 +19,13 @@ enum HapticManager {
         case .heavy: .heavy
         }
         UIImpactFeedbackGenerator(style: uiStyle).impactOccurred()
+        #elseif os(macOS)
+        let pattern: NSHapticFeedbackManager.FeedbackPattern = switch style {
+        case .light: .alignment
+        case .medium: .levelChange
+        case .heavy: .generic
+        }
+        NSHapticFeedbackManager.defaultPerformer.perform(pattern, performanceTime: .default)
         #endif
     }
 }

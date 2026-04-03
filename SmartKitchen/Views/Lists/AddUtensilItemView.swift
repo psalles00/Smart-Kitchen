@@ -62,6 +62,7 @@ struct AddUtensilItemView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                     }
                     .buttonStyle(.plain)
+                    .padding(.vertical, 4)
                 }
 
                 PhotosPicker(selection: $selectedPhoto, matching: .images) {
@@ -76,6 +77,13 @@ struct AddUtensilItemView: View {
                 }
             }
         }
+        .formStyle(.grouped)
+        #if os(macOS)
+        .padding(.horizontal, 20)
+        .padding(.top, 10)
+        .padding(.bottom, 20)
+        .frame(minWidth: 500, minHeight: 450)
+        #endif
         .navigationTitle("Novo Utensílio")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
@@ -223,6 +231,13 @@ struct EditUtensilItemView: View {
                 }
             }
         }
+        .formStyle(.grouped)
+        #if os(macOS)
+        .padding(.horizontal, 20)
+        .padding(.top, 10)
+        .padding(.bottom, 20)
+        .frame(minWidth: 500, minHeight: 450)
+        #endif
         .navigationTitle("Editar Utensílio")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)

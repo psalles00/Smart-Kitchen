@@ -41,6 +41,13 @@ struct EditRecipeView: View {
 
     var body: some View {
         rootContent
+            .formStyle(.grouped)
+            #if os(macOS)
+            .padding(.horizontal, 20)
+            .padding(.top, 10)
+            .padding(.bottom, 20)
+            .frame(minWidth: 700, minHeight: 800)
+            #endif
     }
 
     private var rootContent: some View {
@@ -83,15 +90,17 @@ struct EditRecipeView: View {
         .onChange(of: selectedPhoto) { loadPhoto() }
         .onChange(of: selectedPreparationItems) { loadPreparationMedia() }
         .confirmationDialog("Foto da Receita", isPresented: $showPhotoOptions, titleVisibility: .visible) {
-            #if os(iOS)
             Button("Tirar Foto") {
+                #if os(iOS)
                 if UIImagePickerController.isSourceTypeAvailable(.camera) {
                     showCameraPicker = true
                 } else {
                     showCameraUnavailableAlert = true
                 }
+                #else
+                showCameraPicker = true
+                #endif
             }
-            #endif
 
             Button("Selecionar da Galeria") {
                 showPhotoLibrary = true
@@ -115,13 +124,18 @@ struct EditRecipeView: View {
         ) { result in
             handleCoverFileImport(result)
         }
-        #if os(iOS)
         .sheet(isPresented: $showCameraPicker) {
+            #if os(iOS)
             CameraMediaPicker(mode: .photoOnly) { media in
                 recipe.imageData = media.data
             }
+            #else
+            MacCameraMediaPicker(mode: .photoOnly) { media in
+                recipe.imageData = media.data
+            }
+            .frame(minWidth: 640, minHeight: 520)
+            #endif
         }
-        #endif
         .sheet(isPresented: $showCategoryManager) {
             CategoryManagementView(initialType: .recipe)
         }
@@ -143,8 +157,8 @@ struct EditRecipeView: View {
                 applyUtensilIcon(entry, to: target.id)
             }
         }
-        #if os(iOS)
         .sheet(isPresented: $showPreparationCameraPicker) {
+            #if os(iOS)
             CameraMediaPicker(mode: .photoOrVideo) { media in
                 preparationMediaRows.append(
                     EditPreparationMediaRow(
@@ -154,8 +168,19 @@ struct EditRecipeView: View {
                     )
                 )
             }
+            #else
+            MacCameraMediaPicker(mode: .photoOnly) { media in
+                preparationMediaRows.append(
+                    EditPreparationMediaRow(
+                        type: media.type,
+                        data: media.data,
+                        fileExtension: media.fileExtension
+                    )
+                )
+            }
+            .frame(minWidth: 640, minHeight: 520)
+            #endif
         }
-        #endif
         .photosPicker(
             isPresented: $showPreparationPhotoLibrary,
             selection: $selectedPreparationItems,
@@ -175,15 +200,17 @@ struct EditRecipeView: View {
             Text("Este dispositivo não permite capturar fotos no momento.")
         }
         .confirmationDialog("Adicionar Mídia", isPresented: $showPreparationMediaOptions, titleVisibility: .visible) {
-            #if os(iOS)
             Button("Tirar Foto ou Vídeo") {
+                #if os(iOS)
                 if UIImagePickerController.isSourceTypeAvailable(.camera) {
                     showPreparationCameraPicker = true
                 } else {
                     showCameraUnavailableAlert = true
                 }
+                #else
+                showPreparationCameraPicker = true
+                #endif
             }
-            #endif
 
             Button("Selecionar da Galeria") {
                 showPreparationPhotoLibrary = true
@@ -592,14 +619,22 @@ struct EditRecipeView: View {
     }
 
     private func handleCoverFileImport(_ result: Result<URL, Error>) {
-        guard case let .success(url) = result,
-              let data = try? Data(contentsOf: url) else { return }
-        recipe.imageData = data
+        guard case let .success(url) = result else { return }
+        
+        guard url.startAccessingSecurityScopedResource() else { return }
+        defer { url.stopAccessingSecurityScopedResource() }
+        
+        if let data = try? Data(contentsOf: url) {
+            recipe.imageData = data
+        }
     }
 
     private func handlePreparationFileImport(_ result: Result<[URL], Error>) {
         guard case let .success(urls) = result else { return }
         let importedMedia = urls.compactMap { url -> EditPreparationMediaRow? in
+            guard url.startAccessingSecurityScopedResource() else { return nil }
+            defer { url.stopAccessingSecurityScopedResource() }
+            
             guard let data = try? Data(contentsOf: url) else { return nil }
             let media = pickedRecipeMedia(from: data, contentType: UTType(filenameExtension: url.pathExtension))
             return EditPreparationMediaRow(type: media.type, data: media.data, fileExtension: media.fileExtension)

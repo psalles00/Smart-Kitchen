@@ -244,26 +244,6 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
 
     @ViewBuilder
     private var backgroundLayer: some View {
-        #if os(macOS)
-        if pageTheme == .home {
-            macHomeBackground
-        } else {
-            let selection = backgroundManager.background(for: pageTheme)
-
-            switch selection.type {
-            case .texturedGradient:
-                if let preset = selection.texturedPreset {
-                    TexturedGradientView(preset: preset, progress: 1.0)
-                } else {
-                    originalBackground
-                }
-            case .original:
-                originalBackground
-            case .waves:
-                WavesShaderView(progress: 1.0)
-            }
-        }
-        #else
         let selection = backgroundManager.background(for: pageTheme)
 
         switch selection.type {
@@ -278,7 +258,6 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
         case .waves:
             WavesShaderView(progress: 1.0)
         }
-        #endif
     }
 
     @ViewBuilder
@@ -307,43 +286,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
         }
     }
 
-    #if os(macOS)
-    private var macHomeBackground: some View {
-        ZStack {
-            LinearGradient(
-                colors: [
-                    Color(red: 0.19, green: 0.09, blue: 0.05),
-                    Color(red: 0.47, green: 0.17, blue: 0.09),
-                    Color(red: 0.86, green: 0.42, blue: 0.14)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
 
-            RadialGradient(
-                colors: [
-                    Color.white.opacity(0.22),
-                    Color.orange.opacity(0.12),
-                    Color.clear
-                ],
-                center: .topLeading,
-                startRadius: 20,
-                endRadius: 360
-            )
-
-            RadialGradient(
-                colors: [
-                    Color.yellow.opacity(0.18),
-                    Color.clear
-                ],
-                center: .bottomTrailing,
-                startRadius: 10,
-                endRadius: 320
-            )
-        }
-        .ignoresSafeArea()
-    }
-    #endif
 }
 
 // MARK: - Overlay Child Views (read scrollState — only THEY re-render)
