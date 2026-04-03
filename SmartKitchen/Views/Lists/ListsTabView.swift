@@ -288,7 +288,7 @@ struct ListsTabView: View {
             }
         }
         .padding(4)
-        .background(Color(.tertiarySystemBackground), in: .rect(cornerRadius: 12))
+        .background(Color(.tertiarySystemFill), in: .rect(cornerRadius: 12))
     }
 
     private func badgeText(for tab: ListSubtab) -> String? {
@@ -383,9 +383,11 @@ private struct ListsSubtabDropButton: View {
                         .transition(.scale.combined(with: .opacity))
                 }
             }
+            .contentShape(Rectangle()) // Fix tapping area 
             .frame(maxWidth: .infinity)
             .padding(.vertical, 8)
-            .background(isSelected ? Color.accentColor.opacity(0.15) : .clear, in: .rect(cornerRadius: 8))
+            .background(isSelected ? Color(.systemBackground) : .clear, in: .rect(cornerRadius: 10))
+            .shadow(color: isSelected ? .black.opacity(0.12) : .clear, radius: 4, x: 0, y: 1)
             .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
         }
         .buttonStyle(.plain)

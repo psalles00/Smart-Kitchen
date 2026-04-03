@@ -63,16 +63,18 @@ struct UtensilsView: View {
                         let (categoryName, items) = group
                         Section {
                             ForEach(Array(items.enumerated()), id: \.1.id) { itemIndex, item in
-                                UtensilItemRow(item: item, showsDivider: itemIndex > 0)
-                                    .contentShape(Rectangle())
-                                    .background(alignment: .top) {
-                                        if categoryIndex == 0, itemIndex == 0 {
-                                            ScrollOffsetReader(coordinateSpace: "lists_scroll")
-                                        }
-                                    }
-                                    .onTapGesture {
+                                    Button {
                                         editingItem = item
+                                    } label: {
+                                        UtensilItemRow(item: item, showsDivider: itemIndex > 0)
+                                            .contentShape(Rectangle())
+                                            .background(alignment: .top) {
+                                                if categoryIndex == 0, itemIndex == 0 {
+                                                    ScrollOffsetReader(coordinateSpace: "lists_scroll")
+                                                }
+                                            }
                                     }
+                                    .buttonStyle(.plain)
                                     .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                                         Button(role: .destructive) {
                                             deleteItem(item)

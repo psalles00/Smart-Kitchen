@@ -215,8 +215,7 @@ struct ContentView: View {
             }
             .listStyle(.sidebar)
             .scrollContentBackground(.hidden)
-            .background(Color.black.opacity(0.6))
-            .preferredColorScheme(.dark)
+            .macOSDarkSidebar()
             .environment(\.colorScheme, .dark)
             .navigationTitle("")
         } detail: {
@@ -945,3 +944,29 @@ private struct AddOptionButton: View {
     }
 }
 
+
+#if os(macOS)
+private struct DarkSidebarFix: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        DispatchQueue.main.async {
+            var current = view.superview
+            while let parent = current {
+                if String(describing: type(of: parent)).contains("VisualEffect") {
+                    parent.appearance = NSAppearance(named: .darkAqua)
+                    parent.wantsLayer = true
+                    parent.layer?.backgroundColor = NSColor(white: 0, alpha: 0.6).cgColor
+                }
+                current = parent.superview
+            }
+        }
+        return view
+    }
+    func updateNSView(_ nsView: NSView, context: Context) {}
+}
+extension View {
+    func macOSDarkSidebar() -> some View {
+        self.background(DarkSidebarFix())
+    }
+}
+#endif

@@ -102,24 +102,26 @@ struct PantryView: View {
 
     @ViewBuilder
     private func pantryRow(categoryIndex: Int, itemIndex: Int, category: String, item: PantryItem) -> some View {
-        PantryItemRow(
-            item: item,
-            isDetailed: isDetailed,
-            onSendToGrocery: { sendToGrocery(item) },
-            showsDivider: itemIndex > 0
-        )
-        .contentShape(Rectangle())
-        .overlay {
-            DropTargetHighlight(isActive: targetedItemID == item.id)
-        }
-        .background(alignment: .top) {
-            if categoryIndex == 0, itemIndex == 0 {
-                ScrollOffsetReader(coordinateSpace: "lists_scroll")
+        Button {
+            editingItem = item
+        } label: {
+            PantryItemRow(
+                item: item,
+                isDetailed: isDetailed,
+                onSendToGrocery: { sendToGrocery(item) },
+                showsDivider: itemIndex > 0
+            )
+            .contentShape(Rectangle())
+            .overlay {
+                DropTargetHighlight(isActive: targetedItemID == item.id)
+            }
+            .background(alignment: .top) {
+                if categoryIndex == 0, itemIndex == 0 {
+                    ScrollOffsetReader(coordinateSpace: "lists_scroll")
+                }
             }
         }
-        .onTapGesture {
-            editingItem = item
-        }
+        .buttonStyle(.plain)
         .contextMenu {
             Button("Editar", systemImage: "pencil") {
                 editingItem = item

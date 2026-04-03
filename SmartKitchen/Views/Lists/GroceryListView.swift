@@ -98,21 +98,23 @@ struct GroceryListView: View {
 
     @ViewBuilder
     private func groceryRow(categoryIndex: Int, itemIndex: Int, category: String, item: GroceryItem) -> some View {
-        GroceryItemRow(item: item, showsDivider: itemIndex > 0) {
-            acquireItem(item)
-        }
-        .contentShape(Rectangle())
-        .overlay {
-            DropTargetHighlight(isActive: targetedItemID == item.id)
-        }
-        .background(alignment: .top) {
-            if categoryIndex == 0, itemIndex == 0 {
-                ScrollOffsetReader(coordinateSpace: "lists_scroll")
+        Button {
+            editingItem = item
+        } label: {
+            GroceryItemRow(item: item, showsDivider: itemIndex > 0) {
+                acquireItem(item)
+            }
+            .contentShape(Rectangle())
+            .overlay {
+                DropTargetHighlight(isActive: targetedItemID == item.id)
+            }
+            .background(alignment: .top) {
+                if categoryIndex == 0, itemIndex == 0 {
+                    ScrollOffsetReader(coordinateSpace: "lists_scroll")
+                }
             }
         }
-        .onTapGesture {
-            editingItem = item
-        }
+        .buttonStyle(.plain)
         .contextMenu {
             contextMenuContent(for: item)
         }
