@@ -48,10 +48,11 @@ struct ContentView: View {
 
     private var macActivePageTheme: PageTheme {
         switch selectedSidebar ?? .home {
-        case .recipes:
-            return .recipes
-        default:
-            return .home
+        case .home: return .home
+        case .lists: return .lists
+        case .recipes: return .recipes
+        case .nutrients: return .nutrients
+        case .settings: return .home
         }
     }
     #endif
@@ -214,7 +215,7 @@ struct ContentView: View {
             }
             .listStyle(.sidebar)
             .scrollContentBackground(.hidden)
-            .background(.ultraThinMaterial)
+            .background(Color.black.opacity(0.35))
             .environment(\.colorScheme, .dark)
             .navigationTitle("Smart Kitchen")
         } detail: {
@@ -236,6 +237,8 @@ struct ContentView: View {
                     .background(Color.clear)
             }
         }
+        .toolbarBackground(.hidden, for: .windowToolbar)
+        .toolbarColorScheme(.dark, for: .windowToolbar)
         .background {
             macAppBackground
                 .ignoresSafeArea()
@@ -362,10 +365,6 @@ private struct MacDetailCard<Content: View>: View {
     var body: some View {
         content
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .background(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(Color(nsColor: .windowBackgroundColor))
-            )
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)

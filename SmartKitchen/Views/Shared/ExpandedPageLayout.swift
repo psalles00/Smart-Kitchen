@@ -76,29 +76,13 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
     }
 
     var body: some View {
-        #if os(macOS)
-        ScrollView {
-            VStack(spacing: 0) {
-                // Info Content (Title)
-                infoContent()
-                    .padding(.horizontal, 20)
-                    .padding(.top, 24)
-                    .padding(.bottom, 16)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                
-                content()
-                    .padding(.horizontal, leadingPanelInset)
-                    .padding(.bottom, 24)
-            }
-            .frame(maxWidth: .infinity, alignment: .top)
-        }
-        .scrollIndicators(.visible)
-        #else
         ZStack(alignment: .top) {
             // 1. FIXED BACKGROUND
+            #if !os(macOS)
             backgroundLayer
                 .ignoresSafeArea()
                 .allowsHitTesting(false) // Previne interações com o shader
+            #endif
 
             // 2. BOTTOM FILL (prevents shader from showing on bottom overscroll)
             VStack(spacing: 0) {
@@ -139,7 +123,6 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
                         }
                         .frame(maxWidth: .infinity, alignment: .top)
                         .frame(minHeight: max(0, viewHeight - headerHeight))
-                        #if !os(macOS)
                         .background(Color(.systemBackground))
                         .clipShape(
                             UnevenRoundedRectangle(
@@ -149,9 +132,6 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
                                 topTrailingRadius: cornerRadius
                             )
                         )
-                        #endif
-                        .padding(.leading, leadingPanelInset)
-                        .padding(.trailing, trailingPanelInset)
                     }
                     .background(
                         GeometryReader { scrollGeo in
@@ -163,6 +143,8 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
                         }
                     )
                 }
+                .padding(.leading, leadingPanelInset)
+                .padding(.trailing, trailingPanelInset)
                 .scrollIndicators(.hidden)
                 #if os(macOS)
                 .background(_OverlayScrollerConfigurator())
@@ -210,7 +192,6 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
         .onGeometryChange(for: CGFloat.self, of: { $0.safeAreaInsets.top }) { newTop in
             scrollState.safeAreaTop = newTop
         }
-        #endif
     }
 
     // MARK: - Scroll Handler (closure — no body dependency)
