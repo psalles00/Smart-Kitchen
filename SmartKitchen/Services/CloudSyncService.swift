@@ -1,7 +1,6 @@
 import Foundation
 import SwiftData
 import Observation
-import Security
 #if canImport(UIKit)
 import UIKit
 #elseif canImport(AppKit)
@@ -201,23 +200,10 @@ final class CloudSyncService: @unchecked Sendable {
         #if targetEnvironment(simulator)
         return false
         #else
-        let task = SecTaskCreateFromSelf(nil)
-        let keys = ["com.apple.developer.icloud-services" as CFString] as CFArray
-        var error: Unmanaged<CFError>?
-        
-        guard let entitlements = SecTaskCopyValuesForEntitlements(
-            task,
-            keys,
-            &error
-        ) as? [String: Any] else {
-            return false
-        }
-
-        guard let services = entitlements["com.apple.developer.icloud-services"] as? [String] else {
-            return false
-        }
-
-        return services.contains("CloudKit") || services.contains("CloudKit-Anonymous")
+        // The actual CloudKit entitlement check happens when creating the
+        // SwiftData container. On device builds, avoid relying on SecTask APIs
+        // that are not consistently exposed to Swift across SDK targets.
+        return true
         #endif
     }
 
