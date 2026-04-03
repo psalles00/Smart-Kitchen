@@ -85,6 +85,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
             #endif
 
             // 2. BOTTOM FILL (prevents shader from showing on bottom overscroll)
+            #if !os(macOS)
             VStack(spacing: 0) {
                 Spacer()
                 Color(.systemBackground)
@@ -96,6 +97,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
             .ignoresSafeArea(.container, edges: .bottom)
             .allowsHitTesting(false)
             .zIndex(1)
+            #endif
 
             // 3. INFO AREA (behind scroll)
             _InfoAreaLayer(
@@ -124,6 +126,9 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
                         .frame(maxWidth: .infinity, alignment: .top)
                         .frame(minHeight: max(0, viewHeight - headerHeight))
                         .background(Color(.systemBackground))
+                        #if os(macOS)
+                        .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+                        #else
                         .clipShape(
                             UnevenRoundedRectangle(
                                 topLeadingRadius: cornerRadius,
@@ -132,6 +137,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
                                 topTrailingRadius: cornerRadius
                             )
                         )
+                        #endif
                     }
                     .background(
                         GeometryReader { scrollGeo in

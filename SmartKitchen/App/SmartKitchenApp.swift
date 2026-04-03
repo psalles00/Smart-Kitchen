@@ -32,6 +32,7 @@ struct SmartKitchenApp: App {
         }
         #if os(macOS)
         .defaultSize(width: 1100, height: 750)
+        .windowStyle(.hiddenTitleBar)
         .windowResizability(.contentMinSize)
         .commands {
             CommandGroup(replacing: .newItem) { }

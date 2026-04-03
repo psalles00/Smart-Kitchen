@@ -215,25 +215,26 @@ struct ContentView: View {
             }
             .listStyle(.sidebar)
             .scrollContentBackground(.hidden)
-            .background(Color.black.opacity(0.35))
+            .background(Color.black.opacity(0.6))
+            .preferredColorScheme(.dark)
             .environment(\.colorScheme, .dark)
-            .navigationTitle("Smart Kitchen")
+            .navigationTitle("")
         } detail: {
             switch selectedSidebar ?? .home {
             case .home:
-                NavigationStack { MacDetailCard { HomeView(onSettingsTap: { selectedSidebar = .settings }) } }
+                NavigationStack { HomeView(onSettingsTap: { selectedSidebar = .settings }) }
                     .background(Color.clear)
             case .lists:
-                NavigationStack { MacDetailCard { ListsTabView() } }
+                NavigationStack { ListsTabView() }
                     .background(Color.clear)
             case .recipes:
-                NavigationStack { MacDetailCard { RecipesView() } }
+                NavigationStack { RecipesView() }
                     .background(Color.clear)
             case .nutrients:
-                NavigationStack { MacDetailCard { NutrientsPlaceholderView() } }
+                NavigationStack { NutrientsPlaceholderView() }
                     .background(Color.clear)
             case .settings:
-                NavigationStack { MacDetailCard { SettingsView() } }
+                NavigationStack { SettingsView() }
                     .background(Color.clear)
             }
         }
@@ -355,7 +356,6 @@ struct ContentView: View {
 
 #if os(macOS)
 private struct MacDetailCard<Content: View>: View {
-    @Environment(\.colorScheme) private var colorScheme
     private let content: Content
 
     init(@ViewBuilder content: () -> Content) {
@@ -365,15 +365,6 @@ private struct MacDetailCard<Content: View>: View {
     var body: some View {
         content
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .strokeBorder(
-                        (colorScheme == .dark ? Color.white.opacity(0.12) : Color.black.opacity(0.06)),
-                        lineWidth: 1
-                    )
-            )
-            .padding(16)
     }
 }
 #endif
