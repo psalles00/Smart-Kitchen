@@ -33,7 +33,6 @@ struct AddPantryItemView: View {
     @State private var expiryDurationValue: Int = 7
     @State private var expiryDurationUnit: ExpiryDurationUnit = .days
     @State private var keepExpiryOnAcquire = false
-    @State private var showCategoryManager = false
     @State private var showIconPicker = false
     @State private var focusNameField = false
     @State private var selectedPhoto: PhotosPickerItem?
@@ -72,16 +71,6 @@ struct AddPantryItemView: View {
                 Button("Salvar") { save() }
                     .disabled(!isValid)
             }
-            ToolbarItem(placement: .adaptiveTrailing) {
-                Button {
-                    showCategoryManager = true
-                } label: {
-                    Image(systemName: "slider.horizontal.3")
-                }
-            }
-        }
-        .sheet(isPresented: $showCategoryManager) {
-            CategoryManagementView(initialType: .pantry)
         }
         .sheet(isPresented: $showIconPicker) {
             ItemIconPickerView(
@@ -323,7 +312,6 @@ struct EditPantryItemView: View {
     @Query(sort: \Category.sortOrder) private var allEditCategories: [Category]
 
     @Bindable var item: PantryItem
-    @State private var showCategoryManager = false
     @State private var showIconPicker = false
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var showPhotoPreview = false
@@ -359,16 +347,6 @@ struct EditPantryItemView: View {
             ToolbarItem(placement: .confirmationAction) {
                 Button("OK") { dismiss() }
             }
-            ToolbarItem(placement: .adaptiveTrailing) {
-                Button {
-                    showCategoryManager = true
-                } label: {
-                    Image(systemName: "slider.horizontal.3")
-                }
-            }
-        }
-        .sheet(isPresented: $showCategoryManager) {
-            CategoryManagementView(initialType: .pantry)
         }
         .sheet(isPresented: $showIconPicker) {
             ItemIconPickerView(

@@ -81,6 +81,27 @@ enum ListsSortOption: String, Codable, CaseIterable, Identifiable {
     }
 }
 
+enum ListGroupingMode: String, Codable, CaseIterable, Identifiable {
+    case category
+    case marketSection
+
+    var id: String { rawValue }
+
+    var displayName: LocalizedStringKey {
+        switch self {
+        case .category: "Categoria"
+        case .marketSection: "Seção no Mercado"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .category: "square.grid.2x2"
+        case .marketSection: "cart"
+        }
+    }
+}
+
 // MARK: - Settings Model (singleton)
 
 @Model
@@ -98,6 +119,8 @@ final class AppSettings {
     var hasCompletedOnboarding: Bool = false
     var showUtensils: Bool = false
     var recipeGalleryColumns: Int = 2
+    var pantryGroupingMode: ListGroupingMode = ListGroupingMode.category
+    var groceryGroupingMode: ListGroupingMode = ListGroupingMode.marketSection
 
     init() {
         self.id = UUID()
@@ -111,6 +134,8 @@ final class AppSettings {
         self.openAIAPIKey = ""
         self.hasCompletedOnboarding = false
         self.showUtensils = false
+        self.pantryGroupingMode = .category
+        self.groceryGroupingMode = .marketSection
     }
 
     @Transient

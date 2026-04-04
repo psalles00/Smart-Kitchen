@@ -62,7 +62,7 @@ struct AddRecipeView: View {
     }
 
     var body: some View {
-        rootContent
+        editorScaffold
             .formStyle(.grouped)
             #if os(macOS)
             .padding(.horizontal, 20)
@@ -72,7 +72,83 @@ struct AddRecipeView: View {
             #endif
     }
 
-    private var rootContent: some View {
+    private var editorScaffold: some View {
+        recipeForm
+            .navigationTitle("Nova Receita")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .tint(PageTheme.recipes.accentColor)
+            .toolbar { toolbarContent }
+            .onChange(of: selectedPhoto) {
+                loadPhoto()
+            }
+            .onChange(of: selectedPreparationItems) {
+                loadPreparationMedia()
+            }
+            .onAppear {
+                DispatchQueue.main.async {
+                    isNameFieldFocused = true
+                }
+            }
+            .confirmationDialog("Adicionar Foto", isPresented: $showPhotoOptions, titleVisibility: .visible) {
+                coverPhotoDialogContent
+            }
+            .photosPicker(isPresented: $showPhotoLibrary, selection: $selectedPhoto, matching: .images)
+            .fileImporter(
+                isPresented: $showPhotoFileImporter,
+                allowedContentTypes: [.image]
+            ) { result in
+                handleCoverFileImport(result)
+            }
+            .sheet(isPresented: $showCameraPicker) {
+                coverCameraSheet
+            }
+            .sheet(item: $activeIngredientPicker) { target in
+                ItemIconPickerView(
+                    initialQuery: ingredientName(for: target.id),
+                    currentIconFileName: ingredientIconName(for: target.id),
+                    fallbackSymbol: "leaf"
+                ) { entry in
+                    applyIngredientIcon(entry, to: target.id)
+                }
+            }
+            .sheet(item: $activeUtensilPicker) { target in
+                ItemIconPickerView(
+                    initialQuery: utensilName(for: target.id),
+                    currentIconFileName: utensilIconName(for: target.id),
+                    fallbackSymbol: "fork.knife"
+                ) { entry in
+                    applyUtensilIcon(entry, to: target.id)
+                }
+            }
+            .sheet(isPresented: $showPreparationCameraPicker) {
+                preparationCameraSheet
+            }
+            .photosPicker(
+                isPresented: $showPreparationPhotoLibrary,
+                selection: $selectedPreparationItems,
+                maxSelectionCount: 12,
+                matching: .any(of: [.images, .videos])
+            )
+            .fileImporter(
+                isPresented: $showPreparationFileImporter,
+                allowedContentTypes: [.image, .movie],
+                allowsMultipleSelection: true
+            ) { result in
+                handlePreparationFileImport(result)
+            }
+            .alert("Câmera indisponível", isPresented: $showCameraUnavailableAlert) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text("Este dispositivo não permite capturar fotos no momento.")
+            }
+            .confirmationDialog("Adicionar Mídia", isPresented: $showPreparationMediaOptions, titleVisibility: .visible) {
+                preparationMediaDialogContent
+            }
+    }
+
+    private var recipeForm: some View {
         Form {
             imageSection
             basicInfoSection
@@ -87,169 +163,110 @@ struct AddRecipeView: View {
             }
             stepsSection
         }
-        .navigationTitle("Nova Receita")
+    }
+
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        ToolbarItem(placement: .cancellationAction) {
+            Button("Cancelar") { dismiss() }
+        }
+        ToolbarItem(placement: .confirmationAction) {
+            Button("Salvar") { save() }
+                .fontWeight(.semibold)
+                .disabled(!isValid)
+        }
+    }
+
+    @ViewBuilder
+    private var coverCameraSheet: some View {
         #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
+        CameraMediaPicker(mode: .photoOnly) { media in
+            imageData = media.data
+        }
+        #else
+        MacCameraMediaPicker(mode: .photoOnly) { media in
+            imageData = media.data
+        }
+        .frame(minWidth: 640, minHeight: 520)
         #endif
-        .tint(PageTheme.recipes.accentColor)
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Cancelar") { dismiss() }
-            }
-            ToolbarItem(placement: .confirmationAction) {
-                Button("Salvar") { save() }
-                    .fontWeight(.semibold)
-                    .disabled(!isValid)
-            }
-            ToolbarItem(placement: .adaptiveTrailing) {
-                Button {
-                    showCategoryManager = true
-                } label: {
-                    Image(systemName: "slider.horizontal.3")
-                }
-            }
+    }
+
+    @ViewBuilder
+    private var preparationCameraSheet: some View {
+        #if os(iOS)
+        CameraMediaPicker(mode: .photoOrVideo) { media in
+            preparationMedia.append(
+                DraftPreparationMedia(
+                    type: media.type,
+                    data: media.data,
+                    fileExtension: media.fileExtension
+                )
+            )
         }
-        .onChange(of: selectedPhoto) {
-            loadPhoto()
+        #else
+        MacCameraMediaPicker(mode: .photoOnly) { media in
+            preparationMedia.append(
+                DraftPreparationMedia(
+                    type: media.type,
+                    data: media.data,
+                    fileExtension: media.fileExtension
+                )
+            )
         }
-        .onChange(of: selectedPreparationItems) {
-            loadPreparationMedia()
-        }
-        .onAppear {
-            DispatchQueue.main.async {
-                isNameFieldFocused = true
-            }
-        }
-        .confirmationDialog("Adicionar Foto", isPresented: $showPhotoOptions, titleVisibility: .visible) {
-            Button("Tirar Foto") {
-                #if os(iOS)
-                if UIImagePickerController.isSourceTypeAvailable(.camera) {
-                    showCameraPicker = true
-                } else {
-                    showCameraUnavailableAlert = true
-                }
-                #else
+        .frame(minWidth: 640, minHeight: 520)
+        #endif
+    }
+
+    @ViewBuilder
+    private var coverPhotoDialogContent: some View {
+        Button("Tirar Foto") {
+            #if os(iOS)
+            if UIImagePickerController.isSourceTypeAvailable(.camera) {
                 showCameraPicker = true
-                #endif
-            }
-
-            Button("Selecionar da Galeria") {
-                showPhotoLibrary = true
-            }
-
-            Button("Selecionar dos Arquivos") {
-                showPhotoFileImporter = true
-            }
-
-            if imageData != nil {
-                Button("Remover Foto", role: .destructive) {
-                    imageData = nil
-                    selectedPhoto = nil
-                }
-            }
-        }
-        .photosPicker(isPresented: $showPhotoLibrary, selection: $selectedPhoto, matching: .images)
-        .fileImporter(
-            isPresented: $showPhotoFileImporter,
-            allowedContentTypes: [.image]
-        ) { result in
-            handleCoverFileImport(result)
-        }
-        .sheet(isPresented: $showCameraPicker) {
-            #if os(iOS)
-            CameraMediaPicker(mode: .photoOnly) { media in
-                imageData = media.data
+            } else {
+                showCameraUnavailableAlert = true
             }
             #else
-            MacCameraMediaPicker(mode: .photoOnly) { media in
-                imageData = media.data
-            }
-            .frame(minWidth: 640, minHeight: 520)
+            showCameraPicker = true
             #endif
         }
-        .sheet(isPresented: $showCategoryManager) {
-            CategoryManagementView(initialType: .recipe)
+
+        Button("Selecionar da Galeria") {
+            showPhotoLibrary = true
         }
-        .sheet(item: $activeIngredientPicker) { target in
-            ItemIconPickerView(
-                initialQuery: ingredientName(for: target.id),
-                currentIconFileName: ingredientIconName(for: target.id),
-                fallbackSymbol: "leaf"
-            ) { entry in
-                applyIngredientIcon(entry, to: target.id)
+
+        Button("Selecionar dos Arquivos") {
+            showPhotoFileImporter = true
+        }
+
+        if imageData != nil {
+            Button("Remover Foto", role: .destructive) {
+                imageData = nil
+                selectedPhoto = nil
             }
         }
-        .sheet(item: $activeUtensilPicker) { target in
-            ItemIconPickerView(
-                initialQuery: utensilName(for: target.id),
-                currentIconFileName: utensilIconName(for: target.id),
-                fallbackSymbol: "fork.knife"
-            ) { entry in
-                applyUtensilIcon(entry, to: target.id)
-            }
-        }
-        .sheet(isPresented: $showPreparationCameraPicker) {
+    }
+
+    @ViewBuilder
+    private var preparationMediaDialogContent: some View {
+        Button("Tirar Foto ou Vídeo") {
             #if os(iOS)
-            CameraMediaPicker(mode: .photoOrVideo) { media in
-                preparationMedia.append(
-                    DraftPreparationMedia(
-                        type: media.type,
-                        data: media.data,
-                        fileExtension: media.fileExtension
-                    )
-                )
-            }
-            #else
-            MacCameraMediaPicker(mode: .photoOnly) { media in
-                preparationMedia.append(
-                    DraftPreparationMedia(
-                        type: media.type,
-                        data: media.data,
-                        fileExtension: media.fileExtension
-                    )
-                )
-            }
-            .frame(minWidth: 640, minHeight: 520)
-            #endif
-        }
-        .photosPicker(
-            isPresented: $showPreparationPhotoLibrary,
-            selection: $selectedPreparationItems,
-            maxSelectionCount: 12,
-            matching: .any(of: [.images, .videos])
-        )
-        .fileImporter(
-            isPresented: $showPreparationFileImporter,
-            allowedContentTypes: [.image, .movie],
-            allowsMultipleSelection: true
-        ) { result in
-            handlePreparationFileImport(result)
-        }
-        .alert("Câmera indisponível", isPresented: $showCameraUnavailableAlert) {
-            Button("OK", role: .cancel) { }
-        } message: {
-            Text("Este dispositivo não permite capturar fotos no momento.")
-        }
-        .confirmationDialog("Adicionar Mídia", isPresented: $showPreparationMediaOptions, titleVisibility: .visible) {
-            Button("Tirar Foto ou Vídeo") {
-                #if os(iOS)
-                if UIImagePickerController.isSourceTypeAvailable(.camera) {
-                    showPreparationCameraPicker = true
-                } else {
-                    showCameraUnavailableAlert = true
-                }
-                #else
+            if UIImagePickerController.isSourceTypeAvailable(.camera) {
                 showPreparationCameraPicker = true
-                #endif
+            } else {
+                showCameraUnavailableAlert = true
             }
+            #else
+            showPreparationCameraPicker = true
+            #endif
+        }
 
-            Button("Selecionar da Galeria") {
-                showPreparationPhotoLibrary = true
-            }
+        Button("Selecionar da Galeria") {
+            showPreparationPhotoLibrary = true
+        }
 
-            Button("Selecionar dos Arquivos") {
-                showPreparationFileImporter = true
-            }
+        Button("Selecionar dos Arquivos") {
+            showPreparationFileImporter = true
         }
     }
 

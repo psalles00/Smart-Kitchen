@@ -48,7 +48,13 @@ struct ContentView: View {
     @State private var selectedSidebar: SidebarItem? = .home
 
     private var macActivePageTheme: PageTheme {
-        (selectedSidebar ?? .home).pageTheme
+        switch selectedSidebar ?? .home {
+        case .home: return .home
+        case .lists: return .lists
+        case .recipes: return .recipes
+        case .nutrients: return .nutrients
+        case .settings: return .home
+        }
     }
     #endif
 
@@ -207,12 +213,12 @@ struct ContentView: View {
             List(selection: $selectedSidebar) {
                 Section("Navegação") {
                     ForEach(SidebarItem.allCases.filter { $0 != .settings }) { item in
-                        sidebarRow(for: item)
+                        Label(item.title, systemImage: item.systemImage)
                             .tag(item)
                     }
                 }
                 Section("Preferências") {
-                    sidebarRow(for: .settings)
+                    Label(SidebarItem.settings.title, systemImage: SidebarItem.settings.systemImage)
                         .tag(SidebarItem.settings)
                 }
             }
@@ -282,22 +288,6 @@ struct ContentView: View {
         }
     }
 
-    @ViewBuilder
-    private func sidebarRow(for item: SidebarItem) -> some View {
-        let isSelected = selectedSidebar == item
-
-        Label(item.title, systemImage: item.systemImage)
-            .font(.headline.weight(.medium))
-            .foregroundStyle(isSelected ? Color.white : Color.white.opacity(0.96))
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
-            .background(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(isSelected ? Color.white.opacity(0.16) : Color.clear)
-            )
-            .listRowBackground(Color.clear)
-    }
     #endif
 
     private func handleTabSelectionChange(_ newValue: AppTab) {

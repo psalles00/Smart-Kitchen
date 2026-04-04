@@ -22,6 +22,7 @@ struct PantryView: View {
 
     private var settings: AppSettings? { settingsArray.first }
     private var isDetailed: Bool { settings?.pantryDetailLevel == .detailed }
+    private var groupingMode: ListGroupingMode { settings?.pantryGroupingMode ?? .category }
     private var categoryOrder: [String] { allCategories.filter { $0.type == .pantry }.map(\.name) }
 
     private var filteredItems: [PantryItem] {
@@ -48,15 +49,24 @@ struct PantryView: View {
     }
 
     private var groupedItems: [(String, [PantryItem])] {
-        let grouped = Dictionary(grouping: filteredItems) { $0.category }
+        let keyForItem: (PantryItem) -> String = groupingMode == .marketSection
+            ? { ItemDatabase.marketSection(for: $0.category) }
+            : { $0.category }
+
+        let grouped = Dictionary(grouping: filteredItems, by: keyForItem)
+
         return grouped
-            .map { category, items in
-                (category, sortedItems(items))
-            }
+            .map { key, items in (key, sortedItems(items)) }
             .sorted { lhs, rhs in
-                let leftIndex = categoryOrder.firstIndex(of: lhs.0) ?? .max
-                let rightIndex = categoryOrder.firstIndex(of: rhs.0) ?? .max
-                if leftIndex != rightIndex { return leftIndex < rightIndex }
+                if groupingMode == .marketSection {
+                    let leftIdx = ItemDatabase.marketSectionOrder.firstIndex(of: lhs.0) ?? .max
+                    let rightIdx = ItemDatabase.marketSectionOrder.firstIndex(of: rhs.0) ?? .max
+                    if leftIdx != rightIdx { return leftIdx < rightIdx }
+                } else {
+                    let leftIdx = categoryOrder.firstIndex(of: lhs.0) ?? .max
+                    let rightIdx = categoryOrder.firstIndex(of: rhs.0) ?? .max
+                    if leftIdx != rightIdx { return leftIdx < rightIdx }
+                }
                 return lhs.0.localizedCaseInsensitiveCompare(rhs.0) == .orderedAscending
             }
     }
@@ -286,19 +296,27 @@ struct PantryView: View {
     }
 
     private func handleDrop(_ payload: ListsDragPayload, targetCategory: String, targetItem: PantryItem?) -> Bool {
+        // When grouping by market section, the drop target is a section name, not a category.
+        // Keep the item's original category; only reorder within the visual group.
+        let resolvedCategory: (String) -> String = { original in
+            groupingMode == .marketSection ? original : targetCategory
+        }
+
         switch payload.sourceList {
         case .pantry:
             guard let sourceItem = allItems.first(where: { $0.id == payload.itemID }) else { return false }
             let previousCategory = sourceItem.category
-            sourceItem.category = targetCategory
-            reorderPantryItem(sourceItem, in: targetCategory, before: targetItem)
+            let newCategory = resolvedCategory(sourceItem.category)
+            sourceItem.category = newCategory
+            reorderPantryItem(sourceItem, in: newCategory, before: targetItem)
             normalizePantrySortOrder(in: previousCategory)
             return true
         case .grocery:
             guard let groceryItem = groceryItems.first(where: { $0.id == payload.itemID }) else { return false }
+            let newCategory = resolvedCategory(groceryItem.category)
             let pantryItem = PantryItem(
                 name: groceryItem.name,
-                category: targetCategory,
+                category: newCategory,
                 quantity: groceryItem.quantity,
                 unit: groceryItem.unit,
                 iconName: groceryItem.iconName,
@@ -308,7 +326,7 @@ struct PantryView: View {
             )
             modelContext.insert(pantryItem)
             modelContext.delete(groceryItem)
-            reorderPantryItem(pantryItem, in: targetCategory, before: targetItem)
+            reorderPantryItem(pantryItem, in: newCategory, before: targetItem)
             return true
         case .utensils:
             return false

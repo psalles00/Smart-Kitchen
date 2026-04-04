@@ -46,7 +46,6 @@ struct RecipesView: View {
     @State private var showsInlineTitle = false
     @State private var editingRecipe: Recipe?
     @State private var showCompatibleOnly = false
-    @State private var showCategoryManager = false
     @State private var currentScrollOffset: CGFloat = 0
     @State private var contentResetToken: Int = 0
 
@@ -137,10 +136,6 @@ struct RecipesView: View {
 
                         GlassButtonGroup {
                             optionsMenu
-                            GlassGroupDivider()
-                            GlassGroupButton(systemImage: "slider.horizontal.3") {
-                                showCategoryManager = true
-                            }
                         }
 
                         topControlsSeparator
@@ -182,9 +177,6 @@ struct RecipesView: View {
             NavigationStack {
                 EditRecipeView(recipe: recipe)
             }
-        }
-        .sheet(isPresented: $showCategoryManager) {
-            CategoryManagementView(initialType: .recipe)
         }
         .onAppear { recomputeCompatibilities() }
         .onChange(of: pantryItems) { _, _ in recomputeCompatibilities() }
@@ -413,9 +405,6 @@ struct RecipesView: View {
 
     private var optionsMenu: some View {
         GlassGroupMenu(systemImage: "line.3.horizontal.decrease.circle") {
-            Button("Categorias", systemImage: "slider.horizontal.3") {
-                showCategoryManager = true
-            }
             Section("Visualização") {
                 ForEach(RecipeViewMode.allCases) { mode in
                     Button {

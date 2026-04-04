@@ -65,7 +65,6 @@ struct ListsTabView: View {
     @State private var showAddPantry = false
     @State private var showAddGrocery = false
     @State private var showAddUtensil = false
-    @State private var showCategoryManager = false
     @State private var showSearch = false
     @State private var searchText = ""
     @State private var showsInlineTitle = false
@@ -113,9 +112,7 @@ struct ListsTabView: View {
                         GlassButtonGroup {
                             optionsMenu
                             GlassGroupDivider()
-                            GlassGroupButton(systemImage: "slider.horizontal.3") {
-                                showCategoryManager = true
-                            }
+                            groupingModeButton
                         }
 
                         GlassButtonGroup {
@@ -236,12 +233,6 @@ struct ListsTabView: View {
                 AddUtensilItemView()
             }
         }
-        .sheet(isPresented: $showCategoryManager) {
-            CategoryManagementView(
-                initialType: selectedSubtab == .utensils ? .utensil : .pantry,
-                allowedTypes: settings?.showUtensils == true ? [.pantry, .utensil] : [.pantry]
-            )
-        }
     }
 
     private var optionsMenu: some View {
@@ -284,6 +275,40 @@ struct ListsTabView: View {
                     }
                 }
             }
+        }
+    }
+
+    private var groupingModeButton: some View {
+        GlassGroupMenu(systemImage: currentGroupingMode.icon) {
+            Section("Agrupar por") {
+                ForEach(ListGroupingMode.allCases) { mode in
+                    Button {
+                        setGroupingMode(mode)
+                    } label: {
+                        Label(mode.displayName, systemImage: mode.icon)
+                        if currentGroupingMode == mode {
+                            Image(systemName: "checkmark")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private var currentGroupingMode: ListGroupingMode {
+        switch selectedSubtab {
+        case .pantry: settings?.pantryGroupingMode ?? .category
+        case .grocery: settings?.groceryGroupingMode ?? .marketSection
+        case .utensils: .category
+        }
+    }
+
+    private func setGroupingMode(_ mode: ListGroupingMode) {
+        guard let settings else { return }
+        switch selectedSubtab {
+        case .pantry: settings.pantryGroupingMode = mode
+        case .grocery: settings.groceryGroupingMode = mode
+        case .utensils: break
         }
     }
 

@@ -6,6 +6,7 @@ struct GroceryListView: View {
     @Query(sort: \GroceryItem.sortOrder) private var allItems: [GroceryItem]
     @Query(sort: \PantryItem.sortOrder) private var pantryItems: [PantryItem]
     @Query(sort: \Category.sortOrder) private var allCategories: [Category]
+    @Query private var settingsArray: [AppSettings]
 
     @State private var editingItem: GroceryItem?
     @State private var acquiredPantryItem: PantryItem?
@@ -19,6 +20,7 @@ struct GroceryListView: View {
     var onPullToAdd: (() -> Void)?
     var onScrollOffsetChange: (CGFloat) -> Void = { _ in }
 
+    private var groupingMode: ListGroupingMode { settingsArray.first?.groceryGroupingMode ?? .marketSection }
     private var categoryOrder: [String] { allCategories.filter { $0.type == .pantry }.map(\.name) }
 
     private var filteredItems: [GroceryItem] {
@@ -29,15 +31,24 @@ struct GroceryListView: View {
     }
 
     private var groupedItems: [(String, [GroceryItem])] {
-        let grouped = Dictionary(grouping: filteredItems) { $0.category }
+        let keyForItem: (GroceryItem) -> String = groupingMode == .marketSection
+            ? { ItemDatabase.marketSection(for: $0.category) }
+            : { $0.category }
+
+        let grouped = Dictionary(grouping: filteredItems, by: keyForItem)
+
         return grouped
-            .map { category, items in
-                (category, sortedItems(items))
-            }
+            .map { key, items in (key, sortedItems(items)) }
             .sorted { lhs, rhs in
-                let leftIndex = categoryOrder.firstIndex(of: lhs.0) ?? .max
-                let rightIndex = categoryOrder.firstIndex(of: rhs.0) ?? .max
-                if leftIndex != rightIndex { return leftIndex < rightIndex }
+                if groupingMode == .marketSection {
+                    let leftIdx = ItemDatabase.marketSectionOrder.firstIndex(of: lhs.0) ?? .max
+                    let rightIdx = ItemDatabase.marketSectionOrder.firstIndex(of: rhs.0) ?? .max
+                    if leftIdx != rightIdx { return leftIdx < rightIdx }
+                } else {
+                    let leftIdx = categoryOrder.firstIndex(of: lhs.0) ?? .max
+                    let rightIdx = categoryOrder.firstIndex(of: rhs.0) ?? .max
+                    if leftIdx != rightIdx { return leftIdx < rightIdx }
+                }
                 return lhs.0.localizedCaseInsensitiveCompare(rhs.0) == .orderedAscending
             }
     }
@@ -259,19 +270,25 @@ struct GroceryListView: View {
     }
 
     private func handleDrop(_ payload: ListsDragPayload, targetCategory: String, targetItem: GroceryItem?) -> Bool {
+        let resolvedCategory: (String) -> String = { original in
+            groupingMode == .marketSection ? original : targetCategory
+        }
+
         switch payload.sourceList {
         case .grocery:
             guard let sourceItem = allItems.first(where: { $0.id == payload.itemID }) else { return false }
             let previousCategory = sourceItem.category
-            sourceItem.category = targetCategory
-            reorderGroceryItem(sourceItem, in: targetCategory, before: targetItem)
+            let newCategory = resolvedCategory(sourceItem.category)
+            sourceItem.category = newCategory
+            reorderGroceryItem(sourceItem, in: newCategory, before: targetItem)
             normalizeGrocerySortOrder(in: previousCategory)
             return true
         case .pantry:
             guard let pantryItem = pantryItems.first(where: { $0.id == payload.itemID }) else { return false }
+            let newCategory = resolvedCategory(pantryItem.category)
             let groceryItem = GroceryItem(
                 name: pantryItem.name,
-                category: targetCategory,
+                category: newCategory,
                 quantity: pantryItem.quantity,
                 unit: pantryItem.unit,
                 iconName: pantryItem.iconName,
@@ -281,7 +298,7 @@ struct GroceryListView: View {
             )
             modelContext.insert(groceryItem)
             modelContext.delete(pantryItem)
-            reorderGroceryItem(groceryItem, in: targetCategory, before: targetItem)
+            reorderGroceryItem(groceryItem, in: newCategory, before: targetItem)
             return true
         case .utensils:
             return false
