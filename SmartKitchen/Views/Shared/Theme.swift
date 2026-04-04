@@ -218,9 +218,53 @@ struct NeutralItemActionButton: View {
 
 // MARK: - Animated Item Action Button (LifeOS-style)
 
+@MainActor
+private final class CheckboxActionDelayCoordinator {
+    static let shared = CheckboxActionDelayCoordinator()
+
+    private var pendingActions: [(action: () -> Void, onExecuted: (() -> Void)?)] = []
+    private var revision: Int = 0
+    private var worker: Task<Void, Never>?
+
+    func enqueue(_ action: @escaping () -> Void, onExecuted: (() -> Void)? = nil) {
+        pendingActions.append((action, onExecuted))
+        revision += 1
+
+        if worker == nil {
+            worker = Task { @MainActor in
+                await self.drainWhenStable()
+            }
+        }
+    }
+
+    private func drainWhenStable() async {
+        while true {
+            let snapshot = revision
+            try? await Task.sleep(for: .seconds(2))
+            if Task.isCancelled { return }
+
+            // A newer tap arrived; restart the 2-second window.
+            if snapshot != revision {
+                continue
+            }
+
+            let actions = pendingActions
+            pendingActions.removeAll()
+            actions.forEach {
+                $0.action()
+                $0.onExecuted?()
+            }
+
+            worker = nil
+            return
+        }
+    }
+}
+
 /// An animated circular button that fills with color and reveals an icon when tapped.
 struct AnimatedItemActionButton: View {
     let systemImage: String
+    let initialSystemImage: String
     let color: Color
     let action: () -> Void
 
@@ -234,10 +278,22 @@ struct AnimatedItemActionButton: View {
     @State private var iconScale: CGFloat = 0
     @State private var isAnimating: Bool = false
 
+    init(systemImage: String, initialSystemImage: String? = nil, color: Color, action: @escaping () -> Void) {
+        self.systemImage = systemImage
+        self.initialSystemImage = initialSystemImage ?? systemImage
+        self.color = color
+        self.action = action
+    }
+
     var body: some View {
         Button {
             guard !isAnimating else { return }
             HapticManager.impact(style: .medium)
+            CheckboxActionDelayCoordinator.shared.enqueue(action) {
+                Task { @MainActor in
+                    await finishAnimationAfterAction()
+                }
+            }
             animateAndPerform()
         } label: {
             ZStack {
@@ -271,7 +327,7 @@ struct AnimatedItemActionButton: View {
                     .frame(width: size, height: size)
                     .opacity(fillOpacity)
 
-                Image(systemName: systemImage)
+                Image(systemName: initialSystemImage)
                     .font(.system(size: size * 0.4, weight: .bold))
                     .foregroundColor(uncheckedColor)
                     .opacity(showIcon ? 0 : 1)
@@ -308,23 +364,24 @@ struct AnimatedItemActionButton: View {
                 iconScale = 1
             }
             HapticManager.impact(style: .light)
-
-            try? await Task.sleep(for: .milliseconds(400))
-            action()
-
-            try? await Task.sleep(for: .milliseconds(200))
-            withAnimation(.easeOut(duration: 0.2)) {
-                iconScale = 0
-                fillOpacity = 0
-            }
-            try? await Task.sleep(for: .milliseconds(150))
-            showIcon = false
-            withAnimation(.easeOut(duration: 0.2)) {
-                strokeProgress = 0
-            }
-            try? await Task.sleep(for: .milliseconds(250))
-            isAnimating = false
         }
+    }
+
+    @MainActor
+    private func finishAnimationAfterAction() async {
+        // Keep the marked state visible until the action has actually run.
+        try? await Task.sleep(for: .milliseconds(200))
+        withAnimation(.easeOut(duration: 0.2)) {
+            iconScale = 0
+            fillOpacity = 0
+        }
+        try? await Task.sleep(for: .milliseconds(150))
+        showIcon = false
+        withAnimation(.easeOut(duration: 0.2)) {
+            strokeProgress = 0
+        }
+        try? await Task.sleep(for: .milliseconds(250))
+        isAnimating = false
     }
 }
 

@@ -15,6 +15,8 @@ final class GroceryItem {
     /// Fixed items are auto-added back when the linked pantry item is depleted.
     var isFixed: Bool = false
     var linkedPantryItemId: UUID? = nil
+    /// Default shelf-life in days. When acquiring this item into the pantry, auto-set expiration.
+    var defaultExpiryDays: Int? = nil
     var sortOrder: Int = 0
     var addedAt: Date = Date()
 
@@ -29,6 +31,7 @@ final class GroceryItem {
         isChecked: Bool = false,
         isFixed: Bool = false,
         linkedPantryItemId: UUID? = nil,
+        defaultExpiryDays: Int? = nil,
         sortOrder: Int = 0
     ) {
         self.id = UUID()
@@ -42,6 +45,7 @@ final class GroceryItem {
         self.isChecked = isChecked
         self.isFixed = isFixed
         self.linkedPantryItemId = linkedPantryItemId
+        self.defaultExpiryDays = defaultExpiryDays
         self.sortOrder = sortOrder
         self.addedAt = .now
     }

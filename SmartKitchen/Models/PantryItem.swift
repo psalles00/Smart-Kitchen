@@ -14,6 +14,8 @@ final class PantryItem {
     /// When true, depleting this item auto-adds it to the grocery list.
     var isLinkedToGrocery: Bool = false
     var expirationDate: Date? = nil
+    /// Default shelf-life in days. When set, sending to grocery preserves this expiry duration.
+    var defaultExpiryDays: Int? = nil
     var sortOrder: Int = 0
     var addedAt: Date = Date()
 
@@ -27,6 +29,7 @@ final class PantryItem {
         iconName: String? = nil,
         isLinkedToGrocery: Bool = false,
         expirationDate: Date? = nil,
+        defaultExpiryDays: Int? = nil,
         sortOrder: Int = 0
     ) {
         self.id = UUID()
@@ -39,6 +42,7 @@ final class PantryItem {
         self.iconName = iconName
         self.isLinkedToGrocery = isLinkedToGrocery
         self.expirationDate = expirationDate
+        self.defaultExpiryDays = defaultExpiryDays
         self.sortOrder = sortOrder
         self.addedAt = .now
     }

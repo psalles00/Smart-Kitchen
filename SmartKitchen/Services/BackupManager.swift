@@ -294,6 +294,7 @@ struct AppBackupSnapshot: Codable {
                 iconName: record.iconName,
                 isLinkedToGrocery: record.isLinkedToGrocery,
                 expirationDate: record.expirationDate,
+                defaultExpiryDays: record.defaultExpiryDays,
                 sortOrder: record.sortOrder
             )
             item.id = record.id
@@ -313,6 +314,7 @@ struct AppBackupSnapshot: Codable {
                 isChecked: record.isChecked,
                 isFixed: record.isFixed,
                 linkedPantryItemId: record.linkedPantryItemId,
+                defaultExpiryDays: record.defaultExpiryDays,
                 sortOrder: record.sortOrder
             )
             item.id = record.id
@@ -478,6 +480,7 @@ struct PantryItemRecord: Codable {
     let iconName: String?
     let isLinkedToGrocery: Bool
     let expirationDate: Date?
+    let defaultExpiryDays: Int?
     let sortOrder: Int
     let addedAt: Date
 
@@ -492,6 +495,7 @@ struct PantryItemRecord: Codable {
         iconName = item.iconName
         isLinkedToGrocery = item.isLinkedToGrocery
         expirationDate = item.expirationDate
+        defaultExpiryDays = item.defaultExpiryDays
         sortOrder = item.sortOrder
         addedAt = item.addedAt
     }
@@ -508,6 +512,7 @@ struct PantryItemRecord: Codable {
         iconName = try container.decodeIfPresent(String.self, forKey: .iconName)
         isLinkedToGrocery = try container.decode(Bool.self, forKey: .isLinkedToGrocery)
         expirationDate = try container.decodeIfPresent(Date.self, forKey: .expirationDate)
+        defaultExpiryDays = try container.decodeIfPresent(Int.self, forKey: .defaultExpiryDays)
         sortOrder = try container.decodeIfPresent(Int.self, forKey: .sortOrder) ?? 0
         addedAt = try container.decode(Date.self, forKey: .addedAt)
     }
@@ -525,6 +530,7 @@ struct GroceryItemRecord: Codable {
     let isChecked: Bool
     let isFixed: Bool
     let linkedPantryItemId: UUID?
+    let defaultExpiryDays: Int?
     let sortOrder: Int
     let addedAt: Date
 
@@ -540,6 +546,7 @@ struct GroceryItemRecord: Codable {
         isChecked = item.isChecked
         isFixed = item.isFixed
         linkedPantryItemId = item.linkedPantryItemId
+        defaultExpiryDays = item.defaultExpiryDays
         sortOrder = item.sortOrder
         addedAt = item.addedAt
     }
@@ -557,6 +564,7 @@ struct GroceryItemRecord: Codable {
         isChecked = try container.decodeIfPresent(Bool.self, forKey: .isChecked) ?? false
         isFixed = try container.decodeIfPresent(Bool.self, forKey: .isFixed) ?? false
         linkedPantryItemId = try container.decodeIfPresent(UUID.self, forKey: .linkedPantryItemId)
+        defaultExpiryDays = try container.decodeIfPresent(Int.self, forKey: .defaultExpiryDays)
         sortOrder = try container.decodeIfPresent(Int.self, forKey: .sortOrder) ?? 0
         addedAt = try container.decode(Date.self, forKey: .addedAt)
     }

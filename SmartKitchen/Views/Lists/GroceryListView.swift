@@ -21,19 +21,9 @@ struct GroceryListView: View {
     private var categoryOrder: [String] { allCategories.filter { $0.type == .pantry }.map(\.name) }
 
     private var filteredItems: [GroceryItem] {
-        var items = searchText.isEmpty
+        let items = searchText.isEmpty
             ? allItems
             : allItems.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
-
-        switch filterOption {
-        case .all:
-            break
-        case .fixedOnly:
-            items = items.filter(\.isFixed)
-        case .regularOnly:
-            items = items.filter { !$0.isFixed }
-        }
-
         return items
     }
 
@@ -101,7 +91,8 @@ struct GroceryListView: View {
         Button {
             editingItem = item
         } label: {
-            GroceryItemRow(item: item, showsDivider: itemIndex > 0) {
+            let categoryIconName = allCategories.first(where: { $0.name == category && $0.type == .grocery })?.iconName
+            GroceryItemRow(item: item, categoryIconName: categoryIconName, showsDivider: itemIndex > 0) {
                 acquireItem(item)
             }
             .contentShape(Rectangle())
@@ -163,10 +154,6 @@ struct GroceryListView: View {
 
     private func groceryHeader(for category: String) -> some View {
         HStack(spacing: 6) {
-            let catIcon = allCategories.first(where: { $0.name == category && $0.type == .pantry })
-            if let iconName = catIcon?.iconName {
-                IconImage(name: iconName, fallbackSymbol: "cart", size: 16)
-            }
             Text(category)
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.primary.opacity(0.72))
@@ -209,12 +196,6 @@ struct GroceryListView: View {
         Button("Adquirir e Editar", systemImage: "square.and.pencil") {
             acquireItem(item, shouldEdit: true)
         }
-        Button(
-            item.isFixed ? "Desafixar" : "Fixar",
-            systemImage: item.isFixed ? "pin.slash" : "pin"
-        ) {
-            item.isFixed.toggle()
-        }
         Divider()
         Button("Excluir", systemImage: "trash", role: .destructive) {
             deleteItem(item)
@@ -240,17 +221,15 @@ struct GroceryListView: View {
             quantity: item.quantity,
             unit: item.unit,
             iconName: item.iconName,
-            isLinkedToGrocery: item.isFixed,
+            isLinkedToGrocery: false,
+            expirationDate: expirationDateForPantry(from: item),
+            defaultExpiryDays: item.defaultExpiryDays,
             sortOrder: (pantryItems.map(\.sortOrder).max() ?? -1) + 1
         )
         modelContext.insert(pantryItem)
 
         withAnimation {
-            if item.isFixed {
-                item.sortOrder = (allItems.map(\.sortOrder).max() ?? -1) + 1
-            } else {
-                modelContext.delete(item)
-            }
+            modelContext.delete(item)
         }
 
         if shouldEdit {
@@ -296,7 +275,8 @@ struct GroceryListView: View {
                 unit: pantryItem.unit,
                 iconName: pantryItem.iconName,
                 isFixed: pantryItem.isLinkedToGrocery,
-                linkedPantryItemId: pantryItem.isLinkedToGrocery ? pantryItem.id : nil
+                linkedPantryItemId: pantryItem.isLinkedToGrocery ? pantryItem.id : nil,
+                defaultExpiryDays: expiryDaysForGrocery(from: pantryItem)
             )
             modelContext.insert(groceryItem)
             modelContext.delete(pantryItem)
@@ -334,10 +314,28 @@ struct GroceryListView: View {
             if item.sortOrder != index { item.sortOrder = index }
         }
     }
+
+    private func expiryDaysForGrocery(from item: PantryItem) -> Int? {
+        if let saved = item.defaultExpiryDays, saved > 0 { return saved }
+        guard let expirationDate = item.expirationDate else { return nil }
+        let days = Calendar.current.dateComponents(
+            [.day],
+            from: Calendar.current.startOfDay(for: .now),
+            to: Calendar.current.startOfDay(for: expirationDate)
+        ).day
+        guard let days, days > 0 else { return nil }
+        return days
+    }
+
+    private func expirationDateForPantry(from item: GroceryItem) -> Date? {
+        guard let days = item.defaultExpiryDays, days > 0 else { return nil }
+        return Calendar.current.date(byAdding: .day, value: days, to: Date())
+    }
 }
 
 struct GroceryItemRow: View {
     let item: GroceryItem
+    let categoryIconName: String?
     let showsDivider: Bool
     let onAcquire: () -> Void
 
@@ -350,7 +348,7 @@ struct GroceryItemRow: View {
             }
 
             HStack(alignment: .center, spacing: 12) {
-                IconImage(name: item.name, iconFileName: item.iconName, fallbackSymbol: "basket", size: 28, showBalloon: true)
+                IconImage(name: item.name, iconFileName: item.iconName ?? categoryIconName, fallbackSymbol: "basket", size: 28, showBalloon: true)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(item.name)
@@ -370,14 +368,9 @@ struct GroceryItemRow: View {
 
                 Spacer()
 
-                if item.isFixed {
-                    Image(systemName: "pin.fill")
-                        .font(.caption)
-                        .foregroundStyle(.orange)
-                }
-
                 AnimatedItemActionButton(
                     systemImage: "refrigerator",
+                    initialSystemImage: "checkmark",
                     color: PageTheme.lists.accentColor,
                     action: onAcquire
                 )

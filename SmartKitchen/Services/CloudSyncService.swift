@@ -243,6 +243,7 @@ final class CloudSyncService: @unchecked Sendable {
             iconName: source.iconName,
             isLinkedToGrocery: source.isLinkedToGrocery,
             expirationDate: source.expirationDate,
+            defaultExpiryDays: source.defaultExpiryDays,
             sortOrder: source.sortOrder
         )
         copy.id = source.id
@@ -262,6 +263,7 @@ final class CloudSyncService: @unchecked Sendable {
             isChecked: source.isChecked,
             isFixed: source.isFixed,
             linkedPantryItemId: source.linkedPantryItemId,
+            defaultExpiryDays: source.defaultExpiryDays,
             sortOrder: source.sortOrder
         )
         copy.id = source.id

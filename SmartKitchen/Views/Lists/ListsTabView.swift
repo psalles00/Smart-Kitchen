@@ -35,16 +35,12 @@ enum PantryListFilterOption: String, CaseIterable, Identifiable {
 
 enum GroceryListFilterOption: String, CaseIterable, Identifiable {
     case all
-    case fixedOnly
-    case regularOnly
 
     var id: String { rawValue }
 
     var label: LocalizedStringKey {
         switch self {
         case .all: "Todos"
-        case .fixedOnly: "Fixos"
-        case .regularOnly: "Não fixos"
         }
     }
 }
@@ -309,6 +305,13 @@ struct ListsTabView: View {
         switch (payload.sourceList, destination) {
         case (.pantry, .grocery):
             guard let pantryItem = pantryItems.first(where: { $0.id == payload.itemID }) else { return }
+            var expiryDays: Int?
+            if let saved = pantryItem.defaultExpiryDays, saved > 0 {
+                expiryDays = saved
+            } else if let expDate = pantryItem.expirationDate {
+                let days = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: .now), to: Calendar.current.startOfDay(for: expDate)).day
+                if let d = days, d > 0 { expiryDays = d }
+            }
             let groceryItem = GroceryItem(
                 name: pantryItem.name,
                 category: pantryItem.category,
@@ -317,6 +320,7 @@ struct ListsTabView: View {
                 iconName: pantryItem.iconName,
                 isFixed: pantryItem.isLinkedToGrocery,
                 linkedPantryItemId: pantryItem.isLinkedToGrocery ? pantryItem.id : nil,
+                defaultExpiryDays: expiryDays,
                 sortOrder: (groceryItems.map(\.sortOrder).max() ?? -1) + 1
             )
             modelContext.insert(groceryItem)
@@ -324,6 +328,10 @@ struct ListsTabView: View {
             selectedSubtab = .grocery
         case (.grocery, .pantry):
             guard let groceryItem = groceryItems.first(where: { $0.id == payload.itemID }) else { return }
+            var expirationDate: Date?
+            if let days = groceryItem.defaultExpiryDays, days > 0 {
+                expirationDate = Calendar.current.date(byAdding: .day, value: days, to: Date())
+            }
             let pantryItem = PantryItem(
                 name: groceryItem.name,
                 category: groceryItem.category,
@@ -331,6 +339,8 @@ struct ListsTabView: View {
                 unit: groceryItem.unit,
                 iconName: groceryItem.iconName,
                 isLinkedToGrocery: groceryItem.isFixed,
+                expirationDate: expirationDate,
+                defaultExpiryDays: groceryItem.defaultExpiryDays,
                 sortOrder: (pantryItems.map(\.sortOrder).max() ?? -1) + 1
             )
             modelContext.insert(pantryItem)
@@ -371,7 +381,7 @@ private struct ListsSubtabDropButton: View {
         Button(action: onTap) {
             HStack(spacing: 6) {
                 Text(tab.title)
-                    .font(.subheadline.weight(.medium))
+                    .font(.footnote.weight(.medium))
 
                 if let badgeText, !badgeText.isEmpty {
                     Text(badgeText)

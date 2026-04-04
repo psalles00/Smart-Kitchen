@@ -2,6 +2,16 @@ import SwiftUI
 import SwiftData
 import PhotosUI
 
+// MARK: - Expiry Input Helpers
+
+enum ExpiryInputMode: String, CaseIterable {
+    case date, duration
+}
+
+enum ExpiryDurationUnit: String, CaseIterable {
+    case days, months
+}
+
 struct AddPantryItemView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
@@ -17,9 +27,12 @@ struct AddPantryItemView: View {
     @State private var userChangedCategory = false
     @State private var quantity: Double?
     @State private var unit = ""
-    @State private var isLinkedToGrocery = false
     @State private var hasExpirationDate = false
     @State private var expirationDate = Date()
+    @State private var expiryMode: ExpiryInputMode = .date
+    @State private var expiryDurationValue: Int = 7
+    @State private var expiryDurationUnit: ExpiryDurationUnit = .days
+    @State private var keepExpiryOnAcquire = false
     @State private var showCategoryManager = false
     @State private var showIconPicker = false
     @State private var focusNameField = false
@@ -32,85 +45,12 @@ struct AddPantryItemView: View {
 
     var body: some View {
         Form {
-            Section("Item") {
-                ItemSearchField(
-                    text: $name,
-                    iconFileName: iconName,
-                    fallbackSymbol: "leaf",
-                    isFocusedBinding: $focusNameField,
-                    showsLeadingIcon: true,
-                    onIconTapped: { showIconPicker = true }
-                ) { entry in
-                    applySelectedEntry(entry)
-                }
-
-                Picker("Categoria", selection: $selectedCategory) {
-                    ForEach(categories) { cat in
-                        Text(cat.name).tag(cat.name)
-                    }
-                }
-                .onChange(of: selectedCategory) { _, _ in
-                    userChangedCategory = true
-                }
-            }
-
-            Section("Detalhes") {
-                TextField("Descrição (opcional)", text: $descriptionText, axis: .vertical)
-                    .lineLimit(3...5)
-
-                if let imageData, let image = PlatformImage(data: imageData) {
-                    Button {
-                        showPhotoPreview = true
-                    } label: {
-                        Image(platformImage: image)
-                            .resizable()
-                            .scaledToFill()
-                            .frame(height: 160)
-                            .frame(maxWidth: .infinity)
-                            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.vertical, 4)
-                }
-
-                PhotosPicker(selection: $selectedPhoto, matching: .images) {
-                    Label(imageData == nil ? "Adicionar Foto" : "Alterar Foto", systemImage: "photo")
-                }
-
-                if imageData != nil {
-                    Button("Remover Foto", role: .destructive) {
-                        imageData = nil
-                        selectedPhoto = nil
-                    }
-                }
-            }
-
+            itemSection
+            detailsSection
             if isDetailed {
-                Section("Quantidade") {
-                    HStack {
-                        TextField("Qtd", value: $quantity, format: .number)
-                            #if os(iOS)
-                            .keyboardType(.decimalPad)
-                            #endif
-                            .frame(width: 80)
-                        TextField("Unidade (kg, L, x...)", text: $unit)
-                    }
-                }
+                quantitySection
             }
-
-            Section("Validade") {
-                Toggle("Possui validade", isOn: $hasExpirationDate.animation())
-
-                if hasExpirationDate {
-                    DatePicker("Validade", selection: $expirationDate, displayedComponents: .date)
-                }
-            }
-
-            Section {
-                Toggle("Fixo no mercado", isOn: $isLinkedToGrocery)
-            } footer: {
-                Text("Quando ativado, o item aparece automaticamente na lista de mercado ao ser removido da despensa.")
-            }
+            expirySection
         }
         .formStyle(.grouped)
         #if os(macOS)
@@ -167,6 +107,131 @@ struct AddPantryItemView: View {
         }
     }
 
+    @ViewBuilder
+    private var itemSection: some View {
+        Section("Item") {
+            ItemSearchField(
+                text: $name,
+                iconFileName: iconName,
+                fallbackSymbol: "leaf",
+                isFocusedBinding: $focusNameField,
+                showsLeadingIcon: true,
+                onIconTapped: { showIconPicker = true }
+            ) { (entry: ItemEntry) in
+                applySelectedEntry(entry)
+            }
+
+            Picker("Categoria", selection: $selectedCategory) {
+                ForEach(categories) { cat in
+                    Text(cat.name).tag(cat.name)
+                }
+            }
+            .onChange(of: selectedCategory) { _, _ in
+                userChangedCategory = true
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var detailsSection: some View {
+        Section("Detalhes") {
+            TextField("Descrição (opcional)", text: $descriptionText, axis: .vertical)
+                .lineLimit(3...5)
+
+            if let imageData, let image = PlatformImage(data: imageData) {
+                Button {
+                    showPhotoPreview = true
+                } label: {
+                    Image(platformImage: image)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(height: 160)
+                        .frame(maxWidth: .infinity)
+                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                .padding(.vertical, 4)
+            }
+
+            PhotosPicker(selection: $selectedPhoto, matching: .images) {
+                Label(imageData == nil ? "Adicionar Foto" : "Alterar Foto", systemImage: "photo")
+            }
+
+            if imageData != nil {
+                Button("Remover Foto", role: .destructive) {
+                    imageData = nil
+                    selectedPhoto = nil
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var quantitySection: some View {
+        Section("Quantidade") {
+            HStack {
+                TextField("Qtd", value: $quantity, format: .number)
+                    #if os(iOS)
+                    .keyboardType(.decimalPad)
+                    #endif
+                    .frame(width: 80)
+                TextField("Unidade (kg, L, x...)", text: $unit)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var expirySection: some View {
+        Section("Validade") {
+            Toggle("Possui validade", isOn: $hasExpirationDate.animation())
+
+            if hasExpirationDate {
+                Picker("Modo", selection: $expiryMode.animation()) {
+                    Text("Data").tag(ExpiryInputMode.date)
+                    Text("Duração").tag(ExpiryInputMode.duration)
+                }
+                .pickerStyle(.segmented)
+
+                if expiryMode == .date {
+                    DatePicker("Validade", selection: $expirationDate, in: Date()..., displayedComponents: .date)
+                        .onChange(of: expirationDate) { _, newDate in
+                            syncDurationFromDate(newDate)
+                        }
+                } else {
+                    HStack(spacing: 0) {
+                        Picker("Quantidade", selection: $expiryDurationValue) {
+                            ForEach(1...365, id: \.self) { n in
+                                Text("\(n)").tag(n)
+                            }
+                        }
+                        .pickerStyle(.wheel)
+                        .frame(width: 80, height: 120)
+                        .clipped()
+
+                        Picker("Unidade", selection: $expiryDurationUnit) {
+                            Text("dias").tag(ExpiryDurationUnit.days)
+                            Text("meses").tag(ExpiryDurationUnit.months)
+                        }
+                        .pickerStyle(.wheel)
+                        .frame(width: 100, height: 120)
+                        .clipped()
+                    }
+                    .onChange(of: expiryDurationValue) { _, _ in syncDateFromDuration() }
+                    .onChange(of: expiryDurationUnit) { _, _ in syncDateFromDuration() }
+                }
+
+                if expiryMode == .duration {
+                    Toggle("Manter ao mover", isOn: $keepExpiryOnAcquire)
+                        .toggleStyle(.switch)
+
+                    Text("Manter ao mover de Mercado para Despensa")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+    }
+
     private func applySelectedEntry(_ entry: ItemEntry) {
         name = entry.preferredTitle(matching: name)
         iconName = entry.nomeDoArquivo
@@ -197,12 +262,36 @@ struct AddPantryItemView: View {
             quantity: isDetailed ? quantity : nil,
             unit: isDetailed ? (unit.isEmpty ? nil : unit) : nil,
             iconName: finalIcon,
-            isLinkedToGrocery: isLinkedToGrocery,
+            isLinkedToGrocery: false,
             expirationDate: hasExpirationDate ? expirationDate : nil,
+            defaultExpiryDays: hasExpirationDate && keepExpiryOnAcquire ? computeExpiryDays() : nil,
             sortOrder: (allItems.map(\.sortOrder).max() ?? -1) + 1
         )
         modelContext.insert(item)
         dismiss()
+    }
+
+    private func syncDurationFromDate(_ date: Date) {
+        let days = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: .now), to: Calendar.current.startOfDay(for: date)).day ?? 0
+        if days >= 30 && days % 30 <= 2 {
+            expiryDurationUnit = .months
+            expiryDurationValue = max(1, days / 30)
+        } else {
+            expiryDurationUnit = .days
+            expiryDurationValue = max(1, days)
+        }
+    }
+
+    private func syncDateFromDuration() {
+        let component: Calendar.Component = expiryDurationUnit == .months ? .month : .day
+        expirationDate = Calendar.current.date(byAdding: component, value: expiryDurationValue, to: Date()) ?? Date()
+    }
+
+    private func computeExpiryDays() -> Int {
+        if expiryMode == .duration {
+            return expiryDurationUnit == .months ? expiryDurationValue * 30 : expiryDurationValue
+        }
+        return max(0, Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: .now), to: Calendar.current.startOfDay(for: expirationDate)).day ?? 0)
     }
 
     private func loadPhoto() {
@@ -228,99 +317,21 @@ struct EditPantryItemView: View {
     @State private var showIconPicker = false
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var showPhotoPreview = false
+    @State private var expiryMode: ExpiryInputMode = .date
+    @State private var expiryDurationValue: Int = 7
+    @State private var expiryDurationUnit: ExpiryDurationUnit = .days
 
     private var categories: [Category] { allEditCategories.filter { $0.type == .pantry } }
     private var isDetailed: Bool { settingsArray.first?.pantryDetailLevel == .detailed }
 
     var body: some View {
         Form {
-            Section("Item") {
-                ItemSearchField(
-                    text: $item.name,
-                    iconFileName: item.iconName,
-                    fallbackSymbol: "leaf",
-                    showsLeadingIcon: true,
-                    onIconTapped: { showIconPicker = true }
-                ) { entry in
-                    applySelectedEntry(entry)
-                }
-
-                Picker("Categoria", selection: $item.category) {
-                    ForEach(categories) { cat in
-                        Text(cat.name).tag(cat.name)
-                    }
-                }
-            }
-
-            Section("Detalhes") {
-                TextField("Descrição (opcional)", text: $item.descriptionText, axis: .vertical)
-                    .lineLimit(3...5)
-
-                if let imageData = item.imageData, let image = PlatformImage(data: imageData) {
-                    Button {
-                        showPhotoPreview = true
-                    } label: {
-                        Image(platformImage: image)
-                            .resizable()
-                            .scaledToFill()
-                            .frame(height: 160)
-                            .frame(maxWidth: .infinity)
-                            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    }
-                    .buttonStyle(.plain)
-                }
-
-                PhotosPicker(selection: $selectedPhoto, matching: .images) {
-                    Label(item.imageData == nil ? "Adicionar Foto" : "Alterar Foto", systemImage: "photo")
-                }
-
-                if item.imageData != nil {
-                    Button("Remover Foto", role: .destructive) {
-                        item.imageData = nil
-                        selectedPhoto = nil
-                    }
-                }
-            }
-
+            itemSectionEdit
+            detailsSectionEdit
             if isDetailed {
-                Section("Quantidade") {
-                    HStack {
-                        TextField("Qtd", value: $item.quantity, format: .number)
-                            #if os(iOS)
-                            .keyboardType(.decimalPad)
-                            #endif
-                            .frame(width: 80)
-                        TextField("Unidade", text: Binding(
-                            get: { item.unit ?? "" },
-                            set: { item.unit = $0.isEmpty ? nil : $0 }
-                        ))
-                    }
-                }
+                quantitySectionEdit
             }
-
-            Section("Validade") {
-                Toggle("Possui validade", isOn: Binding(
-                    get: { item.expirationDate != nil },
-                    set: { hasDate in
-                        if hasDate {
-                            item.expirationDate = item.expirationDate ?? Date()
-                        } else {
-                            item.expirationDate = nil
-                        }
-                    }
-                ))
-
-                if item.expirationDate != nil {
-                    DatePicker("Validade", selection: Binding(
-                        get: { item.expirationDate ?? Date() },
-                        set: { item.expirationDate = $0 }
-                    ), displayedComponents: .date)
-                }
-            }
-
-            Section {
-                Toggle("Fixo no mercado", isOn: $item.isLinkedToGrocery)
-            }
+            expirySectionEdit
         }
         .formStyle(.grouped)
         #if os(macOS)
@@ -366,6 +377,157 @@ struct EditPantryItemView: View {
         .onChange(of: selectedPhoto) {
             loadPhoto()
         }
+        .onAppear {
+            if let date = item.expirationDate {
+                editSyncDurationFromDate(date)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var itemSectionEdit: some View {
+        Section("Item") {
+            ItemSearchField(
+                text: $item.name,
+                iconFileName: item.iconName,
+                fallbackSymbol: "leaf",
+                showsLeadingIcon: true,
+                onIconTapped: { showIconPicker = true }
+            ) { (entry: ItemEntry) in
+                applySelectedEntry(entry)
+            }
+
+            Picker("Categoria", selection: $item.category) {
+                ForEach(categories) { cat in
+                    Text(cat.name).tag(cat.name)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var detailsSectionEdit: some View {
+        Section("Detalhes") {
+            TextField("Descrição (opcional)", text: $item.descriptionText, axis: .vertical)
+                .lineLimit(3...5)
+
+            if let imageData = item.imageData, let image = PlatformImage(data: imageData) {
+                Button {
+                    showPhotoPreview = true
+                } label: {
+                    Image(platformImage: image)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(height: 160)
+                        .frame(maxWidth: .infinity)
+                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                }
+                .buttonStyle(.plain)
+            }
+
+            PhotosPicker(selection: $selectedPhoto, matching: .images) {
+                Label(item.imageData == nil ? "Adicionar Foto" : "Alterar Foto", systemImage: "photo")
+            }
+
+            if item.imageData != nil {
+                Button("Remover Foto", role: .destructive) {
+                    item.imageData = nil
+                    selectedPhoto = nil
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var quantitySectionEdit: some View {
+        Section("Quantidade") {
+            HStack {
+                TextField("Qtd", value: $item.quantity, format: .number)
+                    #if os(iOS)
+                    .keyboardType(.decimalPad)
+                    #endif
+                    .frame(width: 80)
+                TextField("Unidade", text: Binding(
+                    get: { item.unit ?? "" },
+                    set: { item.unit = $0.isEmpty ? nil : $0 }
+                ))
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var expirySectionEdit: some View {
+        Section("Validade") {
+            Toggle("Possui validade", isOn: Binding(
+                get: { item.expirationDate != nil },
+                set: { hasDate in
+                    withAnimation {
+                        if hasDate {
+                            item.expirationDate = item.expirationDate ?? Date()
+                        } else {
+                            item.expirationDate = nil
+                        }
+                    }
+                }
+            ))
+
+            if item.expirationDate != nil {
+                Picker("Modo", selection: $expiryMode.animation()) {
+                    Text("Data").tag(ExpiryInputMode.date)
+                    Text("Duração").tag(ExpiryInputMode.duration)
+                }
+                .pickerStyle(.segmented)
+
+                if expiryMode == .date {
+                    DatePicker("Validade", selection: Binding(
+                        get: { item.expirationDate ?? Date() },
+                        set: { newDate in
+                            item.expirationDate = newDate
+                            editSyncDurationFromDate(newDate)
+                        }
+                    ), in: Date()..., displayedComponents: .date)
+                } else {
+                    HStack(spacing: 0) {
+                        Picker("Quantidade", selection: $expiryDurationValue) {
+                            ForEach(1...365, id: \.self) { n in
+                                Text("\(n)").tag(n)
+                            }
+                        }
+                        .pickerStyle(.wheel)
+                        .frame(width: 80, height: 120)
+                        .clipped()
+
+                        Picker("Unidade", selection: $expiryDurationUnit) {
+                            Text("dias").tag(ExpiryDurationUnit.days)
+                            Text("meses").tag(ExpiryDurationUnit.months)
+                        }
+                        .pickerStyle(.wheel)
+                        .frame(width: 100, height: 120)
+                        .clipped()
+                    }
+                    .onChange(of: expiryDurationValue) { _, _ in editSyncDateFromDuration() }
+                    .onChange(of: expiryDurationUnit) { _, _ in editSyncDateFromDuration() }
+                }
+
+                if expiryMode == .duration {
+                    Toggle("Manter ao mover", isOn: Binding(
+                        get: { item.defaultExpiryDays != nil },
+                        set: { keep in
+                            if keep {
+                                item.defaultExpiryDays = editComputeExpiryDays()
+                            } else {
+                                item.defaultExpiryDays = nil
+                            }
+                        }
+                    ))
+                    .toggleStyle(.switch)
+
+                    Text("Manter ao mover de Mercado para Despensa")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
     }
 
     private func applySelectedEntry(_ entry: ItemEntry) {
@@ -384,5 +546,28 @@ struct EditPantryItemView: View {
                 item.imageData = data
             }
         }
+    }
+
+    private func editSyncDurationFromDate(_ date: Date) {
+        let days = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: .now), to: Calendar.current.startOfDay(for: date)).day ?? 0
+        if days >= 30 && days % 30 <= 2 {
+            expiryDurationUnit = .months
+            expiryDurationValue = max(1, days / 30)
+        } else {
+            expiryDurationUnit = .days
+            expiryDurationValue = max(1, days)
+        }
+    }
+
+    private func editSyncDateFromDuration() {
+        let component: Calendar.Component = expiryDurationUnit == .months ? .month : .day
+        item.expirationDate = Calendar.current.date(byAdding: component, value: expiryDurationValue, to: Date()) ?? Date()
+    }
+
+    private func editComputeExpiryDays() -> Int {
+        if expiryMode == .duration {
+            return expiryDurationUnit == .months ? expiryDurationValue * 30 : expiryDurationValue
+        }
+        return max(0, Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: .now), to: Calendar.current.startOfDay(for: item.expirationDate ?? Date())).day ?? 0)
     }
 }

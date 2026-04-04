@@ -105,8 +105,10 @@ struct PantryView: View {
         Button {
             editingItem = item
         } label: {
+            let categoryIconName = allCategories.first(where: { $0.name == category && $0.type == .pantry })?.iconName
             PantryItemRow(
                 item: item,
+                categoryIconName: categoryIconName,
                 isDetailed: isDetailed,
                 onSendToGrocery: { sendToGrocery(item) },
                 showsDivider: itemIndex > 0
@@ -179,10 +181,6 @@ struct PantryView: View {
 
     private func pantryHeader(for category: String) -> some View {
         HStack(spacing: 6) {
-            let catIcon = allCategories.first(where: { $0.name == category && $0.type == .pantry })
-            if let iconName = catIcon?.iconName {
-                IconImage(name: iconName, fallbackSymbol: "leaf", size: 16)
-            }
             Text(category)
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.primary.opacity(0.72))
@@ -235,6 +233,7 @@ struct PantryView: View {
                     iconName: item.iconName,
                     isFixed: true,
                     linkedPantryItemId: item.id,
+                    defaultExpiryDays: expiryDaysForGrocery(from: item),
                     sortOrder: (groceryItems.map(\.sortOrder).max() ?? -1) + 1
                 )
                 modelContext.insert(grocery)
@@ -252,6 +251,7 @@ struct PantryView: View {
             iconName: item.iconName,
             isFixed: item.isLinkedToGrocery,
             linkedPantryItemId: item.isLinkedToGrocery ? item.id : nil,
+            defaultExpiryDays: expiryDaysForGrocery(from: item),
             sortOrder: (groceryItems.map(\.sortOrder).max() ?? -1) + 1
         )
         withAnimation {
@@ -301,7 +301,9 @@ struct PantryView: View {
                 quantity: groceryItem.quantity,
                 unit: groceryItem.unit,
                 iconName: groceryItem.iconName,
-                isLinkedToGrocery: groceryItem.isFixed
+                isLinkedToGrocery: groceryItem.isFixed,
+                expirationDate: expirationDateForPantry(from: groceryItem),
+                defaultExpiryDays: groceryItem.defaultExpiryDays
             )
             modelContext.insert(pantryItem)
             modelContext.delete(groceryItem)
@@ -339,10 +341,28 @@ struct PantryView: View {
             if item.sortOrder != index { item.sortOrder = index }
         }
     }
+
+    private func expiryDaysForGrocery(from item: PantryItem) -> Int? {
+        if let saved = item.defaultExpiryDays, saved > 0 { return saved }
+        guard let expirationDate = item.expirationDate else { return nil }
+        let days = Calendar.current.dateComponents(
+            [.day],
+            from: Calendar.current.startOfDay(for: .now),
+            to: Calendar.current.startOfDay(for: expirationDate)
+        ).day
+        guard let days, days > 0 else { return nil }
+        return days
+    }
+
+    private func expirationDateForPantry(from item: GroceryItem) -> Date? {
+        guard let days = item.defaultExpiryDays, days > 0 else { return nil }
+        return Calendar.current.date(byAdding: .day, value: days, to: Date())
+    }
 }
 
 struct PantryItemRow: View {
     let item: PantryItem
+    let categoryIconName: String?
     let isDetailed: Bool
     let onSendToGrocery: () -> Void
     let showsDivider: Bool
@@ -356,7 +376,7 @@ struct PantryItemRow: View {
             }
 
             HStack(alignment: .center, spacing: 12) {
-                IconImage(name: item.name, iconFileName: item.iconName, fallbackSymbol: "leaf", size: 28, showBalloon: true)
+                IconImage(name: item.name, iconFileName: item.iconName ?? categoryIconName, fallbackSymbol: "leaf", size: 28, showBalloon: true)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(item.name)
@@ -384,6 +404,7 @@ struct PantryItemRow: View {
 
                 AnimatedItemActionButton(
                     systemImage: "cart",
+                    initialSystemImage: "xmark",
                     color: PageTheme.lists.accentColor,
                     action: onSendToGrocery
                 )

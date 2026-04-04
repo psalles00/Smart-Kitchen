@@ -18,7 +18,9 @@ struct AddGroceryItemView: View {
     private var categories: [Category] { allCategories.filter { $0.type == .pantry } }
     @State private var quantity: Double?
     @State private var unit = ""
-    @State private var isFixed = false
+    @State private var hasDefaultExpiry = false
+    @State private var expiryDurationValue: Int = 7
+    @State private var expiryDurationUnit: ExpiryDurationUnit = .days
     @State private var showCategoryManager = false
     @State private var showIconPicker = false
     @State private var focusNameField = false
@@ -93,11 +95,31 @@ struct AddGroceryItemView: View {
                 }
             }
 
-            Section {
-                Toggle("Item fixo", isOn: $isFixed)
-            } footer: {
-                Text("Itens fixos reaparecem automaticamente na lista ao serem marcados como concluídos.")
+            Section("Validade") {
+                Toggle("Usar validade ao mover para despensa", isOn: $hasDefaultExpiry.animation())
+
+                if hasDefaultExpiry {
+                    HStack(spacing: 0) {
+                        Picker("Quantidade", selection: $expiryDurationValue) {
+                            ForEach(1...365, id: \.self) { n in
+                                Text("\(n)").tag(n)
+                            }
+                        }
+                        .pickerStyle(.wheel)
+                        .frame(width: 80, height: 120)
+                        .clipped()
+
+                        Picker("Unidade", selection: $expiryDurationUnit) {
+                            Text("dias").tag(ExpiryDurationUnit.days)
+                            Text("meses").tag(ExpiryDurationUnit.months)
+                        }
+                        .pickerStyle(.wheel)
+                        .frame(width: 100, height: 120)
+                        .clipped()
+                    }
+                }
             }
+
         }
         .formStyle(.grouped)
         #if os(macOS)
@@ -186,11 +208,16 @@ struct AddGroceryItemView: View {
             quantity: quantity,
             unit: unit.isEmpty ? nil : unit,
             iconName: finalIcon,
-            isFixed: isFixed,
+            isFixed: false,
+            defaultExpiryDays: hasDefaultExpiry ? computeGroceryExpiryDays() : nil,
             sortOrder: (allItems.map(\.sortOrder).max() ?? -1) + 1
         )
         modelContext.insert(item)
         dismiss()
+    }
+
+    private func computeGroceryExpiryDays() -> Int {
+        expiryDurationUnit == .months ? expiryDurationValue * 30 : expiryDurationValue
     }
 
     private func loadPhoto() {
@@ -215,6 +242,8 @@ struct EditGroceryItemView: View {
     @State private var showIconPicker = false
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var showPhotoPreview = false
+    @State private var expiryDurationValue: Int = 7
+    @State private var expiryDurationUnit: ExpiryDurationUnit = .days
 
     private var categories: [Category] { allEditCategories.filter { $0.type == .pantry } }
 
@@ -282,9 +311,48 @@ struct EditGroceryItemView: View {
                 }
             }
 
-            Section {
-                Toggle("Item fixo", isOn: $item.isFixed)
+            Section("Validade") {
+                Toggle("Usar validade ao mover para despensa", isOn: Binding(
+                    get: { item.defaultExpiryDays != nil },
+                    set: { hasExpiry in
+                        withAnimation {
+                            if hasExpiry {
+                                item.defaultExpiryDays = expiryDurationUnit == .months ? expiryDurationValue * 30 : expiryDurationValue
+                            } else {
+                                item.defaultExpiryDays = nil
+                            }
+                        }
+                    }
+                ))
+
+                if item.defaultExpiryDays != nil {
+                    HStack(spacing: 0) {
+                        Picker("Quantidade", selection: $expiryDurationValue) {
+                            ForEach(1...365, id: \.self) { n in
+                                Text("\(n)").tag(n)
+                            }
+                        }
+                        .pickerStyle(.wheel)
+                        .frame(width: 80, height: 120)
+                        .clipped()
+
+                        Picker("Unidade", selection: $expiryDurationUnit) {
+                            Text("dias").tag(ExpiryDurationUnit.days)
+                            Text("meses").tag(ExpiryDurationUnit.months)
+                        }
+                        .pickerStyle(.wheel)
+                        .frame(width: 100, height: 120)
+                        .clipped()
+                    }
+                    .onChange(of: expiryDurationValue) { _, _ in
+                        item.defaultExpiryDays = expiryDurationUnit == .months ? expiryDurationValue * 30 : expiryDurationValue
+                    }
+                    .onChange(of: expiryDurationUnit) { _, _ in
+                        item.defaultExpiryDays = expiryDurationUnit == .months ? expiryDurationValue * 30 : expiryDurationValue
+                    }
+                }
             }
+
         }
         .formStyle(.grouped)
         #if os(macOS)
@@ -329,6 +397,17 @@ struct EditGroceryItemView: View {
         }
         .onChange(of: selectedPhoto) {
             loadPhoto()
+        }
+        .onAppear {
+            if let days = item.defaultExpiryDays, days > 0 {
+                if days >= 30 && days % 30 == 0 {
+                    expiryDurationUnit = .months
+                    expiryDurationValue = max(1, days / 30)
+                } else {
+                    expiryDurationUnit = .days
+                    expiryDurationValue = days
+                }
+            }
         }
     }
 

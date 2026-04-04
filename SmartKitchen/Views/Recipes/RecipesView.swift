@@ -236,6 +236,8 @@ struct RecipesView: View {
                     }
                 }
             }
+            .padding(4)
+            .background(Color(.tertiarySystemFill), in: .rect(cornerRadius: 12))
             .padding(.horizontal, 8)
             .padding(.vertical, 8)
         }
@@ -244,11 +246,12 @@ struct RecipesView: View {
     private func filterChip(label: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(label)
-                .font(.subheadline.weight(.medium))
-                .padding(.horizontal, 14)
-                .padding(.vertical, 7)
-                .background(isSelected ? Color.accentColor : Color(.tertiarySystemBackground), in: .capsule)
-                .foregroundStyle(isSelected ? .white : .primary)
+                .font(.footnote.weight(.medium))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
+                .background(isSelected ? Color(.systemBackground) : .clear, in: .rect(cornerRadius: 10))
+                .shadow(color: isSelected ? .black.opacity(0.12) : .clear, radius: 4, x: 0, y: 1)
+                .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
         }
         .buttonStyle(.plain)
     }
