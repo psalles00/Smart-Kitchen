@@ -87,6 +87,17 @@ enum ListGroupingMode: String, Codable, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let raw = (try? container.decode(String.self)) ?? ""
+        self = ListGroupingMode(rawValue: raw) ?? .category
+    }
+
+    func encode(to encoder: any Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(rawValue)
+    }
+
     var displayName: LocalizedStringKey {
         switch self {
         case .category: "Categoria"
@@ -119,8 +130,9 @@ final class AppSettings {
     var hasCompletedOnboarding: Bool = false
     var showUtensils: Bool = false
     var recipeGalleryColumns: Int = 2
-    var pantryGroupingMode: ListGroupingMode = ListGroupingMode.category
-    var groceryGroupingMode: ListGroupingMode = ListGroupingMode.marketSection
+    /// Stored as raw strings to keep persisted settings resilient to schema changes.
+    var pantryGroupingModeRaw: String = ListGroupingMode.category.rawValue
+    var groceryGroupingModeRaw: String = ListGroupingMode.marketSection.rawValue
 
     init() {
         self.id = UUID()
@@ -134,8 +146,8 @@ final class AppSettings {
         self.openAIAPIKey = ""
         self.hasCompletedOnboarding = false
         self.showUtensils = false
-        self.pantryGroupingMode = .category
-        self.groceryGroupingMode = .marketSection
+        self.pantryGroupingModeRaw = ListGroupingMode.category.rawValue
+        self.groceryGroupingModeRaw = ListGroupingMode.marketSection.rawValue
     }
 
     @Transient
@@ -148,5 +160,17 @@ final class AppSettings {
     var recipeCompatibilityThresholdPercent: Int {
         get { recipeCompatibilityThresholdPercentValue ?? 80 }
         set { recipeCompatibilityThresholdPercentValue = newValue }
+    }
+
+    @Transient
+    var pantryGroupingMode: ListGroupingMode {
+        get { ListGroupingMode(rawValue: pantryGroupingModeRaw) ?? .category }
+        set { pantryGroupingModeRaw = newValue.rawValue }
+    }
+
+    @Transient
+    var groceryGroupingMode: ListGroupingMode {
+        get { ListGroupingMode(rawValue: groceryGroupingModeRaw) ?? .marketSection }
+        set { groceryGroupingModeRaw = newValue.rawValue }
     }
 }

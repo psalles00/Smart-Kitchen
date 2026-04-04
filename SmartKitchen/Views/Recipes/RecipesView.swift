@@ -237,14 +237,13 @@ struct RecipesView: View {
             }
             .padding(4)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color(.tertiarySystemFill), in: .rect(cornerRadius: 12))
-            .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(.tertiarySystemFill), in: .rect(cornerRadius: 12))
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .padding(.horizontal, 16)
         .padding(.top, 8)
-        .padding(.bottom, 14)
+        .padding(.bottom, 8)
     }
 
     private func filterChip(label: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
@@ -279,7 +278,7 @@ struct RecipesView: View {
             }
         }
         .padding(.horizontal, 16)
-        .padding(.top, 2)
+        .padding(.top, 0)
         .padding(.bottom, 20)
         .gesture(
             MagnificationGesture()
@@ -319,7 +318,7 @@ struct RecipesView: View {
             }
         }
         .padding(.horizontal, 16)
-        .padding(.top, 2)
+        .padding(.top, 0)
         .padding(.bottom, 20)
         .onScrollOffsetChange(perform: updateInlineTitle)
         .navigationDestination(for: UUID.self) { id in
@@ -367,9 +366,10 @@ struct RecipesView: View {
         HStack(spacing: 6) {
             Text(title)
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.primary.opacity(0.72))
             Spacer()
         }
+        .textCase(nil)
         .padding(.vertical, 4)
     }
 

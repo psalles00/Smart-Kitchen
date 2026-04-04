@@ -115,6 +115,7 @@ struct AddPantryItemView: View {
                     Text(cat.name).tag(cat.name)
                 }
             }
+            .controlSize(.small)
             .onChange(of: selectedCategory) { _, _ in
                 userChangedCategory = true
             }
@@ -309,8 +310,6 @@ struct AddPantryItemView: View {
 struct EditPantryItemView: View {
     @Environment(\.dismiss) private var dismiss
     @Query private var settingsArray: [AppSettings]
-    @Query(sort: \Category.sortOrder) private var allEditCategories: [Category]
-
     @Bindable var item: PantryItem
     @State private var showIconPicker = false
     @State private var selectedPhoto: PhotosPickerItem?
@@ -319,7 +318,11 @@ struct EditPantryItemView: View {
     @State private var expiryDurationValue: Int = 7
     @State private var expiryDurationUnit: ExpiryDurationUnit = .days
 
-    private var categories: [Category] { allEditCategories.filter { $0.type == .pantry } }
+    private let categories = CategoryDatabase.shared.allCategories
+
+    private var categoryIconFileName: String? {
+        CategoryDatabase.shared.entry(for: item.category)?.iconFileName
+    }
     private var isDetailed: Bool { settingsArray.first?.pantryDetailLevel == .detailed }
 
     var body: some View {
@@ -378,6 +381,7 @@ struct EditPantryItemView: View {
             ItemSearchField(
                 text: $item.name,
                 iconFileName: item.iconName,
+                placeholderIconFileName: categoryIconFileName,
                 fallbackSymbol: "leaf",
                 showsLeadingIcon: true,
                 onIconTapped: { showIconPicker = true }
@@ -387,9 +391,17 @@ struct EditPantryItemView: View {
 
             Picker("Categoria", selection: $item.category) {
                 ForEach(categories) { cat in
-                    Text(cat.name).tag(cat.name)
+                    CategoryLabelView(
+                        categoryName: cat.name,
+                        iconSize: 12,
+                        spacing: 6,
+                        font: .caption
+                    )
+                    .tag(cat.name)
                 }
             }
+            .controlSize(.small)
+            .pickerStyle(.navigationLink)
         }
     }
 
@@ -565,4 +577,3 @@ struct EditPantryItemView: View {
         return max(0, Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: .now), to: Calendar.current.startOfDay(for: item.expirationDate ?? Date())).day ?? 0)
     }
 }
-

@@ -109,6 +109,7 @@ struct PantryView: View {
         } header: {
             pantryHeader(for: category)
         }
+        .listSectionSeparator(.hidden)
     }
 
     @ViewBuilder

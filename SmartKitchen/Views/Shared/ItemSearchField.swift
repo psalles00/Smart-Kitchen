@@ -5,11 +5,14 @@ struct ItemSearchField: View {
     @Binding var text: String
     var placeholder: String = "Nome"
     var iconFileName: String? = nil
+    var placeholderIconFileName: String? = nil
     var fallbackSymbol: String = "leaf"
     var isFocusedBinding: Binding<Bool>? = nil
     var showsLeadingIcon = false
     var onIconTapped: (() -> Void)? = nil
     var onItemSelected: ((ItemEntry) -> Void)?
+
+    private let leadingIconSize: CGFloat = 24
 
     @State private var suggestions: [ItemEntry] = []
     @State private var showSuggestions = false
@@ -85,13 +88,25 @@ struct ItemSearchField: View {
     }
 
     private var itemIcon: some View {
-        IconImage(
-            name: text,
-            iconFileName: iconFileName,
-            fallbackSymbol: fallbackSymbol,
-            size: 28,
-            showBalloon: true
-        )
+        Group {
+            if let placeholderIconFileName, iconFileName == nil {
+                IconImage(
+                    name: "",
+                    iconFileName: placeholderIconFileName,
+                    fallbackSymbol: fallbackSymbol,
+                    size: leadingIconSize,
+                    showBalloon: true
+                )
+            } else {
+                IconImage(
+                    name: text,
+                    iconFileName: iconFileName,
+                    fallbackSymbol: fallbackSymbol,
+                    size: leadingIconSize,
+                    showBalloon: true
+                )
+            }
+        }
     }
 
     private var suggestionsList: some View {

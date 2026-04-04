@@ -47,6 +47,7 @@ struct AddGroceryItemView: View {
                         Text(cat.name).tag(cat.name)
                     }
                 }
+                .controlSize(.small)
                 .onChange(of: selectedCategory) { _, _ in
                     userChangedCategory = true
                 }
@@ -234,8 +235,6 @@ struct AddGroceryItemView: View {
 
 struct EditGroceryItemView: View {
     @Environment(\.dismiss) private var dismiss
-    @Query(sort: \Category.sortOrder) private var allEditCategories: [Category]
-
     @Bindable var item: GroceryItem
     @State private var showIconPicker = false
     @State private var selectedPhoto: PhotosPickerItem?
@@ -243,7 +242,11 @@ struct EditGroceryItemView: View {
     @State private var expiryDurationValue: Int = 7
     @State private var expiryDurationUnit: ExpiryDurationUnit = .days
 
-    private var categories: [Category] { allEditCategories.filter { $0.type == .pantry } }
+    private let categories = CategoryDatabase.shared.allCategories
+
+    private var categoryIconFileName: String? {
+        CategoryDatabase.shared.entry(for: item.category)?.iconFileName
+    }
 
     var body: some View {
         Form {
@@ -251,6 +254,7 @@ struct EditGroceryItemView: View {
                 ItemSearchField(
                     text: $item.name,
                     iconFileName: item.iconName,
+                    placeholderIconFileName: categoryIconFileName,
                     fallbackSymbol: "basket",
                     showsLeadingIcon: true,
                     onIconTapped: { showIconPicker = true }
@@ -260,9 +264,17 @@ struct EditGroceryItemView: View {
 
                 Picker("Categoria", selection: $item.category) {
                     ForEach(categories) { cat in
-                        Text(cat.name).tag(cat.name)
+                        CategoryLabelView(
+                            categoryName: cat.name,
+                            iconSize: 12,
+                            spacing: 6,
+                            font: .caption
+                        )
+                        .tag(cat.name)
                     }
                 }
+                .controlSize(.small)
+                .pickerStyle(.navigationLink)
             }
 
             Section("Detalhes") {

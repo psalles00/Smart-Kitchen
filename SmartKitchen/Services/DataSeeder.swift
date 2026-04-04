@@ -3,36 +3,77 @@ import SwiftData
 
 /// Seeds the database with demo data on first launch.
 struct DataSeeder {
+    private static let pantryCategoryDefinitions: [(name: String, iconName: String?)] = [
+        ("Frutas", "apple.png"),
+        ("Verduras e Legumes", "broccoli.png"),
+        ("Carnes e Aves", "chicken-raw.png"),
+        ("Peixes e Frutos do Mar", "fish.png"),
+        ("Laticínios e Ovos", "milk.png"),
+        ("Padaria", "bread-white.png"),
+        ("Grãos, Massas e Cereais", "rice.png"),
+        ("Bebidas", "water-bottle.png"),
+        ("Temperos e Condimentos", "salt.png"),
+        ("Enlatados e Conservas", "canned-tuna.png"),
+        ("Doces e Sobremesas", "cake.png"),
+        ("Snacks e Petiscos", "chips.png"),
+        ("Pratos Prontos", "lunch-box.png"),
+        ("Limpeza e Higiene", "dish-soap.png"),
+        ("Utensílios de Cozinha", "frying-pan.png"),
+        ("Eletrodomésticos", "blender.png"),
+        ("Saúde e Bem-estar", "healthy-food.png"),
+        ("Outros", nil),
+    ]
+
+    private static let recipeCategoryDefinitions: [(name: String, iconName: String?)] = [
+        ("Café da manhã", "pancakes.png"),
+        ("Almoço", "lunch-box.png"),
+        ("Jantar", "dinner.png"),
+        ("Lanche", "sandwich.png"),
+        ("Sobremesa", "cake.png"),
+        ("Bebida", "smoothie.png"),
+        ("Outros", nil),
+    ]
+
+    private static let utensilCategoryDefinitions: [(name: String, iconName: String?)] = [
+        ("Utensílios de Cozinha", "frying-pan.png"),
+        ("Eletrodomésticos", "blender.png"),
+        ("Outros", nil),
+    ]
+
+    private static let legacyPantryCategoryMapping: [String: String] = [
+        "Vegetais": "Verduras e Legumes",
+        "Carnes": "Carnes e Aves",
+        "Laticínios": "Laticínios e Ovos",
+        "Grãos": "Grãos, Massas e Cereais",
+    ]
+
+    private static let legacyUtensilCategoryMapping: [String: String] = [
+        "Panelas": "Utensílios de Cozinha",
+        "Talheres": "Utensílios de Cozinha",
+        "Utensílios de preparo": "Utensílios de Cozinha",
+    ]
 
     static func seedIfNeeded(context: ModelContext) {
         // Use a local flag to prevent re-seeding when CloudKit sync
         // delivers data from another device before local queries resolve.
         let hasSeededKey = "SmartKitchen.hasSeeded"
-        if UserDefaults.standard.bool(forKey: hasSeededKey) { return }
 
         // Also check if settings already exist (e.g. synced from another device)
         let settingsDescriptor = FetchDescriptor<AppSettings>()
         let existing = (try? context.fetch(settingsDescriptor))?.first
-        if existing != nil {
-            UserDefaults.standard.set(true, forKey: hasSeededKey)
-            return
+        let hasSeeded = UserDefaults.standard.bool(forKey: hasSeededKey)
+
+        if existing == nil, !hasSeeded {
+            let settings = AppSettings()
+            context.insert(settings)
+
+            seedCategories(context: context)
+            seedPantryItems(context: context)
+            seedGroceryItems(context: context)
+            seedRecipes(context: context)
         }
 
-        // Create default settings
-        let settings = AppSettings()
-        context.insert(settings)
-
-        // Seed categories
-        seedCategories(context: context)
-
-        // Seed pantry items (3)
-        seedPantryItems(context: context)
-
-        // Seed grocery items (3)
-        seedGroceryItems(context: context)
-
-        // Seed recipes (3)
-        seedRecipes(context: context)
+        synchronizeCategories(context: context)
 
         try? context.save()
         UserDefaults.standard.set(true, forKey: hasSeededKey)
@@ -41,59 +82,111 @@ struct DataSeeder {
     // MARK: - Categories
 
     private static func seedCategories(context: ModelContext) {
-        let pantryCategories = [
-            ("Frutas", "apple.png", 0),
-            ("Verduras e Legumes", "broccoli.png", 1),
-            ("Carnes e Aves", "chicken-raw.png", 2),
-            ("Peixes e Frutos do Mar", "fish.png", 3),
-            ("Laticínios e Ovos", "milk.png", 4),
-            ("Padaria", "bread-white.png", 5),
-            ("Grãos, Massas e Cereais", "rice.png", 6),
-            ("Bebidas", "water-bottle.png", 7),
-            ("Temperos e Condimentos", "salt.png", 8),
-            ("Enlatados e Conservas", "canned-tuna.png", 9),
-            ("Doces e Sobremesas", "cake.png", 10),
-            ("Snacks e Petiscos", "chips.png", 11),
-            ("Pratos Prontos", "lunch-box.png", 12),
-            ("Limpeza e Higiene", "dish-soap.png", 13),
-            ("Utensílios de Cozinha", "frying-pan.png", 14),
-            ("Eletrodomésticos", "blender.png", 15),
-            ("Saúde e Bem-estar", "healthy-food.png", 16),
-            ("Outros", nil as String?, 17),
-        ]
+        insertCategories(pantryCategoryDefinitions, type: .pantry, context: context)
+        insertCategories(recipeCategoryDefinitions, type: .recipe, context: context)
+        insertCategories(utensilCategoryDefinitions, type: .utensil, context: context)
+    }
 
-        for (name, icon, order) in pantryCategories {
-            let cat = Category(name: name, type: .pantry, iconName: icon, sortOrder: order)
-            context.insert(cat)
+    private static func insertCategories(
+        _ definitions: [(name: String, iconName: String?)],
+        type: CategoryType,
+        context: ModelContext
+    ) {
+        for (order, definition) in definitions.enumerated() {
+            let category = Category(
+                name: definition.name,
+                type: type,
+                iconName: definition.iconName,
+                sortOrder: order
+            )
+            context.insert(category)
         }
+    }
 
-        let recipeCategories = [
-            ("Café da manhã", "pancakes.png", 0),
-            ("Almoço", "lunch-box.png", 1),
-            ("Jantar", "dinner.png", 2),
-            ("Lanche", "sandwich.png", 3),
-            ("Sobremesa", "cake.png", 4),
-            ("Bebida", "smoothie.png", 5),
-            ("Outros", nil as String?, 6),
-        ]
+    private static func synchronizeCategories(context: ModelContext) {
+        synchronizeCategoryDefinitions(pantryCategoryDefinitions, type: .pantry, context: context)
+        synchronizeCategoryDefinitions(recipeCategoryDefinitions, type: .recipe, context: context)
+        synchronizeCategoryDefinitions(utensilCategoryDefinitions, type: .utensil, context: context)
+        migrateLegacyItemCategories(context: context)
+        removeLegacyUtensilCategories(context: context)
+    }
 
-        for (name, icon, order) in recipeCategories {
-            let cat = Category(name: name, type: .recipe, iconName: icon, sortOrder: order)
-            context.insert(cat)
+    private static func synchronizeCategoryDefinitions(
+        _ definitions: [(name: String, iconName: String?)],
+        type: CategoryType,
+        context: ModelContext
+    ) {
+        let descriptor = FetchDescriptor<Category>()
+        let existing = ((try? context.fetch(descriptor)) ?? []).filter { $0.type == type }
+
+        for (order, definition) in definitions.enumerated() {
+            if let category = existing.first(where: { sameCategoryName($0.name, definition.name) }) {
+                category.name = definition.name
+                category.iconName = definition.iconName
+                category.sortOrder = order
+            } else {
+                context.insert(
+                    Category(
+                        name: definition.name,
+                        type: type,
+                        iconName: definition.iconName,
+                        sortOrder: order
+                    )
+                )
+            }
         }
+    }
 
-        let utensilCategories = [
-            ("Panelas", "cooking-pot.png", 0),
-            ("Talheres", "cutlery.png", 1),
-            ("Utensílios de preparo", "spatula.png", 2),
-            ("Eletrodomésticos", "blender.png", 3),
-            ("Outros", nil as String?, 4),
-        ]
+    private static func migrateLegacyItemCategories(context: ModelContext) {
+        migratePantryCategories(context: context)
+        migrateGroceryCategories(context: context)
+        migrateUtensilCategories(context: context)
+    }
 
-        for (name, icon, order) in utensilCategories {
-            let cat = Category(name: name, type: .utensil, iconName: icon, sortOrder: order)
-            context.insert(cat)
+    private static func migratePantryCategories(context: ModelContext) {
+        let descriptor = FetchDescriptor<PantryItem>()
+        let items = (try? context.fetch(descriptor)) ?? []
+        for item in items {
+            if let replacement = legacyPantryCategoryMapping[item.category] {
+                item.category = replacement
+            }
         }
+    }
+
+    private static func migrateGroceryCategories(context: ModelContext) {
+        let descriptor = FetchDescriptor<GroceryItem>()
+        let items = (try? context.fetch(descriptor)) ?? []
+        for item in items {
+            if let replacement = legacyPantryCategoryMapping[item.category] {
+                item.category = replacement
+            }
+        }
+    }
+
+    private static func migrateUtensilCategories(context: ModelContext) {
+        let descriptor = FetchDescriptor<UtensilItem>()
+        let items = (try? context.fetch(descriptor)) ?? []
+        for item in items {
+            if let replacement = legacyUtensilCategoryMapping[item.category] {
+                item.category = replacement
+            }
+        }
+    }
+
+    private static func removeLegacyUtensilCategories(context: ModelContext) {
+        let descriptor = FetchDescriptor<Category>()
+        let existing = (try? context.fetch(descriptor)) ?? []
+        for category in existing
+        where category.type == .utensil && legacyUtensilCategoryMapping.keys.contains(category.name) {
+            context.delete(category)
+        }
+    }
+
+    private static func sameCategoryName(_ lhs: String, _ rhs: String) -> Bool {
+        lhs.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
+            .lowercased() ==
+        rhs.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
+            .lowercased()
     }
 
     // MARK: - Pantry Items

@@ -455,6 +455,10 @@ final class CloudSyncService: @unchecked Sendable {
         copy.recipeCompatibilityThresholdPercentValue = source.recipeCompatibilityThresholdPercentValue
         copy.openAIAPIKey = source.openAIAPIKey
         copy.hasCompletedOnboarding = source.hasCompletedOnboarding
+        copy.showUtensils = source.showUtensils
+        copy.recipeGalleryColumns = source.recipeGalleryColumns
+        copy.pantryGroupingModeRaw = source.pantryGroupingModeRaw
+        copy.groceryGroupingModeRaw = source.groceryGroupingModeRaw
         return copy
     }
 }

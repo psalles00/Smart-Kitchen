@@ -1,0 +1,92 @@
+[
+  {
+    "name": "Frutas",
+    "icon_file_name": "apple.png",
+    "market_section": "Hortifruti"
+  },
+  {
+    "name": "Verduras e Legumes",
+    "icon_file_name": "broccoli.png",
+    "market_section": "Hortifruti"
+  },
+  {
+    "name": "Carnes e Aves",
+    "icon_file_name": "chicken-raw.png",
+    "market_section": "Açougue"
+  },
+  {
+    "name": "Peixes e Frutos do Mar",
+    "icon_file_name": "fish-raw.png",
+    "market_section": "Peixaria"
+  },
+  {
+    "name": "Padaria",
+    "icon_file_name": "bread-white.png",
+    "market_section": "Padaria"
+  },
+  {
+    "name": "Laticínios e Ovos",
+    "icon_file_name": "milk.png",
+    "market_section": "Refrigerados"
+  },
+  {
+    "name": "Grãos, Massas e Cereais",
+    "icon_file_name": "rice.png",
+    "market_section": "Mercearia"
+  },
+  {
+    "name": "Bebidas",
+    "icon_file_name": "water-bottle.png",
+    "market_section": "Bebidas"
+  },
+  {
+    "name": "Temperos e Condimentos",
+    "icon_file_name": "salt.png",
+    "market_section": "Temperos"
+  },
+  {
+    "name": "Enlatados e Conservas",
+    "icon_file_name": "canned-tuna.png",
+    "market_section": "Enlatados"
+  },
+  {
+    "name": "Doces e Sobremesas",
+    "icon_file_name": "cake.png",
+    "market_section": "Doces"
+  },
+  {
+    "name": "Snacks e Petiscos",
+    "icon_file_name": "chips.png",
+    "market_section": "Salgadinhos"
+  },
+  {
+    "name": "Pratos Prontos",
+    "icon_file_name": "lunch-box.png",
+    "market_section": "Congelados"
+  },
+  {
+    "name": "Limpeza e Higiene",
+    "icon_file_name": "dish-soap.png",
+    "market_section": "Limpeza"
+  },
+  {
+    "name": "Utensílios de Cozinha",
+    "icon_file_name": "frying-pan.png",
+    "market_section": "Utilidades"
+  },
+  {
+    "name": "Eletrodomésticos",
+    "icon_file_name": "blender.png",
+    "market_section": "Eletro"
+  },
+  {
+    "name": "Saúde e Bem-estar",
+    "icon_file_name": "healthy-food.png",
+    "market_section": "Saúde"
+  },
+  {
+    "name": "Outros",
+    "icon_file_name": null,
+    "market_section": "Outros"
+  }
+]

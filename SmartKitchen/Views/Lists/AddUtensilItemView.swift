@@ -41,6 +41,7 @@ struct AddUtensilItemView: View {
                         Text(cat.name).tag(cat.name)
                     }
                 }
+                .controlSize(.small)
                 .onChange(of: selectedCategory) { _, _ in
                     userChangedCategory = true
                 }
@@ -172,14 +173,16 @@ struct AddUtensilItemView: View {
 
 struct EditUtensilItemView: View {
     @Environment(\.dismiss) private var dismiss
-    @Query(sort: \Category.sortOrder) private var allEditCategories: [Category]
-
     @Bindable var item: UtensilItem
     @State private var showIconPicker = false
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var showPhotoPreview = false
 
-    private var categories: [Category] { allEditCategories.filter { $0.type == .utensil } }
+    private let categories = CategoryDatabase.shared.allCategories
+
+    private var categoryIconFileName: String? {
+        CategoryDatabase.shared.entry(for: item.category)?.iconFileName
+    }
 
     var body: some View {
         Form {
@@ -187,6 +190,7 @@ struct EditUtensilItemView: View {
                 ItemSearchField(
                     text: $item.name,
                     iconFileName: item.iconName,
+                    placeholderIconFileName: categoryIconFileName,
                     fallbackSymbol: "fork.knife",
                     showsLeadingIcon: true,
                     onIconTapped: { showIconPicker = true }
@@ -196,9 +200,17 @@ struct EditUtensilItemView: View {
 
                 Picker("Categoria", selection: $item.category) {
                     ForEach(categories) { cat in
-                        Text(cat.name).tag(cat.name)
+                        CategoryLabelView(
+                            categoryName: cat.name,
+                            iconSize: 12,
+                            spacing: 6,
+                            font: .caption
+                        )
+                        .tag(cat.name)
                     }
                 }
+                .controlSize(.small)
+                .pickerStyle(.navigationLink)
             }
 
             Section("Detalhes") {

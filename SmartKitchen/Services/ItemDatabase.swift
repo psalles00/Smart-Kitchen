@@ -108,25 +108,7 @@ final class ItemDatabase: Sendable {
 
     /// Maps a category name to its supermarket section.
     static func marketSection(for category: String) -> String {
-        switch category {
-        case "Frutas", "Verduras e Legumes":       return "Hortifruti"
-        case "Carnes e Aves":                       return "Açougue"
-        case "Peixes e Frutos do Mar":              return "Peixaria"
-        case "Padaria":                             return "Padaria"
-        case "Laticínios e Ovos":                   return "Refrigerados"
-        case "Grãos, Massas e Cereais":             return "Mercearia"
-        case "Bebidas":                             return "Bebidas"
-        case "Temperos e Condimentos":              return "Temperos"
-        case "Enlatados e Conservas":               return "Enlatados"
-        case "Doces e Sobremesas":                  return "Doces"
-        case "Snacks e Petiscos":                   return "Salgadinhos"
-        case "Pratos Prontos":                      return "Congelados"
-        case "Limpeza e Higiene":                   return "Limpeza"
-        case "Utensílios de Cozinha":               return "Utilidades"
-        case "Eletrodomésticos":                    return "Eletro"
-        case "Saúde e Bem-estar":                   return "Saúde"
-        default:                                    return "Outros"
-        }
+        CategoryDatabase.shared.marketSection(for: category)
     }
 
     /// Ordered list of market sections for sorting.

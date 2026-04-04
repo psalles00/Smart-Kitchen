@@ -96,6 +96,7 @@ struct GroceryListView: View {
         } header: {
             groceryHeader(for: category)
         }
+        .listSectionSeparator(.hidden)
     }
 
     @ViewBuilder
