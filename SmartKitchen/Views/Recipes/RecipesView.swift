@@ -111,7 +111,7 @@ struct RecipesView: View {
 
     private var galleryColumns: [GridItem] {
         #if os(macOS)
-        [GridItem(.adaptive(minimum: 150, maximum: 150), spacing: 12)]
+        [GridItem(.adaptive(minimum: 150, maximum: 200), spacing: 12)]
         #else
         Array(repeating: GridItem(.flexible(), spacing: 12), count: settings?.recipeGalleryColumns ?? 2)
         #endif
@@ -168,11 +168,13 @@ struct RecipesView: View {
             NavigationStack {
                 AddRecipeView()
             }
+            .forceLightStatusBar()
         }
         .sheet(item: $editingRecipe) { recipe in
             NavigationStack {
                 EditRecipeView(recipe: recipe)
             }
+            .forceLightStatusBar()
         }
         .onAppear { recomputeCompatibilities() }
         .onChange(of: pantryItems) { _, _ in recomputeCompatibilities() }
@@ -224,6 +226,23 @@ struct RecipesView: View {
     // MARK: - Category Filter
 
     private var categoryFilter: some View {
+        #if os(macOS)
+        HStack(spacing: 0) {
+            filterChip(label: "Todos", isSelected: selectedCategory == nil) {
+                selectedCategory = nil
+            }
+            ForEach(recipeCategories) { cat in
+                filterChip(label: cat.name, isSelected: selectedCategory == cat.name) {
+                    selectedCategory = cat.name
+                }
+            }
+        }
+        .padding(4)
+        .background(Color(.tertiarySystemFill), in: .rect(cornerRadius: 12))
+        .padding(.horizontal, 16)
+        .padding(.top, 8)
+        .padding(.bottom, 8)
+        #else
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 0) {
                 filterChip(label: "Todos", isSelected: selectedCategory == nil) {
@@ -244,17 +263,20 @@ struct RecipesView: View {
         .padding(.horizontal, 16)
         .padding(.top, 8)
         .padding(.bottom, 8)
+        #endif
     }
 
     private func filterChip(label: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(label)
                 .font(.footnote.weight(.medium))
+                .frame(maxWidth: .infinity)
                 .padding(.vertical, 8)
                 .padding(.horizontal, 12)
                 .background(isSelected ? Color(.systemBackground) : .clear, in: .rect(cornerRadius: 10))
                 .shadow(color: isSelected ? .black.opacity(0.12) : .clear, radius: 4, x: 0, y: 1)
                 .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }

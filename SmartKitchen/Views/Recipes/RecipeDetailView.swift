@@ -113,27 +113,32 @@ struct RecipeDetailView: View {
             NavigationStack {
                 EditRecipeView(recipe: recipe)
             }
+            .forceLightStatusBar()
         }
         .sheet(item: $editingPantryItem) { item in
             NavigationStack {
                 EditPantryItemView(item: item)
             }
+            .forceLightStatusBar()
         }
         .sheet(item: $editingGroceryItem) { item in
             NavigationStack {
                 EditGroceryItemView(item: item)
             }
+            .forceLightStatusBar()
         }
         .sheet(item: $editingUtensilItem) { item in
             NavigationStack {
                 EditUtensilItemView(item: item)
             }
+            .forceLightStatusBar()
         }
         .sheet(item: $previewSelection) { selection in
             PreparationMediaPreviewView(
                 mediaItems: sortedPreparationMedia,
                 selectedMediaID: selection.id
             )
+            .forceLightStatusBar()
         }
     }
 

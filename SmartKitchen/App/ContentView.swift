@@ -151,7 +151,9 @@ struct ContentView: View {
             }
             .forceLightStatusBar()
         }
+        #if os(iOS)
         .forceLightStatusBar()
+        #endif
         .onChange(of: selectedTab) { _, newValue in
             handleTabSelectionChange(newValue)
         }
@@ -234,19 +236,15 @@ struct ContentView: View {
             case .lists:
                 NavigationStack { ListsTabView() }
                     .background(Color.clear)
-                    .environment(\.colorScheme, .light)
             case .recipes:
                 NavigationStack { RecipesView() }
                     .background(Color.clear)
-                    .environment(\.colorScheme, .light)
             case .nutrients:
                 NavigationStack { NutrientsPlaceholderView() }
                     .background(Color.clear)
-                    .environment(\.colorScheme, .light)
             case .settings:
                 NavigationStack { SettingsView() }
                     .background(Color.clear)
-                    .environment(\.colorScheme, .light)
             }
         }
         .toolbarBackground(.hidden, for: .windowToolbar)
@@ -999,6 +997,8 @@ extension View {
 }
 #else
 extension View {
-    func forceLightStatusBar() -> some View { self }
+    func forceLightStatusBar() -> some View {
+        self.environment(\.colorScheme, .light)
+    }
 }
 #endif

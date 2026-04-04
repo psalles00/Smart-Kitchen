@@ -103,6 +103,7 @@ struct AddRecipeView: View {
             }
             .sheet(isPresented: $showCameraPicker) {
                 coverCameraSheet
+                    .forceLightStatusBar()
             }
             .sheet(item: $activeIngredientPicker) { target in
                 ItemIconPickerView(
@@ -112,6 +113,7 @@ struct AddRecipeView: View {
                 ) { entry in
                     applyIngredientIcon(entry, to: target.id)
                 }
+                .forceLightStatusBar()
             }
             .sheet(item: $activeUtensilPicker) { target in
                 ItemIconPickerView(
@@ -121,9 +123,11 @@ struct AddRecipeView: View {
                 ) { entry in
                     applyUtensilIcon(entry, to: target.id)
                 }
+                .forceLightStatusBar()
             }
             .sheet(isPresented: $showPreparationCameraPicker) {
                 preparationCameraSheet
+                    .forceLightStatusBar()
             }
             .photosPicker(
                 isPresented: $showPreparationPhotoLibrary,

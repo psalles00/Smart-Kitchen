@@ -67,11 +67,13 @@ struct GroceryListView: View {
             NavigationStack {
                 EditGroceryItemView(item: item)
             }
+            .forceLightStatusBar()
         }
         .sheet(item: $acquiredPantryItem) { item in
             NavigationStack {
                 EditPantryItemView(item: item)
             }
+            .forceLightStatusBar()
         }
     }
 
@@ -81,8 +83,13 @@ struct GroceryListView: View {
                 grocerySection(categoryIndex: categoryIndex, category: entry.0, items: entry.1)
             }
         }
+        #if os(macOS)
+        .listStyle(.inset)
+        #else
         .listStyle(.plain)
+        #endif
         .scrollContentBackground(.hidden)
+        .listSectionSeparator(.hidden)
         .coordinateSpace(name: "lists_scroll")
         .onScrollOffsetChange(perform: onScrollOffsetChange)
     }
@@ -367,11 +374,11 @@ struct GroceryItemRow: View {
             }
 
             HStack(alignment: .center, spacing: 12) {
-                IconImage(name: item.name, iconFileName: item.iconName ?? categoryIconName, fallbackSymbol: "basket", size: 28, showBalloon: true)
+                IconImage(name: item.name, iconFileName: item.iconName ?? categoryIconName, fallbackSymbol: "basket", size: 24, showBalloon: true)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(item.name)
-                        .font(.system(size: 16, weight: .medium))
+                        .font(.system(size: 14, weight: .medium))
                         .lineLimit(1)
 
                     if let qty = item.quantity {

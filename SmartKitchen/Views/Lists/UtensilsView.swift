@@ -124,6 +124,7 @@ struct UtensilsView: View {
             NavigationStack {
                 EditUtensilItemView(item: item)
             }
+            .forceLightStatusBar()
         }
     }
 
@@ -147,10 +148,10 @@ struct UtensilItemRow: View {
             }
 
             HStack(alignment: .center, spacing: 12) {
-                IconImage(name: item.name, iconFileName: item.iconName, fallbackSymbol: "fork.knife", size: 28, showBalloon: true)
+                IconImage(name: item.name, iconFileName: item.iconName, fallbackSymbol: "fork.knife", size: 24, showBalloon: true)
 
                 Text(item.name)
-                    .font(.system(size: 16, weight: .medium))
+                    .font(.system(size: 14, weight: .medium))
                     .lineLimit(1)
 
                 Spacer()

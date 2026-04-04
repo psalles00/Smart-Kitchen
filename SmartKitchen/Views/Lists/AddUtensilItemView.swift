@@ -107,6 +107,7 @@ struct AddUtensilItemView: View {
             ) { entry in
                 iconName = entry.nomeDoArquivo
             }
+            .forceLightStatusBar()
         }
         .sheet(isPresented: $showPhotoPreview) {
             if let imageData, let image = PlatformImage(data: imageData) {
@@ -198,19 +199,11 @@ struct EditUtensilItemView: View {
                     applySelectedEntry(entry)
                 }
 
-                Picker("Categoria", selection: $item.category) {
-                    ForEach(categories) { cat in
-                        CategoryLabelView(
-                            categoryName: cat.name,
-                            iconSize: 12,
-                            spacing: 6,
-                            font: .caption
-                        )
-                        .tag(cat.name)
-                    }
-                }
-                .controlSize(.small)
-                .pickerStyle(.navigationLink)
+                CategorySelectionRow(
+                    title: "Categoria",
+                    categories: categories,
+                    selection: $item.category
+                )
             }
 
             Section("Detalhes") {
@@ -268,6 +261,7 @@ struct EditUtensilItemView: View {
             ) { entry in
                 item.iconName = entry.nomeDoArquivo
             }
+            .forceLightStatusBar()
         }
         .sheet(isPresented: $showPhotoPreview) {
             if let imageData = item.imageData, let image = PlatformImage(data: imageData) {

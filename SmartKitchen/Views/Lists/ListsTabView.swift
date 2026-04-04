@@ -218,16 +218,19 @@ struct ListsTabView: View {
             NavigationStack {
                 AddPantryItemView()
             }
+            .forceLightStatusBar()
         }
         .sheet(isPresented: $showAddGrocery) {
             NavigationStack {
                 AddGroceryItemView()
             }
+            .forceLightStatusBar()
         }
         .sheet(isPresented: $showAddUtensil) {
             NavigationStack {
                 AddUtensilItemView()
             }
+            .forceLightStatusBar()
         }
     }
 
@@ -461,9 +464,9 @@ private struct ListsSubtabDropButton: View {
                         .transition(.scale.combined(with: .opacity))
                 }
             }
-            .contentShape(Rectangle()) // Fix tapping area 
             .frame(maxWidth: .infinity)
             .padding(.vertical, 8)
+            .contentShape(Rectangle())
             .background(isSelected ? Color(.systemBackground) : .clear, in: .rect(cornerRadius: 10))
             .shadow(color: isSelected ? .black.opacity(0.12) : .clear, radius: 4, x: 0, y: 1)
             .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
