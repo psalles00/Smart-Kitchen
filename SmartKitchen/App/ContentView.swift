@@ -236,15 +236,19 @@ struct ContentView: View {
             case .lists:
                 NavigationStack { ListsTabView() }
                     .background(Color.clear)
+                    .environment(\.colorScheme, .light)
             case .recipes:
                 NavigationStack { RecipesView() }
                     .background(Color.clear)
+                    .environment(\.colorScheme, .light)
             case .nutrients:
                 NavigationStack { NutrientsPlaceholderView() }
                     .background(Color.clear)
+                    .environment(\.colorScheme, .light)
             case .settings:
                 NavigationStack { SettingsView() }
                     .background(Color.clear)
+                    .environment(\.colorScheme, .light)
             }
         }
         .toolbarBackground(.hidden, for: .windowToolbar)
