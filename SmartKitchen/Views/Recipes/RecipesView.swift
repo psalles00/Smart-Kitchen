@@ -111,10 +111,7 @@ struct RecipesView: View {
         #if os(macOS)
         [GridItem(.adaptive(minimum: 150, maximum: 150), spacing: 12)]
         #else
-        [
-            GridItem(.flexible(), spacing: 12),
-            GridItem(.flexible(), spacing: 12),
-        ]
+        Array(repeating: GridItem(.flexible(), spacing: 12), count: settings?.recipeGalleryColumns ?? 2)
         #endif
     }
 
@@ -253,9 +250,10 @@ struct RecipesView: View {
     private func filterChip(label: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(label)
-                .font(.subheadline.weight(.semibold))
+                .font(.footnote.weight(.medium))
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 8)
+                .padding(.vertical, 6)
+                .padding(.horizontal, 12)
                 .background(isSelected ? Color(.systemBackground) : .clear, in: .rect(cornerRadius: 10))
                 .shadow(color: isSelected ? .black.opacity(0.12) : .clear, radius: 4, x: 0, y: 1)
                 .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
@@ -278,8 +276,10 @@ struct RecipesView: View {
                 VStack(alignment: .leading, spacing: 14) {
                     if selectedCategory == nil {
                         Text(group.category)
-                            .font(.sectionTitle)
-                            .padding(.horizontal, 2)
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.primary.opacity(0.72))
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
                     }
 
                     LazyVGrid(columns: galleryColumns, spacing: 12) {
@@ -308,8 +308,10 @@ struct RecipesView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     if selectedCategory == nil {
                         Text(group.category)
-                            .font(.sectionTitle)
-                            .padding(.horizontal, 2)
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.primary.opacity(0.72))
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
                     }
 
                     recipeRows(group.recipes)
@@ -394,6 +396,26 @@ struct RecipesView: View {
                         }
                     }
                 }
+
+                #if os(iOS)
+                if viewMode == .gallery {
+                    Divider()
+                    Menu {
+                        ForEach([2, 3, 4], id: \.self) { count in
+                            Button {
+                                settings?.recipeGalleryColumns = count
+                            } label: {
+                                Label("\(count) Colunas", systemImage: "square.grid.\(count == 2 ? "2x2" : count == 3 ? "3x2" : "4x3")")
+                                if settings?.recipeGalleryColumns == count {
+                                    Image(systemName: "checkmark")
+                                }
+                            }
+                        }
+                    } label: {
+                        Label("Tamanho da Grade", systemImage: "circle.grid.2x2")
+                    }
+                }
+                #endif
             }
             Section("Ordenar por") {
                 ForEach(RecipeSortOption.allCases, id: \.self) { option in
