@@ -38,6 +38,7 @@
 		46A9E7C4E7D39DC5B4775AEE /* IconImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = C97DDE84F26B0242CD107962 /* IconImage.swift */; };
 		4B3DA7067DB683837533E8D8 /* images-128 in Resources */ = {isa = PBXBuildFile; fileRef = E5AEE72295DDF210EBDBBF9A /* images-128 */; };
 		4F72E60F6B6210D496C588E9 /* CookingModeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB5922AD808C26CB4738DAC7 /* CookingModeView.swift */; };
+		5478B72D2F8185250007607D /* StatusBarStyleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5478B72C2F8185250007607D /* StatusBarStyleView.swift */; };
 		58D2D6BBDF7D05B19AA79AF0 /* Category.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D11C9DAD56B01DB249CFF1F /* Category.swift */; };
 		5B159D7F29B8A025F734BEB3 /* Boska-ExtralightItalic.otf in Resources */ = {isa = PBXBuildFile; fileRef = D2D194C91AB19D58E1F0BEB6 /* Boska-ExtralightItalic.otf */; };
 		5EEC1B0DA5DA071C0FF43DED /* ItemEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A2B9A25959E9E24FA72DBF7 /* ItemEntry.swift */; };
@@ -118,6 +119,7 @@
 		4F4B90D9D920F1E391155645 /* Boska-Regular.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Boska-Regular.otf"; sourceTree = "<group>"; };
 		4FFE418BF404A910C30CECCD /* Telma-Black.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Telma-Black.otf"; sourceTree = "<group>"; };
 		51B3504E5B6AEC4327A2CE73 /* Boska-Italic.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Boska-Italic.otf"; sourceTree = "<group>"; };
+		5478B72C2F8185250007607D /* StatusBarStyleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBarStyleView.swift; sourceTree = "<group>"; };
 		57785079D17F41CE565A524B /* AppTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTab.swift; sourceTree = "<group>"; };
 		5C2662A0F63DB0481D8B8BF6 /* Boska-BoldItalic.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Boska-BoldItalic.otf"; sourceTree = "<group>"; };
 		5E0128131D22D908484AA9D1 /* ChatBubbleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatBubbleView.swift; sourceTree = "<group>"; };
@@ -258,7 +260,6 @@
 			path = Models;
 			sourceTree = "<group>";
 		};
-
 		6690C6AFEAC3F53F3E6FC924 /* Lists */ = {
 			isa = PBXGroup;
 			children = (
@@ -280,6 +281,7 @@
 				57785079D17F41CE565A524B /* AppTab.swift */,
 				C54310018082C8F6F3CE3FE1 /* ContentView.swift */,
 				A0E510B072AA05179DF44BD5 /* SmartKitchenApp.swift */,
+				5478B72C2F8185250007607D /* StatusBarStyleView.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -564,6 +566,7 @@
 				2C5230C58E8CD542404C9E1B /* SettingsButton.swift in Sources */,
 				02B073D45FF8C0469EC3DC03 /* SettingsView.swift in Sources */,
 				34C4D9EBC144B792537D7BA5 /* SmartKitchenApp.swift in Sources */,
+				5478B72D2F8185250007607D /* StatusBarStyleView.swift in Sources */,
 				7807253BB73E6F7177EECA32 /* SuggestionChipsView.swift in Sources */,
 				AB3B06A6A7827DA0150A8FB4 /* TexturedGradientView.swift in Sources */,
 				46817A4977D35BB88599CF30 /* Theme.swift in Sources */,

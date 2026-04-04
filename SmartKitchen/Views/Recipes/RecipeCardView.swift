@@ -28,7 +28,13 @@ struct RecipeCardView: View {
 
                 if columns <= 3 {
                     HStack(spacing: 6) {
-                        if recipe.totalTime > 0 {
+                        if columns == 3, let compatibility = compatibility {
+                            if compatibility.ratio >= 1.0 {
+                                Label(availableIngredientsText(for: compatibility), systemImage: "checkmark.seal.fill")
+                            } else {
+                                Label(availableIngredientsText(for: compatibility), systemImage: "checklist")
+                            }
+                        } else if recipe.totalTime > 0 {
                             Label("\(recipe.totalTime)\(columns == 3 ? "m" : " min")", systemImage: "clock")
                         }
                         if columns == 2 {
@@ -98,5 +104,9 @@ struct RecipeCardView: View {
                     .foregroundStyle(.quaternary)
             }
         }
+    }
+
+    private func availableIngredientsText(for compatibility: RecipeCompatibility) -> String {
+        "\(compatibility.matchedIngredients) de \(compatibility.totalIngredients)"
     }
 }

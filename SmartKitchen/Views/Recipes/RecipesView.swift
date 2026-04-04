@@ -236,25 +236,24 @@ struct RecipesView: View {
     // MARK: - Category Filter
 
     private var categoryFilter: some View {
-        ZStack(alignment: .leading) {
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Color(.tertiarySystemFill))
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 0) {
-                    filterChip(label: "Todos", isSelected: selectedCategory == nil) {
-                        selectedCategory = nil
-                    }
-                    ForEach(recipeCategories) { cat in
-                        filterChip(label: cat.name, isSelected: selectedCategory == cat.name) {
-                            selectedCategory = cat.name
-                        }
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 0) {
+                filterChip(label: "Todos", isSelected: selectedCategory == nil) {
+                    selectedCategory = nil
+                }
+                ForEach(recipeCategories) { cat in
+                    filterChip(label: cat.name, isSelected: selectedCategory == cat.name) {
+                        selectedCategory = cat.name
                     }
                 }
-                .padding(4)
             }
+            .padding(4)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color(.tertiarySystemFill), in: .rect(cornerRadius: 12))
+            .fixedSize(horizontal: false, vertical: true)
         }
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .padding(.horizontal, 16)
         .padding(.top, 8)
         .padding(.bottom, 14)

@@ -111,6 +111,7 @@ struct ContentView: View {
                     Color.clear
                 }
             }
+            .forceLightStatusBar()
         }
         .environment(\.openSettings, {
             #if os(macOS)
@@ -130,6 +131,7 @@ struct ContentView: View {
             NavigationStack {
                 SettingsView()
             }
+            .forceLightStatusBar()
         }
         .onAppear {
             // TODO: Re-enable daily backup once BackupManager.swift is included in this target.
@@ -142,7 +144,9 @@ struct ContentView: View {
             NavigationStack {
                 AssistantView()
             }
+            .forceLightStatusBar()
         }
+        .forceLightStatusBar()
         .onChange(of: selectedTab) { _, newValue in
             handleTabSelectionChange(newValue)
         }
@@ -432,16 +436,19 @@ private struct HomeView: View {
             NavigationStack {
                 AssistantView()
             }
+            .forceLightStatusBar()
         }
         .sheet(isPresented: $showAddGrocery) {
             NavigationStack {
                 AddGroceryItemView()
             }
+            .forceLightStatusBar()
         }
         .sheet(isPresented: $showAddPantry) {
             NavigationStack {
                 AddPantryItemView()
             }
+            .forceLightStatusBar()
         }
         .onAppear {
             updateRecipeCategories()
@@ -980,5 +987,27 @@ extension View {
     func macOSDarkSidebar() -> some View {
         self.background(DarkSidebarFix())
     }
+}
+#endif
+
+#if os(iOS)
+private struct ForceLightStatusBarModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .overlay(alignment: .top) {
+                StatusBarStyleView(style: .lightContent)
+                    .frame(width: 0, height: 0)
+                    .allowsHitTesting(false)
+            }
+    }
+}
+extension View {
+    func forceLightStatusBar() -> some View {
+        self.modifier(ForceLightStatusBarModifier())
+    }
+}
+#else
+extension View {
+    func forceLightStatusBar() -> some View { self }
 }
 #endif
