@@ -62,6 +62,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
                 header(false)
                     .frame(height: headerHeight)
                     .padding(.top, 12)
+                    .simultaneousGesture(pullRefreshGesture, including: onRefresh != nil ? .all : .none)
 
                 ZStack {
                     RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
@@ -90,6 +91,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
                 // Fixed header (transparent, over shader)
                 header(false)
                     .frame(height: headerHeight)
+                    .simultaneousGesture(pullRefreshGesture, including: onRefresh != nil ? .all : .none)
 
                 // Shader zone: info + pull handle
                 pullableShaderZone
@@ -139,30 +141,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
         }
         .frame(maxWidth: .infinity)
         .contentShape(Rectangle())
-        .gesture(
-            onRefresh != nil
-            ? DragGesture(minimumDistance: 5)
-                .onChanged { value in
-                    guard !isRefreshing else { return }
-                    let dy = value.translation.height
-                    if dy > 0 {
-                        withAnimation(.interactiveSpring) {
-                            dragOffset = dy
-                        }
-                    }
-                }
-                .onEnded { value in
-                    guard !isRefreshing else { return }
-                    if dragOffset >= refreshThreshold {
-                        triggerRefresh()
-                    } else {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                            dragOffset = 0
-                        }
-                    }
-                }
-            : nil
-        )
+        .simultaneousGesture(pullRefreshGesture, including: onRefresh != nil ? .all : .none)
     }
 
     private func triggerRefresh() {
@@ -180,6 +159,29 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
                 }
             }
         }
+    }
+
+    private var pullRefreshGesture: some Gesture {
+        DragGesture(minimumDistance: 5)
+            .onChanged { value in
+                guard onRefresh != nil, !isRefreshing else { return }
+                let dy = value.translation.height
+                if dy > 0 {
+                    withAnimation(.interactiveSpring) {
+                        dragOffset = dy
+                    }
+                }
+            }
+            .onEnded { _ in
+                guard onRefresh != nil, !isRefreshing else { return }
+                if dragOffset >= refreshThreshold {
+                    triggerRefresh()
+                } else {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        dragOffset = 0
+                    }
+                }
+            }
     }
 
     // MARK: - Background

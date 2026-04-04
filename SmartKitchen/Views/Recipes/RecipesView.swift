@@ -236,30 +236,35 @@ struct RecipesView: View {
     // MARK: - Category Filter
 
     private var categoryFilter: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 12) {
-                filterChip(label: "Todos", isSelected: selectedCategory == nil) {
-                    selectedCategory = nil
-                }
-                ForEach(recipeCategories) { cat in
-                    filterChip(label: cat.name, isSelected: selectedCategory == cat.name) {
-                        selectedCategory = cat.name
+        ZStack(alignment: .leading) {
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(Color(.tertiarySystemFill))
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 0) {
+                    filterChip(label: "Todos", isSelected: selectedCategory == nil) {
+                        selectedCategory = nil
+                    }
+                    ForEach(recipeCategories) { cat in
+                        filterChip(label: cat.name, isSelected: selectedCategory == cat.name) {
+                            selectedCategory = cat.name
+                        }
                     }
                 }
+                .padding(4)
             }
-            .padding(4)
-            .background(Color(.tertiarySystemFill), in: .rect(cornerRadius: 12))
-            .padding(.horizontal, 10)
-            .padding(.vertical, 10)
         }
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 16)
+        .padding(.top, 8)
+        .padding(.bottom, 14)
     }
 
     private func filterChip(label: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(label)
                 .font(.footnote.weight(.medium))
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 6)
+                .padding(.vertical, 8)
                 .padding(.horizontal, 12)
                 .background(isSelected ? Color(.systemBackground) : .clear, in: .rect(cornerRadius: 10))
                 .shadow(color: isSelected ? .black.opacity(0.12) : .clear, radius: 4, x: 0, y: 1)
@@ -278,15 +283,11 @@ struct RecipesView: View {
     // MARK: - Gallery
 
     private var galleryView: some View {
-        LazyVStack(alignment: .leading, spacing: 18) {
+        LazyVStack(alignment: .leading, spacing: 12) {
             ForEach(groupedRecipes, id: \.category) { group in
-                VStack(alignment: .leading, spacing: 14) {
+                VStack(alignment: .leading, spacing: 8) {
                     if selectedCategory == nil {
-                        Text(group.category)
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(.primary.opacity(0.72))
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
+                        recipeSectionHeader(group.category)
                     }
 
                     LazyVGrid(columns: galleryColumns, spacing: 12) {
@@ -297,7 +298,8 @@ struct RecipesView: View {
                 }
             }
         }
-        .padding(.horizontal, 8)
+        .padding(.horizontal, 16)
+        .padding(.top, 2)
         .padding(.bottom, 20)
         .gesture(
             MagnificationGesture()
@@ -325,22 +327,19 @@ struct RecipesView: View {
     // MARK: - List
 
     private var listView: some View {
-        LazyVStack(alignment: .leading, spacing: 18) {
+        LazyVStack(alignment: .leading, spacing: 12) {
             ForEach(groupedRecipes, id: \.category) { group in
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: 8) {
                     if selectedCategory == nil {
-                        Text(group.category)
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(.primary.opacity(0.72))
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
+                        recipeSectionHeader(group.category)
                     }
 
                     recipeRows(group.recipes)
                 }
             }
         }
-        .padding(.horizontal, 8)
+        .padding(.horizontal, 16)
+        .padding(.top, 2)
         .padding(.bottom, 20)
         .onScrollOffsetChange(perform: updateInlineTitle)
         .navigationDestination(for: UUID.self) { id in
@@ -382,6 +381,16 @@ struct RecipesView: View {
                 }
             }
         }
+    }
+
+    private func recipeSectionHeader(_ title: String) -> some View {
+        HStack(spacing: 6) {
+            Text(title)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.secondary)
+            Spacer()
+        }
+        .padding(.vertical, 4)
     }
 
     @ViewBuilder

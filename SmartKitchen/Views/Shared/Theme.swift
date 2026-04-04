@@ -70,11 +70,7 @@ struct GlassGroupMenu<Content: View>: View {
 /// A visual separator for styling within GlassButtonGroup
 struct GlassGroupDivider: View {
     var body: some View {
-        Capsule(style: .continuous)
-            .fill(Color.white.opacity(0.28))
-            .frame(width: 1, height: 16)
-            .padding(.horizontal, 2)
-            .accessibilityHidden(true)
+        EmptyView()
     }
 }
 
