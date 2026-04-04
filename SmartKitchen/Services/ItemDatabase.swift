@@ -47,23 +47,38 @@ final class ItemDatabase: Sendable {
         var seen = Set<String>()
         var results: [ItemEntry] = []
 
-        // Prefix matches first
+        // Gather candidates
         for (normalized, entry) in index {
-            guard normalized.hasPrefix(q) else { continue }
-            guard seen.insert(entry.nomeDoArquivo).inserted else { continue }
-            results.append(entry)
-            if results.count >= limit { return results }
+            if normalized.contains(q) {
+                if seen.insert(entry.nomeDoArquivo).inserted {
+                    results.append(entry)
+                }
+            }
         }
-
-        // Then contains matches
-        for (normalized, entry) in index {
-            guard normalized.contains(q) else { continue }
-            guard seen.insert(entry.nomeDoArquivo).inserted else { continue }
-            results.append(entry)
-            if results.count >= limit { return results }
+        
+        // Sort by match quality
+        let sorted = results.sorted { (a: ItemEntry, b: ItemEntry) -> Bool in
+            let titleA = Self.normalize(a.preferredTitle(matching: query))
+            let titleB = Self.normalize(b.preferredTitle(matching: query))
+            
+            let aExact = titleA == q
+            let bExact = titleB == q
+            if aExact != bExact { return aExact }
+            
+            let aPrefix = titleA.hasPrefix(q)
+            let bPrefix = titleB.hasPrefix(q)
+            if aPrefix != bPrefix { return aPrefix }
+            
+            // Prefer shorter titles
+            if titleA.count != titleB.count {
+                return titleA.count < titleB.count
+            }
+            
+            // Fallback to alphabetical
+            return a.nomeDoArquivo < b.nomeDoArquivo
         }
-
-        return results
+        
+        return Array(sorted.prefix(limit))
     }
 
     func featuredEntries(limit: Int = 12) -> [ItemEntry] {

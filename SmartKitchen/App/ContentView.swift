@@ -224,6 +224,7 @@ struct ContentView: View {
             }
             .listStyle(.sidebar)
             .navigationTitle("")
+            .tint(macActivePageTheme.accentColor)
         } detail: {
             switch selectedSidebar ?? .home {
             case .home:

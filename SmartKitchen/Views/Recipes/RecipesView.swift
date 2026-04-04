@@ -132,13 +132,9 @@ struct RecipesView: View {
                             }
                         }
 
-                        topControlsSeparator
-
                         GlassButtonGroup {
                             optionsMenu
                         }
-
-                        topControlsSeparator
 
                         SettingsButton()
                     }
@@ -262,13 +258,6 @@ struct RecipesView: View {
                 .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
         }
         .buttonStyle(.plain)
-    }
-
-    private var topControlsSeparator: some View {
-        Rectangle()
-            .fill(Color.primary.opacity(0.14))
-            .frame(width: 1, height: 22)
-            .padding(.horizontal, 1)
     }
 
     // MARK: - Gallery

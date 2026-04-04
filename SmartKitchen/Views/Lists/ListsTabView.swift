@@ -107,8 +107,6 @@ struct ListsTabView: View {
                             }
                         }
 
-                        topControlsSeparator
-
                         GlassButtonGroup {
                             optionsMenu
                             GlassGroupDivider()
@@ -126,8 +124,6 @@ struct ListsTabView: View {
                                 }
                             }
                         }
-
-                        topControlsSeparator
 
                         SettingsButton()
                     }
@@ -438,12 +434,6 @@ struct ListsTabView: View {
         selectedSubtab = nextIndex < visibleTabs.endIndex ? visibleTabs[nextIndex] : visibleTabs[visibleTabs.startIndex]
     }
 
-    private var topControlsSeparator: some View {
-        Rectangle()
-            .fill(Color.primary.opacity(0.14))
-            .frame(width: 1, height: 22)
-            .padding(.horizontal, 1)
-    }
 }
 
 private struct ListsSubtabDropButton: View {
