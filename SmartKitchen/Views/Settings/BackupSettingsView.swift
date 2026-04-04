@@ -73,6 +73,7 @@ struct BackupSettingsView: View {
                 Text("Use estas opções para transferir backups entre dispositivos ou guardar uma cópia externa.")
             }
         }
+        .macSettingsContainer()
         .navigationTitle("Backup")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)

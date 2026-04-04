@@ -21,6 +21,9 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
     private let cornerRadius: CGFloat = 24
     private let topMargin: CGFloat = 10
     private let leadingPanelInset: CGFloat = 8
+    #if os(macOS)
+    private let macBottomInset: CGFloat = 8
+    #endif
     private let bottomTabBarContentInset: CGFloat = 84
 
     // Pull-to-action state
@@ -62,8 +65,13 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
             VStack(spacing: 0) {
                 header(false)
                     .frame(height: headerHeight)
-                    .padding(.top, 12)
+                    .padding(.top, 4)
                     .simultaneousGesture(pullRefreshGesture, including: onRefresh != nil ? .all : .none)
+
+                infoContent()
+                    .padding(.horizontal, 20)
+                    .padding(.top, 4)
+                    .padding(.bottom, 10)
 
                 ZStack {
                     RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
@@ -77,7 +85,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
                 }
                 .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
                 .padding(.horizontal, 16)
-                .padding(.bottom, 24)
+                .padding(.bottom, macBottomInset)
             }
         }
         #else

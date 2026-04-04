@@ -9,6 +9,20 @@ struct SettingsView: View {
     private var settings: AppSettings? { settingsArray.first }
 
     var body: some View {
+        settingsForm
+            .navigationTitle("Configurações")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("OK") { dismiss() }
+                }
+            }
+            .macSettingsContainer()
+    }
+
+    private var settingsForm: some View {
         Form {
             // MARK: - iCloud
             Section {
@@ -130,15 +144,6 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .navigationTitle("Configurações")
-        #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-        #endif
-        .toolbar {
-            ToolbarItem(placement: .confirmationAction) {
-                Button("OK") { dismiss() }
-            }
-        }
     }
 
     private func resetData() {
@@ -153,3 +158,38 @@ struct SettingsView: View {
         try? modelContext.save()
     }
 }
+
+#if os(macOS)
+struct MacSettingsContainerModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(Color(nsColor: .controlBackgroundColor))
+
+            content
+                .scrollContentBackground(.hidden)
+                .padding(.top, 8)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.55), lineWidth: 1)
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 10)
+        .padding(.bottom, 16)
+    }
+}
+
+extension View {
+    func macSettingsContainer() -> some View {
+        modifier(MacSettingsContainerModifier())
+    }
+}
+#else
+extension View {
+    func macSettingsContainer() -> some View {
+        self
+    }
+}
+#endif
