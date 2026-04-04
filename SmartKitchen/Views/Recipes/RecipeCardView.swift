@@ -4,6 +4,7 @@ import SwiftUI
 struct RecipeCardView: View {
     let recipe: Recipe
     var compatibility: RecipeCompatibility? = nil
+    var columns: Int = 2
 
     var body: some View {
         ZStack(alignment: .bottomLeading) {
@@ -21,20 +22,24 @@ struct RecipeCardView: View {
                 Spacer()
 
                 Text(recipe.name)
-                    .font(.cardTitle)
+                    .font(columns >= 3 ? .caption.weight(.semibold) : .cardTitle)
                     .foregroundStyle(.white)
-                    .lineLimit(2)
+                    .lineLimit(columns == 4 ? 3 : 2)
 
-                HStack(spacing: 8) {
-                    if recipe.totalTime > 0 {
-                        Label("\(recipe.totalTime) min", systemImage: "clock")
+                if columns <= 3 {
+                    HStack(spacing: 6) {
+                        if recipe.totalTime > 0 {
+                            Label("\(recipe.totalTime)\(columns == 3 ? "m" : " min")", systemImage: "clock")
+                        }
+                        if columns == 2 {
+                            Label(recipe.difficulty.rawValue, systemImage: recipe.difficulty.icon)
+                        }
                     }
-                    Label(recipe.difficulty.rawValue, systemImage: recipe.difficulty.icon)
+                    .font(columns == 3 ? .caption2 : .caption)
+                    .foregroundStyle(.white.opacity(0.85))
                 }
-                .font(.caption)
-                .foregroundStyle(.white.opacity(0.85))
 
-                if let compatibility {
+                if columns == 2, let compatibility = compatibility {
                     HStack(spacing: 4) {
                         if compatibility.ratio >= 1.0 {
                             Image(systemName: "checkmark.seal.fill")
@@ -46,12 +51,12 @@ struct RecipeCardView: View {
                     .foregroundStyle(.white.opacity(0.92))
                 }
             }
-            .padding(12)
+            .padding(columns >= 3 ? 8 : 12)
         }
         #if os(macOS)
         .frame(width: 150, height: 150)
         #else
-        .frame(height: 190)
+        .aspectRatio(1, contentMode: .fit)
         #endif
         .background(Color(.secondarySystemBackground))
         .clipShape(.rect(cornerRadius: 16))

@@ -404,6 +404,7 @@ struct PantryItemRow: View {
                 }
 
                 AnimatedItemActionButton(
+                    actionID: item.id.uuidString,
                     systemImage: "cart",
                     initialSystemImage: "xmark",
                     color: PageTheme.lists.accentColor,

@@ -292,6 +292,21 @@ struct RecipesView: View {
         }
         .padding(.horizontal, 8)
         .padding(.bottom, 20)
+        .gesture(
+            MagnificationGesture()
+                .onEnded { scale in
+                    guard let settings = settings else { return }
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        if scale < 0.8 {
+                            // Pinch in -> smaller cards -> more columns
+                            settings.recipeGalleryColumns = min(settings.recipeGalleryColumns + 1, 4)
+                        } else if scale > 1.2 {
+                            // Pinch out -> larger cards -> fewer columns
+                            settings.recipeGalleryColumns = max(settings.recipeGalleryColumns - 1, 2)
+                        }
+                    }
+                }
+        )
         .onScrollOffsetChange(perform: updateInlineTitle)
         .navigationDestination(for: UUID.self) { id in
             if let recipe = allRecipes.first(where: { $0.id == id }) {
@@ -334,7 +349,8 @@ struct RecipesView: View {
         NavigationLink(value: recipe.id) {
             RecipeCardView(
                 recipe: recipe,
-                compatibility: compatibilities[recipe.id]
+                compatibility: compatibilities[recipe.id],
+                columns: settings?.recipeGalleryColumns ?? 2
             )
         }
         .buttonStyle(.plain)
@@ -405,7 +421,7 @@ struct RecipesView: View {
                             Button {
                                 settings?.recipeGalleryColumns = count
                             } label: {
-                                Label("\(count) Colunas", systemImage: "square.grid.\(count == 2 ? "2x2" : count == 3 ? "3x2" : "4x3")")
+                                Text("\(count) Colunas")
                                 if settings?.recipeGalleryColumns == count {
                                     Image(systemName: "checkmark")
                                 }

@@ -3,6 +3,8 @@ import SwiftUI
 /// Displays an icon from the bundled icon library, falling back to an SF Symbol.
 /// When `showBalloon` is true, wraps the icon in a circular background.
 struct IconImage: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     let name: String
     var iconFileName: String? = nil
     var fallbackSymbol: String = "leaf"
@@ -16,7 +18,7 @@ struct IconImage: View {
                 iconContent
                     .frame(width: size, height: size)
                     .padding(size * 0.175)
-                    .background(Color(red: 243/255, green: 243/255, blue: 244/255), in: Circle())
+                    .background(balloonBackgroundColor, in: Circle())
                     .frame(width: balloonSize, height: balloonSize)
             } else {
                 iconContent
@@ -49,5 +51,11 @@ struct IconImage: View {
             return IconResolver.image(for: name)
         }
         return nil
+    }
+
+    private var balloonBackgroundColor: Color {
+        colorScheme == .dark
+            ? Color(red: 28/255, green: 28/255, blue: 31/255)
+            : Color(red: 243/255, green: 243/255, blue: 244/255)
     }
 }

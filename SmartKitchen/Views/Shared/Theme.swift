@@ -222,12 +222,34 @@ struct NeutralItemActionButton: View {
 private final class CheckboxActionDelayCoordinator {
     static let shared = CheckboxActionDelayCoordinator()
 
-    private var pendingActions: [(action: () -> Void, onExecuted: (() -> Void)?)] = []
+    private struct PendingAction {
+        let key: String
+        let action: () -> Void
+        let onExecuted: (() -> Void)?
+    }
+
+    private var pendingActions: [PendingAction] = []
     private var revision: Int = 0
     private var worker: Task<Void, Never>?
 
-    func enqueue(_ action: @escaping () -> Void, onExecuted: (() -> Void)? = nil) {
-        pendingActions.append((action, onExecuted))
+    func enqueueOrCancel(
+        key: String,
+        action: @escaping () -> Void,
+        onExecuted: (() -> Void)? = nil
+    ) -> Bool {
+        if let index = pendingActions.firstIndex(where: { $0.key == key }) {
+            pendingActions.remove(at: index)
+            revision += 1
+            return false
+        }
+
+        pendingActions.append(
+            PendingAction(
+                key: key,
+                action: action,
+                onExecuted: onExecuted
+            )
+        )
         revision += 1
 
         if worker == nil {
@@ -235,6 +257,8 @@ private final class CheckboxActionDelayCoordinator {
                 await self.drainWhenStable()
             }
         }
+
+        return true
     }
 
     private func drainWhenStable() async {
@@ -263,6 +287,9 @@ private final class CheckboxActionDelayCoordinator {
 
 /// An animated circular button that fills with color and reveals an icon when tapped.
 struct AnimatedItemActionButton: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    let actionID: String
     let systemImage: String
     let initialSystemImage: String
     let color: Color
@@ -270,15 +297,21 @@ struct AnimatedItemActionButton: View {
 
     private let size: CGFloat = 32
     private let lineWidth: CGFloat = 4.5
-    private let uncheckedColor = Color(red: 243/255, green: 243/255, blue: 244/255)
 
     @State private var strokeProgress: CGFloat = 0
     @State private var fillOpacity: CGFloat = 0
     @State private var showIcon: Bool = false
     @State private var iconScale: CGFloat = 0
-    @State private var isAnimating: Bool = false
+    @State private var isPending: Bool = false
 
-    init(systemImage: String, initialSystemImage: String? = nil, color: Color, action: @escaping () -> Void) {
+    init(
+        actionID: String,
+        systemImage: String,
+        initialSystemImage: String? = nil,
+        color: Color,
+        action: @escaping () -> Void
+    ) {
+        self.actionID = actionID
         self.systemImage = systemImage
         self.initialSystemImage = initialSystemImage ?? systemImage
         self.color = color
@@ -287,14 +320,21 @@ struct AnimatedItemActionButton: View {
 
     var body: some View {
         Button {
-            guard !isAnimating else { return }
             HapticManager.impact(style: .medium)
-            CheckboxActionDelayCoordinator.shared.enqueue(action) {
+            let wasEnqueued = CheckboxActionDelayCoordinator.shared.enqueueOrCancel(
+                key: actionID,
+                action: action
+            ) {
                 Task { @MainActor in
                     await finishAnimationAfterAction()
                 }
             }
-            animateAndPerform()
+
+            if wasEnqueued {
+                animateAndPerform()
+            } else {
+                cancelPendingAnimation()
+            }
         } label: {
             ZStack {
                 Circle()
@@ -329,7 +369,7 @@ struct AnimatedItemActionButton: View {
 
                 Image(systemName: initialSystemImage)
                     .font(.system(size: size * 0.4, weight: .bold))
-                    .foregroundColor(uncheckedColor)
+                    .foregroundColor(uncheckedIconColor)
                     .opacity(showIcon ? 0 : 1)
 
                 Image(systemName: systemImage)
@@ -342,8 +382,18 @@ struct AnimatedItemActionButton: View {
         .buttonStyle(.plain)
     }
 
+    private var uncheckedColor: Color {
+        colorScheme == .dark
+            ? Color(red: 28/255, green: 28/255, blue: 31/255)
+            : Color(red: 243/255, green: 243/255, blue: 244/255)
+    }
+
+    private var uncheckedIconColor: Color {
+        uncheckedColor
+    }
+
     private func animateAndPerform() {
-        isAnimating = true
+        isPending = true
         strokeProgress = 0
         fillOpacity = 0
         showIcon = false
@@ -367,6 +417,22 @@ struct AnimatedItemActionButton: View {
         }
     }
 
+    private func cancelPendingAnimation() {
+        guard isPending else { return }
+
+        withAnimation(.easeOut(duration: 0.18)) {
+            iconScale = 0
+            fillOpacity = 0
+            strokeProgress = 0
+        }
+
+        withAnimation(.easeOut(duration: 0.12).delay(0.05)) {
+            showIcon = false
+        }
+
+        isPending = false
+    }
+
     @MainActor
     private func finishAnimationAfterAction() async {
         // Keep the marked state visible until the action has actually run.
@@ -381,7 +447,7 @@ struct AnimatedItemActionButton: View {
             strokeProgress = 0
         }
         try? await Task.sleep(for: .milliseconds(250))
-        isAnimating = false
+        isPending = false
     }
 }
 

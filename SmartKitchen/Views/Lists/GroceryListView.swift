@@ -370,6 +370,7 @@ struct GroceryItemRow: View {
                 Spacer()
 
                 AnimatedItemActionButton(
+                    actionID: item.id.uuidString,
                     systemImage: "refrigerator",
                     initialSystemImage: "checkmark",
                     color: PageTheme.lists.accentColor,
