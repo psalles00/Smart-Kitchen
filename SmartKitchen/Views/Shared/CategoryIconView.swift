@@ -2,7 +2,7 @@ import SwiftUI
 
 struct CategoryIconView: View {
     let categoryName: String
-    var size: CGFloat = 18
+    var size: CGFloat = 20
     var showBalloon: Bool = false
 
     private var entry: CategoryDatabaseEntry? {
@@ -22,7 +22,7 @@ struct CategoryIconView: View {
 
 struct CategoryLabelView: View {
     let categoryName: String
-    var iconSize: CGFloat = 14
+    var iconSize: CGFloat = 15
     var spacing: CGFloat = 6
     var font: Font = .caption
 

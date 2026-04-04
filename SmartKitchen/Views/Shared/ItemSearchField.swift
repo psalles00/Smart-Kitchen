@@ -12,7 +12,7 @@ struct ItemSearchField: View {
     var onIconTapped: (() -> Void)? = nil
     var onItemSelected: ((ItemEntry) -> Void)?
 
-    private let leadingIconSize: CGFloat = 24
+    private let leadingIconSize: CGFloat = 26
 
     @State private var suggestions: [ItemEntry] = []
     @State private var showSuggestions = false
