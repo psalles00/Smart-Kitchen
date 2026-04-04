@@ -204,17 +204,27 @@ struct AddPantryItemView: View {
                                 Text("\(n)").tag(n)
                             }
                         }
+                        #if os(iOS)
                         .pickerStyle(.wheel)
                         .frame(width: 80, height: 120)
                         .clipped()
+                        #else
+                        .pickerStyle(.menu)
+                        .frame(width: 120)
+                        #endif
 
                         Picker("Unidade", selection: $expiryDurationUnit) {
                             Text("dias").tag(ExpiryDurationUnit.days)
                             Text("meses").tag(ExpiryDurationUnit.months)
                         }
+                        #if os(iOS)
                         .pickerStyle(.wheel)
                         .frame(width: 100, height: 120)
                         .clipped()
+                        #else
+                        .pickerStyle(.menu)
+                        .frame(width: 140)
+                        #endif
                     }
                     .onChange(of: expiryDurationValue) { _, _ in syncDateFromDuration() }
                     .onChange(of: expiryDurationUnit) { _, _ in syncDateFromDuration() }
@@ -493,17 +503,27 @@ struct EditPantryItemView: View {
                                 Text("\(n)").tag(n)
                             }
                         }
+                        #if os(iOS)
                         .pickerStyle(.wheel)
                         .frame(width: 80, height: 120)
                         .clipped()
+                        #else
+                        .pickerStyle(.menu)
+                        .frame(width: 120)
+                        #endif
 
                         Picker("Unidade", selection: $expiryDurationUnit) {
                             Text("dias").tag(ExpiryDurationUnit.days)
                             Text("meses").tag(ExpiryDurationUnit.months)
                         }
+                        #if os(iOS)
                         .pickerStyle(.wheel)
                         .frame(width: 100, height: 120)
                         .clipped()
+                        #else
+                        .pickerStyle(.menu)
+                        .frame(width: 140)
+                        #endif
                     }
                     .onChange(of: expiryDurationValue) { _, _ in editSyncDateFromDuration() }
                     .onChange(of: expiryDurationUnit) { _, _ in editSyncDateFromDuration() }
@@ -567,3 +587,4 @@ struct EditPantryItemView: View {
         return max(0, Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: .now), to: Calendar.current.startOfDay(for: item.expirationDate ?? Date())).day ?? 0)
     }
 }
+

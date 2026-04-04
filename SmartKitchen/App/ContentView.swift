@@ -407,10 +407,10 @@ private struct HomeView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 24) {
                         assistantLauncher
-                        actionDeck
                         if !expiringItemsState.isEmpty {
                             expiringSection
                         }
+                        actionDeck
                         dessertShelf
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -505,7 +505,7 @@ private struct HomeView: View {
             .filter {
                 guard let expirationDate = $0.expirationDate else { return false }
                 let day = Calendar.current.startOfDay(for: expirationDate)
-                return day >= now && day <= limit
+                return day <= limit
             }
             .sorted {
                 guard let lhs = $0.expirationDate, let rhs = $1.expirationDate else { return false }
@@ -650,7 +650,7 @@ private struct HomeView: View {
                         if let expirationDate = item.expirationDate {
                             Text(relativeExpirationText(for: expirationDate))
                                 .font(.caption.weight(.semibold))
-                                .foregroundStyle(.orange)
+                                .foregroundStyle(expirationHighlightColor(for: expirationDate))
                         }
                     }
                     .padding(14)
@@ -806,9 +806,17 @@ private struct HomeView: View {
 
     private func relativeExpirationText(for date: Date) -> String {
         let days = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: .now), to: Calendar.current.startOfDay(for: date)).day ?? 0
-        if days <= 0 { return "Hoje" }
+        if days < 0 { return "Expirado" }
+        if days == 0 { return "Hoje" }
         if days == 1 { return "1 dia" }
         return "\(days) dias"
+    }
+
+    private func expirationHighlightColor(for date: Date) -> Color {
+        let days = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: .now), to: Calendar.current.startOfDay(for: date)).day ?? 0
+        if days < 0 { return .red }
+        if days <= 7 { return .yellow }
+        return .orange
     }
 }
 

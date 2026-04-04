@@ -105,17 +105,27 @@ struct AddGroceryItemView: View {
                                 Text("\(n)").tag(n)
                             }
                         }
+                        #if os(iOS)
                         .pickerStyle(.wheel)
                         .frame(width: 80, height: 120)
                         .clipped()
+                        #else
+                        .pickerStyle(.menu)
+                        .frame(width: 120)
+                        #endif
 
                         Picker("Unidade", selection: $expiryDurationUnit) {
                             Text("dias").tag(ExpiryDurationUnit.days)
                             Text("meses").tag(ExpiryDurationUnit.months)
                         }
+                        #if os(iOS)
                         .pickerStyle(.wheel)
                         .frame(width: 100, height: 120)
                         .clipped()
+                        #else
+                        .pickerStyle(.menu)
+                        .frame(width: 140)
+                        #endif
                     }
                 }
             }
@@ -332,17 +342,27 @@ struct EditGroceryItemView: View {
                                 Text("\(n)").tag(n)
                             }
                         }
+                        #if os(iOS)
                         .pickerStyle(.wheel)
                         .frame(width: 80, height: 120)
                         .clipped()
+                        #else
+                        .pickerStyle(.menu)
+                        .frame(width: 120)
+                        #endif
 
                         Picker("Unidade", selection: $expiryDurationUnit) {
                             Text("dias").tag(ExpiryDurationUnit.days)
                             Text("meses").tag(ExpiryDurationUnit.months)
                         }
+                        #if os(iOS)
                         .pickerStyle(.wheel)
                         .frame(width: 100, height: 120)
                         .clipped()
+                        #else
+                        .pickerStyle(.menu)
+                        .frame(width: 140)
+                        #endif
                     }
                     .onChange(of: expiryDurationValue) { _, _ in
                         item.defaultExpiryDays = expiryDurationUnit == .months ? expiryDurationValue * 30 : expiryDurationValue

@@ -21,6 +21,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
     private let cornerRadius: CGFloat = 24
     private let topMargin: CGFloat = 10
     private let leadingPanelInset: CGFloat = 8
+    private let bottomTabBarContentInset: CGFloat = 84
 
     // Pull-to-action state
     private let refreshThreshold: CGFloat = 80
@@ -100,6 +101,9 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
                 content()
                     .padding(.top, topMargin)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .safeAreaInset(edge: .bottom) {
+                        Color.clear.frame(height: bottomTabBarContentInset)
+                    }
                     .background(Color(.systemBackground))
                     .clipShape(
                         UnevenRoundedRectangle(
