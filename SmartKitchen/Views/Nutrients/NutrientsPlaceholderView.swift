@@ -4,13 +4,13 @@ struct NutrientsPlaceholderView: View {
     var body: some View {
         ExpandedPageLayout(
             pageTheme: .nutrients,
-            startsWithInfoCollapsed: true,
             header: { isInverted in
                 PageHeader(title: "Nutrientes", isInverted: isInverted) {
                     SettingsButton()
                 }
             },
             content: {
+                ScrollView {
                 VStack(spacing: 24) {
                     Spacer().frame(height: 40)
 
@@ -40,11 +40,11 @@ struct NutrientsPlaceholderView: View {
                     Spacer()
                 }
                 .frame(maxWidth: .infinity)
+                }
             },
             infoContent: {
-                NutrientsInfoContent()
-            },
-            onRefresh: nil
+                EmptyView()
+            }
         )
         #if os(iOS)
         .toolbar(.hidden, for: .navigationBar)

@@ -16,6 +16,7 @@ struct GroceryListView: View {
     let sortOption: ListsSortOption
     let filterOption: GroceryListFilterOption
     var onAcquired: (() -> Void)?
+    var onPullToAdd: (() -> Void)?
     var onScrollOffsetChange: (CGFloat) -> Void = { _ in }
 
     private var categoryOrder: [String] { allCategories.filter { $0.type == .pantry }.map(\.name) }
@@ -102,6 +103,7 @@ struct GroceryListView: View {
             .background(alignment: .top) {
                 if categoryIndex == 0, itemIndex == 0 {
                     ScrollOffsetReader(coordinateSpace: "lists_scroll")
+                    PageScrollOffsetReader()
                 }
             }
         }

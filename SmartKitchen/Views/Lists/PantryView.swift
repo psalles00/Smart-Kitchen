@@ -17,6 +17,7 @@ struct PantryView: View {
     let filterOption: PantryListFilterOption
     let expiringLeadDays: Int
     var onSentToGrocery: (() -> Void)?
+    var onPullToAdd: (() -> Void)?
     var onScrollOffsetChange: (CGFloat) -> Void = { _ in }
 
     private var settings: AppSettings? { settingsArray.first }
@@ -120,6 +121,7 @@ struct PantryView: View {
             .background(alignment: .top) {
                 if categoryIndex == 0, itemIndex == 0 {
                     ScrollOffsetReader(coordinateSpace: "lists_scroll")
+                    PageScrollOffsetReader()
                 }
             }
         }

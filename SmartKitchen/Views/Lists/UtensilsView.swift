@@ -9,6 +9,7 @@ struct UtensilsView: View {
 
     let searchText: String
     let sortOption: ListsSortOption
+    var onPullToAdd: (() -> Void)?
     var onScrollOffsetChange: (CGFloat) -> Void = { _ in }
 
     private var utensilCategories: [Category] {
@@ -58,6 +59,7 @@ struct UtensilsView: View {
                 )
                 .padding(.top, 40)
             } else {
+                ScrollView {
                 LazyVStack(spacing: 0, pinnedViews: .sectionHeaders) {
                     ForEach(Array(groupedItems.enumerated()), id: \.1.0) { categoryIndex, group in
                         let (categoryName, items) = group
@@ -71,6 +73,7 @@ struct UtensilsView: View {
                                             .background(alignment: .top) {
                                                 if categoryIndex == 0, itemIndex == 0 {
                                                     ScrollOffsetReader(coordinateSpace: "lists_scroll")
+                                                    PageScrollOffsetReader()
                                                 }
                                             }
                                     }
@@ -113,6 +116,9 @@ struct UtensilsView: View {
                     }
                 }
                 .padding(.top, 8)
+                }
+                .coordinateSpace(name: "lists_scroll")
+                .onScrollOffsetChange(perform: onScrollOffsetChange)
             }
         }
         .sheet(item: $editingItem) { item in

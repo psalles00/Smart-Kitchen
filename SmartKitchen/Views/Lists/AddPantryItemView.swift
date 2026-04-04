@@ -510,7 +510,7 @@ struct EditPantryItemView: View {
                 }
 
                 if expiryMode == .duration {
-                    Toggle("Manter ao mover", isOn: Binding(
+                    Toggle("Manter ao mover de Mercado para Despensa", isOn: Binding(
                         get: { item.defaultExpiryDays != nil },
                         set: { keep in
                             if keep {
@@ -521,10 +521,6 @@ struct EditPantryItemView: View {
                         }
                     ))
                     .toggleStyle(.switch)
-
-                    Text("Manter ao mover de Mercado para Despensa")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
                 }
             }
         }

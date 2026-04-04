@@ -398,21 +398,28 @@ private struct HomeView: View {
                 }
             },
             content: {
-                VStack(alignment: .leading, spacing: 24) {
-                    assistantLauncher
-                    actionDeck
-                    if !expiringItemsState.isEmpty {
-                        expiringSection
+                ScrollView {
+                    PageScrollOffsetReader()
+                    VStack(alignment: .leading, spacing: 24) {
+                        assistantLauncher
+                        actionDeck
+                        if !expiringItemsState.isEmpty {
+                            expiringSection
+                        }
+                        dessertShelf
                     }
-                    dessertShelf
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 12)
+                    .padding(.bottom, 28)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 16)
-                .padding(.top, 12)
-                .padding(.bottom, 28)
             },
             infoContent: {
                 HomeInfoContent()
+            },
+            onRefresh: {
+                showAssistant = true
+                try? await Task.sleep(nanoseconds: 500_000_000)
             }
         )
         #if os(iOS)

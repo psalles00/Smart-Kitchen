@@ -121,10 +121,9 @@ struct RecipesView: View {
     var body: some View {
         ExpandedPageLayout(
             pageTheme: .recipes,
-            startsWithInfoCollapsed: true,
             header: { isInverted in
                 PageHeader(title: "Receitas", isInverted: isInverted) {
-                    HStack(spacing: 8) {
+                    HStack(spacing: 6) {
                         GlassButtonGroup {
                             GlassGroupButton(systemImage: "magnifyingglass") {
                                 withAnimation(.spring(response: 0.28, dampingFraction: 0.88)) {
@@ -134,6 +133,8 @@ struct RecipesView: View {
                             }
                         }
 
+                        topControlsSeparator
+
                         GlassButtonGroup {
                             optionsMenu
                             GlassGroupDivider()
@@ -141,6 +142,8 @@ struct RecipesView: View {
                                 showCategoryManager = true
                             }
                         }
+
+                        topControlsSeparator
 
                         SettingsButton()
                     }
@@ -158,7 +161,11 @@ struct RecipesView: View {
                 }
             },
             infoContent: {
-                RecipesInfoContent()
+                EmptyView()
+            },
+            onRefresh: {
+                showAddRecipe = true
+                try? await Task.sleep(nanoseconds: 500_000_000)
             }
         )
         #if os(iOS)
@@ -203,8 +210,6 @@ struct RecipesView: View {
     @ViewBuilder
     private var recipeContent: some View {
         VStack(spacing: 0) {
-            ScrollOffsetReader(coordinateSpace: "expanded_scroll")
-
             CollapsibleSearchBar(
                 text: $searchText,
                 isPresented: $showSearch,
@@ -214,10 +219,13 @@ struct RecipesView: View {
             // Category filter chips
             categoryFilter
 
-            if viewMode == .gallery {
-                galleryView
-            } else {
-                listView
+            ScrollView {
+                PageScrollOffsetReader()
+                if viewMode == .gallery {
+                    galleryView
+                } else {
+                    listView
+                }
             }
         }
     }
@@ -226,7 +234,7 @@ struct RecipesView: View {
 
     private var categoryFilter: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
+            HStack(spacing: 12) {
                 filterChip(label: "Todos", isSelected: selectedCategory == nil) {
                     selectedCategory = nil
                 }
@@ -238,15 +246,15 @@ struct RecipesView: View {
             }
             .padding(4)
             .background(Color(.tertiarySystemFill), in: .rect(cornerRadius: 12))
-            .padding(.horizontal, 8)
-            .padding(.vertical, 8)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 10)
         }
     }
 
     private func filterChip(label: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(label)
-                .font(.footnote.weight(.medium))
+                .font(.subheadline.weight(.semibold))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 8)
                 .background(isSelected ? Color(.systemBackground) : .clear, in: .rect(cornerRadius: 10))
@@ -254,6 +262,13 @@ struct RecipesView: View {
                 .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
         }
         .buttonStyle(.plain)
+    }
+
+    private var topControlsSeparator: some View {
+        Rectangle()
+            .fill(Color.primary.opacity(0.14))
+            .frame(width: 1, height: 22)
+            .padding(.horizontal, 1)
     }
 
     // MARK: - Gallery

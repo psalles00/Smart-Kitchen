@@ -93,10 +93,9 @@ struct ListsTabView: View {
     var body: some View {
         ExpandedPageLayout(
             pageTheme: .lists,
-            startsWithInfoCollapsed: true,
             header: { isInverted in
                 PageHeader(title: "Listas", isInverted: isInverted) {
-                    HStack(spacing: 8) {
+                    HStack(spacing: 6) {
                         GlassButtonGroup {
                             GlassGroupButton(systemImage: "magnifyingglass") {
                                 withAnimation(.spring(response: 0.28, dampingFraction: 0.88)) {
@@ -105,6 +104,8 @@ struct ListsTabView: View {
                                 }
                             }
                         }
+
+                        topControlsSeparator
 
                         GlassButtonGroup {
                             optionsMenu
@@ -125,6 +126,8 @@ struct ListsTabView: View {
                                 }
                             }
                         }
+
+                        topControlsSeparator
 
                         SettingsButton()
                     }
@@ -157,6 +160,7 @@ struct ListsTabView: View {
                                     withAnimation { groceryBadge = 0 }
                                 }
                             },
+                            onPullToAdd: { showAddPantry = true },
                             onScrollOffsetChange: updateInlineTitle
                         )
                     case .grocery:
@@ -172,19 +176,31 @@ struct ListsTabView: View {
                                     withAnimation { pantryBadge = 0 }
                                 }
                             },
+                            onPullToAdd: { showAddGrocery = true },
                             onScrollOffsetChange: updateInlineTitle
                         )
                     case .utensils:
                         UtensilsView(
                             searchText: searchText,
                             sortOption: sortOption,
+                            onPullToAdd: { showAddUtensil = true },
                             onScrollOffsetChange: updateInlineTitle
                         )
                     }
                 }
             },
             infoContent: {
-                ListsInfoContent()
+                EmptyView()
+            },
+            onRefresh: {
+                if selectedSubtab == .pantry {
+                    showAddPantry = true
+                } else if selectedSubtab == .utensils {
+                    showAddUtensil = true
+                } else {
+                    showAddGrocery = true
+                }
+                try? await Task.sleep(nanoseconds: 500_000_000)
             }
         )
         #if os(iOS)
@@ -365,6 +381,13 @@ struct ListsTabView: View {
         if showsInlineTitle != shouldShow {
             showsInlineTitle = shouldShow
         }
+    }
+
+    private var topControlsSeparator: some View {
+        Rectangle()
+            .fill(Color.primary.opacity(0.14))
+            .frame(width: 1, height: 22)
+            .padding(.horizontal, 1)
     }
 }
 
