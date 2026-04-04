@@ -369,6 +369,7 @@ private struct MacDetailCard<Content: View>: View {
 #endif
 
 private struct HomeView: View {
+    @Environment(\.scrollToTopTrigger) private var scrollToTopTrigger
     // Corrigido ciclo do AttributeGraph separando dependências reativas de SwiftData em @State com atualização manual para evitar travamentos no macOS.
 
     @Query(sort: \PantryItem.name) private var pantryItems: [PantryItem]
@@ -384,6 +385,7 @@ private struct HomeView: View {
     @State private var recipeCategoriesState: [Category] = []
     @State private var compatibleMatchesState: [HomeRecipeMatch] = []
     @State private var expiringItemsState: [PantryItem] = []
+    @State private var contentResetToken: Int = 0
 
     private var settings: AppSettings? { settingsArray.first }
     
@@ -412,6 +414,7 @@ private struct HomeView: View {
                     .padding(.top, 12)
                     .padding(.bottom, 28)
                 }
+                .id(contentResetToken)
             },
             infoContent: {
                 HomeInfoContent()
@@ -458,6 +461,9 @@ private struct HomeView: View {
         }
         .onChange(of: selectedCompatibleCategory) { _, _ in
             updateCompatibleMatches()
+        }
+        .onChange(of: scrollToTopTrigger) { _, _ in
+            contentResetToken += 1
         }
     }
 

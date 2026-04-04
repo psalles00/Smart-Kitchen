@@ -42,7 +42,7 @@ struct GlassGroupButton: View {
         Button(action: action) {
             Image(systemName: systemImage)
                 .font(.system(size: 16, weight: .semibold))
-                .frame(width: 44, height: 36)
+                .frame(width: 34, height: 36)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -60,7 +60,7 @@ struct GlassGroupMenu<Content: View>: View {
         } label: {
             Image(systemName: systemImage)
                 .font(.system(size: 16, weight: .semibold))
-                .frame(width: 44, height: 36)
+                .frame(width: 34, height: 36)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -70,7 +70,11 @@ struct GlassGroupMenu<Content: View>: View {
 /// A visual separator for styling within GlassButtonGroup
 struct GlassGroupDivider: View {
     var body: some View {
-        EmptyView()
+        Capsule(style: .continuous)
+            .fill(Color.white.opacity(0.28))
+            .frame(width: 1, height: 16)
+            .padding(.horizontal, 2)
+            .accessibilityHidden(true)
     }
 }
 

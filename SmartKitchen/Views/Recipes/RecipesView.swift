@@ -31,6 +31,7 @@ enum RecipeSortOption: String, CaseIterable {
 // MARK: - View
 
 struct RecipesView: View {
+    @Environment(\.scrollToTopTrigger) private var scrollToTopTrigger
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Recipe.createdAt, order: .reverse) private var allRecipes: [Recipe]
     @Query(sort: \PantryItem.name) private var pantryItems: [PantryItem]
@@ -46,6 +47,8 @@ struct RecipesView: View {
     @State private var editingRecipe: Recipe?
     @State private var showCompatibleOnly = false
     @State private var showCategoryManager = false
+    @State private var currentScrollOffset: CGFloat = 0
+    @State private var contentResetToken: Int = 0
 
     // Cached expensive computations
     @State private var cachedPantryNames: [String] = []
@@ -156,6 +159,7 @@ struct RecipesView: View {
                         recipeContent
                     }
                 }
+                .id(contentResetToken)
             },
             infoContent: {
                 EmptyView()
@@ -185,6 +189,9 @@ struct RecipesView: View {
         .onAppear { recomputeCompatibilities() }
         .onChange(of: pantryItems) { _, _ in recomputeCompatibilities() }
         .onChange(of: allRecipes) { _, _ in recomputeCompatibilities() }
+        .onChange(of: scrollToTopTrigger) { _, _ in
+            handleActiveTabRetap()
+        }
     }
 
     private func recomputeCompatibilities() {
@@ -520,9 +527,31 @@ struct RecipesView: View {
     }
 
     private func updateInlineTitle(_ offset: CGFloat) {
+        currentScrollOffset = offset
         let shouldShow = offset < -24
         if showsInlineTitle != shouldShow {
             showsInlineTitle = shouldShow
         }
+    }
+
+    private func handleActiveTabRetap() {
+        if isNearTop {
+            advanceToNextCategory()
+        } else {
+            contentResetToken += 1
+        }
+    }
+
+    private var isNearTop: Bool {
+        currentScrollOffset >= -24
+    }
+
+    private func advanceToNextCategory() {
+        let categories = [nil] + recipeCategories.map(\.name)
+        guard categories.count > 1 else { return }
+
+        let currentIndex = categories.firstIndex(of: selectedCategory) ?? 0
+        let nextIndex = categories.index(after: currentIndex)
+        selectedCategory = nextIndex < categories.endIndex ? categories[nextIndex] : categories[categories.startIndex]
     }
 }

@@ -1,6 +1,9 @@
 import SwiftUI
 
 struct NutrientsPlaceholderView: View {
+    @Environment(\.scrollToTopTrigger) private var scrollToTopTrigger
+    @State private var contentResetToken: Int = 0
+
     var body: some View {
         ExpandedPageLayout(
             pageTheme: .nutrients,
@@ -40,6 +43,7 @@ struct NutrientsPlaceholderView: View {
                     Spacer()
                 }
                 .frame(maxWidth: .infinity)
+                .id(contentResetToken)
                 }
             },
             infoContent: {
@@ -50,6 +54,9 @@ struct NutrientsPlaceholderView: View {
         .toolbar(.hidden, for: .navigationBar)
         #endif
         .tint(PageTheme.nutrients.accentColor)
+        .onChange(of: scrollToTopTrigger) { _, _ in
+            contentResetToken += 1
+        }
     }
 
     private func featureRow(icon: String, title: String, description: String) -> some View {

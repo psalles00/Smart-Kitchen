@@ -55,6 +55,7 @@ struct ListsDragPayload: Codable, Transferable, Hashable {
 }
 
 struct ListsTabView: View {
+    @Environment(\.scrollToTopTrigger) private var scrollToTopTrigger
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \PantryItem.sortOrder) private var pantryItems: [PantryItem]
     @Query(sort: \GroceryItem.sortOrder) private var groceryItems: [GroceryItem]
@@ -72,6 +73,8 @@ struct ListsTabView: View {
     @State private var pantryFilter: PantryListFilterOption = .all
     @State private var groceryFilter: GroceryListFilterOption = .all
     @State private var targetedTab: ListSubtab?
+    @State private var currentScrollOffset: CGFloat = 0
+    @State private var contentResetToken: Int = 0
 
     @State private var pantryBadge: Int = 0
     @State private var groceryBadge: Int = 0
@@ -145,48 +148,51 @@ struct ListsTabView: View {
                         .padding(.horizontal)
                         .padding(.top, 8)
 
-                    switch selectedSubtab {
-                    case .pantry:
-                        PantryView(
-                            searchText: searchText,
-                            sortOption: sortOption,
-                            filterOption: pantryFilter,
-                            expiringLeadDays: settings?.expiringItemsLeadDays ?? 30,
-                            onSentToGrocery: {
-                                withAnimation(.spring(response: 0.35)) {
-                                    groceryBadge += 1
-                                }
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                                    withAnimation { groceryBadge = 0 }
-                                }
-                            },
-                            onPullToAdd: { showAddPantry = true },
-                            onScrollOffsetChange: updateInlineTitle
-                        )
-                    case .grocery:
-                        GroceryListView(
-                            searchText: searchText,
-                            sortOption: sortOption,
-                            filterOption: groceryFilter,
-                            onAcquired: {
-                                withAnimation(.spring(response: 0.35)) {
-                                    pantryBadge += 1
-                                }
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                                    withAnimation { pantryBadge = 0 }
-                                }
-                            },
-                            onPullToAdd: { showAddGrocery = true },
-                            onScrollOffsetChange: updateInlineTitle
-                        )
-                    case .utensils:
-                        UtensilsView(
-                            searchText: searchText,
-                            sortOption: sortOption,
-                            onPullToAdd: { showAddUtensil = true },
-                            onScrollOffsetChange: updateInlineTitle
-                        )
+                    Group {
+                        switch selectedSubtab {
+                        case .pantry:
+                            PantryView(
+                                searchText: searchText,
+                                sortOption: sortOption,
+                                filterOption: pantryFilter,
+                                expiringLeadDays: settings?.expiringItemsLeadDays ?? 30,
+                                onSentToGrocery: {
+                                    withAnimation(.spring(response: 0.35)) {
+                                        groceryBadge += 1
+                                    }
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                                        withAnimation { groceryBadge = 0 }
+                                    }
+                                },
+                                onPullToAdd: { showAddPantry = true },
+                                onScrollOffsetChange: updateInlineTitle
+                            )
+                        case .grocery:
+                            GroceryListView(
+                                searchText: searchText,
+                                sortOption: sortOption,
+                                filterOption: groceryFilter,
+                                onAcquired: {
+                                    withAnimation(.spring(response: 0.35)) {
+                                        pantryBadge += 1
+                                    }
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                                        withAnimation { pantryBadge = 0 }
+                                    }
+                                },
+                                onPullToAdd: { showAddGrocery = true },
+                                onScrollOffsetChange: updateInlineTitle
+                            )
+                        case .utensils:
+                            UtensilsView(
+                                searchText: searchText,
+                                sortOption: sortOption,
+                                onPullToAdd: { showAddUtensil = true },
+                                onScrollOffsetChange: updateInlineTitle
+                            )
+                        }
                     }
+                    .id("\(selectedSubtab.rawValue)-\(contentResetToken)")
                 }
             },
             infoContent: {
@@ -210,6 +216,10 @@ struct ListsTabView: View {
         .onChange(of: selectedSubtab) {
             searchText = ""
             showsInlineTitle = false
+            currentScrollOffset = 0
+        }
+        .onChange(of: scrollToTopTrigger) { _, _ in
+            handleActiveTabRetap()
         }
         .sheet(isPresented: $showAddPantry) {
             NavigationStack {
@@ -377,10 +387,30 @@ struct ListsTabView: View {
     }
 
     private func updateInlineTitle(_ offset: CGFloat) {
+        currentScrollOffset = offset
         let shouldShow = offset < -24
         if showsInlineTitle != shouldShow {
             showsInlineTitle = shouldShow
         }
+    }
+
+    private func handleActiveTabRetap() {
+        if isNearTop {
+            advanceToNextVisibleSubtab()
+        } else {
+            contentResetToken += 1
+        }
+    }
+
+    private var isNearTop: Bool {
+        currentScrollOffset >= -24
+    }
+
+    private func advanceToNextVisibleSubtab() {
+        guard visibleTabs.count > 1,
+              let currentIndex = visibleTabs.firstIndex(of: selectedSubtab) else { return }
+        let nextIndex = visibleTabs.index(after: currentIndex)
+        selectedSubtab = nextIndex < visibleTabs.endIndex ? visibleTabs[nextIndex] : visibleTabs[visibleTabs.startIndex]
     }
 
     private var topControlsSeparator: some View {
