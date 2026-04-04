@@ -25,7 +25,11 @@ struct PageHeader: View {
             }
         }
         .padding(.horizontal)
+        #if os(macOS)
+        .padding(.top, 0)
+        #else
         .padding(.top, 8)
+        #endif
     }
 }
 

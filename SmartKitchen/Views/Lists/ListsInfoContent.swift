@@ -25,6 +25,7 @@ struct ListsInfoContent: View {
                 }
             }
         }
+        .padding(.bottom, 12)
     }
 }
 

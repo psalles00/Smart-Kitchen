@@ -136,7 +136,7 @@
       "Hand Soap Dispenser"
     ],
     "nome_do_arquivo": "hand-soap-dispenser.png",
-    "categoria": "Higiene Pessoal"
+    "categoria": "Limpeza e Higiene"
   },
   {
     "titulos": [
@@ -154,7 +154,7 @@
       "Rack de secagem de pratos"
     ],
     "nome_do_arquivo": "dish-drying-rack.png",
-    "categoria": "Limpeza"
+    "categoria": "Limpeza e Higiene"
   },
   {
     "titulos": [
@@ -171,7 +171,7 @@
       "Saboneteira"
     ],
     "nome_do_arquivo": "dish-soap.png",
-    "categoria": "Limpeza"
+    "categoria": "Limpeza e Higiene"
   },
   {
     "titulos": [
@@ -179,7 +179,7 @@
       "Esponja de Prato"
     ],
     "nome_do_arquivo": "dish-sponge.png",
-    "categoria": "Limpeza"
+    "categoria": "Limpeza e Higiene"
   },
   {
     "titulos": [
@@ -197,7 +197,7 @@
       "Sourdough Bread"
     ],
     "nome_do_arquivo": "sourdough-bread.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -357,7 +357,7 @@
       "Toothpick"
     ],
     "nome_do_arquivo": "toothpick.png",
-    "categoria": "Higiene Pessoal"
+    "categoria": "Limpeza e Higiene"
   },
   {
     "titulos": [
@@ -368,7 +368,7 @@
       "Milk"
     ],
     "nome_do_arquivo": "milk.png",
-    "categoria": "Laticínios"
+    "categoria": "Laticínios e Ovos"
   },
   {
     "titulos": [
@@ -379,7 +379,7 @@
       "Ovo de Galinha"
     ],
     "nome_do_arquivo": "egg.png",
-    "categoria": "Proteínas"
+    "categoria": "Laticínios e Ovos"
   },
   {
     "titulos": [
@@ -390,7 +390,7 @@
       "Queijo Prato"
     ],
     "nome_do_arquivo": "cheese.png",
-    "categoria": "Laticínios"
+    "categoria": "Laticínios e Ovos"
   },
   {
     "titulos": [
@@ -447,7 +447,7 @@
       "Potato"
     ],
     "nome_do_arquivo": "potato.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -482,7 +482,7 @@
       "Manteiga sem Sal"
     ],
     "nome_do_arquivo": "butter.png",
-    "categoria": "Laticínios"
+    "categoria": "Laticínios e Ovos"
   },
   {
     "titulos": [
@@ -492,7 +492,7 @@
       "Rice"
     ],
     "nome_do_arquivo": "rice.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -500,7 +500,7 @@
       "Saltine Cracker"
     ],
     "nome_do_arquivo": "saltine-cracker.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -525,7 +525,7 @@
       "Pasta"
     ],
     "nome_do_arquivo": "pasta.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -535,7 +535,7 @@
       "Raw Chicken"
     ],
     "nome_do_arquivo": "chicken-raw.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -566,7 +566,7 @@
       "Raw Fish"
     ],
     "nome_do_arquivo": "fish-raw.png",
-    "categoria": "Proteínas"
+    "categoria": "Peixes e Frutos do Mar"
   },
   {
     "titulos": [
@@ -583,7 +583,7 @@
       "Ovo frito"
     ],
     "nome_do_arquivo": "chicken-egg-cooked.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -591,7 +591,7 @@
       "Meat"
     ],
     "nome_do_arquivo": "meat.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -601,7 +601,7 @@
       "Yogurt"
     ],
     "nome_do_arquivo": "yogurt.png",
-    "categoria": "Laticínios"
+    "categoria": "Laticínios e Ovos"
   },
   {
     "titulos": [
@@ -621,7 +621,7 @@
       "Tomato"
     ],
     "nome_do_arquivo": "tomato.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -633,7 +633,7 @@
       "Carne de Boi"
     ],
     "nome_do_arquivo": "beef.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -642,7 +642,7 @@
       "Cenoura Ralada"
     ],
     "nome_do_arquivo": "carrot.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -650,7 +650,7 @@
       "Roast Chicken"
     ],
     "nome_do_arquivo": "chicken-roasted.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -658,7 +658,7 @@
       "Peixe Cozido"
     ],
     "nome_do_arquivo": "fish-cooked.png",
-    "categoria": "Proteínas"
+    "categoria": "Peixes e Frutos do Mar"
   },
   {
     "titulos": [
@@ -674,7 +674,7 @@
       "Fried Chicken"
     ],
     "nome_do_arquivo": "chicken-fried.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -695,7 +695,7 @@
       "Pão de Forma"
     ],
     "nome_do_arquivo": "bread-white.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -703,14 +703,14 @@
       "Raw Beef"
     ],
     "nome_do_arquivo": "beef-raw.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
       "Falafel"
     ],
     "nome_do_arquivo": "falafel.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -745,7 +745,7 @@
       "Onion"
     ],
     "nome_do_arquivo": "onion.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -763,7 +763,7 @@
       "Lettuce"
     ],
     "nome_do_arquivo": "lettuce.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -771,7 +771,7 @@
       "Pepino"
     ],
     "nome_do_arquivo": "cucumber.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -788,7 +788,7 @@
       "Peanut"
     ],
     "nome_do_arquivo": "peanut.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -893,7 +893,7 @@
       "Sorvete de Palito"
     ],
     "nome_do_arquivo": "ice-cream.png",
-    "categoria": "Laticínios"
+    "categoria": "Laticínios e Ovos"
   },
   {
     "titulos": [
@@ -921,7 +921,7 @@
       "Croissant de Chocolate"
     ],
     "nome_do_arquivo": "croissant.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -945,7 +945,7 @@
       "Sushi"
     ],
     "nome_do_arquivo": "sushi.png",
-    "categoria": "Proteínas"
+    "categoria": "Peixes e Frutos do Mar"
   },
   {
     "titulos": [
@@ -961,7 +961,7 @@
       "Paella"
     ],
     "nome_do_arquivo": "paella.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -979,14 +979,14 @@
       "taco"
     ],
     "nome_do_arquivo": "taco.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
       "Ramen"
     ],
     "nome_do_arquivo": "ramen.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -994,7 +994,7 @@
       "Popcorn"
     ],
     "nome_do_arquivo": "popcorn.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -1029,7 +1029,7 @@
       "Bagel"
     ],
     "nome_do_arquivo": "bagel.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -1039,7 +1039,7 @@
       "Pão Francês"
     ],
     "nome_do_arquivo": "baguette.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -1057,7 +1057,7 @@
       "Hambúrguer"
     ],
     "nome_do_arquivo": "burger.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -1086,7 +1086,7 @@
       "Meatball"
     ],
     "nome_do_arquivo": "meatball.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -1094,7 +1094,7 @@
       "Torrada de Abacate"
     ],
     "nome_do_arquivo": "avocado-toast.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -1115,7 +1115,7 @@
       "Mandioca"
     ],
     "nome_do_arquivo": "cassava.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -1181,7 +1181,7 @@
       "Salada"
     ],
     "nome_do_arquivo": "salad.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -1204,7 +1204,7 @@
       "Rolo de papel toalha"
     ],
     "nome_do_arquivo": "paper-towel-roll.png",
-    "categoria": "Limpeza"
+    "categoria": "Limpeza e Higiene"
   },
   {
     "titulos": [
@@ -1212,7 +1212,7 @@
       "Artichoke"
     ],
     "nome_do_arquivo": "artichoke.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -1220,7 +1220,7 @@
       "Prateleira"
     ],
     "nome_do_arquivo": "dish-rack.png",
-    "categoria": "Limpeza"
+    "categoria": "Limpeza e Higiene"
   },
   {
     "titulos": [
@@ -1228,7 +1228,7 @@
       "Radish"
     ],
     "nome_do_arquivo": "radish.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -1236,7 +1236,7 @@
       "Pimenta"
     ],
     "nome_do_arquivo": "chili-pepper.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -1254,7 +1254,7 @@
       "Sardinha"
     ],
     "nome_do_arquivo": "sardine.png",
-    "categoria": "Proteínas"
+    "categoria": "Peixes e Frutos do Mar"
   },
   {
     "titulos": [
@@ -1262,7 +1262,7 @@
       "Walnut"
     ],
     "nome_do_arquivo": "walnut.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -1270,7 +1270,7 @@
       "Cloudberry"
     ],
     "nome_do_arquivo": "cloudberry.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -1279,7 +1279,7 @@
       "Brócolis"
     ],
     "nome_do_arquivo": "broccoli.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -1295,7 +1295,7 @@
       "Repolho"
     ],
     "nome_do_arquivo": "cabbage.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -1303,7 +1303,7 @@
       "Eggplant"
     ],
     "nome_do_arquivo": "eggplant.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -1336,7 +1336,7 @@
       "Sunflower Seed"
     ],
     "nome_do_arquivo": "sunflower-seed.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -1354,7 +1354,7 @@
       "Cereal Box"
     ],
     "nome_do_arquivo": "cereal-box.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -1381,7 +1381,7 @@
       "Milho Verde"
     ],
     "nome_do_arquivo": "corn-on-the-cob.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -1398,7 +1398,7 @@
       "Hazelnut"
     ],
     "nome_do_arquivo": "hazelnut.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -1423,7 +1423,7 @@
       "Rolo de repolho"
     ],
     "nome_do_arquivo": "cabbage-roll.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -1431,7 +1431,7 @@
       "Ovo cozido"
     ],
     "nome_do_arquivo": "hard-boiled-egg.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -1439,7 +1439,7 @@
       "Fatia de Pepino"
     ],
     "nome_do_arquivo": "cucumber-slice.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -1475,7 +1475,7 @@
       "Sausage"
     ],
     "nome_do_arquivo": "sausage.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -1507,7 +1507,7 @@
       "Castanha de caju"
     ],
     "nome_do_arquivo": "cashew-nut.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -1533,7 +1533,7 @@
       "Grão de bico"
     ],
     "nome_do_arquivo": "chickpea.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -1550,7 +1550,7 @@
       "Pinhão"
     ],
     "nome_do_arquivo": "pine-nut.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -1559,7 +1559,7 @@
       "Pumpkin"
     ],
     "nome_do_arquivo": "pumpkin.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -1567,7 +1567,7 @@
       "Cashew"
     ],
     "nome_do_arquivo": "cashew.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -1576,7 +1576,7 @@
       "Núcleo de Milho"
     ],
     "nome_do_arquivo": "corn-kernel.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -1584,7 +1584,7 @@
       "Oatmeal"
     ],
     "nome_do_arquivo": "oatmeal.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -1593,7 +1593,7 @@
       "Classic Cheeseburger"
     ],
     "nome_do_arquivo": "classic-cheeseburger.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -1653,7 +1653,7 @@
       "Sushi - Rolinho Califórnia"
     ],
     "nome_do_arquivo": "sushi-california-roll.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -1711,7 +1711,7 @@
       "Döner"
     ],
     "nome_do_arquivo": "dner.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -1761,7 +1761,7 @@
       "Spicy Chicken Wing"
     ],
     "nome_do_arquivo": "spicy-chicken-wing.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -1797,7 +1797,7 @@
       "Ribeye Steak"
     ],
     "nome_do_arquivo": "ribeye-steak.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -1840,7 +1840,7 @@
       "Spaghetti and Meatballs"
     ],
     "nome_do_arquivo": "spaghetti-and-meatballs.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -1930,7 +1930,7 @@
       "granola"
     ],
     "nome_do_arquivo": "granola.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -1948,7 +1948,7 @@
       "Presunto"
     ],
     "nome_do_arquivo": "ham.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -1981,7 +1981,7 @@
       "Wheat"
     ],
     "nome_do_arquivo": "wheat.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -2070,7 +2070,7 @@
       "Grumo"
     ],
     "nome_do_arquivo": "groat.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -2093,7 +2093,7 @@
       "Shrimp"
     ],
     "nome_do_arquivo": "shrimp-925i6g.png",
-    "categoria": "Proteínas"
+    "categoria": "Peixes e Frutos do Mar"
   },
   {
     "titulos": [
@@ -2118,7 +2118,7 @@
       "Sandwich"
     ],
     "nome_do_arquivo": "sandwich.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -2126,7 +2126,7 @@
       "Dumplings"
     ],
     "nome_do_arquivo": "dumplings.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -2159,7 +2159,7 @@
       "Soya Beans"
     ],
     "nome_do_arquivo": "soya-beans.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -2219,7 +2219,7 @@
       "Oats"
     ],
     "nome_do_arquivo": "oats.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -2328,7 +2328,7 @@
       "Proofing Basket"
     ],
     "nome_do_arquivo": "proofing-basket.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -2406,7 +2406,7 @@
       "Croissant"
     ],
     "nome_do_arquivo": "croissant-68rc1e.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -2414,14 +2414,14 @@
       "Batard"
     ],
     "nome_do_arquivo": "batard.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
       "Pain au Levain"
     ],
     "nome_do_arquivo": "pain-au-levain.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -2445,7 +2445,7 @@
       "Cheesecake"
     ],
     "nome_do_arquivo": "cheesecake.png",
-    "categoria": "Laticínios"
+    "categoria": "Laticínios e Ovos"
   },
   {
     "titulos": [
@@ -2551,7 +2551,7 @@
       "Sponge"
     ],
     "nome_do_arquivo": "sponge.png",
-    "categoria": "Limpeza"
+    "categoria": "Limpeza e Higiene"
   },
   {
     "titulos": [
@@ -2559,7 +2559,7 @@
       "Turkey"
     ],
     "nome_do_arquivo": "turkey-ko72p3.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -2661,7 +2661,7 @@
       "Tábua de Queijos Artesanais"
     ],
     "nome_do_arquivo": "artisan-cheese-board.png",
-    "categoria": "Laticínios"
+    "categoria": "Laticínios e Ovos"
   },
   {
     "titulos": [
@@ -2706,7 +2706,7 @@
       "Flour"
     ],
     "nome_do_arquivo": "flour.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -2740,7 +2740,7 @@
       "Halloumi"
     ],
     "nome_do_arquivo": "halloumi.png",
-    "categoria": "Laticínios"
+    "categoria": "Laticínios e Ovos"
   },
   {
     "titulos": [
@@ -2769,7 +2769,7 @@
       "Focaccia"
     ],
     "nome_do_arquivo": "focaccia.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -2832,7 +2832,7 @@
       "Tabule"
     ],
     "nome_do_arquivo": "tabbouleh.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -2848,7 +2848,7 @@
       "Hummus"
     ],
     "nome_do_arquivo": "hummus.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -2881,7 +2881,7 @@
       "Carne seca"
     ],
     "nome_do_arquivo": "beef-jerky.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -2974,7 +2974,7 @@
       "Paneer"
     ],
     "nome_do_arquivo": "paneer.png",
-    "categoria": "Laticínios"
+    "categoria": "Laticínios e Ovos"
   },
   {
     "titulos": [
@@ -2991,7 +2991,7 @@
       "Sanduíche de Pastrami"
     ],
     "nome_do_arquivo": "pastrami-sandwich.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -3015,7 +3015,7 @@
       "Brócolis"
     ],
     "nome_do_arquivo": "broccoli-1.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -3023,7 +3023,7 @@
       "Döner Kebab"
     ],
     "nome_do_arquivo": "dner-kebab.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -3046,7 +3046,7 @@
       "Queijo Brie"
     ],
     "nome_do_arquivo": "brie-cheese.png",
-    "categoria": "Laticínios"
+    "categoria": "Laticínios e Ovos"
   },
   {
     "titulos": [
@@ -3079,7 +3079,7 @@
       "Dragão Azul (lesma do mar)"
     ],
     "nome_do_arquivo": "blue-dragon-sea-slug.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -3094,14 +3094,14 @@
       "Iogurte grego"
     ],
     "nome_do_arquivo": "greek-yogurt.png",
-    "categoria": "Laticínios"
+    "categoria": "Laticínios e Ovos"
   },
   {
     "titulos": [
       "Ghee"
     ],
     "nome_do_arquivo": "ghee.png",
-    "categoria": "Laticínios"
+    "categoria": "Laticínios e Ovos"
   },
   {
     "titulos": [
@@ -3146,7 +3146,7 @@
       "Oat Milk"
     ],
     "nome_do_arquivo": "oat-milk.png",
-    "categoria": "Laticínios"
+    "categoria": "Laticínios e Ovos"
   },
   {
     "titulos": [
@@ -3222,14 +3222,14 @@
       "Butter Churn"
     ],
     "nome_do_arquivo": "butter-churn.png",
-    "categoria": "Laticínios"
+    "categoria": "Laticínios e Ovos"
   },
   {
     "titulos": [
       "Rendang"
     ],
     "nome_do_arquivo": "rendang.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -3245,7 +3245,7 @@
       "Bagel"
     ],
     "nome_do_arquivo": "bagel-1.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -3260,7 +3260,7 @@
       "Bánh Mì"
     ],
     "nome_do_arquivo": "bnh-m.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -3297,14 +3297,14 @@
       "Samosa"
     ],
     "nome_do_arquivo": "samosa.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
       "Brioche"
     ],
     "nome_do_arquivo": "brioche.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -3337,7 +3337,7 @@
       "Leite de Cabra"
     ],
     "nome_do_arquivo": "goat-milk.png",
-    "categoria": "Laticínios"
+    "categoria": "Laticínios e Ovos"
   },
   {
     "titulos": [
@@ -3406,7 +3406,7 @@
       "French Fries"
     ],
     "nome_do_arquivo": "french-fries.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -3414,7 +3414,7 @@
       "Cereal matinal"
     ],
     "nome_do_arquivo": "breakfast-cereal.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -3435,7 +3435,7 @@
       "Murukku"
     ],
     "nome_do_arquivo": "murukku.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -3456,7 +3456,7 @@
       "Gyoza"
     ],
     "nome_do_arquivo": "gyoza.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -3488,7 +3488,7 @@
       "Queijo Artesanal"
     ],
     "nome_do_arquivo": "artisan-cheese.png",
-    "categoria": "Laticínios"
+    "categoria": "Laticínios e Ovos"
   },
   {
     "titulos": [
@@ -3504,14 +3504,14 @@
       "Couve-flor"
     ],
     "nome_do_arquivo": "cauliflower.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
       "Raclette"
     ],
     "nome_do_arquivo": "raclette.png",
-    "categoria": "Laticínios"
+    "categoria": "Laticínios e Ovos"
   },
   {
     "titulos": [
@@ -3544,7 +3544,7 @@
       "Chips"
     ],
     "nome_do_arquivo": "chips.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -3625,7 +3625,7 @@
       "Bacon"
     ],
     "nome_do_arquivo": "bacon.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -3641,7 +3641,7 @@
       "Brotos de Bambu"
     ],
     "nome_do_arquivo": "bamboo-shoots.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -3665,7 +3665,7 @@
       "Cherry Tree"
     ],
     "nome_do_arquivo": "cherry-tree.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -3681,7 +3681,7 @@
       "Garba"
     ],
     "nome_do_arquivo": "garba.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -3698,7 +3698,7 @@
       "Vaca Holandesa"
     ],
     "nome_do_arquivo": "holstein-cow.png",
-    "categoria": "Laticínios"
+    "categoria": "Laticínios e Ovos"
   },
   {
     "titulos": [
@@ -3706,14 +3706,14 @@
       "Pistachio"
     ],
     "nome_do_arquivo": "pistachio.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
       "Burrata"
     ],
     "nome_do_arquivo": "burrata.png",
-    "categoria": "Laticínios"
+    "categoria": "Laticínios e Ovos"
   },
   {
     "titulos": [
@@ -3751,7 +3751,7 @@
       "Salada de repolho"
     ],
     "nome_do_arquivo": "coleslaw.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -3760,7 +3760,7 @@
       "Sanduíche de frango"
     ],
     "nome_do_arquivo": "chicken-sandwich.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -3768,7 +3768,7 @@
       "Korean Fried Chicken"
     ],
     "nome_do_arquivo": "korean-fried-chicken.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -3784,14 +3784,14 @@
       "Queijo Mussarela"
     ],
     "nome_do_arquivo": "mozzarella-cheese.png",
-    "categoria": "Laticínios"
+    "categoria": "Laticínios e Ovos"
   },
   {
     "titulos": [
       "Onigiri"
     ],
     "nome_do_arquivo": "onigiri.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -3807,7 +3807,7 @@
       "Alloco"
     ],
     "nome_do_arquivo": "alloco.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -3823,7 +3823,7 @@
       "Pepita"
     ],
     "nome_do_arquivo": "nugget.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -3839,7 +3839,7 @@
       "Zucchini"
     ],
     "nome_do_arquivo": "zucchini.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -3895,7 +3895,7 @@
       "Red Chili"
     ],
     "nome_do_arquivo": "red-chili.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -3903,7 +3903,7 @@
       "Salsichas Brancas da Baviera"
     ],
     "nome_do_arquivo": "bavarian-white-sausages.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -3924,7 +3924,7 @@
       "Salmão Fresco"
     ],
     "nome_do_arquivo": "salmon.png",
-    "categoria": "Proteínas"
+    "categoria": "Peixes e Frutos do Mar"
   },
   {
     "titulos": [
@@ -3932,7 +3932,7 @@
       "Tilápia"
     ],
     "nome_do_arquivo": "tilapia.png",
-    "categoria": "Proteínas"
+    "categoria": "Peixes e Frutos do Mar"
   },
   {
     "titulos": [
@@ -3941,7 +3941,7 @@
       "Atum Rabilho do Atlântico"
     ],
     "nome_do_arquivo": "atlantic-bluefin-tuna.png",
-    "categoria": "Proteínas"
+    "categoria": "Peixes e Frutos do Mar"
   },
   {
     "titulos": [
@@ -3955,7 +3955,7 @@
       "Bao"
     ],
     "nome_do_arquivo": "bao.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -3972,7 +3972,7 @@
       "Hot Dog"
     ],
     "nome_do_arquivo": "hot-dog.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -3980,7 +3980,7 @@
       "Peixe e batatas fritas"
     ],
     "nome_do_arquivo": "fish-and-chips.png",
-    "categoria": "Proteínas"
+    "categoria": "Peixes e Frutos do Mar"
   },
   {
     "titulos": [
@@ -4004,7 +4004,7 @@
       "Frango Biryani"
     ],
     "nome_do_arquivo": "chicken-biryani.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -4035,7 +4035,7 @@
       "Tofu"
     ],
     "nome_do_arquivo": "tofu.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -4093,7 +4093,7 @@
       "Scrambled Egg"
     ],
     "nome_do_arquivo": "scrambled-egg.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -4102,7 +4102,7 @@
       "Noodles"
     ],
     "nome_do_arquivo": "noodles.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -4111,7 +4111,7 @@
       "Pão Naan"
     ],
     "nome_do_arquivo": "naan-bread.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -4149,7 +4149,7 @@
       "Pepperoni Pizza Slice"
     ],
     "nome_do_arquivo": "pepperoni-pizza-slice.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -4206,7 +4206,7 @@
       "Grande café da manhã"
     ],
     "nome_do_arquivo": "big-breakfast.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -4230,7 +4230,7 @@
       "Bruschetta"
     ],
     "nome_do_arquivo": "bruschetta.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -4262,7 +4262,7 @@
       "Torta de Carne Australiana"
     ],
     "nome_do_arquivo": "australian-meat-pie.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -4335,7 +4335,7 @@
       "Corn Fritters"
     ],
     "nome_do_arquivo": "corn-fritters.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -4384,7 +4384,7 @@
       "Prato escaldante de carne da Mongólia"
     ],
     "nome_do_arquivo": "mongolian-beef-sizzling-plate.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -4408,7 +4408,7 @@
       "Nachos"
     ],
     "nome_do_arquivo": "nachos.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -4457,7 +4457,7 @@
       "Reef and Beef"
     ],
     "nome_do_arquivo": "reef-and-beef.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -4491,7 +4491,7 @@
       "Satay Chicken Skewers"
     ],
     "nome_do_arquivo": "satay-chicken-skewers.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -4515,7 +4515,7 @@
       "Sanduíche De Geléia De Manteiga De Amendoim"
     ],
     "nome_do_arquivo": "peanut-butter-jelly-sandwich.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -4530,7 +4530,7 @@
       "Iogurte Congelado"
     ],
     "nome_do_arquivo": "frozen-yoghurt.png",
-    "categoria": "Laticínios"
+    "categoria": "Laticínios e Ovos"
   },
   {
     "titulos": [
@@ -4546,7 +4546,7 @@
       "Honey Chicken"
     ],
     "nome_do_arquivo": "honey-chicken.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -4570,7 +4570,7 @@
       "Loaded French Fries"
     ],
     "nome_do_arquivo": "loaded-french-fries.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -4595,7 +4595,7 @@
       "Smoked Ember Rib Stack"
     ],
     "nome_do_arquivo": "smoked-ember-rib-stack.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -4619,7 +4619,7 @@
       "Sate Lilit Mordidas"
     ],
     "nome_do_arquivo": "sate-lilit-bites.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -4643,7 +4643,7 @@
       "Herb-Crusted Lamb Rack"
     ],
     "nome_do_arquivo": "herb-crusted-lamb-rack.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -4653,7 +4653,7 @@
       "Pan-Roasted Hāpuku with Pāua Risotto"
     ],
     "nome_do_arquivo": "pan-roasted-hpuku-with-pua-risotto.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -4686,7 +4686,7 @@
       "Pimenta Verde"
     ],
     "nome_do_arquivo": "green-pepper.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -4737,7 +4737,7 @@
       "Ploughman’s Board"
     ],
     "nome_do_arquivo": "ploughmans-board.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -4745,7 +4745,7 @@
       "Bife refogado com cerveja e torta de rim"
     ],
     "nome_do_arquivo": "ale-braised-steak-kidney-pie.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -4770,7 +4770,7 @@
       "Parmegiana de Frango Clássica"
     ],
     "nome_do_arquivo": "classic-chicken-parmigiana.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -4778,7 +4778,7 @@
       "Polpette ao Forno"
     ],
     "nome_do_arquivo": "polpette-al-forno.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -4786,7 +4786,7 @@
       "Risotto al Limone e Gamberi"
     ],
     "nome_do_arquivo": "risotto-al-limone-e-gamberi.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -4888,7 +4888,7 @@
       "Restaurante Torre Nacho"
     ],
     "nome_do_arquivo": "diner-nacho-tower.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -4942,7 +4942,7 @@
       "Mojarra"
     ],
     "nome_do_arquivo": "mojarra.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -4950,7 +4950,7 @@
       "Quesadilla"
     ],
     "nome_do_arquivo": "quesadilla.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -4984,7 +4984,7 @@
       "Garlic"
     ],
     "nome_do_arquivo": "garlic.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -4992,7 +4992,7 @@
       "Lentils"
     ],
     "nome_do_arquivo": "lentils.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -5000,7 +5000,7 @@
       "Spinach"
     ],
     "nome_do_arquivo": "spinach.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -5033,7 +5033,7 @@
       "Heavy Cream"
     ],
     "nome_do_arquivo": "heavy-cream.png",
-    "categoria": "Laticínios"
+    "categoria": "Laticínios e Ovos"
   },
   {
     "titulos": [
@@ -5062,7 +5062,7 @@
       "Noodle"
     ],
     "nome_do_arquivo": "noodle.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -5085,7 +5085,7 @@
       "Garlic Clove"
     ],
     "nome_do_arquivo": "garlic-clove.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -5093,7 +5093,7 @@
       "Beterraba"
     ],
     "nome_do_arquivo": "beet.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -5143,7 +5143,7 @@
       "Ribs"
     ],
     "nome_do_arquivo": "ribs.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -5182,7 +5182,7 @@
       "Chicken Wings"
     ],
     "nome_do_arquivo": "chicken-wings.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -5241,7 +5241,7 @@
       "Oyster Mushroom"
     ],
     "nome_do_arquivo": "oyster-mushroom.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -5266,7 +5266,7 @@
       "Yogurt Parfait"
     ],
     "nome_do_arquivo": "yogurt-parfait.png",
-    "categoria": "Laticínios"
+    "categoria": "Laticínios e Ovos"
   },
   {
     "titulos": [
@@ -5274,7 +5274,7 @@
       "Plantain Chips"
     ],
     "nome_do_arquivo": "plantain-chips.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -5282,7 +5282,7 @@
       "Wild Raspberry Bush"
     ],
     "nome_do_arquivo": "wild-raspberry-bush.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -5290,7 +5290,7 @@
       "Polvo Carbonizado"
     ],
     "nome_do_arquivo": "charred-octopus.png",
-    "categoria": "Proteínas"
+    "categoria": "Peixes e Frutos do Mar"
   },
   {
     "titulos": [
@@ -5307,7 +5307,7 @@
       "Sorghum Bread"
     ],
     "nome_do_arquivo": "sorghum-bread.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -5323,14 +5323,14 @@
       "Edamame"
     ],
     "nome_do_arquivo": "edamame.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
       "Lassi"
     ],
     "nome_do_arquivo": "lassi.png",
-    "categoria": "Laticínios"
+    "categoria": "Laticínios e Ovos"
   },
   {
     "titulos": [
@@ -5338,7 +5338,7 @@
       "Nibs de cacau"
     ],
     "nome_do_arquivo": "cacao-nibs.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -5347,7 +5347,7 @@
       "pão ázimo"
     ],
     "nome_do_arquivo": "matzo.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -5388,7 +5388,7 @@
       "Polenta"
     ],
     "nome_do_arquivo": "polenta.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -5418,7 +5418,7 @@
       "Chimichurri Steak"
     ],
     "nome_do_arquivo": "chimichurri-steak.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -5458,14 +5458,14 @@
       "Salada de Quinua"
     ],
     "nome_do_arquivo": "quinoa-salad.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
       "Ceviche"
     ],
     "nome_do_arquivo": "ceviche.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -5481,7 +5481,7 @@
       "Jerk Chicken"
     ],
     "nome_do_arquivo": "jerk-chicken.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -5564,7 +5564,7 @@
       "Tortilha de Milho Azul"
     ],
     "nome_do_arquivo": "blue-corn-tortilla.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -5580,7 +5580,7 @@
       "Nori Sheet"
     ],
     "nome_do_arquivo": "nori-sheet.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -5613,7 +5613,7 @@
       "Katsu Sando"
     ],
     "nome_do_arquivo": "katsu-sando.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -5622,7 +5622,7 @@
       "Panela de melão"
     ],
     "nome_do_arquivo": "melon-pan.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -5672,7 +5672,7 @@
       "Remendo de ervas"
     ],
     "nome_do_arquivo": "herbal-patch.png",
-    "categoria": "Higiene Pessoal"
+    "categoria": "Limpeza e Higiene"
   },
   {
     "titulos": [
@@ -5711,7 +5711,7 @@
       "Kimbap"
     ],
     "nome_do_arquivo": "kimbap.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -5745,7 +5745,7 @@
       "Puffed Rice Snack"
     ],
     "nome_do_arquivo": "puffed-rice-snack.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -5762,7 +5762,7 @@
       "Salsify Root"
     ],
     "nome_do_arquivo": "salsify-root.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -5786,7 +5786,7 @@
       "Pickled Quail Egg"
     ],
     "nome_do_arquivo": "pickled-quail-egg.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -5812,7 +5812,7 @@
       "Pomada de confrei"
     ],
     "nome_do_arquivo": "comfrey-salve.png",
-    "categoria": "Higiene Pessoal"
+    "categoria": "Limpeza e Higiene"
   },
   {
     "titulos": [
@@ -5821,7 +5821,7 @@
       "Imersão de ervas para pés"
     ],
     "nome_do_arquivo": "herbal-foot-soak.png",
-    "categoria": "Higiene Pessoal"
+    "categoria": "Limpeza e Higiene"
   },
   {
     "titulos": [
@@ -5829,7 +5829,7 @@
       "Milk Glass"
     ],
     "nome_do_arquivo": "milk-glass.png",
-    "categoria": "Laticínios"
+    "categoria": "Laticínios e Ovos"
   },
   {
     "titulos": [
@@ -5845,7 +5845,7 @@
       "Turkish Simit"
     ],
     "nome_do_arquivo": "turkish-simit.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -5854,7 +5854,7 @@
       "Colisão de caviar"
     ],
     "nome_do_arquivo": "caviar-bump.png",
-    "categoria": "Proteínas"
+    "categoria": "Peixes e Frutos do Mar"
   },
   {
     "titulos": [
@@ -5913,14 +5913,14 @@
       "Flamin’Quente Cheeto"
     ],
     "nome_do_arquivo": "flamin-hot-cheeto.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
       "Coxinha"
     ],
     "nome_do_arquivo": "coxinha.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -5928,7 +5928,7 @@
       "Ovo de Ganso"
     ],
     "nome_do_arquivo": "goose-egg.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -5937,7 +5937,7 @@
       "Stuffed Squash Blossom"
     ],
     "nome_do_arquivo": "stuffed-squash-blossom.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -5969,7 +5969,7 @@
       "Okra Chip"
     ],
     "nome_do_arquivo": "okra-chip.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -5996,7 +5996,7 @@
       "Navy Bean"
     ],
     "nome_do_arquivo": "navy-bean.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -6012,7 +6012,7 @@
       "Quinoa"
     ],
     "nome_do_arquivo": "quinoa.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -6029,7 +6029,7 @@
       "Limoeiro"
     ],
     "nome_do_arquivo": "lemon-tree.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -6037,7 +6037,7 @@
       "Carne Wellington"
     ],
     "nome_do_arquivo": "beef-wellington.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -6061,7 +6061,7 @@
       "Macieira"
     ],
     "nome_do_arquivo": "apple-tree.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -6085,7 +6085,7 @@
       "Orange Tree"
     ],
     "nome_do_arquivo": "orange-tree.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -6110,7 +6110,7 @@
       "Crumble de Queijo Azul"
     ],
     "nome_do_arquivo": "blue-cheese-crumble.png",
-    "categoria": "Laticínios"
+    "categoria": "Laticínios e Ovos"
   },
   {
     "titulos": [
@@ -6118,14 +6118,14 @@
       "Time-Turnip"
     ],
     "nome_do_arquivo": "time-turnip.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
       "Satay"
     ],
     "nome_do_arquivo": "satay.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -6173,7 +6173,7 @@
       "Purple Sweet Potato Cube"
     ],
     "nome_do_arquivo": "purple-sweet-potato-cube.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -6190,7 +6190,7 @@
       "Lança de picles fritos"
     ],
     "nome_do_arquivo": "fried-pickle-spear.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -6207,7 +6207,7 @@
       "Onion Rings"
     ],
     "nome_do_arquivo": "onion-rings.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -6232,7 +6232,7 @@
       "Perna Confitada de Pato"
     ],
     "nome_do_arquivo": "duck-confit-leg.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -6305,7 +6305,7 @@
       "Ovo"
     ],
     "nome_do_arquivo": "egg-1.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -6355,7 +6355,7 @@
       "Rhubarb Stick"
     ],
     "nome_do_arquivo": "rhubarb-stick.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -6437,7 +6437,7 @@
       "Pé de galinha"
     ],
     "nome_do_arquivo": "chicken-foot.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -6453,7 +6453,7 @@
       "Spam"
     ],
     "nome_do_arquivo": "spam.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -6494,7 +6494,7 @@
       "Dim Sum Siu Mai"
     ],
     "nome_do_arquivo": "dim-sum-siu-mai.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -6502,7 +6502,7 @@
       "Tomato Juice"
     ],
     "nome_do_arquivo": "tomato-juice.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -6536,7 +6536,7 @@
       "Kebab"
     ],
     "nome_do_arquivo": "kebab.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -6544,7 +6544,7 @@
       "Remendo de frutas vermelhas"
     ],
     "nome_do_arquivo": "berry-patch.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -6553,7 +6553,7 @@
       "Smoked Salmon Blini"
     ],
     "nome_do_arquivo": "smoked-salmon-blini.png",
-    "categoria": "Proteínas"
+    "categoria": "Peixes e Frutos do Mar"
   },
   {
     "titulos": [
@@ -6561,7 +6561,7 @@
       "Wagyu Slider"
     ],
     "nome_do_arquivo": "wagyu-slider.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -6613,7 +6613,7 @@
       "Hamburger"
     ],
     "nome_do_arquivo": "hamburger.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -6622,7 +6622,7 @@
       "Salsão"
     ],
     "nome_do_arquivo": "celery.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -6702,7 +6702,7 @@
       "Shish Kebab"
     ],
     "nome_do_arquivo": "shish-kebab.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -6720,7 +6720,7 @@
       "Miojo"
     ],
     "nome_do_arquivo": "instant-noodles.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -6761,7 +6761,7 @@
       "Egg Carton"
     ],
     "nome_do_arquivo": "egg-carton.png",
-    "categoria": "Proteínas"
+    "categoria": "Laticínios e Ovos"
   },
   {
     "titulos": [
@@ -6804,7 +6804,7 @@
       "Cheetos"
     ],
     "nome_do_arquivo": "cheetos.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -6820,14 +6820,14 @@
       "Scrub Daddy"
     ],
     "nome_do_arquivo": "scrub-daddy.png",
-    "categoria": "Limpeza"
+    "categoria": "Limpeza e Higiene"
   },
   {
     "titulos": [
       "'nduja"
     ],
     "nome_do_arquivo": "nduja.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -6869,7 +6869,7 @@
       "Fried Avocado Slice"
     ],
     "nome_do_arquivo": "fried-avocado-slice.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -6878,7 +6878,7 @@
       "Potted Dwarf Orange Tree"
     ],
     "nome_do_arquivo": "potted-dwarf-orange-tree.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -7008,7 +7008,7 @@
       "Arroz frito estilo chaufa"
     ],
     "nome_do_arquivo": "arroz-frito-estilo-chaufa.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -7064,7 +7064,7 @@
       "Cashew Nut Tree"
     ],
     "nome_do_arquivo": "cashew-nut-tree.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -7108,7 +7108,7 @@
       "Loaf Pan Set"
     ],
     "nome_do_arquivo": "loaf-pan-set.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -7116,7 +7116,7 @@
       "Jalapeño"
     ],
     "nome_do_arquivo": "jalapeno.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -7150,7 +7150,7 @@
       "Vieira"
     ],
     "nome_do_arquivo": "scallop.png",
-    "categoria": "Proteínas"
+    "categoria": "Peixes e Frutos do Mar"
   },
   {
     "titulos": [
@@ -7242,14 +7242,14 @@
       "Salame"
     ],
     "nome_do_arquivo": "salame.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
       "Shawarma"
     ],
     "nome_do_arquivo": "shawarma.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -7266,7 +7266,7 @@
       "Pecan"
     ],
     "nome_do_arquivo": "pecan.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -7275,14 +7275,14 @@
       "Lab-Grown Meat"
     ],
     "nome_do_arquivo": "lab-grown-meat.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
       "Empanada"
     ],
     "nome_do_arquivo": "empanada.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -7290,7 +7290,7 @@
       "Picles"
     ],
     "nome_do_arquivo": "pickles.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -7329,7 +7329,7 @@
       "Aaruul"
     ],
     "nome_do_arquivo": "aaruul.png",
-    "categoria": "Laticínios"
+    "categoria": "Laticínios e Ovos"
   },
   {
     "titulos": [
@@ -7405,7 +7405,7 @@
       "Sementes de abóbora"
     ],
     "nome_do_arquivo": "pumpkin-seeds.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -7445,7 +7445,7 @@
       "Expired Meat"
     ],
     "nome_do_arquivo": "expired-meat.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -7470,7 +7470,7 @@
       "Gambas al Ajillo"
     ],
     "nome_do_arquivo": "gambas-al-ajillo.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -7484,7 +7484,7 @@
       "Bungeoppang"
     ],
     "nome_do_arquivo": "bungeoppang.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -7506,7 +7506,7 @@
       "Chirashi-zushi"
     ],
     "nome_do_arquivo": "chirashi-zushi.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -7571,14 +7571,14 @@
       "Suco de Cenoura"
     ],
     "nome_do_arquivo": "carrot-juice.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
       "Ratatouille"
     ],
     "nome_do_arquivo": "ratatouille.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -7629,7 +7629,7 @@
       "Tigela de Dhal"
     ],
     "nome_do_arquivo": "bowl-of-dhal.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -7677,7 +7677,7 @@
       "Arepa"
     ],
     "nome_do_arquivo": "arepa.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -7686,7 +7686,7 @@
       "Sweet Potato"
     ],
     "nome_do_arquivo": "sweet-potato.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -7741,7 +7741,7 @@
       "rolo de lagosta"
     ],
     "nome_do_arquivo": "lobster-roll.png",
-    "categoria": "Proteínas"
+    "categoria": "Peixes e Frutos do Mar"
   },
   {
     "titulos": [
@@ -7759,7 +7759,7 @@
       "Queijo Parmesão"
     ],
     "nome_do_arquivo": "parmesan-cheese.png",
-    "categoria": "Laticínios"
+    "categoria": "Laticínios e Ovos"
   },
   {
     "titulos": [
@@ -7782,7 +7782,7 @@
       "Elote"
     ],
     "nome_do_arquivo": "elote.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -7881,7 +7881,7 @@
       "Maçã Caranguejo"
     ],
     "nome_do_arquivo": "crab-apple.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -7907,7 +7907,7 @@
       "Pearl Onion"
     ],
     "nome_do_arquivo": "pearl-onion.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -7932,7 +7932,7 @@
       "Milk Jug"
     ],
     "nome_do_arquivo": "milk-jug.png",
-    "categoria": "Laticínios"
+    "categoria": "Laticínios e Ovos"
   },
   {
     "titulos": [
@@ -7957,7 +7957,7 @@
       "Queijo Pimenta Jack"
     ],
     "nome_do_arquivo": "pepper-jack-cheese.png",
-    "categoria": "Laticínios"
+    "categoria": "Laticínios e Ovos"
   },
   {
     "titulos": [
@@ -7966,7 +7966,7 @@
       "Tijolo Ramen Instantâneo"
     ],
     "nome_do_arquivo": "instant-ramen-brick.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -7990,7 +7990,7 @@
       "Fried Cheese Curds"
     ],
     "nome_do_arquivo": "fried-cheese-curds.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -8053,7 +8053,7 @@
       "Tapete de secagem de pratos"
     ],
     "nome_do_arquivo": "dish-drying-mat.png",
-    "categoria": "Limpeza"
+    "categoria": "Limpeza e Higiene"
   },
   {
     "titulos": [
@@ -8086,7 +8086,7 @@
       "pastel frito"
     ],
     "nome_do_arquivo": "pastel-frito.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -8094,7 +8094,7 @@
       "Lamb Kofta"
     ],
     "nome_do_arquivo": "lamb-kofta.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -8175,7 +8175,7 @@
       "Maple Bacon Donut"
     ],
     "nome_do_arquivo": "maple-bacon-donut.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -8224,14 +8224,14 @@
       "Mordida Crocante de Couve-Flor"
     ],
     "nome_do_arquivo": "crispy-cauliflower-bite.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
       "Spam Musubi"
     ],
     "nome_do_arquivo": "spam-musubi.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -8249,7 +8249,7 @@
       "Rainbow Carrots"
     ],
     "nome_do_arquivo": "rainbow-carrots.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -8257,7 +8257,7 @@
       "Smoked Herring"
     ],
     "nome_do_arquivo": "smoked-herring.png",
-    "categoria": "Proteínas"
+    "categoria": "Peixes e Frutos do Mar"
   },
   {
     "titulos": [
@@ -8274,7 +8274,7 @@
       "Ovo de Pato"
     ],
     "nome_do_arquivo": "duck-egg.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -8282,7 +8282,7 @@
       "Codfish"
     ],
     "nome_do_arquivo": "codfish.png",
-    "categoria": "Proteínas"
+    "categoria": "Peixes e Frutos do Mar"
   },
   {
     "titulos": [
@@ -8290,7 +8290,7 @@
       "Loops Froot"
     ],
     "nome_do_arquivo": "froot-loops.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -8306,7 +8306,7 @@
       "Sliced Onion"
     ],
     "nome_do_arquivo": "sliced-onion.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -8337,7 +8337,7 @@
       "Lap Cheong"
     ],
     "nome_do_arquivo": "lap-cheong.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -8352,7 +8352,7 @@
       "Samphire"
     ],
     "nome_do_arquivo": "samphire.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -8392,7 +8392,7 @@
       "Zucchini Noodles"
     ],
     "nome_do_arquivo": "zucchini-noodles.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -8416,7 +8416,7 @@
       "Salsicha de Sangue"
     ],
     "nome_do_arquivo": "blood-sausage.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -8457,7 +8457,7 @@
       "Purple Corn Chip"
     ],
     "nome_do_arquivo": "purple-corn-chip.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -8488,14 +8488,14 @@
       "Crab Shack on Stilts"
     ],
     "nome_do_arquivo": "crab-shack-on-stilts.png",
-    "categoria": "Proteínas"
+    "categoria": "Peixes e Frutos do Mar"
   },
   {
     "titulos": [
       "Fiddlehead"
     ],
     "nome_do_arquivo": "fiddlehead.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -8554,7 +8554,7 @@
       "Castanha do Pará"
     ],
     "nome_do_arquivo": "brazil-nut.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -8570,7 +8570,7 @@
       "Spam Fried Rice"
     ],
     "nome_do_arquivo": "spam-fried-rice.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -8586,7 +8586,7 @@
       "Carton of Milk"
     ],
     "nome_do_arquivo": "carton-of-milk.png",
-    "categoria": "Laticínios"
+    "categoria": "Laticínios e Ovos"
   },
   {
     "titulos": [
@@ -8603,7 +8603,7 @@
       "Tentáculo de Polvo"
     ],
     "nome_do_arquivo": "octopus-tentacle.png",
-    "categoria": "Proteínas"
+    "categoria": "Peixes e Frutos do Mar"
   },
   {
     "titulos": [
@@ -8635,7 +8635,7 @@
       "Corn Dog"
     ],
     "nome_do_arquivo": "corn-dog.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -8653,7 +8653,7 @@
       "Rolo de Dragão"
     ],
     "nome_do_arquivo": "dragon-roll.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -8662,7 +8662,7 @@
       "Rolinho de Sushi Arco-Íris"
     ],
     "nome_do_arquivo": "rainbow-sushi-roll.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -8687,14 +8687,14 @@
       "Couves de Bruxelas"
     ],
     "nome_do_arquivo": "brussel-sprouts.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
       "Kwek-kwek"
     ],
     "nome_do_arquivo": "kwek-kwek.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -8702,7 +8702,7 @@
       "Roasted Potatoes"
     ],
     "nome_do_arquivo": "roasted-potatoes.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -8767,7 +8767,7 @@
       "Gemada"
     ],
     "nome_do_arquivo": "eggnog.png",
-    "categoria": "Laticínios"
+    "categoria": "Laticínios e Ovos"
   },
   {
     "titulos": [
@@ -8775,7 +8775,7 @@
       "Roast Turkey"
     ],
     "nome_do_arquivo": "roast-turkey.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -8783,7 +8783,7 @@
       "Onion Bhaji"
     ],
     "nome_do_arquivo": "onion-bhaji.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -8792,7 +8792,7 @@
       "Kohlrabi"
     ],
     "nome_do_arquivo": "kohlrabi.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -8848,7 +8848,7 @@
       "Toasted Coconut Chip"
     ],
     "nome_do_arquivo": "toasted-coconut-chip.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -8926,7 +8926,7 @@
       "Taco de Camarão"
     ],
     "nome_do_arquivo": "shrimp-taco.png",
-    "categoria": "Proteínas"
+    "categoria": "Peixes e Frutos do Mar"
   },
   {
     "titulos": [
@@ -8952,7 +8952,7 @@
       "Raiz de Lótus Frita"
     ],
     "nome_do_arquivo": "fried-lotus-root.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -8960,7 +8960,7 @@
       "Lobster Mac and Cheese"
     ],
     "nome_do_arquivo": "lobster-mac-and-cheese.png",
-    "categoria": "Proteínas"
+    "categoria": "Peixes e Frutos do Mar"
   },
   {
     "titulos": [
@@ -9009,7 +9009,7 @@
       "Dried Dulse"
     ],
     "nome_do_arquivo": "dried-dulse.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -9034,7 +9034,7 @@
       "Tora de Queijo de Cabra"
     ],
     "nome_do_arquivo": "goat-cheese-log.png",
-    "categoria": "Laticínios"
+    "categoria": "Laticínios e Ovos"
   },
   {
     "titulos": [
@@ -9102,7 +9102,7 @@
       "Pickled Herring"
     ],
     "nome_do_arquivo": "pickled-herring.png",
-    "categoria": "Proteínas"
+    "categoria": "Peixes e Frutos do Mar"
   },
   {
     "titulos": [
@@ -9119,7 +9119,7 @@
       "Wagyu Steak"
     ],
     "nome_do_arquivo": "wagyu-steak.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -9144,7 +9144,7 @@
       "Drip Tray"
     ],
     "nome_do_arquivo": "drip-tray.png",
-    "categoria": "Limpeza"
+    "categoria": "Limpeza e Higiene"
   },
   {
     "titulos": [
@@ -9152,7 +9152,7 @@
       "Pepino"
     ],
     "nome_do_arquivo": "gherkin.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -9168,7 +9168,7 @@
       "Truffle Fries"
     ],
     "nome_do_arquivo": "truffle-fries.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -9185,7 +9185,7 @@
       "Florzinha de brócolis carbonizada"
     ],
     "nome_do_arquivo": "charred-broccoli-floret.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -9253,7 +9253,7 @@
       "Fried Onion Bloom"
     ],
     "nome_do_arquivo": "fried-onion-bloom.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -9333,7 +9333,7 @@
       "Sopaipilla"
     ],
     "nome_do_arquivo": "sopaipilla.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -9341,7 +9341,7 @@
       "Raspador de pratos"
     ],
     "nome_do_arquivo": "dish-scraper.png",
-    "categoria": "Limpeza"
+    "categoria": "Limpeza e Higiene"
   },
   {
     "titulos": [
@@ -9367,7 +9367,7 @@
       "Cuscuz"
     ],
     "nome_do_arquivo": "couscous.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -9392,7 +9392,7 @@
       "Spilled Milk"
     ],
     "nome_do_arquivo": "spilled-milk.png",
-    "categoria": "Limpeza"
+    "categoria": "Limpeza e Higiene"
   },
   {
     "titulos": [
@@ -9417,7 +9417,7 @@
       "Purple Yam"
     ],
     "nome_do_arquivo": "purple-yam.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -9449,7 +9449,7 @@
       "Ostra frita Po' Boy"
     ],
     "nome_do_arquivo": "fried-oyster-po-boy.png",
-    "categoria": "Proteínas"
+    "categoria": "Peixes e Frutos do Mar"
   },
   {
     "titulos": [
@@ -9491,7 +9491,7 @@
       "Tâmaras embrulhadas em bacon"
     ],
     "nome_do_arquivo": "bacon-wrapped-dates.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -9533,7 +9533,7 @@
       "Swordfish Steak"
     ],
     "nome_do_arquivo": "swordfish-steak.png",
-    "categoria": "Proteínas"
+    "categoria": "Peixes e Frutos do Mar"
   },
   {
     "titulos": [
@@ -9569,7 +9569,7 @@
       "Geléia de Bacon"
     ],
     "nome_do_arquivo": "bacon-jam.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -9703,7 +9703,7 @@
       "Couves de Bruxelas"
     ],
     "nome_do_arquivo": "brussels-sprouts.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -9711,7 +9711,7 @@
       "Pastinaga"
     ],
     "nome_do_arquivo": "parsnip.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -9744,7 +9744,7 @@
       "Swiss Chard Leaf"
     ],
     "nome_do_arquivo": "swiss-chard-leaf.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -9753,7 +9753,7 @@
       "Garlic Butter Shrimp"
     ],
     "nome_do_arquivo": "garlic-butter-shrimp.png",
-    "categoria": "Proteínas"
+    "categoria": "Peixes e Frutos do Mar"
   },
   {
     "titulos": [
@@ -9761,7 +9761,7 @@
       "Sizzling Sisig Plate"
     ],
     "nome_do_arquivo": "sizzling-sisig-plate.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -9769,7 +9769,7 @@
       "Tequeños"
     ],
     "nome_do_arquivo": "tequeos.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -9786,7 +9786,7 @@
       "Tinned Anchovy"
     ],
     "nome_do_arquivo": "tinned-anchovy.png",
-    "categoria": "Proteínas"
+    "categoria": "Peixes e Frutos do Mar"
   },
   {
     "titulos": [
@@ -9795,7 +9795,7 @@
       "Tiger Bread"
     ],
     "nome_do_arquivo": "tiger-bread.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -9804,7 +9804,7 @@
       "Tuile crocante de parmesão"
     ],
     "nome_do_arquivo": "crispy-parmesan-tuile.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -9829,7 +9829,7 @@
       "Whipped Cream"
     ],
     "nome_do_arquivo": "whipped-cream.png",
-    "categoria": "Laticínios"
+    "categoria": "Laticínios e Ovos"
   },
   {
     "titulos": [
@@ -9846,7 +9846,7 @@
       "Pano de prato"
     ],
     "nome_do_arquivo": "dishcloth.png",
-    "categoria": "Limpeza"
+    "categoria": "Limpeza e Higiene"
   },
   {
     "titulos": [
@@ -9879,7 +9879,7 @@
       "Derramamento de café na mesa"
     ],
     "nome_do_arquivo": "coffee-spill-on-desk.png",
-    "categoria": "Limpeza"
+    "categoria": "Limpeza e Higiene"
   },
   {
     "titulos": [
@@ -9945,7 +9945,7 @@
       "Miso Glazed Eggplant"
     ],
     "nome_do_arquivo": "miso-glazed-eggplant.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -9953,7 +9953,7 @@
       "Cauliflower Rice"
     ],
     "nome_do_arquivo": "cauliflower-rice.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -9962,7 +9962,7 @@
       "Semente de Lótus Tufada"
     ],
     "nome_do_arquivo": "puffed-lotus-seed.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -10011,7 +10011,7 @@
       "Salmon Roe"
     ],
     "nome_do_arquivo": "salmon-roe.png",
-    "categoria": "Proteínas"
+    "categoria": "Peixes e Frutos do Mar"
   },
   {
     "titulos": [
@@ -10034,7 +10034,7 @@
       "Remo de cacto"
     ],
     "nome_do_arquivo": "cactus-paddle.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -10051,7 +10051,7 @@
       "Smoked Duck Breast"
     ],
     "nome_do_arquivo": "smoked-duck-breast.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -10085,7 +10085,7 @@
       "Spilled Coffee"
     ],
     "nome_do_arquivo": "spilled-coffee.png",
-    "categoria": "Limpeza"
+    "categoria": "Limpeza e Higiene"
   },
   {
     "titulos": [
@@ -10118,7 +10118,7 @@
       "White Asparagus"
     ],
     "nome_do_arquivo": "white-asparagus.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -10165,7 +10165,7 @@
       "Pele De Frango Crocante"
     ],
     "nome_do_arquivo": "crispy-chicken-skin.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -10173,7 +10173,7 @@
       "Tiger Nut"
     ],
     "nome_do_arquivo": "tiger-nut.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -10335,7 +10335,7 @@
       "Rosemary Focaccia Knot"
     ],
     "nome_do_arquivo": "rosemary-focaccia-knot.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -10343,7 +10343,7 @@
       "Crab Rangoon"
     ],
     "nome_do_arquivo": "crab-rangoon.png",
-    "categoria": "Proteínas"
+    "categoria": "Peixes e Frutos do Mar"
   },
   {
     "titulos": [
@@ -10351,7 +10351,7 @@
       "Tornado Potato"
     ],
     "nome_do_arquivo": "tornado-potato.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -10400,7 +10400,7 @@
       "Grão De Bico Crocante"
     ],
     "nome_do_arquivo": "crispy-chickpeas.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -10408,7 +10408,7 @@
       "Saco de Arroz"
     ],
     "nome_do_arquivo": "bag-of-rice.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -10432,7 +10432,7 @@
       "Puffed Quinoa Bar"
     ],
     "nome_do_arquivo": "puffed-quinoa-bar.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -10489,14 +10489,14 @@
       "Tubo de ovas de bacalhau"
     ],
     "nome_do_arquivo": "cod-roe-tube.png",
-    "categoria": "Proteínas"
+    "categoria": "Peixes e Frutos do Mar"
   },
   {
     "titulos": [
       "Mimolette"
     ],
     "nome_do_arquivo": "mimolette.png",
-    "categoria": "Laticínios"
+    "categoria": "Laticínios e Ovos"
   },
   {
     "titulos": [
@@ -10522,7 +10522,7 @@
       "Water Chestnut"
     ],
     "nome_do_arquivo": "water-chestnut.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -10537,14 +10537,14 @@
       "Salmiakki"
     ],
     "nome_do_arquivo": "salmiakki.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
       "Ossobuco"
     ],
     "nome_do_arquivo": "ossobuco.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -10553,7 +10553,7 @@
       "Fried Sage Leaf"
     ],
     "nome_do_arquivo": "fried-sage-leaf.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -10561,7 +10561,7 @@
       "Legumes picados"
     ],
     "nome_do_arquivo": "chopped-vegetables.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -10578,7 +10578,7 @@
       "Tuna bowl"
     ],
     "nome_do_arquivo": "tuna-bowl.png",
-    "categoria": "Proteínas"
+    "categoria": "Peixes e Frutos do Mar"
   },
   {
     "titulos": [
@@ -10637,7 +10637,7 @@
       "Caranguejo Azul"
     ],
     "nome_do_arquivo": "blue-crab.png",
-    "categoria": "Proteínas"
+    "categoria": "Peixes e Frutos do Mar"
   },
   {
     "titulos": [
@@ -10654,7 +10654,7 @@
       "Sanduíche de picles com manteiga de amendoim"
     ],
     "nome_do_arquivo": "peanut-butter-pickle-sandwich.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -10672,7 +10672,7 @@
       "Zucchini Flower Tempura"
     ],
     "nome_do_arquivo": "zucchini-flower-tempura.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -10681,7 +10681,7 @@
       "Latte"
     ],
     "nome_do_arquivo": "latte.png",
-    "categoria": "Laticínios"
+    "categoria": "Laticínios e Ovos"
   },
   {
     "titulos": [
@@ -10722,7 +10722,7 @@
       "Tortilha de milho"
     ],
     "nome_do_arquivo": "corn-tortilla.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -10765,7 +10765,7 @@
       "Roasted Bone Marrow"
     ],
     "nome_do_arquivo": "roasted-bone-marrow.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [
@@ -10773,7 +10773,7 @@
       "Costelas de milho carbonizadas"
     ],
     "nome_do_arquivo": "charred-corn-ribs.png",
-    "categoria": "Vegetais"
+    "categoria": "Verduras e Legumes"
   },
   {
     "titulos": [
@@ -10798,7 +10798,7 @@
       "Chipa (Pão de Queijo)"
     ],
     "nome_do_arquivo": "chipa-cheese-bread.png",
-    "categoria": "Grãos e Massas"
+    "categoria": "Grãos, Massas e Cereais"
   },
   {
     "titulos": [
@@ -10806,7 +10806,7 @@
       "Spiral Potato Stick"
     ],
     "nome_do_arquivo": "spiral-potato-stick.png",
-    "categoria": "Snacks"
+    "categoria": "Snacks e Petiscos"
   },
   {
     "titulos": [
@@ -10822,7 +10822,7 @@
       "Cachorro-quente embrulhado em bacon"
     ],
     "nome_do_arquivo": "bacon-wrapped-hot-dog.png",
-    "categoria": "Proteínas"
+    "categoria": "Carnes e Aves"
   },
   {
     "titulos": [

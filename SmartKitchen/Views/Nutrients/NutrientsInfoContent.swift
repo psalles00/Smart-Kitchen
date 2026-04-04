@@ -30,5 +30,6 @@ struct NutrientsInfoContent: View {
                     .foregroundColor(.white.opacity(0.75))
             }
         }
+        .padding(.bottom, 12)
     }
 }

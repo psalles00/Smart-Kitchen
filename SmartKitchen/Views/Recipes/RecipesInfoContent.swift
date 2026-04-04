@@ -34,5 +34,6 @@ struct RecipesInfoContent: View {
                     .foregroundColor(.white)
             }
         }
+        .padding(.bottom, 12)
     }
 }

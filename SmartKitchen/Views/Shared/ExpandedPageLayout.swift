@@ -22,6 +22,8 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
     private let topMargin: CGFloat = 10
     private let leadingPanelInset: CGFloat = 8
     #if os(macOS)
+    private let macHeaderTopInset: CGFloat = -14
+    private let macHeaderHeight: CGFloat = 34
     private let macBottomInset: CGFloat = 8
     #endif
     private let bottomTabBarContentInset: CGFloat = 84
@@ -38,6 +40,17 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
         leadingPanelInset
         #endif
     }
+
+    #if os(macOS)
+    private var macContainerTopGap: CGFloat {
+        switch pageTheme {
+        case .lists, .recipes, .nutrients:
+            18
+        case .home:
+            0
+        }
+    }
+    #endif
 
     init(
         pageTheme: PageTheme,
@@ -64,8 +77,8 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
 
             VStack(spacing: 0) {
                 header(false)
-                    .frame(height: headerHeight)
-                    .padding(.top, 4)
+                    .frame(height: macHeaderHeight)
+                    .padding(.top, macHeaderTopInset)
                     .simultaneousGesture(pullRefreshGesture, including: onRefresh != nil ? .all : .none)
 
                 infoContent()
@@ -84,6 +97,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
                     }
                 }
                 .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+                .padding(.top, macContainerTopGap)
                 .padding(.horizontal, 16)
                 .padding(.bottom, macBottomInset)
             }
