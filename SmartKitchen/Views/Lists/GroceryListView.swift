@@ -103,7 +103,6 @@ struct GroceryListView: View {
             .background(alignment: .top) {
                 if categoryIndex == 0, itemIndex == 0 {
                     ScrollOffsetReader(coordinateSpace: "lists_scroll")
-                    PageScrollOffsetReader()
                 }
             }
         }

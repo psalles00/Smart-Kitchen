@@ -220,7 +220,6 @@ struct RecipesView: View {
             categoryFilter
 
             ScrollView {
-                PageScrollOffsetReader()
                 if viewMode == .gallery {
                     galleryView
                 } else {

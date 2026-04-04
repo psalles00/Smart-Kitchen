@@ -399,7 +399,6 @@ private struct HomeView: View {
             },
             content: {
                 ScrollView {
-                    PageScrollOffsetReader()
                     VStack(alignment: .leading, spacing: 24) {
                         assistantLauncher
                         actionDeck
