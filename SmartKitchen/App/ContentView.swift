@@ -121,7 +121,11 @@ struct ContentView: View {
             #endif
         })
         .environment(\.scrollToTopTrigger, scrollToTopTrigger)
+        #if os(macOS)
+        .preferredColorScheme(.dark)
+        #else
         .preferredColorScheme(settings?.appearanceMode.colorScheme)
+        #endif
         #if os(macOS)
         .tint(macActivePageTheme.accentColor)
         #else
@@ -218,27 +222,29 @@ struct ContentView: View {
                 }
             }
             .listStyle(.sidebar)
-            .scrollContentBackground(.hidden)
-            .macOSDarkSidebar()
-            .environment(\.colorScheme, .dark)
             .navigationTitle("")
         } detail: {
             switch selectedSidebar ?? .home {
             case .home:
                 NavigationStack { HomeView(onSettingsTap: { selectedSidebar = .settings }) }
                     .background(Color.clear)
+                    .environment(\.colorScheme, .light)
             case .lists:
                 NavigationStack { ListsTabView() }
                     .background(Color.clear)
+                    .environment(\.colorScheme, .light)
             case .recipes:
                 NavigationStack { RecipesView() }
                     .background(Color.clear)
+                    .environment(\.colorScheme, .light)
             case .nutrients:
                 NavigationStack { NutrientsPlaceholderView() }
                     .background(Color.clear)
+                    .environment(\.colorScheme, .light)
             case .settings:
                 NavigationStack { SettingsView() }
                     .background(Color.clear)
+                    .environment(\.colorScheme, .light)
             }
         }
         .toolbarBackground(.hidden, for: .windowToolbar)
@@ -971,32 +977,6 @@ private struct AddOptionButton: View {
     }
 }
 
-
-#if os(macOS)
-private struct DarkSidebarFix: NSViewRepresentable {
-    func makeNSView(context: Context) -> NSView {
-        let view = NSView()
-        DispatchQueue.main.async {
-            var current = view.superview
-            while let parent = current {
-                if String(describing: type(of: parent)).contains("VisualEffect") {
-                    parent.appearance = NSAppearance(named: .darkAqua)
-                    parent.wantsLayer = true
-                    parent.layer?.backgroundColor = NSColor(white: 0, alpha: 0.6).cgColor
-                }
-                current = parent.superview
-            }
-        }
-        return view
-    }
-    func updateNSView(_ nsView: NSView, context: Context) {}
-}
-extension View {
-    func macOSDarkSidebar() -> some View {
-        self.background(DarkSidebarFix())
-    }
-}
-#endif
 
 #if os(iOS)
 private struct ForceLightStatusBarModifier: ViewModifier {

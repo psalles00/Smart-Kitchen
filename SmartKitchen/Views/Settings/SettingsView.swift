@@ -35,7 +35,8 @@ struct SettingsView: View {
                 }
             }
 
-            // MARK: - Geral
+            // MARK: - Assistente
+            #if os(iOS)
             Section("Geral") {
                 if let settings {
                     Picker("Aparência", selection: Binding(
@@ -48,8 +49,8 @@ struct SettingsView: View {
                     }
                 }
             }
+            #endif
 
-            // MARK: - Assistente
             Section("Assistente") {
                 LabeledContent("Modelo IA") {
                     Text("GPT-4.1 mini")
