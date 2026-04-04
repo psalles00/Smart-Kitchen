@@ -140,7 +140,15 @@ final class CloudSyncService: @unchecked Sendable {
             throw error
         }
 
-        // 2. Update state and keep old container alive briefly for pending writes
+        // 2. Migrate local data into the new CloudKit container if needed (one-time)
+        do {
+            try Self.migrateLocalDataIfNeeded(from: container, to: newContainer)
+        } catch {
+            // Migration failure shouldn't crash the app; surface the error and continue with an empty cloud container
+            NSLog("[CloudSync] Migration to CloudKit failed: %@", String(describing: error))
+        }
+
+        // 3. Update state and keep old container alive briefly for pending writes
         let oldContainer = container
         syncEnabled = true
         container = newContainer
@@ -154,6 +162,9 @@ final class CloudSyncService: @unchecked Sendable {
             _ = oldContainer
             try? await Task.sleep(for: .seconds(3))
         }
+
+        // 4. Trigger an immediate sync/save to push newly migrated data
+        syncNow()
     }
 
     @MainActor
@@ -187,6 +198,83 @@ final class CloudSyncService: @unchecked Sendable {
     }
 
     // MARK: - Helpers
+
+    // Performs a one-time migration of local data into the new CloudKit container if the destination is empty.
+    @MainActor
+    private static func migrateLocalDataIfNeeded(from sourceContainer: ModelContainer, to destinationContainer: ModelContainer) throws {
+        let destinationContext = ModelContext(destinationContainer)
+        // If destination already has any data, skip migration to avoid duplicates
+        let hasDestData = try hasAnyData(in: destinationContext)
+        guard !hasDestData else { return }
+
+        let sourceContext = ModelContext(sourceContainer)
+
+        // Categories
+        let sourceCategories = try sourceContext.fetch(FetchDescriptor<Category>())
+        for item in sourceCategories {
+            destinationContext.insert(copyCategory(item))
+        }
+
+        // Pantry Items
+        let sourcePantry = try sourceContext.fetch(FetchDescriptor<PantryItem>())
+        for item in sourcePantry {
+            destinationContext.insert(copyPantryItem(item))
+        }
+
+        // Grocery Items
+        let sourceGrocery = try sourceContext.fetch(FetchDescriptor<GroceryItem>())
+        for item in sourceGrocery {
+            destinationContext.insert(copyGroceryItem(item))
+        }
+
+        // Utensils
+        let sourceUtensils = try sourceContext.fetch(FetchDescriptor<UtensilItem>())
+        for item in sourceUtensils {
+            destinationContext.insert(copyUtensilItem(item))
+        }
+
+        // Recipes (deep copy of ingredients/steps/media is handled inside copyRecipe)
+        let sourceRecipes = try sourceContext.fetch(FetchDescriptor<Recipe>())
+        for recipe in sourceRecipes {
+            destinationContext.insert(copyRecipe(recipe))
+        }
+
+        // Chat messages
+        let sourceMessages = try sourceContext.fetch(FetchDescriptor<ChatMessage>())
+        for message in sourceMessages {
+            destinationContext.insert(copyChatMessage(message))
+        }
+
+        // App settings
+        let sourceSettings = try sourceContext.fetch(FetchDescriptor<AppSettings>())
+        for settings in sourceSettings {
+            destinationContext.insert(copyAppSettings(settings))
+        }
+
+        try destinationContext.save()
+    }
+
+    @MainActor
+    private static func hasAnyData(in context: ModelContext) throws -> Bool {
+        // Check a few representative models quickly using a fetchLimit
+        var fdRecipe = FetchDescriptor<Recipe>()
+        fdRecipe.fetchLimit = 1
+        if try !context.fetch(fdRecipe).isEmpty { return true }
+
+        var fdPantry = FetchDescriptor<PantryItem>()
+        fdPantry.fetchLimit = 1
+        if try !context.fetch(fdPantry).isEmpty { return true }
+
+        var fdGrocery = FetchDescriptor<GroceryItem>()
+        fdGrocery.fetchLimit = 1
+        if try !context.fetch(fdGrocery).isEmpty { return true }
+
+        var fdSettings = FetchDescriptor<AppSettings>()
+        fdSettings.fetchLimit = 1
+        if try !context.fetch(fdSettings).isEmpty { return true }
+
+        return false
+    }
 
     private static func makeContainer(usingCloudKit: Bool) throws -> ModelContainer {
         let configuration = ModelConfiguration(
@@ -370,3 +458,4 @@ final class CloudSyncService: @unchecked Sendable {
         return copy
     }
 }
+

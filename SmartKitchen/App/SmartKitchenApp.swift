@@ -11,6 +11,7 @@ extension Notification.Name {
 
 @main
 struct SmartKitchenApp: App {
+    @Environment(\.scenePhase) private var scenePhase
     @State private var cloudSync = CloudSyncService.shared
 
     init() {
@@ -29,6 +30,11 @@ struct SmartKitchenApp: App {
             ContentView()
                 .modelContainer(cloudSync.container)
                 .id(cloudSync.containerID)
+                .onChange(of: scenePhase) { oldValue, newValue in
+                    if newValue == .active {
+                        cloudSync.syncNow()
+                    }
+                }
         }
         #if os(macOS)
         .defaultSize(width: 1100, height: 750)
