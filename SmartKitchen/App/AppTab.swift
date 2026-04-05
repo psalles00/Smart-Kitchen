@@ -6,15 +6,15 @@ enum AppTab: String, Hashable {
     case lists
     case recipes
     case nutrients
-    case add
+    case commandBar
 
     var icon: String {
         switch self {
-        case .assistant: "house"
-        case .lists:     "list.bullet.clipboard"
-        case .recipes:   "book.closed"
-        case .nutrients: "chart.bar.doc.horizontal"
-        case .add:       "plus"
+        case .assistant:  "house"
+        case .lists:      "list.bullet.clipboard"
+        case .recipes:    "book.closed"
+        case .nutrients:  "chart.bar.doc.horizontal"
+        case .commandBar: "sparkle.magnifyingglass"
         }
     }
 
@@ -28,7 +28,7 @@ enum AppTab: String, Hashable {
             .recipes
         case .nutrients:
             .nutrients
-        case .add:
+        case .commandBar:
             nil
         }
     }

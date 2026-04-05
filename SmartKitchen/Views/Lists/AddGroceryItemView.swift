@@ -8,6 +8,8 @@ struct AddGroceryItemView: View {
     @Query(sort: \GroceryItem.sortOrder) private var allItems: [GroceryItem]
     @Query(sort: \Category.sortOrder) private var allCategories: [Category]
 
+    var initialName: String = ""
+
     @State private var name = ""
     @State private var descriptionText = ""
     @State private var imageData: Data?
@@ -171,6 +173,9 @@ struct AddGroceryItemView: View {
             loadPhoto()
         }
         .onAppear {
+            if !initialName.isEmpty {
+                name = initialName
+            }
             DispatchQueue.main.async {
                 focusNameField = true
             }

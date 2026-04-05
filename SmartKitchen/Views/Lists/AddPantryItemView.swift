@@ -19,6 +19,8 @@ struct AddPantryItemView: View {
     @Query(sort: \PantryItem.sortOrder) private var allItems: [PantryItem]
     @Query(sort: \Category.sortOrder) private var allCategories: [Category]
 
+    var initialName: String = ""
+
     @State private var name = ""
     @State private var descriptionText = ""
     @State private var imageData: Data?
@@ -91,6 +93,9 @@ struct AddPantryItemView: View {
             loadPhoto()
         }
         .onAppear {
+            if !initialName.isEmpty {
+                name = initialName
+            }
             DispatchQueue.main.async {
                 focusNameField = true
             }

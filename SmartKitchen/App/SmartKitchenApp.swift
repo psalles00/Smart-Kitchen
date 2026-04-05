@@ -44,18 +44,35 @@ private struct NewItemCommandActionKey: FocusedValueKey {
     typealias Value = NewItemCommandAction
 }
 
+private struct OpenCommandBarActionKey: FocusedValueKey {
+    typealias Value = () -> Void
+}
+
 extension FocusedValues {
     var newItemCommandAction: NewItemCommandAction? {
         get { self[NewItemCommandActionKey.self] }
         set { self[NewItemCommandActionKey.self] = newValue }
     }
+
+    var openCommandBarAction: (() -> Void)? {
+        get { self[OpenCommandBarActionKey.self] }
+        set { self[OpenCommandBarActionKey.self] = newValue }
+    }
 }
 
 struct MacNewItemCommands: Commands {
     @FocusedValue(\.newItemCommandAction) private var newItemCommandAction
+    @FocusedValue(\.openCommandBarAction) private var openCommandBarAction
 
     var body: some Commands {
         CommandGroup(replacing: .newItem) {
+            Button("Buscar e Adicionar…") {
+                openCommandBarAction?()
+            }
+            .keyboardShortcut("k", modifiers: .command)
+
+            Divider()
+
             Button(newItemCommandAction?.title ?? "Novo") {
                 newItemCommandAction?.perform()
             }

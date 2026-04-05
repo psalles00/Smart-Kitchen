@@ -37,12 +37,18 @@ struct ContentView: View {
     @Query private var settingsArray: [AppSettings]
     @State private var selectedTab: AppTab = .assistant
     @State private var lastContentTab: AppTab = .assistant
-    @State private var showAddOptions = false
-    @State private var addSheetType: AddSheetType?
+    @State private var showCommandBar = false
+    @State private var searchQuery = ""
     @State private var showAssistant = false
     @State private var showSettings = false
-    @State private var isBouncingBackFromAdd = false
+    @State private var showAddPantry = false
+    @State private var showAddGrocery = false
+    @State private var showAddRecipe = false
+    @State private var showAddUtensil = false
+    @State private var addItemPrefill = ""
+    @State private var isBouncingBackFromCommandBar = false
     @State private var scrollToTopTrigger: Int = 0
+    @StateObject private var searchService = UniversalSearchService()
 
     #if os(macOS)
     @State private var selectedSidebar: SidebarItem? = .home
@@ -60,20 +66,12 @@ struct ContentView: View {
 
     private var settings: AppSettings? { settingsArray.first }
     private var activePageTheme: PageTheme { selectedTab.pageTheme ?? lastContentTab.pageTheme ?? .home }
-    private var addMenuOptions: [AddSheetType] {
-        var options: [AddSheetType] = [.pantryItem, .groceryItem, .recipe]
-        if settings?.showUtensils == true {
-            options.append(.utensil)
-        }
-        options.append(.assistantConversation)
-        return options
-    }
 
     private var tabSelectionBinding: Binding<AppTab> {
         Binding(
             get: { selectedTab },
             set: { newValue in
-                if newValue == selectedTab && newValue != .add && !isBouncingBackFromAdd {
+                if newValue == selectedTab && newValue != .commandBar && !isBouncingBackFromCommandBar {
                     scrollToTopTrigger += 1
                 }
                 selectedTab = newValue
@@ -82,35 +80,30 @@ struct ContentView: View {
     }
 
     var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            mainTabView
-
-            if showAddOptions {
-                Color.black.opacity(0.001)
-                    .ignoresSafeArea()
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        closeAddMenu()
-                    }
-                    .transition(.opacity)
-            }
-
-            addOptionsOverlay
-        }
-        .sheet(item: $addSheetType) { type in
+        mainTabView
+        .sheet(isPresented: $showAddPantry) {
             NavigationStack {
-                switch type {
-                case .pantryItem:
-                    AddPantryItemView()
-                case .groceryItem:
-                    AddGroceryItemView()
-                case .recipe:
-                    AddRecipeView()
-                case .utensil:
-                    AddUtensilItemView()
-                case .assistantConversation:
-                    Color.clear
-                }
+                AddPantryItemView(initialName: addItemPrefill)
+            }
+            .forceLightStatusBar()
+            .onDisappear { addItemPrefill = "" }
+        }
+        .sheet(isPresented: $showAddGrocery) {
+            NavigationStack {
+                AddGroceryItemView(initialName: addItemPrefill)
+            }
+            .forceLightStatusBar()
+            .onDisappear { addItemPrefill = "" }
+        }
+        .sheet(isPresented: $showAddRecipe) {
+            NavigationStack {
+                AddRecipeView()
+            }
+            .forceLightStatusBar()
+        }
+        .sheet(isPresented: $showAddUtensil) {
+            NavigationStack {
+                AddUtensilItemView()
             }
             .forceLightStatusBar()
         }
@@ -137,6 +130,14 @@ struct ContentView: View {
                 SettingsView()
             }
             .forceLightStatusBar()
+        }
+        .sheet(isPresented: $showCommandBar) {
+            CommandBarView { action in
+                handleCommandBarAction(action)
+            }
+            #if os(macOS)
+            .frame(width: 560, height: 480)
+            #endif
         }
         .onAppear {
             // TODO: Re-enable daily backup once BackupManager.swift is included in this target.
@@ -201,11 +202,19 @@ struct ContentView: View {
                 Label("Nutrientes", systemImage: AppTab.nutrients.icon)
             }
 
-            Tab(value: AppTab.add, role: .search) {
-                Color.clear
+            Tab(value: AppTab.commandBar, role: .search) {
+                CommandBarSearchContent(
+                    query: $searchQuery,
+                    searchService: searchService,
+                    onAction: { handleCommandBarAction($0) }
+                )
             } label: {
-                Label("Adicionar", systemImage: AppTab.add.icon)
+                Label("Buscar", systemImage: AppTab.commandBar.icon)
             }
+        }
+        .searchable(text: $searchQuery, placement: .automatic, prompt: "Buscar, adicionar ou perguntar…")
+        .onChange(of: searchQuery) { _, newValue in
+            searchService.search(query: newValue, context: modelContext, showUtensils: settings?.showUtensils == true)
         }
     }
 
@@ -227,6 +236,16 @@ struct ContentView: View {
             .listStyle(.sidebar)
             .navigationTitle("")
             .tint(macActivePageTheme.accentColor)
+            .toolbar {
+                ToolbarItem(placement: .automatic) {
+                    Button {
+                        showCommandBar = true
+                    } label: {
+                        Label("Buscar", systemImage: "sparkle.magnifyingglass")
+                    }
+                    .keyboardShortcut("k", modifiers: .command)
+                }
+            }
         } detail: {
             switch selectedSidebar ?? .home {
             case .home:
@@ -253,6 +272,7 @@ struct ContentView: View {
         }
         .toolbarBackground(.hidden, for: .windowToolbar)
         .toolbarColorScheme(.dark, for: .windowToolbar)
+        .focusedSceneValue(\.openCommandBarAction, { showCommandBar = true })
         .background {
             macAppBackground
                 .ignoresSafeArea()
@@ -294,44 +314,52 @@ struct ContentView: View {
     #endif
 
     private func handleTabSelectionChange(_ newValue: AppTab) {
-        if newValue == .add {
-            isBouncingBackFromAdd = true
+        if newValue == .commandBar {
+            // On macOS, open the command bar sheet instead
+            #if os(macOS)
+            isBouncingBackFromCommandBar = true
             selectedTab = lastContentTab
-            openAddOptionsFromTab()
+            showCommandBar = true
+            return
+            #endif
+            // On iOS, the native search tab handles it
             return
         }
 
-        if isBouncingBackFromAdd {
-            isBouncingBackFromAdd = false
+        if isBouncingBackFromCommandBar {
+            isBouncingBackFromCommandBar = false
             return
         }
 
         lastContentTab = newValue
-        if showAddOptions {
-            closeAddMenu()
-        }
     }
 
-    private func selectAddType(_ type: AddSheetType) {
-        closeAddMenu()
-        switch type {
-        case .assistantConversation:
+    private func handleCommandBarAction(_ action: CommandBarAction) {
+        switch action {
+        case .openPantryItem:
+            selectedTab = .lists
+        case .openGroceryItem:
+            selectedTab = .lists
+        case .openRecipe:
+            selectedTab = .recipes
+        case .openUtensil:
+            selectedTab = .lists
+        case .addPantryItem(let prefill):
+            addItemPrefill = prefill
+            showAddPantry = true
+        case .addGroceryItem(let prefill):
+            addItemPrefill = prefill
+            showAddGrocery = true
+        case .addRecipe:
+            showAddRecipe = true
+        case .addUtensil:
+            showAddUtensil = true
+        case .askAssistant:
             clearChatMessages()
             showAssistant = true
-        case .recipe, .pantryItem, .groceryItem, .utensil:
-            addSheetType = type
-        }
-    }
-
-    private func closeAddMenu() {
-        withAnimation(.spring(response: 0.28, dampingFraction: 0.88)) {
-            showAddOptions = false
-        }
-    }
-
-    private func openAddOptionsFromTab() {
-        withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) {
-            showAddOptions.toggle()
+        case .openAssistant:
+            clearChatMessages()
+            showAssistant = true
         }
     }
 
@@ -343,29 +371,6 @@ struct ContentView: View {
         }
     }
 
-    private var addOptionsOverlay: some View {
-        VStack(alignment: .trailing, spacing: 10) {
-            if showAddOptions {
-                ForEach(Array(addMenuOptions.enumerated()), id: \.element.id) { index, type in
-                    AddOptionButton(type: type) {
-                        selectAddType(type)
-                    }
-                    .transition(
-                        .asymmetric(
-                            insertion: .offset(x: 18, y: CGFloat(18 + (index * 10)))
-                                .combined(with: .scale(scale: 0.92, anchor: .bottomTrailing))
-                                .combined(with: .opacity),
-                            removal: .offset(x: 10, y: 8)
-                                .combined(with: .scale(scale: 0.96, anchor: .bottomTrailing))
-                                .combined(with: .opacity)
-                        )
-                    )
-                }
-            }
-        }
-        .padding(.trailing, 14)
-        .padding(.bottom, 88)
-    }
 }
 
 #if os(macOS)
@@ -656,7 +661,7 @@ private struct HomeView: View {
             VStack(spacing: 10) {
                 ForEach(expiringItemsState.prefix(5)) { item in
                     HStack(spacing: 12) {
-                        IconImage(name: item.name, fallbackSymbol: "clock.badge.exclamationmark", size: 28)
+                        IconImage(name: item.name, iconFileName: item.iconName, fallbackSymbol: "clock.badge.exclamationmark", size: 28)
 
                         VStack(alignment: .leading, spacing: 3) {
                             Text(item.name)
@@ -914,83 +919,6 @@ private struct HomeRecipeMatchCard: View {
                     .foregroundStyle(.quaternary)
             }
         }
-    }
-}
-
-// MARK: - Add Sheet Types
-
-enum AddSheetType: String, Identifiable, CaseIterable {
-    case recipe
-    case pantryItem
-    case groceryItem
-    case utensil
-    case assistantConversation
-
-    var id: String { rawValue }
-
-    var title: LocalizedStringKey {
-        switch self {
-        case .recipe:      "Nova Receita"
-        case .pantryItem:  "Item da Despensa"
-        case .groceryItem: "Item do Mercado"
-        case .utensil:     "Utensílio"
-        case .assistantConversation: "Nova Conversa"
-        }
-    }
-
-    var subtitle: LocalizedStringKey {
-        switch self {
-        case .recipe:      "Crie e salve uma receita"
-        case .pantryItem:  "Adicione algo que você já tem"
-        case .groceryItem: "Inclua algo para comprar"
-        case .utensil:     "Adicione um utensílio"
-        case .assistantConversation: "Comece um novo chat com o assistente"
-        }
-    }
-
-    var icon: String {
-        switch self {
-        case .recipe:      "book.badge.plus"
-        case .pantryItem:  "refrigerator"
-        case .groceryItem: "cart.badge.plus"
-        case .utensil:     "fork.knife"
-        case .assistantConversation: "square.and.pencil"
-        }
-    }
-}
-
-private struct AddOptionButton: View {
-    let type: AddSheetType
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 12) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(type.title)
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.primary)
-                    Text(type.subtitle)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-
-                Image(systemName: type.icon)
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundStyle(.primary)
-                    .frame(width: 34, height: 34)
-                    .background(Color(.tertiarySystemFill), in: Circle())
-            }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
-            .background(.ultraThinMaterial, in: Capsule())
-            .overlay {
-                Capsule()
-                    .strokeBorder(Color.white.opacity(0.18), lineWidth: 1)
-            }
-            .shadow(color: .black.opacity(0.08), radius: 16, y: 8)
-        }
-        .buttonStyle(.plain)
     }
 }
 
