@@ -46,6 +46,7 @@ struct CommandBarSearchContent: View {
     let onAction: (CommandBarAction) -> Void
 
     @State private var selectedIndex = 0
+    @FocusState private var isSearchFocused: Bool
 
     private var settings: AppSettings? { settingsArray.first }
 
@@ -67,6 +68,10 @@ struct CommandBarSearchContent: View {
                     proxy.scrollTo(searchService.results[newIndex].id, anchor: .center)
                 }
             }
+        }
+        .focused($isSearchFocused)
+        .onAppear {
+            isSearchFocused = true
         }
         .onChange(of: query) { _, _ in
             selectedIndex = 0
