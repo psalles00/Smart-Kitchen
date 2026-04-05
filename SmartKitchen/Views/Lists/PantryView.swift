@@ -393,6 +393,10 @@ struct PantryItemRow: View {
     let onSendToGrocery: () -> Void
     let showsDivider: Bool
 
+    private var hasExtraData: Bool {
+        item.imageData != nil || !item.descriptionText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             if showsDivider {
@@ -405,19 +409,17 @@ struct PantryItemRow: View {
                 IconImage(name: item.name, iconFileName: item.iconName ?? categoryIconName, fallbackSymbol: "leaf", size: 24, showBalloon: true)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(item.name)
-                        .font(.system(size: 14, weight: .medium))
-                        .lineLimit(1)
-                    if isDetailed, !item.formattedQuantity.isEmpty {
-                        Text(item.formattedQuantity)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                    HStack(spacing: 4) {
+                        Text(item.name)
+                            .font(.system(size: 14, weight: .medium))
+                            .lineLimit(1)
+                        if hasExtraData {
+                            Image(systemName: "doc.text")
+                                .font(.system(size: 9))
+                                .foregroundStyle(.tertiary)
+                        }
                     }
-                    if let expiration = item.formattedExpirationDate {
-                        Text("Validade \(expiration)")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
+                    subtitleLine
                 }
 
                 Spacer()
@@ -438,6 +440,40 @@ struct PantryItemRow: View {
             }
             .padding(.vertical, 7)
             .padding(.horizontal, 16)
+        }
+    }
+
+    @ViewBuilder
+    private var subtitleLine: some View {
+        let description = item.descriptionText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let hasQuantity = isDetailed && !item.formattedQuantity.isEmpty
+        let hasExpiry = item.formattedExpirationDate != nil
+        let hasDescription = !description.isEmpty
+
+        if hasQuantity || hasExpiry || hasDescription {
+            HStack(spacing: 0) {
+                if hasDescription {
+                    Text(description)
+                        .lineLimit(1)
+                }
+                if hasDescription && (hasQuantity || hasExpiry) {
+                    Text("  ·  ")
+                        .foregroundStyle(.quaternary)
+                }
+                if hasQuantity {
+                    Text(item.formattedQuantity)
+                }
+                if hasQuantity && hasExpiry {
+                    Text("  ·  ")
+                        .foregroundStyle(.quaternary)
+                }
+                if let expiration = item.formattedExpirationDate {
+                    Text("Validade \(expiration)")
+                }
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
         }
     }
 }

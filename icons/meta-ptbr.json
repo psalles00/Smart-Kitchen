@@ -1,7 +1,7 @@
 {
   "tamanho": 128,
   "enviado_em": "2025-12-01 10:01:34",
-  "quantidade_de_objetos": 1312,
+  "quantidade_de_objetos": 1882,
   "itens": [
     {
       "titulo": "Torradeira",
@@ -27,7 +27,7 @@
       ],
       "volume": 1
     },
-    { 
+    {
       "titulo": "Forno de microondas",
       "nome_do_arquivo": "microwave-oven.png",
       "adicionado_em": "2025-05-15 16:06:53",
@@ -17229,6 +17229,7420 @@
         "proteína"
       ],
       "volume": 9
+    },
+    {
+      "titulo": "Leitor de Código de Barras",
+      "nome_do_arquivo": "barcode-scanner.png",
+      "adicionado_em": "2025-06-11 22:47:56",
+      "slug": "barcode-scanner",
+      "categoria": "Tecnologia e mídia",
+      "tags": [
+        "technology",
+        "electronics",
+        "identification"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Código de Barras",
+      "nome_do_arquivo": "barcode.png",
+      "adicionado_em": "2025-06-11 22:47:52",
+      "slug": "barcode",
+      "categoria": "Interface e símbolos",
+      "tags": [
+        "interface",
+        "symbol",
+        "identification"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Comprador",
+      "nome_do_arquivo": "buyer.png",
+      "adicionado_em": "2025-11-17 16:21:49",
+      "slug": "buyer",
+      "categoria": "Profissões",
+      "tags": [
+        "professions",
+        "work",
+        "market"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Caixa",
+      "nome_do_arquivo": "cashier.png",
+      "adicionado_em": "2025-05-16 20:55:56",
+      "slug": "cashier",
+      "categoria": "Profissões",
+      "tags": [
+        "service",
+        "work",
+        "finance"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Loja de Conveniência",
+      "nome_do_arquivo": "convenience-store.png",
+      "adicionado_em": "2025-07-24 09:02:04",
+      "slug": "convenience-store",
+      "categoria": "Lugares e estruturas",
+      "tags": [
+        "structure",
+        "urban",
+        "everyday"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Recorte de Cupom",
+      "nome_do_arquivo": "coupon-clip.png",
+      "adicionado_em": "2025-09-30 14:41:25",
+      "slug": "coupon-clip",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "organization",
+        "everyday",
+        "tool"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Cupom",
+      "nome_do_arquivo": "coupon.png",
+      "adicionado_em": "2025-06-28 18:55:17",
+      "slug": "coupon",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "everyday",
+        "payment",
+        "market"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Mercado Coberto",
+      "nome_do_arquivo": "covered-market.png",
+      "adicionado_em": "2025-07-06 13:41:10",
+      "slug": "covered-market",
+      "categoria": "Lugares e estruturas",
+      "tags": [
+        "market",
+        "structure",
+        "community"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Cliente",
+      "nome_do_arquivo": "customer.png",
+      "adicionado_em": "2025-11-17 16:01:49",
+      "slug": "customer",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "everyday",
+        "service",
+        "market"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Etiqueta de Desconto",
+      "nome_do_arquivo": "discount-tag-1.png",
+      "adicionado_em": "2025-08-29 13:10:11",
+      "slug": "discount-tag-1",
+      "categoria": "Interface e símbolos",
+      "tags": [
+        "interface",
+        "symbol",
+        "market"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Etiqueta de Desconto",
+      "nome_do_arquivo": "discount-tag.png",
+      "adicionado_em": "2025-08-29 13:10:06",
+      "slug": "discount-tag",
+      "categoria": "Interface e símbolos",
+      "tags": [
+        "interface",
+        "symbol",
+        "market"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Desconto",
+      "nome_do_arquivo": "discount.png",
+      "adicionado_em": "2025-05-24 15:01:17",
+      "slug": "discount",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "everyday",
+        "finance",
+        "payment"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Feira da Ladra",
+      "nome_do_arquivo": "flea-market.png",
+      "adicionado_em": "2025-05-27 00:20:47",
+      "slug": "flea-market",
+      "categoria": "Eventos",
+      "tags": [
+        "events",
+        "market",
+        "social"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Mercado Flutuante",
+      "nome_do_arquivo": "floating-market.png",
+      "adicionado_em": "2025-06-12 07:49:08",
+      "slug": "floating-market",
+      "categoria": "Lugares e estruturas",
+      "tags": [
+        "market",
+        "water",
+        "Asia"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Sacola de Supermercado",
+      "nome_do_arquivo": "grocery-bag.png",
+      "adicionado_em": "2025-06-14 14:13:22",
+      "slug": "grocery-bag",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "everyday",
+        "packaging",
+        "utility"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Cupom Fiscal de Supermercado",
+      "nome_do_arquivo": "grocery-receipt.png",
+      "adicionado_em": "2025-10-10 10:01:42",
+      "slug": "grocery-receipt",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "document",
+        "everyday",
+        "payment"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Salão de Mercado",
+      "nome_do_arquivo": "market-hall.png",
+      "adicionado_em": "2025-06-13 14:25:26",
+      "slug": "market-hall",
+      "categoria": "Lugares e estruturas",
+      "tags": [
+        "structure",
+        "market",
+        "community"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Praça de Mercado",
+      "nome_do_arquivo": "market-square.png",
+      "adicionado_em": "2025-05-17 00:11:13",
+      "slug": "market-square",
+      "categoria": "Lugares e estruturas",
+      "tags": [
+        "structure",
+        "urban",
+        "service"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Mercado",
+      "nome_do_arquivo": "marketplace.png",
+      "adicionado_em": "2025-06-14 04:01:08",
+      "slug": "marketplace",
+      "categoria": "Lugares e estruturas",
+      "tags": [
+        "market",
+        "public",
+        "community"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Comerciante",
+      "nome_do_arquivo": "merchant-trader.png",
+      "adicionado_em": "2025-07-16 08:38:48",
+      "slug": "merchant-trader",
+      "categoria": "Profissões",
+      "tags": [
+        "profession",
+        "market",
+        "wealth"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Mini Supermercado",
+      "nome_do_arquivo": "mini-supermarket.png",
+      "adicionado_em": "2025-06-26 15:37:23",
+      "slug": "mini-supermarket",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "market",
+        "everyday",
+        "community"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Oferta",
+      "nome_do_arquivo": "offer.png",
+      "adicionado_em": "2025-11-11 21:32:03",
+      "slug": "offer",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "everyday",
+        "market",
+        "selection"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Casa de Penhores",
+      "nome_do_arquivo": "pawnshop.png",
+      "adicionado_em": "2025-06-12 17:52:04",
+      "slug": "pawnshop",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "service",
+        "finance",
+        "market"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Desconto Percentual",
+      "nome_do_arquivo": "percentage-discount.png",
+      "adicionado_em": "2025-09-02 09:28:01",
+      "slug": "percentage-discount",
+      "categoria": "Interface e símbolos",
+      "tags": [
+        "interface",
+        "symbol",
+        "market"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Cesta de Compras Plástica",
+      "nome_do_arquivo": "plastic-shopping-basket.png",
+      "adicionado_em": "2025-11-04 09:12:02",
+      "slug": "plastic-shopping-basket",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "storage",
+        "organization",
+        "everyday"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Ponto de Venda",
+      "nome_do_arquivo": "point-of-sale.png",
+      "adicionado_em": "2025-06-03 14:48:00",
+      "slug": "point-of-sale",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "work",
+        "service",
+        "payment"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Etiqueta de Preço",
+      "nome_do_arquivo": "price-tag.png",
+      "adicionado_em": "2025-07-08 15:11:36",
+      "slug": "price-tag",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "everyday",
+        "market",
+        "identification"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Carrinho de Mão",
+      "nome_do_arquivo": "pushcart.png",
+      "adicionado_em": "2025-06-03 20:01:07",
+      "slug": "pushcart",
+      "categoria": "Veículos e transporte",
+      "tags": [
+        "vehicle",
+        "transport",
+        "market"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Recibo",
+      "nome_do_arquivo": "receipt-1.png",
+      "adicionado_em": "2025-06-10 18:28:48",
+      "slug": "receipt-1",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "document",
+        "finance",
+        "everyday"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Impressora de Recibos",
+      "nome_do_arquivo": "receipt-printer.png",
+      "adicionado_em": "2025-10-08 16:41:48",
+      "slug": "receipt-printer",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "equipment",
+        "printing",
+        "work"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Espeto de Recibos",
+      "nome_do_arquivo": "receipt-spike.png",
+      "adicionado_em": "2025-11-01 16:21:58",
+      "slug": "receipt-spike",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "office",
+        "organization",
+        "tool"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Recibo",
+      "nome_do_arquivo": "receipt.png",
+      "adicionado_em": "2025-06-08 07:01:29",
+      "slug": "receipt",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "document",
+        "finance",
+        "everyday"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Gerente de Loja",
+      "nome_do_arquivo": "retail-store-manager.png",
+      "adicionado_em": "2025-05-17 00:26:08",
+      "slug": "retail-store-manager",
+      "categoria": "Profissões",
+      "tags": [
+        "work",
+        "service",
+        "organization"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Sacola Reutilizável",
+      "nome_do_arquivo": "reusable-shopping-bag.png",
+      "adicionado_em": "2025-05-18 23:11:26",
+      "slug": "reusable-shopping-bag",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "eco-friendly",
+        "everyday",
+        "storage"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Gráfico de Funil de Vendas",
+      "nome_do_arquivo": "sales-funnel-chart.png",
+      "adicionado_em": "2025-07-30 17:25:52",
+      "slug": "sales-funnel-chart",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "work",
+        "visualization",
+        "market"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Vendedor",
+      "nome_do_arquivo": "salesperson.png",
+      "adicionado_em": "2025-05-16 23:46:00",
+      "slug": "salesperson",
+      "categoria": "Profissões",
+      "tags": [
+        "service",
+        "work",
+        "everyday"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Autoatendimento",
+      "nome_do_arquivo": "self-checkout.png",
+      "adicionado_em": "2025-10-02 22:41:23",
+      "slug": "self-checkout",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "technology",
+        "service",
+        "payment"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Loja",
+      "nome_do_arquivo": "shop.png",
+      "adicionado_em": "2025-05-17 14:26:14",
+      "slug": "shop",
+      "categoria": "Lugares e estruturas",
+      "tags": [
+        "structure",
+        "urban",
+        "service"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Sacola de Compras",
+      "nome_do_arquivo": "shopping-bag.png",
+      "adicionado_em": "2025-06-13 03:32:04",
+      "slug": "shopping-bag",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "everyday",
+        "packaging",
+        "accessory"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Cesta de Compras",
+      "nome_do_arquivo": "shopping-basket.png",
+      "adicionado_em": "2025-07-11 10:12:39",
+      "slug": "shopping-basket",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "everyday",
+        "organization",
+        "market"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Carrinho de Compras",
+      "nome_do_arquivo": "shopping-cart.png",
+      "adicionado_em": "2025-05-16 05:01:01",
+      "slug": "shopping-cart",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "organization",
+        "everyday",
+        "structure"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Shopping Center",
+      "nome_do_arquivo": "shopping-center.png",
+      "adicionado_em": "2025-10-31 09:03:09",
+      "slug": "shopping-center",
+      "categoria": "Lugares e estruturas",
+      "tags": [
+        "structure",
+        "urban",
+        "market"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Shopping Mall",
+      "nome_do_arquivo": "shopping-mall.png",
+      "adicionado_em": "2025-06-30 11:37:38",
+      "slug": "shopping-mall",
+      "categoria": "Lugares e estruturas",
+      "tags": [
+        "structure",
+        "urban",
+        "market"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Lojas",
+      "nome_do_arquivo": "shops.png",
+      "adicionado_em": "2025-10-24 12:50:57",
+      "slug": "shops",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "market",
+        "service",
+        "everyday"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Supermercado",
+      "nome_do_arquivo": "supermarket.png",
+      "adicionado_em": "2025-07-02 08:53:14",
+      "slug": "supermarket",
+      "categoria": "Lugares e estruturas",
+      "tags": [
+        "market",
+        "public",
+        "urban"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Feira Comercial",
+      "nome_do_arquivo": "trade-show.png",
+      "adicionado_em": "2025-06-10 21:12:49",
+      "slug": "trade-show",
+      "categoria": "Eventos",
+      "tags": [
+        "events",
+        "market",
+        "presentation"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Bazar",
+      "nome_do_arquivo": "yard-sale.png",
+      "adicionado_em": "2025-07-25 15:51:36",
+      "slug": "yard-sale",
+      "categoria": "Eventos",
+      "tags": [
+        "events",
+        "market",
+        "community"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Pilha AA",
+      "nome_do_arquivo": "aa-battery.png",
+      "adicionado_em": "2025-06-02 16:55:25",
+      "slug": "aa-battery",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "energy",
+        "electronics",
+        "everyday"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Lenços Antibacterianos",
+      "nome_do_arquivo": "antibacterial-wipes.png",
+      "adicionado_em": "2025-06-14 10:49:05",
+      "slug": "antibacterial-wipes",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "cleaning",
+        "sanitation",
+        "personal care"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Tubo de Gel de Arnica",
+      "nome_do_arquivo": "arnica-gel-tube.png",
+      "adicionado_em": "2025-11-09 16:21:59",
+      "slug": "arnica-gel-tube",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "wellness",
+        "first aid",
+        "personal care"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Mamadeira",
+      "nome_do_arquivo": "baby-feeding-bottle.png",
+      "adicionado_em": "2025-05-15 14:50:47",
+      "slug": "baby-feeding-bottle",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "children",
+        "nutrition",
+        "personal care"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Bicarbonato de Sódio",
+      "nome_do_arquivo": "baking-soda.png",
+      "adicionado_em": "2025-05-15 14:50:47",
+      "slug": "baking-soda",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "ingredient",
+        "cleaning",
+        "everyday"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Band-Aid",
+      "nome_do_arquivo": "band-aid.png",
+      "adicionado_em": "2025-06-02 10:24:52",
+      "slug": "band-aid",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "first aid",
+        "personal care",
+        "healthcare"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Kit de Costura",
+      "nome_do_arquivo": "basic-sewing-kit.png",
+      "adicionado_em": "2025-05-17 02:26:13",
+      "slug": "basic-sewing-kit",
+      "categoria": "Hobbies",
+      "tags": [
+        "art",
+        "equipment",
+        "clothing"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Toalha de Banho",
+      "nome_do_arquivo": "bath-towel.png",
+      "adicionado_em": "2025-07-06 14:31:01",
+      "slug": "bath-towel",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "bathroom",
+        "personal care",
+        "cleaning"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Bateria",
+      "nome_do_arquivo": "battery.png",
+      "adicionado_em": "2025-07-01 13:18:59",
+      "slug": "battery",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "energy",
+        "electronics",
+        "everyday"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Grânulos de Pólen de Abelha",
+      "nome_do_arquivo": "bee-pollen-granules.png",
+      "adicionado_em": "2025-05-15 14:50:47",
+      "slug": "bee-pollen-granules",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "nutrition",
+        "wellness",
+        "ingredient"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Vassoura de Palha",
+      "nome_do_arquivo": "besom.png",
+      "adicionado_em": "2025-06-04 21:37:05",
+      "slug": "besom",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "cleaning",
+        "everyday",
+        "utility"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Vela de Aniversário",
+      "nome_do_arquivo": "birthday-candle.png",
+      "adicionado_em": "2025-07-25 02:11:39",
+      "slug": "birthday-candle",
+      "categoria": "Eventos",
+      "tags": [
+        "events",
+        "celebration",
+        "holiday"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Água Sanitária",
+      "nome_do_arquivo": "bleach.png",
+      "adicionado_em": "2025-08-16 22:21:11",
+      "slug": "bleach",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "cleaning",
+        "sanitation",
+        "laundry"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Prendedor de Pão",
+      "nome_do_arquivo": "bread-clip.png",
+      "adicionado_em": "2025-07-14 02:11:36",
+      "slug": "bread-clip",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "everyday",
+        "packaging",
+        "organization"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Vassoura e Pá",
+      "nome_do_arquivo": "broom-and-shovel.png",
+      "adicionado_em": "2025-07-25 21:51:31",
+      "slug": "broom-and-shovel",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "cleaning",
+        "everyday",
+        "tool"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Vassoura",
+      "nome_do_arquivo": "broom.png",
+      "adicionado_em": "2025-05-15 18:51:50",
+      "slug": "broom",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "cleaning",
+        "appliance"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Balde",
+      "nome_do_arquivo": "bucket.png",
+      "adicionado_em": "2025-05-17 17:30:42",
+      "slug": "bucket",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "everyday",
+        "basic",
+        "cleaning"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Vela",
+      "nome_do_arquivo": "candle-wiki4y.png",
+      "adicionado_em": "2025-06-08 21:32:29",
+      "slug": "candle-wiki4y",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "lighting",
+        "decor",
+        "fragrance"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Vela",
+      "nome_do_arquivo": "candle.png",
+      "adicionado_em": "2025-05-15 21:11:03",
+      "slug": "candle",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "lighting",
+        "decor"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Luvas de Limpeza",
+      "nome_do_arquivo": "cleaning-gloves.png",
+      "adicionado_em": "2025-06-07 04:00:49",
+      "slug": "cleaning-gloves",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "cleaning",
+        "everyday",
+        "wearable"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Kit de Limpeza",
+      "nome_do_arquivo": "cleaning-kit-1.png",
+      "adicionado_em": "2025-06-27 08:37:34",
+      "slug": "cleaning-kit-1",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "cleaning",
+        "everyday",
+        "maintenance"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Kit de Limpeza",
+      "nome_do_arquivo": "cleaning-kit.png",
+      "adicionado_em": "2025-06-24 19:37:59",
+      "slug": "cleaning-kit",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "cleaning",
+        "everyday",
+        "tool"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Pregador de Roupa",
+      "nome_do_arquivo": "clothespin.png",
+      "adicionado_em": "2025-11-03 12:02:01",
+      "slug": "clothespin",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "everyday",
+        "laundry",
+        "fastener"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Pilha Comum",
+      "nome_do_arquivo": "consumer-battery.png",
+      "adicionado_em": "2025-06-02 21:47:22",
+      "slug": "consumer-battery",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "energy",
+        "electronics",
+        "everyday"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Cotonete",
+      "nome_do_arquivo": "cotton-swab.png",
+      "adicionado_em": "2025-06-10 09:12:58",
+      "slug": "cotton-swab",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "cleaning",
+        "everyday"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Fio Dental",
+      "nome_do_arquivo": "dental-floss.png",
+      "adicionado_em": "2025-06-12 08:40:56",
+      "slug": "dental-floss",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "personal care",
+        "sanitation",
+        "wellness"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Desodorante",
+      "nome_do_arquivo": "deodorant-1.png",
+      "adicionado_em": "2025-08-24 15:40:36",
+      "slug": "deodorant-1",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "sanitation",
+        "fragrance"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Desodorante",
+      "nome_do_arquivo": "deodorant.png",
+      "adicionado_em": "2025-07-24 11:41:37",
+      "slug": "deodorant",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "personal care",
+        "fragrance",
+        "sanitation"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Fraldas",
+      "nome_do_arquivo": "diapers.png",
+      "adicionado_em": "2025-06-23 03:43:19",
+      "slug": "diapers",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "sanitation",
+        "children"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Suplemento Alimentar",
+      "nome_do_arquivo": "dietary-supplement.png",
+      "adicionado_em": "2025-05-15 14:50:47",
+      "slug": "dietary-supplement",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "healthcare",
+        "wellness",
+        "nutrition"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Termômetro Digital",
+      "nome_do_arquivo": "digital-thermometer.png",
+      "adicionado_em": "2025-06-13 10:55:19",
+      "slug": "digital-thermometer",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "electronics",
+        "measurement",
+        "healthcare"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Saquinho de Cocô",
+      "nome_do_arquivo": "dog-poop-bag.png",
+      "adicionado_em": "2025-09-21 15:11:18",
+      "slug": "dog-poop-bag",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "dog",
+        "waste",
+        "sanitation"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Tapete de Entrada",
+      "nome_do_arquivo": "door-mat.png",
+      "adicionado_em": "2025-05-16 02:31:13",
+      "slug": "door-mat",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "decor",
+        "cleaning",
+        "everyday"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Capacho",
+      "nome_do_arquivo": "doormat.png",
+      "adicionado_em": "2025-05-15 19:51:03",
+      "slug": "doormat",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "decor",
+        "cleaning",
+        "organization"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Fita Silver Tape",
+      "nome_do_arquivo": "duct-tape.png",
+      "adicionado_em": "2025-09-08 13:21:48",
+      "slug": "duct-tape",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "tool",
+        "work",
+        "maintenance"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Pá de Lixo",
+      "nome_do_arquivo": "dustpan.png",
+      "adicionado_em": "2025-09-02 09:28:00",
+      "slug": "dustpan",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "cleaning",
+        "tool",
+        "everyday"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Protetor Auricular",
+      "nome_do_arquivo": "ear-plug.png",
+      "adicionado_em": "2025-10-30 19:41:47",
+      "slug": "ear-plug",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "protection",
+        "personal care",
+        "sleep"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Escova de Dente Elétrica",
+      "nome_do_arquivo": "electric-toothbrush.png",
+      "adicionado_em": "2025-05-15 16:43:02",
+      "slug": "electric-toothbrush",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "appliance"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Sal de Epsom",
+      "nome_do_arquivo": "epsom-salt.png",
+      "adicionado_em": "2025-06-14 05:43:05",
+      "slug": "epsom-salt",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "wellness",
+        "personal care",
+        "mineral"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Extensão Elétrica",
+      "nome_do_arquivo": "extension-cord.png",
+      "adicionado_em": "2025-05-16 02:10:56",
+      "slug": "extension-cord",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "technology",
+        "everyday",
+        "appliance"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Colírio",
+      "nome_do_arquivo": "eyedrop.png",
+      "adicionado_em": "2025-10-23 02:51:22",
+      "slug": "eyedrop",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "medicine",
+        "personal care"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Folha de Amaciante",
+      "nome_do_arquivo": "fabric-softener-sheet.png",
+      "adicionado_em": "2025-11-05 21:41:58",
+      "slug": "fabric-softener-sheet",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "laundry",
+        "cleaning",
+        "everyday"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Máscara Facial",
+      "nome_do_arquivo": "face-mask.png",
+      "adicionado_em": "2025-06-13 13:31:18",
+      "slug": "face-mask",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "healthcare",
+        "sanitation",
+        "wearable"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Escova de Dente de Dedo",
+      "nome_do_arquivo": "finger-toothbrush.png",
+      "adicionado_em": "2025-07-21 11:11:20",
+      "slug": "finger-toothbrush",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "cleaning",
+        "everyday"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Cortador de Unha",
+      "nome_do_arquivo": "fingernail-clipper.png",
+      "adicionado_em": "2025-06-11 12:57:28",
+      "slug": "fingernail-clipper",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "tool",
+        "everyday"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Fio Dental com Haste",
+      "nome_do_arquivo": "flossers.png",
+      "adicionado_em": "2025-07-11 19:51:21",
+      "slug": "flossers",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "personal care",
+        "cleaning",
+        "health"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Guardanapo Dobrado",
+      "nome_do_arquivo": "folded-napkin.png",
+      "adicionado_em": "2025-05-15 14:50:47",
+      "slug": "folded-napkin",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "everyday",
+        "cleaning",
+        "decor"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Colônia",
+      "nome_do_arquivo": "fragrance-cologne.png",
+      "adicionado_em": "2025-05-23 12:30:49",
+      "slug": "fragrance-cologne",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "everyday",
+        "fragrance"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Esmalte que Brilha no Escuro",
+      "nome_do_arquivo": "glow-in-the-dark-nail-polish.png",
+      "adicionado_em": "2025-07-09 02:10:56",
+      "slug": "glow-in-the-dark-nail-polish",
+      "categoria": "Moda e estilo",
+      "tags": [
+        "cosmetics",
+        "fashion",
+        "beauty"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Bastão de Cola",
+      "nome_do_arquivo": "glue-stick.png",
+      "adicionado_em": "2025-06-20 14:31:27",
+      "slug": "glue-stick",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "tool",
+        "craft",
+        "everyday"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Tinta de Cabelo",
+      "nome_do_arquivo": "hair-dye.png",
+      "adicionado_em": "2025-07-18 20:21:24",
+      "slug": "hair-dye",
+      "categoria": "Moda e estilo",
+      "tags": [
+        "beauty",
+        "cosmetics",
+        "hair"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Escova de Cabelo",
+      "nome_do_arquivo": "hairbrush.png",
+      "adicionado_em": "2025-06-14 05:49:04",
+      "slug": "hairbrush",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "tool",
+        "everyday"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Álcool em Gel",
+      "nome_do_arquivo": "hand-sanitizer.png",
+      "adicionado_em": "2025-05-16 03:10:51",
+      "slug": "hand-sanitizer",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "everyday",
+        "cleaning"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Jogo de Toalhas de Mão",
+      "nome_do_arquivo": "hand-towel-set.png",
+      "adicionado_em": "2025-09-18 13:50:59",
+      "slug": "hand-towel-set",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "everyday",
+        "cleaning",
+        "bathroom"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Toalha de Mão",
+      "nome_do_arquivo": "hand-towel.png",
+      "adicionado_em": "2025-05-15 21:40:56",
+      "slug": "hand-towel",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "bathroom",
+        "everyday",
+        "personal care"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Bolsa Térmica",
+      "nome_do_arquivo": "heating-pad.png",
+      "adicionado_em": "2025-06-14 11:01:09",
+      "slug": "heating-pad",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "personal care",
+        "heating",
+        "wellness"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Bolsa de Água Quente",
+      "nome_do_arquivo": "hot-water-bottle.png",
+      "adicionado_em": "2025-07-12 04:21:19",
+      "slug": "hot-water-bottle",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "wellness",
+        "comfort",
+        "heating"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Lâmpada Incandescente",
+      "nome_do_arquivo": "incandescent-light-bulb.png",
+      "adicionado_em": "2025-06-02 10:25:48",
+      "slug": "incandescent-light-bulb",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "lighting",
+        "everyday",
+        "energy"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Escova Interdental",
+      "nome_do_arquivo": "interdental-brush.png",
+      "adicionado_em": "2025-06-10 09:13:03",
+      "slug": "interdental-brush",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "personal care",
+        "wellness",
+        "tool"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Bola de Lavanderia",
+      "nome_do_arquivo": "laundry-ball.png",
+      "adicionado_em": "2025-10-04 16:51:23",
+      "slug": "laundry-ball",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "laundry",
+        "cleaning",
+        "eco-friendly"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Sabão de Lavar Roupa",
+      "nome_do_arquivo": "laundry-detergent.png",
+      "adicionado_em": "2025-05-16 01:31:09",
+      "slug": "laundry-detergent",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "cleaning",
+        "laundry",
+        "everyday"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Cápsula de Sabão",
+      "nome_do_arquivo": "laundry-pod.png",
+      "adicionado_em": "2025-07-18 11:11:50",
+      "slug": "laundry-pod",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "laundry",
+        "cleaning",
+        "everyday"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Folha de Lavanderia",
+      "nome_do_arquivo": "laundry-sheet.png",
+      "adicionado_em": "2025-10-10 10:11:43",
+      "slug": "laundry-sheet",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "laundry",
+        "cleaning",
+        "everyday"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Lâmpada",
+      "nome_do_arquivo": "light-bulb.png",
+      "adicionado_em": "2025-05-22 18:21:09",
+      "slug": "light-bulb",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "lighting",
+        "everyday",
+        "appliance"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Lâmpada",
+      "nome_do_arquivo": "lightbulb.png",
+      "adicionado_em": "2025-05-22 16:26:21",
+      "slug": "lightbulb",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "lighting",
+        "everyday",
+        "appliance"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Escova Tira-Pelo",
+      "nome_do_arquivo": "lint-brush.png",
+      "adicionado_em": "2025-07-08 22:01:04",
+      "slug": "lint-brush",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "cleaning",
+        "everyday",
+        "tool"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Removedor de Bolinhas",
+      "nome_do_arquivo": "lint-remover.png",
+      "adicionado_em": "2025-09-17 16:11:14",
+      "slug": "lint-remover",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "cleaning",
+        "tool",
+        "clothing"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Rolo Adesivo",
+      "nome_do_arquivo": "lint-roller.png",
+      "adicionado_em": "2025-07-08 23:00:57",
+      "slug": "lint-roller",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "cleaning",
+        "personal care",
+        "everyday"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Protetor Labial",
+      "nome_do_arquivo": "lip-balm.png",
+      "adicionado_em": "2025-07-05 13:31:09",
+      "slug": "lip-balm",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "personal care",
+        "health",
+        "cosmetics"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Refil de Sabonete Líquido",
+      "nome_do_arquivo": "liquid-soap-refill-pack.png",
+      "adicionado_em": "2025-10-21 11:41:23",
+      "slug": "liquid-soap-refill-pack",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "cleaning",
+        "eco-friendly"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Bucha de Banho",
+      "nome_do_arquivo": "loofah.png",
+      "adicionado_em": "2025-09-27 13:51:16",
+      "slug": "loofah",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "cleaning",
+        "bathroom"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Fósforo",
+      "nome_do_arquivo": "match.png",
+      "adicionado_em": "2025-07-24 21:21:34",
+      "slug": "match",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "everyday",
+        "tool",
+        "heating"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Máscara Médica",
+      "nome_do_arquivo": "medical-mask.png",
+      "adicionado_em": "2025-06-12 04:36:58",
+      "slug": "medical-mask",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "healthcare",
+        "sanitation",
+        "wearable"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Copo Menstrual",
+      "nome_do_arquivo": "menstrual-cup.png",
+      "adicionado_em": "2025-07-16 08:41:28",
+      "slug": "menstrual-cup",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "personal care",
+        "sanitation",
+        "eco-friendly"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Hidratante",
+      "nome_do_arquivo": "moisturizer.png",
+      "adicionado_em": "2025-06-03 15:05:54",
+      "slug": "moisturizer",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "wellness",
+        "everyday"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Esfregão",
+      "nome_do_arquivo": "mop.png",
+      "adicionado_em": "2025-05-26 07:41:33",
+      "slug": "mop",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "cleaning",
+        "everyday",
+        "utility"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Naftalina",
+      "nome_do_arquivo": "mothball.png",
+      "adicionado_em": "2025-09-11 23:11:22",
+      "slug": "mothball",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "everyday",
+        "cleaning",
+        "storage"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Enxaguante Bucal",
+      "nome_do_arquivo": "mouthwash.png",
+      "adicionado_em": "2025-07-11 19:41:25",
+      "slug": "mouthwash",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "personal care",
+        "health",
+        "sanitation"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Kit de Cuidados com as Unhas",
+      "nome_do_arquivo": "nail-care-kit.png",
+      "adicionado_em": "2025-07-25 14:01:45",
+      "slug": "nail-care-kit",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "personal care",
+        "wellness",
+        "beauty"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Lixa de Unha",
+      "nome_do_arquivo": "nail-file.png",
+      "adicionado_em": "2025-06-04 08:36:13",
+      "slug": "nail-file",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "beauty",
+        "everyday"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Tesoura de Unha",
+      "nome_do_arquivo": "nail-scissors.png",
+      "adicionado_em": "2025-06-11 20:26:01",
+      "slug": "nail-scissors",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "tool",
+        "everyday"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Luva de Nitrilo",
+      "nome_do_arquivo": "nitrile-glove.png",
+      "adicionado_em": "2025-09-01 22:51:25",
+      "slug": "nitrile-glove",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "healthcare",
+        "safety",
+        "sanitation"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Aparador de Pelos do Nariz",
+      "nome_do_arquivo": "nose-hair-trimmer.png",
+      "adicionado_em": "2025-09-17 12:21:33",
+      "slug": "nose-hair-trimmer",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "tool",
+        "everyday"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Pomada",
+      "nome_do_arquivo": "ointment.png",
+      "adicionado_em": "2025-07-25 15:31:44",
+      "slug": "ointment",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "medicine",
+        "personal care"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Chupeta",
+      "nome_do_arquivo": "pacifier.png",
+      "adicionado_em": "2025-09-01 23:51:24",
+      "slug": "pacifier",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "children",
+        "comfort",
+        "everyday"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Fita de Embalagem",
+      "nome_do_arquivo": "packing-tape.png",
+      "adicionado_em": "2025-07-07 11:31:02",
+      "slug": "packing-tape",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "packaging",
+        "work",
+        "tool"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Dispensador de Papel Toalha",
+      "nome_do_arquivo": "paper-towel-dispenser.png",
+      "adicionado_em": "2025-08-21 14:49:23",
+      "slug": "paper-towel-dispenser",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "cleaning",
+        "sanitation",
+        "everyday"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Lixeira com Pedal",
+      "nome_do_arquivo": "pedal-bin.png",
+      "adicionado_em": "2025-09-16 10:11:29",
+      "slug": "pedal-bin",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "sanitation",
+        "waste",
+        "cleaning"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Caneta",
+      "nome_do_arquivo": "pen.png",
+      "adicionado_em": "2025-05-15 19:04:04",
+      "slug": "pen",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "writing",
+        "organization",
+        "personal care"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Spray de Perfume",
+      "nome_do_arquivo": "perfume-spray.png",
+      "adicionado_em": "2025-06-03 14:10:59",
+      "slug": "perfume-spray",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "fragrance",
+        "everyday"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Removedor de Pelo de Animal",
+      "nome_do_arquivo": "pet-hair-remover.png",
+      "adicionado_em": "2025-10-30 22:21:56",
+      "slug": "pet-hair-remover",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "cleaning",
+        "pet",
+        "tool"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Rolo de Pelo de Animal",
+      "nome_do_arquivo": "pet-hair-roller.png",
+      "adicionado_em": "2025-10-11 15:11:40",
+      "slug": "pet-hair-roller",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "cleaning",
+        "pet",
+        "everyday"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Frasco de Comprimidos",
+      "nome_do_arquivo": "pill-bottle.png",
+      "adicionado_em": "2025-06-09 07:53:27",
+      "slug": "pill-bottle",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "medicine",
+        "packaging",
+        "healthcare"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Lâmina de Barbear",
+      "nome_do_arquivo": "razor.png",
+      "adicionado_em": "2025-05-31 17:23:34",
+      "slug": "razor",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "everyday",
+        "bathroom"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Saco Zip Reutilizável",
+      "nome_do_arquivo": "reusable-zip-bag.png",
+      "adicionado_em": "2025-10-10 10:21:49",
+      "slug": "reusable-zip-bag",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "storage",
+        "organization",
+        "eco-friendly"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Spray de Soro Fisiológico",
+      "nome_do_arquivo": "saline-spray.png",
+      "adicionado_em": "2025-06-11 01:00:56",
+      "slug": "saline-spray",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "personal care",
+        "healthcare",
+        "wellness"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Absorventes",
+      "nome_do_arquivo": "sanitary-pads.png",
+      "adicionado_em": "2025-07-11 23:21:36",
+      "slug": "sanitary-pads",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "personal care",
+        "sanitation",
+        "health"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Shampoo",
+      "nome_do_arquivo": "shampoo.png",
+      "adicionado_em": "2025-06-09 09:30:45",
+      "slug": "shampoo",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "cleaning",
+        "bathroom"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Creme de Barbear",
+      "nome_do_arquivo": "shaving-cream.png",
+      "adicionado_em": "2025-07-11 18:41:17",
+      "slug": "shaving-cream",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "bathroom",
+        "everyday"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Touca de Banho",
+      "nome_do_arquivo": "shower-cap.png",
+      "adicionado_em": "2025-07-25 17:01:32",
+      "slug": "shower-cap",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "bathroom",
+        "waterproof"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Gel de Banho",
+      "nome_do_arquivo": "shower-gel.png",
+      "adicionado_em": "2025-06-03 15:11:04",
+      "slug": "shower-gel",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "bathroom",
+        "cleaning"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Esponja de Banho",
+      "nome_do_arquivo": "shower-puff.png",
+      "adicionado_em": "2025-10-09 10:51:41",
+      "slug": "shower-puff",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "cleaning",
+        "bathroom"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Rodo de Box",
+      "nome_do_arquivo": "shower-squeegee.png",
+      "adicionado_em": "2025-09-27 11:01:11",
+      "slug": "shower-squeegee",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "cleaning",
+        "bathroom",
+        "tool"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Protetores Auriculares de Silicone",
+      "nome_do_arquivo": "silicone-earplugs.png",
+      "adicionado_em": "2025-10-10 16:51:39",
+      "slug": "silicone-earplugs",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "personal care",
+        "protection",
+        "health"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Barra de Sabão",
+      "nome_do_arquivo": "soap-bar.png",
+      "adicionado_em": "2025-05-16 23:11:05",
+      "slug": "soap-bar",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "cleaning",
+        "everyday"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Sabonete no Cordão",
+      "nome_do_arquivo": "soap-on-a-rope.png",
+      "adicionado_em": "2025-10-30 15:51:56",
+      "slug": "soap-on-a-rope",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "cleaning",
+        "bathroom"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Sabão",
+      "nome_do_arquivo": "soap.png",
+      "adicionado_em": "2025-05-17 16:45:38",
+      "slug": "soap",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "cleaning",
+        "basic"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Borrifador",
+      "nome_do_arquivo": "spray-bottle-1.png",
+      "adicionado_em": "2025-07-24 22:07:47",
+      "slug": "spray-bottle-1",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "personal care",
+        "cleaning",
+        "wellness"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Borrifador",
+      "nome_do_arquivo": "spray-bottle.png",
+      "adicionado_em": "2025-05-23 20:11:19",
+      "slug": "spray-bottle",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "cleaning",
+        "personal care",
+        "everyday"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Mop Spray",
+      "nome_do_arquivo": "spray-mop.png",
+      "adicionado_em": "2025-11-19 21:41:32",
+      "slug": "spray-mop",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "cleaning",
+        "tool",
+        "everyday"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Caneta Tira-Manchas",
+      "nome_do_arquivo": "stain-remover-pen.png",
+      "adicionado_em": "2025-10-04 16:11:20",
+      "slug": "stain-remover-pen",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "cleaning",
+        "tool",
+        "everyday"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Rolo Adesivo",
+      "nome_do_arquivo": "sticky-roller.png",
+      "adicionado_em": "2025-09-16 10:21:27",
+      "slug": "sticky-roller",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "cleaning",
+        "everyday",
+        "tool"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Protetor Solar",
+      "nome_do_arquivo": "sunscreen.png",
+      "adicionado_em": "2025-05-16 01:50:50",
+      "slug": "sunscreen",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "everyday",
+        "outdoor"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Super Cola",
+      "nome_do_arquivo": "super-glue.png",
+      "adicionado_em": "2025-09-09 15:41:46",
+      "slug": "super-glue",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "everyday",
+        "tool",
+        "maintenance"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Termômetro",
+      "nome_do_arquivo": "thermometer.png",
+      "adicionado_em": "2025-06-12 06:36:59",
+      "slug": "thermometer",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "measurement",
+        "healthcare",
+        "monitoring"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Lenço de Papel",
+      "nome_do_arquivo": "tissue.png",
+      "adicionado_em": "2025-06-03 16:26:01",
+      "slug": "tissue",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "cleaning",
+        "everyday"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Suporte de Escova de Vaso",
+      "nome_do_arquivo": "toilet-brush-holder.png",
+      "adicionado_em": "2025-06-04 04:31:01",
+      "slug": "toilet-brush-holder",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "bathroom",
+        "cleaning",
+        "organization"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Escova de Vaso",
+      "nome_do_arquivo": "toilet-brush.png",
+      "adicionado_em": "2025-05-19 02:55:48",
+      "slug": "toilet-brush",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "cleaning",
+        "bathroom",
+        "everyday"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Papel Higiênico",
+      "nome_do_arquivo": "toilet-paper.png",
+      "adicionado_em": "2025-05-16 22:51:04",
+      "slug": "toilet-paper",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "everyday",
+        "bathroom",
+        "personal care"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Limpador de Língua",
+      "nome_do_arquivo": "tongue-cleaner.png",
+      "adicionado_em": "2025-06-07 23:31:35",
+      "slug": "tongue-cleaner",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "personal care",
+        "wellness",
+        "tool"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Raspador de Língua",
+      "nome_do_arquivo": "tongue-scraper.png",
+      "adicionado_em": "2025-09-05 12:01:08",
+      "slug": "tongue-scraper",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "personal care",
+        "cleaning",
+        "health"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Fio Dental",
+      "nome_do_arquivo": "tooth-floss.png",
+      "adicionado_em": "2025-10-26 13:21:10",
+      "slug": "tooth-floss",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "cleaning",
+        "everyday"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Porta Escova de Dente",
+      "nome_do_arquivo": "toothbrush-holder.png",
+      "adicionado_em": "2025-05-18 22:16:11",
+      "slug": "toothbrush-holder",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "bathroom",
+        "organization",
+        "everyday"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Escova de Dente",
+      "nome_do_arquivo": "toothbrush.png",
+      "adicionado_em": "2025-05-17 15:45:35",
+      "slug": "toothbrush",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "everyday",
+        "bathroom"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Tubo de Pasta de Dente",
+      "nome_do_arquivo": "toothpaste-tube.png",
+      "adicionado_em": "2025-05-19 04:15:52",
+      "slug": "toothpaste-tube",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "everyday",
+        "bathroom"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Pasta de Dente",
+      "nome_do_arquivo": "toothpaste.png",
+      "adicionado_em": "2025-05-16 18:45:56",
+      "slug": "toothpaste",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "everyday",
+        "healthcare"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Toalha",
+      "nome_do_arquivo": "towel.png",
+      "adicionado_em": "2025-06-10 22:00:41",
+      "slug": "towel",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "cleaning",
+        "everyday"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Saco de Lixo",
+      "nome_do_arquivo": "trash-bag.png",
+      "adicionado_em": "2025-07-25 15:41:39",
+      "slug": "trash-bag",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "waste",
+        "sanitation",
+        "everyday"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Lixeira",
+      "nome_do_arquivo": "trash-bin.png",
+      "adicionado_em": "2025-06-11 12:00:53",
+      "slug": "trash-bin",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "sanitation",
+        "everyday",
+        "utility"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Lata de Lixo",
+      "nome_do_arquivo": "trash-can.png",
+      "adicionado_em": "2025-05-15 20:31:06",
+      "slug": "trash-can",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "organization",
+        "cleaning"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Pinça",
+      "nome_do_arquivo": "tweezers.png",
+      "adicionado_em": "2025-06-04 08:30:46",
+      "slug": "tweezers",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "first aid",
+        "utility"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Guarda-Chuva",
+      "nome_do_arquivo": "umbrella.png",
+      "adicionado_em": "2025-05-15 16:49:08",
+      "slug": "umbrella",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "weather",
+        "outdoor"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Aspirador de Pó",
+      "nome_do_arquivo": "vacuum-cleaner.png",
+      "adicionado_em": "2025-05-15 16:25:03",
+      "slug": "vacuum-cleaner",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "appliance",
+        "cleaning"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Vitamina em Goma",
+      "nome_do_arquivo": "vitamin-gummy.png",
+      "adicionado_em": "2025-05-15 14:50:47",
+      "slug": "vitamin-gummy",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "nutrition",
+        "wellness",
+        "supplement"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Vitaminas",
+      "nome_do_arquivo": "vitamins.png",
+      "adicionado_em": "2025-05-15 14:50:47",
+      "slug": "vitamins",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "nutrition",
+        "healthcare",
+        "wellness"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Rodo de Janela",
+      "nome_do_arquivo": "window-squeegee.png",
+      "adicionado_em": "2025-05-16 04:40:58",
+      "slug": "window-squeegee",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "cleaning",
+        "everyday",
+        "bathroom"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Máquina de Lavar",
+      "nome_do_arquivo": "washing-machine.png",
+      "adicionado_em": "2025-05-15 16:37:13",
+      "slug": "washing-machine",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "appliance",
+        "laundry",
+        "cleaning"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Secador de Cabelo",
+      "nome_do_arquivo": "hair-dryer.png",
+      "adicionado_em": "2025-05-15 16:40:06",
+      "slug": "hair-dryer",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "appliance",
+        "personal care",
+        "cleaning"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Cortina de Box",
+      "nome_do_arquivo": "shower-curtain.png",
+      "adicionado_em": "2025-05-15 19:10:00",
+      "slug": "shower-curtain",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "privacy",
+        "decor",
+        "bathroom"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Vaso de Planta",
+      "nome_do_arquivo": "plant-pot.png",
+      "adicionado_em": "2025-05-15 19:30:56",
+      "slug": "plant-pot",
+      "categoria": "Natureza e ar livre",
+      "tags": [
+        "decor",
+        "storage",
+        "outdoor"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Ar-Condicionado de Janela",
+      "nome_do_arquivo": "window-air-conditioner.png",
+      "adicionado_em": "2025-05-15 21:01:02",
+      "slug": "window-air-conditioner",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "appliance",
+        "cooling",
+        "technology"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Cesta de Piquenique",
+      "nome_do_arquivo": "picnic-basket.png",
+      "adicionado_em": "2025-05-15 22:50:55",
+      "slug": "picnic-basket",
+      "categoria": "Natureza e ar livre",
+      "tags": [
+        "storage",
+        "outdoor",
+        "everyday"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Chuveiro",
+      "nome_do_arquivo": "shower-head.png",
+      "adicionado_em": "2025-05-15 23:40:47",
+      "slug": "shower-head",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "bathroom",
+        "appliance",
+        "everyday"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Tapete de Box",
+      "nome_do_arquivo": "shower-mat.png",
+      "adicionado_em": "2025-05-16 01:41:04",
+      "slug": "shower-mat",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "bathroom",
+        "comfort",
+        "everyday"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Pregador de Roupa",
+      "nome_do_arquivo": "laundry-peg.png",
+      "adicionado_em": "2025-05-16 03:40:56",
+      "slug": "laundry-peg",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "laundry",
+        "everyday",
+        "organization"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Cesto de Roupa Suja",
+      "nome_do_arquivo": "laundry-basket.png",
+      "adicionado_em": "2025-05-16 04:30:52",
+      "slug": "laundry-basket",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "laundry",
+        "organization",
+        "everyday"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Regador",
+      "nome_do_arquivo": "watering-can.png",
+      "adicionado_em": "2025-05-16 05:20:51",
+      "slug": "watering-can",
+      "categoria": "Natureza e ar livre",
+      "tags": [
+        "outdoor",
+        "nature",
+        "everyday"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Escova de Sapato",
+      "nome_do_arquivo": "shoe-brush.png",
+      "adicionado_em": "2025-05-16 06:30:56",
+      "slug": "shoe-brush",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "cleaning",
+        "everyday"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Kit de Fabricação de Sabão",
+      "nome_do_arquivo": "soap-making-kit.png",
+      "adicionado_em": "2025-05-16 12:34:18",
+      "slug": "soap-making-kit",
+      "categoria": "Hobbies",
+      "tags": [
+        "art",
+        "equipment",
+        "eco-friendly"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Bloco de Desenho",
+      "nome_do_arquivo": "basic-drawing-pad.png",
+      "adicionado_em": "2025-05-17 16:05:39",
+      "slug": "basic-drawing-pad",
+      "categoria": "Hobbies",
+      "tags": [
+        "hobbies",
+        "art",
+        "basic"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Saboneteira",
+      "nome_do_arquivo": "soap-dish.png",
+      "adicionado_em": "2025-05-17 16:20:41",
+      "slug": "soap-dish",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "bathroom",
+        "organization",
+        "basic"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Faca de Bushcraft",
+      "nome_do_arquivo": "bushcraft-knife.png",
+      "adicionado_em": "2025-05-17 17:00:44",
+      "slug": "bushcraft-knife",
+      "categoria": "Natureza e ar livre",
+      "tags": [
+        "outdoor",
+        "equipment",
+        "basic"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Vaso Sanitário",
+      "nome_do_arquivo": "toilet.png",
+      "adicionado_em": "2025-05-17 18:10:39",
+      "slug": "toilet",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "bathroom",
+        "everyday",
+        "basic"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Tablet",
+      "nome_do_arquivo": "tablet-computer.png",
+      "adicionado_em": "2025-05-17 19:55:41",
+      "slug": "tablet-computer",
+      "categoria": "Tecnologia e mídia",
+      "tags": [
+        "technology",
+        "media",
+        "everyday"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Colchonete",
+      "nome_do_arquivo": "sleeping-pad.png",
+      "adicionado_em": "2025-05-18 15:31:24",
+      "slug": "sleeping-pad",
+      "categoria": "Natureza e ar livre",
+      "tags": [
+        "outdoor",
+        "nature",
+        "basic"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Pente Fino",
+      "nome_do_arquivo": "tooth-comb.png",
+      "adicionado_em": "2025-05-19 03:30:53",
+      "slug": "tooth-comb",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "everyday",
+        "personal care",
+        "basic"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Desentupidor",
+      "nome_do_arquivo": "toilet-plunger.png",
+      "adicionado_em": "2025-05-19 03:35:52",
+      "slug": "toilet-plunger",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "everyday",
+        "bathroom",
+        "basic"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Suporte de Papel Higiênico",
+      "nome_do_arquivo": "toilet-paper-holder.png",
+      "adicionado_em": "2025-05-19 08:05:54",
+      "slug": "toilet-paper-holder",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "bathroom",
+        "everyday",
+        "organization"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Troféu",
+      "nome_do_arquivo": "cup-sports-reward.png",
+      "adicionado_em": "2025-05-23 00:20:46",
+      "slug": "cup-sports-reward",
+      "categoria": "Esportes",
+      "tags": [
+        "sports",
+        "symbol",
+        "collection"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Pato de Borracha",
+      "nome_do_arquivo": "rubber-duck.png",
+      "adicionado_em": "2025-05-23 01:50:52",
+      "slug": "rubber-duck",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "bathroom",
+        "entertainment",
+        "everyday"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Plástico Bolha",
+      "nome_do_arquivo": "bubble-wrap.png",
+      "adicionado_em": "2025-05-23 05:30:50",
+      "slug": "bubble-wrap",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "everyday",
+        "packaging",
+        "entertainment"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Rosa",
+      "nome_do_arquivo": "rose.png",
+      "adicionado_em": "2025-05-24 04:01:19",
+      "slug": "rose",
+      "categoria": "Natureza e ar livre",
+      "tags": [
+        "plant",
+        "nature",
+        "fragrance"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Tablet E-Ink",
+      "nome_do_arquivo": "e-ink-tablet.png",
+      "adicionado_em": "2025-05-25 19:01:18",
+      "slug": "e-ink-tablet",
+      "categoria": "Tecnologia e mídia",
+      "tags": [
+        "technology",
+        "media",
+        "writing"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Kit de Escultura em Sabão",
+      "nome_do_arquivo": "soap-carving-set.png",
+      "adicionado_em": "2025-05-25 21:41:27",
+      "slug": "soap-carving-set",
+      "categoria": "Hobbies",
+      "tags": [
+        "hobbies",
+        "art",
+        "equipment"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Copo de Escova de Dente",
+      "nome_do_arquivo": "toothbrush-cup.png",
+      "adicionado_em": "2025-05-26 12:30:53",
+      "slug": "toothbrush-cup",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "bathroom",
+        "personal care",
+        "organization"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Kit de Primeiros Socorros Esportivo",
+      "nome_do_arquivo": "sports-first-aid-kit.png",
+      "adicionado_em": "2025-05-26 14:50:51",
+      "slug": "sports-first-aid-kit",
+      "categoria": "Esportes",
+      "tags": [
+        "sports",
+        "safety",
+        "equipment"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Banheiro Público",
+      "nome_do_arquivo": "public-restroom.png",
+      "adicionado_em": "2025-05-26 15:00:44",
+      "slug": "public-restroom",
+      "categoria": "Lugares e estruturas",
+      "tags": [
+        "structure",
+        "bathroom",
+        "public"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Chá de Bebê",
+      "nome_do_arquivo": "baby-shower.png",
+      "adicionado_em": "2025-05-26 20:40:45",
+      "slug": "baby-shower",
+      "categoria": "Eventos",
+      "tags": [
+        "events",
+        "celebration",
+        "family"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Lavanderia",
+      "nome_do_arquivo": "laundromat.png",
+      "adicionado_em": "2025-05-27 01:51:05",
+      "slug": "laundromat",
+      "categoria": "Lugares e estruturas",
+      "tags": [
+        "structure",
+        "public",
+        "laundry"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Kit de Primeiros Socorros de Obra",
+      "nome_do_arquivo": "worksite-first-aid-kit.png",
+      "adicionado_em": "2025-05-27 03:50:48",
+      "slug": "worksite-first-aid-kit",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "work",
+        "safety",
+        "equipment"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Cordão de Luz",
+      "nome_do_arquivo": "light-pull-cord.png",
+      "adicionado_em": "2025-05-27 05:00:49",
+      "slug": "light-pull-cord",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "lighting",
+        "everyday",
+        "bathroom"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Bloco de Rascunho",
+      "nome_do_arquivo": "sketch-pad.png",
+      "adicionado_em": "2025-05-27 07:10:45",
+      "slug": "sketch-pad",
+      "categoria": "Hobbies",
+      "tags": [
+        "hobbies",
+        "art",
+        "everyday"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Cápsula de Remédio",
+      "nome_do_arquivo": "medicine-capsule.png",
+      "adicionado_em": "2025-06-02 09:31:57",
+      "slug": "medicine-capsule",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "healthcare",
+        "medicine",
+        "personal care"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Uma Dúzia de Rosas",
+      "nome_do_arquivo": "a-dozen-roses.png",
+      "adicionado_em": "2025-06-02 10:24:49",
+      "slug": "a-dozen-roses",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "plant",
+        "celebration",
+        "fragrance"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Canivete",
+      "nome_do_arquivo": "pocket-knife.png",
+      "adicionado_em": "2025-06-02 12:09:57",
+      "slug": "pocket-knife",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "everyday",
+        "utility",
+        "accessory"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Kit de Primeiros Socorros",
+      "nome_do_arquivo": "first-aid-kit.png",
+      "adicionado_em": "2025-06-03 08:07:13",
+      "slug": "first-aid-kit",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "healthcare",
+        "first aid",
+        "safety"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Cotton Club",
+      "nome_do_arquivo": "cotton-club.png",
+      "adicionado_em": "2025-06-03 08:10:07",
+      "slug": "cotton-club",
+      "categoria": "Lugares e estruturas",
+      "tags": [
+        "structure",
+        "entertainment",
+        "music",
+        "history",
+        "landmark",
+        "urban",
+        "culture"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Banho de Espuma",
+      "nome_do_arquivo": "bubble-bath.png",
+      "adicionado_em": "2025-06-03 14:06:02",
+      "slug": "bubble-bath",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "bathroom",
+        "leisure"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Óleo Essencial",
+      "nome_do_arquivo": "essential-oil.png",
+      "adicionado_em": "2025-06-03 14:21:03",
+      "slug": "essential-oil",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "fragrance",
+        "wellness"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Farmácia",
+      "nome_do_arquivo": "pharmacy.png",
+      "adicionado_em": "2025-06-03 16:41:07",
+      "slug": "pharmacy",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "healthcare",
+        "medicine",
+        "service"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Maquiagem",
+      "nome_do_arquivo": "makeup.png",
+      "adicionado_em": "2025-06-03 19:26:04",
+      "slug": "makeup",
+      "categoria": "Moda e estilo",
+      "tags": [
+        "beauty",
+        "cosmetics",
+        "personal care"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Termômetro de Ouvido",
+      "nome_do_arquivo": "ear-thermometer.png",
+      "adicionado_em": "2025-06-03 19:46:06",
+      "slug": "ear-thermometer",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "healthcare",
+        "measurement",
+        "monitoring"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Saco de Roupa Suja",
+      "nome_do_arquivo": "laundry-bag.png",
+      "adicionado_em": "2025-06-04 08:27:02",
+      "slug": "laundry-bag",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "laundry",
+        "storage",
+        "everyday"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Bisturi",
+      "nome_do_arquivo": "scalpel.png",
+      "adicionado_em": "2025-06-04 08:36:04",
+      "slug": "scalpel",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "medicine",
+        "healthcare",
+        "equipment"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Lixeira de Reciclagem",
+      "nome_do_arquivo": "recycling-bin.png",
+      "adicionado_em": "2025-06-04 08:37:01",
+      "slug": "recycling-bin",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "eco-friendly",
+        "organization",
+        "everyday"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Banheira Bateau",
+      "nome_do_arquivo": "bateau-tub.png",
+      "adicionado_em": "2025-06-04 21:36:48",
+      "slug": "bateau-tub",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "bathroom",
+        "personal care",
+        "comfort"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Zelador",
+      "nome_do_arquivo": "janitor.png",
+      "adicionado_em": "2025-06-05 16:40:10",
+      "slug": "janitor",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "work",
+        "cleaning",
+        "professions"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Contêiner de Transporte",
+      "nome_do_arquivo": "shipping-container.png",
+      "adicionado_em": "2025-06-06 09:12:49",
+      "slug": "shipping-container",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "work",
+        "transport",
+        "storage"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Algodão",
+      "nome_do_arquivo": "cotton.png",
+      "adicionado_em": "2025-06-07 00:00:50",
+      "slug": "cotton",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "plant",
+        "manufacturing",
+        "work"
+      ],
+      "volume": 2
+    },
+    {
+      "titulo": "Ferro de Passar",
+      "nome_do_arquivo": "clothes-iron.png",
+      "adicionado_em": "2025-06-07 15:04:02",
+      "slug": "clothes-iron",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "appliance",
+        "laundry",
+        "heating"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Ancinho",
+      "nome_do_arquivo": "rake.png",
+      "adicionado_em": "2025-06-08 02:31:20",
+      "slug": "rake",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "tool",
+        "outdoor",
+        "cleaning"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Batom",
+      "nome_do_arquivo": "lipstick.png",
+      "adicionado_em": "2025-06-09 14:00:43",
+      "slug": "lipstick",
+      "categoria": "Moda e estilo",
+      "tags": [
+        "cosmetics",
+        "beauty",
+        "accessory"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Frasco de Perfume",
+      "nome_do_arquivo": "perfume-bottle.png",
+      "adicionado_em": "2025-06-10 09:23:13",
+      "slug": "perfume-bottle",
+      "categoria": "Moda e estilo",
+      "tags": [
+        "fragrance",
+        "beauty",
+        "accessory"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Contêiner de Carga",
+      "nome_do_arquivo": "cargo-container.png",
+      "adicionado_em": "2025-06-10 13:01:31",
+      "slug": "cargo-container",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "storage",
+        "transport",
+        "work"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Aspirador Robô",
+      "nome_do_arquivo": "robot-vacuum.png",
+      "adicionado_em": "2025-06-10 16:13:10",
+      "slug": "robot-vacuum",
+      "categoria": "Tecnologia e mídia",
+      "tags": [
+        "technology",
+        "robotics",
+        "cleaning"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Seringa",
+      "nome_do_arquivo": "syringe.png",
+      "adicionado_em": "2025-06-10 18:28:53",
+      "slug": "syringe",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "healthcare",
+        "medicine",
+        "equipment"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Lava-Jato",
+      "nome_do_arquivo": "car-wash.png",
+      "adicionado_em": "2025-06-10 20:36:24",
+      "slug": "car-wash",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "cleaning",
+        "service",
+        "transport"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Kit de Limpeza de Saxofone",
+      "nome_do_arquivo": "saxophone-cleaning-kit.png",
+      "adicionado_em": "2025-06-10 21:08:48",
+      "slug": "saxophone-cleaning-kit",
+      "categoria": "Entretenimento e lazer",
+      "tags": [
+        "music",
+        "cleaning",
+        "maintenance"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Tablet",
+      "nome_do_arquivo": "tablet.png",
+      "adicionado_em": "2025-06-10 21:30:45",
+      "slug": "tablet",
+      "categoria": "Tecnologia e mídia",
+      "tags": [
+        "technology",
+        "media",
+        "electronics"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Planta Jarro",
+      "nome_do_arquivo": "pitcher-plant.png",
+      "adicionado_em": "2025-06-11 13:48:48",
+      "slug": "pitcher-plant",
+      "categoria": "Natureza e ar livre",
+      "tags": [
+        "plant",
+        "carnivorous",
+        "nature"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Lingote de Ferro",
+      "nome_do_arquivo": "iron-ingot.png",
+      "adicionado_em": "2025-06-11 15:48:47",
+      "slug": "iron-ingot",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "manufacturing",
+        "mineral",
+        "construction"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Lavadora de Alta Pressão",
+      "nome_do_arquivo": "pressure-washer.png",
+      "adicionado_em": "2025-06-11 19:18:49",
+      "slug": "pressure-washer",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "cleaning",
+        "equipment",
+        "work"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Chuveiro",
+      "nome_do_arquivo": "showerhead.png",
+      "adicionado_em": "2025-06-11 19:54:46",
+      "slug": "showerhead",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "bathroom",
+        "sanitation",
+        "personal care"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Secadora de Roupas",
+      "nome_do_arquivo": "clothes-dryer.png",
+      "adicionado_em": "2025-06-11 22:47:50",
+      "slug": "clothes-dryer",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "appliance",
+        "laundry",
+        "everyday"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Termômetro Infravermelho",
+      "nome_do_arquivo": "infrared-thermometer.png",
+      "adicionado_em": "2025-06-12 01:30:57",
+      "slug": "infrared-thermometer",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "healthcare",
+        "measurement",
+        "wellness"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Vestido Transpassado",
+      "nome_do_arquivo": "wrap-dress.png",
+      "adicionado_em": "2025-06-12 05:13:04",
+      "slug": "wrap-dress",
+      "categoria": "Moda e estilo",
+      "tags": [
+        "clothing",
+        "fashion",
+        "wearable"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Medicamento para Alergia",
+      "nome_do_arquivo": "allergy-medication.png",
+      "adicionado_em": "2025-06-12 06:49:03",
+      "slug": "allergy-medication",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "medicine",
+        "healthcare",
+        "wellness"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Ferro de Solda",
+      "nome_do_arquivo": "soldering-iron.png",
+      "adicionado_em": "2025-06-12 07:01:06",
+      "slug": "soldering-iron",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "tool",
+        "work",
+        "electronics"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Rosas",
+      "nome_do_arquivo": "roses.png",
+      "adicionado_em": "2025-06-12 08:36:53",
+      "slug": "roses",
+      "categoria": "Natureza e ar livre",
+      "tags": [
+        "nature",
+        "plant",
+        "fragrance"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Lingote de Ferro",
+      "nome_do_arquivo": "iron-ingot-1.png",
+      "adicionado_em": "2025-06-12 17:51:25",
+      "slug": "iron-ingot-1",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "work",
+        "manufacturing",
+        "mineral"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Seringa",
+      "nome_do_arquivo": "syringe-1.png",
+      "adicionado_em": "2025-06-12 17:51:30",
+      "slug": "syringe-1",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "medicine",
+        "tool",
+        "healthcare"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Seringa",
+      "nome_do_arquivo": "syringe-2.png",
+      "adicionado_em": "2025-06-12 17:51:43",
+      "slug": "syringe-2",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "medicine",
+        "healthcare",
+        "tool"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Detalhista Automotivo",
+      "nome_do_arquivo": "automotive-detailer.png",
+      "adicionado_em": "2025-06-12 21:01:09",
+      "slug": "automotive-detailer",
+      "categoria": "Profissões",
+      "tags": [
+        "professions",
+        "service",
+        "cleaning"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Filtro de Carbono",
+      "nome_do_arquivo": "carbon-filter.png",
+      "adicionado_em": "2025-06-12 22:25:04",
+      "slug": "carbon-filter",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "work",
+        "equipment",
+        "cleaning"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Tablet com Teclado",
+      "nome_do_arquivo": "apple-ipad-pro-mounted-in-a-magic-keyboard-case.png",
+      "adicionado_em": "2025-06-12 23:00:11",
+      "slug": "apple-ipad-pro-mounted-in-a-magic-keyboard-case",
+      "categoria": "Tecnologia e mídia",
+      "tags": [
+        "technology",
+        "electronics",
+        "computing"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Pia",
+      "nome_do_arquivo": "sink.png",
+      "adicionado_em": "2025-06-13 03:25:19",
+      "slug": "sink",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "cleaning",
+        "sanitation",
+        "bathroom"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Carrinho de Manutenção",
+      "nome_do_arquivo": "maintenance-cart.png",
+      "adicionado_em": "2025-06-13 05:37:26",
+      "slug": "maintenance-cart",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "maintenance",
+        "equipment",
+        "work"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Difusor de Óleo Essencial",
+      "nome_do_arquivo": "essential-oil-diffuser.png",
+      "adicionado_em": "2025-06-13 08:49:20",
+      "slug": "essential-oil-diffuser",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "wellness",
+        "fragrance",
+        "personal care"
+      ],
+      "volume": 3
+    },
+    {
+      "titulo": "Escultura em Sabão",
+      "nome_do_arquivo": "soap-carving.png",
+      "adicionado_em": "2025-06-13 12:13:26",
+      "slug": "soap-carving",
+      "categoria": "Hobbies",
+      "tags": [
+        "hobbies",
+        "craft",
+        "creativity"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Remédio para Alergia",
+      "nome_do_arquivo": "allergy-medicine.png",
+      "adicionado_em": "2025-06-13 16:13:22",
+      "slug": "allergy-medicine",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "medicine",
+        "healthcare",
+        "wellness"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Varal",
+      "nome_do_arquivo": "clothesline.png",
+      "adicionado_em": "2025-06-13 22:32:41",
+      "slug": "clothesline",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "laundry",
+        "outdoor",
+        "eco-friendly"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Flebotomista",
+      "nome_do_arquivo": "phlebotomist.png",
+      "adicionado_em": "2025-06-14 00:37:04",
+      "slug": "phlebotomist",
+      "categoria": "Profissões",
+      "tags": [
+        "professions",
+        "healthcare",
+        "medicine"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Perfumista",
+      "nome_do_arquivo": "perfumer.png",
+      "adicionado_em": "2025-06-14 00:49:06",
+      "slug": "perfumer",
+      "categoria": "Profissões",
+      "tags": [
+        "professions",
+        "fragrance",
+        "chemistry"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Vassoura de Curling",
+      "nome_do_arquivo": "curling-broom.png",
+      "adicionado_em": "2025-06-14 13:19:08",
+      "slug": "curling-broom",
+      "categoria": "Esportes",
+      "tags": [
+        "sports",
+        "equipment",
+        "tool"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Pasta de Dente na Escova",
+      "nome_do_arquivo": "toothpaste-nurdle.png",
+      "adicionado_em": "2025-06-14 13:22:41",
+      "slug": "toothpaste-nurdle",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "sanitation",
+        "everyday"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Chapéu Bucket",
+      "nome_do_arquivo": "bucket-hat.png",
+      "adicionado_em": "2025-06-14 15:48:54",
+      "slug": "bucket-hat",
+      "categoria": "Moda e estilo",
+      "tags": [
+        "fashion",
+        "accessory",
+        "casual"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Pediatra",
+      "nome_do_arquivo": "pediatrician.png",
+      "adicionado_em": "2025-06-14 17:31:01",
+      "slug": "pediatrician",
+      "categoria": "Profissões",
+      "tags": [
+        "professions",
+        "healthcare",
+        "medicine"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Inalador",
+      "nome_do_arquivo": "inhaler.png",
+      "adicionado_em": "2025-06-14 20:00:54",
+      "slug": "inhaler",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "healthcare",
+        "medicine",
+        "wellness"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Cirurgião",
+      "nome_do_arquivo": "surgeon.png",
+      "adicionado_em": "2025-06-15 21:01:02",
+      "slug": "surgeon",
+      "categoria": "Profissões",
+      "tags": [
+        "professions",
+        "healthcare",
+        "medicine"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Pia",
+      "nome_do_arquivo": "sink-1.png",
+      "adicionado_em": "2025-06-16 13:14:20",
+      "slug": "sink-1",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "cleaning",
+        "sanitation",
+        "bathroom"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Osso da Articulação do Joelho",
+      "nome_do_arquivo": "knee-joint-bone.png",
+      "adicionado_em": "2025-06-18 13:27:15",
+      "slug": "knee-joint-bone",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "anatomy",
+        "joint",
+        "health"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Dentes",
+      "nome_do_arquivo": "teeth.png",
+      "adicionado_em": "2025-06-18 13:27:58",
+      "slug": "teeth",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "anatomy",
+        "health",
+        "wellness"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Banco Inclinado",
+      "nome_do_arquivo": "incline-bench.png",
+      "adicionado_em": "2025-06-18 13:29:46",
+      "slug": "incline-bench",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "exercise",
+        "equipment",
+        "health"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Barra de Mergulho",
+      "nome_do_arquivo": "dip-bar.png",
+      "adicionado_em": "2025-06-18 13:29:53",
+      "slug": "dip-bar",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "exercise",
+        "equipment",
+        "health"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Máquina de Panturrilha em Pé",
+      "nome_do_arquivo": "standing-calf-raise-machine.png",
+      "adicionado_em": "2025-06-19 12:58:16",
+      "slug": "standing-calf-raise-machine",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "equipment",
+        "exercise",
+        "health"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Balão de Coração Rosa",
+      "nome_do_arquivo": "pink-heart-foil-balloon.png",
+      "adicionado_em": "2025-06-19 17:31:23",
+      "slug": "pink-heart-foil-balloon",
+      "categoria": "Eventos",
+      "tags": [
+        "events",
+        "celebration",
+        "decor"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Cadeira do Capitão",
+      "nome_do_arquivo": "captains-chair.png",
+      "adicionado_em": "2025-06-20 13:30:48",
+      "slug": "captains-chair",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "exercise",
+        "wellness",
+        "health"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Máquina de Flexão de Perna",
+      "nome_do_arquivo": "lying-leg-curl-machine.png",
+      "adicionado_em": "2025-06-20 13:30:53",
+      "slug": "lying-leg-curl-machine",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "equipment",
+        "exercise",
+        "health"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Vírus",
+      "nome_do_arquivo": "virus.png",
+      "adicionado_em": "2025-06-20 17:13:25",
+      "slug": "virus",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "virus",
+        "microorganism",
+        "health"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Máquina de Rosca Bíceps",
+      "nome_do_arquivo": "biceps-curl-machine.png",
+      "adicionado_em": "2025-06-22 17:30:40",
+      "slug": "biceps-curl-machine",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "exercise",
+        "equipment",
+        "health"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Pá de Areia para Gato",
+      "nome_do_arquivo": "cat-litter-scoop.png",
+      "adicionado_em": "2025-06-22 17:31:33",
+      "slug": "cat-litter-scoop",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "pet",
+        "cleaning",
+        "tool"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Ar-Condicionado",
+      "nome_do_arquivo": "air-conditioner.png",
+      "adicionado_em": "2025-06-22 19:37:23",
+      "slug": "air-conditioner",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "appliance",
+        "cooling",
+        "everyday"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Ebola",
+      "nome_do_arquivo": "ebola.png",
+      "adicionado_em": "2025-06-22 20:01:35",
+      "slug": "ebola",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "virus",
+        "health",
+        "Africa"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Preservativo",
+      "nome_do_arquivo": "condom.png",
+      "adicionado_em": "2025-06-22 20:07:24",
+      "slug": "condom",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "wellness",
+        "safety"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Vacina",
+      "nome_do_arquivo": "vaccine.png",
+      "adicionado_em": "2025-06-22 23:37:25",
+      "slug": "vaccine",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "medicine",
+        "wellness"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Caixa Térmica",
+      "nome_do_arquivo": "cooler-box.png",
+      "adicionado_em": "2025-06-22 23:43:19",
+      "slug": "cooler-box",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "cooling",
+        "health",
+        "storage"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Caneta de Injeção GLP-1",
+      "nome_do_arquivo": "glp-1-injection-pen.png",
+      "adicionado_em": "2025-06-23 00:37:18",
+      "slug": "glp-1-injection-pen",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "medicine",
+        "healthcare",
+        "wellness"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Recipiente",
+      "nome_do_arquivo": "container.png",
+      "adicionado_em": "2025-06-23 01:13:23",
+      "slug": "container",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "storage",
+        "organization",
+        "everyday"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Bíceps",
+      "nome_do_arquivo": "bicep.png",
+      "adicionado_em": "2025-06-23 08:09:55",
+      "slug": "bicep",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "anatomy",
+        "health",
+        "exercise"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Doação de Sangue",
+      "nome_do_arquivo": "blood-donation.png",
+      "adicionado_em": "2025-06-23 08:10:47",
+      "slug": "blood-donation",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "charity",
+        "service"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Vício em Celular",
+      "nome_do_arquivo": "phone-addiction.png",
+      "adicionado_em": "2025-06-24 09:48:55",
+      "slug": "phone-addiction",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "wellness",
+        "technology"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Balde de Tinta",
+      "nome_do_arquivo": "painting-bucket.png",
+      "adicionado_em": "2025-06-24 19:37:39",
+      "slug": "painting-bucket",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "tool",
+        "equipment",
+        "everyday"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Pulverizador Manual",
+      "nome_do_arquivo": "handheld-fumigation-sprayer.png",
+      "adicionado_em": "2025-06-24 19:37:43",
+      "slug": "handheld-fumigation-sprayer",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "cleaning",
+        "sanitation",
+        "tool"
+      ],
+      "volume": 4
+    },
+    {
+      "titulo": "Peso de Academia",
+      "nome_do_arquivo": "gym-weight.png",
+      "adicionado_em": "2025-06-26 15:37:30",
+      "slug": "gym-weight",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "equipment",
+        "exercise",
+        "health"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Rim",
+      "nome_do_arquivo": "kidney.png",
+      "adicionado_em": "2025-06-27 16:13:13",
+      "slug": "kidney",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "organ",
+        "anatomy",
+        "health"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Galão",
+      "nome_do_arquivo": "jerry-can.png",
+      "adicionado_em": "2025-06-27 18:34:08",
+      "slug": "jerry-can",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "storage",
+        "utility",
+        "equipment"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Anestesista",
+      "nome_do_arquivo": "anesthesiologist.png",
+      "adicionado_em": "2025-06-27 18:49:17",
+      "slug": "anesthesiologist",
+      "categoria": "Profissões",
+      "tags": [
+        "professions",
+        "healthcare",
+        "medicine"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Sono",
+      "nome_do_arquivo": "sleep.png",
+      "adicionado_em": "2025-06-28 08:35:41",
+      "slug": "sleep",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "everyday",
+        "health",
+        "wellness"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Porta-Canetas",
+      "nome_do_arquivo": "pen-pot.png",
+      "adicionado_em": "2025-06-28 08:49:10",
+      "slug": "pen-pot",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "organization",
+        "writing",
+        "everyday"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Paciente em Avental Cirúrgico",
+      "nome_do_arquivo": "patient-in-pre-operative-gown.png",
+      "adicionado_em": "2025-06-28 09:07:34",
+      "slug": "patient-in-pre-operative-gown",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "healthcare",
+        "medicine",
+        "wellness"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Dente",
+      "nome_do_arquivo": "tooth.png",
+      "adicionado_em": "2025-06-28 10:01:17",
+      "slug": "tooth",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "anatomy",
+        "health",
+        "biology"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Antena Parabólica",
+      "nome_do_arquivo": "satellite-dish.png",
+      "adicionado_em": "2025-06-28 17:27:06",
+      "slug": "satellite-dish",
+      "categoria": "Tecnologia e mídia",
+      "tags": [
+        "technology",
+        "media",
+        "communication"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Pia",
+      "nome_do_arquivo": "sink-2.png",
+      "adicionado_em": "2025-06-29 16:48:02",
+      "slug": "sink-2",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "cleaning",
+        "water",
+        "sanitation"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Raio-X do Tórax",
+      "nome_do_arquivo": "chest-x-ray.png",
+      "adicionado_em": "2025-06-29 17:43:17",
+      "slug": "chest-x-ray",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "healthcare",
+        "medicine",
+        "diagnostic"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Lixo",
+      "nome_do_arquivo": "garbage.png",
+      "adicionado_em": "2025-06-30 22:13:15",
+      "slug": "garbage",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "everyday",
+        "sanitation",
+        "waste"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Frasco de Loção",
+      "nome_do_arquivo": "bottle-of-lotion.png",
+      "adicionado_em": "2025-07-01 13:07:20",
+      "slug": "bottle-of-lotion",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "personal care",
+        "health",
+        "beauty"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Pé",
+      "nome_do_arquivo": "foot.png",
+      "adicionado_em": "2025-07-02 08:53:13",
+      "slug": "foot",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "anatomy",
+        "everyday",
+        "health"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Distensão Muscular",
+      "nome_do_arquivo": "muscle-strain.png",
+      "adicionado_em": "2025-07-05 08:03:10",
+      "slug": "muscle-strain",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "injury",
+        "wellness"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Diário de Saúde",
+      "nome_do_arquivo": "health-journal.png",
+      "adicionado_em": "2025-07-05 15:30:56",
+      "slug": "health-journal",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "wellness",
+        "document"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Óculos de Luz Azul",
+      "nome_do_arquivo": "blue-light-glasses.png",
+      "adicionado_em": "2025-07-05 15:40:48",
+      "slug": "blue-light-glasses",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "vision",
+        "health",
+        "wearable"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Pintando as Unhas",
+      "nome_do_arquivo": "painting-nails.png",
+      "adicionado_em": "2025-07-05 21:06:24",
+      "slug": "painting-nails",
+      "categoria": "Moda e estilo",
+      "tags": [
+        "beauty",
+        "cosmetics",
+        "personal care"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Estômago",
+      "nome_do_arquivo": "stomach.png",
+      "adicionado_em": "2025-07-05 21:11:18",
+      "slug": "stomach",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "organ",
+        "anatomy",
+        "health"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Fabricação de Sabão",
+      "nome_do_arquivo": "soap-making.png",
+      "adicionado_em": "2025-07-05 22:36:26",
+      "slug": "soap-making",
+      "categoria": "Hobbies",
+      "tags": [
+        "hobbies",
+        "craft",
+        "creativity"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Difusor de Aromaterapia",
+      "nome_do_arquivo": "aromatherapy-diffuser.png",
+      "adicionado_em": "2025-07-06 13:11:17",
+      "slug": "aromatherapy-diffuser",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "wellness",
+        "fragrance",
+        "personal care"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Cigarro",
+      "nome_do_arquivo": "cigarette.png",
+      "adicionado_em": "2025-07-07 08:21:03",
+      "slug": "cigarette",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "everyday",
+        "addiction",
+        "health"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Fragmentadora",
+      "nome_do_arquivo": "shredder.png",
+      "adicionado_em": "2025-07-08 16:30:56",
+      "slug": "shredder",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "appliance",
+        "office",
+        "waste"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Carregador Sem Fio",
+      "nome_do_arquivo": "wireless-charging-pad.png",
+      "adicionado_em": "2025-07-08 19:20:49",
+      "slug": "wireless-charging-pad",
+      "categoria": "Tecnologia e mídia",
+      "tags": [
+        "technology",
+        "electronics",
+        "energy"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Molde de Sabão",
+      "nome_do_arquivo": "soap-mold.png",
+      "adicionado_em": "2025-07-08 20:41:00",
+      "slug": "soap-mold",
+      "categoria": "Hobbies",
+      "tags": [
+        "craft",
+        "tool",
+        "hobbies"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Gesso",
+      "nome_do_arquivo": "plaster-cast.png",
+      "adicionado_em": "2025-07-08 21:16:02",
+      "slug": "plaster-cast",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "healthcare",
+        "injury",
+        "first aid"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Bolsa de Soro",
+      "nome_do_arquivo": "iv-drip-bag.png",
+      "adicionado_em": "2025-07-08 21:25:56",
+      "slug": "iv-drip-bag",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "healthcare",
+        "medicine",
+        "emergency"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Comedouro para Pet",
+      "nome_do_arquivo": "pet-bowl.png",
+      "adicionado_em": "2025-07-08 22:05:54",
+      "slug": "pet-bowl",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "pet",
+        "domestic",
+        "everyday"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Incenso",
+      "nome_do_arquivo": "incense-stick.png",
+      "adicionado_em": "2025-07-09 01:15:53",
+      "slug": "incense-stick",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "fragrance",
+        "spiritual",
+        "everyday"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Ventosa de Elevação",
+      "nome_do_arquivo": "vacuum-lifter.png",
+      "adicionado_em": "2025-07-09 03:15:59",
+      "slug": "vacuum-lifter",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "equipment",
+        "work",
+        "industry"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Filtro de Fiapos",
+      "nome_do_arquivo": "lint-trap.png",
+      "adicionado_em": "2025-07-09 03:26:00",
+      "slug": "lint-trap",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "laundry",
+        "cleaning",
+        "maintenance"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Travesseiro da Fada do Dente",
+      "nome_do_arquivo": "tooth-fairy-pillow.png",
+      "adicionado_em": "2025-07-09 03:36:01",
+      "slug": "tooth-fairy-pillow",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "children",
+        "sleep",
+        "gift"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Hotel Cápsula",
+      "nome_do_arquivo": "capsule-hotel.png",
+      "adicionado_em": "2025-07-09 05:46:00",
+      "slug": "capsule-hotel",
+      "categoria": "Lugares e estruturas",
+      "tags": [
+        "structure",
+        "Japan",
+        "travel"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Dilatador Nasal Adesivo",
+      "nome_do_arquivo": "nasal-strip.png",
+      "adicionado_em": "2025-07-09 08:16:02",
+      "slug": "nasal-strip",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "wellness",
+        "personal care"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Máquina de Embalar",
+      "nome_do_arquivo": "shrink-wrap-machine.png",
+      "adicionado_em": "2025-07-09 13:05:58",
+      "slug": "shrink-wrap-machine",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "equipment",
+        "packaging",
+        "industry"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Touca para Enxaqueca",
+      "nome_do_arquivo": "migraine-cap.png",
+      "adicionado_em": "2025-07-09 15:31:14",
+      "slug": "migraine-cap",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "wellness",
+        "wearable",
+        "cooling",
+        "personal care"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Spray Desinfetante",
+      "nome_do_arquivo": "disinfectant-spray.png",
+      "adicionado_em": "2025-07-09 19:41:00",
+      "slug": "disinfectant-spray",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "cleaning",
+        "sanitation",
+        "work"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Sardas Falsas",
+      "nome_do_arquivo": "fake-freckles.png",
+      "adicionado_em": "2025-07-10 15:46:03",
+      "slug": "fake-freckles",
+      "categoria": "Moda e estilo",
+      "tags": [
+        "beauty",
+        "cosmetics",
+        "fashion"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Cílios Postiços",
+      "nome_do_arquivo": "faux-eyelashes.png",
+      "adicionado_em": "2025-07-10 15:51:00",
+      "slug": "faux-eyelashes",
+      "categoria": "Moda e estilo",
+      "tags": [
+        "fashion",
+        "beauty",
+        "cosmetics"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Faca de Entalhar",
+      "nome_do_arquivo": "whittling-knife.png",
+      "adicionado_em": "2025-07-10 16:31:03",
+      "slug": "whittling-knife",
+      "categoria": "Hobbies",
+      "tags": [
+        "tool",
+        "craft",
+        "hobbies"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Enceradeira",
+      "nome_do_arquivo": "floor-buffer.png",
+      "adicionado_em": "2025-07-10 16:51:10",
+      "slug": "floor-buffer",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "cleaning",
+        "equipment",
+        "work"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Vaso de Terracota",
+      "nome_do_arquivo": "terracotta-pot.png",
+      "adicionado_em": "2025-07-10 17:21:03",
+      "slug": "terracotta-pot",
+      "categoria": "Hobbies",
+      "tags": [
+        "craft",
+        "plant",
+        "outdoor"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Cesta de Disc Golf",
+      "nome_do_arquivo": "disc-golf-basket.png",
+      "adicionado_em": "2025-07-10 20:47:10",
+      "slug": "disc-golf-basket",
+      "categoria": "Hobbies",
+      "tags": [
+        "sports",
+        "equipment",
+        "outdoor"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Cesto de Roupa",
+      "nome_do_arquivo": "laundry-hamper.png",
+      "adicionado_em": "2025-07-10 21:01:18",
+      "slug": "laundry-hamper",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "storage",
+        "organization",
+        "laundry"
+      ],
+      "volume": 5
+    },
+    {
+      "titulo": "Bengala de Madeira",
+      "nome_do_arquivo": "wooden-walking-stick.png",
+      "adicionado_em": "2025-07-11 22:01:37",
+      "slug": "wooden-walking-stick",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "everyday",
+        "tool",
+        "health"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Rolo de Papel Higiênico Vazio",
+      "nome_do_arquivo": "toilet-paper-tube.png",
+      "adicionado_em": "2025-07-11 23:11:52",
+      "slug": "toilet-paper-tube",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "everyday",
+        "bathroom",
+        "eco-friendly"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Linfonodo",
+      "nome_do_arquivo": "lymph-node.png",
+      "adicionado_em": "2025-07-12 02:41:33",
+      "slug": "lymph-node",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "organ",
+        "anatomy",
+        "health"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Irrigador Nasal",
+      "nome_do_arquivo": "nasal-irrigator.png",
+      "adicionado_em": "2025-07-12 02:51:38",
+      "slug": "nasal-irrigator",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "personal care",
+        "health",
+        "cleaning"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Tambor de Aço",
+      "nome_do_arquivo": "steel-pan.png",
+      "adicionado_em": "2025-07-12 03:51:33",
+      "slug": "steel-pan",
+      "categoria": "Entretenimento e lazer",
+      "tags": [
+        "music",
+        "instrument",
+        "Caribbean"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Cotonete Estéril",
+      "nome_do_arquivo": "sterile-swab.png",
+      "adicionado_em": "2025-07-12 04:31:59",
+      "slug": "sterile-swab",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "healthcare",
+        "first aid",
+        "sanitation"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Comprimido Antiácido",
+      "nome_do_arquivo": "antacid-tablet.png",
+      "adicionado_em": "2025-07-12 07:01:41",
+      "slug": "antacid-tablet",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "medicine",
+        "healthcare",
+        "first aid"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Corretor Postural",
+      "nome_do_arquivo": "posture-corrector.png",
+      "adicionado_em": "2025-07-12 07:11:23",
+      "slug": "posture-corrector",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "wearable",
+        "health",
+        "wellness"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Removedor de Mofo",
+      "nome_do_arquivo": "mold-removal.png",
+      "adicionado_em": "2025-07-12 13:45:32",
+      "slug": "mold-removal",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "cleaning",
+        "health",
+        "sanitation"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Qualidade do Ar Interior",
+      "nome_do_arquivo": "indoor-air-quality.png",
+      "adicionado_em": "2025-07-12 13:45:37",
+      "slug": "indoor-air-quality",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "wellness",
+        "monitoring"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Purificador de Ar",
+      "nome_do_arquivo": "air-purifier-1.png",
+      "adicionado_em": "2025-07-12 13:45:42",
+      "slug": "air-purifier-1",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "appliance",
+        "health",
+        "cleaning"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Bidê",
+      "nome_do_arquivo": "bidet.png",
+      "adicionado_em": "2025-07-12 14:21:19",
+      "slug": "bidet",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "bathroom",
+        "personal care",
+        "sanitation"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Máquina Secadora",
+      "nome_do_arquivo": "dryer-machine.png",
+      "adicionado_em": "2025-07-12 15:41:37",
+      "slug": "dryer-machine",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "appliance",
+        "laundry",
+        "everyday"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Detecção de Gás Radônio",
+      "nome_do_arquivo": "radon-gas-detection.png",
+      "adicionado_em": "2025-07-13 13:28:08",
+      "slug": "radon-gas-detection",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "monitoring",
+        "safety"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Radiografia Dentária",
+      "nome_do_arquivo": "dental-radiography.png",
+      "adicionado_em": "2025-07-13 15:01:42",
+      "slug": "dental-radiography",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "diagnostic",
+        "healthcare",
+        "medicine"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Estilete de Artesanato",
+      "nome_do_arquivo": "papercutting-knife.png",
+      "adicionado_em": "2025-07-13 17:11:49",
+      "slug": "papercutting-knife",
+      "categoria": "Hobbies",
+      "tags": [
+        "tool",
+        "craft",
+        "hobbies"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Dispensador de Sabão Industrial",
+      "nome_do_arquivo": "industrial-soap-dispenser.png",
+      "adicionado_em": "2025-07-13 18:51:10",
+      "slug": "industrial-soap-dispenser",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "work",
+        "sanitation",
+        "equipment"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Vitória-Régia",
+      "nome_do_arquivo": "giant-lily-pad.png",
+      "adicionado_em": "2025-07-14 08:11:41",
+      "slug": "giant-lily-pad",
+      "categoria": "Natureza e ar livre",
+      "tags": [
+        "plant",
+        "aquatic",
+        "wetland"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Caixa de Sanitização UV",
+      "nome_do_arquivo": "uv-sanitation-box.png",
+      "adicionado_em": "2025-07-15 07:11:46",
+      "slug": "uv-sanitation-box",
+      "categoria": "Tecnologia e mídia",
+      "tags": [
+        "technology",
+        "sanitation",
+        "cleaning"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Lata de Cobras de Brinquedo",
+      "nome_do_arquivo": "prank-snake-can.png",
+      "adicionado_em": "2025-07-16 13:21:25",
+      "slug": "prank-snake-can",
+      "categoria": "Entretenimento e lazer",
+      "tags": [
+        "humor",
+        "toy",
+        "entertainment"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Útero",
+      "nome_do_arquivo": "uterus.png",
+      "adicionado_em": "2025-07-16 18:51:48",
+      "slug": "uterus",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "organ",
+        "anatomy",
+        "health"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Ponte Dentária",
+      "nome_do_arquivo": "dental-bridge.png",
+      "adicionado_em": "2025-07-16 21:01:46",
+      "slug": "dental-bridge",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "healthcare",
+        "medicine",
+        "personal care"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Florete de Esgrima",
+      "nome_do_arquivo": "fencing-foil.png",
+      "adicionado_em": "2025-07-16 23:21:48",
+      "slug": "fencing-foil",
+      "categoria": "Esportes",
+      "tags": [
+        "sports",
+        "equipment",
+        "competition"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Pote com Luzes",
+      "nome_do_arquivo": "fairy-light-jar.png",
+      "adicionado_em": "2025-07-17 13:21:46",
+      "slug": "fairy-light-jar",
+      "categoria": "Entretenimento e lazer",
+      "tags": [
+        "decor",
+        "lighting",
+        "entertainment"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Organizador de Meias",
+      "nome_do_arquivo": "sock-organizer.png",
+      "adicionado_em": "2025-07-17 22:51:45",
+      "slug": "sock-organizer",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "storage",
+        "organization",
+        "laundry"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Célula Cancerígena",
+      "nome_do_arquivo": "cancer-cell.png",
+      "adicionado_em": "2025-07-18 09:31:16",
+      "slug": "cancer-cell",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "biology",
+        "medicine"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Dente de Ouro",
+      "nome_do_arquivo": "gold-tooth.png",
+      "adicionado_em": "2025-07-18 12:41:23",
+      "slug": "gold-tooth",
+      "categoria": "Moda e estilo",
+      "tags": [
+        "jewelry",
+        "status",
+        "accessory"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Sachê de Gaveta",
+      "nome_do_arquivo": "scented-drawer-sachet.png",
+      "adicionado_em": "2025-07-18 14:01:27",
+      "slug": "scented-drawer-sachet",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "fragrance",
+        "storage",
+        "everyday"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Banheira de Gelo",
+      "nome_do_arquivo": "cold-plunge-tub.png",
+      "adicionado_em": "2025-07-18 16:01:31",
+      "slug": "cold-plunge-tub",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "wellness",
+        "equipment",
+        "health"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Lata de Óleo",
+      "nome_do_arquivo": "oil-can.png",
+      "adicionado_em": "2025-07-18 21:11:22",
+      "slug": "oil-can",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "tool",
+        "maintenance",
+        "industry"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Intestino",
+      "nome_do_arquivo": "gut.png",
+      "adicionado_em": "2025-07-18 22:51:07",
+      "slug": "gut",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "organ",
+        "anatomy",
+        "health"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Imóvel",
+      "nome_do_arquivo": "real-estate.png",
+      "adicionado_em": "2025-07-18 23:11:31",
+      "slug": "real-estate",
+      "categoria": "Lugares e estruturas",
+      "tags": [
+        "structure",
+        "housing",
+        "market"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Tigela de Banho Sonoro",
+      "nome_do_arquivo": "sound-bath-bowl.png",
+      "adicionado_em": "2025-07-18 23:41:27",
+      "slug": "sound-bath-bowl",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "instrument",
+        "meditation",
+        "wellness"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Orelha",
+      "nome_do_arquivo": "ear.png",
+      "adicionado_em": "2025-07-19 14:44:23",
+      "slug": "ear",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "organ",
+        "anatomy",
+        "health"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Carrinho de Emergência",
+      "nome_do_arquivo": "crash-cart.png",
+      "adicionado_em": "2025-07-20 08:51:41",
+      "slug": "crash-cart",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "healthcare",
+        "emergency",
+        "equipment"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Irrigador Bucal",
+      "nome_do_arquivo": "waterpik.png",
+      "adicionado_em": "2025-07-20 11:21:32",
+      "slug": "waterpik",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "personal care",
+        "health",
+        "cleaning"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Cilindro de Oxigênio Portátil",
+      "nome_do_arquivo": "portable-oxygen-canister.png",
+      "adicionado_em": "2025-07-20 12:01:10",
+      "slug": "portable-oxygen-canister",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "wellness",
+        "emergency"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Mapa de Reflexologia Podal",
+      "nome_do_arquivo": "foot-reflexology-chart.png",
+      "adicionado_em": "2025-07-20 12:11:26",
+      "slug": "foot-reflexology-chart",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "wellness",
+        "diagnostic"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Almofada Metatarsal",
+      "nome_do_arquivo": "metatarsal-pad.png",
+      "adicionado_em": "2025-07-20 12:31:32",
+      "slug": "metatarsal-pad",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "wellness",
+        "footwear"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Difusor de Aroma",
+      "nome_do_arquivo": "scent-diffuser.png",
+      "adicionado_em": "2025-07-21 10:50:44",
+      "slug": "scent-diffuser",
+      "categoria": "Hobbies",
+      "tags": [
+        "fragrance",
+        "relaxation",
+        "wellness"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Dispensador Automático de Sabonete",
+      "nome_do_arquivo": "automatic-soap-dispenser.png",
+      "adicionado_em": "2025-07-21 11:21:11",
+      "slug": "automatic-soap-dispenser",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "cleaning",
+        "technology",
+        "sanitation"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Pet Shop",
+      "nome_do_arquivo": "pet-store.png",
+      "adicionado_em": "2025-07-24 09:01:57",
+      "slug": "pet-store",
+      "categoria": "Lugares e estruturas",
+      "tags": [
+        "structure",
+        "animal",
+        "market"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Aparelho Ortodôntico",
+      "nome_do_arquivo": "orthodontic-appliance.png",
+      "adicionado_em": "2025-07-24 09:03:49",
+      "slug": "orthodontic-appliance",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "wellness",
+        "body modification"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Mulher Grávida",
+      "nome_do_arquivo": "pregnant-woman.png",
+      "adicionado_em": "2025-07-24 09:05:04",
+      "slug": "pregnant-woman",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "wellness",
+        "life transition"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Fígado",
+      "nome_do_arquivo": "liver.png",
+      "adicionado_em": "2025-07-24 09:31:43",
+      "slug": "liver",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "organ",
+        "anatomy",
+        "health"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Pincel de Maquiagem",
+      "nome_do_arquivo": "makeup-brush.png",
+      "adicionado_em": "2025-07-24 10:21:37",
+      "slug": "makeup-brush",
+      "categoria": "Moda e estilo",
+      "tags": [
+        "beauty",
+        "cosmetics",
+        "tool"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Dor de Dente",
+      "nome_do_arquivo": "toothache.png",
+      "adicionado_em": "2025-07-24 10:41:37",
+      "slug": "toothache",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "injury",
+        "wellness"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Urina",
+      "nome_do_arquivo": "urine.png",
+      "adicionado_em": "2025-07-24 18:51:22",
+      "slug": "urine",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "waste",
+        "diagnostic"
+      ],
+      "volume": 6
+    },
+    {
+      "titulo": "Sangue",
+      "nome_do_arquivo": "blood.png",
+      "adicionado_em": "2025-07-25 01:21:45",
+      "slug": "blood",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "biology",
+        "anatomy"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Limpador de Mesa",
+      "nome_do_arquivo": "desk-cleaner.png",
+      "adicionado_em": "2025-07-25 17:41:33",
+      "slug": "desk-cleaner",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "cleaning",
+        "office",
+        "everyday"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Pote Vazio",
+      "nome_do_arquivo": "empty-jar.png",
+      "adicionado_em": "2025-07-26 00:11:38",
+      "slug": "empty-jar",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "storage",
+        "organization",
+        "everyday"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Cérebro com Curativo",
+      "nome_do_arquivo": "brain-with-a-band-aid.png",
+      "adicionado_em": "2025-07-28 17:42:42",
+      "slug": "brain-with-a-band-aid",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "wellness",
+        "injury"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Limpa-Vidros",
+      "nome_do_arquivo": "window-cleaner.png",
+      "adicionado_em": "2025-07-28 17:43:30",
+      "slug": "window-cleaner",
+      "categoria": "Profissões",
+      "tags": [
+        "professions",
+        "cleaning",
+        "service"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Bateia de Ouro",
+      "nome_do_arquivo": "gold-pan.png",
+      "adicionado_em": "2025-07-30 17:21:54",
+      "slug": "gold-pan",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "mining",
+        "tool",
+        "work"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Planta de Lavagem",
+      "nome_do_arquivo": "wash-plant.png",
+      "adicionado_em": "2025-07-30 17:22:45",
+      "slug": "wash-plant",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "industry",
+        "mining",
+        "equipment"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Flexibilidade",
+      "nome_do_arquivo": "flexibility.png",
+      "adicionado_em": "2025-07-30 17:23:16",
+      "slug": "flexibility",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "wellness",
+        "exercise"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Pulmão",
+      "nome_do_arquivo": "lung.png",
+      "adicionado_em": "2025-07-30 17:23:22",
+      "slug": "lung",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "organ",
+        "anatomy",
+        "health"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Reciclagem",
+      "nome_do_arquivo": "recycle.png",
+      "adicionado_em": "2025-08-02 16:22:16",
+      "slug": "recycle",
+      "categoria": "Interface e símbolos",
+      "tags": [
+        "interface",
+        "symbol",
+        "eco-friendly"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Ar-Condicionado Cassete",
+      "nome_do_arquivo": "cassette-air-conditioner.png",
+      "adicionado_em": "2025-08-02 16:23:01",
+      "slug": "cassette-air-conditioner",
+      "categoria": "Tecnologia e mídia",
+      "tags": [
+        "technology",
+        "cooling",
+        "appliance"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Potpourri",
+      "nome_do_arquivo": "potpourri.png",
+      "adicionado_em": "2025-08-02 16:41:11",
+      "slug": "potpourri",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "fragrance",
+        "decor",
+        "everyday"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Bandagem",
+      "nome_do_arquivo": "bandages.png",
+      "adicionado_em": "2025-08-05 05:17:00",
+      "slug": "bandages",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "first aid",
+        "health",
+        "injury"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Língua",
+      "nome_do_arquivo": "tongue-1.png",
+      "adicionado_em": "2025-08-05 05:17:20",
+      "slug": "tongue-1",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "organ",
+        "anatomy",
+        "health"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Faca de Arremesso",
+      "nome_do_arquivo": "throwing-knife.png",
+      "adicionado_em": "2025-08-08 07:31:14",
+      "slug": "throwing-knife",
+      "categoria": "Esportes",
+      "tags": [
+        "sports",
+        "equipment",
+        "weapon"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Fórceps",
+      "nome_do_arquivo": "forceps.png",
+      "adicionado_em": "2025-08-16 20:51:07",
+      "slug": "forceps",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "tool",
+        "healthcare",
+        "medicine"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Fungo Dente Sangrento",
+      "nome_do_arquivo": "bleeding-tooth-fungus.png",
+      "adicionado_em": "2025-08-17 01:51:03",
+      "slug": "bleeding-tooth-fungus",
+      "categoria": "Natureza e ar livre",
+      "tags": [
+        "fungus",
+        "nature",
+        "warning"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Dentista",
+      "nome_do_arquivo": "dentist-1.png",
+      "adicionado_em": "2025-08-18 13:30:45",
+      "slug": "dentist-1",
+      "categoria": "Profissões",
+      "tags": [
+        "profession",
+        "healthcare",
+        "medicine"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Vesícula Biliar",
+      "nome_do_arquivo": "gallbladder.png",
+      "adicionado_em": "2025-08-20 14:28:55",
+      "slug": "gallbladder",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "organ",
+        "anatomy",
+        "health"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Aeróbica",
+      "nome_do_arquivo": "aerobics.png",
+      "adicionado_em": "2025-08-24 15:41:04",
+      "slug": "aerobics",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "exercise",
+        "wellness",
+        "health"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Penico Infantil",
+      "nome_do_arquivo": "childs-potty.png",
+      "adicionado_em": "2025-08-24 15:51:19",
+      "slug": "childs-potty",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "children",
+        "bathroom",
+        "sanitation"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Máquina de Aspirar",
+      "nome_do_arquivo": "vacuuming-machine.png",
+      "adicionado_em": "2025-08-24 17:21:22",
+      "slug": "vacuuming-machine",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "appliance",
+        "cleaning",
+        "everyday"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Lixeira de Papel",
+      "nome_do_arquivo": "paper-bin.png",
+      "adicionado_em": "2025-08-27 10:08:26",
+      "slug": "paper-bin",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "waste",
+        "organization",
+        "everyday"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Lixeira de Papel",
+      "nome_do_arquivo": "paper-bin-1.png",
+      "adicionado_em": "2025-08-27 10:08:38",
+      "slug": "paper-bin-1",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "waste",
+        "organization",
+        "everyday"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Escovando os Dentes",
+      "nome_do_arquivo": "brushing-teeth.png",
+      "adicionado_em": "2025-08-29 13:10:42",
+      "slug": "brushing-teeth",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "cleaning",
+        "everyday"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Lavando o Rosto",
+      "nome_do_arquivo": "washing-face.png",
+      "adicionado_em": "2025-08-29 13:10:43",
+      "slug": "washing-face",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "cleaning",
+        "everyday"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Limpando a Mesa",
+      "nome_do_arquivo": "cleaning-the-table.png",
+      "adicionado_em": "2025-08-29 13:10:46",
+      "slug": "cleaning-the-table",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "cleaning",
+        "everyday",
+        "sanitation"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Skibidi Toilet",
+      "nome_do_arquivo": "skibidi-toilet.png",
+      "adicionado_em": "2025-08-30 15:11:20",
+      "slug": "skibidi-toilet",
+      "categoria": "Tecnologia e mídia",
+      "tags": [
+        "media",
+        "animation",
+        "humor"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Propés Descartáveis",
+      "nome_do_arquivo": "disposable-shoe-covers.png",
+      "adicionado_em": "2025-09-01 22:21:24",
+      "slug": "disposable-shoe-covers",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "sanitation",
+        "footwear"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Aparelho Auditivo",
+      "nome_do_arquivo": "hearing-aid.png",
+      "adicionado_em": "2025-09-01 22:41:19",
+      "slug": "hearing-aid",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "assistive technology",
+        "accessibility"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Sonâmbulo",
+      "nome_do_arquivo": "sleepwalker.png",
+      "adicionado_em": "2025-09-04 21:22:21",
+      "slug": "sleepwalker",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "sleep",
+        "wellness"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Cinzas",
+      "nome_do_arquivo": "ashes.png",
+      "adicionado_em": "2025-09-05 00:51:34",
+      "slug": "ashes",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "waste",
+        "cleaning",
+        "spiritual"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Removedor de Carrapato",
+      "nome_do_arquivo": "tick-remover.png",
+      "adicionado_em": "2025-09-05 12:11:04",
+      "slug": "tick-remover",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "tool",
+        "first aid",
+        "health"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Banheira com Pés",
+      "nome_do_arquivo": "clawfoot-bathtub.png",
+      "adicionado_em": "2025-09-05 16:41:06",
+      "slug": "clawfoot-bathtub",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "bathroom",
+        "luxury",
+        "cleaning"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Pulseira de Identificação Médica",
+      "nome_do_arquivo": "medical-id-bracelet.png",
+      "adicionado_em": "2025-09-06 16:01:07",
+      "slug": "medical-id-bracelet",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "identification",
+        "wearable",
+        "safety"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Chuveiro de Emergência",
+      "nome_do_arquivo": "safety-shower.png",
+      "adicionado_em": "2025-09-07 15:31:20",
+      "slug": "safety-shower",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "safety",
+        "equipment",
+        "emergency"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Prensa de Papelão",
+      "nome_do_arquivo": "cardboard-baler.png",
+      "adicionado_em": "2025-09-07 15:41:10",
+      "slug": "cardboard-baler",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "equipment",
+        "waste",
+        "industry"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Purificador de Ar Interno",
+      "nome_do_arquivo": "indoor-air-purifier.png",
+      "adicionado_em": "2025-09-09 16:21:37",
+      "slug": "indoor-air-purifier",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "appliance",
+        "health",
+        "wellness"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Mouse Pad",
+      "nome_do_arquivo": "mouse-pad.png",
+      "adicionado_em": "2025-09-09 17:11:27",
+      "slug": "mouse-pad",
+      "categoria": "Tecnologia e mídia",
+      "tags": [
+        "technology",
+        "office",
+        "accessory"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Herpes Labial",
+      "nome_do_arquivo": "cold-sore.png",
+      "adicionado_em": "2025-09-09 23:11:23",
+      "slug": "cold-sore",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "virus",
+        "wellness"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Coágulo de Sangue",
+      "nome_do_arquivo": "blood-clot.png",
+      "adicionado_em": "2025-09-09 23:21:30",
+      "slug": "blood-clot",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "injury",
+        "biology"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Desfibrilador Pessoal",
+      "nome_do_arquivo": "personal-defibrillator.png",
+      "adicionado_em": "2025-09-09 23:51:27",
+      "slug": "personal-defibrillator",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "emergency",
+        "first aid"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Película de Unha Espelhada",
+      "nome_do_arquivo": "mirrored-nail-wraps.png",
+      "adicionado_em": "2025-09-10 11:51:47",
+      "slug": "mirrored-nail-wraps",
+      "categoria": "Moda e estilo",
+      "tags": [
+        "fashion",
+        "beauty",
+        "cosmetics"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Anel de Monitoramento do Sono",
+      "nome_do_arquivo": "sleep-tracking-ring.png",
+      "adicionado_em": "2025-09-10 12:31:31",
+      "slug": "sleep-tracking-ring",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "wearable",
+        "health",
+        "tracking"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Plataforma de Step",
+      "nome_do_arquivo": "step-aerobics-platform.png",
+      "adicionado_em": "2025-09-10 14:11:30",
+      "slug": "step-aerobics-platform",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "equipment",
+        "exercise",
+        "health"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Carrinho Utilitário",
+      "nome_do_arquivo": "utility-cart.png",
+      "adicionado_em": "2025-09-11 22:41:21",
+      "slug": "utility-cart",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "work",
+        "equipment",
+        "organization"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Vassoura de Quadribol",
+      "nome_do_arquivo": "quidditch-broom.png",
+      "adicionado_em": "2025-09-12 01:01:22",
+      "slug": "quidditch-broom",
+      "categoria": "Esportes",
+      "tags": [
+        "sports",
+        "magic",
+        "fantasy"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Protetor Anti-Ronco",
+      "nome_do_arquivo": "snore-guard.png",
+      "adicionado_em": "2025-09-12 02:11:26",
+      "slug": "snore-guard",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "personal care",
+        "sleep",
+        "health"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Ovo e Colher",
+      "nome_do_arquivo": "egg-and-spoon.png",
+      "adicionado_em": "2025-09-12 04:21:26",
+      "slug": "egg-and-spoon",
+      "categoria": "Esportes",
+      "tags": [
+        "sports",
+        "game",
+        "balance"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Frasco de Poção",
+      "nome_do_arquivo": "potion-bottle.png",
+      "adicionado_em": "2025-09-12 13:41:28",
+      "slug": "potion-bottle",
+      "categoria": "Hobbies",
+      "tags": [
+        "hobbies",
+        "craft",
+        "fantasy"
+      ],
+      "volume": 7
+    },
+    {
+      "titulo": "Relatório Médico",
+      "nome_do_arquivo": "medical-report.png",
+      "adicionado_em": "2025-09-12 16:01:20",
+      "slug": "medical-report",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "healthcare",
+        "document",
+        "diagnostic"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Etiqueta de Roupa",
+      "nome_do_arquivo": "laundry-tag.png",
+      "adicionado_em": "2025-09-15 13:31:26",
+      "slug": "laundry-tag",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "laundry",
+        "clothing",
+        "identification"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Bolha de Sabão",
+      "nome_do_arquivo": "soap-bubble.png",
+      "adicionado_em": "2025-09-15 13:41:28",
+      "slug": "soap-bubble",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "everyday",
+        "toy",
+        "imagination"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Kit de Teste de Alergia",
+      "nome_do_arquivo": "allergy-test-kit.png",
+      "adicionado_em": "2025-09-15 16:01:13",
+      "slug": "allergy-test-kit",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "diagnostic",
+        "testing"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Úmero",
+      "nome_do_arquivo": "humerus.png",
+      "adicionado_em": "2025-09-16 15:31:28",
+      "slug": "humerus",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "anatomy",
+        "health",
+        "joint"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Escápula",
+      "nome_do_arquivo": "scapula.png",
+      "adicionado_em": "2025-09-16 15:42:24",
+      "slug": "scapula",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "anatomy",
+        "health",
+        "joint"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Esterno",
+      "nome_do_arquivo": "sternum.png",
+      "adicionado_em": "2025-09-16 15:51:10",
+      "slug": "sternum",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "anatomy",
+        "organ",
+        "health"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Caixa Torácica",
+      "nome_do_arquivo": "ribcage.png",
+      "adicionado_em": "2025-09-16 16:01:28",
+      "slug": "ribcage",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "anatomy",
+        "organ",
+        "health"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Óleo de Hortelã",
+      "nome_do_arquivo": "peppermint-oil.png",
+      "adicionado_em": "2025-09-17 11:41:32",
+      "slug": "peppermint-oil",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "wellness",
+        "health",
+        "fragrance"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Almofada de Equilíbrio",
+      "nome_do_arquivo": "balance-pad.png",
+      "adicionado_em": "2025-09-17 12:11:18",
+      "slug": "balance-pad",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "wellness",
+        "exercise",
+        "balance"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Tampa de Ralo",
+      "nome_do_arquivo": "drain-stopper.png",
+      "adicionado_em": "2025-09-17 16:31:26",
+      "slug": "drain-stopper",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "everyday",
+        "bathroom",
+        "sanitation"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Máquina de Limpeza Industrial",
+      "nome_do_arquivo": "industrial-cleaning-machine.png",
+      "adicionado_em": "2025-09-18 14:11:29",
+      "slug": "industrial-cleaning-machine",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "equipment",
+        "cleaning",
+        "industry"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Caixa de Gordura",
+      "nome_do_arquivo": "grease-trap.png",
+      "adicionado_em": "2025-09-19 10:51:24",
+      "slug": "grease-trap",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "sanitation",
+        "waste",
+        "industry"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Banho de Assento",
+      "nome_do_arquivo": "sitz-bath.png",
+      "adicionado_em": "2025-09-21 10:31:19",
+      "slug": "sitz-bath",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "personal care",
+        "bathroom"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Adipômetro",
+      "nome_do_arquivo": "body-fat-caliper.png",
+      "adicionado_em": "2025-09-21 10:41:01",
+      "slug": "body-fat-caliper",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "measurement",
+        "diagnostic"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Plataforma Vibratória",
+      "nome_do_arquivo": "vibration-plate.png",
+      "adicionado_em": "2025-09-21 14:21:23",
+      "slug": "vibration-plate",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "equipment",
+        "exercise",
+        "wellness"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Sais de Amônia",
+      "nome_do_arquivo": "sniffing-salts.png",
+      "adicionado_em": "2025-09-21 14:31:15",
+      "slug": "sniffing-salts",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "first aid",
+        "wellness"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Composteira",
+      "nome_do_arquivo": "compost-bin.png",
+      "adicionado_em": "2025-09-22 10:32:20",
+      "slug": "compost-bin",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "waste",
+        "eco-friendly",
+        "agriculture"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Capa Protetora",
+      "nome_do_arquivo": "dust-cover.png",
+      "adicionado_em": "2025-09-22 12:11:27",
+      "slug": "dust-cover",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "protection",
+        "cleaning",
+        "everyday"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Bomba de Banho",
+      "nome_do_arquivo": "bath-bomb.png",
+      "adicionado_em": "2025-09-23 09:21:17",
+      "slug": "bath-bomb",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "bathroom",
+        "relaxation"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Pad de Bateria Eletrônica",
+      "nome_do_arquivo": "electronic-drum-pad.png",
+      "adicionado_em": "2025-09-24 11:01:27",
+      "slug": "electronic-drum-pad",
+      "categoria": "Entretenimento e lazer",
+      "tags": [
+        "music",
+        "instrument",
+        "electronics"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Maquiagem e Cuidados com a Pele",
+      "nome_do_arquivo": "makeup-and-skincare.png",
+      "adicionado_em": "2025-09-27 19:01:15",
+      "slug": "makeup-and-skincare",
+      "categoria": "Moda e estilo",
+      "tags": [
+        "cosmetics",
+        "beauty",
+        "personal care"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Planta Carnívora",
+      "nome_do_arquivo": "carnivorous-pitcher-plant.png",
+      "adicionado_em": "2025-09-30 14:01:22",
+      "slug": "carnivorous-pitcher-plant",
+      "categoria": "Natureza e ar livre",
+      "tags": [
+        "plant",
+        "carnivorous",
+        "nature"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Navio na Garrafa",
+      "nome_do_arquivo": "bottle-ship.png",
+      "adicionado_em": "2025-09-30 14:11:31",
+      "slug": "bottle-ship",
+      "categoria": "Hobbies",
+      "tags": [
+        "hobbies",
+        "craft",
+        "collection"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Comprimido de Glicose",
+      "nome_do_arquivo": "glucose-tablet.png",
+      "adicionado_em": "2025-09-30 19:31:21",
+      "slug": "glucose-tablet",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "supplement",
+        "energy"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Bar de Oxigênio",
+      "nome_do_arquivo": "oxygen-bar.png",
+      "adicionado_em": "2025-09-30 19:41:15",
+      "slug": "oxygen-bar",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "wellness",
+        "relaxation",
+        "health"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Cotoveleira para Tendinite",
+      "nome_do_arquivo": "tennis-elbow-brace.png",
+      "adicionado_em": "2025-09-30 20:31:25",
+      "slug": "tennis-elbow-brace",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "support",
+        "injury"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Supositório",
+      "nome_do_arquivo": "suppository.png",
+      "adicionado_em": "2025-09-30 21:11:25",
+      "slug": "suppository",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "medicine",
+        "healthcare",
+        "personal care"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Lixeira Cheia",
+      "nome_do_arquivo": "overfilled-trash-can.png",
+      "adicionado_em": "2025-09-30 22:51:11",
+      "slug": "overfilled-trash-can",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "waste",
+        "clutter",
+        "everyday"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Algodão em Disco",
+      "nome_do_arquivo": "cotton-puff.png",
+      "adicionado_em": "2025-10-01 01:01:17",
+      "slug": "cotton-puff",
+      "categoria": "Natureza e ar livre",
+      "tags": [
+        "nature",
+        "plant",
+        "eco-friendly"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Diagnóstico",
+      "nome_do_arquivo": "diagnosis.png",
+      "adicionado_em": "2025-10-01 01:21:18",
+      "slug": "diagnosis",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "assessment",
+        "diagnostic"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Demência",
+      "nome_do_arquivo": "dementia.png",
+      "adicionado_em": "2025-10-01 01:31:12",
+      "slug": "dementia",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "disorder",
+        "memory"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Dor de Cabeça",
+      "nome_do_arquivo": "headache.png",
+      "adicionado_em": "2025-10-01 02:01:24",
+      "slug": "headache",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "wellness",
+        "disorder"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Dilatador Nasal",
+      "nome_do_arquivo": "nasal-dilator.png",
+      "adicionado_em": "2025-10-02 08:41:18",
+      "slug": "nasal-dilator",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "wellness",
+        "assistive technology"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Felpa de Bolso",
+      "nome_do_arquivo": "pocket-lint.png",
+      "adicionado_em": "2025-10-02 12:41:17",
+      "slug": "pocket-lint",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "everyday",
+        "clutter",
+        "cleaning"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Barril de Banho de Gelo",
+      "nome_do_arquivo": "ice-bath-barrel.png",
+      "adicionado_em": "2025-10-02 16:01:30",
+      "slug": "ice-bath-barrel",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "wellness",
+        "health",
+        "equipment"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Capacete Craniano",
+      "nome_do_arquivo": "cranial-helmet.png",
+      "adicionado_em": "2025-10-02 16:11:22",
+      "slug": "cranial-helmet",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "wellness",
+        "helmet",
+        "assistive technology",
+        "support"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Adesivo de Língua",
+      "nome_do_arquivo": "tongue-patch.png",
+      "adicionado_em": "2025-10-02 16:21:19",
+      "slug": "tongue-patch",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "body modification",
+        "controversial"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Cartão de Tipo Sanguíneo",
+      "nome_do_arquivo": "blood-type-card.png",
+      "adicionado_em": "2025-10-02 16:31:20",
+      "slug": "blood-type-card",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "identification",
+        "health",
+        "emergency"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Dente Fóssil",
+      "nome_do_arquivo": "fossil-tooth.png",
+      "adicionado_em": "2025-10-04 14:11:25",
+      "slug": "fossil-tooth",
+      "categoria": "Hobbies",
+      "tags": [
+        "fossil",
+        "collection",
+        "hobbies"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Tambor de Resíduo Perigoso",
+      "nome_do_arquivo": "hazardous-waste-drum.png",
+      "adicionado_em": "2025-10-04 14:51:25",
+      "slug": "hazardous-waste-drum",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "work",
+        "safety",
+        "waste"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Bolhas de Sabão",
+      "nome_do_arquivo": "soap-bubbles.png",
+      "adicionado_em": "2025-10-04 15:10:57",
+      "slug": "soap-bubbles",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "toy",
+        "cleaning",
+        "everyday"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Toalha de Microfibra",
+      "nome_do_arquivo": "microfiber-towel.png",
+      "adicionado_em": "2025-10-04 16:21:24",
+      "slug": "microfiber-towel",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "personal care",
+        "cleaning",
+        "wellness"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Pistola de Bolhas de Sabão",
+      "nome_do_arquivo": "soap-bubble-gun.png",
+      "adicionado_em": "2025-10-04 19:21:20",
+      "slug": "soap-bubble-gun",
+      "categoria": "Entretenimento e lazer",
+      "tags": [
+        "toy",
+        "entertainment",
+        "party"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Faca Puukko",
+      "nome_do_arquivo": "puukko-knife.png",
+      "adicionado_em": "2025-10-04 19:41:28",
+      "slug": "puukko-knife",
+      "categoria": "Hobbies",
+      "tags": [
+        "tool",
+        "craft",
+        "outdoor"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Luva para Artrite",
+      "nome_do_arquivo": "arthritis-glove.png",
+      "adicionado_em": "2025-10-05 11:51:39",
+      "slug": "arthritis-glove",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "wellness",
+        "support"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Autismo",
+      "nome_do_arquivo": "autism.png",
+      "adicionado_em": "2025-10-05 17:01:41",
+      "slug": "autism",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "disorder",
+        "health",
+        "awareness"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Moldura de Placa",
+      "nome_do_arquivo": "license-plate-frame.png",
+      "adicionado_em": "2025-10-08 09:51:42",
+      "slug": "license-plate-frame",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "vehicle",
+        "accessory",
+        "customization"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Contenção Transparente",
+      "nome_do_arquivo": "clear-retainer.png",
+      "adicionado_em": "2025-10-09 19:51:36",
+      "slug": "clear-retainer",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "wellness",
+        "wearable"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Porta-Sabonete Econômico",
+      "nome_do_arquivo": "soap-saver.png",
+      "adicionado_em": "2025-10-10 10:31:47",
+      "slug": "soap-saver",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "bathroom",
+        "organization"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Kit de Teste de DNA",
+      "nome_do_arquivo": "dna-test-kit.png",
+      "adicionado_em": "2025-10-10 10:41:46",
+      "slug": "dna-test-kit",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "testing",
+        "diagnostic",
+        "health"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Bola Sensorial Tátil",
+      "nome_do_arquivo": "tactile-sensory-ball.png",
+      "adicionado_em": "2025-10-10 10:51:49",
+      "slug": "tactile-sensory-ball",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "wellness",
+        "health",
+        "relaxation"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Pote de Vidro do Mar",
+      "nome_do_arquivo": "sea-glass-jar.png",
+      "adicionado_em": "2025-10-10 12:31:41",
+      "slug": "sea-glass-jar",
+      "categoria": "Hobbies",
+      "tags": [
+        "hobbies",
+        "collection",
+        "decor"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Palito de Mascar",
+      "nome_do_arquivo": "chewing-stick.png",
+      "adicionado_em": "2025-10-10 12:41:42",
+      "slug": "chewing-stick",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "personal care",
+        "health",
+        "eco-friendly"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Garrafa de Alquimia",
+      "nome_do_arquivo": "alchemy-bottle.png",
+      "adicionado_em": "2025-10-10 13:11:43",
+      "slug": "alchemy-bottle",
+      "categoria": "Hobbies",
+      "tags": [
+        "hobbies",
+        "fantasy",
+        "craft"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Banquinho de Vaso Sanitário",
+      "nome_do_arquivo": "toilet-step-stool.png",
+      "adicionado_em": "2025-10-10 17:31:45",
+      "slug": "toilet-step-stool",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "bathroom",
+        "children",
+        "accessibility"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Spray para Garganta",
+      "nome_do_arquivo": "throat-spray.png",
+      "adicionado_em": "2025-10-10 18:21:31",
+      "slug": "throat-spray",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "wellness",
+        "medicine"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Sérum de Vitamina C",
+      "nome_do_arquivo": "vitamin-c-serum.png",
+      "adicionado_em": "2025-10-11 16:11:40",
+      "slug": "vitamin-c-serum",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "beauty",
+        "wellness",
+        "supplement"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Painel de Terapia com Luz Vermelha",
+      "nome_do_arquivo": "red-light-therapy-panel.png",
+      "adicionado_em": "2025-10-12 09:11:36",
+      "slug": "red-light-therapy-panel",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "wellness",
+        "equipment"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Compactador de Lixo",
+      "nome_do_arquivo": "waste-compactor.png",
+      "adicionado_em": "2025-10-12 11:31:43",
+      "slug": "waste-compactor",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "equipment",
+        "waste",
+        "industry"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Esteira com Mesa",
+      "nome_do_arquivo": "treadmill-desk.png",
+      "adicionado_em": "2025-10-12 11:51:38",
+      "slug": "treadmill-desk",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "exercise",
+        "office"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Joia de Dente",
+      "nome_do_arquivo": "tooth-gem.png",
+      "adicionado_em": "2025-10-15 14:42:23",
+      "slug": "tooth-gem",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "body modification",
+        "cosmetics",
+        "personal care"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Abafador de Ruído",
+      "nome_do_arquivo": "sound-reducing-ear-muffs.png",
+      "adicionado_em": "2025-10-15 14:51:45",
+      "slug": "sound-reducing-ear-muffs",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "protection",
+        "wearable",
+        "health"
+      ],
+      "volume": 8
+    },
+    {
+      "titulo": "Carro Basculante",
+      "nome_do_arquivo": "tilt-truck.png",
+      "adicionado_em": "2025-10-16 15:31:37",
+      "slug": "tilt-truck",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "work",
+        "equipment",
+        "waste"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Estilete",
+      "nome_do_arquivo": "utility-knife.png",
+      "adicionado_em": "2025-10-16 16:01:08",
+      "slug": "utility-knife",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "tool",
+        "utility",
+        "work"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Garrafa Vazia",
+      "nome_do_arquivo": "empty-bottle.png",
+      "adicionado_em": "2025-10-16 17:01:44",
+      "slug": "empty-bottle",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "storage",
+        "packaging",
+        "everyday"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Fratura",
+      "nome_do_arquivo": "fracture.png",
+      "adicionado_em": "2025-10-16 19:01:35",
+      "slug": "fracture",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "injury",
+        "medicine"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Barril de Resíduo Perigoso",
+      "nome_do_arquivo": "hazardous-waste-barrel.png",
+      "adicionado_em": "2025-10-20 16:53:17",
+      "slug": "hazardous-waste-barrel",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "waste",
+        "safety",
+        "industry"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Espanador de Teia de Aranha",
+      "nome_do_arquivo": "cobweb-duster.png",
+      "adicionado_em": "2025-10-20 16:55:23",
+      "slug": "cobweb-duster",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "cleaning",
+        "tool",
+        "work"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Agulha de Acupuntura",
+      "nome_do_arquivo": "acupuncture-needle.png",
+      "adicionado_em": "2025-10-20 16:56:21",
+      "slug": "acupuncture-needle",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "wellness",
+        "medicine"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Dente de Baleia Esculpido",
+      "nome_do_arquivo": "whale-tooth-scrimshaw.png",
+      "adicionado_em": "2025-10-20 16:57:19",
+      "slug": "whale-tooth-scrimshaw",
+      "categoria": "Hobbies",
+      "tags": [
+        "hobbies",
+        "craft",
+        "artifact"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Placa de Identificação",
+      "nome_do_arquivo": "name-plate.png",
+      "adicionado_em": "2025-10-20 17:01:12",
+      "slug": "name-plate",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "identification",
+        "work",
+        "office"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Sanguessuga",
+      "nome_do_arquivo": "leech.png",
+      "adicionado_em": "2025-10-21 10:21:54",
+      "slug": "leech",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "parasite",
+        "animal",
+        "medicine"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Ficha de Lavanderia",
+      "nome_do_arquivo": "laundry-coin.png",
+      "adicionado_em": "2025-10-22 16:51:19",
+      "slug": "laundry-coin",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "laundry",
+        "payment",
+        "everyday"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Chiclete Mascado",
+      "nome_do_arquivo": "chewed-gum.png",
+      "adicionado_em": "2025-10-22 18:41:08",
+      "slug": "chewed-gum",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "everyday",
+        "habit",
+        "waste"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Tampa de Vaso Sanitário",
+      "nome_do_arquivo": "toilet-lid-cover.png",
+      "adicionado_em": "2025-10-22 19:31:13",
+      "slug": "toilet-lid-cover",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "bathroom",
+        "comfort",
+        "decor"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Espuma",
+      "nome_do_arquivo": "foam.png",
+      "adicionado_em": "2025-10-22 23:51:13",
+      "slug": "foam",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "everyday",
+        "comfort",
+        "cleaning"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Escova de Piscina",
+      "nome_do_arquivo": "pool-cleaning-brush.png",
+      "adicionado_em": "2025-10-23 00:01:11",
+      "slug": "pool-cleaning-brush",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "cleaning",
+        "tool",
+        "maintenance"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Soco Inglês",
+      "nome_do_arquivo": "knuckle-duster.png",
+      "adicionado_em": "2025-10-23 00:21:18",
+      "slug": "knuckle-duster",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "weapon",
+        "danger",
+        "protection"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Mandíbula",
+      "nome_do_arquivo": "jaw.png",
+      "adicionado_em": "2025-10-23 03:00:48",
+      "slug": "jaw",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "anatomy",
+        "organ",
+        "health"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Porta-Chaves",
+      "nome_do_arquivo": "key-bowl.png",
+      "adicionado_em": "2025-10-23 18:11:17",
+      "slug": "key-bowl",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "storage",
+        "organization",
+        "everyday"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Veia",
+      "nome_do_arquivo": "vein.png",
+      "adicionado_em": "2025-10-24 11:21:20",
+      "slug": "vein",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "anatomy",
+        "organ",
+        "health"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Artéria",
+      "nome_do_arquivo": "artery.png",
+      "adicionado_em": "2025-10-24 11:31:12",
+      "slug": "artery",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "organ",
+        "anatomy",
+        "health"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Cabaça de Água",
+      "nome_do_arquivo": "gourd-water-bottle.png",
+      "adicionado_em": "2025-10-24 15:31:15",
+      "slug": "gourd-water-bottle",
+      "categoria": "Hobbies",
+      "tags": [
+        "hobbies",
+        "craft",
+        "eco-friendly"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Desentupidor de Cano",
+      "nome_do_arquivo": "drain-snake.png",
+      "adicionado_em": "2025-10-26 13:01:14",
+      "slug": "drain-snake",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "tool",
+        "maintenance",
+        "cleaning"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Terrário na Garrafa",
+      "nome_do_arquivo": "bottle-terrarium.png",
+      "adicionado_em": "2025-10-26 19:01:12",
+      "slug": "bottle-terrarium",
+      "categoria": "Hobbies",
+      "tags": [
+        "hobbies",
+        "miniature",
+        "plant"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Cápsula do Tempo",
+      "nome_do_arquivo": "time-capsule-safe.png",
+      "adicionado_em": "2025-10-27 09:11:19",
+      "slug": "time-capsule-safe",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "storage",
+        "security",
+        "work"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Cesto de Arame",
+      "nome_do_arquivo": "wire-basket.png",
+      "adicionado_em": "2025-10-28 11:11:17",
+      "slug": "wire-basket",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "storage",
+        "organization",
+        "work"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Cesto de Frutas Vermelhas",
+      "nome_do_arquivo": "berry-basket.png",
+      "adicionado_em": "2025-10-29 14:32:04",
+      "slug": "berry-basket",
+      "categoria": "Natureza e ar livre",
+      "tags": [
+        "nature",
+        "outdoor",
+        "collection"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Canetinha Perfumada",
+      "nome_do_arquivo": "scented-marker.png",
+      "adicionado_em": "2025-10-30 17:51:31",
+      "slug": "scented-marker",
+      "categoria": "Entretenimento e lazer",
+      "tags": [
+        "writing",
+        "fragrance",
+        "children"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Dose de Reforço",
+      "nome_do_arquivo": "booster-shot.png",
+      "adicionado_em": "2025-10-30 18:31:53",
+      "slug": "booster-shot",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "medicine",
+        "wellness"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Scanner de Composição Corporal",
+      "nome_do_arquivo": "body-composition-scanner.png",
+      "adicionado_em": "2025-10-30 18:41:51",
+      "slug": "body-composition-scanner",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "diagnostic",
+        "measurement"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Espremedor de Pasta de Dente",
+      "nome_do_arquivo": "toothpaste-squeezer.png",
+      "adicionado_em": "2025-10-30 19:21:50",
+      "slug": "toothpaste-squeezer",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "bathroom",
+        "personal care",
+        "tool"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Banheiro",
+      "nome_do_arquivo": "bathroom.png",
+      "adicionado_em": "2025-10-31 09:02:59",
+      "slug": "bathroom",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "bathroom",
+        "everyday",
+        "personal care"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Plataforma de Lançamento",
+      "nome_do_arquivo": "rocket-launch-pad.png",
+      "adicionado_em": "2025-10-31 12:01:56",
+      "slug": "rocket-launch-pad",
+      "categoria": "Lugares e estruturas",
+      "tags": [
+        "structure",
+        "space",
+        "infrastructure"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Tampa de Pasta de Dente",
+      "nome_do_arquivo": "toothpaste-cap.png",
+      "adicionado_em": "2025-11-01 14:51:55",
+      "slug": "toothpaste-cap",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "personal care",
+        "bathroom",
+        "fastener"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Ferro de Marcar Gado",
+      "nome_do_arquivo": "cattle-branding-iron.png",
+      "adicionado_em": "2025-11-01 19:01:53",
+      "slug": "cattle-branding-iron",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "tool",
+        "identification",
+        "agriculture"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Esteira de Mesa",
+      "nome_do_arquivo": "desk-treadmill.png",
+      "adicionado_em": "2025-11-02 15:21:57",
+      "slug": "desk-treadmill",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "exercise",
+        "office"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Shorts de Algodão Vermelho",
+      "nome_do_arquivo": "red-cotton-shorts.png",
+      "adicionado_em": "2025-11-03 16:13:14",
+      "slug": "red-cotton-shorts",
+      "categoria": "Moda e estilo",
+      "tags": [
+        "clothing",
+        "casual",
+        "comfort"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Chapéu Bucket de Veludo Amarelo",
+      "nome_do_arquivo": "yellow-corduroy-bucket-hat-with-chin-strap.png",
+      "adicionado_em": "2025-11-03 16:13:16",
+      "slug": "yellow-corduroy-bucket-hat-with-chin-strap",
+      "categoria": "Moda e estilo",
+      "tags": [
+        "fashion",
+        "clothing",
+        "accessory"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Chapéu Bucket Metálico",
+      "nome_do_arquivo": "metallic-bucket-hat.png",
+      "adicionado_em": "2025-11-04 10:42:14",
+      "slug": "metallic-bucket-hat",
+      "categoria": "Moda e estilo",
+      "tags": [
+        "fashion",
+        "accessory",
+        "wearable"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Tensão",
+      "nome_do_arquivo": "tension.png",
+      "adicionado_em": "2025-11-05 23:41:59",
+      "slug": "tension",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "wellness",
+        "stress"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Joelheiras",
+      "nome_do_arquivo": "knee-pads.png",
+      "adicionado_em": "2025-11-07 00:51:58",
+      "slug": "knee-pads",
+      "categoria": "Trabalho e indústria",
+      "tags": [
+        "protection",
+        "work",
+        "safety"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Planta de Aloe Vera",
+      "nome_do_arquivo": "aloe-vera-plant.png",
+      "adicionado_em": "2025-11-07 02:02:11",
+      "slug": "aloe-vera-plant",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "plant",
+        "wellness",
+        "health"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Garrafa com Lembrete de Hidratação",
+      "nome_do_arquivo": "hydration-reminder-bottle.png",
+      "adicionado_em": "2025-11-07 02:11:30",
+      "slug": "hydration-reminder-bottle",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "hydration",
+        "wellness",
+        "health"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Pélvis",
+      "nome_do_arquivo": "pelvis.png",
+      "adicionado_em": "2025-11-08 13:21:58",
+      "slug": "pelvis",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "anatomy",
+        "organ",
+        "health"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Copo de Gargarejo",
+      "nome_do_arquivo": "gargle-cup.png",
+      "adicionado_em": "2025-11-08 15:31:30",
+      "slug": "gargle-cup",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "personal care",
+        "bathroom",
+        "health"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Marcador de Roupa",
+      "nome_do_arquivo": "laundry-marker.png",
+      "adicionado_em": "2025-11-09 13:22:07",
+      "slug": "laundry-marker",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "laundry",
+        "writing",
+        "identification"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Medicamentos",
+      "nome_do_arquivo": "drugs.png",
+      "adicionado_em": "2025-11-09 17:31:57",
+      "slug": "drugs",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "medicine",
+        "healthcare",
+        "treatment"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Ducha",
+      "nome_do_arquivo": "douche.png",
+      "adicionado_em": "2025-11-09 18:01:58",
+      "slug": "douche",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "personal care",
+        "cleaning",
+        "health"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Garrafa de Cobre",
+      "nome_do_arquivo": "copper-water-bottle.png",
+      "adicionado_em": "2025-11-12 12:02:03",
+      "slug": "copper-water-bottle",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "wellness",
+        "hydration",
+        "eco-friendly"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Pilha de Roupa Suja",
+      "nome_do_arquivo": "dirty-laundry-pile.png",
+      "adicionado_em": "2025-11-14 12:12:00",
+      "slug": "dirty-laundry-pile",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "clutter",
+        "laundry",
+        "everyday"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Esponja de Escultura",
+      "nome_do_arquivo": "sculpting-sponge.png",
+      "adicionado_em": "2025-11-14 14:41:56",
+      "slug": "sculpting-sponge",
+      "categoria": "Hobbies",
+      "tags": [
+        "tool",
+        "craft",
+        "hobbies"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Mesa Digitalizadora",
+      "nome_do_arquivo": "digital-drawing-tablet.png",
+      "adicionado_em": "2025-11-14 14:52:06",
+      "slug": "digital-drawing-tablet",
+      "categoria": "Hobbies",
+      "tags": [
+        "technology",
+        "art",
+        "tool"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Kit de Limpeza de Celular",
+      "nome_do_arquivo": "cell-phone-cleaning-kit.png",
+      "adicionado_em": "2025-11-14 18:31:58",
+      "slug": "cell-phone-cleaning-kit",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "cleaning",
+        "technology",
+        "everyday"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Girar a Garrafa",
+      "nome_do_arquivo": "spin-the-bottle.png",
+      "adicionado_em": "2025-11-16 11:11:55",
+      "slug": "spin-the-bottle",
+      "categoria": "Entretenimento e lazer",
+      "tags": [
+        "game",
+        "party",
+        "social"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Pente de Cristal",
+      "nome_do_arquivo": "crystal-hair-comb.png",
+      "adicionado_em": "2025-11-17 15:31:43",
+      "slug": "crystal-hair-comb",
+      "categoria": "Moda e estilo",
+      "tags": [
+        "fashion",
+        "accessory",
+        "hair"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Mini Garrafa com Mensagem",
+      "nome_do_arquivo": "tiny-message-bottle.png",
+      "adicionado_em": "2025-11-20 00:21:34",
+      "slug": "tiny-message-bottle",
+      "categoria": "Hobbies",
+      "tags": [
+        "miniature",
+        "craft",
+        "gift"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Caixa Organizadora Plástica",
+      "nome_do_arquivo": "plastic-storage-bin.png",
+      "adicionado_em": "2025-11-24 10:51:35",
+      "slug": "plastic-storage-bin",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "storage",
+        "organization",
+        "everyday"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Saco de Lixo Cheio",
+      "nome_do_arquivo": "overfilled-trash-bag.png",
+      "adicionado_em": "2025-11-24 11:11:33",
+      "slug": "overfilled-trash-bag",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "waste",
+        "sanitation",
+        "clutter"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Varizes",
+      "nome_do_arquivo": "varicose-vein.png",
+      "adicionado_em": "2025-11-24 12:41:41",
+      "slug": "varicose-vein",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "disorder",
+        "treatment"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Adesivo de Nicotina",
+      "nome_do_arquivo": "nicotine-patch.png",
+      "adicionado_em": "2025-11-24 15:01:17",
+      "slug": "nicotine-patch",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "health",
+        "addiction",
+        "treatment"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Baldinho de Areia",
+      "nome_do_arquivo": "sandcastle-bucket.png",
+      "adicionado_em": "2025-11-24 16:41:35",
+      "slug": "sandcastle-bucket",
+      "categoria": "Hobbies",
+      "tags": [
+        "hobbies",
+        "outdoor",
+        "toy"
+      ],
+      "volume": 9
+    },
+    {
+      "titulo": "Panela de Fogueira",
+      "nome_do_arquivo": "campfire-cooking-pot.png",
+      "adicionado_em": "2025-05-15 14:50:47",
+      "slug": "campfire-cooking-pot",
+      "categoria": "Natureza e ar livre",
+      "tags": [
+        "outdoor",
+        "equipment",
+        "basic"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Embalagem de Bala",
+      "nome_do_arquivo": "candy-wrapper.png",
+      "adicionado_em": "2025-05-15 14:50:47",
+      "slug": "candy-wrapper",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "packaging",
+        "waste",
+        "sweet"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Lavador de Louça",
+      "nome_do_arquivo": "dishwasher-1.png",
+      "adicionado_em": "2025-05-15 14:50:47",
+      "slug": "dishwasher",
+      "categoria": "Profissões",
+      "tags": [
+        "profession",
+        "service",
+        "sanitation"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Tabela Nutricional",
+      "nome_do_arquivo": "nutrition-chart.png",
+      "adicionado_em": "2025-05-15 14:50:47",
+      "slug": "nutrition-chart",
+      "categoria": "Saúde e bem-estar",
+      "tags": [
+        "nutrition",
+        "health",
+        "measurement"
+      ],
+      "volume": 1
+    },
+    {
+      "titulo": "Carrinho de Servir",
+      "nome_do_arquivo": "serving-cart.png",
+      "adicionado_em": "2025-05-15 14:50:47",
+      "slug": "serving-cart",
+      "categoria": "Vida cotidiana",
+      "tags": [
+        "furniture",
+        "storage",
+        "entertainment"
+      ],
+      "volume": 1
     }
   ]
 }

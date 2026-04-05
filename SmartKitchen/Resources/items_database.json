@@ -6619,7 +6619,10 @@
     "titulos": [
       "Celery",
       "Salsao",
-      "Salsão"
+      "Salsão",
+      "Leek",
+      "Alho Poro",
+      "Alho Poró"
     ],
     "nome_do_arquivo": "celery.png",
     "categoria": "Verduras e Legumes"
@@ -10838,5 +10841,5843 @@
     ],
     "nome_do_arquivo": "antibody.png",
     "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Barcode Scanner",
+      "Leitor de Codigo de Barras",
+      "Leitor de Código de Barras",
+      "Scanner de Código de Barras"
+    ],
+    "nome_do_arquivo": "barcode-scanner.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Barcode",
+      "Codigo de Barras",
+      "Código de Barras"
+    ],
+    "nome_do_arquivo": "barcode.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Buyer",
+      "Cliente",
+      "Comprador",
+      "Shopper"
+    ],
+    "nome_do_arquivo": "buyer.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Caixa",
+      "Caixa de Supermercado",
+      "Cashier",
+      "Operador de Caixa"
+    ],
+    "nome_do_arquivo": "cashier.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Convenience Store",
+      "Conveniencia",
+      "Conveniência",
+      "Loja de Conveniencia",
+      "Loja de Conveniência"
+    ],
+    "nome_do_arquivo": "convenience-store.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Clip de Cupom",
+      "Coupon Clip",
+      "Cupom Recortado",
+      "Recorte de Cupom"
+    ],
+    "nome_do_arquivo": "coupon-clip.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Coupon",
+      "Cupom",
+      "Cupom de Desconto",
+      "Vale",
+      "Voucher"
+    ],
+    "nome_do_arquivo": "coupon.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Covered Market",
+      "Feira Coberta",
+      "Mercado Coberto",
+      "Mercado Municipal"
+    ],
+    "nome_do_arquivo": "covered-market.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Cliente",
+      "Comprador",
+      "Consumidor",
+      "Customer",
+      "Shopper"
+    ],
+    "nome_do_arquivo": "customer.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Discount Tag",
+      "Etiqueta de Desconto",
+      "Promocao",
+      "Promoção",
+      "Sale Tag",
+      "Tag de Desconto"
+    ],
+    "nome_do_arquivo": "discount-tag-1.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Discount Tag",
+      "Etiqueta de Desconto",
+      "Promocao",
+      "Promoção",
+      "Sale Tag",
+      "Tag de Desconto"
+    ],
+    "nome_do_arquivo": "discount-tag.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Desconto",
+      "Discount",
+      "Oferta",
+      "Promocao",
+      "Promoção",
+      "Sale"
+    ],
+    "nome_do_arquivo": "discount.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Brecho",
+      "Brechó",
+      "Feira da Ladra",
+      "Flea Market",
+      "Mercado de Pulgas"
+    ],
+    "nome_do_arquivo": "flea-market.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Floating Market",
+      "Mercado Flutuante"
+    ],
+    "nome_do_arquivo": "floating-market.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Grocery Bag",
+      "Grocery bag",
+      "Sacola Plastica",
+      "Sacola Plástica",
+      "Sacola de Compras",
+      "Sacola de Supermercado",
+      "Shopping Bag"
+    ],
+    "nome_do_arquivo": "grocery-bag.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Cupom Fiscal",
+      "Cupom Fiscal de Supermercado",
+      "Grocery Receipt",
+      "Nota Fiscal de Compras"
+    ],
+    "nome_do_arquivo": "grocery-receipt.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Market Hall",
+      "Pavilhao de Mercado",
+      "Pavilhão de Mercado",
+      "Salao de Mercado",
+      "Salão de Mercado"
+    ],
+    "nome_do_arquivo": "market-hall.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Market Square",
+      "Praca de Mercado",
+      "Praca do Comercio",
+      "Praça de Mercado",
+      "Praça do Comércio"
+    ],
+    "nome_do_arquivo": "market-square.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Feira",
+      "Market",
+      "Marketplace",
+      "Mercado",
+      "Praça do Mercado"
+    ],
+    "nome_do_arquivo": "marketplace.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Comerciante",
+      "Merchant",
+      "Merchant Trader",
+      "Negociante",
+      "Vendedor"
+    ],
+    "nome_do_arquivo": "merchant-trader.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Mercadinho",
+      "Mercearia",
+      "Mini Mart",
+      "Mini Supermarket",
+      "Mini Supermercado",
+      "Minimercado"
+    ],
+    "nome_do_arquivo": "mini-supermarket.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Deal",
+      "Oferta",
+      "Offer",
+      "Promocao",
+      "Promoção"
+    ],
+    "nome_do_arquivo": "offer.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Casa de Penhores",
+      "Pawnshop",
+      "Penhor"
+    ],
+    "nome_do_arquivo": "pawnshop.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "% de Desconto",
+      "Desconto Percentual",
+      "Percentage Discount",
+      "Percentual de Desconto",
+      "Porcentagem de Desconto"
+    ],
+    "nome_do_arquivo": "percentage-discount.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Cesta de Compras Plastica",
+      "Cesta de Compras Plástica",
+      "Cesta de Supermercado",
+      "Plastic Shopping Basket"
+    ],
+    "nome_do_arquivo": "plastic-shopping-basket.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Caixa Registradora",
+      "PDV",
+      "POS",
+      "Point of Sale",
+      "Ponto de Venda"
+    ],
+    "nome_do_arquivo": "point-of-sale.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Etiqueta de Preco",
+      "Etiqueta de Preço",
+      "Price Tag",
+      "Tag de Preco",
+      "Tag de Preço"
+    ],
+    "nome_do_arquivo": "price-tag.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Carrinho",
+      "Carrinho de Mao",
+      "Carrinho de Mão",
+      "Pushcart"
+    ],
+    "nome_do_arquivo": "pushcart.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Comprovante",
+      "Cupom Fiscal",
+      "Nota Fiscal",
+      "Receipt",
+      "Recibo"
+    ],
+    "nome_do_arquivo": "receipt-1.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Impressora de Cupom Fiscal",
+      "Impressora de Recibos",
+      "Receipt Printer"
+    ],
+    "nome_do_arquivo": "receipt-printer.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Espeto de Recibos",
+      "Prendedor de Notas Fiscais",
+      "Receipt Spike",
+      "Suporte de Recibos"
+    ],
+    "nome_do_arquivo": "receipt-spike.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Comprovante",
+      "Cupom Fiscal",
+      "Nota Fiscal",
+      "Receipt",
+      "Recibo"
+    ],
+    "nome_do_arquivo": "receipt.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Gerente de Loja",
+      "Gerente de Varejo",
+      "Retail Store Manager"
+    ],
+    "nome_do_arquivo": "retail-store-manager.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Eco Bag",
+      "Ecobag",
+      "Reusable Shopping Bag",
+      "Sacola Ecologica",
+      "Sacola Ecológica",
+      "Sacola Reutilizavel",
+      "Sacola Reutilizável"
+    ],
+    "nome_do_arquivo": "reusable-shopping-bag.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Funil de Vendas",
+      "Grafico de Funil de Vendas",
+      "Gráfico de Funil de Vendas",
+      "Sales Funnel Chart"
+    ],
+    "nome_do_arquivo": "sales-funnel-chart.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Atendente",
+      "Salesperson",
+      "Vendedor",
+      "Vendedora"
+    ],
+    "nome_do_arquivo": "salesperson.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Autoatendimento",
+      "Caixa de Autoatendimento",
+      "Self Checkout",
+      "Self-Checkout"
+    ],
+    "nome_do_arquivo": "self-checkout.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Comercio",
+      "Comércio",
+      "Loja",
+      "Shop",
+      "Store"
+    ],
+    "nome_do_arquivo": "shop.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Sacola",
+      "Sacola de Compras",
+      "Shopping Bag",
+      "Shopping bag"
+    ],
+    "nome_do_arquivo": "shopping-bag.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Cesta de Compras",
+      "Cesta de Supermercado",
+      "Cestinha de Compras",
+      "Shopping Basket"
+    ],
+    "nome_do_arquivo": "shopping-basket.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Carrinho de Compras",
+      "Carrinho de Supermercado",
+      "Shopping Cart"
+    ],
+    "nome_do_arquivo": "shopping-cart.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Centro Comercial",
+      "Mall",
+      "Shopping",
+      "Shopping Center"
+    ],
+    "nome_do_arquivo": "shopping-center.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Centro Comercial",
+      "Shopping",
+      "Shopping Mall",
+      "Shopping mall"
+    ],
+    "nome_do_arquivo": "shopping-mall.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Comercios",
+      "Comércios",
+      "Lojas",
+      "Shops",
+      "Stores"
+    ],
+    "nome_do_arquivo": "shops.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Grocery Store",
+      "Hipermercado",
+      "Mercado",
+      "Supermarket",
+      "Supermercado"
+    ],
+    "nome_do_arquivo": "supermarket.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Exposicao Comercial",
+      "Exposição Comercial",
+      "Feira Comercial",
+      "Feira de Negocios",
+      "Feira de Negócios",
+      "Trade Show"
+    ],
+    "nome_do_arquivo": "trade-show.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Bazar",
+      "Brecho",
+      "Brechó",
+      "Garage Sale",
+      "Venda de Garagem",
+      "Yard Sale"
+    ],
+    "nome_do_arquivo": "yard-sale.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "AA Battery",
+      "Battery AA",
+      "Pilha",
+      "Pilha AA",
+      "Pilha Palito"
+    ],
+    "nome_do_arquivo": "aa-battery.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Antibacterial Wipes",
+      "Disinfecting Wipes",
+      "Lenco Umedecido",
+      "Lenço Umedecido Antibacteriano",
+      "Lenços Antibacterianos",
+      "Toalha Antibacteriana"
+    ],
+    "nome_do_arquivo": "antibacterial-wipes.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Arnica",
+      "Arnica Gel",
+      "Arnica Gel Tube",
+      "Gel de Arnica",
+      "Pomada de Arnica",
+      "Tubo de Gel de Arnica"
+    ],
+    "nome_do_arquivo": "arnica-gel-tube.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Baby Bottle",
+      "Baby Feeding Bottle",
+      "Baby feeding bottle",
+      "Mamadeira",
+      "Mamadeira de Bebe",
+      "Mamadeira de Bebê"
+    ],
+    "nome_do_arquivo": "baby-feeding-bottle.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Baking Soda",
+      "Bicarbonato",
+      "Bicarbonato de Sodio",
+      "Bicarbonato de Sódio"
+    ],
+    "nome_do_arquivo": "baking-soda.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Band Aid",
+      "Band-Aid",
+      "Bandage Strip",
+      "Curativo Adesivo",
+      "Esparadrapo"
+    ],
+    "nome_do_arquivo": "band-aid.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Conjunto de Costura",
+      "Estojo de Costura",
+      "Kit de Costura",
+      "Sewing Kit"
+    ],
+    "nome_do_arquivo": "basic-sewing-kit.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Bath Towel",
+      "Bath towel",
+      "Toalha",
+      "Toalha de Banho"
+    ],
+    "nome_do_arquivo": "bath-towel.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Bateria",
+      "Battery",
+      "Pilha"
+    ],
+    "nome_do_arquivo": "battery.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Bee Pollen",
+      "Bee Pollen Granules",
+      "Grânulos de Pólen de Abelha",
+      "Polen de Abelha",
+      "Pólen de Abelha"
+    ],
+    "nome_do_arquivo": "bee-pollen-granules.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Besom",
+      "Straw Broom",
+      "Vassoura Rustica",
+      "Vassoura Rústica",
+      "Vassoura de Palha"
+    ],
+    "nome_do_arquivo": "besom.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Birthday Candle",
+      "Vela de Aniversario",
+      "Vela de Aniversário",
+      "Velinha de Aniversario",
+      "Velinha de Aniversário"
+    ],
+    "nome_do_arquivo": "birthday-candle.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Agua Sanitaria",
+      "Alvejante",
+      "Bleach",
+      "Cloro",
+      "Água Sanitária"
+    ],
+    "nome_do_arquivo": "bleach.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Bread Clip",
+      "Bread Tag",
+      "Fecho de Pao",
+      "Fecho de Pão",
+      "Prendedor de Pao",
+      "Prendedor de Pão"
+    ],
+    "nome_do_arquivo": "bread-clip.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Broom and Dustpan",
+      "Broom and Shovel",
+      "Kit de Limpeza",
+      "Vassoura e Pa",
+      "Vassoura e Pá"
+    ],
+    "nome_do_arquivo": "broom-and-shovel.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Broom",
+      "Vassoura"
+    ],
+    "nome_do_arquivo": "broom.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Balde",
+      "Bucket",
+      "Pail"
+    ],
+    "nome_do_arquivo": "bucket.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Candle",
+      "Vela",
+      "Vela Aromatica",
+      "Vela Aromática",
+      "Vela Decorativa"
+    ],
+    "nome_do_arquivo": "candle-wiki4y.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Candle",
+      "Vela",
+      "Vela Aromatica",
+      "Vela Aromática"
+    ],
+    "nome_do_arquivo": "candle.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Cleaning Gloves",
+      "Luvas de Borracha",
+      "Luvas de Latex",
+      "Luvas de Limpeza",
+      "Luvas de Látex",
+      "Rubber Gloves"
+    ],
+    "nome_do_arquivo": "cleaning-gloves.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Cleaning Kit",
+      "Cleaning Set",
+      "Conjunto de Limpeza",
+      "Kit de Limpeza",
+      "Material de Limpeza"
+    ],
+    "nome_do_arquivo": "cleaning-kit-1.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Cleaning Kit",
+      "Cleaning Supplies",
+      "Conjunto de Limpeza",
+      "Kit de Limpeza",
+      "Produtos de Limpeza"
+    ],
+    "nome_do_arquivo": "cleaning-kit.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Clothes Peg",
+      "Clothespin",
+      "Pregador de Roupa",
+      "Prendedor de Roupa"
+    ],
+    "nome_do_arquivo": "clothespin.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Bateria Comum",
+      "Consumer Battery",
+      "Pilha",
+      "Pilha Comum"
+    ],
+    "nome_do_arquivo": "consumer-battery.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Cotonete",
+      "Cotton Swab",
+      "Haste Flexivel",
+      "Haste Flexível",
+      "Q-Tip"
+    ],
+    "nome_do_arquivo": "cotton-swab.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Dental Floss",
+      "Fio Dental"
+    ],
+    "nome_do_arquivo": "dental-floss.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Antitranspirante",
+      "Deodorant",
+      "Desodorante"
+    ],
+    "nome_do_arquivo": "deodorant-1.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Antitranspirante",
+      "Deodorant",
+      "Desodorante"
+    ],
+    "nome_do_arquivo": "deodorant.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Diapers",
+      "Fralda",
+      "Fralda Descartavel",
+      "Fralda Descartável",
+      "Fraldas",
+      "Nappies"
+    ],
+    "nome_do_arquivo": "diapers.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Dietary Supplement",
+      "Suplemento Alimentar",
+      "Suplemento Dietetico",
+      "Suplemento Dietético"
+    ],
+    "nome_do_arquivo": "dietary-supplement.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Digital Thermometer",
+      "Digital thermometer",
+      "Termometro Digital",
+      "Termômetro Digital"
+    ],
+    "nome_do_arquivo": "digital-thermometer.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Dog Poop Bag",
+      "Saco para Cocô de Cachorro",
+      "Saco para Fezes",
+      "Saquinho de Coco",
+      "Saquinho de Cocô"
+    ],
+    "nome_do_arquivo": "dog-poop-bag.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Capacho",
+      "Door Mat",
+      "Doormat",
+      "Tapete de Entrada"
+    ],
+    "nome_do_arquivo": "door-mat.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Capacho",
+      "Doormat",
+      "Tapete de Entrada",
+      "Tapete de Porta",
+      "Welcome Mat"
+    ],
+    "nome_do_arquivo": "doormat.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Duct Tape",
+      "Fita Adesiva Reforcada",
+      "Fita Adesiva Reforçada",
+      "Fita Silver Tape",
+      "Silver Tape"
+    ],
+    "nome_do_arquivo": "duct-tape.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Dustpan",
+      "Pa de Lixo",
+      "Pá de Lixo"
+    ],
+    "nome_do_arquivo": "dustpan.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Ear Plug",
+      "Earplug",
+      "Protetor Auricular",
+      "Tampao de Ouvido",
+      "Tampão de Ouvido"
+    ],
+    "nome_do_arquivo": "ear-plug.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Electric Toothbrush",
+      "Escova Eletrica",
+      "Escova Elétrica",
+      "Escova de Dente Eletrica",
+      "Escova de Dente Elétrica"
+    ],
+    "nome_do_arquivo": "electric-toothbrush.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Epsom Salt",
+      "Epsom salt",
+      "Sal de Epsom",
+      "Sulfato de Magnesio",
+      "Sulfato de Magnésio"
+    ],
+    "nome_do_arquivo": "epsom-salt.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Extensao",
+      "Extensao Eletrica",
+      "Extension Cord",
+      "Extensão",
+      "Extensão Elétrica",
+      "Regua de Tomadas",
+      "Régua de Tomadas"
+    ],
+    "nome_do_arquivo": "extension-cord.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Colirio",
+      "Colírio",
+      "Eye Drops",
+      "Eyedrop",
+      "Gota para os Olhos"
+    ],
+    "nome_do_arquivo": "eyedrop.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Amaciante em Folha",
+      "Dryer Sheet",
+      "Fabric Softener Sheet",
+      "Folha de Amaciante"
+    ],
+    "nome_do_arquivo": "fabric-softener-sheet.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Face Mask",
+      "Mascara Facial",
+      "Mascara de Protecao",
+      "Máscara Facial",
+      "Máscara de Proteção"
+    ],
+    "nome_do_arquivo": "face-mask.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Dedeira Escova",
+      "Escova de Dedo",
+      "Escova de Dente de Dedo",
+      "Finger Toothbrush"
+    ],
+    "nome_do_arquivo": "finger-toothbrush.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Alicate de Unha",
+      "Cortador de Unha",
+      "Cortador de Unhas",
+      "Fingernail Clipper",
+      "Nail Clipper"
+    ],
+    "nome_do_arquivo": "fingernail-clipper.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Dental Flossers",
+      "Fio Dental com Haste",
+      "Flosser",
+      "Flossers",
+      "Palito de Fio Dental"
+    ],
+    "nome_do_arquivo": "flossers.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Folded Napkin",
+      "Guardanapo",
+      "Guardanapo Dobrado"
+    ],
+    "nome_do_arquivo": "folded-napkin.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Cologne",
+      "Colonia",
+      "Colônia",
+      "Fragrance",
+      "Fragrance (Cologne)",
+      "Fragrancia",
+      "Fragrância",
+      "Perfume Masculino"
+    ],
+    "nome_do_arquivo": "fragrance-cologne.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Esmalte Fluorescente",
+      "Esmalte Neon",
+      "Esmalte que Brilha no Escuro",
+      "Glow-in-the-Dark Nail Polish"
+    ],
+    "nome_do_arquivo": "glow-in-the-dark-nail-polish.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Bastao de Cola",
+      "Bastão de Cola",
+      "Cola Bastão",
+      "Cola em Bastao",
+      "Cola em Bastão",
+      "Glue Stick"
+    ],
+    "nome_do_arquivo": "glue-stick.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Coloracao Capilar",
+      "Coloração Capilar",
+      "Hair Color",
+      "Hair Dye",
+      "Tinta de Cabelo",
+      "Tintura Capilar",
+      "Tintura de Cabelo"
+    ],
+    "nome_do_arquivo": "hair-dye.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Escova de Cabelo",
+      "Hair Brush",
+      "Hairbrush"
+    ],
+    "nome_do_arquivo": "hairbrush.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Alcool Gel",
+      "Alcool em Gel",
+      "Hand Sanitizer",
+      "Álcool Gel",
+      "Álcool em Gel"
+    ],
+    "nome_do_arquivo": "hand-sanitizer.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Conjunto de Toalhas",
+      "Hand Towel Set",
+      "Jogo de Toalhas de Mao",
+      "Jogo de Toalhas de Mão"
+    ],
+    "nome_do_arquivo": "hand-towel-set.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Hand Towel",
+      "Toalha de Mao",
+      "Toalha de Mão",
+      "Toalha de Rosto"
+    ],
+    "nome_do_arquivo": "hand-towel.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Almofada Termica",
+      "Almofada Térmica",
+      "Bolsa Termica",
+      "Bolsa Térmica",
+      "Compressa Quente",
+      "Heating Pad"
+    ],
+    "nome_do_arquivo": "heating-pad.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Bolsa de Agua Quente",
+      "Bolsa de Água Quente",
+      "Hot Water Bottle"
+    ],
+    "nome_do_arquivo": "hot-water-bottle.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Incandescent Light Bulb",
+      "Lampada Incandescente",
+      "Lâmpada Incandescente"
+    ],
+    "nome_do_arquivo": "incandescent-light-bulb.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Escova Interdental",
+      "Interdental Brush"
+    ],
+    "nome_do_arquivo": "interdental-brush.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Bola Ecologica de Lavagem",
+      "Bola Ecológica de Lavagem",
+      "Bola de Lavanderia",
+      "Bola de Lavar Roupa",
+      "Laundry Ball"
+    ],
+    "nome_do_arquivo": "laundry-ball.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Detergente de Roupa",
+      "Laundry Detergent",
+      "Sabao de Lavar Roupa",
+      "Sabao em Po",
+      "Sabão de Lavar Roupa",
+      "Sabão em Pó"
+    ],
+    "nome_do_arquivo": "laundry-detergent.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Capsula de Sabao",
+      "Cápsula de Sabão",
+      "Detergent Pod",
+      "Laundry Pod",
+      "Pod de Lavanderia"
+    ],
+    "nome_do_arquivo": "laundry-pod.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Folha de Lavanderia",
+      "Laundry Sheet",
+      "Lencol de Lavanderia",
+      "Lençol de Lavanderia"
+    ],
+    "nome_do_arquivo": "laundry-sheet.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Lampada",
+      "Light Bulb",
+      "Light bulb",
+      "Lightbulb",
+      "Lâmpada"
+    ],
+    "nome_do_arquivo": "light-bulb.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Lampada",
+      "Light Bulb",
+      "Lightbulb",
+      "Lâmpada"
+    ],
+    "nome_do_arquivo": "lightbulb.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Escova Tira-Pelo",
+      "Escova de Pelos",
+      "Lint Brush",
+      "Removedor de Pelos"
+    ],
+    "nome_do_arquivo": "lint-brush.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Lint Remover",
+      "Removedor de Bolinhas",
+      "Removedor de Pelo",
+      "Tira-Pelos"
+    ],
+    "nome_do_arquivo": "lint-remover.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Lint Roller",
+      "Rolo Adesivo",
+      "Rolo Tira-Pelo",
+      "Rolo de Tirar Pelo"
+    ],
+    "nome_do_arquivo": "lint-roller.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Hidratante Labial",
+      "Lip Balm",
+      "Manteiga de Cacau",
+      "Protetor Labial"
+    ],
+    "nome_do_arquivo": "lip-balm.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Liquid Soap Refill Pack",
+      "Refil de Sabonete Liquido",
+      "Refil de Sabonete Líquido",
+      "Soap Refill"
+    ],
+    "nome_do_arquivo": "liquid-soap-refill-pack.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Bath Sponge",
+      "Bucha Vegetal",
+      "Bucha de Banho",
+      "Esponja de Banho",
+      "Loofah"
+    ],
+    "nome_do_arquivo": "loofah.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Fosforo",
+      "Fósforo",
+      "Match",
+      "Palito de Fosforo",
+      "Palito de Fósforo"
+    ],
+    "nome_do_arquivo": "match.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Mascara Cirurgica",
+      "Mascara Medica",
+      "Medical Mask",
+      "Máscara Cirúrgica",
+      "Máscara Médica",
+      "Surgical Mask"
+    ],
+    "nome_do_arquivo": "medical-mask.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Coletor Menstrual",
+      "Copo Menstrual",
+      "Menstrual Cup"
+    ],
+    "nome_do_arquivo": "menstrual-cup.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Creme Hidratante",
+      "Hidratante",
+      "Hidratante Corporal",
+      "Moisturiser",
+      "Moisturizer"
+    ],
+    "nome_do_arquivo": "moisturizer.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Esfregao",
+      "Esfregão",
+      "Mop",
+      "Rodo"
+    ],
+    "nome_do_arquivo": "mop.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Bola de Naftalina",
+      "Canfora",
+      "Cânfora",
+      "Mothball",
+      "Naftalina"
+    ],
+    "nome_do_arquivo": "mothball.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Antisseptico Bucal",
+      "Antisséptico Bucal",
+      "Enxaguante Bucal",
+      "Listerine",
+      "Mouthwash"
+    ],
+    "nome_do_arquivo": "mouthwash.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Kit de Cuidados com as Unhas",
+      "Kit de Manicure",
+      "Nail Care Kit"
+    ],
+    "nome_do_arquivo": "nail-care-kit.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Lixa de Unha",
+      "Nail File"
+    ],
+    "nome_do_arquivo": "nail-file.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Nail Scissors",
+      "Tesoura de Unha",
+      "Tesourinha de Unha"
+    ],
+    "nome_do_arquivo": "nail-scissors.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Luva Descartavel",
+      "Luva Descartável",
+      "Luva Nitrilica",
+      "Luva Nitrílica",
+      "Luva de Nitrilo",
+      "Nitrile Glove"
+    ],
+    "nome_do_arquivo": "nitrile-glove.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Aparador de Pelos do Nariz",
+      "Cortador de Pelos Nasais",
+      "Nose Hair Trimmer"
+    ],
+    "nome_do_arquivo": "nose-hair-trimmer.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Cream",
+      "Creme Medicinal",
+      "Ointment",
+      "Pomada",
+      "Ungüento"
+    ],
+    "nome_do_arquivo": "ointment.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Bico",
+      "Chupeta",
+      "Pacifier"
+    ],
+    "nome_do_arquivo": "pacifier.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Fita Adesiva de Embalagem",
+      "Fita Durex Larga",
+      "Fita de Embalagem",
+      "Packing Tape"
+    ],
+    "nome_do_arquivo": "packing-tape.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Dispensador de Papel Toalha",
+      "Paper Towel Dispenser",
+      "Porta Papel Toalha",
+      "Suporte de Papel Toalha"
+    ],
+    "nome_do_arquivo": "paper-towel-dispenser.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Lixeira com Pedal",
+      "Lixeira de Pedal",
+      "Pedal Bin"
+    ],
+    "nome_do_arquivo": "pedal-bin.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Caneta",
+      "Caneta Esferografica",
+      "Caneta Esferográfica",
+      "Pen"
+    ],
+    "nome_do_arquivo": "pen.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Borrifador de Perfume",
+      "Perfume",
+      "Perfume Spray",
+      "Spray de Perfume"
+    ],
+    "nome_do_arquivo": "perfume-spray.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Pet Hair Remover",
+      "Removedor de Pelo de Animal",
+      "Removedor de Pelo de Pet",
+      "Tira-Pelo de Animal"
+    ],
+    "nome_do_arquivo": "pet-hair-remover.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Pet Hair Roller",
+      "Rolo Tira Pelo",
+      "Rolo Tira-Pelo de Pet",
+      "Rolo de Pelo de Animal"
+    ],
+    "nome_do_arquivo": "pet-hair-roller.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Frasco de Comprimidos",
+      "Frasco de Remedio",
+      "Frasco de Remédio",
+      "Pill Bottle",
+      "Pote de Comprimidos"
+    ],
+    "nome_do_arquivo": "pill-bottle.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Barbeador",
+      "Gilete",
+      "Lamina de Barbear",
+      "Lâmina de Barbear",
+      "Razor"
+    ],
+    "nome_do_arquivo": "razor.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Reusable Zip Bag",
+      "Saco Zip Reutilizavel",
+      "Saco Zip Reutilizável",
+      "Saco com Zíper Reutilizável"
+    ],
+    "nome_do_arquivo": "reusable-zip-bag.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Saline Spray",
+      "Saline spray",
+      "Soro Fisiologico",
+      "Soro Fisiológico",
+      "Spray Nasal Salino",
+      "Spray de Soro Fisiologico",
+      "Spray de Soro Fisiológico"
+    ],
+    "nome_do_arquivo": "saline-spray.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Absorvente Higienico",
+      "Absorvente Higiênico",
+      "Absorventes",
+      "Sanitary Pads"
+    ],
+    "nome_do_arquivo": "sanitary-pads.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Shampoo",
+      "Xampu"
+    ],
+    "nome_do_arquivo": "shampoo.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Creme de Barbear",
+      "Espuma de Barbear",
+      "Shaving Cream"
+    ],
+    "nome_do_arquivo": "shaving-cream.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Shower Cap",
+      "Touca de Banho"
+    ],
+    "nome_do_arquivo": "shower-cap.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Body Wash",
+      "Gel de Banho",
+      "Sabonete Liquido",
+      "Sabonete Líquido",
+      "Shower Gel"
+    ],
+    "nome_do_arquivo": "shower-gel.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Bucha de Banho",
+      "Esponja de Banho",
+      "Esponja de Chuveiro",
+      "Shower Puff"
+    ],
+    "nome_do_arquivo": "shower-puff.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Rodo de Banheiro",
+      "Rodo de Box",
+      "Rodo para Box",
+      "Shower Squeegee"
+    ],
+    "nome_do_arquivo": "shower-squeegee.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Protetores Auriculares de Silicone",
+      "Silicone Earplugs",
+      "Tampao de Ouvido de Silicone",
+      "Tampão de Ouvido de Silicone"
+    ],
+    "nome_do_arquivo": "silicone-earplugs.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Barra de Sabao",
+      "Barra de Sabão",
+      "Sabao em Barra",
+      "Sabonete em Barra",
+      "Sabão em Barra",
+      "Soap Bar"
+    ],
+    "nome_do_arquivo": "soap-bar.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Sabonete com Corda",
+      "Sabonete no Cordao",
+      "Sabonete no Cordão",
+      "Soap on a Rope"
+    ],
+    "nome_do_arquivo": "soap-on-a-rope.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Sabao",
+      "Sabonete",
+      "Sabão",
+      "Soap"
+    ],
+    "nome_do_arquivo": "soap.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Borrifador",
+      "Frasco Spray",
+      "Pulverizador",
+      "Spray Bottle"
+    ],
+    "nome_do_arquivo": "spray-bottle-1.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Borrifador",
+      "Frasco Spray",
+      "Pulverizador",
+      "Spray Bottle"
+    ],
+    "nome_do_arquivo": "spray-bottle.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Mop Spray",
+      "Rodo Spray",
+      "Spray Mop",
+      "Vassoura Spray"
+    ],
+    "nome_do_arquivo": "spray-mop.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Caneta Removedora de Manchas",
+      "Caneta Tira-Manchas",
+      "Removedor de Manchas",
+      "Stain Remover Pen"
+    ],
+    "nome_do_arquivo": "stain-remover-pen.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Lint Roller",
+      "Rolo Adesivo",
+      "Rolo Pegajoso",
+      "Rolo Tira-Pelo",
+      "Sticky Roller"
+    ],
+    "nome_do_arquivo": "sticky-roller.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Bloqueador Solar",
+      "Filtro Solar",
+      "Protetor Solar",
+      "Sunblock",
+      "Sunscreen"
+    ],
+    "nome_do_arquivo": "sunscreen.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Cola Instantanea",
+      "Cola Instantânea",
+      "Super Cola",
+      "Super Glue"
+    ],
+    "nome_do_arquivo": "super-glue.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Termometro",
+      "Termômetro",
+      "Thermometer"
+    ],
+    "nome_do_arquivo": "thermometer.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Kleenex",
+      "Lenco de Papel",
+      "Lenço de Papel",
+      "Papel de Seda",
+      "Tissue"
+    ],
+    "nome_do_arquivo": "tissue.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Porta Escova Sanitaria",
+      "Porta Escova Sanitária",
+      "Suporte de Escova de Vaso",
+      "Toilet Brush Holder"
+    ],
+    "nome_do_arquivo": "toilet-brush-holder.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Escova Sanitaria",
+      "Escova Sanitária",
+      "Escova de Vaso",
+      "Toilet Brush"
+    ],
+    "nome_do_arquivo": "toilet-brush.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Papel Higienico",
+      "Papel Higiênico",
+      "Toilet Paper"
+    ],
+    "nome_do_arquivo": "toilet-paper.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Limpador de Lingua",
+      "Limpador de Língua",
+      "Raspador de Lingua",
+      "Raspador de Língua",
+      "Tongue Cleaner"
+    ],
+    "nome_do_arquivo": "tongue-cleaner.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Limpador de Lingua",
+      "Limpador de Língua",
+      "Raspador de Lingua",
+      "Raspador de Língua",
+      "Tongue Scraper"
+    ],
+    "nome_do_arquivo": "tongue-scraper.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Dental Floss",
+      "Fio Dental",
+      "Tooth Floss"
+    ],
+    "nome_do_arquivo": "tooth-floss.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Porta Escova de Dente",
+      "Suporte de Escova de Dente",
+      "Toothbrush Holder"
+    ],
+    "nome_do_arquivo": "toothbrush-holder.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Escova Dental",
+      "Escova de Dente",
+      "Toothbrush"
+    ],
+    "nome_do_arquivo": "toothbrush.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Bisnaga de Pasta de Dente",
+      "Toothpaste Tube",
+      "Tubo de Creme Dental",
+      "Tubo de Pasta de Dente"
+    ],
+    "nome_do_arquivo": "toothpaste-tube.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Creme Dental",
+      "Pasta de Dente",
+      "Toothpaste"
+    ],
+    "nome_do_arquivo": "toothpaste.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Toalha",
+      "Toalha de Banho",
+      "Toalha de Rosto",
+      "Towel"
+    ],
+    "nome_do_arquivo": "towel.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Garbage Bag",
+      "Saco de Lixo",
+      "Trash Bag"
+    ],
+    "nome_do_arquivo": "trash-bag.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Cesto de Lixo",
+      "Lata de Lixo",
+      "Lixeira",
+      "Trash Bin",
+      "Trash bin",
+      "Waste Bin"
+    ],
+    "nome_do_arquivo": "trash-bin.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Garbage Can",
+      "Lata de Lixo",
+      "Lixeira",
+      "Trash Can"
+    ],
+    "nome_do_arquivo": "trash-can.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Pinca",
+      "Pinça",
+      "Tweezers"
+    ],
+    "nome_do_arquivo": "tweezers.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Guarda Chuva",
+      "Guarda-Chuva",
+      "Sombrinha",
+      "Umbrella"
+    ],
+    "nome_do_arquivo": "umbrella.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Aspirador",
+      "Aspirador de Po",
+      "Aspirador de Pó",
+      "Vacuum Cleaner"
+    ],
+    "nome_do_arquivo": "vacuum-cleaner.png",
+    "categoria": "Eletrodomésticos"
+  },
+  {
+    "titulos": [
+      "Gummy Vitamin",
+      "Vitamin Gummy",
+      "Vitamina Gummy",
+      "Vitamina em Bala",
+      "Vitamina em Goma"
+    ],
+    "nome_do_arquivo": "vitamin-gummy.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Vitaminas",
+      "Vitamins"
+    ],
+    "nome_do_arquivo": "vitamins.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Rodo Limpa-Vidros",
+      "Rodo de Janela",
+      "Rodo de Vidro",
+      "Window Squeegee"
+    ],
+    "nome_do_arquivo": "window-squeegee.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Lavadora",
+      "Maquina de Lavar",
+      "Maquina de Lavar Roupa",
+      "Máquina de Lavar",
+      "Máquina de Lavar Roupa",
+      "Washing Machine"
+    ],
+    "nome_do_arquivo": "washing-machine.png",
+    "categoria": "Eletrodomésticos"
+  },
+  {
+    "titulos": [
+      "Blow Dryer",
+      "Hair Dryer",
+      "Secador",
+      "Secador de Cabelo"
+    ],
+    "nome_do_arquivo": "hair-dryer.png",
+    "categoria": "Eletrodomésticos"
+  },
+  {
+    "titulos": [
+      "Cortina de Banheiro",
+      "Cortina de Box",
+      "Cortina de Chuveiro",
+      "Shower Curtain"
+    ],
+    "nome_do_arquivo": "shower-curtain.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Cachepo",
+      "Cachepô",
+      "Flower Pot",
+      "Plant Pot",
+      "Vaso de Planta",
+      "Vaso para Planta"
+    ],
+    "nome_do_arquivo": "plant-pot.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Ar Condicionado de Janela",
+      "Ar-Condicionado de Janela",
+      "Window Air Conditioner"
+    ],
+    "nome_do_arquivo": "window-air-conditioner.png",
+    "categoria": "Eletrodomésticos"
+  },
+  {
+    "titulos": [
+      "Cesta de Piquenique",
+      "Cesto de Piquenique",
+      "Picnic Basket"
+    ],
+    "nome_do_arquivo": "picnic-basket.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Cabeca de Chuveiro",
+      "Cabeça de Chuveiro",
+      "Chuveiro",
+      "Ducha",
+      "Shower Head"
+    ],
+    "nome_do_arquivo": "shower-head.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Shower Mat",
+      "Tapete Antiderrapante",
+      "Tapete de Banheiro",
+      "Tapete de Box"
+    ],
+    "nome_do_arquivo": "shower-mat.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Clothes Peg",
+      "Laundry Peg",
+      "Pregador de Roupa",
+      "Prendedor de Roupa"
+    ],
+    "nome_do_arquivo": "laundry-peg.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Cesta de Roupa Suja",
+      "Cesto de Roupa Suja",
+      "Laundry Basket",
+      "Laundry Hamper"
+    ],
+    "nome_do_arquivo": "laundry-basket.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Regador",
+      "Watering Can"
+    ],
+    "nome_do_arquivo": "watering-can.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Escova de Calcado",
+      "Escova de Calçado",
+      "Escova de Sapato",
+      "Shoe Brush"
+    ],
+    "nome_do_arquivo": "shoe-brush.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Kit de Fabricacao de Sabao",
+      "Kit de Fabricação de Sabão",
+      "Kit para Fazer Sabão",
+      "Soap Making Kit"
+    ],
+    "nome_do_arquivo": "soap-making-kit.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Bloco de Desenho",
+      "Caderno de Desenho",
+      "Drawing Pad",
+      "Prancheta de Desenho",
+      "Sketch Pad"
+    ],
+    "nome_do_arquivo": "basic-drawing-pad.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Porta Sabonete",
+      "Porta-Sabonete",
+      "Saboneteira",
+      "Soap Dish"
+    ],
+    "nome_do_arquivo": "soap-dish.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Bushcraft Knife",
+      "Faca de Bushcraft",
+      "Faca de Mato",
+      "Faca de Sobrevivencia",
+      "Faca de Sobrevivência"
+    ],
+    "nome_do_arquivo": "bushcraft-knife.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Bacia Sanitaria",
+      "Bacia Sanitária",
+      "Privada",
+      "Toilet",
+      "Vaso Sanitario",
+      "Vaso Sanitário"
+    ],
+    "nome_do_arquivo": "toilet.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Computador Tablet",
+      "Tablet",
+      "Tablet Computer"
+    ],
+    "nome_do_arquivo": "tablet-computer.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Colchao Inflavel",
+      "Colchonete",
+      "Colchão Inflável",
+      "Isolante Termico",
+      "Isolante Térmico",
+      "Sleeping Pad"
+    ],
+    "nome_do_arquivo": "sleeping-pad.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Fine-Tooth Comb",
+      "Pente Fino",
+      "Pente de Dentes Finos",
+      "Tooth Comb"
+    ],
+    "nome_do_arquivo": "tooth-comb.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Desentupidor",
+      "Desentupidor de Vaso",
+      "Plunger",
+      "Toilet Plunger"
+    ],
+    "nome_do_arquivo": "toilet-plunger.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Porta Papel Higienico",
+      "Porta Papel Higiênico",
+      "Suporte de Papel Higienico",
+      "Suporte de Papel Higiênico",
+      "Toilet Paper Holder"
+    ],
+    "nome_do_arquivo": "toilet-paper-holder.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Cup (Sports Reward)",
+      "Sports Cup",
+      "Taca Esportiva",
+      "Taça Esportiva",
+      "Trofeu",
+      "Troféu",
+      "Trophy"
+    ],
+    "nome_do_arquivo": "cup-sports-reward.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Patinho de Borracha",
+      "Pato de Borracha",
+      "Rubber Duck",
+      "Rubber Ducky"
+    ],
+    "nome_do_arquivo": "rubber-duck.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Bubble Wrap",
+      "Bubble wrap",
+      "Papel Bolha",
+      "Plastico Bolha",
+      "Plástico Bolha"
+    ],
+    "nome_do_arquivo": "bubble-wrap.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Flor Rosa",
+      "Rosa",
+      "Rose"
+    ],
+    "nome_do_arquivo": "rose.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "E-Ink Tablet",
+      "E-Reader",
+      "Kindle",
+      "Leitor Digital",
+      "Tablet E-Ink"
+    ],
+    "nome_do_arquivo": "e-ink-tablet.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Kit de Escultura em Sabao",
+      "Kit de Escultura em Sabão",
+      "Soap Carving Set"
+    ],
+    "nome_do_arquivo": "soap-carving-set.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Copo de Escova de Dente",
+      "Porta Escova de Dente",
+      "Toothbrush Cup"
+    ],
+    "nome_do_arquivo": "toothbrush-cup.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Kit de Primeiros Socorros Esportivo",
+      "Kit de Primeiros Socorros para Esporte",
+      "Sports First Aid Kit"
+    ],
+    "nome_do_arquivo": "sports-first-aid-kit.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Banheiro Publico",
+      "Banheiro Público",
+      "Public Restroom",
+      "Sanitario Publico",
+      "Sanitário Público"
+    ],
+    "nome_do_arquivo": "public-restroom.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Baby Shower",
+      "Cha de Bebe",
+      "Cha de Fralda",
+      "Chá de Bebê",
+      "Chá de Fralda"
+    ],
+    "nome_do_arquivo": "baby-shower.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Launderette",
+      "Laundromat",
+      "Lavanderia",
+      "Lavanderia Automatica",
+      "Lavanderia Automática",
+      "Lavanderia Self-Service"
+    ],
+    "nome_do_arquivo": "laundromat.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Kit de Primeiros Socorros Industrial",
+      "Kit de Primeiros Socorros de Obra",
+      "Worksite First Aid Kit"
+    ],
+    "nome_do_arquivo": "worksite-first-aid-kit.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Cordao de Luz",
+      "Cordão de Luz",
+      "Interruptor de Cordao",
+      "Interruptor de Cordão",
+      "Light Pull Cord"
+    ],
+    "nome_do_arquivo": "light-pull-cord.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Bloco de Rascunho",
+      "Caderno de Esboço",
+      "Sketch Pad",
+      "Sketchbook"
+    ],
+    "nome_do_arquivo": "sketch-pad.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Capsula",
+      "Capsula de Remedio",
+      "Comprimido",
+      "Cápsula",
+      "Cápsula de Remédio",
+      "Medicine Capsule",
+      "Pill"
+    ],
+    "nome_do_arquivo": "medicine-capsule.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "A Dozen Roses",
+      "Buque de Rosas",
+      "Buquê de Rosas",
+      "Rosas",
+      "Uma Dúzia de Rosas"
+    ],
+    "nome_do_arquivo": "a-dozen-roses.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Canivete",
+      "Pocket Knife"
+    ],
+    "nome_do_arquivo": "pocket-knife.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Caixa de Primeiros Socorros",
+      "Estojo de Primeiros Socorros",
+      "First Aid Kit",
+      "First-Aid Kit",
+      "Kit de Primeiros Socorros"
+    ],
+    "nome_do_arquivo": "first-aid-kit.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Cotton Club"
+    ],
+    "nome_do_arquivo": "cotton-club.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Banho de Espuma",
+      "Bubble Bath",
+      "Espuma de Banho"
+    ],
+    "nome_do_arquivo": "bubble-bath.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Essential Oil",
+      "Oleo Essencial",
+      "Óleo Essencial"
+    ],
+    "nome_do_arquivo": "essential-oil.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Drogaria",
+      "Drugstore",
+      "Farmacia",
+      "Farmácia",
+      "Pharmacy"
+    ],
+    "nome_do_arquivo": "pharmacy.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Cosmeticos",
+      "Cosmetics",
+      "Cosméticos",
+      "Make Up",
+      "Makeup",
+      "Maquiagem"
+    ],
+    "nome_do_arquivo": "makeup.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Ear Thermometer",
+      "Termometro Auricular",
+      "Termometro de Ouvido",
+      "Termômetro Auricular",
+      "Termômetro de Ouvido"
+    ],
+    "nome_do_arquivo": "ear-thermometer.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Bolsa de Lavanderia",
+      "Laundry Bag",
+      "Saco de Roupa Suja"
+    ],
+    "nome_do_arquivo": "laundry-bag.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Bisturi",
+      "Scalpel"
+    ],
+    "nome_do_arquivo": "scalpel.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Lixeira Reciclavel",
+      "Lixeira Reciclável",
+      "Lixeira de Reciclagem",
+      "Recycling Bin"
+    ],
+    "nome_do_arquivo": "recycling-bin.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Banheira",
+      "Banheira Bateau",
+      "Banheira de Imersao",
+      "Banheira de Imersão",
+      "Bateau Tub",
+      "Freestanding Tub"
+    ],
+    "nome_do_arquivo": "bateau-tub.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Auxiliar de Limpeza",
+      "Faxineiro",
+      "Janitor",
+      "Zelador"
+    ],
+    "nome_do_arquivo": "janitor.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Container",
+      "Container de Transporte",
+      "Contêiner",
+      "Contêiner de Transporte",
+      "Shipping Container"
+    ],
+    "nome_do_arquivo": "shipping-container.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Algodao",
+      "Algodão",
+      "Cotton"
+    ],
+    "nome_do_arquivo": "cotton.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Clothes Iron",
+      "Ferro de Engomar",
+      "Ferro de Passar",
+      "Ferro de Passar Roupa",
+      "Iron"
+    ],
+    "nome_do_arquivo": "clothes-iron.png",
+    "categoria": "Eletrodomésticos"
+  },
+  {
+    "titulos": [
+      "Ancinho",
+      "Rake",
+      "Rastelo"
+    ],
+    "nome_do_arquivo": "rake.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Batom",
+      "Lipstick"
+    ],
+    "nome_do_arquivo": "lipstick.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Frasco de Perfume",
+      "Perfume Bottle",
+      "Vidro de Perfume"
+    ],
+    "nome_do_arquivo": "perfume-bottle.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Cargo Container",
+      "Cargo container",
+      "Container",
+      "Container de Carga",
+      "Contêiner",
+      "Contêiner de Carga",
+      "Shipping Container"
+    ],
+    "nome_do_arquivo": "cargo-container.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Aspirador Robo",
+      "Aspirador Robô",
+      "Robo Aspirador",
+      "Robot Vacuum",
+      "Robô Aspirador",
+      "Roomba"
+    ],
+    "nome_do_arquivo": "robot-vacuum.png",
+    "categoria": "Eletrodomésticos"
+  },
+  {
+    "titulos": [
+      "Agulha",
+      "Injecao",
+      "Injeção",
+      "Seringa",
+      "Syringe"
+    ],
+    "nome_do_arquivo": "syringe.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Car Wash",
+      "Lava-Jato",
+      "Lavacao de Carro",
+      "Lavar Carro",
+      "Lavação de Carro"
+    ],
+    "nome_do_arquivo": "car-wash.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Kit de Limpeza de Saxofone",
+      "Kit de Manutenção de Saxofone",
+      "Saxophone Cleaning Kit"
+    ],
+    "nome_do_arquivo": "saxophone-cleaning-kit.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Comprimido",
+      "Tablet"
+    ],
+    "nome_do_arquivo": "tablet.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Nepenthes",
+      "Pitcher Plant",
+      "Planta Carnivora",
+      "Planta Carnívora",
+      "Planta Jarro"
+    ],
+    "nome_do_arquivo": "pitcher-plant.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Barra de Ferro",
+      "Iron Ingot",
+      "Lingote de Ferro"
+    ],
+    "nome_do_arquivo": "iron-ingot.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Lavadora de Alta Pressao",
+      "Lavadora de Alta Pressão",
+      "Pressure Washer",
+      "WAP"
+    ],
+    "nome_do_arquivo": "pressure-washer.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Cabeça de Chuveiro",
+      "Chuveiro",
+      "Ducha",
+      "Shower Head",
+      "Showerhead"
+    ],
+    "nome_do_arquivo": "showerhead.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Clothes Dryer",
+      "Dryer",
+      "Maquina de Secar",
+      "Máquina de Secar",
+      "Secadora",
+      "Secadora de Roupas"
+    ],
+    "nome_do_arquivo": "clothes-dryer.png",
+    "categoria": "Eletrodomésticos"
+  },
+  {
+    "titulos": [
+      "Infrared Thermometer",
+      "Infrared thermometer",
+      "Termometro Infravermelho",
+      "Termômetro Digital Infravermelho",
+      "Termômetro Infravermelho"
+    ],
+    "nome_do_arquivo": "infrared-thermometer.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Vestido Envelope",
+      "Vestido Transpassado",
+      "Wrap Dress",
+      "Wrap dress"
+    ],
+    "nome_do_arquivo": "wrap-dress.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Allergy Medication",
+      "Allergy Medicine",
+      "Allergy medication",
+      "Antialérgico",
+      "Medicamento para Alergia",
+      "Remedio para Alergia",
+      "Remédio para Alergia"
+    ],
+    "nome_do_arquivo": "allergy-medication.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Estanho de Solda",
+      "Ferro de Solda",
+      "Soldador",
+      "Soldering Iron",
+      "Soldering iron"
+    ],
+    "nome_do_arquivo": "soldering-iron.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Buque de Rosas",
+      "Buquê de Rosas",
+      "Rosas",
+      "Roses"
+    ],
+    "nome_do_arquivo": "roses.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Barra de Ferro",
+      "Iron Ingot",
+      "Lingote de Ferro"
+    ],
+    "nome_do_arquivo": "iron-ingot-1.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Agulha",
+      "Seringa",
+      "Syringe"
+    ],
+    "nome_do_arquivo": "syringe-1.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Agulha",
+      "Seringa",
+      "Syringe"
+    ],
+    "nome_do_arquivo": "syringe-2.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Auto Detailer",
+      "Automotive Detailer",
+      "Detalhista Automotivo",
+      "Lavador de Carros",
+      "Polidor Automotivo"
+    ],
+    "nome_do_arquivo": "automotive-detailer.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Carbon Filter",
+      "Filtro de Carbono",
+      "Filtro de Carvao Ativado",
+      "Filtro de Carvão Ativado"
+    ],
+    "nome_do_arquivo": "carbon-filter.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Tablet",
+      "Tablet Keyboard Case",
+      "Tablet com Teclado",
+      "iPad com Teclado",
+      "iPad with Keyboard"
+    ],
+    "nome_do_arquivo": "apple-ipad-pro-mounted-in-a-magic-keyboard-case.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Lavatorio",
+      "Lavatório",
+      "Pia",
+      "Pia de Banheiro",
+      "Pia de Cozinha",
+      "Sink"
+    ],
+    "nome_do_arquivo": "sink.png",
+    "categoria": "Utensílios de Cozinha"
+  },
+  {
+    "titulos": [
+      "Carrinho de Faxina",
+      "Carrinho de Limpeza",
+      "Carrinho de Manutencao",
+      "Carrinho de Manutenção",
+      "Maintenance Cart",
+      "Maintenance cart"
+    ],
+    "nome_do_arquivo": "maintenance-cart.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Difusor de Aromaterapia",
+      "Difusor de Oleo Essencial",
+      "Difusor de Óleo Essencial",
+      "Essential Oil Diffuser",
+      "Essential oil diffuser"
+    ],
+    "nome_do_arquivo": "essential-oil-diffuser.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Escultura em Sabao",
+      "Escultura em Sabão",
+      "Soap Carving",
+      "Soap carving"
+    ],
+    "nome_do_arquivo": "soap-carving.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Allergy Medicine",
+      "Allergy medicine",
+      "Antialergico",
+      "Antialérgico",
+      "Medicamento para Alergia",
+      "Remédio para Alergia"
+    ],
+    "nome_do_arquivo": "allergy-medicine.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Clothesline",
+      "Corda de Varal",
+      "Varal",
+      "Varal de Roupas",
+      "Washing Line"
+    ],
+    "nome_do_arquivo": "clothesline.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Coletador de Sangue",
+      "Flebotomista",
+      "Phlebotomist"
+    ],
+    "nome_do_arquivo": "phlebotomist.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Perfumer",
+      "Perfumista"
+    ],
+    "nome_do_arquivo": "perfumer.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Curling Broom",
+      "Vassoura de Curling"
+    ],
+    "nome_do_arquivo": "curling-broom.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Pasta de Dente na Escova",
+      "Porcao de Pasta de Dente",
+      "Porção de Pasta de Dente",
+      "Toothpaste Nurdle"
+    ],
+    "nome_do_arquivo": "toothpaste-nurdle.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Bucket Hat",
+      "Bucket hat",
+      "Chapeu Bucket",
+      "Chapeu de Pescador",
+      "Chapéu Bucket",
+      "Chapéu de Pescador"
+    ],
+    "nome_do_arquivo": "bucket-hat.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Pediatra",
+      "Pediatrician"
+    ],
+    "nome_do_arquivo": "pediatrician.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Asthma Inhaler",
+      "Bombinha",
+      "Bombinha de Asma",
+      "Inalador",
+      "Inhaler"
+    ],
+    "nome_do_arquivo": "inhaler.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Cirurgiao",
+      "Cirurgião",
+      "Medico Cirurgiao",
+      "Médico Cirurgião",
+      "Surgeon"
+    ],
+    "nome_do_arquivo": "surgeon.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Pia",
+      "Pia de Banheiro",
+      "Pia de Cozinha",
+      "Sink"
+    ],
+    "nome_do_arquivo": "sink-1.png",
+    "categoria": "Utensílios de Cozinha"
+  },
+  {
+    "titulos": [
+      "Articulacao do Joelho",
+      "Articulação do Joelho",
+      "Joelho",
+      "Knee Joint Bone",
+      "Osso da Articulação do Joelho"
+    ],
+    "nome_do_arquivo": "knee-joint-bone.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Dentes",
+      "Denticao",
+      "Dentição",
+      "Teeth"
+    ],
+    "nome_do_arquivo": "teeth.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Banco Inclinado",
+      "Banco de Musculacao",
+      "Banco de Musculação",
+      "Incline Bench"
+    ],
+    "nome_do_arquivo": "incline-bench.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Barra Paralela",
+      "Barra de Mergulho",
+      "Dip Bar",
+      "Estacao de Dip",
+      "Estação de Dip",
+      "Parallel Bars"
+    ],
+    "nome_do_arquivo": "dip-bar.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Elevação de Panturrilha",
+      "Maquina de Panturrilha em Pe",
+      "Máquina de Panturrilha em Pé",
+      "Standing Calf Raise Machine"
+    ],
+    "nome_do_arquivo": "standing-calf-raise-machine.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Balao de Coracao",
+      "Balao de Coracao Rosa",
+      "Balão de Coração",
+      "Balão de Coração Rosa",
+      "Pink Heart Foil Balloon"
+    ],
+    "nome_do_arquivo": "pink-heart-foil-balloon.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Cadeira Romana",
+      "Cadeira do Capitao",
+      "Cadeira do Capitão",
+      "Captain's Chair"
+    ],
+    "nome_do_arquivo": "captains-chair.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Lying Leg Curl Machine",
+      "Maquina de Flexao de Perna",
+      "Mesa Flexora",
+      "Máquina de Flexão de Perna"
+    ],
+    "nome_do_arquivo": "lying-leg-curl-machine.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Virus",
+      "Vírus"
+    ],
+    "nome_do_arquivo": "virus.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Biceps Curl Machine",
+      "Maquina de Rosca",
+      "Máquina de Rosca Bíceps",
+      "Rosca Biceps",
+      "Rosca Bíceps"
+    ],
+    "nome_do_arquivo": "biceps-curl-machine.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Cat Litter Scoop",
+      "Pa de Areia para Gato",
+      "Pa para Caixa de Areia",
+      "Pá de Areia para Gato",
+      "Pá para Caixa de Areia"
+    ],
+    "nome_do_arquivo": "cat-litter-scoop.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "AC Unit",
+      "Air Conditioner",
+      "Ar Condicionado",
+      "Ar-Condicionado"
+    ],
+    "nome_do_arquivo": "air-conditioner.png",
+    "categoria": "Eletrodomésticos"
+  },
+  {
+    "titulos": [
+      "Ebola",
+      "Virus Ebola",
+      "Vírus Ebola"
+    ],
+    "nome_do_arquivo": "ebola.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Camisinha",
+      "Condom",
+      "Preservativo"
+    ],
+    "nome_do_arquivo": "condom.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Imunizacao",
+      "Imunização",
+      "Vaccine",
+      "Vacina"
+    ],
+    "nome_do_arquivo": "vaccine.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Caixa Termica",
+      "Caixa Térmica",
+      "Cooler",
+      "Cooler Box",
+      "Cooler box",
+      "Isopor"
+    ],
+    "nome_do_arquivo": "cooler-box.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Caneta de Injecao GLP-1",
+      "Caneta de Injeção GLP-1",
+      "Caneta de Insulina",
+      "GLP-1 Injection Pen",
+      "Ozempic"
+    ],
+    "nome_do_arquivo": "glp-1-injection-pen.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Container",
+      "Contêiner",
+      "Pote",
+      "Recipiente",
+      "Storage Container"
+    ],
+    "nome_do_arquivo": "container.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Bicep",
+      "Biceps",
+      "Bíceps",
+      "Musculo do Braco",
+      "Músculo do Braço"
+    ],
+    "nome_do_arquivo": "bicep.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Blood Donation",
+      "Doacao de Sangue",
+      "Doar Sangue",
+      "Doação de Sangue"
+    ],
+    "nome_do_arquivo": "blood-donation.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Dependencia de Celular",
+      "Dependência de Celular",
+      "Phone Addiction",
+      "Vicio em Celular",
+      "Vício em Celular"
+    ],
+    "nome_do_arquivo": "phone-addiction.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Balde de Pintura",
+      "Balde de Tinta",
+      "Lata de Tinta",
+      "Paint Bucket",
+      "Painting Bucket"
+    ],
+    "nome_do_arquivo": "painting-bucket.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Borrifador de Fumigacao",
+      "Borrifador de Fumigação",
+      "Fogger",
+      "Fumigador Manual",
+      "Handheld Fumigation Sprayer",
+      "Pulverizador Manual"
+    ],
+    "nome_do_arquivo": "handheld-fumigation-sprayer.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Dumbbell",
+      "Gym Weight",
+      "Halter",
+      "Haltere",
+      "Peso",
+      "Peso de Academia"
+    ],
+    "nome_do_arquivo": "gym-weight.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Kidney",
+      "Rim",
+      "Rins"
+    ],
+    "nome_do_arquivo": "kidney.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Bidao",
+      "Bidão",
+      "Galao",
+      "Galão",
+      "Jerry Can",
+      "Jerrycan"
+    ],
+    "nome_do_arquivo": "jerry-can.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Anestesiologista",
+      "Anestesista",
+      "Anesthesiologist",
+      "Medico Anestesista",
+      "Médico Anestesista"
+    ],
+    "nome_do_arquivo": "anesthesiologist.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Descanso",
+      "Dormir",
+      "Sleep",
+      "Sono"
+    ],
+    "nome_do_arquivo": "sleep.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Pen Holder",
+      "Pen Pot",
+      "Porta Canetas",
+      "Porta-Canetas"
+    ],
+    "nome_do_arquivo": "pen-pot.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Paciente Pre-Operatorio",
+      "Paciente Pré-Operatório",
+      "Paciente em Avental Cirúrgico",
+      "Patient in Pre-Operative Gown"
+    ],
+    "nome_do_arquivo": "patient-in-pre-operative-gown.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Dente",
+      "Tooth"
+    ],
+    "nome_do_arquivo": "tooth.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Antena Parabolica",
+      "Antena Parabólica",
+      "Parabolica",
+      "Parabólica",
+      "Satellite Dish"
+    ],
+    "nome_do_arquivo": "satellite-dish.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Lavatorio",
+      "Lavatório",
+      "Pia",
+      "Pia de Banheiro",
+      "Pia de Cozinha",
+      "Sink"
+    ],
+    "nome_do_arquivo": "sink-2.png",
+    "categoria": "Utensílios de Cozinha"
+  },
+  {
+    "titulos": [
+      "Chest X-ray",
+      "Radiografia do Torax",
+      "Radiografia do Tórax",
+      "Raio X do Torax",
+      "Raio-X do Tórax"
+    ],
+    "nome_do_arquivo": "chest-x-ray.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Garbage",
+      "Lixo",
+      "Lixo Domestico",
+      "Lixo Doméstico",
+      "Trash"
+    ],
+    "nome_do_arquivo": "garbage.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Bottle of Lotion",
+      "Frasco de Locao",
+      "Frasco de Loção",
+      "Hidratante",
+      "Locao Corporal",
+      "Lotion",
+      "Loção Corporal"
+    ],
+    "nome_do_arquivo": "bottle-of-lotion.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Foot",
+      "Pe",
+      "Pé"
+    ],
+    "nome_do_arquivo": "foot.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Distensao Muscular",
+      "Distensão Muscular",
+      "Lesao Muscular",
+      "Lesão Muscular",
+      "Muscle Strain"
+    ],
+    "nome_do_arquivo": "muscle-strain.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Caderno de Saude",
+      "Caderno de Saúde",
+      "Diario de Saude",
+      "Diário de Saúde",
+      "Health Journal",
+      "Health journal"
+    ],
+    "nome_do_arquivo": "health-journal.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Blue Light Glasses",
+      "Blue light glasses",
+      "Oculos Anti Luz Azul",
+      "Oculos de Luz Azul",
+      "Óculos Anti Luz Azul",
+      "Óculos de Luz Azul"
+    ],
+    "nome_do_arquivo": "blue-light-glasses.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Manicure",
+      "Painting Nails",
+      "Pintando as Unhas",
+      "Pintar Unhas"
+    ],
+    "nome_do_arquivo": "painting-nails.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Estomago",
+      "Estômago",
+      "Stomach"
+    ],
+    "nome_do_arquivo": "stomach.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Fabricacao de Sabao",
+      "Fabricação de Sabão",
+      "Fazer Sabao",
+      "Fazer Sabão",
+      "Soap Making"
+    ],
+    "nome_do_arquivo": "soap-making.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Aromaterapia",
+      "Aromatherapy Diffuser",
+      "Difusor de Aroma",
+      "Difusor de Aromaterapia",
+      "Difusor de Essencia",
+      "Difusor de Essência"
+    ],
+    "nome_do_arquivo": "aromatherapy-diffuser.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Cigarette",
+      "Cigarro"
+    ],
+    "nome_do_arquivo": "cigarette.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Fragmentadora",
+      "Paper Shredder",
+      "Shredder",
+      "Trituradora de Papel"
+    ],
+    "nome_do_arquivo": "shredder.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Base de Carregamento Sem Fio",
+      "Carregador Sem Fio",
+      "Carregador Wireless",
+      "Wireless Charging Pad"
+    ],
+    "nome_do_arquivo": "wireless-charging-pad.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Forma de Sabao",
+      "Forma de Sabão",
+      "Molde de Sabao",
+      "Molde de Sabão",
+      "Soap Mold"
+    ],
+    "nome_do_arquivo": "soap-mold.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Cast",
+      "Gesso",
+      "Gesso Ortopedico",
+      "Gesso Ortopédico",
+      "Imobilizacao",
+      "Imobilização",
+      "Plaster Cast"
+    ],
+    "nome_do_arquivo": "plaster-cast.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Bolsa de Soro",
+      "Bolsa de Soro Fisiologico",
+      "Bolsa de Soro Fisiológico",
+      "IV Bag",
+      "IV Drip Bag",
+      "Soro Intravenoso"
+    ],
+    "nome_do_arquivo": "iv-drip-bag.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Comedouro de Animal",
+      "Comedouro para Pet",
+      "Pet Bowl",
+      "Pote de Racao",
+      "Pote de Ração",
+      "Tigela para Pet"
+    ],
+    "nome_do_arquivo": "pet-bowl.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Incense",
+      "Incense Stick",
+      "Incenso",
+      "Pau de Incenso",
+      "Vareta de Incenso"
+    ],
+    "nome_do_arquivo": "incense-stick.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Vacuum Lifter",
+      "Ventosa Industrial",
+      "Ventosa de Elevacao",
+      "Ventosa de Elevação"
+    ],
+    "nome_do_arquivo": "vacuum-lifter.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Coletor de Fiapos",
+      "Filtro de Fiapos",
+      "Lint Trap",
+      "Lint trap"
+    ],
+    "nome_do_arquivo": "lint-trap.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Almofada da Fada do Dente",
+      "Tooth Fairy Pillow",
+      "Tooth fairy pillow",
+      "Travesseiro da Fada do Dente"
+    ],
+    "nome_do_arquivo": "tooth-fairy-pillow.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Capsule Hotel",
+      "Hotel Capsula",
+      "Hotel Cápsula"
+    ],
+    "nome_do_arquivo": "capsule-hotel.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Breathe Right Strip",
+      "Dilatador Nasal Adesivo",
+      "Fita Nasal",
+      "Nasal Strip",
+      "Respirador Nasal"
+    ],
+    "nome_do_arquivo": "nasal-strip.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Maquina de Embalar",
+      "Máquina de Embalar",
+      "Seladora",
+      "Shrink Wrap Machine"
+    ],
+    "nome_do_arquivo": "shrink-wrap-machine.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Migraine Cap",
+      "Touca Termica para Enxaqueca",
+      "Touca Térmica para Enxaqueca",
+      "Touca para Enxaqueca"
+    ],
+    "nome_do_arquivo": "migraine-cap.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Desinfetante Spray",
+      "Desinfetante em Spray",
+      "Disinfectant Spray",
+      "Spray Desinfetante"
+    ],
+    "nome_do_arquivo": "disinfectant-spray.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Fake Freckles",
+      "Sardas Artificiais",
+      "Sardas Falsas"
+    ],
+    "nome_do_arquivo": "fake-freckles.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Cilios Falsos",
+      "Cilios Posticos",
+      "Cílios Falsos",
+      "Cílios Postiços",
+      "False Eyelashes",
+      "Faux Eyelashes"
+    ],
+    "nome_do_arquivo": "faux-eyelashes.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Faca de Entalhar",
+      "Faca de Escultura em Madeira",
+      "Whittling Knife"
+    ],
+    "nome_do_arquivo": "whittling-knife.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Enceradeira",
+      "Floor Buffer",
+      "Floor Polisher",
+      "Polidora de Piso"
+    ],
+    "nome_do_arquivo": "floor-buffer.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Terracotta Pot",
+      "Vaso de Barro",
+      "Vaso de Ceramica",
+      "Vaso de Cerâmica",
+      "Vaso de Terracota"
+    ],
+    "nome_do_arquivo": "terracotta-pot.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Cesta de Disc Golf",
+      "Disc Golf Basket",
+      "Disk Golf"
+    ],
+    "nome_do_arquivo": "disc-golf-basket.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Cesto de Roupa",
+      "Cesto de Roupas Sujas",
+      "Laundry Hamper"
+    ],
+    "nome_do_arquivo": "laundry-hamper.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Bengala",
+      "Bengala de Madeira",
+      "Walking Stick",
+      "Wooden Walking Stick"
+    ],
+    "nome_do_arquivo": "wooden-walking-stick.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Rolo de Papel Higienico Vazio",
+      "Rolo de Papel Higiênico Vazio",
+      "Toilet Paper Tube",
+      "Tubo de Papel Higiênico"
+    ],
+    "nome_do_arquivo": "toilet-paper-tube.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Ganglio Linfatico",
+      "Gânglio Linfático",
+      "Linfonodo",
+      "Lymph Node"
+    ],
+    "nome_do_arquivo": "lymph-node.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Irrigador Nasal",
+      "Lavagem Nasal",
+      "Nasal Irrigator",
+      "Neti Pot"
+    ],
+    "nome_do_arquivo": "nasal-irrigator.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Steel Drum",
+      "Steel Pan",
+      "Tambor de Aco",
+      "Tambor de Aço"
+    ],
+    "nome_do_arquivo": "steel-pan.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Cotonete Esteril",
+      "Cotonete Estéril",
+      "Sterile Swab",
+      "Swab Esteril",
+      "Swab Estéril"
+    ],
+    "nome_do_arquivo": "sterile-swab.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Antacid",
+      "Antacid Tablet",
+      "Antiacido",
+      "Antiácido",
+      "Comprimido Antiácido",
+      "Sal de Frutas"
+    ],
+    "nome_do_arquivo": "antacid-tablet.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Cinta Postural",
+      "Corretor Postural",
+      "Corretor de Postura",
+      "Posture Corrector"
+    ],
+    "nome_do_arquivo": "posture-corrector.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Anti-Mofo",
+      "Mold Removal",
+      "Mold Remover",
+      "Removedor de Mofo",
+      "Tira Mofo"
+    ],
+    "nome_do_arquivo": "mold-removal.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Indoor Air Quality",
+      "Monitor de Qualidade do Ar",
+      "Qualidade do Ar Interior",
+      "Qualidade do Ar Interno"
+    ],
+    "nome_do_arquivo": "indoor-air-quality.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Air Purifier",
+      "Filtro de Ar",
+      "Purificador de Ar"
+    ],
+    "nome_do_arquivo": "air-purifier-1.png",
+    "categoria": "Eletrodomésticos"
+  },
+  {
+    "titulos": [
+      "Bide",
+      "Bidet",
+      "Bidê"
+    ],
+    "nome_do_arquivo": "bidet.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Dryer Machine",
+      "Maquina Secadora",
+      "Máquina Secadora",
+      "Secadora",
+      "Tumble Dryer"
+    ],
+    "nome_do_arquivo": "dryer-machine.png",
+    "categoria": "Eletrodomésticos"
+  },
+  {
+    "titulos": [
+      "Deteccao de Gas Radonio",
+      "Detector de Radonio",
+      "Detector de Radônio",
+      "Detecção de Gás Radônio",
+      "Radon Gas Detection"
+    ],
+    "nome_do_arquivo": "radon-gas-detection.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Dental Radiography",
+      "Dental X-ray",
+      "Radiografia Dentaria",
+      "Radiografia Dentária",
+      "Raio-X Dental"
+    ],
+    "nome_do_arquivo": "dental-radiography.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Estilete",
+      "Estilete de Artesanato",
+      "Estilete de Precisao",
+      "Estilete de Precisão",
+      "Papercutting Knife",
+      "X-Acto Knife"
+    ],
+    "nome_do_arquivo": "papercutting-knife.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Dispensador de Sabao Industrial",
+      "Dispensador de Sabão Industrial",
+      "Industrial Soap Dispenser",
+      "Saboneteira Industrial"
+    ],
+    "nome_do_arquivo": "industrial-soap-dispenser.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Giant Lily Pad",
+      "Planta Aquática Gigante",
+      "Victoria Regia",
+      "Vitória-Régia"
+    ],
+    "nome_do_arquivo": "giant-lily-pad.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Caixa UV",
+      "Caixa de Sanitização UV",
+      "Esterilizador UV",
+      "UV Sanitation Box"
+    ],
+    "nome_do_arquivo": "uv-sanitation-box.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Lata de Cobras de Brinquedo",
+      "Lata de Susto",
+      "Prank Snake Can"
+    ],
+    "nome_do_arquivo": "prank-snake-can.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Utero",
+      "Uterus",
+      "Útero"
+    ],
+    "nome_do_arquivo": "uterus.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Dental Bridge",
+      "Ponte Dentaria",
+      "Ponte Dentária",
+      "Protese Dentaria Fixa",
+      "Prótese Dentária Fixa"
+    ],
+    "nome_do_arquivo": "dental-bridge.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Espada de Esgrima",
+      "Fencing Foil",
+      "Florete de Esgrima"
+    ],
+    "nome_do_arquivo": "fencing-foil.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Fairy Light Jar",
+      "Luminaria de Pote",
+      "Luminária de Pote",
+      "Pote com Luzes",
+      "Vidro com Luzinhas"
+    ],
+    "nome_do_arquivo": "fairy-light-jar.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Organizador de Meias",
+      "Sock Organizer"
+    ],
+    "nome_do_arquivo": "sock-organizer.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Cancer Cell",
+      "Celula Cancerigena",
+      "Celula de Cancer",
+      "Célula Cancerígena",
+      "Célula de Câncer"
+    ],
+    "nome_do_arquivo": "cancer-cell.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Dente de Ouro",
+      "Gold Tooth",
+      "Grillz"
+    ],
+    "nome_do_arquivo": "gold-tooth.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Sache Perfumado",
+      "Sache de Gaveta",
+      "Sachê Perfumado",
+      "Sachê de Gaveta",
+      "Scented Drawer Sachet"
+    ],
+    "nome_do_arquivo": "scented-drawer-sachet.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Banheira de Gelo",
+      "Cold Plunge Tub",
+      "Crioterapia",
+      "Ice Bath",
+      "Imersao em Agua Gelada",
+      "Imersão em Água Gelada"
+    ],
+    "nome_do_arquivo": "cold-plunge-tub.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Almotolia",
+      "Lata de Oleo",
+      "Lata de Óleo",
+      "Oil Can"
+    ],
+    "nome_do_arquivo": "oil-can.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Gut",
+      "Intestine",
+      "Intestino",
+      "Sistema Digestivo"
+    ],
+    "nome_do_arquivo": "gut.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Imobiliaria",
+      "Imobiliária",
+      "Imovel",
+      "Imóvel",
+      "Real Estate"
+    ],
+    "nome_do_arquivo": "real-estate.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Singing Bowl",
+      "Sino Tibetano",
+      "Sound Bath Bowl",
+      "Tigela Tibetana",
+      "Tigela de Banho Sonoro"
+    ],
+    "nome_do_arquivo": "sound-bath-bowl.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Ear",
+      "Orelha",
+      "Ouvido"
+    ],
+    "nome_do_arquivo": "ear.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Carrinho de Emergencia",
+      "Carrinho de Emergência",
+      "Carrinho de Parada",
+      "Crash Cart"
+    ],
+    "nome_do_arquivo": "crash-cart.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Fio Dental de Agua",
+      "Fio Dental de Água",
+      "Irrigador Bucal",
+      "Irrigador Oral",
+      "Water Flosser",
+      "Waterpik"
+    ],
+    "nome_do_arquivo": "waterpik.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Cilindro de Oxigenio Portatil",
+      "Cilindro de Oxigênio Portátil",
+      "Oxigenio Portatil",
+      "Oxigênio Portátil",
+      "Portable Oxygen Canister"
+    ],
+    "nome_do_arquivo": "portable-oxygen-canister.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Foot Reflexology Chart",
+      "Mapa de Reflexologia Podal",
+      "Reflexologia dos Pes",
+      "Reflexologia dos Pés"
+    ],
+    "nome_do_arquivo": "foot-reflexology-chart.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Almofada Metatarsal",
+      "Almofada para Pé",
+      "Metatarsal Pad",
+      "Metatarsal pad",
+      "Protetor Metatarsal"
+    ],
+    "nome_do_arquivo": "metatarsal-pad.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Aromatizador",
+      "Difusor de Aroma",
+      "Difusor de Perfume",
+      "Scent Diffuser"
+    ],
+    "nome_do_arquivo": "scent-diffuser.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Automatic Soap Dispenser",
+      "Dispensador Automático de Sabonete",
+      "Dispensador de Sabonete",
+      "Saboneteira Automatica",
+      "Saboneteira Automática"
+    ],
+    "nome_do_arquivo": "automatic-soap-dispenser.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Loja de Animais",
+      "Loja de Pet",
+      "Pet Shop",
+      "Pet Store"
+    ],
+    "nome_do_arquivo": "pet-store.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Aparelho Dentario",
+      "Aparelho Dentário",
+      "Aparelho Ortodontico",
+      "Aparelho Ortodôntico",
+      "Braces",
+      "Orthodontic Appliance"
+    ],
+    "nome_do_arquivo": "orthodontic-appliance.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Gestante",
+      "Gravidez",
+      "Mulher Gravida",
+      "Mulher Grávida",
+      "Pregnant Woman"
+    ],
+    "nome_do_arquivo": "pregnant-woman.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Figado",
+      "Fígado",
+      "Liver"
+    ],
+    "nome_do_arquivo": "liver.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Escova de Maquiagem",
+      "Makeup Brush",
+      "Pincel de Maquiagem",
+      "Pincel de Maquiar"
+    ],
+    "nome_do_arquivo": "makeup-brush.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Dor de Dente",
+      "Toothache"
+    ],
+    "nome_do_arquivo": "toothache.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Exame de Urina",
+      "Urina",
+      "Urine"
+    ],
+    "nome_do_arquivo": "urine.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Blood",
+      "Sangue"
+    ],
+    "nome_do_arquivo": "blood.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Desk Cleaner",
+      "Limpador de Mesa",
+      "Mini Aspirador de Mesa"
+    ],
+    "nome_do_arquivo": "desk-cleaner.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Empty Jar",
+      "Jarra Vazia",
+      "Pote Vazio",
+      "Vidro Vazio"
+    ],
+    "nome_do_arquivo": "empty-jar.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Brain with Band-Aid",
+      "Brain with a Band-Aid",
+      "Cerebro com Curativo",
+      "Cérebro com Curativo",
+      "Saude Mental",
+      "Saúde Mental"
+    ],
+    "nome_do_arquivo": "brain-with-a-band-aid.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Limpa Vidros",
+      "Limpa-Vidros",
+      "Limpador de Janela",
+      "Window Cleaner"
+    ],
+    "nome_do_arquivo": "window-cleaner.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Bateia de Ouro",
+      "Gold Pan",
+      "Peneira de Ouro"
+    ],
+    "nome_do_arquivo": "gold-pan.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Estacao de Lavagem",
+      "Estação de Lavagem",
+      "Planta de Lavagem",
+      "Wash Plant"
+    ],
+    "nome_do_arquivo": "wash-plant.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Alongamento",
+      "Flexibilidade",
+      "Flexibility",
+      "Stretching"
+    ],
+    "nome_do_arquivo": "flexibility.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Lung",
+      "Pulmao",
+      "Pulmão"
+    ],
+    "nome_do_arquivo": "lung.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Reciclagem",
+      "Reciclar",
+      "Recycle",
+      "Recycling",
+      "Simbolo de Reciclagem",
+      "Símbolo de Reciclagem"
+    ],
+    "nome_do_arquivo": "recycle.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Ar Condicionado Cassete",
+      "Ar Condicionado de Teto",
+      "Ar-Condicionado Cassete",
+      "Cassette Air Conditioner"
+    ],
+    "nome_do_arquivo": "cassette-air-conditioner.png",
+    "categoria": "Eletrodomésticos"
+  },
+  {
+    "titulos": [
+      "Flores Aromaticas",
+      "Flores Aromáticas",
+      "Potpourri",
+      "Sache Aromatico",
+      "Sachê Aromático"
+    ],
+    "nome_do_arquivo": "potpourri.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Atadura",
+      "Bandagem",
+      "Bandages",
+      "Faixa",
+      "Gauze Bandage",
+      "Gaze"
+    ],
+    "nome_do_arquivo": "bandages.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Lingua",
+      "Língua",
+      "Tongue"
+    ],
+    "nome_do_arquivo": "tongue-1.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Faca de Arremesso",
+      "Throwing Knife"
+    ],
+    "nome_do_arquivo": "throwing-knife.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Forceps",
+      "Fórceps",
+      "Pinca Cirurgica",
+      "Pinça Cirúrgica"
+    ],
+    "nome_do_arquivo": "forceps.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Bleeding Tooth Fungus",
+      "Fungo Dente Sangrento",
+      "Hydnellum Peckii"
+    ],
+    "nome_do_arquivo": "bleeding-tooth-fungus.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Dentist",
+      "Dentista"
+    ],
+    "nome_do_arquivo": "dentist-1.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Gallbladder",
+      "Vesicula Biliar",
+      "Vesícula Biliar"
+    ],
+    "nome_do_arquivo": "gallbladder.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Aerobics",
+      "Aerobics Exercise",
+      "Aeróbica",
+      "Exercicio Aerobico",
+      "Exercício Aeróbico",
+      "Ginastica",
+      "Ginástica"
+    ],
+    "nome_do_arquivo": "aerobics.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Child's Potty",
+      "Penico Infantil",
+      "Pinico",
+      "Potty",
+      "Troninho"
+    ],
+    "nome_do_arquivo": "childs-potty.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Aspiradora",
+      "Maquina de Aspirar",
+      "Máquina de Aspirar",
+      "Vacuuming Machine"
+    ],
+    "nome_do_arquivo": "vacuuming-machine.png",
+    "categoria": "Eletrodomésticos"
+  },
+  {
+    "titulos": [
+      "Cesto de Lixo",
+      "Lata de Lixo",
+      "Lixeira de Papel",
+      "Paper Bin"
+    ],
+    "nome_do_arquivo": "paper-bin.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Cesto de Lixo",
+      "Lixeira de Papel",
+      "Paper Bin",
+      "Waste Bin"
+    ],
+    "nome_do_arquivo": "paper-bin-1.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Brushing Teeth",
+      "Escovando os Dentes",
+      "Escovar os Dentes",
+      "Higiene Bucal"
+    ],
+    "nome_do_arquivo": "brushing-teeth.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Lavando o Rosto",
+      "Lavar o Rosto",
+      "Limpeza Facial",
+      "Washing Face"
+    ],
+    "nome_do_arquivo": "washing-face.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Cleaning the Table",
+      "Limpando a Mesa",
+      "Limpar a Mesa",
+      "Limpeza de Mesa",
+      "Wiping Table"
+    ],
+    "nome_do_arquivo": "cleaning-the-table.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Skibidi Toilet"
+    ],
+    "nome_do_arquivo": "skibidi-toilet.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Cobre-Sapato Descartável",
+      "Disposable Shoe Covers",
+      "Propes Descartaveis",
+      "Propés Descartáveis"
+    ],
+    "nome_do_arquivo": "disposable-shoe-covers.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Aparelho Auditivo",
+      "Hearing Aid",
+      "Protese Auditiva",
+      "Prótese Auditiva"
+    ],
+    "nome_do_arquivo": "hearing-aid.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Sleepwalker",
+      "Sonambulismo",
+      "Sonambulo",
+      "Sonâmbulo"
+    ],
+    "nome_do_arquivo": "sleepwalker.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Ashes",
+      "Cinzas"
+    ],
+    "nome_do_arquivo": "ashes.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Pinca para Carrapato",
+      "Pinça para Carrapato",
+      "Removedor de Carrapato",
+      "Tick Remover"
+    ],
+    "nome_do_arquivo": "tick-remover.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Banheira Vitoriana",
+      "Banheira com Pes",
+      "Banheira com Pés",
+      "Clawfoot Bathtub"
+    ],
+    "nome_do_arquivo": "clawfoot-bathtub.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Medical ID Bracelet",
+      "Pulseira Medica",
+      "Pulseira Médica",
+      "Pulseira de Identificacao Medica",
+      "Pulseira de Identificação Médica"
+    ],
+    "nome_do_arquivo": "medical-id-bracelet.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Chuveiro de Emergencia",
+      "Chuveiro de Emergência",
+      "Chuveiro de Seguranca",
+      "Chuveiro de Segurança",
+      "Safety Shower"
+    ],
+    "nome_do_arquivo": "safety-shower.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Cardboard Baler",
+      "Compactador de Papelao",
+      "Compactador de Papelão",
+      "Prensa de Papelão"
+    ],
+    "nome_do_arquivo": "cardboard-baler.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Filtro de Ar",
+      "Indoor Air Purifier",
+      "Purificador de Ar",
+      "Purificador de Ar Interno"
+    ],
+    "nome_do_arquivo": "indoor-air-purifier.png",
+    "categoria": "Eletrodomésticos"
+  },
+  {
+    "titulos": [
+      "Mouse Pad",
+      "Mousepad",
+      "Tapete de Mouse"
+    ],
+    "nome_do_arquivo": "mouse-pad.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Cold Sore",
+      "Herpes",
+      "Herpes Labial"
+    ],
+    "nome_do_arquivo": "cold-sore.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Blood Clot",
+      "Coagulo",
+      "Coagulo de Sangue",
+      "Coágulo",
+      "Coágulo de Sangue",
+      "Trombose"
+    ],
+    "nome_do_arquivo": "blood-clot.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "AED",
+      "DEA",
+      "Desfibrilador Externo Automático",
+      "Desfibrilador Pessoal",
+      "Personal Defibrillator"
+    ],
+    "nome_do_arquivo": "personal-defibrillator.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Adesivo de Unha Espelhado",
+      "Mirrored Nail Wraps",
+      "Nail Wrap Espelhado",
+      "Película de Unha Espelhada"
+    ],
+    "nome_do_arquivo": "mirrored-nail-wraps.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Anel Inteligente",
+      "Anel de Monitoramento do Sono",
+      "Rastreador de Sono",
+      "Sleep Tracking Ring"
+    ],
+    "nome_do_arquivo": "sleep-tracking-ring.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Plataforma de Aerobica",
+      "Plataforma de Aeróbica",
+      "Plataforma de Step",
+      "Step",
+      "Step Aerobics Platform",
+      "Step Platform"
+    ],
+    "nome_do_arquivo": "step-aerobics-platform.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Carrinho Multiuso",
+      "Carrinho Utilitario",
+      "Carrinho Utilitário",
+      "Utility Cart"
+    ],
+    "nome_do_arquivo": "utility-cart.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Quidditch Broom",
+      "Vassoura Voadora",
+      "Vassoura de Quadribol"
+    ],
+    "nome_do_arquivo": "quidditch-broom.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Aparelho para Ronco",
+      "Dispositivo Anti-Ronco",
+      "Protetor Anti-Ronco",
+      "Snore Guard"
+    ],
+    "nome_do_arquivo": "snore-guard.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Corrida do Ovo na Colher",
+      "Egg and Spoon",
+      "Ovo e Colher"
+    ],
+    "nome_do_arquivo": "egg-and-spoon.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Frasco Magico",
+      "Frasco Mágico",
+      "Frasco de Pocao",
+      "Frasco de Poção",
+      "Potion Bottle"
+    ],
+    "nome_do_arquivo": "potion-bottle.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Exame Medico",
+      "Exame Médico",
+      "Laudo Medico",
+      "Laudo Médico",
+      "Medical Report",
+      "Relatorio Medico",
+      "Relatório Médico"
+    ],
+    "nome_do_arquivo": "medical-report.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Care Label",
+      "Etiqueta de Lavagem",
+      "Etiqueta de Roupa",
+      "Laundry Tag"
+    ],
+    "nome_do_arquivo": "laundry-tag.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Bolha de Sabao",
+      "Bolha de Sabão",
+      "Soap Bubble"
+    ],
+    "nome_do_arquivo": "soap-bubble.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Allergy Test Kit",
+      "Exame de Alergia",
+      "Kit de Teste de Alergia",
+      "Teste de Alergia"
+    ],
+    "nome_do_arquivo": "allergy-test-kit.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Humerus",
+      "Osso do Braco",
+      "Osso do Braço",
+      "Umero",
+      "Úmero"
+    ],
+    "nome_do_arquivo": "humerus.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Escapula",
+      "Escápula",
+      "Omoplata",
+      "Scapula"
+    ],
+    "nome_do_arquivo": "scapula.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Esterno",
+      "Osso Esterno",
+      "Sternum"
+    ],
+    "nome_do_arquivo": "sternum.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Caixa Toracica",
+      "Caixa Torácica",
+      "Costelas",
+      "Ossos do Torax",
+      "Ossos do Tórax",
+      "Ribcage"
+    ],
+    "nome_do_arquivo": "ribcage.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Oleo Essencial de Hortela",
+      "Oleo de Hortela",
+      "Peppermint Oil",
+      "Óleo Essencial de Hortelã",
+      "Óleo de Hortelã"
+    ],
+    "nome_do_arquivo": "peppermint-oil.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Almofada de Equilibrio",
+      "Almofada de Equilíbrio",
+      "Balance Pad",
+      "Pad de Equilíbrio"
+    ],
+    "nome_do_arquivo": "balance-pad.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Drain Plug",
+      "Drain Stopper",
+      "Tampa de Ralo",
+      "Tampao de Ralo",
+      "Tampão de Ralo"
+    ],
+    "nome_do_arquivo": "drain-stopper.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Industrial Cleaning Machine",
+      "Lavadora Industrial",
+      "Maquina de Limpeza Industrial",
+      "Máquina de Limpeza Industrial"
+    ],
+    "nome_do_arquivo": "industrial-cleaning-machine.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Caixa de Gordura",
+      "Grease Trap"
+    ],
+    "nome_do_arquivo": "grease-trap.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Banho de Assento",
+      "Sitz Bath"
+    ],
+    "nome_do_arquivo": "sitz-bath.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Adipometro",
+      "Adipômetro",
+      "Body Fat Caliper",
+      "Medidor de Gordura Corporal"
+    ],
+    "nome_do_arquivo": "body-fat-caliper.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Plataforma Vibratoria",
+      "Plataforma Vibratória",
+      "Vibration Plate"
+    ],
+    "nome_do_arquivo": "vibration-plate.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Sais de Amonia",
+      "Sais de Amônia",
+      "Sal Amoniaco",
+      "Sal Amoníaco",
+      "Smelling Salts",
+      "Sniffing Salts"
+    ],
+    "nome_do_arquivo": "sniffing-salts.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Compost Bin",
+      "Composteira",
+      "Compostor",
+      "Lixeira de Composto"
+    ],
+    "nome_do_arquivo": "compost-bin.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Capa Protetora",
+      "Capa contra Poeira",
+      "Dust Cover",
+      "Protetor contra Po",
+      "Protetor contra Pó"
+    ],
+    "nome_do_arquivo": "dust-cover.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Bath Bomb",
+      "Bomba Efervescente de Banho",
+      "Bomba de Banho"
+    ],
+    "nome_do_arquivo": "bath-bomb.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Bateria Eletronica",
+      "Bateria Eletrônica",
+      "Electronic Drum Pad",
+      "Pad de Bateria Eletrônica"
+    ],
+    "nome_do_arquivo": "electronic-drum-pad.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Cosmeticos",
+      "Cosméticos",
+      "Makeup and Skincare",
+      "Maquiagem e Cuidados com a Pele",
+      "Maquiagem e Skincare"
+    ],
+    "nome_do_arquivo": "makeup-and-skincare.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Carnivorous Pitcher Plant",
+      "Nepenthes",
+      "Pitcher Plant",
+      "Planta Carnivora",
+      "Planta Carnívora"
+    ],
+    "nome_do_arquivo": "carnivorous-pitcher-plant.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Barco na Garrafa",
+      "Bottle Ship",
+      "Navio na Garrafa",
+      "Ship in a Bottle"
+    ],
+    "nome_do_arquivo": "bottle-ship.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Comprimido de Glicose",
+      "Glicose",
+      "Glucose Tablet",
+      "Pastilha de Glicose"
+    ],
+    "nome_do_arquivo": "glucose-tablet.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Bar de Oxigenio",
+      "Bar de Oxigênio",
+      "Oxygen Bar"
+    ],
+    "nome_do_arquivo": "oxygen-bar.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Cotoveleira",
+      "Cotoveleira Tenis",
+      "Cotoveleira para Tendinite",
+      "Tennis Elbow Brace"
+    ],
+    "nome_do_arquivo": "tennis-elbow-brace.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Supositorio",
+      "Supositório",
+      "Suppository"
+    ],
+    "nome_do_arquivo": "suppository.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Lata de Lixo Transbordando",
+      "Lixeira Cheia",
+      "Overfilled Trash Can"
+    ],
+    "nome_do_arquivo": "overfilled-trash-can.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Algodao em Disco",
+      "Algodão em Disco",
+      "Cotton Pad",
+      "Cotton Puff",
+      "Disco de Algodao",
+      "Disco de Algodão"
+    ],
+    "nome_do_arquivo": "cotton-puff.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Diagnosis",
+      "Diagnostico",
+      "Diagnóstico"
+    ],
+    "nome_do_arquivo": "diagnosis.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Demencia",
+      "Dementia",
+      "Demência"
+    ],
+    "nome_do_arquivo": "dementia.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Cefaleia",
+      "Dor de Cabeca",
+      "Dor de Cabeça",
+      "Enxaqueca",
+      "Headache"
+    ],
+    "nome_do_arquivo": "headache.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Dilatador Nasal",
+      "Nasal Dilator"
+    ],
+    "nome_do_arquivo": "nasal-dilator.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Felpa de Bolso",
+      "Fiapo de Bolso",
+      "Pocket Lint"
+    ],
+    "nome_do_arquivo": "pocket-lint.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Banho de Gelo",
+      "Barril de Banho de Gelo",
+      "Barril de Crioterapia",
+      "Ice Bath Barrel"
+    ],
+    "nome_do_arquivo": "ice-bath-barrel.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Capacete Craniano",
+      "Cranial Helmet",
+      "Ortese Craniana",
+      "Órtese Craniana"
+    ],
+    "nome_do_arquivo": "cranial-helmet.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Adesivo de Lingua",
+      "Adesivo de Língua",
+      "Patch de Lingua",
+      "Patch de Língua",
+      "Tongue Patch"
+    ],
+    "nome_do_arquivo": "tongue-patch.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Blood Type Card",
+      "Cartao de Tipo Sanguineo",
+      "Cartão de Tipo Sanguíneo",
+      "Tipo Sanguineo",
+      "Tipo Sanguíneo"
+    ],
+    "nome_do_arquivo": "blood-type-card.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Dente Fossil",
+      "Dente Fóssil",
+      "Fossil Tooth",
+      "Fossil de Dente",
+      "Fóssil de Dente"
+    ],
+    "nome_do_arquivo": "fossil-tooth.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Hazardous Waste Drum",
+      "Tambor Toxico",
+      "Tambor Tóxico",
+      "Tambor de Residuo Perigoso",
+      "Tambor de Resíduo Perigoso"
+    ],
+    "nome_do_arquivo": "hazardous-waste-drum.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Bolhas de Sabao",
+      "Bolhas de Sabão",
+      "Soap Bubbles"
+    ],
+    "nome_do_arquivo": "soap-bubbles.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Microfiber Towel",
+      "Pano de Microfibra",
+      "Toalha de Microfibra"
+    ],
+    "nome_do_arquivo": "microfiber-towel.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Lança Bolhas",
+      "Pistola de Bolhas de Sabao",
+      "Pistola de Bolhas de Sabão",
+      "Soap Bubble Gun"
+    ],
+    "nome_do_arquivo": "soap-bubble-gun.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Faca Finlandesa",
+      "Faca Puukko",
+      "Puukko Knife"
+    ],
+    "nome_do_arquivo": "puukko-knife.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Arthritis Glove",
+      "Luva Terapeutica",
+      "Luva Terapêutica",
+      "Luva de Artrite",
+      "Luva para Artrite"
+    ],
+    "nome_do_arquivo": "arthritis-glove.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Autism",
+      "Autismo",
+      "Simbolo do Autismo",
+      "Símbolo do Autismo"
+    ],
+    "nome_do_arquivo": "autism.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "License Plate Frame",
+      "Moldura de Placa",
+      "Suporte de Placa de Carro"
+    ],
+    "nome_do_arquivo": "license-plate-frame.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Clear Retainer",
+      "Contencao Dental",
+      "Contenção Dental",
+      "Contenção Transparente",
+      "Dental Retainer",
+      "Retainer Transparente"
+    ],
+    "nome_do_arquivo": "clear-retainer.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Porta-Sabonete Econômico",
+      "Saboneteira Economica",
+      "Saboneteira Econômica",
+      "Soap Saver"
+    ],
+    "nome_do_arquivo": "soap-saver.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "DNA Test Kit",
+      "Exame de DNA",
+      "Kit de Teste de DNA",
+      "Teste de DNA"
+    ],
+    "nome_do_arquivo": "dna-test-kit.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Bola Sensorial",
+      "Bola Sensorial Tatil",
+      "Bola Sensorial Tátil",
+      "Tactile Sensory Ball"
+    ],
+    "nome_do_arquivo": "tactile-sensory-ball.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Pote de Vidro do Mar",
+      "Sea Glass Jar",
+      "Vidro Marítimo",
+      "Vidro do Mar"
+    ],
+    "nome_do_arquivo": "sea-glass-jar.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Chewing Stick",
+      "Escova Natural",
+      "Miswak",
+      "Palito de Mascar"
+    ],
+    "nome_do_arquivo": "chewing-stick.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Alchemy Bottle",
+      "Frasco de Alquimia",
+      "Garrafa de Alquimia",
+      "Poção"
+    ],
+    "nome_do_arquivo": "alchemy-bottle.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Banquinho de Vaso Sanitario",
+      "Banquinho de Vaso Sanitário",
+      "Banquinho para Banheiro",
+      "Toilet Step Stool"
+    ],
+    "nome_do_arquivo": "toilet-step-stool.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Spray de Garganta",
+      "Spray para Dor de Garganta",
+      "Spray para Garganta",
+      "Throat Spray"
+    ],
+    "nome_do_arquivo": "throat-spray.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Serum de Vitamina C",
+      "Sérum de Vitamina C",
+      "Vitamin C Serum"
+    ],
+    "nome_do_arquivo": "vitamin-c-serum.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Fototerapia Vermelha",
+      "Painel de Terapia com Luz Vermelha",
+      "Red Light Therapy Panel",
+      "Terapia com Luz Vermelha"
+    ],
+    "nome_do_arquivo": "red-light-therapy-panel.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Compactador de Lixo",
+      "Compactador de Residuos",
+      "Compactador de Resíduos",
+      "Waste Compactor"
+    ],
+    "nome_do_arquivo": "waste-compactor.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Esteira com Mesa",
+      "Mesa com Esteira",
+      "Treadmill Desk",
+      "Walking Desk"
+    ],
+    "nome_do_arquivo": "treadmill-desk.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Brilhante no Dente",
+      "Joia de Dente",
+      "Piercing de Dente",
+      "Tooth Gem"
+    ],
+    "nome_do_arquivo": "tooth-gem.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Abafador de Ouvido",
+      "Abafador de Ruído",
+      "Ear Muffs",
+      "Protetor Auricular",
+      "Sound-Reducing Ear Muffs"
+    ],
+    "nome_do_arquivo": "sound-reducing-ear-muffs.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Carrinho Basculante",
+      "Carro Basculante",
+      "Tilt Truck"
+    ],
+    "nome_do_arquivo": "tilt-truck.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Box Cutter",
+      "Canivete Utilitario",
+      "Canivete Utilitário",
+      "Estilete",
+      "Utility Knife"
+    ],
+    "nome_do_arquivo": "utility-knife.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Empty Bottle",
+      "Garrafa Vazia"
+    ],
+    "nome_do_arquivo": "empty-bottle.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Fracture",
+      "Fratura",
+      "Osso Fraturado",
+      "Osso Quebrado"
+    ],
+    "nome_do_arquivo": "fracture.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Barril de Residuo Perigoso",
+      "Barril de Resíduo Perigoso",
+      "Hazardous Waste Barrel",
+      "Lixo Toxico",
+      "Lixo Tóxico"
+    ],
+    "nome_do_arquivo": "hazardous-waste-barrel.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Cobweb Duster",
+      "Espanador de Teia de Aranha",
+      "Espanador de Teto",
+      "Removedor de Teia"
+    ],
+    "nome_do_arquivo": "cobweb-duster.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Acupuncture Needle",
+      "Acupuntura",
+      "Agulha de Acupuntura"
+    ],
+    "nome_do_arquivo": "acupuncture-needle.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Dente de Baleia Esculpido",
+      "Scrimshaw",
+      "Whale Tooth Scrimshaw"
+    ],
+    "nome_do_arquivo": "whale-tooth-scrimshaw.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Cracha",
+      "Crachá",
+      "Name Plate",
+      "Placa de Identificacao",
+      "Placa de Identificação"
+    ],
+    "nome_do_arquivo": "name-plate.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Leech",
+      "Sanguessuga"
+    ],
+    "nome_do_arquivo": "leech.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Ficha de Lavanderia",
+      "Laundry Coin",
+      "Moeda de Lavanderia"
+    ],
+    "nome_do_arquivo": "laundry-coin.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Chewed Gum",
+      "Chiclete Mascado",
+      "Goma de Mascar Usada"
+    ],
+    "nome_do_arquivo": "chewed-gum.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Capa de Vaso",
+      "Tampa de Vaso Sanitario",
+      "Tampa de Vaso Sanitário",
+      "Toilet Lid Cover"
+    ],
+    "nome_do_arquivo": "toilet-lid-cover.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Espuma",
+      "Foam"
+    ],
+    "nome_do_arquivo": "foam.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Escova de Piscina",
+      "Escova para Limpar Piscina",
+      "Pool Cleaning Brush"
+    ],
+    "nome_do_arquivo": "pool-cleaning-brush.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Brass Knuckles",
+      "Knuckle Duster",
+      "Soco Ingles",
+      "Soco Inglês"
+    ],
+    "nome_do_arquivo": "knuckle-duster.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Jaw",
+      "Mandibula",
+      "Mandíbula",
+      "Maxilar"
+    ],
+    "nome_do_arquivo": "jaw.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Bandeja de Chaves",
+      "Key Bowl",
+      "Porta Chaves",
+      "Porta-Chaves",
+      "Tigela de Chaves"
+    ],
+    "nome_do_arquivo": "key-bowl.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Veia",
+      "Vein"
+    ],
+    "nome_do_arquivo": "vein.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Arteria",
+      "Artery",
+      "Artéria",
+      "Vaso Sanguineo",
+      "Vaso Sanguíneo"
+    ],
+    "nome_do_arquivo": "artery.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Cabaca de Agua",
+      "Cabaça de Água",
+      "Cantil de Cabaca",
+      "Cantil de Cabaça",
+      "Gourd Water Bottle"
+    ],
+    "nome_do_arquivo": "gourd-water-bottle.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Desentupidor Flexivel",
+      "Desentupidor Flexível",
+      "Desentupidor de Cano",
+      "Drain Snake",
+      "Pipe Snake"
+    ],
+    "nome_do_arquivo": "drain-snake.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Bottle Terrarium",
+      "Terrario",
+      "Terrario na Garrafa",
+      "Terrário",
+      "Terrário na Garrafa"
+    ],
+    "nome_do_arquivo": "bottle-terrarium.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Capsula do Tempo",
+      "Cofre Cápsula do Tempo",
+      "Cápsula do Tempo",
+      "Time Capsule Safe"
+    ],
+    "nome_do_arquivo": "time-capsule-safe.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Cesta de Arame",
+      "Cesto Metalico",
+      "Cesto Metálico",
+      "Cesto de Arame",
+      "Wire Basket"
+    ],
+    "nome_do_arquivo": "wire-basket.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Berry Basket",
+      "Cesta de Berries",
+      "Cesta de Frutas",
+      "Cesto de Frutas Vermelhas"
+    ],
+    "nome_do_arquivo": "berry-basket.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Canetinha Perfumada",
+      "Marcador Perfumado",
+      "Scented Marker"
+    ],
+    "nome_do_arquivo": "scented-marker.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Booster Shot",
+      "Booster Vaccine",
+      "Dose de Reforco",
+      "Dose de Reforço",
+      "Vacina de Reforco",
+      "Vacina de Reforço"
+    ],
+    "nome_do_arquivo": "booster-shot.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Balanca de Composicao Corporal",
+      "Balança de Composição Corporal",
+      "Body Composition Scanner",
+      "Scanner de Composição Corporal"
+    ],
+    "nome_do_arquivo": "body-composition-scanner.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Apertador de Pasta de Dente",
+      "Espremedor de Pasta de Dente",
+      "Toothpaste Squeezer"
+    ],
+    "nome_do_arquivo": "toothpaste-squeezer.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Banheiro",
+      "Bathroom",
+      "Lavabo",
+      "Restroom",
+      "WC"
+    ],
+    "nome_do_arquivo": "bathroom.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Base de Lancamento",
+      "Base de Lançamento",
+      "Plataforma de Lancamento",
+      "Plataforma de Lançamento",
+      "Rocket Launch Pad"
+    ],
+    "nome_do_arquivo": "rocket-launch-pad.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Tampa de Creme Dental",
+      "Tampa de Pasta de Dente",
+      "Toothpaste Cap"
+    ],
+    "nome_do_arquivo": "toothpaste-cap.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Cattle Branding Iron",
+      "Ferro de Marcar Gado",
+      "Marca de Gado"
+    ],
+    "nome_do_arquivo": "cattle-branding-iron.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Desk Treadmill",
+      "Esteira de Mesa",
+      "Esteira para Escritorio",
+      "Esteira para Escritório",
+      "Walking Pad"
+    ],
+    "nome_do_arquivo": "desk-treadmill.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Bermuda Vermelha",
+      "Red Cotton Shorts",
+      "Shorts de Algodao Vermelho",
+      "Shorts de Algodão Vermelho"
+    ],
+    "nome_do_arquivo": "red-cotton-shorts.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Chapeu Bucket de Veludo Amarelo",
+      "Chapéu Bucket Amarelo",
+      "Chapéu Bucket de Veludo Amarelo",
+      "Yellow Corduroy Bucket Hat",
+      "Yellow Corduroy Bucket Hat with Chin Strap"
+    ],
+    "nome_do_arquivo": "yellow-corduroy-bucket-hat-with-chin-strap.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Chapeu Bucket Metalico",
+      "Chapéu Bucket Metálico",
+      "Metallic Bucket Hat"
+    ],
+    "nome_do_arquivo": "metallic-bucket-hat.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Estresse",
+      "Stress",
+      "Tensao",
+      "Tension",
+      "Tensão"
+    ],
+    "nome_do_arquivo": "tension.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Joelheira",
+      "Joelheiras",
+      "Knee Pads",
+      "Protetor de Joelho"
+    ],
+    "nome_do_arquivo": "knee-pads.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Aloe Vera",
+      "Aloe Vera Plant",
+      "Babosa",
+      "Planta de Aloe Vera"
+    ],
+    "nome_do_arquivo": "aloe-vera-plant.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Garrafa Inteligente",
+      "Garrafa com Lembrete",
+      "Garrafa com Lembrete de Hidratação",
+      "Hydration Reminder Bottle"
+    ],
+    "nome_do_arquivo": "hydration-reminder-bottle.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Bacia",
+      "Osso da Bacia",
+      "Pelvis",
+      "Pélvis"
+    ],
+    "nome_do_arquivo": "pelvis.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Copo de Bochecho",
+      "Copo de Gargarejo",
+      "Copo para Gargarejo",
+      "Gargle Cup"
+    ],
+    "nome_do_arquivo": "gargle-cup.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Caneta para Roupa",
+      "Laundry Marker",
+      "Marcador de Roupa"
+    ],
+    "nome_do_arquivo": "laundry-marker.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Drogas",
+      "Drugs",
+      "Medicamentos",
+      "Medication",
+      "Remedios",
+      "Remédios"
+    ],
+    "nome_do_arquivo": "drugs.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Douche",
+      "Ducha",
+      "Ducha Higienica",
+      "Ducha Higiênica"
+    ],
+    "nome_do_arquivo": "douche.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Copper Water Bottle",
+      "Garrafa de Agua de Cobre",
+      "Garrafa de Cobre",
+      "Garrafa de Água de Cobre"
+    ],
+    "nome_do_arquivo": "copper-water-bottle.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Dirty Laundry Pile",
+      "Monte de Roupa Suja",
+      "Pilha de Roupa Suja",
+      "Roupa Suja"
+    ],
+    "nome_do_arquivo": "dirty-laundry-pile.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Esponja de Escultura",
+      "Esponja para Modelagem",
+      "Sculpting Sponge"
+    ],
+    "nome_do_arquivo": "sculpting-sponge.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Digital Drawing Tablet",
+      "Mesa Digital",
+      "Mesa Digitalizadora",
+      "Tablet de Desenho Digital"
+    ],
+    "nome_do_arquivo": "digital-drawing-tablet.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Cell Phone Cleaning Kit",
+      "Kit de Limpeza de Celular",
+      "Kit de Limpeza de Telefone"
+    ],
+    "nome_do_arquivo": "cell-phone-cleaning-kit.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Girar a Garrafa",
+      "Jogo da Garrafa",
+      "Spin the Bottle",
+      "Spin-the-Bottle"
+    ],
+    "nome_do_arquivo": "spin-the-bottle.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Crystal Hair Comb",
+      "Pente Decorado",
+      "Pente de Cristal"
+    ],
+    "nome_do_arquivo": "crystal-hair-comb.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Garrafa com Mensagem",
+      "Mensagem na Garrafa",
+      "Mini Garrafa com Mensagem",
+      "Tiny Message Bottle"
+    ],
+    "nome_do_arquivo": "tiny-message-bottle.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Caixa Organizadora Plastica",
+      "Caixa Organizadora Plástica",
+      "Caixa de Armazenamento",
+      "Plastic Storage Bin"
+    ],
+    "nome_do_arquivo": "plastic-storage-bin.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Overfilled Trash Bag",
+      "Saco de Lixo Cheio",
+      "Saco de Lixo Transbordando"
+    ],
+    "nome_do_arquivo": "overfilled-trash-bag.png",
+    "categoria": "Limpeza e Higiene"
+  },
+  {
+    "titulos": [
+      "Varicose Vein",
+      "Varizes",
+      "Veia Varicosa"
+    ],
+    "nome_do_arquivo": "varicose-vein.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Adesivo Antifumo",
+      "Adesivo de Nicotina",
+      "Nicotine Patch",
+      "Patch de Nicotina"
+    ],
+    "nome_do_arquivo": "nicotine-patch.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Balde de Areia",
+      "Baldinho de Areia",
+      "Baldinho de Praia",
+      "Sandcastle Bucket"
+    ],
+    "nome_do_arquivo": "sandcastle-bucket.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Caldeirao de Fogueira",
+      "Caldeirão de Fogueira",
+      "Campfire Cooking Pot",
+      "Panela de Acampamento",
+      "Panela de Fogueira"
+    ],
+    "nome_do_arquivo": "campfire-cooking-pot.png",
+    "categoria": "Utensílios de Cozinha"
+  },
+  {
+    "titulos": [
+      "Candy Wrapper",
+      "Embalagem de Bala",
+      "Embalagem de Doce",
+      "Papel de Bala"
+    ],
+    "nome_do_arquivo": "candy-wrapper.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Auxiliar de Cozinha",
+      "Dishwasher",
+      "Lavador de Louca",
+      "Lavador de Louça"
+    ],
+    "nome_do_arquivo": "dishwasher-1.png",
+    "categoria": "Outros"
+  },
+  {
+    "titulos": [
+      "Grafico de Nutricao",
+      "Gráfico de Nutrição",
+      "Nutrition Chart",
+      "Quadro Nutricional",
+      "Tabela Nutricional"
+    ],
+    "nome_do_arquivo": "nutrition-chart.png",
+    "categoria": "Saúde e Bem-estar"
+  },
+  {
+    "titulos": [
+      "Carrinho de Bar",
+      "Carrinho de Cha",
+      "Carrinho de Chá",
+      "Carrinho de Servir",
+      "Serving Cart"
+    ],
+    "nome_do_arquivo": "serving-cart.png",
+    "categoria": "Utensílios de Cozinha"
   }
 ]

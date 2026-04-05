@@ -38,6 +38,17 @@ struct SettingsView: View {
                 }
 
                 NavigationLink {
+                    FamilySharingSettingsView()
+                } label: {
+                    Label {
+                        Text("Compartilhamento Familiar")
+                    } icon: {
+                        Image(systemName: "person.2.fill")
+                            .foregroundStyle(.purple)
+                    }
+                }
+
+                NavigationLink {
                     BackupSettingsView()
                 } label: {
                     Label {

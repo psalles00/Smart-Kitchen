@@ -365,6 +365,10 @@ struct GroceryItemRow: View {
     let showsDivider: Bool
     let onAcquire: () -> Void
 
+    private var hasExtraData: Bool {
+        item.imageData != nil || !item.descriptionText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             if showsDivider {
@@ -377,19 +381,17 @@ struct GroceryItemRow: View {
                 IconImage(name: item.name, iconFileName: item.iconName ?? categoryIconName, fallbackSymbol: "basket", size: 24, showBalloon: true)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(item.name)
-                        .font(.system(size: 14, weight: .medium))
-                        .lineLimit(1)
-
-                    if let qty = item.quantity {
-                        let num = qty.truncatingRemainder(dividingBy: 1) == 0
-                            ? String(format: "%.0f", qty)
-                            : String(format: "%.1f", qty)
-                        let text = item.unit.map { u in u.isEmpty ? "\(num)x" : "\(num) \(u)" } ?? "\(num)x"
-                        Text(text)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                    HStack(spacing: 4) {
+                        Text(item.name)
+                            .font(.system(size: 14, weight: .medium))
+                            .lineLimit(1)
+                        if hasExtraData {
+                            Image(systemName: "doc.text")
+                                .font(.system(size: 9))
+                                .foregroundStyle(.tertiary)
+                        }
                     }
+                    subtitleLine
                 }
 
                 Spacer()
@@ -404,6 +406,36 @@ struct GroceryItemRow: View {
             }
             .padding(.vertical, 7)
             .padding(.horizontal, 16)
+        }
+    }
+
+    @ViewBuilder
+    private var subtitleLine: some View {
+        let description = item.descriptionText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let hasQuantity = item.quantity != nil
+        let hasDescription = !description.isEmpty
+
+        if hasQuantity || hasDescription {
+            HStack(spacing: 0) {
+                if hasDescription {
+                    Text(description)
+                        .lineLimit(1)
+                }
+                if hasDescription && hasQuantity {
+                    Text("  ·  ")
+                        .foregroundStyle(.quaternary)
+                }
+                if let qty = item.quantity {
+                    let num = qty.truncatingRemainder(dividingBy: 1) == 0
+                        ? String(format: "%.0f", qty)
+                        : String(format: "%.1f", qty)
+                    let text = item.unit.map { u in u.isEmpty ? "\(num)x" : "\(num) \(u)" } ?? "\(num)x"
+                    Text(text)
+                }
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
         }
     }
 }

@@ -42,12 +42,11 @@ struct AddGroceryItemView: View {
                     applySelectedEntry(entry)
                 }
 
-                Picker("Categoria", selection: $selectedCategory) {
-                    ForEach(categories) { cat in
-                        Text(cat.name).tag(cat.name)
-                    }
-                }
-                .controlSize(.small)
+                CategorySelectionRow(
+                    title: "Categoria",
+                    categories: CategoryDatabase.shared.allCategories,
+                    selection: $selectedCategory
+                )
                 .onChange(of: selectedCategory) { _, _ in
                     userChangedCategory = true
                 }
@@ -243,6 +242,18 @@ struct EditGroceryItemView: View {
     @State private var expiryDurationValue: Int = 7
     @State private var expiryDurationUnit: ExpiryDurationUnit = .days
 
+    #if os(macOS)
+    @State private var didConfirm = false
+    @State private var snapshotName = ""
+    @State private var snapshotDescription = ""
+    @State private var snapshotImageData: Data?
+    @State private var snapshotCategory = ""
+    @State private var snapshotQuantity: Double?
+    @State private var snapshotUnit: String?
+    @State private var snapshotIconName: String?
+    @State private var snapshotDefaultExpiryDays: Int?
+    #endif
+
     private let categories = CategoryDatabase.shared.allCategories
 
     private var categoryIconFileName: String? {
@@ -381,7 +392,12 @@ struct EditGroceryItemView: View {
         .tint(PageTheme.lists.accentColor)
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
-                Button("OK") { dismiss() }
+                Button("OK") {
+                    #if os(macOS)
+                    didConfirm = true
+                    #endif
+                    dismiss()
+                }
             }
         }
         .sheet(isPresented: $showIconPicker) {
@@ -412,7 +428,31 @@ struct EditGroceryItemView: View {
                     expiryDurationValue = days
                 }
             }
+            #if os(macOS)
+            snapshotName = item.name
+            snapshotDescription = item.descriptionText
+            snapshotImageData = item.imageData
+            snapshotCategory = item.category
+            snapshotQuantity = item.quantity
+            snapshotUnit = item.unit
+            snapshotIconName = item.iconName
+            snapshotDefaultExpiryDays = item.defaultExpiryDays
+            #endif
         }
+        #if os(macOS)
+        .onDisappear {
+            if !didConfirm {
+                item.name = snapshotName
+                item.descriptionText = snapshotDescription
+                item.imageData = snapshotImageData
+                item.category = snapshotCategory
+                item.quantity = snapshotQuantity
+                item.unit = snapshotUnit
+                item.iconName = snapshotIconName
+                item.defaultExpiryDays = snapshotDefaultExpiryDays
+            }
+        }
+        #endif
     }
 
     private func applySelectedEntry(_ entry: ItemEntry) {

@@ -1,5 +1,6 @@
 import Foundation
 import SwiftData
+import CoreData
 import Observation
 #if canImport(UIKit)
 import UIKit
@@ -15,10 +16,13 @@ final class CloudSyncService: @unchecked Sendable {
 
     private static let syncEnabledKey = "iCloudSyncEnabled"
     private static let lastSyncDateKey = "iCloudLastSyncDate"
-    
+    private static let storeSplitKey = "SmartKitchen.hasCompletedStoreSplit"
+    private var remoteChangeObserver: Any?
+    private var deduplicationWorkItem: DispatchWorkItem?
+
     private(set) var container: ModelContainer
     private(set) var containerID = UUID()
-    private static let appSchema = Schema([
+    static let appSchema = Schema([
         Recipe.self,
         RecipeIngredient.self,
         RecipeStep.self,
@@ -31,7 +35,18 @@ final class CloudSyncService: @unchecked Sendable {
         AppSettings.self,
     ])
 
-    private static let cloudKitContainerID = "iCloud.com.pedrosalles.smartkitchen.sync"
+    static let cloudKitContainerID = "iCloud.com.pedrosalles.smartkitchen.sync"
+
+    // MARK: - Store URLs
+
+    private static var storeDirectory: URL {
+        FileManager.default
+            .urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+            .appendingPathComponent("SmartKitchen", isDirectory: true)
+    }
+
+    static var privateStoreURL: URL { storeDirectory.appendingPathComponent("Private.store") }
+    static var sharedStoreURL: URL { storeDirectory.appendingPathComponent("Shared.store") }
 
     // MARK: - Sync state
 
@@ -62,6 +77,12 @@ final class CloudSyncService: @unchecked Sendable {
         let cloudKitAllowed = Self.canUseCloudKitInCurrentEnvironment()
         let useCloud = syncPref && !skip && cloudKitAllowed
 
+        // Ensure store directory exists
+        try? FileManager.default.createDirectory(at: Self.storeDirectory, withIntermediateDirectories: true)
+
+        // Migrate from legacy single store to multi-store layout (one-time)
+        Self.performStoreSplitMigrationIfNeeded()
+
         do {
             container = try Self.makeContainer(usingCloudKit: useCloud)
         } catch {
@@ -80,6 +101,7 @@ final class CloudSyncService: @unchecked Sendable {
 
         if useCloud {
             registerForRemoteNotifications()
+            setupRemoteChangeObservation()
         }
     }
 
@@ -104,6 +126,9 @@ final class CloudSyncService: @unchecked Sendable {
             syncError = "Erro ao sincronizar: \(error.localizedDescription)"
         }
         isSyncing = false
+
+        // Deduplicate after every foreground sync
+        scheduleDeduplication()
     }
 
     var statusDescription: String {
@@ -140,15 +165,7 @@ final class CloudSyncService: @unchecked Sendable {
             throw error
         }
 
-        // 2. Migrate local data into the new CloudKit container if needed (one-time)
-        do {
-            try Self.migrateLocalDataIfNeeded(from: container, to: newContainer)
-        } catch {
-            // Migration failure shouldn't crash the app; surface the error and continue with an empty cloud container
-            NSLog("[CloudSync] Migration to CloudKit failed: %@", String(describing: error))
-        }
-
-        // 3. Update state and keep old container alive briefly for pending writes
+        // 2. Update state and keep old container alive briefly for pending writes
         let oldContainer = container
         syncEnabled = true
         container = newContainer
@@ -156,6 +173,7 @@ final class CloudSyncService: @unchecked Sendable {
         lastSyncDate = Date()
 
         registerForRemoteNotifications()
+        setupRemoteChangeObservation()
 
         // Keep old container alive so pending writes finish
         Task { @MainActor in
@@ -189,6 +207,7 @@ final class CloudSyncService: @unchecked Sendable {
         syncEnabled = false
         container = newContainer
         containerID = UUID()
+        teardownRemoteChangeObservation()
 
         // Keep old container alive so pending writes finish
         Task { @MainActor in
@@ -197,91 +216,93 @@ final class CloudSyncService: @unchecked Sendable {
         }
     }
 
-    // MARK: - Helpers
+    // MARK: - Multi-store migration
 
-    // Performs a one-time migration of local data into the new CloudKit container if the destination is empty.
-    @MainActor
-    private static func migrateLocalDataIfNeeded(from sourceContainer: ModelContainer, to destinationContainer: ModelContainer) throws {
-        let destinationContext = ModelContext(destinationContainer)
-        // If destination already has any data, skip migration to avoid duplicates
-        let hasDestData = try hasAnyData(in: destinationContext)
-        guard !hasDestData else { return }
+    /// One-time migration from the legacy single default.store to the new multi-store layout.
+    private static func performStoreSplitMigrationIfNeeded() {
+        guard !UserDefaults.standard.bool(forKey: storeSplitKey) else { return }
+        defer { UserDefaults.standard.set(true, forKey: storeSplitKey) }
 
-        let sourceContext = ModelContext(sourceContainer)
-
-        // Categories
-        let sourceCategories = try sourceContext.fetch(FetchDescriptor<Category>())
-        for item in sourceCategories {
-            destinationContext.insert(copyCategory(item))
+        // If new stores already exist, skip (fresh install or already migrated)
+        if FileManager.default.fileExists(atPath: privateStoreURL.path)
+            || FileManager.default.fileExists(atPath: sharedStoreURL.path) {
+            return
         }
 
-        // Pantry Items
-        let sourcePantry = try sourceContext.fetch(FetchDescriptor<PantryItem>())
-        for item in sourcePantry {
-            destinationContext.insert(copyPantryItem(item))
-        }
+        // Try to open the old single-store container at the default location
+        let oldConfig = ModelConfiguration(schema: appSchema, cloudKitDatabase: .none)
+        guard let oldContainer = try? ModelContainer(for: appSchema, configurations: oldConfig) else { return }
 
-        // Grocery Items
-        let sourceGrocery = try sourceContext.fetch(FetchDescriptor<GroceryItem>())
-        for item in sourceGrocery {
-            destinationContext.insert(copyGroceryItem(item))
-        }
+        let oldContext = ModelContext(oldContainer)
 
-        // Utensils
-        let sourceUtensils = try sourceContext.fetch(FetchDescriptor<UtensilItem>())
-        for item in sourceUtensils {
-            destinationContext.insert(copyUtensilItem(item))
-        }
-
-        // Recipes (deep copy of ingredients/steps/media is handled inside copyRecipe)
-        let sourceRecipes = try sourceContext.fetch(FetchDescriptor<Recipe>())
-        for recipe in sourceRecipes {
-            destinationContext.insert(copyRecipe(recipe))
-        }
-
-        // Chat messages
-        let sourceMessages = try sourceContext.fetch(FetchDescriptor<ChatMessage>())
-        for message in sourceMessages {
-            destinationContext.insert(copyChatMessage(message))
-        }
-
-        // App settings
-        let sourceSettings = try sourceContext.fetch(FetchDescriptor<AppSettings>())
-        for settings in sourceSettings {
-            destinationContext.insert(copyAppSettings(settings))
-        }
-
-        try destinationContext.save()
-    }
-
-    @MainActor
-    private static func hasAnyData(in context: ModelContext) throws -> Bool {
-        // Check a few representative models quickly using a fetchLimit
-        var fdRecipe = FetchDescriptor<Recipe>()
-        fdRecipe.fetchLimit = 1
-        if try !context.fetch(fdRecipe).isEmpty { return true }
-
-        var fdPantry = FetchDescriptor<PantryItem>()
-        fdPantry.fetchLimit = 1
-        if try !context.fetch(fdPantry).isEmpty { return true }
-
-        var fdGrocery = FetchDescriptor<GroceryItem>()
-        fdGrocery.fetchLimit = 1
-        if try !context.fetch(fdGrocery).isEmpty { return true }
-
+        // Quick check if old store has data
         var fdSettings = FetchDescriptor<AppSettings>()
         fdSettings.fetchLimit = 1
-        if try !context.fetch(fdSettings).isEmpty { return true }
+        let hasData = (try? !oldContext.fetch(fdSettings).isEmpty) ?? false
 
-        return false
+        var fdRecipe = FetchDescriptor<Recipe>()
+        fdRecipe.fetchLimit = 1
+        let hasRecipes = (try? !oldContext.fetch(fdRecipe).isEmpty) ?? false
+
+        guard hasData || hasRecipes else { return }
+
+        // Create new multi-store container for migration (local only)
+        guard let newContainer = try? makeContainer(usingCloudKit: false) else { return }
+        let newContext = ModelContext(newContainer)
+
+        do {
+            // Copy all data — SwiftData routes each model to its correct store by schema
+            for item in try oldContext.fetch(FetchDescriptor<Category>()) {
+                newContext.insert(copyCategory(item))
+            }
+            for item in try oldContext.fetch(FetchDescriptor<PantryItem>()) {
+                newContext.insert(copyPantryItem(item))
+            }
+            for item in try oldContext.fetch(FetchDescriptor<GroceryItem>()) {
+                newContext.insert(copyGroceryItem(item))
+            }
+            for item in try oldContext.fetch(FetchDescriptor<UtensilItem>()) {
+                newContext.insert(copyUtensilItem(item))
+            }
+            for recipe in try oldContext.fetch(FetchDescriptor<Recipe>()) {
+                newContext.insert(copyRecipe(recipe))
+            }
+            for message in try oldContext.fetch(FetchDescriptor<ChatMessage>()) {
+                newContext.insert(copyChatMessage(message))
+            }
+            for settings in try oldContext.fetch(FetchDescriptor<AppSettings>()) {
+                newContext.insert(copyAppSettings(settings))
+            }
+            try newContext.save()
+            NSLog("[CloudSync] Store split migration completed successfully")
+        } catch {
+            NSLog("[CloudSync] Store split migration failed: %@", String(describing: error))
+        }
     }
 
+    // MARK: - Container factory
+
     private static func makeContainer(usingCloudKit: Bool) throws -> ModelContainer {
-        let configuration = ModelConfiguration(
-            schema: appSchema,
+        let privateSchema = Schema([AppSettings.self, ChatMessage.self])
+        let sharedSchema = Schema([
+            PantryItem.self, GroceryItem.self, UtensilItem.self, Category.self,
+            Recipe.self, RecipeIngredient.self, RecipeStep.self, RecipePreparationMedia.self,
+        ])
+
+        let privateConfig = ModelConfiguration(
+            "Private",
+            schema: privateSchema,
+            url: privateStoreURL,
             cloudKitDatabase: usingCloudKit ? .private(cloudKitContainerID) : .none
         )
-        return try ModelContainer(for: appSchema, configurations: configuration)
+        let sharedConfig = ModelConfiguration(
+            "Shared",
+            schema: sharedSchema,
+            url: sharedStoreURL,
+            cloudKitDatabase: usingCloudKit ? .automatic : .none
+        )
+
+        return try ModelContainer(for: appSchema, configurations: privateConfig, sharedConfig)
     }
 
     private static func canUseCloudKitInCurrentEnvironment() -> Bool {
@@ -305,6 +326,137 @@ final class CloudSyncService: @unchecked Sendable {
             NSApplication.shared.registerForRemoteNotifications()
         }
         #endif
+    }
+
+    // MARK: - Remote change observation & deduplication
+
+    private func setupRemoteChangeObservation() {
+        teardownRemoteChangeObservation()
+        remoteChangeObserver = NotificationCenter.default.addObserver(
+            forName: .NSPersistentStoreRemoteChange,
+            object: nil,
+            queue: nil
+        ) { [weak self] _ in
+            self?.scheduleDeduplication()
+        }
+    }
+
+    private func teardownRemoteChangeObservation() {
+        if let observer = remoteChangeObserver {
+            NotificationCenter.default.removeObserver(observer)
+            remoteChangeObserver = nil
+        }
+    }
+
+    private func scheduleDeduplication() {
+        deduplicationWorkItem?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            self?.performDeduplication()
+        }
+        deduplicationWorkItem = work
+        // Debounce: CloudKit can fire many notifications in rapid succession
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: work)
+    }
+
+    /// Removes duplicate records across all entity types.
+    /// Safe to call from any thread; creates its own context.
+    func performDeduplication() {
+        let context = ModelContext(container)
+        context.autosaveEnabled = false
+
+        var totalDeleted = 0
+        totalDeleted += deduplicateByID(PantryItem.self, keyPath: \.id, context: context)
+        totalDeleted += deduplicateByID(GroceryItem.self, keyPath: \.id, context: context)
+        totalDeleted += deduplicateByID(UtensilItem.self, keyPath: \.id, context: context)
+        totalDeleted += deduplicateByID(Recipe.self, keyPath: \.id, context: context)
+        totalDeleted += deduplicateByID(ChatMessage.self, keyPath: \.id, context: context)
+        totalDeleted += deduplicateCategories(context: context)
+        totalDeleted += deduplicateAppSettings(context: context)
+
+        guard totalDeleted > 0 else { return }
+
+        do {
+            try context.save()
+            lastSyncDate = Date()
+            NSLog("[CloudSync] Deduplication removed %d duplicate(s)", totalDeleted)
+        } catch {
+            NSLog("[CloudSync] Deduplication save failed: %@", error.localizedDescription)
+        }
+    }
+
+    /// Generic dedup: groups records by their UUID `id` and deletes extras.
+    private func deduplicateByID<T: PersistentModel>(
+        _ type: T.Type,
+        keyPath: KeyPath<T, UUID>,
+        context: ModelContext
+    ) -> Int {
+        guard let all = try? context.fetch(FetchDescriptor<T>()) else { return 0 }
+
+        var seen = Set<UUID>()
+        var deleted = 0
+
+        for item in all {
+            let id = item[keyPath: keyPath]
+            if seen.contains(id) {
+                context.delete(item)
+                deleted += 1
+            } else {
+                seen.insert(id)
+            }
+        }
+        return deleted
+    }
+
+    /// Categories: dedup by UUID and then by (name, type) to catch
+    /// duplicates created by the seeder on a different device.
+    private func deduplicateCategories(context: ModelContext) -> Int {
+        guard let all = try? context.fetch(FetchDescriptor<Category>()) else { return 0 }
+
+        var deleted = 0
+
+        // Pass 1 — dedup by UUID
+        var seenIDs = Set<UUID>()
+        var surviving = [Category]()
+        for cat in all {
+            if seenIDs.contains(cat.id) {
+                context.delete(cat)
+                deleted += 1
+            } else {
+                seenIDs.insert(cat.id)
+                surviving.append(cat)
+            }
+        }
+
+        // Pass 2 — dedup by (name, type); keep the one with the lowest sortOrder
+        surviving.sort { $0.sortOrder < $1.sortOrder }
+        var seenKeys = Set<String>()
+        for cat in surviving {
+            let normalized = cat.name
+                .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
+                .lowercased()
+            let key = "\(cat.type.rawValue)|\(normalized)"
+            if seenKeys.contains(key) {
+                context.delete(cat)
+                deleted += 1
+            } else {
+                seenKeys.insert(key)
+            }
+        }
+
+        return deleted
+    }
+
+    /// Keep only one AppSettings instance (the one that looks most configured).
+    private func deduplicateAppSettings(context: ModelContext) -> Int {
+        guard let all = try? context.fetch(FetchDescriptor<AppSettings>()), all.count > 1 else { return 0 }
+
+        let sorted = all.sorted {
+            ($0.hasCompletedOnboarding ? 1 : 0) > ($1.hasCompletedOnboarding ? 1 : 0)
+        }
+        for item in sorted.dropFirst() {
+            context.delete(item)
+        }
+        return sorted.count - 1
     }
 
     // MARK: - Copy helpers

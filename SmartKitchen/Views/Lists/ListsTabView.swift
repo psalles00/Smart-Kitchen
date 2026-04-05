@@ -15,6 +15,14 @@ enum ListSubtab: String, CaseIterable, Codable {
         case .utensils: "Utensílios"
         }
     }
+
+    var newItemTitle: String {
+        switch self {
+        case .pantry: "Novo Item da Despensa"
+        case .grocery: "Novo Item do Mercado"
+        case .utensils: "Novo Utensílio"
+        }
+    }
 }
 
 enum PantryListFilterOption: String, CaseIterable, Identifiable {
@@ -232,6 +240,12 @@ struct ListsTabView: View {
             }
             .forceLightStatusBar()
         }
+        #if os(macOS)
+        .focusedSceneValue(
+            \.newItemCommandAction,
+            NewItemCommandAction(title: selectedSubtab.newItemTitle, perform: openNewItemSheet)
+        )
+        #endif
     }
 
     private var optionsMenu: some View {
@@ -435,6 +449,17 @@ struct ListsTabView: View {
               let currentIndex = visibleTabs.firstIndex(of: selectedSubtab) else { return }
         let nextIndex = visibleTabs.index(after: currentIndex)
         selectedSubtab = nextIndex < visibleTabs.endIndex ? visibleTabs[nextIndex] : visibleTabs[visibleTabs.startIndex]
+    }
+
+    private func openNewItemSheet() {
+        switch selectedSubtab {
+        case .pantry:
+            showAddPantry = true
+        case .grocery:
+            showAddGrocery = true
+        case .utensils:
+            showAddUtensil = true
+        }
     }
 
 }

@@ -63,7 +63,15 @@ struct DataSeeder {
         let existing = (try? context.fetch(settingsDescriptor))?.first
         let hasSeeded = UserDefaults.standard.bool(forKey: hasSeededKey)
 
-        if existing == nil, !hasSeeded {
+        // Also check if synced data already exists (another device may have
+        // pushed items before AppSettings arrived via CloudKit).
+        let hasSyncedData: Bool = {
+            var fd = FetchDescriptor<PantryItem>()
+            fd.fetchLimit = 1
+            return (try? !context.fetch(fd).isEmpty) ?? false
+        }()
+
+        if existing == nil, !hasSeeded, !hasSyncedData {
             let settings = AppSettings()
             context.insert(settings)
 

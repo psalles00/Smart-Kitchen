@@ -176,6 +176,12 @@ struct RecipesView: View {
             }
             .forceLightStatusBar()
         }
+        #if os(macOS)
+        .focusedSceneValue(
+            \.newItemCommandAction,
+            NewItemCommandAction(title: "Nova Receita", perform: { showAddRecipe = true })
+        )
+        #endif
         .onAppear { recomputeCompatibilities() }
         .onChange(of: pantryItems) { _, _ in recomputeCompatibilities() }
         .onChange(of: allRecipes) { _, _ in recomputeCompatibilities() }

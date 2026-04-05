@@ -111,12 +111,11 @@ struct AddPantryItemView: View {
                 applySelectedEntry(entry)
             }
 
-            Picker("Categoria", selection: $selectedCategory) {
-                ForEach(categories) { cat in
-                    Text(cat.name).tag(cat.name)
-                }
-            }
-            .controlSize(.small)
+            CategorySelectionRow(
+                title: "Categoria",
+                categories: CategoryDatabase.shared.allCategories,
+                selection: $selectedCategory
+            )
             .onChange(of: selectedCategory) { _, _ in
                 userChangedCategory = true
             }
@@ -178,17 +177,12 @@ struct AddPantryItemView: View {
 
             if hasExpirationDate {
                 Picker("Modo", selection: $expiryMode.animation()) {
-                    Text("Data").tag(ExpiryInputMode.date)
                     Text("Duração").tag(ExpiryInputMode.duration)
+                    Text("Data").tag(ExpiryInputMode.date)
                 }
                 .pickerStyle(.segmented)
 
-                if expiryMode == .date {
-                    DatePicker("Validade", selection: $expirationDate, in: Date()..., displayedComponents: .date)
-                        .onChange(of: expirationDate) { _, newDate in
-                            syncDurationFromDate(newDate)
-                        }
-                } else {
+                if expiryMode == .duration {
                     HStack(spacing: 0) {
                         Picker("Quantidade", selection: $expiryDurationValue) {
                             ForEach(1...365, id: \.self) { n in
@@ -219,6 +213,11 @@ struct AddPantryItemView: View {
                     }
                     .onChange(of: expiryDurationValue) { _, _ in syncDateFromDuration() }
                     .onChange(of: expiryDurationUnit) { _, _ in syncDateFromDuration() }
+                } else {
+                    DatePicker("Validade", selection: $expirationDate, in: Date()..., displayedComponents: .date)
+                        .onChange(of: expirationDate) { _, newDate in
+                            syncDurationFromDate(newDate)
+                        }
                 }
 
                 if expiryMode == .duration {
@@ -315,9 +314,23 @@ struct EditPantryItemView: View {
     @State private var showIconPicker = false
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var showPhotoPreview = false
-    @State private var expiryMode: ExpiryInputMode = .date
+    @State private var expiryMode: ExpiryInputMode = .duration
     @State private var expiryDurationValue: Int = 7
     @State private var expiryDurationUnit: ExpiryDurationUnit = .days
+
+    #if os(macOS)
+    @State private var didConfirm = false
+    @State private var snapshotName = ""
+    @State private var snapshotDescription = ""
+    @State private var snapshotImageData: Data?
+    @State private var snapshotCategory = ""
+    @State private var snapshotQuantity: Double?
+    @State private var snapshotUnit: String?
+    @State private var snapshotIconName: String?
+    @State private var snapshotExpirationDate: Date?
+    @State private var snapshotDefaultExpiryDays: Int?
+    @State private var snapshotIsLinkedToGrocery = false
+    #endif
 
     private let categories = CategoryDatabase.shared.allCategories
 
@@ -349,7 +362,12 @@ struct EditPantryItemView: View {
         .tint(PageTheme.lists.accentColor)
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
-                Button("OK") { dismiss() }
+                Button("OK") {
+                    #if os(macOS)
+                    didConfirm = true
+                    #endif
+                    dismiss()
+                }
             }
         }
         .sheet(isPresented: $showIconPicker) {
@@ -374,7 +392,35 @@ struct EditPantryItemView: View {
             if let date = item.expirationDate {
                 editSyncDurationFromDate(date)
             }
+            #if os(macOS)
+            snapshotName = item.name
+            snapshotDescription = item.descriptionText
+            snapshotImageData = item.imageData
+            snapshotCategory = item.category
+            snapshotQuantity = item.quantity
+            snapshotUnit = item.unit
+            snapshotIconName = item.iconName
+            snapshotExpirationDate = item.expirationDate
+            snapshotDefaultExpiryDays = item.defaultExpiryDays
+            snapshotIsLinkedToGrocery = item.isLinkedToGrocery
+            #endif
         }
+        #if os(macOS)
+        .onDisappear {
+            if !didConfirm {
+                item.name = snapshotName
+                item.descriptionText = snapshotDescription
+                item.imageData = snapshotImageData
+                item.category = snapshotCategory
+                item.quantity = snapshotQuantity
+                item.unit = snapshotUnit
+                item.iconName = snapshotIconName
+                item.expirationDate = snapshotExpirationDate
+                item.defaultExpiryDays = snapshotDefaultExpiryDays
+                item.isLinkedToGrocery = snapshotIsLinkedToGrocery
+            }
+        }
+        #endif
     }
 
     @ViewBuilder
@@ -467,20 +513,12 @@ struct EditPantryItemView: View {
 
             if item.expirationDate != nil {
                 Picker("Modo", selection: $expiryMode.animation()) {
-                    Text("Data").tag(ExpiryInputMode.date)
                     Text("Duração").tag(ExpiryInputMode.duration)
+                    Text("Data").tag(ExpiryInputMode.date)
                 }
                 .pickerStyle(.segmented)
 
-                if expiryMode == .date {
-                    DatePicker("Validade", selection: Binding(
-                        get: { item.expirationDate ?? Date() },
-                        set: { newDate in
-                            item.expirationDate = newDate
-                            editSyncDurationFromDate(newDate)
-                        }
-                    ), in: Date()..., displayedComponents: .date)
-                } else {
+                if expiryMode == .duration {
                     HStack(spacing: 0) {
                         Picker("Quantidade", selection: $expiryDurationValue) {
                             ForEach(1...365, id: \.self) { n in
@@ -511,6 +549,14 @@ struct EditPantryItemView: View {
                     }
                     .onChange(of: expiryDurationValue) { _, _ in editSyncDateFromDuration() }
                     .onChange(of: expiryDurationUnit) { _, _ in editSyncDateFromDuration() }
+                } else {
+                    DatePicker("Validade", selection: Binding(
+                        get: { item.expirationDate ?? Date() },
+                        set: { newDate in
+                            item.expirationDate = newDate
+                            editSyncDurationFromDate(newDate)
+                        }
+                    ), in: Date()..., displayedComponents: .date)
                 }
 
                 if expiryMode == .duration {

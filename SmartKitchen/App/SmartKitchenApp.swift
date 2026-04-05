@@ -1,16 +1,79 @@
 import SwiftUI
 import SwiftData
+import CloudKit
 
 #if canImport(UIKit)
 import UIKit
+#elseif canImport(AppKit)
+import AppKit
 #endif
 
 extension Notification.Name {
     static let openSettings = Notification.Name("com.smartkitchen.openSettings")
 }
 
+// MARK: - App Delegate for CloudKit Share Acceptance
+
+#if os(iOS)
+class SmartKitchenAppDelegate: NSObject, UIApplicationDelegate {
+    func application(_ application: UIApplication, userDidAcceptCloudKitShareWith cloudKitShareMetadata: CKShare.Metadata) {
+        Task {
+            try? await SharingService.shared.acceptShare(metadata: cloudKitShareMetadata)
+            await SharingService.shared.refreshShare()
+        }
+    }
+}
+#elseif os(macOS)
+class SmartKitchenAppDelegate: NSObject, NSApplicationDelegate {
+    func application(_ application: NSApplication, userDidAcceptCloudKitShareWith metadata: CKShare.Metadata) {
+        Task {
+            try? await SharingService.shared.acceptShare(metadata: metadata)
+            await SharingService.shared.refreshShare()
+        }
+    }
+}
+#endif
+
+#if os(macOS)
+struct NewItemCommandAction {
+    let title: String
+    let perform: () -> Void
+}
+
+private struct NewItemCommandActionKey: FocusedValueKey {
+    typealias Value = NewItemCommandAction
+}
+
+extension FocusedValues {
+    var newItemCommandAction: NewItemCommandAction? {
+        get { self[NewItemCommandActionKey.self] }
+        set { self[NewItemCommandActionKey.self] = newValue }
+    }
+}
+
+struct MacNewItemCommands: Commands {
+    @FocusedValue(\.newItemCommandAction) private var newItemCommandAction
+
+    var body: some Commands {
+        CommandGroup(replacing: .newItem) {
+            Button(newItemCommandAction?.title ?? "Novo") {
+                newItemCommandAction?.perform()
+            }
+            .keyboardShortcut("n", modifiers: .command)
+            .disabled(newItemCommandAction == nil)
+        }
+    }
+}
+#endif
+
 @main
 struct SmartKitchenApp: App {
+    #if os(iOS)
+    @UIApplicationDelegateAdaptor(SmartKitchenAppDelegate.self) var appDelegate
+    #elseif os(macOS)
+    @NSApplicationDelegateAdaptor(SmartKitchenAppDelegate.self) var appDelegate
+    #endif
+
     @Environment(\.scenePhase) private var scenePhase
     @State private var cloudSync = CloudSyncService.shared
 
@@ -18,6 +81,9 @@ struct SmartKitchenApp: App {
         // Seed demo data on first launch
         let context = ModelContext(CloudSyncService.shared.container)
         DataSeeder.seedIfNeeded(context: context)
+
+        // Clean any existing duplicates from prior sync issues
+        CloudSyncService.shared.performDeduplication()
 
         // Must be called after all stored properties are initialized
         #if os(iOS)
@@ -41,7 +107,7 @@ struct SmartKitchenApp: App {
         .windowStyle(.hiddenTitleBar)
         .windowResizability(.contentMinSize)
         .commands {
-            CommandGroup(replacing: .newItem) { }
+            MacNewItemCommands()
             CommandGroup(replacing: .appSettings) {
                 Button("Configurações…") {
                     NotificationCenter.default.post(name: .openSettings, object: nil)

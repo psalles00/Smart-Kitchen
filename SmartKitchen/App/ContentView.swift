@@ -435,14 +435,26 @@ private struct HomeView: View {
                 HomeInfoContent()
             },
             onRefresh: {
-                showAssistant = true
-                try? await Task.sleep(nanoseconds: 500_000_000)
+                CloudSyncService.shared.syncNow()
+                try? await Task.sleep(nanoseconds: 400_000_000)
             }
         )
         #if os(iOS)
         .toolbar(.hidden, for: .navigationBar)
         #endif
         .tint(PageTheme.home.accentColor)
+        #if os(macOS)
+        .toolbar {
+            ToolbarItem(placement: .automatic) {
+                Button {
+                    CloudSyncService.shared.syncNow()
+                } label: {
+                    Label("Sincronizar", systemImage: "arrow.clockwise")
+                }
+                .keyboardShortcut("r", modifiers: .command)
+            }
+        }
+        #endif
         .sheet(isPresented: $showAssistant) {
             NavigationStack {
                 AssistantView()
