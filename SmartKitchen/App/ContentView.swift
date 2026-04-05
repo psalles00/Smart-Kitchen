@@ -203,18 +203,21 @@ struct ContentView: View {
             }
 
             Tab(value: AppTab.commandBar, role: .search) {
-                CommandBarSearchContent(
-                    query: $searchQuery,
-                    searchService: searchService,
-                    onAction: { handleCommandBarAction($0) }
-                )
+                NavigationStack {
+                    CommandBarSearchContent(
+                        query: $searchQuery,
+                        searchService: searchService,
+                        onAction: { handleCommandBarAction($0) }
+                    )
+                    .navigationTitle("Buscar")
+                }
+                .searchable(text: $searchQuery, placement: .automatic, prompt: "Itens, receitas ou perguntas…")
+                .onChange(of: searchQuery) { _, newValue in
+                    searchService.search(query: newValue, context: modelContext, showUtensils: settings?.showUtensils == true)
+                }
             } label: {
                 Label("Buscar", systemImage: AppTab.commandBar.icon)
             }
-        }
-        .searchable(text: $searchQuery, placement: .automatic, prompt: "Buscar, adicionar ou perguntar…")
-        .onChange(of: searchQuery) { _, newValue in
-            searchService.search(query: newValue, context: modelContext, showUtensils: settings?.showUtensils == true)
         }
     }
 
@@ -236,6 +239,29 @@ struct ContentView: View {
             .listStyle(.sidebar)
             .navigationTitle("")
             .tint(macActivePageTheme.accentColor)
+            .safeAreaInset(edge: .bottom) {
+                Button {
+                    showCommandBar = true
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "sparkle.magnifyingglass")
+                            .font(.system(size: 14, weight: .semibold))
+                        Text("Buscar e Adicionar")
+                            .font(.subheadline.weight(.medium))
+                        Spacer()
+                        Text("⌘K")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.tertiary)
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
+                    .background(.white.opacity(0.08), in: .rect(cornerRadius: 10))
+                    .contentShape(.rect)
+                }
+                .buttonStyle(.plain)
+                .padding(.horizontal, 12)
+                .padding(.bottom, 8)
+            }
             .toolbar {
                 ToolbarItem(placement: .automatic) {
                     Button {
