@@ -32,6 +32,7 @@ enum RecipeSortOption: String, CaseIterable {
 
 struct RecipesView: View {
     @Environment(\.scrollToTopTrigger) private var scrollToTopTrigger
+    @Environment(\.scrollToItem) private var scrollToItem
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Recipe.createdAt, order: .reverse) private var allRecipes: [Recipe]
     @Query(sort: \PantryItem.name) private var pantryItems: [PantryItem]
@@ -48,6 +49,7 @@ struct RecipesView: View {
     @State private var showCompatibleOnly = false
     @State private var currentScrollOffset: CGFloat = 0
     @State private var contentResetToken: Int = 0
+    @State private var highlightedRecipeID: UUID?
 
     // Cached expensive computations
     @State private var cachedPantryNames: [String] = []
@@ -219,11 +221,33 @@ struct RecipesView: View {
             // Category filter chips
             categoryFilter
 
-            ScrollView {
-                if viewMode == .gallery {
-                    galleryView
-                } else {
-                    listView
+            ScrollViewReader { proxy in
+                ScrollView {
+                    if viewMode == .gallery {
+                        galleryView
+                    } else {
+                        listView
+                    }
+                }
+                .onChange(of: scrollToItem) { _, request in
+                    guard let request, request.type == "recipe" else { return }
+                    // Clear category filter so item is visible
+                    selectedCategory = nil
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        withAnimation(.easeInOut(duration: 0.4)) {
+                            proxy.scrollTo(request.itemID, anchor: .center)
+                        }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                highlightedRecipeID = request.itemID
+                            }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                                withAnimation(.easeOut(duration: 0.5)) {
+                                    highlightedRecipeID = nil
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -365,11 +389,19 @@ struct RecipesView: View {
                 compatibility: compatibilities[recipe.id],
                 columns: settings?.recipeGalleryColumns ?? 2
             )
+            .overlay {
+                if highlightedRecipeID == recipe.id {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(Color.accentColor, lineWidth: 2)
+                        .shadow(color: .accentColor.opacity(0.4), radius: 8)
+                }
+            }
         }
         .buttonStyle(.plain)
         .contextMenu {
             recipeContextMenu(for: recipe)
         }
+        .id(recipe.id)
     }
 
     @ViewBuilder
@@ -381,11 +413,19 @@ struct RecipesView: View {
                         recipe: recipe,
                         compatibility: compatibilities[recipe.id]
                     )
+                    .overlay {
+                        if highlightedRecipeID == recipe.id {
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .stroke(Color.accentColor, lineWidth: 2)
+                                .shadow(color: .accentColor.opacity(0.4), radius: 8)
+                        }
+                    }
                 }
                 .buttonStyle(.plain)
                 .contextMenu {
                     recipeContextMenu(for: recipe)
                 }
+                .id(recipe.id)
             }
         }
     }

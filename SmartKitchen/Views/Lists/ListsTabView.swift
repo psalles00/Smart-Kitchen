@@ -64,6 +64,7 @@ struct ListsDragPayload: Codable, Transferable, Hashable {
 
 struct ListsTabView: View {
     @Environment(\.scrollToTopTrigger) private var scrollToTopTrigger
+    @Environment(\.scrollToItem) private var scrollToItem
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \PantryItem.sortOrder) private var pantryItems: [PantryItem]
     @Query(sort: \GroceryItem.sortOrder) private var groceryItems: [GroceryItem]
@@ -221,6 +222,19 @@ struct ListsTabView: View {
         }
         .onChange(of: scrollToTopTrigger) { _, _ in
             handleActiveTabRetap()
+        }
+        .onChange(of: scrollToItem) { _, request in
+            guard let request else { return }
+            switch request.type {
+            case "pantryItem":
+                selectedSubtab = .pantry
+            case "groceryItem":
+                selectedSubtab = .grocery
+            case "utensil":
+                selectedSubtab = .utensils
+            default:
+                break
+            }
         }
         .sheet(isPresented: $showAddPantry) {
             NavigationStack {

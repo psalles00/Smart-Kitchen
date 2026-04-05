@@ -48,6 +48,8 @@ struct ContentView: View {
     @State private var addItemPrefill = ""
     @State private var isBouncingBackFromCommandBar = false
     @State private var scrollToTopTrigger: Int = 0
+    @State private var scrollToItemRequest: ScrollToItemRequest?
+    @State private var isSearchActive = false
     @StateObject private var searchService = UniversalSearchService()
 
     #if os(macOS)
@@ -81,6 +83,7 @@ struct ContentView: View {
 
     var body: some View {
         mainTabView
+        .environment(\.scrollToItem, scrollToItemRequest)
         .sheet(isPresented: $showAddPantry) {
             NavigationStack {
                 AddPantryItemView(initialName: addItemPrefill)
@@ -211,9 +214,17 @@ struct ContentView: View {
                     )
                     .navigationTitle("Buscar")
                 }
-                .searchable(text: $searchQuery, placement: .automatic, prompt: "Itens, receitas ou perguntas…")
+                .searchable(text: $searchQuery, isPresented: $isSearchActive, placement: .automatic, prompt: "Itens, receitas ou perguntas…")
+                .onSubmit(of: .search) {
+                    submitSearchAction()
+                }
                 .onChange(of: searchQuery) { _, newValue in
                     searchService.search(query: newValue, context: modelContext, showUtensils: settings?.showUtensils == true)
+                }
+                .onChange(of: selectedTab) { _, newValue in
+                    if newValue == .commandBar {
+                        isSearchActive = true
+                    }
                 }
             } label: {
                 Label("Buscar", systemImage: AppTab.commandBar.icon)
@@ -361,14 +372,22 @@ struct ContentView: View {
     }
 
     private func handleCommandBarAction(_ action: CommandBarAction) {
+        // Dismiss search on iOS before navigating
+        isSearchActive = false
+        searchQuery = ""
+
         switch action {
-        case .openPantryItem:
+        case .openPantryItem(let id):
+            scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "pantryItem")
             selectedTab = .lists
-        case .openGroceryItem:
+        case .openGroceryItem(let id):
+            scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "groceryItem")
             selectedTab = .lists
-        case .openRecipe:
+        case .openRecipe(let id):
+            scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "recipe")
             selectedTab = .recipes
-        case .openUtensil:
+        case .openUtensil(let id):
+            scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "utensil")
             selectedTab = .lists
         case .addPantryItem(let prefill):
             addItemPrefill = prefill
@@ -386,6 +405,51 @@ struct ContentView: View {
         case .openAssistant:
             clearChatMessages()
             showAssistant = true
+        }
+
+        // Clear scroll request after views have consumed it
+        if scrollToItemRequest != nil {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                scrollToItemRequest = nil
+            }
+        }
+    }
+
+    /// Called when the user presses Enter/Search on the keyboard.
+    private func submitSearchAction() {
+        let trimmedQuery = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedQuery.isEmpty else { return }
+
+        let isQuestion = trimmedQuery.contains("?") ||
+            trimmedQuery.split(separator: " ").count >= 4
+
+        // If there are search results and it's not a question, open the first result
+        if !searchService.results.isEmpty && !isQuestion {
+            let first = searchService.results[0]
+            if let objectID = first.objectID {
+                RecentActionsStore.shared.record(RecentAction(
+                    title: first.title,
+                    type: first.type,
+                    objectID: first.objectID,
+                    iconName: first.iconFilename
+                ))
+                switch first.type {
+                case .pantryItem:  handleCommandBarAction(.openPantryItem(objectID))
+                case .groceryItem: handleCommandBarAction(.openGroceryItem(objectID))
+                case .recipe:      handleCommandBarAction(.openRecipe(objectID))
+                case .utensil:     handleCommandBarAction(.openUtensil(objectID))
+                default:           handleCommandBarAction(.addPantryItem(prefill: trimmedQuery))
+                }
+                return
+            }
+        }
+
+        // If it looks like a question, ask assistant
+        if isQuestion {
+            handleCommandBarAction(.askAssistant(prefill: trimmedQuery))
+        } else {
+            // Default: add to pantry
+            handleCommandBarAction(.addPantryItem(prefill: trimmedQuery))
         }
     }
 

@@ -3,6 +3,7 @@ import SwiftData
 
 struct PantryView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.scrollToItem) private var scrollToItem
     @Query(sort: \PantryItem.sortOrder) private var allItems: [PantryItem]
     @Query(sort: \GroceryItem.sortOrder) private var groceryItems: [GroceryItem]
     @Query(sort: \Category.sortOrder) private var allCategories: [Category]
@@ -11,6 +12,7 @@ struct PantryView: View {
     @State private var editingItem: PantryItem?
     @State private var targetedItemID: UUID?
     @State private var targetedCategoryName: String?
+    @State private var highlightedItemID: UUID?
 
     let searchText: String
     let sortOption: ListsSortOption
@@ -90,20 +92,40 @@ struct PantryView: View {
     }
 
     private var itemList: some View {
-        List {
-            ForEach(Array(groupedItems.enumerated()), id: \.element.0) { categoryIndex, entry in
-                pantrySection(categoryIndex: categoryIndex, category: entry.0, items: entry.1)
+        ScrollViewReader { proxy in
+            List {
+                ForEach(Array(groupedItems.enumerated()), id: \.element.0) { categoryIndex, entry in
+                    pantrySection(categoryIndex: categoryIndex, category: entry.0, items: entry.1)
+                }
+            }
+            #if os(macOS)
+            .listStyle(.inset)
+            #else
+            .listStyle(.plain)
+            #endif
+            .scrollContentBackground(.hidden)
+            .listSectionSeparator(.hidden)
+            .coordinateSpace(name: "lists_scroll")
+            .onScrollOffsetChange(perform: onScrollOffsetChange)
+            .onChange(of: scrollToItem) { _, request in
+                guard let request, request.type == "pantryItem" else { return }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    withAnimation(.easeInOut(duration: 0.4)) {
+                        proxy.scrollTo(request.itemID, anchor: .center)
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            highlightedItemID = request.itemID
+                        }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                            withAnimation(.easeOut(duration: 0.5)) {
+                                highlightedItemID = nil
+                            }
+                        }
+                    }
+                }
             }
         }
-        #if os(macOS)
-        .listStyle(.inset)
-        #else
-        .listStyle(.plain)
-        #endif
-        .scrollContentBackground(.hidden)
-        .listSectionSeparator(.hidden)
-        .coordinateSpace(name: "lists_scroll")
-        .onScrollOffsetChange(perform: onScrollOffsetChange)
     }
 
     @ViewBuilder
@@ -194,7 +216,8 @@ struct PantryView: View {
         )
         .listRowInsets(EdgeInsets())
         .listRowSeparator(.hidden)
-        .listRowBackground(Color.clear)
+        .listRowBackground(highlightedItemID == item.id ? Color.accentColor.opacity(0.15) : Color.clear)
+        .id(item.id)
     }
 
     private func pantryHeader(for category: String) -> some View {
