@@ -133,6 +133,16 @@ final class AppSettings {
     /// Stored as raw strings to keep persisted settings resilient to schema changes.
     var pantryGroupingModeRaw: String = ListGroupingMode.category.rawValue
     var groceryGroupingModeRaw: String = ListGroupingMode.marketSection.rawValue
+    var lastAddItemDestinationRaw: String = AddItemDestination.grocery.rawValue
+
+    // MARK: - Notifications
+    var notificationsEnabled: Bool = true
+    var expiryNotificationsEnabled: Bool = true
+    /// JSON-encoded array of Int (days before expiry to notify). Default: [3, 1, 0]
+    var expiryReminderDaysJSON: String = "[3, 1, 0]"
+    /// Hour of day (0-23) to deliver expiry notifications.
+    var expiryNotificationHour: Int = 9
+    var lowStockNotificationsEnabled: Bool = false
 
     init() {
         self.id = UUID()
@@ -148,6 +158,22 @@ final class AppSettings {
         self.showUtensils = false
         self.pantryGroupingModeRaw = ListGroupingMode.category.rawValue
         self.groceryGroupingModeRaw = ListGroupingMode.marketSection.rawValue
+        self.lastAddItemDestinationRaw = AddItemDestination.grocery.rawValue
+        self.notificationsEnabled = true
+        self.expiryNotificationsEnabled = true
+        self.expiryReminderDaysJSON = "[3, 1, 0]"
+        self.expiryNotificationHour = 9
+        self.lowStockNotificationsEnabled = false
+    }
+
+    @Transient
+    var expiryReminderDays: [Int] {
+        get {
+            (try? JSONDecoder().decode([Int].self, from: Data(expiryReminderDaysJSON.utf8))) ?? [3, 1, 0]
+        }
+        set {
+            expiryReminderDaysJSON = (try? String(data: JSONEncoder().encode(newValue), encoding: .utf8)) ?? "[3, 1, 0]"
+        }
     }
 
     @Transient

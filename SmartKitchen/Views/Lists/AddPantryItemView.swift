@@ -95,6 +95,13 @@ struct AddPantryItemView: View {
         .onAppear {
             if !initialName.isEmpty {
                 name = initialName
+                if let match = ItemDatabase.shared.exactMatch(for: initialName) {
+                    iconName = match.nomeDoArquivo
+                    if categories.contains(where: { $0.name == match.categoria }) {
+                        selectedCategory = match.categoria
+                        userChangedCategory = true
+                    }
+                }
             }
             DispatchQueue.main.async {
                 focusNameField = true

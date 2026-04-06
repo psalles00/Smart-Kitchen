@@ -45,7 +45,10 @@ struct ContentView: View {
     @State private var showAddGrocery = false
     @State private var showAddRecipe = false
     @State private var showAddUtensil = false
+    @State private var showAddItem = false
     @State private var addItemPrefill = ""
+    @State private var addItemIconFileName: String?
+    @State private var addItemCategory: String?
     @State private var isBouncingBackFromCommandBar = false
     @State private var scrollToTopTrigger: Int = 0
     @State private var scrollToItemRequest: ScrollToItemRequest?
@@ -109,6 +112,21 @@ struct ContentView: View {
                 AddUtensilItemView()
             }
             .forceLightStatusBar()
+        }
+        .sheet(isPresented: $showAddItem) {
+            NavigationStack {
+                AddItemView(
+                    initialName: addItemPrefill,
+                    initialIconFileName: addItemIconFileName,
+                    initialCategory: addItemCategory
+                )
+            }
+            .forceLightStatusBar()
+            .onDisappear {
+                addItemPrefill = ""
+                addItemIconFileName = nil
+                addItemCategory = nil
+            }
         }
         .environment(\.openSettings, {
             #if os(macOS)
@@ -212,19 +230,17 @@ struct ContentView: View {
                         searchService: searchService,
                         onAction: { handleCommandBarAction($0) }
                     )
-                    .navigationTitle("Buscar")
+                    .navigationTitle("Assistente")
+                    #if os(iOS)
+                    .navigationBarTitleDisplayMode(.inline)
+                    #endif
                 }
-                .searchable(text: $searchQuery, isPresented: $isSearchActive, placement: .automatic, prompt: "Itens, receitas ou perguntas…")
+                .searchable(text: $searchQuery, placement: .automatic, prompt: "Itens, receitas ou perguntas…")
                 .onSubmit(of: .search) {
                     submitSearchAction()
                 }
                 .onChange(of: searchQuery) { _, newValue in
                     searchService.search(query: newValue, context: modelContext, showUtensils: settings?.showUtensils == true)
-                }
-                .onChange(of: selectedTab) { _, newValue in
-                    if newValue == .commandBar {
-                        isSearchActive = true
-                    }
                 }
             } label: {
                 Label("Buscar", systemImage: AppTab.commandBar.icon)
@@ -352,14 +368,14 @@ struct ContentView: View {
 
     private func handleTabSelectionChange(_ newValue: AppTab) {
         if newValue == .commandBar {
-            // On macOS, open the command bar sheet instead
             #if os(macOS)
+            // macOS: bounce back and present as a sheet
             isBouncingBackFromCommandBar = true
             selectedTab = lastContentTab
             showCommandBar = true
             return
             #endif
-            // On iOS, the native search tab handles it
+            // iOS: native search tab handles it
             return
         }
 
@@ -372,9 +388,10 @@ struct ContentView: View {
     }
 
     private func handleCommandBarAction(_ action: CommandBarAction) {
-        // Dismiss search on iOS before navigating
+        // Dismiss search/command bar before navigating
         isSearchActive = false
         searchQuery = ""
+        showCommandBar = false
 
         switch action {
         case .openPantryItem(let id):
@@ -395,6 +412,11 @@ struct ContentView: View {
         case .addGroceryItem(let prefill):
             addItemPrefill = prefill
             showAddGrocery = true
+        case .addItem(let prefill, let iconFileName, let category):
+            addItemPrefill = prefill
+            addItemIconFileName = iconFileName
+            addItemCategory = category
+            showAddItem = true
         case .addRecipe:
             showAddRecipe = true
         case .addUtensil:
@@ -423,7 +445,7 @@ struct ContentView: View {
         let isQuestion = trimmedQuery.contains("?") ||
             trimmedQuery.split(separator: " ").count >= 4
 
-        // If there are search results and it's not a question, open the first result
+        // If there are search results and it's not a question, navigate to the first result
         if !searchService.results.isEmpty && !isQuestion {
             let first = searchService.results[0]
             if let objectID = first.objectID {
@@ -438,7 +460,7 @@ struct ContentView: View {
                 case .groceryItem: handleCommandBarAction(.openGroceryItem(objectID))
                 case .recipe:      handleCommandBarAction(.openRecipe(objectID))
                 case .utensil:     handleCommandBarAction(.openUtensil(objectID))
-                default:           handleCommandBarAction(.addPantryItem(prefill: trimmedQuery))
+                default:           handleCommandBarAction(.addItem(prefill: trimmedQuery, iconFileName: nil, category: nil))
                 }
                 return
             }
@@ -448,8 +470,8 @@ struct ContentView: View {
         if isQuestion {
             handleCommandBarAction(.askAssistant(prefill: trimmedQuery))
         } else {
-            // Default: add to pantry
-            handleCommandBarAction(.addPantryItem(prefill: trimmedQuery))
+            // Default: open AddItemView with destination picker
+            handleCommandBarAction(.addItem(prefill: trimmedQuery, iconFileName: nil, category: nil))
         }
     }
 

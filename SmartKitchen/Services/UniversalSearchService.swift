@@ -139,13 +139,15 @@ final class UniversalSearchService: ObservableObject {
         let normalizedName = normalize(name)
         if normalizedName == query { return 100 }          // exact
         if normalizedName.hasPrefix(query) { return 80 }   // prefix
-        if normalizedName.contains(query) { return 50 }    // contains
 
         // Check individual words
         let words = normalizedName.split(separator: " ")
         for word in words {
             if word.hasPrefix(query) { return 60 }         // word-prefix
         }
+
+        // For short queries (< 4 chars), skip substring-contains to avoid noise
+        if query.count >= 4 && normalizedName.contains(query) { return 50 }
 
         return nil
     }

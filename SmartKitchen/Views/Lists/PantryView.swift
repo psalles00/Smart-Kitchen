@@ -107,7 +107,7 @@ struct PantryView: View {
             .listSectionSeparator(.hidden)
             .coordinateSpace(name: "lists_scroll")
             .onScrollOffsetChange(perform: onScrollOffsetChange)
-            .onChange(of: scrollToItem) { _, request in
+            .onChange(of: scrollToItem, initial: true) { _, request in
                 guard let request, request.type == "pantryItem" else { return }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                     withAnimation(.easeInOut(duration: 0.4)) {

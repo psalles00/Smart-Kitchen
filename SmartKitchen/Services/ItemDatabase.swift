@@ -44,12 +44,20 @@ final class ItemDatabase: Sendable {
             return fallbackToFeatured ? featuredEntries(limit: limit) : []
         }
 
+        let shortQuery = q.count < 4
         var seen = Set<String>()
         var results: [ItemEntry] = []
 
         // Gather candidates
         for (normalized, entry) in index {
-            if normalized.contains(q) {
+            let matches: Bool
+            if shortQuery {
+                // For short queries, only match prefix or word-prefix to avoid noise
+                matches = normalized.hasPrefix(q) || normalized.split(separator: " ").contains { $0.hasPrefix(q) }
+            } else {
+                matches = normalized.contains(q)
+            }
+            if matches {
                 if seen.insert(entry.nomeDoArquivo).inserted {
                     results.append(entry)
                 }

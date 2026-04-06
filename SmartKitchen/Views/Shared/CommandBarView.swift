@@ -9,6 +9,7 @@ enum CommandBarAction {
     case openUtensil(UUID)
     case addPantryItem(prefill: String)
     case addGroceryItem(prefill: String)
+    case addItem(prefill: String, iconFileName: String?, category: String?)
     case addRecipe(prefill: String)
     case addUtensil(prefill: String)
     case askAssistant(prefill: String)
@@ -44,6 +45,7 @@ struct CommandBarSearchContent: View {
     @Binding var query: String
     @ObservedObject var searchService: UniversalSearchService
     let onAction: (CommandBarAction) -> Void
+    var onDismiss: (() -> Void)? = nil
 
     @State private var selectedIndex = 0
 
@@ -54,6 +56,7 @@ struct CommandBarSearchContent: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     if query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        assistantHeader
                         emptyStateContent
                     } else {
                         searchResultsContent
@@ -71,6 +74,19 @@ struct CommandBarSearchContent: View {
         .onChange(of: query) { _, _ in
             selectedIndex = 0
         }
+    }
+
+    // MARK: - Assistant Header
+
+    private var assistantHeader: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Assistente")
+                .font(.title2.bold())
+            Text("Busque itens, receitas, ou faça perguntas ao assistente de cozinha.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.horizontal, 16)
     }
 
     // MARK: - Empty State
@@ -140,12 +156,6 @@ struct CommandBarSearchContent: View {
                 }
             }
 
-            let featured = ItemDatabase.shared.featuredEntries(limit: 16)
-            if !featured.isEmpty {
-                CommandBarSuggestionChips(suggestions: featured) { entry in
-                    query = entry.preferredTitle()
-                }
-            }
         }
     }
 
@@ -177,17 +187,17 @@ struct CommandBarSearchContent: View {
                 }
             }
 
+            // Action buttons
+            actionButtonsSection(query: trimmedQuery, isQuestion: isQuestion)
+
             // Suggestions from item database
             if !searchService.suggestions.isEmpty && !isQuestion {
                 CommandBarSuggestionChips(
                     suggestions: Array(searchService.suggestions.prefix(12))
                 ) { entry in
-                    onAction(.addPantryItem(prefill: entry.preferredTitle()))
+                    onAction(.addItem(prefill: entry.preferredTitle(), iconFileName: entry.nomeDoArquivo, category: entry.categoria))
                 }
             }
-
-            // Action buttons
-            actionButtonsSection(query: trimmedQuery, isQuestion: isQuestion)
         }
     }
 
@@ -413,14 +423,6 @@ struct CommandBarView: View {
                     }
                 }
             }
-
-            let featured = ItemDatabase.shared.featuredEntries(limit: 16)
-            if !featured.isEmpty {
-                CommandBarSuggestionChips(suggestions: featured) { entry in
-                    query = entry.preferredTitle()
-                    searchService.search(query: query, context: modelContext, showUtensils: showUtensils)
-                }
-            }
         }
     }
 
@@ -451,16 +453,16 @@ struct CommandBarView: View {
                 }
             }
 
+            actionButtonsSection(query: trimmedQuery, isQuestion: isQuestion)
+
             if !searchService.suggestions.isEmpty && !isQuestion {
                 CommandBarSuggestionChips(
                     suggestions: Array(searchService.suggestions.prefix(12))
                 ) { entry in
-                    onAction(.addPantryItem(prefill: entry.preferredTitle()))
+                    onAction(.addItem(prefill: entry.preferredTitle(), iconFileName: entry.nomeDoArquivo, category: entry.categoria))
                     dismiss()
                 }
             }
-
-            actionButtonsSection(query: trimmedQuery, isQuestion: isQuestion)
         }
     }
 

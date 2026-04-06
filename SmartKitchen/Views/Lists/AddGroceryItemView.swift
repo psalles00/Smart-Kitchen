@@ -140,7 +140,6 @@ struct AddGroceryItemView: View {
         .frame(minWidth: 500, minHeight: 600)
         #endif
         .navigationTitle("Novo Item")
-        .navigationTitle("Novo Item")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
@@ -175,6 +174,13 @@ struct AddGroceryItemView: View {
         .onAppear {
             if !initialName.isEmpty {
                 name = initialName
+                if let match = ItemDatabase.shared.exactMatch(for: initialName) {
+                    iconName = match.nomeDoArquivo
+                    if categories.contains(where: { $0.name == match.categoria }) {
+                        selectedCategory = match.categoria
+                        userChangedCategory = true
+                    }
+                }
             }
             DispatchQueue.main.async {
                 focusNameField = true

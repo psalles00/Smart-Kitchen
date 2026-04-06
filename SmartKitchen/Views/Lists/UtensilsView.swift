@@ -3,9 +3,11 @@ import SwiftData
 
 struct UtensilsView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.scrollToItem) private var scrollToItem
     @Query(sort: \UtensilItem.sortOrder) private var allItems: [UtensilItem]
     @Query(sort: \Category.sortOrder) private var allCategories: [Category]
     @State private var editingItem: UtensilItem?
+    @State private var highlightedItemID: UUID?
 
     let searchText: String
     let sortOption: ListsSortOption
@@ -59,65 +61,7 @@ struct UtensilsView: View {
                 )
                 .padding(.top, 40)
             } else {
-                ScrollView {
-                LazyVStack(spacing: 0, pinnedViews: .sectionHeaders) {
-                    ForEach(Array(groupedItems.enumerated()), id: \.1.0) { categoryIndex, group in
-                        let (categoryName, items) = group
-                        Section {
-                            ForEach(Array(items.enumerated()), id: \.1.id) { itemIndex, item in
-                                    Button {
-                                        editingItem = item
-                                    } label: {
-                                        UtensilItemRow(item: item, showsDivider: itemIndex > 0)
-                                            .contentShape(Rectangle())
-                                            .background(alignment: .top) {
-                                                if categoryIndex == 0, itemIndex == 0 {
-                                                    ScrollOffsetReader(coordinateSpace: "lists_scroll")
-                                                }
-                                            }
-                                    }
-                                    .buttonStyle(.plain)
-                                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                        Button(role: .destructive) {
-                                            deleteItem(item)
-                                        } label: {
-                                            Label("Remover", systemImage: "trash")
-                                        }
-                                    }
-                                    .contextMenu {
-                                        Button("Editar", systemImage: "pencil") {
-                                            editingItem = item
-                                        }
-                                        Button(role: .destructive) {
-                                            deleteItem(item)
-                                        } label: {
-                                            Label("Remover", systemImage: "trash")
-                                        }
-                                    }
-                            }
-                        } header: {
-                            if groupedItems.count > 1 {
-                                HStack {
-                                    let catIcon = utensilCategories.first(where: { $0.name == categoryName })
-                                    if let iconName = catIcon?.iconName {
-                                        IconImage(name: iconName, fallbackSymbol: "fork.knife", size: 18)
-                                    }
-                                    Text(categoryName)
-                                        .font(.subheadline.weight(.semibold))
-                                        .foregroundStyle(.secondary)
-                                    Spacer()
-                                }
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 4)
-                                .background(Color(.systemBackground))
-                            }
-                        }
-                    }
-                }
-                .padding(.top, 8)
-                }
-                .coordinateSpace(name: "lists_scroll")
-                .onScrollOffsetChange(perform: onScrollOffsetChange)
+                itemList
             }
         }
         .sheet(item: $editingItem) { item in
@@ -125,6 +69,94 @@ struct UtensilsView: View {
                 EditUtensilItemView(item: item)
             }
             .forceLightStatusBar()
+        }
+    }
+
+    private var itemList: some View {
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(spacing: 0, pinnedViews: .sectionHeaders) {
+                    ForEach(Array(groupedItems.enumerated()), id: \.1.0) { categoryIndex, group in
+                        utensilSection(categoryIndex: categoryIndex, categoryName: group.0, items: group.1)
+                    }
+                }
+                .padding(.top, 8)
+            }
+            .coordinateSpace(name: "lists_scroll")
+            .onScrollOffsetChange(perform: onScrollOffsetChange)
+            .onChange(of: scrollToItem, initial: true) { _, request in
+                guard let request, request.type == "utensil" else { return }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    withAnimation(.easeInOut(duration: 0.4)) {
+                        proxy.scrollTo(request.itemID, anchor: .center)
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            highlightedItemID = request.itemID
+                        }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                            withAnimation(.easeOut(duration: 0.5)) {
+                                highlightedItemID = nil
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func utensilSection(categoryIndex: Int, categoryName: String, items: [UtensilItem]) -> some View {
+        Section {
+            ForEach(Array(items.enumerated()), id: \.1.id) { itemIndex, item in
+                Button {
+                    editingItem = item
+                } label: {
+                    UtensilItemRow(item: item, showsDivider: itemIndex > 0)
+                        .contentShape(Rectangle())
+                        .background(alignment: .top) {
+                            if categoryIndex == 0, itemIndex == 0 {
+                                ScrollOffsetReader(coordinateSpace: "lists_scroll")
+                            }
+                        }
+                }
+                .buttonStyle(.plain)
+                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                    Button(role: .destructive) {
+                        deleteItem(item)
+                    } label: {
+                        Label("Remover", systemImage: "trash")
+                    }
+                }
+                .contextMenu {
+                    Button("Editar", systemImage: "pencil") {
+                        editingItem = item
+                    }
+                    Button(role: .destructive) {
+                        deleteItem(item)
+                    } label: {
+                        Label("Remover", systemImage: "trash")
+                    }
+                }
+                .id(item.id)
+                .background(highlightedItemID == item.id ? Color.accentColor.opacity(0.15) : Color.clear)
+            }
+        } header: {
+            if groupedItems.count > 1 {
+                HStack {
+                    let catIcon = utensilCategories.first(where: { $0.name == categoryName })
+                    if let iconName = catIcon?.iconName {
+                        IconImage(name: iconName, fallbackSymbol: "fork.knife", size: 18)
+                    }
+                    Text(categoryName)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 4)
+                .background(Color(.systemBackground))
+            }
         }
     }
 

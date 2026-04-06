@@ -116,6 +116,12 @@ struct SmartKitchenApp: App {
                 .onChange(of: scenePhase) { oldValue, newValue in
                     if newValue == .active {
                         cloudSync.syncNow()
+                        // Reschedule expiry notifications
+                        let ctx = cloudSync.container.mainContext
+                        let descriptor = FetchDescriptor<AppSettings>()
+                        if let settings = try? ctx.fetch(descriptor).first {
+                            NotificationService.shared.rescheduleExpiryNotifications(context: ctx, settings: settings)
+                        }
                     }
                 }
         }

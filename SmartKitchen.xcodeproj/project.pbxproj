@@ -22,6 +22,7 @@
 		152D24BB4004BC24C08DCEB2 /* UniversalSearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D91DCD9189D0778478997A07 /* UniversalSearchService.swift */; };
 		15C992B4D0C985D4AFFF225E /* WavesShaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 382D66BD301AABE81FA0E3A3 /* WavesShaderView.swift */; };
 		189A02E22891E92460667205 /* Boska-MediumItalic.otf in Resources */ = {isa = PBXBuildFile; fileRef = FA437725A0D6ADE89AD114C4 /* Boska-MediumItalic.otf */; };
+		1B0C4B101196B1D8A925D1BE /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54E9C41052AFBFDE995CAA53 /* NotificationService.swift */; };
 		2284AB10BD5726144C4D9404 /* Telma-Bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 45656677AD3714E163ED9011 /* Telma-Bold.otf */; };
 		2447B82F271152F2AB5DDEF9 /* Boska-Regular.otf in Resources */ = {isa = PBXBuildFile; fileRef = 4F4B90D9D920F1E391155645 /* Boska-Regular.otf */; };
 		2521390B8F30F5B0481B38E8 /* Boska-LightItalic.otf in Resources */ = {isa = PBXBuildFile; fileRef = 9F8E85CB792FE0502D695527 /* Boska-LightItalic.otf */; };
@@ -82,6 +83,7 @@
 		AA81B7D69F5621CEB19398EB /* StatusBarStyleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AFAA134B36C06334F7B143B /* StatusBarStyleView.swift */; };
 		AB3B06A6A7827DA0150A8FB4 /* TexturedGradientView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 223EEEC2E6E5C6F3572B0A85 /* TexturedGradientView.swift */; };
 		AC4DD1B6FCADCFDC1504D7E3 /* MacCameraMediaPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3D1EB5B18D19836B0A5C38 /* MacCameraMediaPicker.swift */; };
+		AD36E33810961850E5D206DF /* AddItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65B9C18EA33BF7B878D2662E /* AddItemView.swift */; };
 		AE0AA146C5EBFCFD64C639C4 /* CommandBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D3A8A7840E1C2C1529B3007 /* CommandBarView.swift */; };
 		AFC3471AAA45729E4EA43EE4 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1613EA3D56DD17FDE15B699 /* AppSettings.swift */; };
 		B2EB6743F49EB2E169D2AB56 /* RecipeRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C901446BD6E1A569FBFCE82E /* RecipeRowView.swift */; };
@@ -92,6 +94,7 @@
 		BC4409C445EA7804612AF71F /* Boska-Medium.otf in Resources */ = {isa = PBXBuildFile; fileRef = AB394495821B8AC8F358A0D8 /* Boska-Medium.otf */; };
 		BCE0FE3A1390E8016772474C /* NebulaShaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FE61854469F70D6D206BD52 /* NebulaShaderView.swift */; };
 		BE07F0A752501BBF17C7C0A4 /* Boska-BlackItalic.otf in Resources */ = {isa = PBXBuildFile; fileRef = 4C5880CFC6DCD2F43D3FA289 /* Boska-BlackItalic.otf */; };
+		C456B9C4ABB0CE5A20E50CF3 /* NotificationSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80D12790A5FFD5D1F1730C5C /* NotificationSettingsView.swift */; };
 		C7F9E545D9240FCF56F13D8E /* RecipesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06EDE69C395D0CE9D46BBDA0 /* RecipesView.swift */; };
 		CDD337112645EBFBA9460E84 /* NutrientsPlaceholderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8862D137CF029754BA12880F /* NutrientsPlaceholderView.swift */; };
 		CDFBBC3641BD11F559489BF9 /* HomeInfoContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 120985F96B2DA713EDC2E4F5 /* HomeInfoContent.swift */; };
@@ -138,6 +141,7 @@
 		4F4B90D9D920F1E391155645 /* Boska-Regular.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Boska-Regular.otf"; sourceTree = "<group>"; };
 		4FFE418BF404A910C30CECCD /* Telma-Black.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Telma-Black.otf"; sourceTree = "<group>"; };
 		51B3504E5B6AEC4327A2CE73 /* Boska-Italic.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Boska-Italic.otf"; sourceTree = "<group>"; };
+		54E9C41052AFBFDE995CAA53 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		57785079D17F41CE565A524B /* AppTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTab.swift; sourceTree = "<group>"; };
 		5A1DFA0F1886AD4DFB89ACC3 /* SharingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharingService.swift; sourceTree = "<group>"; };
 		5C2662A0F63DB0481D8B8BF6 /* Boska-BoldItalic.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Boska-BoldItalic.otf"; sourceTree = "<group>"; };
@@ -146,6 +150,7 @@
 		5FE61854469F70D6D206BD52 /* NebulaShaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NebulaShaderView.swift; sourceTree = "<group>"; };
 		600EDD530C0ABD3D8C83E88F /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		60DB5C2D28F6CAD1D2ADA37E /* AddPantryItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddPantryItemView.swift; sourceTree = "<group>"; };
+		65B9C18EA33BF7B878D2662E /* AddItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddItemView.swift; sourceTree = "<group>"; };
 		6762814ECB350EDAE1E3C831 /* Telma-Regular.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Telma-Regular.otf"; sourceTree = "<group>"; };
 		6CD351710E6E853F0407AB7E /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		6D3A8A7840E1C2C1529B3007 /* CommandBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandBarView.swift; sourceTree = "<group>"; };
@@ -154,6 +159,7 @@
 		75728DA118DDAF7AFE520AFD /* NutrientsInfoContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutrientsInfoContent.swift; sourceTree = "<group>"; };
 		772BF40F89C4381662F3C806 /* Boska-Black.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Boska-Black.otf"; sourceTree = "<group>"; };
 		7B18CA8A7141908734CA7123 /* ItemIconPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemIconPickerView.swift; sourceTree = "<group>"; };
+		80D12790A5FFD5D1F1730C5C /* NotificationSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSettingsView.swift; sourceTree = "<group>"; };
 		80D2CBBBCC49CA560D36DA31 /* RecentActionsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentActionsStore.swift; sourceTree = "<group>"; };
 		8553574E6585FF064B4CDA62 /* PageTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageTheme.swift; sourceTree = "<group>"; };
 		85EAF5921660EEAB83572103 /* UtensilItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UtensilItem.swift; sourceTree = "<group>"; };
@@ -179,7 +185,7 @@
 		B8745E6D949D25CCD17EA5D2 /* AddGroceryItemView 2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AddGroceryItemView 2.swift"; sourceTree = "<group>"; };
 		B8E44E925C852E9239F7790A /* ListsInfoContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListsInfoContent.swift; sourceTree = "<group>"; };
 		B970691AA2D626F97231E533 /* PageHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageHeader.swift; sourceTree = "<group>"; };
-		B9A8A000ACD1E665B07A06D4 /* SmartKitchen.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SmartKitchen.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B9A8A000ACD1E665B07A06D4 /* SmartKitchen.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = SmartKitchen.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BD63B6313209711B5CC7C9BC /* AddGroceryItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddGroceryItemView.swift; sourceTree = "<group>"; };
 		BD8EFA8D0DF90B9B35DF27A4 /* items_database.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = items_database.json; sourceTree = "<group>"; };
 		BEBFB0D07FF508C9D65AF2A4 /* CommandBarResultRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandBarResultRow.swift; sourceTree = "<group>"; };
@@ -252,6 +258,7 @@
 				2C063670EE4F7988218002A6 /* CloudSharingControllerRepresentable.swift */,
 				B75E7DE0C964B5588FF6B7B8 /* FamilySharingSettingsView.swift */,
 				EE34761A8547DB1BC47F0FF5 /* iCloudSettingsView.swift */,
+				80D12790A5FFD5D1F1730C5C /* NotificationSettingsView.swift */,
 				6CD351710E6E853F0407AB7E /* SettingsView.swift */,
 			);
 			path = Settings;
@@ -297,6 +304,7 @@
 			children = (
 				B8745E6D949D25CCD17EA5D2 /* AddGroceryItemView 2.swift */,
 				BD63B6313209711B5CC7C9BC /* AddGroceryItemView.swift */,
+				65B9C18EA33BF7B878D2662E /* AddItemView.swift */,
 				60DB5C2D28F6CAD1D2ADA37E /* AddPantryItemView.swift */,
 				A01C258879867293F931BB38 /* AddUtensilItemView.swift */,
 				09F9921AD0C3BA1FB3F6B9E0 /* GroceryListView.swift */,
@@ -453,6 +461,7 @@
 				39E3D008679762441FBCD92E /* HapticManager.swift */,
 				075F230C33AAE3A5989E9EBE /* IconResolver.swift */,
 				9D23D5730AFF637BAC6DCE1E /* ItemDatabase.swift */,
+				54E9C41052AFBFDE995CAA53 /* NotificationService.swift */,
 				B0BA783D43E37794EE28298C /* PlatformImage.swift */,
 				80D2CBBBCC49CA560D36DA31 /* RecentActionsStore.swift */,
 				5A1DFA0F1886AD4DFB89ACC3 /* SharingService.swift */,
@@ -492,6 +501,7 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					9304226077C6C2B4667662DD = {
+						DevelopmentTeam = 5KSM738734;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -558,6 +568,7 @@
 				3240CF720DDBCD8CA1B0DA4B /* APIConfig.swift in Sources */,
 				F1775ABB009A6F3A4BB4E233 /* AddGroceryItemView 2.swift in Sources */,
 				13D3339D5C01016C338DF5F8 /* AddGroceryItemView.swift in Sources */,
+				AD36E33810961850E5D206DF /* AddItemView.swift in Sources */,
 				6D3FE9F146E85EB5360046D9 /* AddPantryItemView.swift in Sources */,
 				76B7379BFC060F245F9CB736 /* AddRecipeView.swift in Sources */,
 				8DCF1B518A6D4FBA6FE722F6 /* AddUtensilItemView.swift in Sources */,
@@ -600,6 +611,8 @@
 				AC4DD1B6FCADCFDC1504D7E3 /* MacCameraMediaPicker.swift in Sources */,
 				6039479CF7B8E9B97514EBD8 /* MeshGradientShaderView.swift in Sources */,
 				BCE0FE3A1390E8016772474C /* NebulaShaderView.swift in Sources */,
+				1B0C4B101196B1D8A925D1BE /* NotificationService.swift in Sources */,
+				C456B9C4ABB0CE5A20E50CF3 /* NotificationSettingsView.swift in Sources */,
 				858A164AAC6170BD3F7B4942 /* NutrientsInfoContent.swift in Sources */,
 				CDD337112645EBFBA9460E84 /* NutrientsPlaceholderView.swift in Sources */,
 				2C0C4D6FC2E2899C31AB203F /* PageHeader.swift in Sources */,
@@ -708,7 +721,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 44K57HQAP9;
+				DEVELOPMENT_TEAM = 5KSM738734;
 				INFOPLIST_FILE = SmartKitchen/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -790,7 +803,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 44K57HQAP9;
+				DEVELOPMENT_TEAM = 5KSM738734;
 				INFOPLIST_FILE = SmartKitchen/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

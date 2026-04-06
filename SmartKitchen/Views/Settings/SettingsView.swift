@@ -49,6 +49,17 @@ struct SettingsView: View {
                 }
 
                 NavigationLink {
+                    NotificationSettingsView()
+                } label: {
+                    Label {
+                        Text("Notificações")
+                    } icon: {
+                        Image(systemName: "bell.badge")
+                            .foregroundStyle(.red)
+                    }
+                }
+
+                NavigationLink {
                     BackupSettingsView()
                 } label: {
                     Label {

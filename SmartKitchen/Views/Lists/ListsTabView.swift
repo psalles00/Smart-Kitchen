@@ -223,7 +223,7 @@ struct ListsTabView: View {
         .onChange(of: scrollToTopTrigger) { _, _ in
             handleActiveTabRetap()
         }
-        .onChange(of: scrollToItem) { _, request in
+        .onChange(of: scrollToItem, initial: true) { _, request in
             guard let request else { return }
             switch request.type {
             case "pantryItem":

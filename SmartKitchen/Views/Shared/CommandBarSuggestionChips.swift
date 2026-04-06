@@ -18,7 +18,7 @@ struct CommandBarSuggestionChips: View {
                         onSelect(entry)
                     } label: {
                         HStack(spacing: 5) {
-                            IconImage(name: entry.preferredTitle(), fallbackSymbol: "leaf", size: 18)
+                            IconImage(name: entry.preferredTitle(), iconFileName: entry.nomeDoArquivo, fallbackSymbol: "leaf", size: 18)
 
                             Text(entry.preferredTitle())
                                 .font(.caption.weight(.medium))
