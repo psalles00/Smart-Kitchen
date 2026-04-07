@@ -17,6 +17,7 @@ final class CloudSyncService: @unchecked Sendable {
     private static let syncEnabledKey = "iCloudSyncEnabled"
     private static let lastSyncDateKey = "iCloudLastSyncDate"
     private static let storeSplitKey = "SmartKitchen.hasCompletedStoreSplit"
+    private static let storeRecoveryAttemptedKey = "SmartKitchen.storeRecoveryAttempted"
     private var remoteChangeObserver: Any?
     private var deduplicationWorkItem: DispatchWorkItem?
 
@@ -87,9 +88,17 @@ final class CloudSyncService: @unchecked Sendable {
             container = try Self.makeContainer(usingCloudKit: useCloud)
         } catch {
             NSLog("CloudKit container failed, falling back to local: %@", String(describing: error))
-            container = try! Self.makeContainer(usingCloudKit: false)
+            do {
+                container = try Self.makeLocalContainerWithRecoveryIfNeeded()
+            } catch {
+                // Last-resort fallback: keep app functional with temporary stores.
+                container = try! Self.makeEphemeralLocalContainer()
+                syncError = "Não foi possível abrir o banco local. O app iniciou em modo temporário; reinicie e tente novamente."
+            }
             UserDefaults.standard.set(false, forKey: Self.syncEnabledKey)
-            syncError = "Não foi possível inicializar a sincronização com iCloud neste dispositivo."
+            if syncError == nil {
+                syncError = "Não foi possível inicializar a sincronização com iCloud neste dispositivo."
+            }
         }
 
         if syncPref && !cloudKitAllowed {
@@ -303,6 +312,76 @@ final class CloudSyncService: @unchecked Sendable {
         )
 
         return try ModelContainer(for: appSchema, configurations: privateConfig, sharedConfig)
+    }
+
+    private static func makeLocalContainerWithRecoveryIfNeeded() throws -> ModelContainer {
+        do {
+            return try makeContainer(usingCloudKit: false)
+        } catch {
+            let alreadyAttempted = UserDefaults.standard.bool(forKey: storeRecoveryAttemptedKey)
+            guard !alreadyAttempted else { throw error }
+
+            UserDefaults.standard.set(true, forKey: storeRecoveryAttemptedKey)
+            backupBrokenStoresForRecovery()
+
+            return try makeContainer(usingCloudKit: false)
+        }
+    }
+
+    private static func makeEphemeralLocalContainer() throws -> ModelContainer {
+        let fallbackDir = storeDirectory.appendingPathComponent("Fallback", isDirectory: true)
+        try? FileManager.default.createDirectory(at: fallbackDir, withIntermediateDirectories: true)
+
+        let privateURL = fallbackDir.appendingPathComponent("Private-\(UUID().uuidString).store")
+        let sharedURL = fallbackDir.appendingPathComponent("Shared-\(UUID().uuidString).store")
+
+        let privateSchema = Schema([AppSettings.self, ChatMessage.self])
+        let sharedSchema = Schema([
+            PantryItem.self, GroceryItem.self, UtensilItem.self, Category.self,
+            Recipe.self, RecipeIngredient.self, RecipeStep.self, RecipePreparationMedia.self,
+        ])
+
+        let privateConfig = ModelConfiguration(
+            "PrivateFallback",
+            schema: privateSchema,
+            url: privateURL,
+            cloudKitDatabase: .none
+        )
+        let sharedConfig = ModelConfiguration(
+            "SharedFallback",
+            schema: sharedSchema,
+            url: sharedURL,
+            cloudKitDatabase: .none
+        )
+
+        return try ModelContainer(for: appSchema, configurations: privateConfig, sharedConfig)
+    }
+
+    private static func backupBrokenStoresForRecovery() {
+        let fm = FileManager.default
+        let recoveryDir = storeDirectory
+            .appendingPathComponent("Recovery", isDirectory: true)
+            .appendingPathComponent("store-\(Int(Date().timeIntervalSince1970))", isDirectory: true)
+
+        try? fm.createDirectory(at: recoveryDir, withIntermediateDirectories: true)
+
+        for baseURL in [privateStoreURL, sharedStoreURL] {
+            let candidates = [
+                baseURL,
+                URL(fileURLWithPath: baseURL.path + "-wal"),
+                URL(fileURLWithPath: baseURL.path + "-shm"),
+            ]
+
+            for url in candidates where fm.fileExists(atPath: url.path) {
+                let destination = recoveryDir.appendingPathComponent(url.lastPathComponent)
+                do {
+                    try fm.moveItem(at: url, to: destination)
+                } catch {
+                    try? fm.removeItem(at: destination)
+                    try? fm.moveItem(at: url, to: destination)
+                }
+            }
+        }
     }
 
     private static func canUseCloudKitInCurrentEnvironment() -> Bool {
