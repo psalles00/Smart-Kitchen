@@ -17,6 +17,11 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
 
     private var backgroundManager = BackgroundManager.shared
 
+    @Environment(\.backgroundTheme) private var backgroundTheme
+
+    /// Use the animated background theme from environment if available, otherwise fall back to the page's own theme.
+    private var effectiveBgTheme: PageTheme { backgroundTheme ?? pageTheme }
+
     private let headerHeight: CGFloat = 60
     private let cornerRadius: CGFloat = 24
     private let topMargin: CGFloat = 10
@@ -32,6 +37,9 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
     private let refreshThreshold: CGFloat = 80
     @State private var dragOffset: CGFloat = 0
     @State private var isRefreshing: Bool = false
+    @State private var backgroundFromTheme: PageTheme = .home
+    @State private var backgroundToTheme: PageTheme = .home
+    @State private var backgroundTransitionProgress: Double = 1.0
 
     private var trailingPanelInset: CGFloat {
         #if os(macOS)
@@ -214,25 +222,51 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
 
     @ViewBuilder
     private var backgroundLayer: some View {
-        let selection = backgroundManager.background(for: pageTheme)
+        ZStack {
+            Color.black
+            themedBackground(for: backgroundFromTheme)
+                .opacity(1.0 - backgroundTransitionProgress)
+            themedBackground(for: backgroundToTheme)
+                .opacity(backgroundTransitionProgress)
+        }
+        .onAppear {
+            backgroundFromTheme = effectiveBgTheme
+            backgroundToTheme = effectiveBgTheme
+            backgroundTransitionProgress = 1.0
+        }
+        .onChange(of: effectiveBgTheme) { _, newTheme in
+            guard newTheme != backgroundToTheme else { return }
+            backgroundFromTheme = backgroundToTheme
+            backgroundToTheme = newTheme
+            backgroundTransitionProgress = 0.0
+
+            withAnimation(.easeInOut(duration: 0.35)) {
+                backgroundTransitionProgress = 1.0
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func themedBackground(for theme: PageTheme) -> some View {
+        let selection = backgroundManager.background(for: theme)
 
         switch selection.type {
         case .texturedGradient:
             if let preset = selection.texturedPreset {
                 TexturedGradientView(preset: preset, progress: 1.0)
             } else {
-                originalBackground
+                originalBackground(for: theme)
             }
         case .original:
-            originalBackground
+            originalBackground(for: theme)
         case .waves:
             WavesShaderView(progress: 1.0)
         }
     }
 
     @ViewBuilder
-    private var originalBackground: some View {
-        switch pageTheme {
+    private func originalBackground(for theme: PageTheme) -> some View {
+        switch theme {
         case .home:
             NebulaShaderView(
                 theme: .home,

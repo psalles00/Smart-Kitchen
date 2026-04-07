@@ -20,6 +20,7 @@ struct AddPantryItemView: View {
     @Query(sort: \Category.sortOrder) private var allCategories: [Category]
 
     var initialName: String = ""
+    var onCreated: ((UUID) -> Void)? = nil
 
     @State private var name = ""
     @State private var descriptionText = ""
@@ -280,6 +281,7 @@ struct AddPantryItemView: View {
             sortOrder: (allItems.map(\.sortOrder).max() ?? -1) + 1
         )
         modelContext.insert(item)
+        onCreated?(item.id)
         dismiss()
     }
 

@@ -53,10 +53,14 @@ struct ContentView: View {
     @State private var scrollToTopTrigger: Int = 0
     @State private var scrollToItemRequest: ScrollToItemRequest?
     @State private var isSearchActive = false
+    @State private var displayedBgTheme: PageTheme = .home
     @StateObject private var searchService = UniversalSearchService()
 
     #if os(macOS)
     @State private var selectedSidebar: SidebarItem? = .home
+    @State private var macBackgroundFromTheme: PageTheme = .home
+    @State private var macBackgroundToTheme: PageTheme = .home
+    @State private var macBackgroundTransitionProgress: Double = 1.0
 
     private var macActivePageTheme: PageTheme {
         switch selectedSidebar ?? .home {
@@ -87,16 +91,23 @@ struct ContentView: View {
     var body: some View {
         mainTabView
         .environment(\.scrollToItem, scrollToItemRequest)
+        .environment(\.backgroundTheme, displayedBgTheme)
         .sheet(isPresented: $showAddPantry) {
             NavigationStack {
-                AddPantryItemView(initialName: addItemPrefill)
+                AddPantryItemView(initialName: addItemPrefill, onCreated: { id in
+                    scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "pantryItem")
+                    selectedTab = .lists
+                })
             }
             .forceLightStatusBar()
             .onDisappear { addItemPrefill = "" }
         }
         .sheet(isPresented: $showAddGrocery) {
             NavigationStack {
-                AddGroceryItemView(initialName: addItemPrefill)
+                AddGroceryItemView(initialName: addItemPrefill, onCreated: { id in
+                    scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "groceryItem")
+                    selectedTab = .lists
+                })
             }
             .forceLightStatusBar()
             .onDisappear { addItemPrefill = "" }
@@ -118,7 +129,20 @@ struct ContentView: View {
                 AddItemView(
                     initialName: addItemPrefill,
                     initialIconFileName: addItemIconFileName,
-                    initialCategory: addItemCategory
+                    initialCategory: addItemCategory,
+                    onCreated: { id, destination in
+                        switch destination {
+                        case .pantry:
+                            scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "pantryItem")
+                            selectedTab = .lists
+                        case .grocery:
+                            scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "groceryItem")
+                            selectedTab = .lists
+                        case .utensil:
+                            scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "utensil")
+                            selectedTab = .lists
+                        }
+                    }
                 )
             }
             .forceLightStatusBar()
@@ -235,12 +259,20 @@ struct ContentView: View {
                     .navigationBarTitleDisplayMode(.inline)
                     #endif
                 }
-                .searchable(text: $searchQuery, placement: .automatic, prompt: "Itens, receitas ou perguntas…")
+                .searchable(text: $searchQuery, isPresented: $isSearchActive, placement: .automatic, prompt: "Adicione, busque, ou pergunte…")
                 .onSubmit(of: .search) {
                     submitSearchAction()
                 }
                 .onChange(of: searchQuery) { _, newValue in
                     searchService.search(query: newValue, context: modelContext, showUtensils: settings?.showUtensils == true)
+                }
+                .onChange(of: isSearchActive) { _, isActive in
+                    if !isActive {
+                        searchQuery = ""
+                        if selectedTab == .commandBar {
+                            selectedTab = lastContentTab
+                        }
+                    }
                 }
             } label: {
                 Label("Buscar", systemImage: AppTab.commandBar.icon)
@@ -330,29 +362,67 @@ struct ContentView: View {
             macAppBackground
                 .ignoresSafeArea()
         }
+        .onAppear {
+            macBackgroundFromTheme = macActivePageTheme
+            macBackgroundToTheme = macActivePageTheme
+            macBackgroundTransitionProgress = 1.0
+        }
+        .onChange(of: selectedSidebar) { _, newValue in
+            let newTheme: PageTheme = {
+                switch newValue ?? .home {
+                case .home: return .home
+                case .lists: return .lists
+                case .recipes: return .recipes
+                case .nutrients: return .nutrients
+                case .settings: return .home
+                }
+            }()
+            if newTheme != displayedBgTheme {
+                displayedBgTheme = newTheme
+            }
+            if newTheme != macBackgroundToTheme {
+                macBackgroundFromTheme = macBackgroundToTheme
+                macBackgroundToTheme = newTheme
+                macBackgroundTransitionProgress = 0.0
+                withAnimation(.easeInOut(duration: 0.35)) {
+                    macBackgroundTransitionProgress = 1.0
+                }
+            }
+        }
     }
 
     @ViewBuilder
     private var macAppBackground: some View {
-        let selection = BackgroundManager.shared.background(for: macActivePageTheme)
+        ZStack {
+            Color.black
+            macThemedBackground(for: macBackgroundFromTheme)
+                .opacity(1.0 - macBackgroundTransitionProgress)
+            macThemedBackground(for: macBackgroundToTheme)
+                .opacity(macBackgroundTransitionProgress)
+        }
+    }
+
+    @ViewBuilder
+    private func macThemedBackground(for theme: PageTheme) -> some View {
+        let selection = BackgroundManager.shared.background(for: theme)
 
         switch selection.type {
         case .texturedGradient:
             if let preset = selection.texturedPreset {
                 TexturedGradientView(preset: preset, progress: 1.0)
             } else {
-                macOriginalBackground
+                macOriginalBackground(for: theme)
             }
         case .original:
-            macOriginalBackground
+            macOriginalBackground(for: theme)
         case .waves:
             WavesShaderView(progress: 1.0)
         }
     }
 
     @ViewBuilder
-    private var macOriginalBackground: some View {
-        switch macActivePageTheme {
+    private func macOriginalBackground(for theme: PageTheme) -> some View {
+        switch theme {
         case .home:
             NebulaShaderView(theme: .home, progress: 1.0)
         case .lists:
@@ -375,7 +445,8 @@ struct ContentView: View {
             showCommandBar = true
             return
             #endif
-            // iOS: native search tab handles it
+            // iOS: activate search field natively via isPresented binding
+            isSearchActive = true
             return
         }
 
@@ -385,6 +456,11 @@ struct ContentView: View {
         }
 
         lastContentTab = newValue
+
+        // Animate background theme change with a fade, independently of content swap
+        if let newTheme = newValue.pageTheme, newTheme != displayedBgTheme {
+            displayedBgTheme = newTheme
+        }
     }
 
     private func handleCommandBarAction(_ action: CommandBarAction) {

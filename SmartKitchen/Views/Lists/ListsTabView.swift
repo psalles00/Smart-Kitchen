@@ -305,10 +305,18 @@ struct ListsTabView: View {
         }
     }
 
+    private var availableGroupingModes: [ListGroupingMode] {
+        switch selectedSubtab {
+        case .pantry: ListGroupingMode.allCases
+        case .grocery: ListGroupingMode.allCases.filter { $0 != .validade }
+        case .utensils: [.category]
+        }
+    }
+
     private var groupingModeButton: some View {
         GlassGroupMenu(systemImage: currentGroupingMode.icon) {
             Section("Agrupar por") {
-                ForEach(ListGroupingMode.allCases) { mode in
+                ForEach(availableGroupingModes) { mode in
                     Button {
                         setGroupingMode(mode)
                     } label: {

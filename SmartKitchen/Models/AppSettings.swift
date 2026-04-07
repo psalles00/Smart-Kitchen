@@ -84,6 +84,7 @@ enum ListsSortOption: String, Codable, CaseIterable, Identifiable {
 enum ListGroupingMode: String, Codable, CaseIterable, Identifiable {
     case category
     case marketSection
+    case validade
 
     var id: String { rawValue }
 
@@ -102,6 +103,7 @@ enum ListGroupingMode: String, Codable, CaseIterable, Identifiable {
         switch self {
         case .category: "Categoria"
         case .marketSection: "Seção no Mercado"
+        case .validade: "Validade"
         }
     }
 
@@ -109,6 +111,7 @@ enum ListGroupingMode: String, Codable, CaseIterable, Identifiable {
         switch self {
         case .category: "square.grid.2x2"
         case .marketSection: "cart"
+        case .validade: "calendar"
         }
     }
 }

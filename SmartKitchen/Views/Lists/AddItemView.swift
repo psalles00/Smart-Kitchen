@@ -29,6 +29,7 @@ struct AddItemView: View {
     var initialName: String = ""
     var initialIconFileName: String? = nil
     var initialCategory: String? = nil
+    var onCreated: ((UUID, AddItemDestination) -> Void)? = nil
 
     @State private var name = ""
     @State private var selectedCategory = "Outros"
@@ -194,6 +195,7 @@ struct AddItemView: View {
                 sortOrder: (groceryItems.map(\.sortOrder).max() ?? -1) + 1
             )
             modelContext.insert(item)
+            onCreated?(item.id, .grocery)
         case .pantry:
             let item = PantryItem(
                 name: trimmed,
@@ -204,6 +206,7 @@ struct AddItemView: View {
                 sortOrder: (pantryItems.map(\.sortOrder).max() ?? -1) + 1
             )
             modelContext.insert(item)
+            onCreated?(item.id, .pantry)
         case .utensil:
             let item = UtensilItem(
                 name: trimmed,
@@ -212,6 +215,7 @@ struct AddItemView: View {
                 sortOrder: (utensilItems.map(\.sortOrder).max() ?? -1) + 1
             )
             modelContext.insert(item)
+            onCreated?(item.id, .utensil)
         }
 
         dismiss()

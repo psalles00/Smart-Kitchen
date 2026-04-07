@@ -389,7 +389,7 @@ struct GroceryItemRow: View {
     let onAcquire: () -> Void
 
     private var hasExtraData: Bool {
-        item.imageData != nil || !item.descriptionText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        item.imageData != nil
     }
 
     var body: some View {
@@ -409,7 +409,7 @@ struct GroceryItemRow: View {
                             .font(.system(size: 14, weight: .medium))
                             .lineLimit(1)
                         if hasExtraData {
-                            Image(systemName: "doc.text")
+                            Image(systemName: "camera")
                                 .font(.system(size: 9))
                                 .foregroundStyle(.tertiary)
                         }

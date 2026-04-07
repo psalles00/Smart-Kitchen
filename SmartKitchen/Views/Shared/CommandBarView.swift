@@ -82,7 +82,7 @@ struct CommandBarSearchContent: View {
         VStack(alignment: .leading, spacing: 4) {
             Text("Assistente")
                 .font(.title2.bold())
-            Text("Busque itens, receitas, ou faça perguntas ao assistente de cozinha.")
+            Text("Adicione ou busque itens e receitas, ou faça perguntas ao assistente de cozinha.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }

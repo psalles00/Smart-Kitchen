@@ -124,7 +124,7 @@ struct AssistantView: View {
             Text("Assistente de Cozinha")
                 .font(.pageTitle)
 
-            Text("Pergunte sobre receitas, verifique sua despensa ou peça sugestões de pratos.")
+            Text("Adicione ou busque itens e receitas, ou faça perguntas ao assistente de cozinha.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

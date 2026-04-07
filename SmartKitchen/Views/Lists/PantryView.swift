@@ -51,6 +51,10 @@ struct PantryView: View {
     }
 
     private var groupedItems: [(String, [PantryItem])] {
+        if groupingMode == .validade {
+            return expirationGroupedItems
+        }
+
         let keyForItem: (PantryItem) -> String = groupingMode == .marketSection
             ? { ItemDatabase.marketSection(for: $0.category) }
             : { $0.category }
@@ -71,6 +75,43 @@ struct PantryView: View {
                 }
                 return lhs.0.localizedCaseInsensitiveCompare(rhs.0) == .orderedAscending
             }
+    }
+
+    private var expirationGroupedItems: [(String, [PantryItem])] {
+        let now = Calendar.current.startOfDay(for: .now)
+        let threeDays = Calendar.current.date(byAdding: .day, value: 3, to: now)!
+        let twoWeeks = Calendar.current.date(byAdding: .day, value: 14, to: now)!
+
+        let sectionOrder = [
+            "Expirados",
+            "Expira hoje",
+            "Expira nos próximos dias",
+            "Expira nas próximas semanas",
+            "Dentro da validade",
+            "Sem validade"
+        ]
+
+        func sectionKey(for item: PantryItem) -> String {
+            guard let expDate = item.expirationDate else { return "Sem validade" }
+            let day = Calendar.current.startOfDay(for: expDate)
+            if day < now { return "Expirados" }
+            if day == now { return "Expira hoje" }
+            if day <= threeDays { return "Expira nos próximos dias" }
+            if day <= twoWeeks { return "Expira nas próximas semanas" }
+            return "Dentro da validade"
+        }
+
+        let grouped = Dictionary(grouping: filteredItems, by: sectionKey)
+
+        return sectionOrder.compactMap { key in
+            guard let items = grouped[key], !items.isEmpty else { return nil }
+            let sorted = items.sorted { a, b in
+                let aDate = a.expirationDate ?? .distantFuture
+                let bDate = b.expirationDate ?? .distantFuture
+                return aDate < bDate
+            }
+            return (key, sorted)
+        }
     }
 
     var body: some View {
@@ -417,7 +458,7 @@ struct PantryItemRow: View {
     let showsDivider: Bool
 
     private var hasExtraData: Bool {
-        item.imageData != nil || !item.descriptionText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        item.imageData != nil
     }
 
     var body: some View {
@@ -437,7 +478,7 @@ struct PantryItemRow: View {
                             .font(.system(size: 14, weight: .medium))
                             .lineLimit(1)
                         if hasExtraData {
-                            Image(systemName: "doc.text")
+                            Image(systemName: "camera")
                                 .font(.system(size: 9))
                                 .foregroundStyle(.tertiary)
                         }

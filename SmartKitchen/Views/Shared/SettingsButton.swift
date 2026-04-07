@@ -45,6 +45,21 @@ extension EnvironmentValues {
     }
 }
 
+// MARK: - Environment key for animated background theme
+
+/// When set, ExpandedPageLayout uses this theme (with cross-fade) for its background
+/// instead of its own fixed pageTheme, enabling the shader to fade independently of tab content.
+private struct BackgroundThemeKey: EnvironmentKey {
+    static let defaultValue: PageTheme? = nil
+}
+
+extension EnvironmentValues {
+    var backgroundTheme: PageTheme? {
+        get { self[BackgroundThemeKey.self] }
+        set { self[BackgroundThemeKey.self] = newValue }
+    }
+}
+
 /// Reusable toolbar button that triggers an external action when tapped.
 struct SettingsButton: View {
     var onTap: (() -> Void)? = nil
