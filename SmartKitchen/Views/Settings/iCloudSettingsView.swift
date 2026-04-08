@@ -85,7 +85,7 @@ struct iCloudSettingsView: View {
                         infoRow(icon: "checkmark.icloud", text: "Itens da despensa")
                         infoRow(icon: "checkmark.icloud", text: "Lista de compras")
                         infoRow(icon: "checkmark.icloud", text: "Categorias personalizadas")
-                        infoRow(icon: "checkmark.icloud", text: "Histórico do assistente")
+                        infoRow(icon: "checkmark.icloud", text: "Histórico da IA")
                         infoRow(icon: "checkmark.icloud", text: "Configurações do app")
                     }
                     .padding(.vertical, 4)

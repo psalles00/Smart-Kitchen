@@ -15,6 +15,7 @@
 		094D96B5F410419141B47EC5 /* UtensilsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFCF4C0BB7E296E1A603660E /* UtensilsView.swift */; };
 		0C7CCF1DBC478071D51E6BDB /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54310018082C8F6F3CE3FE1 /* ContentView.swift */; };
 		0E7E071C945C2EFECB22D70D /* BackupManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9B3D291B4129B374AEF734A /* BackupManager.swift */; };
+		0FC1A5E42DFADFC3AE09A8AD /* ChatConversation.swift in Sources */ = {isa = PBXBuildFile; fileRef = F21B363D1F25116C3B95156D /* ChatConversation.swift */; };
 		13CA2C2B4FD025FB249FBAB5 /* GroceryItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0DB3612494917CB802BC7CC /* GroceryItem.swift */; };
 		13D3339D5C01016C338DF5F8 /* AddGroceryItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD63B6313209711B5CC7C9BC /* AddGroceryItemView.swift */; };
 		1463A33CEB85EA5B7C145162 /* PlatformImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0BA783D43E37794EE28298C /* PlatformImage.swift */; };
@@ -23,6 +24,7 @@
 		15C992B4D0C985D4AFFF225E /* WavesShaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 382D66BD301AABE81FA0E3A3 /* WavesShaderView.swift */; };
 		189A02E22891E92460667205 /* Boska-MediumItalic.otf in Resources */ = {isa = PBXBuildFile; fileRef = FA437725A0D6ADE89AD114C4 /* Boska-MediumItalic.otf */; };
 		1B0C4B101196B1D8A925D1BE /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54E9C41052AFBFDE995CAA53 /* NotificationService.swift */; };
+		1BB5E688AF8BFEE228F01A7E /* AssistantChatManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F95839547159000637E07B07 /* AssistantChatManager.swift */; };
 		2284AB10BD5726144C4D9404 /* Telma-Bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 45656677AD3714E163ED9011 /* Telma-Bold.otf */; };
 		2447B82F271152F2AB5DDEF9 /* Boska-Regular.otf in Resources */ = {isa = PBXBuildFile; fileRef = 4F4B90D9D920F1E391155645 /* Boska-Regular.otf */; };
 		2521390B8F30F5B0481B38E8 /* Boska-LightItalic.otf in Resources */ = {isa = PBXBuildFile; fileRef = 9F8E85CB792FE0502D695527 /* Boska-LightItalic.otf */; };
@@ -57,6 +59,7 @@
 		65B0AE6ECD78538EB12795B1 /* Boska-Bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = EE0C6F52DF4E32C18B5C89C5 /* Boska-Bold.otf */; };
 		6D3FE9F146E85EB5360046D9 /* AddPantryItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60DB5C2D28F6CAD1D2ADA37E /* AddPantryItemView.swift */; };
 		6EA5A2627DE82F481520CAEF /* ListsTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B980A13F716E381A6DB58AD /* ListsTabView.swift */; };
+		751B7A12165A82AE95684224 /* ConversationHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23BD6AC4B303BC43FF6948FB /* ConversationHistoryView.swift */; };
 		75F19966C3ADBF3C1FD656FA /* HapticManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39E3D008679762441FBCD92E /* HapticManager.swift */; };
 		76B7379BFC060F245F9CB736 /* AddRecipeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6BE4C724AFB81764F1B248F /* AddRecipeView.swift */; };
 		7807253BB73E6F7177EECA32 /* SuggestionChipsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88169FAA4B287DCB9C18EC8D /* SuggestionChipsView.swift */; };
@@ -86,6 +89,8 @@
 		AD36E33810961850E5D206DF /* AddItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65B9C18EA33BF7B878D2662E /* AddItemView.swift */; };
 		AE0AA146C5EBFCFD64C639C4 /* CommandBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D3A8A7840E1C2C1529B3007 /* CommandBarView.swift */; };
 		AFC3471AAA45729E4EA43EE4 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1613EA3D56DD17FDE15B699 /* AppSettings.swift */; };
+		B063114564F04045630F99B0 /* RecipeDetailCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AA5493DC675E50A63A65459 /* RecipeDetailCard.swift */; };
+		B0DF8DDD2EA05224AE6A259C /* InlineChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7628AFEACD6EC1D4981E6D86 /* InlineChatView.swift */; };
 		B2EB6743F49EB2E169D2AB56 /* RecipeRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C901446BD6E1A569FBFCE82E /* RecipeRowView.swift */; };
 		B6B6BE5B4609DA4ABFA089E8 /* ItemSearchField.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB768039F88F9878E87FABA4 /* ItemSearchField.swift */; };
 		B6D9AD790FDB1C92DE2B0AC8 /* Recipe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D96FF55EC995E9D208E9D21 /* Recipe.swift */; };
@@ -94,6 +99,7 @@
 		BC4409C445EA7804612AF71F /* Boska-Medium.otf in Resources */ = {isa = PBXBuildFile; fileRef = AB394495821B8AC8F358A0D8 /* Boska-Medium.otf */; };
 		BCE0FE3A1390E8016772474C /* NebulaShaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FE61854469F70D6D206BD52 /* NebulaShaderView.swift */; };
 		BE07F0A752501BBF17C7C0A4 /* Boska-BlackItalic.otf in Resources */ = {isa = PBXBuildFile; fileRef = 4C5880CFC6DCD2F43D3FA289 /* Boska-BlackItalic.otf */; };
+		C3C8F0C9E0419A0A535A0739 /* RecipeOptionButtonsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A1DA8CE366B34B2600E51DD /* RecipeOptionButtonsView.swift */; };
 		C456B9C4ABB0CE5A20E50CF3 /* NotificationSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80D12790A5FFD5D1F1730C5C /* NotificationSettingsView.swift */; };
 		C7F9E545D9240FCF56F13D8E /* RecipesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06EDE69C395D0CE9D46BBDA0 /* RecipesView.swift */; };
 		CDD337112645EBFBA9460E84 /* NutrientsPlaceholderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8862D137CF029754BA12880F /* NutrientsPlaceholderView.swift */; };
@@ -126,11 +132,14 @@
 		1792100BD21DE048AA48B9B3 /* RecipeUtensilsEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeUtensilsEditor.swift; sourceTree = "<group>"; };
 		18F997273D99B1D6AD5B30BE /* EditRecipeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditRecipeView.swift; sourceTree = "<group>"; };
 		223EEEC2E6E5C6F3572B0A85 /* TexturedGradientView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TexturedGradientView.swift; sourceTree = "<group>"; };
+		23BD6AC4B303BC43FF6948FB /* ConversationHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationHistoryView.swift; sourceTree = "<group>"; };
 		269243D37B6FC903CD8D17DE /* RecipesInfoContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipesInfoContent.swift; sourceTree = "<group>"; };
+		2AA5493DC675E50A63A65459 /* RecipeDetailCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeDetailCard.swift; sourceTree = "<group>"; };
 		2C063670EE4F7988218002A6 /* CloudSharingControllerRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSharingControllerRepresentable.swift; sourceTree = "<group>"; };
 		2D11C9DAD56B01DB249CFF1F /* Category.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Category.swift; sourceTree = "<group>"; };
 		382D66BD301AABE81FA0E3A3 /* WavesShaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WavesShaderView.swift; sourceTree = "<group>"; };
 		39E3D008679762441FBCD92E /* HapticManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticManager.swift; sourceTree = "<group>"; };
+		3A1DA8CE366B34B2600E51DD /* RecipeOptionButtonsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeOptionButtonsView.swift; sourceTree = "<group>"; };
 		3A2B9A25959E9E24FA72DBF7 /* ItemEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemEntry.swift; sourceTree = "<group>"; };
 		3C008A1A9BBF5854A3A74D36 /* SearchResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchResult.swift; sourceTree = "<group>"; };
 		3EEFD07FFC5E5CD8A5B51DE2 /* ItemEntry+Display.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ItemEntry+Display.swift"; sourceTree = "<group>"; };
@@ -157,6 +166,7 @@
 		6F314FDF85CDEEA7ECC9062D /* BackgroundManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundManager.swift; sourceTree = "<group>"; };
 		71EA39E201D01426855B0453 /* ExpandedPageLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpandedPageLayout.swift; sourceTree = "<group>"; };
 		75728DA118DDAF7AFE520AFD /* NutrientsInfoContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutrientsInfoContent.swift; sourceTree = "<group>"; };
+		7628AFEACD6EC1D4981E6D86 /* InlineChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineChatView.swift; sourceTree = "<group>"; };
 		772BF40F89C4381662F3C806 /* Boska-Black.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Boska-Black.otf"; sourceTree = "<group>"; };
 		7B18CA8A7141908734CA7123 /* ItemIconPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemIconPickerView.swift; sourceTree = "<group>"; };
 		80D12790A5FFD5D1F1730C5C /* NotificationSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSettingsView.swift; sourceTree = "<group>"; };
@@ -213,8 +223,10 @@
 		ED9E5DCCA2E69888B6028F28 /* ChatMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessage.swift; sourceTree = "<group>"; };
 		EE0C6F52DF4E32C18B5C89C5 /* Boska-Bold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Boska-Bold.otf"; sourceTree = "<group>"; };
 		EE34761A8547DB1BC47F0FF5 /* iCloudSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iCloudSettingsView.swift; sourceTree = "<group>"; };
+		F21B363D1F25116C3B95156D /* ChatConversation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatConversation.swift; sourceTree = "<group>"; };
 		F654E01E3EDFB32FE551A448 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		F7E7518D46EAB3E5E9CC9537 /* RecipeCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeCardView.swift; sourceTree = "<group>"; };
+		F95839547159000637E07B07 /* AssistantChatManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssistantChatManager.swift; sourceTree = "<group>"; };
 		F99E9F25BA500C5491E82BB8 /* PantryItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PantryItem.swift; sourceTree = "<group>"; };
 		F9B3D291B4129B374AEF734A /* BackupManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupManager.swift; sourceTree = "<group>"; };
 		FA437725A0D6ADE89AD114C4 /* Boska-MediumItalic.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Boska-MediumItalic.otf"; sourceTree = "<group>"; };
@@ -286,6 +298,7 @@
 			children = (
 				C1613EA3D56DD17FDE15B699 /* AppSettings.swift */,
 				2D11C9DAD56B01DB249CFF1F /* Category.swift */,
+				F21B363D1F25116C3B95156D /* ChatConversation.swift */,
 				ED9E5DCCA2E69888B6028F28 /* ChatMessage.swift */,
 				E0DB3612494917CB802BC7CC /* GroceryItem.swift */,
 				3A2B9A25959E9E24FA72DBF7 /* ItemEntry.swift */,
@@ -441,7 +454,11 @@
 			children = (
 				D8C16DA117DC717DADE1AF74 /* AssistantView.swift */,
 				5E0128131D22D908484AA9D1 /* ChatBubbleView.swift */,
+				23BD6AC4B303BC43FF6948FB /* ConversationHistoryView.swift */,
+				7628AFEACD6EC1D4981E6D86 /* InlineChatView.swift */,
 				8A614ED31B6BC753A6994689 /* RecipeCardMessage.swift */,
+				2AA5493DC675E50A63A65459 /* RecipeDetailCard.swift */,
+				3A1DA8CE366B34B2600E51DD /* RecipeOptionButtonsView.swift */,
 				88169FAA4B287DCB9C18EC8D /* SuggestionChipsView.swift */,
 			);
 			path = Assistant;
@@ -453,6 +470,7 @@
 				EC020E7681A440A721176135 /* AIService.swift */,
 				5F2855F679DBAC07AFEDF7A0 /* AITools.swift */,
 				980285F2E9866A086F1FC846 /* APIConfig.swift */,
+				F95839547159000637E07B07 /* AssistantChatManager.swift */,
 				6F314FDF85CDEEA7ECC9062D /* BackgroundManager.swift */,
 				F9B3D291B4129B374AEF734A /* BackupManager.swift */,
 				D73CF9864B8CB3F466CA29F4 /* CategoryDatabase.swift */,
@@ -573,6 +591,7 @@
 				8DCF1B518A6D4FBA6FE722F6 /* AddUtensilItemView.swift in Sources */,
 				AFC3471AAA45729E4EA43EE4 /* AppSettings.swift in Sources */,
 				2D12344F1A1A00945862F5F9 /* AppTab.swift in Sources */,
+				1BB5E688AF8BFEE228F01A7E /* AssistantChatManager.swift in Sources */,
 				8BD3A7886E9C8480138D016E /* AssistantView.swift in Sources */,
 				5F2A19DDE4598020BC3256E3 /* BackgroundManager.swift in Sources */,
 				0E7E071C945C2EFECB22D70D /* BackupManager.swift in Sources */,
@@ -582,6 +601,7 @@
 				F320B02091180BFF919446C2 /* CategoryIconView.swift in Sources */,
 				8EDCA89C169625EFABDC68BF /* CategoryManagementView.swift in Sources */,
 				2A2F635024C73FC5AA58F4B2 /* ChatBubbleView.swift in Sources */,
+				0FC1A5E42DFADFC3AE09A8AD /* ChatConversation.swift in Sources */,
 				8F8C1AF93D9EDD6AAE8A210C /* ChatMessage.swift in Sources */,
 				4296D618F38A3BEADA4301A0 /* CloudSharingControllerRepresentable.swift in Sources */,
 				151342A4D6ADA823BBB6A786 /* CloudSyncService.swift in Sources */,
@@ -589,6 +609,7 @@
 				BA1247AEE8C33B39475521EB /* CommandBarSuggestionChips.swift in Sources */,
 				AE0AA146C5EBFCFD64C639C4 /* CommandBarView.swift in Sources */,
 				0C7CCF1DBC478071D51E6BDB /* ContentView.swift in Sources */,
+				751B7A12165A82AE95684224 /* ConversationHistoryView.swift in Sources */,
 				4F72E60F6B6210D496C588E9 /* CookingModeView.swift in Sources */,
 				A17E29B2E7808DFDB7AAA704 /* DataSeeder.swift in Sources */,
 				B845D9D6FA4F82B450218518 /* EditRecipeView.swift in Sources */,
@@ -600,6 +621,7 @@
 				CDFBBC3641BD11F559489BF9 /* HomeInfoContent.swift in Sources */,
 				46A9E7C4E7D39DC5B4775AEE /* IconImage.swift in Sources */,
 				3ED8A02C0BF87FE8112BD6DA /* IconResolver.swift in Sources */,
+				B0DF8DDD2EA05224AE6A259C /* InlineChatView.swift in Sources */,
 				0629B3BEB7C2B43ACB8A6607 /* ItemDatabase.swift in Sources */,
 				DD22E465513D8F5944EE372B /* ItemEntry+Display.swift in Sources */,
 				5EEC1B0DA5DA071C0FF43DED /* ItemEntry.swift in Sources */,
@@ -623,7 +645,9 @@
 				B6D9AD790FDB1C92DE2B0AC8 /* Recipe.swift in Sources */,
 				DB33E0071171446065A58EF1 /* RecipeCardMessage.swift in Sources */,
 				EF44D74612ACCCACAEED34D7 /* RecipeCardView.swift in Sources */,
+				B063114564F04045630F99B0 /* RecipeDetailCard.swift in Sources */,
 				D491FC1396340EEE950526AE /* RecipeDetailView.swift in Sources */,
+				C3C8F0C9E0419A0A535A0739 /* RecipeOptionButtonsView.swift in Sources */,
 				B2EB6743F49EB2E169D2AB56 /* RecipeRowView.swift in Sources */,
 				A4CAD1B30B35902A833F5162 /* RecipeUtensilsEditor.swift in Sources */,
 				0443E1DB88404C26CFD854F1 /* RecipesInfoContent.swift in Sources */,

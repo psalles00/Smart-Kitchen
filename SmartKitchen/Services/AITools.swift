@@ -333,6 +333,11 @@ struct AITools {
         return "{\"success\": true, \"recipe\": \"\(name)\", \"id\": \"\(recipe.id.uuidString)\"}"
     }
 
+    /// Public entry point for creating a recipe from structured args (used by RecipeDetailCard).
+    static func createRecipeFromArgs(_ args: [String: Any], context: ModelContext) -> String {
+        createRecipe(args: args, context: context)
+    }
+
     private static func updateRecipe(args: [String: Any], context: ModelContext) -> String {
         let targetName = args["target_name"] as? String ?? ""
         let descriptor = FetchDescriptor<Recipe>()

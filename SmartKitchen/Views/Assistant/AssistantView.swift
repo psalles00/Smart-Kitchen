@@ -738,14 +738,3 @@ struct AssistantView: View {
         return "Confirma esta alteração no app?\n\nAção pendente: \(summary)."
     }
 }
-
-private struct RecipeDiscoveryResponse {
-    let content: String
-    let recipeIds: [UUID]
-    let quickActions: [QuickAction]
-}
-
-private struct PendingToolExecution {
-    let messages: [[String: Any]]
-    let toolCalls: [ToolCallRequest]
-}

@@ -149,7 +149,7 @@ struct FamilySharingSettingsView: View {
                     infoRow(icon: "person.2", text: "Ideal para casais e famílias que compartilham a mesma cozinha.")
                     infoRow(icon: "pencil.and.outline", text: "Todos os participantes podem adicionar, editar e remover itens.")
                     infoRow(icon: "icloud", text: "Requer que todos os participantes tenham iCloud ativado.")
-                    infoRow(icon: "lock.shield", text: "Configurações pessoais e histórico do assistente nunca são compartilhados.")
+                    infoRow(icon: "lock.shield", text: "Configurações pessoais e histórico da IA nunca são compartilhados.")
                 }
                 .padding(.vertical, 4)
             } header: {

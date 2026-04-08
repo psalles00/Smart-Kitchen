@@ -47,11 +47,86 @@ struct CommandBarSearchContent: View {
     let onAction: (CommandBarAction) -> Void
     var onDismiss: (() -> Void)? = nil
 
+    /// External trigger to open inline chat (set by ContentView when navigating from Home or command bar).
+    @Binding var pendingChatQuery: String?
+    @Binding var pendingOpenChat: Bool
+
     @State private var selectedIndex = 0
+
+    // Inline chat state
+    @State var showInlineChat = false
+    @State var chatInitialQuery: String? = nil
+    @State var chatExistingConversationId: UUID? = nil
+    @State var showConversationHistory = false
 
     private var settings: AppSettings? { settingsArray.first }
 
+    init(
+        query: Binding<String>,
+        searchService: UniversalSearchService,
+        onAction: @escaping (CommandBarAction) -> Void,
+        onDismiss: (() -> Void)? = nil,
+        pendingChatQuery: Binding<String?> = .constant(nil),
+        pendingOpenChat: Binding<Bool> = .constant(false)
+    ) {
+        self._query = query
+        self.searchService = searchService
+        self.onAction = onAction
+        self.onDismiss = onDismiss
+        self._pendingChatQuery = pendingChatQuery
+        self._pendingOpenChat = pendingOpenChat
+    }
+
     var body: some View {
+        Group {
+            if showConversationHistory {
+                ConversationHistoryView(
+                    onSelect: { conversationId in
+                        chatExistingConversationId = conversationId
+                        chatInitialQuery = nil
+                        showConversationHistory = false
+                        showInlineChat = true
+                    },
+                    onDismiss: {
+                        showConversationHistory = false
+                    }
+                )
+            } else if showInlineChat {
+                InlineChatView(
+                    initialQuery: chatInitialQuery,
+                    existingConversationId: chatExistingConversationId,
+                    onDismiss: {
+                        showInlineChat = false
+                        chatInitialQuery = nil
+                        chatExistingConversationId = nil
+                    },
+                    onShowHistory: {
+                        showConversationHistory = true
+                    }
+                )
+            } else {
+                searchContent
+            }
+        }
+        .onChange(of: pendingChatQuery) { _, newValue in
+            if let query = newValue {
+                chatInitialQuery = query
+                chatExistingConversationId = nil
+                showInlineChat = true
+                pendingChatQuery = nil
+            }
+        }
+        .onChange(of: pendingOpenChat) { _, newValue in
+            if newValue {
+                chatInitialQuery = nil
+                chatExistingConversationId = nil
+                showInlineChat = true
+                pendingOpenChat = false
+            }
+        }
+    }
+
+    private var searchContent: some View {
         ScrollViewReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
@@ -76,13 +151,20 @@ struct CommandBarSearchContent: View {
         }
     }
 
+    /// Opens the inline chat, optionally with an initial query.
+    func openChat(initialQuery: String? = nil, existingConversationId: UUID? = nil) {
+        chatInitialQuery = initialQuery
+        chatExistingConversationId = existingConversationId
+        showInlineChat = true
+    }
+
     // MARK: - Assistant Header
 
     private var assistantHeader: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text("Assistente")
                 .font(.title2.bold())
-            Text("Adicione ou busque itens e receitas, ou faça perguntas ao assistente de cozinha.")
+            Text("Adicione ou busque itens e receitas, ou converse com a IA.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
@@ -150,8 +232,8 @@ struct CommandBarSearchContent: View {
                     CommandBarHelpers.quickActionRow(title: "Nova Receita", icon: "book.badge.plus", tint: .red) {
                         onAction(.addRecipe(prefill: ""))
                     }
-                    CommandBarHelpers.quickActionRow(title: "Conversar com Assistente", icon: "sparkles", tint: .blue) {
-                        onAction(.openAssistant)
+                    CommandBarHelpers.quickActionRow(title: "Conversar com IA", icon: "sparkles", tint: .blue) {
+                        openChat()
                     }
                 }
             }
@@ -228,7 +310,12 @@ struct CommandBarSearchContent: View {
                         tint: item.tint,
                         isHighlighted: isFirst
                     ) {
-                        item.perform(query, onAction)
+                        // Intercept ask-assistant to open inline chat
+                        if item.id == "ask-assistant" {
+                            openChat(initialQuery: query)
+                        } else {
+                            item.perform(query, onAction)
+                        }
                     }
                 }
             }
@@ -417,7 +504,7 @@ struct CommandBarView: View {
                         onAction(.addRecipe(prefill: ""))
                         dismiss()
                     }
-                    CommandBarHelpers.quickActionRow(title: "Conversar com Assistente", icon: "sparkles", tint: .blue) {
+                    CommandBarHelpers.quickActionRow(title: "Conversar com IA", icon: "sparkles", tint: .blue) {
                         onAction(.openAssistant)
                         dismiss()
                     }
@@ -580,7 +667,7 @@ enum CommandBarHelpers {
     static func orderedActions(query: String, isQuestion: Bool) -> [ActionItem] {
         let askAssistant = ActionItem(
             id: "ask-assistant",
-            title: "Perguntar ao assistente sobre \"\(query)\"",
+            title: "Perguntar à IA sobre \"\(query)\"",
             icon: "sparkles",
             tint: .blue
         ) { q, action in action(.askAssistant(prefill: q)) }

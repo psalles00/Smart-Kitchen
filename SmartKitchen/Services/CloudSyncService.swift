@@ -33,6 +33,7 @@ final class CloudSyncService: @unchecked Sendable {
         UtensilItem.self,
         Category.self,
         ChatMessage.self,
+        ChatConversation.self,
         AppSettings.self,
     ])
 
@@ -292,7 +293,7 @@ final class CloudSyncService: @unchecked Sendable {
     // MARK: - Container factory
 
     private static func makeContainer(usingCloudKit: Bool) throws -> ModelContainer {
-        let privateSchema = Schema([AppSettings.self, ChatMessage.self])
+        let privateSchema = Schema([AppSettings.self, ChatMessage.self, ChatConversation.self])
         let sharedSchema = Schema([
             PantryItem.self, GroceryItem.self, UtensilItem.self, Category.self,
             Recipe.self, RecipeIngredient.self, RecipeStep.self, RecipePreparationMedia.self,
@@ -335,7 +336,7 @@ final class CloudSyncService: @unchecked Sendable {
         let privateURL = fallbackDir.appendingPathComponent("Private-\(UUID().uuidString).store")
         let sharedURL = fallbackDir.appendingPathComponent("Shared-\(UUID().uuidString).store")
 
-        let privateSchema = Schema([AppSettings.self, ChatMessage.self])
+        let privateSchema = Schema([AppSettings.self, ChatMessage.self, ChatConversation.self])
         let sharedSchema = Schema([
             PantryItem.self, GroceryItem.self, UtensilItem.self, Category.self,
             Recipe.self, RecipeIngredient.self, RecipeStep.self, RecipePreparationMedia.self,
@@ -449,6 +450,7 @@ final class CloudSyncService: @unchecked Sendable {
         totalDeleted += deduplicateByID(UtensilItem.self, keyPath: \.id, context: context)
         totalDeleted += deduplicateByID(Recipe.self, keyPath: \.id, context: context)
         totalDeleted += deduplicateByID(ChatMessage.self, keyPath: \.id, context: context)
+        totalDeleted += deduplicateByID(ChatConversation.self, keyPath: \.id, context: context)
         totalDeleted += deduplicateCategories(context: context)
         totalDeleted += deduplicateAppSettings(context: context)
 

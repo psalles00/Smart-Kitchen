@@ -31,12 +31,15 @@ final class ChatMessage {
     var attachedRecipeIds: [UUID] = []
     /// Quick-action buttons the assistant suggests.
     var quickActions: [QuickAction] = []
+    /// The conversation this message belongs to. Nil for legacy messages.
+    var conversationId: UUID?
 
     init(
         role: MessageRole,
         content: String,
         attachedRecipeIds: [UUID] = [],
-        quickActions: [QuickAction] = []
+        quickActions: [QuickAction] = [],
+        conversationId: UUID? = nil
     ) {
         self.id = UUID()
         self.role = role
@@ -44,5 +47,6 @@ final class ChatMessage {
         self.timestamp = .now
         self.attachedRecipeIds = attachedRecipeIds
         self.quickActions = quickActions
+        self.conversationId = conversationId
     }
 }

@@ -71,7 +71,7 @@ struct SettingsView: View {
                 }
             }
 
-            // MARK: - Assistente
+            // MARK: - IA
             #if os(iOS)
             Section("Geral") {
                 if let settings {
@@ -87,7 +87,7 @@ struct SettingsView: View {
             }
             #endif
 
-            Section("Assistente") {
+            Section("IA") {
                 LabeledContent("Modelo IA") {
                     Text("GPT-4.1 mini")
                         .foregroundStyle(.secondary)

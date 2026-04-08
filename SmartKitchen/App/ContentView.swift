@@ -39,7 +39,6 @@ struct ContentView: View {
     @State private var lastContentTab: AppTab = .assistant
     @State private var showCommandBar = false
     @State private var searchQuery = ""
-    @State private var showAssistant = false
     @State private var showSettings = false
     @State private var showAddPantry = false
     @State private var showAddGrocery = false
@@ -55,6 +54,10 @@ struct ContentView: View {
     @State private var isSearchActive = false
     @State private var displayedBgTheme: PageTheme = .home
     @StateObject private var searchService = UniversalSearchService()
+
+    /// When non-nil, the CommandBar tab will open inline chat with this query on next activation.
+    @State private var pendingChatQuery: String? = nil
+    @State private var pendingOpenChat = false
 
     #if os(macOS)
     @State private var selectedSidebar: SidebarItem? = .home
@@ -191,12 +194,6 @@ struct ContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .openSettings)) { _ in
             showSettings = true
         }
-        .sheet(isPresented: $showAssistant) {
-            NavigationStack {
-                AssistantView()
-            }
-            .forceLightStatusBar()
-        }
         #if os(iOS)
         .forceLightStatusBar()
         #endif
@@ -217,7 +214,14 @@ struct ContentView: View {
         TabView(selection: tabSelectionBinding) {
             Tab(value: AppTab.assistant) {
                 NavigationStack {
-                    HomeView(onSettingsTap: { showSettings = true })
+                    HomeView(
+                        onSettingsTap: { showSettings = true },
+                        onOpenChat: {
+                            pendingOpenChat = true
+                            selectedTab = .commandBar
+                            isSearchActive = true
+                        }
+                    )
                 }
             } label: {
                 Label("Início", systemImage: AppTab.assistant.icon)
@@ -252,7 +256,9 @@ struct ContentView: View {
                     CommandBarSearchContent(
                         query: $searchQuery,
                         searchService: searchService,
-                        onAction: { handleCommandBarAction($0) }
+                        onAction: { handleCommandBarAction($0) },
+                        pendingChatQuery: $pendingChatQuery,
+                        pendingOpenChat: $pendingOpenChat
                     )
                     .navigationTitle("Assistente")
                     #if os(iOS)
@@ -334,7 +340,15 @@ struct ContentView: View {
         } detail: {
             switch selectedSidebar ?? .home {
             case .home:
-                NavigationStack { HomeView(onSettingsTap: { selectedSidebar = .settings }) }
+                NavigationStack {
+                    HomeView(
+                        onSettingsTap: { selectedSidebar = .settings },
+                        onOpenChat: {
+                            pendingOpenChat = true
+                            showCommandBar = true
+                        }
+                    )
+                }
                     .background(Color.clear)
                     .environment(\.colorScheme, .light)
             case .lists:
@@ -497,12 +511,14 @@ struct ContentView: View {
             showAddRecipe = true
         case .addUtensil:
             showAddUtensil = true
-        case .askAssistant:
-            clearChatMessages()
-            showAssistant = true
+        case .askAssistant(let prefill):
+            pendingChatQuery = prefill
+            selectedTab = .commandBar
+            isSearchActive = true
         case .openAssistant:
-            clearChatMessages()
-            showAssistant = true
+            pendingOpenChat = true
+            selectedTab = .commandBar
+            isSearchActive = true
         }
 
         // Clear scroll request after views have consumed it
@@ -551,14 +567,6 @@ struct ContentView: View {
         }
     }
 
-    private func clearChatMessages() {
-        let descriptor = FetchDescriptor<ChatMessage>()
-        let messages = (try? modelContext.fetch(descriptor)) ?? []
-        for message in messages {
-            modelContext.delete(message)
-        }
-    }
-
 }
 
 #if os(macOS)
@@ -585,7 +593,6 @@ private struct HomeView: View {
     @Query(sort: \Category.sortOrder) private var categories: [Category]
     @Query private var settingsArray: [AppSettings]
 
-    @State private var showAssistant = false
     @State private var showAddGrocery = false
     @State private var showAddPantry = false
     @State private var selectedCompatibleCategory: String? = nil
@@ -598,6 +605,7 @@ private struct HomeView: View {
     private var settings: AppSettings? { settingsArray.first }
     
     let onSettingsTap: () -> Void
+    let onOpenChat: () -> Void
 
     var body: some View {
         ExpandedPageLayout(
@@ -636,24 +644,6 @@ private struct HomeView: View {
         .toolbar(.hidden, for: .navigationBar)
         #endif
         .tint(PageTheme.home.accentColor)
-        #if os(macOS)
-        .toolbar {
-            ToolbarItem(placement: .automatic) {
-                Button {
-                    CloudSyncService.shared.syncNow()
-                } label: {
-                    Label("Sincronizar", systemImage: "arrow.clockwise")
-                }
-                .keyboardShortcut("r", modifiers: .command)
-            }
-        }
-        #endif
-        .sheet(isPresented: $showAssistant) {
-            NavigationStack {
-                AssistantView()
-            }
-            .forceLightStatusBar()
-        }
         .sheet(isPresented: $showAddGrocery) {
             NavigationStack {
                 AddGroceryItemView()
@@ -731,7 +721,7 @@ private struct HomeView: View {
 
     private var assistantLauncher: some View {
         Button {
-            showAssistant = true
+            onOpenChat()
         } label: {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(alignment: .top) {
@@ -740,7 +730,7 @@ private struct HomeView: View {
                             .font(.sectionTitle)
                             .foregroundStyle(.primary)
 
-                        Text("Abra o assistente em modal, acesse listas rápido e veja combinações da despensa sem depender de IA.")
+                        Text("Converse com a IA, acesse listas rápido e veja combinações da despensa.")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.leading)
@@ -756,8 +746,8 @@ private struct HomeView: View {
                 }
 
                 HStack(spacing: 8) {
-                    compactPill("Abrir assistente", systemImage: "bubble.left.and.text.bubble.right.fill")
-                    compactPill("Chat em modal", systemImage: "uiwindow.split.2x1")
+                    compactPill("Conversar com IA", systemImage: "bubble.left.and.text.bubble.right.fill")
+                    compactPill("Descubra receitas", systemImage: "fork.knife")
                 }
             }
             .padding(18)
@@ -784,12 +774,12 @@ private struct HomeView: View {
                 GridItem(.flexible(), spacing: 10)
             ], spacing: 10) {
                 homeActionTile(
-                    title: "Assistente",
-                    subtitle: "Abrir chat",
+                    title: "IA",
+                    subtitle: "Conversar",
                     systemImage: "sparkles",
                     tint: .blue
                 ) {
-                    showAssistant = true
+                    onOpenChat()
                 }
 
                 homeActionTile(
