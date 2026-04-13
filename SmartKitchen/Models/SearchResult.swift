@@ -20,6 +20,8 @@ struct SearchResult: Identifiable {
     let score: Double           // higher = better match
     let objectID: UUID?         // reference to the underlying SwiftData model
     let iconFilename: String?   // for custom icon images (items_database)
+    /// Whether the item with the same name exists in the other list too.
+    var isAlsoInOtherList: Bool = false
 
     /// Section label displayed as a badge next to the result.
     var typeLabel: String {
@@ -33,6 +35,16 @@ struct SearchResult: Identifiable {
         }
     }
 
+    /// Secondary label for items in both lists.
+    var secondaryTypeLabel: String? {
+        guard isAlsoInOtherList else { return nil }
+        switch type {
+        case .pantryItem: return "Mercado"
+        case .groceryItem: return "Despensa"
+        default: return nil
+        }
+    }
+
     /// Accent color key for the type badge.
     var typeTint: String {
         switch type {
@@ -42,6 +54,15 @@ struct SearchResult: Identifiable {
         case .utensil:     "purple"
         case .suggestion:  "blue"
         case .action:      "gray"
+        }
+    }
+
+    var secondaryTypeTint: String? {
+        guard isAlsoInOtherList else { return nil }
+        switch type {
+        case .pantryItem: return "green"
+        case .groceryItem: return "orange"
+        default: return nil
         }
     }
 }

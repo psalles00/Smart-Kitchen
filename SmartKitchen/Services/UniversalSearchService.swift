@@ -129,7 +129,33 @@ final class UniversalSearchService: ObservableObject {
         }
 
         // Sort by score descending
-        return all.sorted { $0.score > $1.score }
+        var sorted = all.sorted { $0.score > $1.score }
+
+        // Annotate cross-list items (pantry ↔ grocery) and deduplicate
+        let pantryNames = Set(pantryItems.map { Self.normalize($0.name) })
+        let groceryNames = Set(groceryItems.map { Self.normalize($0.name) })
+        var seenCrossListNames = Set<String>()
+        var deduped: [SearchResult] = []
+
+        for i in sorted.indices {
+            let normalizedTitle = Self.normalize(sorted[i].title)
+            let isPantry = sorted[i].type == .pantryItem
+            let isGrocery = sorted[i].type == .groceryItem
+
+            if isPantry && groceryNames.contains(normalizedTitle) {
+                sorted[i].isAlsoInOtherList = true
+                if seenCrossListNames.contains(normalizedTitle) { continue }
+                seenCrossListNames.insert(normalizedTitle)
+            } else if isGrocery && pantryNames.contains(normalizedTitle) {
+                sorted[i].isAlsoInOtherList = true
+                if seenCrossListNames.contains(normalizedTitle) { continue }
+                seenCrossListNames.insert(normalizedTitle)
+            }
+
+            deduped.append(sorted[i])
+        }
+
+        return deduped
     }
 
     // MARK: - Scoring

@@ -187,10 +187,12 @@ struct PantryView: View {
             editingItem = item
         } label: {
             let categoryIconName = allCategories.first(where: { $0.name == category && $0.type == .pantry })?.iconName
+            let inGrocery = groceryItems.contains { $0.name.localizedCaseInsensitiveCompare(item.name) == .orderedSame }
             PantryItemRow(
                 item: item,
                 categoryIconName: categoryIconName,
                 isDetailed: isDetailed,
+                isAlsoInGrocery: inGrocery,
                 onSendToGrocery: { sendToGrocery(item) },
                 showsDivider: itemIndex > 0
             )
@@ -206,11 +208,20 @@ struct PantryView: View {
         }
         .buttonStyle(.plain)
         .contextMenu {
+            let inGrocery = groceryItems.contains { $0.name.localizedCaseInsensitiveCompare(item.name) == .orderedSame }
             Button("Editar", systemImage: "pencil") {
                 editingItem = item
             }
-            Button("Enviar ao Mercado", systemImage: "cart.badge.plus") {
+            Button("Mover ao Mercado", systemImage: "cart.badge.plus") {
                 sendToGrocery(item)
+            }
+            if !inGrocery {
+                Button("Copiar ao Mercado", systemImage: "doc.on.doc") {
+                    copyToGrocery(item)
+                }
+            }
+            if inGrocery {
+                Label("Também no Mercado", systemImage: "cart")
             }
             Divider()
             Button("Excluir", systemImage: "trash", role: .destructive) {
@@ -223,15 +234,26 @@ struct PantryView: View {
             } label: {
                 Label("Excluir", systemImage: "trash")
             }
-            .tint(.gray)
+            .tint(.red)
         }
         .swipeActions(edge: .leading, allowsFullSwipe: true) {
+            let inGrocery = groceryItems.contains { $0.name.localizedCaseInsensitiveCompare(item.name) == .orderedSame }
+
+            if !inGrocery {
+                Button {
+                    copyToGrocery(item)
+                } label: {
+                    Label("Copiar", systemImage: "cart.badge.plus")
+                }
+                .tint(.blue)
+            }
+
             Button {
                 sendToGrocery(item)
             } label: {
-                Label("Mercado", systemImage: "cart.badge.plus")
+                Label(inGrocery ? "Remover" : "Mover", systemImage: inGrocery ? "cart.badge.minus" : "cart.badge.plus")
             }
-            .tint(.gray)
+            .tint(inGrocery ? .orange : .green)
         }
         .draggable(ListsDragPayload(itemID: item.id, sourceList: .pantry)) {
             DragLiftPreviewCard(
@@ -263,6 +285,9 @@ struct PantryView: View {
 
     private func pantryHeader(for category: String) -> some View {
         HStack(spacing: 6) {
+            if let iconName = allCategories.first(where: { $0.name == category && $0.type == .pantry })?.iconName {
+                IconImage(name: category, iconFileName: iconName, fallbackSymbol: "folder", size: 18)
+            }
             Text(category)
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.primary.opacity(0.72))
@@ -325,6 +350,34 @@ struct PantryView: View {
     }
 
     private func sendToGrocery(_ item: PantryItem) {
+        // If already exists in grocery, just remove from pantry
+        let alreadyInGrocery = groceryItems.contains { $0.name.localizedCaseInsensitiveCompare(item.name) == .orderedSame }
+        if !alreadyInGrocery {
+            let grocery = GroceryItem(
+                name: item.name,
+                category: item.category,
+                quantity: item.quantity,
+                unit: item.unit,
+                iconName: item.iconName,
+                isFixed: item.isLinkedToGrocery,
+                linkedPantryItemId: item.isLinkedToGrocery ? item.id : nil,
+                defaultExpiryDays: expiryDaysForGrocery(from: item),
+                sortOrder: (groceryItems.map(\.sortOrder).max() ?? -1) + 1
+            )
+            withAnimation {
+                modelContext.insert(grocery)
+            }
+        }
+        withAnimation {
+            modelContext.delete(item)
+            onSentToGrocery?()
+        }
+    }
+
+    private func copyToGrocery(_ item: PantryItem) {
+        // Check if already in grocery
+        let alreadyInGrocery = groceryItems.contains { $0.name.localizedCaseInsensitiveCompare(item.name) == .orderedSame }
+        guard !alreadyInGrocery else { return }
         let grocery = GroceryItem(
             name: item.name,
             category: item.category,
@@ -338,7 +391,6 @@ struct PantryView: View {
         )
         withAnimation {
             modelContext.insert(grocery)
-            modelContext.delete(item)
             onSentToGrocery?()
         }
     }
@@ -454,6 +506,7 @@ struct PantryItemRow: View {
     let item: PantryItem
     let categoryIconName: String?
     let isDetailed: Bool
+    let isAlsoInGrocery: Bool
     let onSendToGrocery: () -> Void
     let showsDivider: Bool
 
@@ -481,6 +534,11 @@ struct PantryItemRow: View {
                             Image(systemName: "camera")
                                 .font(.system(size: 9))
                                 .foregroundStyle(.tertiary)
+                        }
+                        if isAlsoInGrocery {
+                            Image(systemName: "cart")
+                                .font(.system(size: 9))
+                                .foregroundStyle(.green.opacity(0.7))
                         }
                     }
                     subtitleLine

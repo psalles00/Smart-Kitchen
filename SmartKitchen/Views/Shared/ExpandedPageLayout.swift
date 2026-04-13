@@ -206,7 +206,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
                 topTrailingRadius: cornerRadius
             )
         )
-        .ignoresSafeArea(edges: .bottom)
+        .ignoresSafeArea(.container, edges: .bottom)
         .padding(.leading, leadingPanelInset)
         .padding(.trailing, trailingPanelInset)
         .animation(.spring(response: 0.38, dampingFraction: 0.78), value: searchBarState.isVisible)

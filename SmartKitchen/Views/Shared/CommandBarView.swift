@@ -14,6 +14,10 @@ enum CommandBarAction {
     case addUtensil(prefill: String)
     case askAssistant(prefill: String)
     case openAssistant
+    case movePantryToGrocery(UUID)
+    case moveGroceryToPantry(UUID)
+    case movePantryToGroceryByName(String)
+    case moveGroceryToPantryByName(String)
 }
 
 // MARK: - Phrase Detection
@@ -753,6 +757,28 @@ enum CommandBarHelpers {
                 in: .rect(cornerRadius: isHighlighted ? 12 : 10)
             )
             .padding(.horizontal, 12)
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+    }
+
+    static func compactActionButton(title: String, icon: String, tint: Color, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(tint)
+
+                Text(title)
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(tint.opacity(0.06), in: .rect(cornerRadius: 10))
             .contentShape(.rect)
         }
         .buttonStyle(.plain)

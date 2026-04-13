@@ -485,9 +485,20 @@ struct ContentView: View {
     }
 
     private func handleCommandBarAction(_ action: CommandBarAction) {
-        // Dismiss search bar before navigating
-        searchBarState.selectResult()
-        showCommandBar = false
+        // For move actions triggered from search quick-action, keep search open
+        let keepSearchOpen: Bool
+        switch action {
+        case .movePantryToGrocery, .moveGroceryToPantry,
+             .movePantryToGroceryByName, .moveGroceryToPantryByName:
+            keepSearchOpen = true
+        default:
+            keepSearchOpen = false
+        }
+
+        if !keepSearchOpen {
+            searchBarState.selectResult()
+            showCommandBar = false
+        }
 
         switch action {
         case .openPantryItem(let id):
@@ -523,6 +534,14 @@ struct ContentView: View {
         case .openAssistant:
             pendingOpenChat = true
             searchBarState.reveal()
+        case .movePantryToGrocery(let id):
+            movePantryItemToGrocery(id: id)
+        case .moveGroceryToPantry(let id):
+            moveGroceryItemToPantry(id: id)
+        case .movePantryToGroceryByName(let name):
+            movePantryItemToGroceryByName(name)
+        case .moveGroceryToPantryByName(let name):
+            moveGroceryItemToPantryByName(name)
         }
 
         // Clear scroll request after views have consumed it
@@ -571,6 +590,81 @@ struct ContentView: View {
         }
     }
 
+    private func movePantryItemToGrocery(id: UUID) {
+        let descriptor = FetchDescriptor<PantryItem>(predicate: #Predicate { $0.id == id })
+        guard let item = try? modelContext.fetch(descriptor).first else { return }
+        let groceryDescriptor = FetchDescriptor<GroceryItem>(sortBy: [SortDescriptor(\GroceryItem.sortOrder)])
+        let groceryItems = (try? modelContext.fetch(groceryDescriptor)) ?? []
+        // Check if already exists in grocery
+        let alreadyInGrocery = groceryItems.contains { $0.name.localizedCaseInsensitiveCompare(item.name) == .orderedSame }
+        if alreadyInGrocery {
+            withAnimation { modelContext.delete(item) }
+        } else {
+            let grocery = GroceryItem(
+                name: item.name,
+                category: item.category,
+                quantity: item.quantity,
+                unit: item.unit,
+                iconName: item.iconName,
+                isFixed: item.isLinkedToGrocery,
+                linkedPantryItemId: item.isLinkedToGrocery ? item.id : nil,
+                sortOrder: (groceryItems.map(\.sortOrder).max() ?? -1) + 1
+            )
+            withAnimation {
+                modelContext.insert(grocery)
+                modelContext.delete(item)
+            }
+        }
+    }
+
+    private func moveGroceryItemToPantry(id: UUID) {
+        let descriptor = FetchDescriptor<GroceryItem>(predicate: #Predicate { $0.id == id })
+        guard let item = try? modelContext.fetch(descriptor).first else { return }
+        let pantryDescriptor = FetchDescriptor<PantryItem>(sortBy: [SortDescriptor(\PantryItem.sortOrder)])
+        let pantryItems = (try? modelContext.fetch(pantryDescriptor)) ?? []
+        // Check if already exists in pantry
+        let alreadyInPantry = pantryItems.contains { $0.name.localizedCaseInsensitiveCompare(item.name) == .orderedSame }
+        if alreadyInPantry {
+            withAnimation { modelContext.delete(item) }
+        } else {
+            var expirationDate: Date?
+            if let days = item.defaultExpiryDays, days > 0 {
+                expirationDate = Calendar.current.date(byAdding: .day, value: days, to: Date())
+            }
+            let pantryItem = PantryItem(
+                name: item.name,
+                category: item.category,
+                quantity: item.quantity,
+                unit: item.unit,
+                iconName: item.iconName,
+                isLinkedToGrocery: false,
+                expirationDate: expirationDate,
+                defaultExpiryDays: item.defaultExpiryDays,
+                sortOrder: (pantryItems.map(\.sortOrder).max() ?? -1) + 1
+            )
+            withAnimation {
+                modelContext.insert(pantryItem)
+                modelContext.delete(item)
+            }
+        }
+    }
+
+    private func movePantryItemToGroceryByName(_ name: String) {
+        let descriptor = FetchDescriptor<PantryItem>()
+        guard let items = try? modelContext.fetch(descriptor),
+              let item = items.first(where: { $0.name.localizedCaseInsensitiveCompare(name) == .orderedSame })
+        else { return }
+        movePantryItemToGrocery(id: item.id)
+    }
+
+    private func moveGroceryItemToPantryByName(_ name: String) {
+        let descriptor = FetchDescriptor<GroceryItem>()
+        guard let items = try? modelContext.fetch(descriptor),
+              let item = items.first(where: { $0.name.localizedCaseInsensitiveCompare(name) == .orderedSame })
+        else { return }
+        moveGroceryItemToPantry(id: item.id)
+    }
+
 }
 
 #if os(macOS)
@@ -590,6 +684,7 @@ private struct MacDetailCard<Content: View>: View {
 
 private struct HomeView: View {
     @Environment(\.scrollToTopTrigger) private var scrollToTopTrigger
+    @Environment(\.modelContext) private var modelContext
     // Corrigido ciclo do AttributeGraph separando dependências reativas de SwiftData em @State com atualização manual para evitar travamentos no macOS.
 
     @Query(sort: \PantryItem.name) private var pantryItems: [PantryItem]
@@ -600,6 +695,7 @@ private struct HomeView: View {
     @State private var showAddGrocery = false
     @State private var showAddPantry = false
     @State private var selectedCompatibleCategory: String? = nil
+    @State private var editingExpiringItem: PantryItem?
 
     @State private var recipeCategoriesState: [Category] = []
     @State private var compatibleMatchesState: [HomeRecipeMatch] = []
@@ -653,6 +749,12 @@ private struct HomeView: View {
         .sheet(isPresented: $showAddPantry) {
             NavigationStack {
                 AddPantryItemView()
+            }
+            .forceLightStatusBar()
+        }
+        .sheet(item: $editingExpiringItem) { item in
+            NavigationStack {
+                EditPantryItemView(item: item)
             }
             .forceLightStatusBar()
         }
@@ -838,29 +940,45 @@ private struct HomeView: View {
 
             VStack(spacing: 10) {
                 ForEach(expiringItemsState.prefix(5)) { item in
-                    HStack(spacing: 12) {
-                        IconImage(name: item.name, iconFileName: item.iconName, fallbackSymbol: "clock.badge.exclamationmark", size: 28)
+                    Button {
+                        editingExpiringItem = item
+                    } label: {
+                        HStack(spacing: 12) {
+                            IconImage(name: item.name, iconFileName: item.iconName, fallbackSymbol: "clock.badge.exclamationmark", size: 28)
 
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text(item.name)
-                                .font(.subheadline.weight(.semibold))
-                            if let expiration = item.formattedExpirationDate {
-                                Text("Validade \(expiration)")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(item.name)
+                                    .font(.subheadline.weight(.semibold))
+                                if let expiration = item.formattedExpirationDate {
+                                    Text("Validade \(expiration)")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+
+                            Spacer()
+
+                            if let expirationDate = item.expirationDate {
+                                Text(relativeExpirationText(for: expirationDate))
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(expirationHighlightColor(for: expirationDate))
                             }
                         }
-
-                        Spacer()
-
-                        if let expirationDate = item.expirationDate {
-                            Text(relativeExpirationText(for: expirationDate))
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(expirationHighlightColor(for: expirationDate))
+                        .padding(14)
+                        .background(Color(.secondarySystemBackground), in: .rect(cornerRadius: 18))
+                    }
+                    .buttonStyle(.plain)
+                    .contextMenu {
+                        Button("Editar", systemImage: "pencil") {
+                            editingExpiringItem = item
+                        }
+                        Divider()
+                        Button("Excluir", systemImage: "trash", role: .destructive) {
+                            withAnimation {
+                                modelContext.delete(item)
+                            }
                         }
                     }
-                    .padding(14)
-                    .background(Color(.secondarySystemBackground), in: .rect(cornerRadius: 18))
                 }
             }
         }

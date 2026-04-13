@@ -420,6 +420,9 @@ struct RecipesView: View {
 
     private func recipeSectionHeader(_ title: String) -> some View {
         HStack(spacing: 6) {
+            if let iconName = allCategories.first(where: { $0.name == title && $0.type == .recipe })?.iconName {
+                IconImage(name: title, iconFileName: iconName, fallbackSymbol: "folder", size: 18)
+            }
             Text(title)
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.primary.opacity(0.72))

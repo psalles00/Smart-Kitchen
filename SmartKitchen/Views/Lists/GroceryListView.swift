@@ -134,7 +134,8 @@ struct GroceryListView: View {
             editingItem = item
         } label: {
             let categoryIconName = allCategories.first(where: { $0.name == category && $0.type == .grocery })?.iconName
-            GroceryItemRow(item: item, categoryIconName: categoryIconName, showsDivider: itemIndex > 0) {
+            let inPantry = pantryItems.contains { $0.name.localizedCaseInsensitiveCompare(item.name) == .orderedSame }
+            GroceryItemRow(item: item, categoryIconName: categoryIconName, isAlsoInPantry: inPantry, showsDivider: itemIndex > 0) {
                 acquireItem(item)
             }
             .contentShape(Rectangle())
@@ -157,15 +158,26 @@ struct GroceryListView: View {
             } label: {
                 Label("Excluir", systemImage: "trash")
             }
-            .tint(.gray)
+            .tint(.red)
         }
         .swipeActions(edge: .leading, allowsFullSwipe: true) {
+            let inPantry = pantryItems.contains { $0.name.localizedCaseInsensitiveCompare(item.name) == .orderedSame }
+
+            if !inPantry {
+                Button {
+                    copyToPantry(item)
+                } label: {
+                    Label("Copiar", systemImage: "checkmark")
+                }
+                .tint(.blue)
+            }
+
             Button {
                 acquireItem(item)
             } label: {
-                Label("Adquirir", systemImage: "checkmark")
+                Label(inPantry ? "Remover" : "Mover", systemImage: inPantry ? "refrigerator.fill" : "checkmark")
             }
-            .tint(.gray)
+            .tint(inPantry ? .orange : .green)
         }
         .draggable(ListsDragPayload(itemID: item.id, sourceList: .grocery)) {
             DragLiftPreviewCard(
@@ -197,6 +209,9 @@ struct GroceryListView: View {
 
     private func groceryHeader(for category: String) -> some View {
         HStack(spacing: 6) {
+            if let iconName = allCategories.first(where: { $0.name == category && ($0.type == .grocery || $0.type == .pantry) })?.iconName {
+                IconImage(name: category, iconFileName: iconName, fallbackSymbol: "folder", size: 18)
+            }
             Text(category)
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.primary.opacity(0.72))
@@ -230,14 +245,23 @@ struct GroceryListView: View {
 
     @ViewBuilder
     private func contextMenuContent(for item: GroceryItem) -> some View {
+        let inPantry = pantryItems.contains { $0.name.localizedCaseInsensitiveCompare(item.name) == .orderedSame }
         Button("Editar", systemImage: "pencil") {
             editingItem = item
         }
-        Button("Adquirir", systemImage: "checkmark.circle") {
+        Button("Mover à Despensa", systemImage: "checkmark.circle") {
             acquireItem(item)
+        }
+        if !inPantry {
+            Button("Copiar à Despensa", systemImage: "doc.on.doc") {
+                copyToPantry(item)
+            }
         }
         Button("Adquirir e Editar", systemImage: "square.and.pencil") {
             acquireItem(item, shouldEdit: true)
+        }
+        if inPantry {
+            Label("Também na Despensa", systemImage: "refrigerator")
         }
         Divider()
         Button("Excluir", systemImage: "trash", role: .destructive) {
@@ -258,6 +282,41 @@ struct GroceryListView: View {
     }
 
     private func acquireItem(_ item: GroceryItem, shouldEdit: Bool = false) {
+        // If already exists in pantry, just remove from grocery
+        let alreadyInPantry = pantryItems.contains { $0.name.localizedCaseInsensitiveCompare(item.name) == .orderedSame }
+        var pantryItem: PantryItem?
+        if !alreadyInPantry {
+            let newPantryItem = PantryItem(
+                name: item.name,
+                category: item.category,
+                quantity: item.quantity,
+                unit: item.unit,
+                iconName: item.iconName,
+                isLinkedToGrocery: false,
+                expirationDate: expirationDateForPantry(from: item),
+                defaultExpiryDays: item.defaultExpiryDays,
+                sortOrder: (pantryItems.map(\.sortOrder).max() ?? -1) + 1
+            )
+            modelContext.insert(newPantryItem)
+            pantryItem = newPantryItem
+        } else {
+            pantryItem = pantryItems.first { $0.name.localizedCaseInsensitiveCompare(item.name) == .orderedSame }
+        }
+
+        withAnimation {
+            modelContext.delete(item)
+        }
+
+        if shouldEdit, let pantryItem {
+            acquiredPantryItem = pantryItem
+        }
+        onAcquired?()
+    }
+
+    private func copyToPantry(_ item: GroceryItem) {
+        // Check if already in pantry
+        let alreadyInPantry = pantryItems.contains { $0.name.localizedCaseInsensitiveCompare(item.name) == .orderedSame }
+        guard !alreadyInPantry else { return }
         let pantryItem = PantryItem(
             name: item.name,
             category: item.category,
@@ -269,14 +328,8 @@ struct GroceryListView: View {
             defaultExpiryDays: item.defaultExpiryDays,
             sortOrder: (pantryItems.map(\.sortOrder).max() ?? -1) + 1
         )
-        modelContext.insert(pantryItem)
-
         withAnimation {
-            modelContext.delete(item)
-        }
-
-        if shouldEdit {
-            acquiredPantryItem = pantryItem
+            modelContext.insert(pantryItem)
         }
         onAcquired?()
     }
@@ -385,6 +438,7 @@ struct GroceryListView: View {
 struct GroceryItemRow: View {
     let item: GroceryItem
     let categoryIconName: String?
+    let isAlsoInPantry: Bool
     let showsDivider: Bool
     let onAcquire: () -> Void
 
@@ -412,6 +466,11 @@ struct GroceryItemRow: View {
                             Image(systemName: "camera")
                                 .font(.system(size: 9))
                                 .foregroundStyle(.tertiary)
+                        }
+                        if isAlsoInPantry {
+                            Image(systemName: "refrigerator")
+                                .font(.system(size: 9))
+                                .foregroundStyle(.orange.opacity(0.7))
                         }
                     }
                     subtitleLine

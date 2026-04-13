@@ -94,10 +94,13 @@ struct InlineSearchResultsView: View {
                         ForEach(Array(searchService.results.prefix(10).enumerated()), id: \.element.id) { index, result in
                             CommandBarResultRow(
                                 result: result,
-                                isPreSelected: index == 0
-                            ) {
-                                executeResult(result)
-                            }
+                                isPreSelected: index == 0,
+                                action: {
+                                    executeResult(result)
+                                },
+                                onQuickAction: quickActionForResult(result),
+                                onReverseAction: reverseActionForResult(result)
+                            )
                             .id(result.id)
                             .padding(.horizontal, 4)
                         }
@@ -120,6 +123,7 @@ struct InlineSearchResultsView: View {
             .padding(.top, 12)
             .padding(.bottom, 16)
         }
+        .scrollDismissesKeyboard(.interactively)
     }
 
     // MARK: - Action Buttons
@@ -143,24 +147,33 @@ struct InlineSearchResultsView: View {
 
                 let actions = CommandBarHelpers.orderedActions(query: query, isQuestion: isQuestion)
 
-                VStack(spacing: 4) {
-                    ForEach(Array(actions.enumerated()), id: \.element.id) { index, item in
-                        let isFirst = index == 0 && !hasResults
-                        CommandBarHelpers.actionButton(
-                            title: item.title,
-                            icon: item.icon,
-                            tint: item.tint,
-                            isHighlighted: isFirst
-                        ) {
-                            if item.id == "ask-assistant" {
-                                openChat(initialQuery: query)
-                            } else {
-                                item.perform(query, onAction)
-                                searchBarState.selectResult()
+                let rows = stride(from: 0, to: actions.count, by: 2).map { i in
+                    Array(actions[i..<min(i + 2, actions.count)])
+                }
+                VStack(spacing: 6) {
+                    ForEach(rows, id: \.first!.id) { pair in
+                        HStack(spacing: 6) {
+                            ForEach(pair, id: \.id) { item in
+                                CommandBarHelpers.compactActionButton(
+                                    title: item.title,
+                                    icon: item.icon,
+                                    tint: item.tint
+                                ) {
+                                    if item.id == "ask-assistant" {
+                                        openChat(initialQuery: query)
+                                    } else {
+                                        item.perform(query, onAction)
+                                        searchBarState.selectResult()
+                                    }
+                                }
+                            }
+                            if pair.count == 1 {
+                                Spacer()
                             }
                         }
                     }
                 }
+                .padding(.horizontal, 12)
             }
         }
     }
@@ -172,6 +185,33 @@ struct InlineSearchResultsView: View {
         chatExistingConversationId = nil
         showInlineChat = true
         searchBarState.mode = .aiChat
+    }
+
+    private func quickActionForResult(_ result: SearchResult) -> (() -> Void)? {
+        guard let objectID = result.objectID else { return nil }
+        switch result.type {
+        case .pantryItem:
+            return { onAction(.movePantryToGrocery(objectID)) }
+        case .groceryItem:
+            return { onAction(.moveGroceryToPantry(objectID)) }
+        default:
+            return nil
+        }
+    }
+
+    /// Reverse action: move the item back by name (since the original UUID is gone after moves).
+    private func reverseActionForResult(_ result: SearchResult) -> (() -> Void)? {
+        let name = result.title
+        switch result.type {
+        case .pantryItem:
+            // Was moved to grocery, now move back to pantry
+            return { onAction(.moveGroceryToPantryByName(name)) }
+        case .groceryItem:
+            // Was moved to pantry, now move back to grocery
+            return { onAction(.movePantryToGroceryByName(name)) }
+        default:
+            return nil
+        }
     }
 
     private func executeResult(_ result: SearchResult) {
