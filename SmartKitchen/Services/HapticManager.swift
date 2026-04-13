@@ -28,4 +28,23 @@ enum HapticManager {
         NSHapticFeedbackManager.defaultPerformer.perform(pattern, performanceTime: .default)
         #endif
     }
+
+    /// Satisfying haptic sequence for search bar reveal: light tap followed by medium tap.
+    static func searchReveal() {
+        #if os(iOS)
+        let light = UIImpactFeedbackGenerator(style: .light)
+        let medium = UIImpactFeedbackGenerator(style: .medium)
+        light.prepare()
+        medium.prepare()
+        light.impactOccurred()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.06) {
+            medium.impactOccurred()
+        }
+        #elseif os(macOS)
+        NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .default)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.06) {
+            NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .default)
+        }
+        #endif
+    }
 }

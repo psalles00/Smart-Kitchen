@@ -38,7 +38,6 @@ struct ContentView: View {
     @State private var selectedTab: AppTab = .assistant
     @State private var lastContentTab: AppTab = .assistant
     @State private var showCommandBar = false
-    @State private var searchQuery = ""
     @State private var showSettings = false
     @State private var showAddPantry = false
     @State private var showAddGrocery = false
@@ -51,9 +50,9 @@ struct ContentView: View {
     @State private var isBouncingBackFromCommandBar = false
     @State private var scrollToTopTrigger: Int = 0
     @State private var scrollToItemRequest: ScrollToItemRequest?
-    @State private var isSearchActive = false
     @State private var displayedBgTheme: PageTheme = .home
     @StateObject private var searchService = UniversalSearchService()
+    @StateObject private var searchBarState = SearchBarState()
 
     /// When non-nil, the CommandBar tab will open inline chat with this query on next activation.
     @State private var pendingChatQuery: String? = nil
@@ -93,6 +92,7 @@ struct ContentView: View {
 
     var body: some View {
         mainTabView
+        .environmentObject(searchBarState)
         .environment(\.scrollToItem, scrollToItemRequest)
         .environment(\.backgroundTheme, displayedBgTheme)
         .sheet(isPresented: $showAddPantry) {
@@ -218,8 +218,7 @@ struct ContentView: View {
                         onSettingsTap: { showSettings = true },
                         onOpenChat: {
                             pendingOpenChat = true
-                            selectedTab = .commandBar
-                            isSearchActive = true
+                            searchBarState.reveal()
                         }
                     )
                 }
@@ -252,38 +251,39 @@ struct ContentView: View {
             }
 
             Tab(value: AppTab.commandBar, role: .search) {
-                NavigationStack {
-                    CommandBarSearchContent(
-                        query: $searchQuery,
-                        searchService: searchService,
-                        onAction: { handleCommandBarAction($0) },
-                        pendingChatQuery: $pendingChatQuery,
-                        pendingOpenChat: $pendingOpenChat
-                    )
-                    .navigationTitle("Assistente")
-                    #if os(iOS)
-                    .navigationBarTitleDisplayMode(.inline)
-                    #endif
-                }
-                .searchable(text: $searchQuery, isPresented: $isSearchActive, placement: .automatic, prompt: "Adicione, busque, ou pergunte…")
-                .onSubmit(of: .search) {
-                    submitSearchAction()
-                }
-                .onChange(of: searchQuery) { _, newValue in
-                    searchService.search(query: newValue, context: modelContext, showUtensils: settings?.showUtensils == true)
-                }
-                .onChange(of: isSearchActive) { _, isActive in
-                    if !isActive {
-                        searchQuery = ""
-                        if selectedTab == .commandBar {
-                            selectedTab = lastContentTab
-                        }
-                    }
-                }
+                Color.clear
             } label: {
-                Label("Buscar", systemImage: AppTab.commandBar.icon)
+                Label(
+                    searchBarState.isVisible ? "Fechar" : "Buscar",
+                    systemImage: searchBarState.isVisible ? "xmark" : "sparkle.magnifyingglass"
+                )
             }
         }
+        .onChange(of: searchBarState.searchText) { _, newValue in
+            searchService.search(query: newValue, context: modelContext, showUtensils: settings?.showUtensils == true)
+        }
+        .environment(\.searchOverlay, searchOverlayView)
+    }
+
+    /// Search results view injected into ExpandedPageLayout's content panel via environment.
+    private var searchOverlayView: AnyView? {
+        guard searchBarState.isVisible else { return nil }
+        let hasText = !searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        let showChat = searchBarState.mode == .aiChat
+
+        guard hasText || showChat || pendingOpenChat || pendingChatQuery != nil else { return nil }
+
+        return AnyView(
+            InlineSearchResultsView(
+                searchBarState: searchBarState,
+                searchService: searchService,
+                onAction: { handleCommandBarAction($0) },
+                pendingChatQuery: $pendingChatQuery,
+                pendingOpenChat: $pendingOpenChat
+            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color(.systemBackground))
+        )
     }
 
     #if os(macOS)
@@ -458,10 +458,17 @@ struct ContentView: View {
             selectedTab = lastContentTab
             showCommandBar = true
             return
-            #endif
-            // iOS: activate search field natively via isPresented binding
-            isSearchActive = true
+            #else
+            // iOS: toggle the unified search bar
+            isBouncingBackFromCommandBar = true
+            selectedTab = lastContentTab
+            if searchBarState.isVisible {
+                searchBarState.dismiss()
+            } else {
+                searchBarState.reveal()
+            }
             return
+            #endif
         }
 
         if isBouncingBackFromCommandBar {
@@ -478,9 +485,8 @@ struct ContentView: View {
     }
 
     private func handleCommandBarAction(_ action: CommandBarAction) {
-        // Dismiss search/command bar before navigating
-        isSearchActive = false
-        searchQuery = ""
+        // Dismiss search bar before navigating
+        searchBarState.selectResult()
         showCommandBar = false
 
         switch action {
@@ -513,12 +519,10 @@ struct ContentView: View {
             showAddUtensil = true
         case .askAssistant(let prefill):
             pendingChatQuery = prefill
-            selectedTab = .commandBar
-            isSearchActive = true
+            searchBarState.reveal()
         case .openAssistant:
             pendingOpenChat = true
-            selectedTab = .commandBar
-            isSearchActive = true
+            searchBarState.reveal()
         }
 
         // Clear scroll request after views have consumed it
@@ -531,7 +535,7 @@ struct ContentView: View {
 
     /// Called when the user presses Enter/Search on the keyboard.
     private func submitSearchAction() {
-        let trimmedQuery = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedQuery = searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedQuery.isEmpty else { return }
 
         let isQuestion = trimmedQuery.contains("?") ||
@@ -634,10 +638,6 @@ private struct HomeView: View {
             },
             infoContent: {
                 HomeInfoContent()
-            },
-            onRefresh: {
-                CloudSyncService.shared.syncNow()
-                try? await Task.sleep(nanoseconds: 400_000_000)
             }
         )
         #if os(iOS)

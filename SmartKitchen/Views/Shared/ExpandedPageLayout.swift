@@ -3,21 +3,37 @@ import SwiftUI
 import AppKit
 #endif
 
+// MARK: - Search Overlay Environment Key
+
+private struct SearchOverlayKey: EnvironmentKey {
+    nonisolated(unsafe) static let defaultValue: AnyView? = nil
+}
+
+extension EnvironmentValues {
+    var searchOverlay: AnyView? {
+        get { self[SearchOverlayKey.self] }
+        set { self[SearchOverlayKey.self] = newValue }
+    }
+}
+
 // MARK: - Expanded Page Layout
 
 /// Layout with a fixed animated background, a floating header, and a
 /// content area that manages its own scrolling.
+/// The shader zone now hosts a UnifiedSearchBar that is revealed by
+/// dragging down anywhere on the page or pressing the search button.
 struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View {
     let pageTheme: PageTheme
     let header: (_ isInverted: Bool) -> Header
     let content: () -> Content
     let infoContent: () -> InfoContent
     let startsWithInfoCollapsed: Bool
-    var onRefresh: (() async -> Void)? = nil
 
     private var backgroundManager = BackgroundManager.shared
 
     @Environment(\.backgroundTheme) private var backgroundTheme
+    @Environment(\.searchOverlay) private var searchOverlay
+    @EnvironmentObject private var searchBarState: SearchBarState
 
     /// Use the animated background theme from environment if available, otherwise fall back to the page's own theme.
     private var effectiveBgTheme: PageTheme { backgroundTheme ?? pageTheme }
@@ -33,13 +49,15 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
     #endif
     private let bottomTabBarContentInset: CGFloat = 84
 
-    // Pull-to-action state
-    private let refreshThreshold: CGFloat = 80
-    @State private var dragOffset: CGFloat = 0
-    @State private var isRefreshing: Bool = false
+
+    // Background transition state
     @State private var backgroundFromTheme: PageTheme = .home
     @State private var backgroundToTheme: PageTheme = .home
     @State private var backgroundTransitionProgress: Double = 1.0
+
+    // Drag-to-reveal state
+    @State private var dragOffset: CGFloat = 0
+    private let revealThreshold: CGFloat = 40
 
     private var trailingPanelInset: CGFloat {
         #if os(macOS)
@@ -65,16 +83,16 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
         startsWithInfoCollapsed: Bool = false,
         @ViewBuilder header: @escaping (_ isInverted: Bool) -> Header,
         @ViewBuilder content: @escaping () -> Content,
-        @ViewBuilder infoContent: @escaping () -> InfoContent,
-        onRefresh: (() async -> Void)? = nil
+        @ViewBuilder infoContent: @escaping () -> InfoContent
     ) {
         self.pageTheme = pageTheme
         self.startsWithInfoCollapsed = startsWithInfoCollapsed
         self.header = header
         self.content = content
         self.infoContent = infoContent
-        self.onRefresh = onRefresh
     }
+
+
 
     var body: some View {
         #if os(macOS)
@@ -87,7 +105,6 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
                 header(false)
                     .frame(height: macHeaderHeight)
                     .padding(.top, macHeaderTopInset)
-                    .simultaneousGesture(pullRefreshGesture, including: onRefresh != nil ? .all : .none)
 
                 infoContent()
                     .padding(.horizontal, 20)
@@ -122,98 +139,112 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
                 // Fixed header (transparent, over shader)
                 header(false)
                     .frame(height: headerHeight)
-                    .simultaneousGesture(pullRefreshGesture, including: onRefresh != nil ? .all : .none)
 
-                // Shader zone: info + pull handle
-                pullableShaderZone
+                // Shader zone: info content + search bar slot
+                shaderZone
 
-                // Content area (each page manages its own scroll)
-                content()
-                    .padding(.top, topMargin)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .safeAreaInset(edge: .bottom) {
-                        Color.clear.frame(height: bottomTabBarContentInset)
-                    }
-                    .background(Color(.systemBackground))
-                    .clipShape(
-                        UnevenRoundedRectangle(
-                            topLeadingRadius: cornerRadius,
-                            bottomLeadingRadius: 0,
-                            bottomTrailingRadius: 0,
-                            topTrailingRadius: cornerRadius
-                        )
-                    )
-                    .ignoresSafeArea(edges: .bottom)
-                    .padding(.leading, leadingPanelInset)
-                    .padding(.trailing, trailingPanelInset)
+                // Content area
+                contentArea
             }
+        }
+        .onAppear {
+            searchBarState.pageContext = pageTheme.searchContext
         }
         #endif
     }
 
-    // MARK: - Shader Pull Zone
+    // MARK: - Shader Zone (iOS)
 
+    #if !os(macOS)
     @ViewBuilder
-    private var pullableShaderZone: some View {
+    private var shaderZone: some View {
         VStack(spacing: 0) {
             infoContent()
                 .padding(.horizontal, 20)
                 .padding(.top, 4)
+                .padding(.bottom, searchBarState.isVisible ? 8 : 0)
 
-            // Pull indicator
-            if onRefresh != nil {
-                _PullIndicatorView(
-                    dragOffset: dragOffset,
-                    isRefreshing: isRefreshing,
-                    refreshThreshold: refreshThreshold,
-                    theme: pageTheme
-                )
-                .frame(height: max(16, 16 + dragOffset))
-            } else {
-                Spacer().frame(height: 16)
+            // Search bar — uses opacity + height animation (never frame 0) so it stays focusable
+            if searchBarState.isVisible {
+                UnifiedSearchBar(state: searchBarState) { _ in }
+                    .transition(.opacity.combined(with: .move(edge: .top)))
             }
+
+            Spacer().frame(height: 8)
         }
         .frame(maxWidth: .infinity)
         .contentShape(Rectangle())
-        .simultaneousGesture(pullRefreshGesture, including: onRefresh != nil ? .all : .none)
+        .simultaneousGesture(dragToRevealGesture)
     }
+    #endif
 
-    private func triggerRefresh() {
-        isRefreshing = true
-        HapticManager.impact(style: .medium)
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-            dragOffset = 40
-        }
-        Task {
-            await onRefresh?()
-            await MainActor.run {
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                    isRefreshing = false
-                    dragOffset = 0
-                }
+    // MARK: - Content Area (iOS)
+
+    #if !os(macOS)
+    private var contentArea: some View {
+        ZStack(alignment: .top) {
+            content()
+                .padding(.top, topMargin)
+
+            // Search results rendered inside the content panel
+            if searchBarState.isVisible, let searchOverlay {
+                searchOverlay
+                    .padding(.top, topMargin)
+                    .transition(.opacity.animation(.easeInOut(duration: 0.15)))
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .safeAreaInset(edge: .bottom) {
+            Color.clear.frame(height: bottomTabBarContentInset)
+        }
+        .background(Color(.systemBackground))
+        .clipShape(
+            UnevenRoundedRectangle(
+                topLeadingRadius: cornerRadius,
+                bottomLeadingRadius: 0,
+                bottomTrailingRadius: 0,
+                topTrailingRadius: cornerRadius
+            )
+        )
+        .ignoresSafeArea(edges: .bottom)
+        .padding(.leading, leadingPanelInset)
+        .padding(.trailing, trailingPanelInset)
+        .animation(.spring(response: 0.38, dampingFraction: 0.78), value: searchBarState.isVisible)
     }
+    #endif
 
-    private var pullRefreshGesture: some Gesture {
-        DragGesture(minimumDistance: 5)
+    // MARK: - Drag to Reveal Gesture
+
+    private var dragToRevealGesture: some Gesture {
+        DragGesture(minimumDistance: 10)
             .onChanged { value in
-                guard onRefresh != nil, !isRefreshing else { return }
                 let dy = value.translation.height
-                if dy > 0 {
-                    withAnimation(.interactiveSpring) {
-                        dragOffset = dy
+                if searchBarState.isVisible {
+                    if dy < 0 {
+                        withAnimation(.interactiveSpring) {
+                            dragOffset = dy
+                        }
+                    }
+                } else {
+                    if dy > 0 {
+                        withAnimation(.interactiveSpring) {
+                            dragOffset = dy
+                        }
                     }
                 }
             }
             .onEnded { _ in
-                guard onRefresh != nil, !isRefreshing else { return }
-                if dragOffset >= refreshThreshold {
-                    triggerRefresh()
-                } else {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                        dragOffset = 0
+                if searchBarState.isVisible {
+                    if dragOffset <= -revealThreshold {
+                        searchBarState.dismiss()
                     }
+                } else {
+                    if dragOffset >= revealThreshold {
+                        searchBarState.reveal()
+                    }
+                }
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                    dragOffset = 0
                 }
             }
     }
@@ -288,39 +319,5 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
                 progress: 1.0
             )
         }
-    }
-}
-
-// MARK: - Pull Indicator View
-
-/// Pull-to-action indicator shown in the shader area.
-private struct _PullIndicatorView: View {
-    let dragOffset: CGFloat
-    let isRefreshing: Bool
-    let refreshThreshold: CGFloat
-    let theme: PageTheme
-
-    private var pullProgress: CGFloat {
-        guard dragOffset > 0 else { return 0 }
-        return min(dragOffset / refreshThreshold, 1.0)
-    }
-
-    var body: some View {
-        VStack {
-            if isRefreshing {
-                ProgressView()
-                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                    .scaleEffect(1.2)
-            } else {
-                Image(systemName: theme == .home ? "sparkles" : "plus.circle")
-                    .font(.system(size: 20, weight: .medium))
-                    .foregroundColor(.white)
-                    .scaleEffect(pullProgress >= 1.0 ? 1.3 : 0.6 + pullProgress * 0.4)
-                    .animation(.easeInOut(duration: 0.2), value: pullProgress >= 1.0)
-            }
-        }
-        .frame(width: 40, height: 40)
-        .opacity(isRefreshing ? 1.0 : pullProgress)
-        .allowsHitTesting(false)
     }
 }

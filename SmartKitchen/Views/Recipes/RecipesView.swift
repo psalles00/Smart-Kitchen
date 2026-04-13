@@ -39,11 +39,11 @@ struct RecipesView: View {
     @Query private var settingsArray: [AppSettings]
     @Query(sort: \Category.sortOrder) private var allCategories: [Category]
 
-    @State private var searchText = ""
+    @EnvironmentObject private var searchBarState: SearchBarState
+
     @State private var selectedCategory: String? = nil
     @State private var sortOption: RecipeSortOption = .dateAdded
     @State private var showAddRecipe = false
-    @State private var showSearch = false
     @State private var showsInlineTitle = false
     @State private var editingRecipe: Recipe?
     @State private var showCompatibleOnly = false
@@ -72,7 +72,8 @@ struct RecipesView: View {
         var result = allRecipes
 
         // Filter by search
-        if !searchText.isEmpty {
+        if !searchBarState.searchText.isEmpty {
+            let searchText = searchBarState.searchText
             result = result.filter {
                 $0.name.localizedCaseInsensitiveContains(searchText) ||
                 $0.tags.contains(where: { $0.localizedCaseInsensitiveContains(searchText) }) ||
@@ -127,10 +128,7 @@ struct RecipesView: View {
                     HStack(spacing: 6) {
                         GlassButtonGroup {
                             GlassGroupButton(systemImage: "magnifyingglass") {
-                                withAnimation(.spring(response: 0.28, dampingFraction: 0.88)) {
-                                    showSearch.toggle()
-                                    if !showSearch { searchText = "" }
-                                }
+                                searchBarState.reveal()
                             }
                         }
 
@@ -156,10 +154,6 @@ struct RecipesView: View {
             },
             infoContent: {
                 EmptyView()
-            },
-            onRefresh: {
-                showAddRecipe = true
-                try? await Task.sleep(nanoseconds: 500_000_000)
             }
         )
         #if os(iOS)
@@ -212,12 +206,6 @@ struct RecipesView: View {
     @ViewBuilder
     private var recipeContent: some View {
         VStack(spacing: 0) {
-            CollapsibleSearchBar(
-                text: $searchText,
-                isPresented: $showSearch,
-                placeholder: "Buscar receitas"
-            )
-
             // Category filter chips
             categoryFilter
 
@@ -533,15 +521,9 @@ struct RecipesView: View {
 
     private var searchEmptyState: some View {
         VStack(spacing: 0) {
-            CollapsibleSearchBar(
-                text: $searchText,
-                isPresented: $showSearch,
-                placeholder: "Buscar receitas"
-            )
-
             categoryFilter
 
-            ContentUnavailableView.search(text: searchText)
+            ContentUnavailableView.search(text: searchBarState.searchText)
         }
     }
 

@@ -55,4 +55,13 @@ enum PageTheme: String, Codable, CaseIterable {
             endPoint: .bottomTrailing
         )
     }
+
+    var searchContext: SearchPageContext {
+        switch self {
+        case .home: .home
+        case .lists: .lists
+        case .recipes: .recipes
+        case .nutrients: .nutrients
+        }
+    }
 }

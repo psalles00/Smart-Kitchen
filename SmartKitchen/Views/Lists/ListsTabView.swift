@@ -74,8 +74,7 @@ struct ListsTabView: View {
     @State private var showAddPantry = false
     @State private var showAddGrocery = false
     @State private var showAddUtensil = false
-    @State private var showSearch = false
-    @State private var searchText = ""
+    @EnvironmentObject private var searchBarState: SearchBarState
     @State private var showsInlineTitle = false
     @State private var sortOption: ListsSortOption = .custom
     @State private var pantryFilter: PantryListFilterOption = .all
@@ -109,10 +108,7 @@ struct ListsTabView: View {
                     HStack(spacing: 6) {
                         GlassButtonGroup {
                             GlassGroupButton(systemImage: "magnifyingglass") {
-                                withAnimation(.spring(response: 0.28, dampingFraction: 0.88)) {
-                                    showSearch.toggle()
-                                    if !showSearch { searchText = "" }
-                                }
+                                searchBarState.reveal()
                             }
                         }
 
@@ -140,12 +136,6 @@ struct ListsTabView: View {
             },
             content: {
                 VStack(spacing: 0) {
-                    CollapsibleSearchBar(
-                        text: $searchText,
-                        isPresented: $showSearch,
-                        placeholder: selectedSubtab == .pantry ? "Buscar na despensa" : selectedSubtab == .utensils ? "Buscar utensílios" : "Buscar no mercado"
-                    )
-
                     subtabPicker
                         .padding(.horizontal)
                         .padding(.top, 8)
@@ -154,7 +144,7 @@ struct ListsTabView: View {
                         switch selectedSubtab {
                         case .pantry:
                             PantryView(
-                                searchText: searchText,
+                                searchText: searchBarState.searchText,
                                 sortOption: sortOption,
                                 filterOption: pantryFilter,
                                 expiringLeadDays: settings?.expiringItemsLeadDays ?? 30,
@@ -171,7 +161,7 @@ struct ListsTabView: View {
                             )
                         case .grocery:
                             GroceryListView(
-                                searchText: searchText,
+                                searchText: searchBarState.searchText,
                                 sortOption: sortOption,
                                 filterOption: groceryFilter,
                                 onAcquired: {
@@ -187,7 +177,7 @@ struct ListsTabView: View {
                             )
                         case .utensils:
                             UtensilsView(
-                                searchText: searchText,
+                                searchText: searchBarState.searchText,
                                 sortOption: sortOption,
                                 onPullToAdd: { showAddUtensil = true },
                                 onScrollOffsetChange: updateInlineTitle
@@ -199,16 +189,6 @@ struct ListsTabView: View {
             },
             infoContent: {
                 EmptyView()
-            },
-            onRefresh: {
-                if selectedSubtab == .pantry {
-                    showAddPantry = true
-                } else if selectedSubtab == .utensils {
-                    showAddUtensil = true
-                } else {
-                    showAddGrocery = true
-                }
-                try? await Task.sleep(nanoseconds: 500_000_000)
             }
         )
         #if os(iOS)
@@ -216,7 +196,7 @@ struct ListsTabView: View {
         #endif
         .tint(PageTheme.lists.accentColor)
         .onChange(of: selectedSubtab) {
-            searchText = ""
+            searchBarState.searchText = ""
             showsInlineTitle = false
             currentScrollOffset = 0
         }
