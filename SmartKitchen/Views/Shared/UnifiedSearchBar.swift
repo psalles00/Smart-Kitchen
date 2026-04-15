@@ -16,23 +16,27 @@ struct UnifiedSearchBar: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            Image(systemName: "magnifyingglass")
+            Image(systemName: state.mode == .aiChat ? "paperplane.fill" : "sparkle.magnifyingglass")
                 .font(.system(size: 16, weight: .medium))
-                .foregroundStyle(.white)
+                .foregroundStyle(.secondary)
 
-            TextField("Adicione, busque, ou pergunte…", text: $state.searchText)
-                .foregroundStyle(.white)
+            TextField(state.mode == .aiChat ? "Converse com a IA…" : "Adicione, busque, ou pergunte…", text: $state.searchText)
+                .foregroundStyle(.primary)
                 #if os(iOS)
                 .textInputAutocapitalization(.never)
                 #endif
                 .disableAutocorrection(true)
                 .focused($isFocused)
-                .submitLabel(.search)
-                .tint(.white)
+                .submitLabel(state.mode == .aiChat ? .send : .search)
                 .onSubmit {
                     let trimmed = state.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
                     guard !trimmed.isEmpty else { return }
-                    state.submitTrigger += 1
+                    if state.mode == .aiChat {
+                        state.pendingChatMessage = trimmed
+                        state.searchText = ""
+                    } else {
+                        state.submitTrigger += 1
+                    }
                 }
 
             if !state.searchText.isEmpty {
@@ -41,7 +45,7 @@ struct UnifiedSearchBar: View {
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .font(.system(size: 16))
-                        .foregroundStyle(.white.opacity(0.6))
+                        .foregroundStyle(.secondary)
                 }
                 .buttonStyle(.plain)
                 .transition(.scale.combined(with: .opacity))
@@ -54,26 +58,29 @@ struct UnifiedSearchBar: View {
             } label: {
                 Image(systemName: "mic.fill")
                     .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(.secondary)
                     .frame(width: 30, height: 30)
             }
             .buttonStyle(.plain)
             #endif
 
-            // Attachment menu
+            // Attachment menu (gallery + camera)
             attachmentMenu
         }
         .padding(.horizontal, 14)
-        .padding(.vertical, 12)
+        .padding(.vertical, 8)
         .background(searchBarBackground)
-        .padding(.horizontal, 16)
-        .environment(\.colorScheme, .dark)
-        .onAppear {
-            // View just entered the hierarchy — focus immediately
-            isFocused = true
+        .padding(.horizontal, 20)
+        .onChange(of: isFocused) { _, newValue in
+            if newValue && !state.isVisible {
+                state.isVisible = true
+            }
         }
         .onChange(of: state.focusTrigger) { _, _ in
             isFocused = true
+        }
+        .onChange(of: state.defocusTrigger) { _, _ in
+            isFocused = false
         }
     }
 
@@ -87,11 +94,7 @@ struct UnifiedSearchBar: View {
                 .glassEffect(.regular.interactive(), in: .capsule)
         } else {
             RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(.ultraThinMaterial)
-                .overlay {
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                        .strokeBorder(Color.white.opacity(0.12), lineWidth: 1)
-                }
+                .fill(Color(.tertiarySystemFill))
         }
     }
 
@@ -100,20 +103,21 @@ struct UnifiedSearchBar: View {
     private var attachmentMenu: some View {
         Menu {
             Button {
-                // Placeholder: photo picker (future feature)
+                // Placeholder: photo picker
             } label: {
-                Label("Subir Foto", systemImage: "photo.on.rectangle")
+                Label("Inserir da Galeria", systemImage: "photo.on.rectangle")
             }
 
             Button {
-                // Placeholder: camera capture (future feature)
+                // Placeholder: camera capture
             } label: {
-                Label("Usar Câmera", systemImage: "camera")
+                Label("Tirar Foto", systemImage: "camera")
             }
         } label: {
-            Image(systemName: "paperclip")
-                .font(.system(size: 15, weight: .medium))
-                .foregroundStyle(.white)
+            Image(systemName: "plus.circle.fill")
+                .font(.system(size: 20, weight: .medium))
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(.secondary)
                 .frame(width: 30, height: 30)
         }
         .buttonStyle(.plain)

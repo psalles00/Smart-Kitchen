@@ -10,7 +10,7 @@ struct CommandBarSuggestionChips: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Sugestões")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.primary.opacity(0.6))
                     .padding(.horizontal, 16)
 
                 WrappingHStack(items: suggestions) { entry in

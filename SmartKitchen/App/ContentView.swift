@@ -37,7 +37,6 @@ struct ContentView: View {
     @Query private var settingsArray: [AppSettings]
     @State private var selectedTab: AppTab = .assistant
     @State private var lastContentTab: AppTab = .assistant
-    @State private var showCommandBar = false
     @State private var showSettings = false
     @State private var showAddPantry = false
     @State private var showAddGrocery = false
@@ -47,10 +46,10 @@ struct ContentView: View {
     @State private var addItemPrefill = ""
     @State private var addItemIconFileName: String?
     @State private var addItemCategory: String?
-    @State private var isBouncingBackFromCommandBar = false
     @State private var scrollToTopTrigger: Int = 0
     @State private var scrollToItemRequest: ScrollToItemRequest?
     @State private var displayedBgTheme: PageTheme = .home
+    @State private var searchDragOffset: CGFloat = 0
     @StateObject private var searchService = UniversalSearchService()
     @StateObject private var searchBarState = SearchBarState()
 
@@ -63,6 +62,8 @@ struct ContentView: View {
     /// When non-nil, the CommandBar tab will open inline chat with this query on next activation.
     @State private var pendingChatQuery: String? = nil
     @State private var pendingOpenChat = false
+    @State private var pendingNewConversation = false
+    @State private var pendingShowHistory = false
 
     #if os(macOS)
     @State private var selectedSidebar: SidebarItem? = .home
@@ -88,7 +89,7 @@ struct ContentView: View {
         Binding(
             get: { selectedTab },
             set: { newValue in
-                if newValue == selectedTab && newValue != .commandBar && !isBouncingBackFromCommandBar {
+                if newValue == selectedTab {
                     scrollToTopTrigger += 1
                 }
                 selectedTab = newValue
@@ -209,14 +210,6 @@ struct ContentView: View {
             }
             .forceLightStatusBar()
         }
-        .sheet(isPresented: $showCommandBar) {
-            CommandBarView { action in
-                handleCommandBarAction(action)
-            }
-            #if os(macOS)
-            .frame(width: 560, height: 480)
-            #endif
-        }
         .onAppear {
             // TODO: Re-enable daily backup once BackupManager.swift is included in this target.
             // BackupManager.shared.performDailyBackupIfNeeded(context: modelContext)
@@ -252,6 +245,8 @@ struct ContentView: View {
                         }
                     )
                 }
+                .overlay { searchResultsOverlay }
+                .safeAreaInset(edge: .bottom, spacing: 0) { bottomSearchBarArea }
             } label: {
                 Label("Início", systemImage: AppTab.assistant.icon)
             }
@@ -260,6 +255,8 @@ struct ContentView: View {
                 NavigationStack {
                     ListsTabView()
                 }
+                .overlay { searchResultsOverlay }
+                .safeAreaInset(edge: .bottom, spacing: 0) { bottomSearchBarArea }
             } label: {
                 Label("Listas", systemImage: AppTab.lists.icon)
             }
@@ -268,6 +265,8 @@ struct ContentView: View {
                 NavigationStack {
                     RecipesView()
                 }
+                .overlay { searchResultsOverlay }
+                .safeAreaInset(edge: .bottom, spacing: 0) { bottomSearchBarArea }
             } label: {
                 Label("Receitas", systemImage: AppTab.recipes.icon)
             }
@@ -276,23 +275,128 @@ struct ContentView: View {
                 NavigationStack {
                     NutrientsPlaceholderView()
                 }
+                .overlay { searchResultsOverlay }
+                .safeAreaInset(edge: .bottom, spacing: 0) { bottomSearchBarArea }
             } label: {
                 Label("Nutrientes", systemImage: AppTab.nutrients.icon)
-            }
-
-            Tab(value: AppTab.commandBar) {
-                Color.clear
-            } label: {
-                Label(
-                    searchBarState.isVisible ? "Fechar" : "Buscar",
-                    systemImage: searchBarState.isVisible ? "xmark" : "sparkle.magnifyingglass"
-                )
             }
         }
         .onChange(of: searchBarState.searchText) { _, newValue in
             searchService.search(query: newValue, context: modelContext, showUtensils: settings?.showUtensils == true)
         }
         .environment(\.searchOverlay, searchOverlayView)
+    }
+
+    // MARK: - Bottom Search Bar
+
+    /// Whether the results panel should be shown (first letter typed, chat, etc.)
+    private var hasSearchContent: Bool {
+        guard searchBarState.isVisible else { return false }
+        let hasText = !searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        return hasText || searchBarState.mode == .aiChat || pendingOpenChat || pendingChatQuery != nil
+    }
+
+    @ViewBuilder
+    private var bottomSearchBarArea: some View {
+        UnifiedSearchBar(state: searchBarState) { _ in }
+            .padding(.vertical, 2)
+            .contentShape(Rectangle())
+            .ignoresSafeArea(.keyboard, edges: .bottom)
+    }
+
+    @ViewBuilder
+    private var searchResultsOverlay: some View {
+        if hasSearchContent {
+            searchResultsPanel
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+        }
+    }
+
+    // MARK: - Search Results Panel
+
+    @ViewBuilder
+    private var searchResultsPanel: some View {
+        VStack(spacing: 0) {
+            // Drag indicator
+            Capsule()
+                .fill(Color(.tertiarySystemFill))
+                .frame(width: 36, height: 5)
+                .padding(.top, 8)
+                .padding(.bottom, 4)
+
+            // Header: title + close button
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(searchBarState.mode == .aiChat ? "Modo IA" : "Assistente")
+                        .font(.pageTitle)
+                    Text(searchBarState.mode == .aiChat
+                         ? "Converse com a IA sobre sua cozinha."
+                         : "Adicione itens, busque na despensa ou pergunte à IA.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                if searchBarState.mode == .aiChat {
+                    Button {
+                        startNewConversation()
+                    } label: {
+                        Image(systemName: "square.and.pencil")
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundStyle(.secondary)
+                            .frame(width: 32, height: 32)
+                    }
+                    .buttonStyle(.plain)
+
+                    Button {
+                        showConversationHistory()
+                    } label: {
+                        Image(systemName: "clock.arrow.circlepath")
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundStyle(.secondary)
+                            .frame(width: 32, height: 32)
+                    }
+                    .buttonStyle(.plain)
+                }
+                Button {
+                    searchBarState.dismiss()
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.title2)
+                        .symbolRenderingMode(.hierarchical)
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 10)
+
+            // Results area
+            if let overlay = searchOverlayView {
+                overlay
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                Spacer(minLength: 0)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(.regularMaterial)
+        .clipShape(UnevenRoundedRectangle(topLeadingRadius: 20, topTrailingRadius: 20))
+        .offset(y: max(searchDragOffset, 0))
+        .gesture(
+            DragGesture(minimumDistance: 30)
+                .onChanged { value in
+                    searchDragOffset = value.translation.height
+                }
+                .onEnded { value in
+                    if value.translation.height > 120 || value.predictedEndTranslation.height > 200 {
+                        searchBarState.dismiss()
+                    }
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                        searchDragOffset = 0
+                    }
+                }
+        )
+        .ignoresSafeArea(edges: .bottom)
     }
 
     /// Search results view injected into ExpandedPageLayout's content panel via environment.
@@ -309,11 +413,20 @@ struct ContentView: View {
                 searchService: searchService,
                 onAction: { handleCommandBarAction($0) },
                 pendingChatQuery: $pendingChatQuery,
-                pendingOpenChat: $pendingOpenChat
+                pendingOpenChat: $pendingOpenChat,
+                pendingNewConversation: $pendingNewConversation,
+                pendingShowHistory: $pendingShowHistory
             )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color(.systemBackground))
         )
+    }
+
+    private func startNewConversation() {
+        pendingNewConversation = true
+    }
+
+    private func showConversationHistory() {
+        pendingShowHistory = true
     }
 
     #if os(macOS)
@@ -336,7 +449,7 @@ struct ContentView: View {
             .tint(macActivePageTheme.accentColor)
             .safeAreaInset(edge: .bottom) {
                 Button {
-                    showCommandBar = true
+                    searchBarState.reveal()
                 } label: {
                     HStack(spacing: 8) {
                         Image(systemName: "sparkle.magnifyingglass")
@@ -360,7 +473,7 @@ struct ContentView: View {
             .toolbar {
                 ToolbarItem(placement: .automatic) {
                     Button {
-                        showCommandBar = true
+                        searchBarState.reveal()
                     } label: {
                         Label("Buscar", systemImage: "sparkle.magnifyingglass")
                     }
@@ -375,7 +488,7 @@ struct ContentView: View {
                         onSettingsTap: { selectedSidebar = .settings },
                         onOpenChat: {
                             pendingOpenChat = true
-                            showCommandBar = true
+                            searchBarState.reveal()
                         }
                     )
                 }
@@ -401,7 +514,7 @@ struct ContentView: View {
         }
         .toolbarBackground(.hidden, for: .windowToolbar)
         .toolbarColorScheme(.dark, for: .windowToolbar)
-        .focusedSceneValue(\.openCommandBarAction, { showCommandBar = true })
+        .focusedSceneValue(\.openCommandBarAction, { searchBarState.reveal() })
         .background {
             macAppBackground
                 .ignoresSafeArea()
@@ -481,31 +594,6 @@ struct ContentView: View {
     #endif
 
     private func handleTabSelectionChange(_ newValue: AppTab) {
-        if newValue == .commandBar {
-            #if os(macOS)
-            // macOS: bounce back and present as a sheet
-            isBouncingBackFromCommandBar = true
-            selectedTab = lastContentTab
-            showCommandBar = true
-            return
-            #else
-            // iOS: toggle the unified search bar
-            isBouncingBackFromCommandBar = true
-            selectedTab = lastContentTab
-            if searchBarState.isVisible {
-                searchBarState.dismiss()
-            } else {
-                searchBarState.reveal()
-            }
-            return
-            #endif
-        }
-
-        if isBouncingBackFromCommandBar {
-            isBouncingBackFromCommandBar = false
-            return
-        }
-
         lastContentTab = newValue
 
         // Animate background theme change with a fade, independently of content swap
@@ -527,7 +615,6 @@ struct ContentView: View {
 
         if !keepSearchOpen {
             searchBarState.selectResult()
-            showCommandBar = false
         }
 
         switch action {

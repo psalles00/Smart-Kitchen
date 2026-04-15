@@ -9,13 +9,13 @@ import UIKit
 // MARK: - Typography
 
 extension Font {
-    /// Bricolage Grotesque ExtraBold — page titles (H1)
-    static let pageTitle: Font = .custom("Bricolage Grotesque", size: 34, relativeTo: .largeTitle).weight(.heavy)
-    /// Bricolage Grotesque SemiBold — section titles (H2)
-    static let sectionTitle: Font = .custom("Bricolage Grotesque", size: 24, relativeTo: .title).weight(.semibold)
-    /// Bricolage Grotesque Medium — card & inline titles (H3)
-    static let cardTitle: Font = .custom("Bricolage Grotesque", size: 18, relativeTo: .title3).weight(.medium)
-    /// Bricolage Grotesque Regular — decorative subtitle
+    /// Bricolage Grotesque — page titles (H1)
+    static let pageTitle: Font = .custom("Bricolage Grotesque", size: 34, relativeTo: .largeTitle).bold()
+    /// Bricolage Grotesque — section titles (H2)
+    static let sectionTitle: Font = .custom("Bricolage Grotesque", size: 24, relativeTo: .title).bold()
+    /// Bricolage Grotesque — card & inline titles (H3)
+    static let cardTitle: Font = .custom("Bricolage Grotesque", size: 18, relativeTo: .title3).bold()
+    /// Bricolage Grotesque — decorative subtitle
     static let serifBody: Font = .custom("Bricolage Grotesque", size: 16, relativeTo: .body)
 }
 

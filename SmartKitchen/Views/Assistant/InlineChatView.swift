@@ -29,6 +29,10 @@ struct InlineChatView: View {
     let onDismiss: () -> Void
     /// Called when viewing conversation history.
     let onShowHistory: () -> Void
+    /// Shared search bar state — when provided, the unified search bar acts as input.
+    var searchBarState: SearchBarState? = nil
+    /// External message to send (received from the unified search bar).
+    @Binding var pendingExternalMessage: String?
 
     /// Current conversation ID. Nil means a new conversation will be created on first message.
     @State private var conversationId: UUID?
@@ -42,19 +46,26 @@ struct InlineChatView: View {
         initialQuery: String? = nil,
         existingConversationId: UUID? = nil,
         onDismiss: @escaping () -> Void,
-        onShowHistory: @escaping () -> Void
+        onShowHistory: @escaping () -> Void,
+        searchBarState: SearchBarState? = nil,
+        pendingExternalMessage: Binding<String?> = .constant(nil)
     ) {
         self.initialQuery = initialQuery
         self.existingConversationId = existingConversationId
         self.onDismiss = onDismiss
         self.onShowHistory = onShowHistory
+        self.searchBarState = searchBarState
+        self._pendingExternalMessage = pendingExternalMessage
     }
 
     private var settings: AppSettings? { settingsArray.first }
 
     var body: some View {
         VStack(spacing: 0) {
-            chatHeader
+            // Hide own header when the parent panel provides one
+            if searchBarState == nil {
+                chatHeader
+            }
 
             // Chat messages
             ScrollViewReader { proxy in
@@ -122,6 +133,7 @@ struct InlineChatView: View {
                         }
                     }
                     .padding(.vertical, 12)
+                    .padding(.bottom, searchBarState != nil ? 60 : 0)
                 }
                 .onChange(of: messages.count) {
                     scrollToBottom(proxy: proxy)
@@ -143,7 +155,16 @@ struct InlineChatView: View {
                     .onTapGesture { self.errorMessage = nil }
             }
 
-            inputBar
+            // Hide own input bar when unified search bar is used as input
+            if searchBarState == nil {
+                inputBar
+            }
+        }
+        .onChange(of: pendingExternalMessage) { _, newValue in
+            if let message = newValue {
+                pendingExternalMessage = nil
+                sendMessage(message)
+            }
         }
         .onAppear {
             if let existingConversationId {

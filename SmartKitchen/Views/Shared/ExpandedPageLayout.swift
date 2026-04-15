@@ -162,19 +162,11 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
             infoContent()
                 .padding(.horizontal, 20)
                 .padding(.top, 4)
-                .padding(.bottom, searchBarState.isVisible ? 8 : 0)
-
-            // Search bar — uses opacity + height animation (never frame 0) so it stays focusable
-            if searchBarState.isVisible {
-                UnifiedSearchBar(state: searchBarState) { _ in }
-                    .transition(.opacity.combined(with: .move(edge: .top)))
-            }
 
             Spacer().frame(height: 8)
         }
         .frame(maxWidth: .infinity)
         .contentShape(Rectangle())
-        .simultaneousGesture(dragToRevealGesture)
     }
     #endif
 
@@ -206,7 +198,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
                 topTrailingRadius: cornerRadius
             )
         )
-        .ignoresSafeArea(.container, edges: .bottom)
+        .ignoresSafeArea(edges: .bottom)
         .padding(.leading, leadingPanelInset)
         .padding(.trailing, trailingPanelInset)
         .animation(.spring(response: 0.38, dampingFraction: 0.78), value: searchBarState.isVisible)

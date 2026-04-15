@@ -19,6 +19,8 @@ struct InlineSearchResultsView: View {
     /// External trigger to open chat.
     @Binding var pendingChatQuery: String?
     @Binding var pendingOpenChat: Bool
+    @Binding var pendingNewConversation: Bool
+    @Binding var pendingShowHistory: Bool
 
     var body: some View {
         Group {
@@ -46,7 +48,12 @@ struct InlineSearchResultsView: View {
                     },
                     onShowHistory: {
                         showConversationHistory = true
-                    }
+                    },
+                    searchBarState: searchBarState,
+                    pendingExternalMessage: Binding(
+                        get: { searchBarState.pendingChatMessage },
+                        set: { searchBarState.pendingChatMessage = $0 }
+                    )
                 )
             } else {
                 searchResultsList
@@ -73,6 +80,29 @@ struct InlineSearchResultsView: View {
         .onChange(of: searchBarState.submitTrigger) { _, _ in
             executeTopResult()
         }
+        .onChange(of: searchBarState.mode) { _, newMode in
+            if newMode != .aiChat && showInlineChat {
+                showInlineChat = false
+                chatInitialQuery = nil
+                chatExistingConversationId = nil
+            }
+        }
+        .onChange(of: pendingNewConversation) { _, newValue in
+            if newValue {
+                pendingNewConversation = false
+                chatInitialQuery = nil
+                chatExistingConversationId = nil
+                showInlineChat = true
+                searchBarState.mode = .aiChat
+                searchBarState.searchText = ""
+            }
+        }
+        .onChange(of: pendingShowHistory) { _, newValue in
+            if newValue {
+                pendingShowHistory = false
+                showConversationHistory = true
+            }
+        }
     }
 
     // MARK: - Search Results List
@@ -83,12 +113,55 @@ struct InlineSearchResultsView: View {
 
         return ScrollView {
             VStack(alignment: .leading, spacing: 16) {
+                // Ask AI as first result when query looks like a question
+                if isQuestion && !trimmedQuery.isEmpty {
+                    Button {
+                        openChat(initialQuery: trimmedQuery)
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "sparkles")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundStyle(.purple)
+                                .frame(width: 36, height: 36)
+                                .background(Color.purple.opacity(0.12), in: .rect(cornerRadius: 10))
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Perguntar à IA")
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundStyle(.primary)
+                                Text(trimmedQuery)
+                                    .font(.caption)
+                                    .foregroundStyle(.primary.opacity(0.55))
+                                    .lineLimit(1)
+                            }
+
+                            Spacer(minLength: 4)
+
+                            ZStack {
+                                Circle()
+                                    .stroke(lineWidth: 3.5)
+                                    .foregroundStyle(Color(.tertiarySystemFill))
+                                    .frame(width: 30, height: 30)
+                                Image(systemName: "return")
+                                    .font(.system(size: 30 * 0.38, weight: .bold))
+                                    .foregroundStyle(.secondary.opacity(0.6))
+                            }
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 10)
+                        .background(Color(.tertiarySystemFill), in: .rect(cornerRadius: 12))
+                        .contentShape(.rect)
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal, 4)
+                }
+
                 // Results
                 if !searchService.results.isEmpty {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Resultados")
                             .font(.caption.weight(.semibold))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.primary.opacity(0.6))
                             .padding(.horizontal, 16)
 
                         ForEach(Array(searchService.results.prefix(10).enumerated()), id: \.element.id) { index, result in
@@ -136,14 +209,14 @@ struct InlineSearchResultsView: View {
             if !hasResults && !query.isEmpty {
                 Text("Nenhum resultado encontrado")
                     .font(.caption)
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(.secondary)
                     .padding(.horizontal, 16)
             }
 
             if !query.isEmpty {
                 Text("Ações")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.primary.opacity(0.6))
                     .padding(.horizontal, 16)
 
                 let actions = CommandBarHelpers.orderedActions(query: query, isQuestion: isQuestion)
@@ -186,6 +259,7 @@ struct InlineSearchResultsView: View {
         chatExistingConversationId = nil
         showInlineChat = true
         searchBarState.mode = .aiChat
+        searchBarState.searchText = ""
     }
 
     private func quickActionForResult(_ result: SearchResult) -> (() -> Void)? {

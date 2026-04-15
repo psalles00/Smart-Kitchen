@@ -115,12 +115,6 @@ struct ListsTabView: View {
                 PageHeader(title: "Listas", isInverted: isInverted) {
                     HStack(spacing: 6) {
                         GlassButtonGroup {
-                            GlassGroupButton(systemImage: "magnifyingglass") {
-                                searchBarState.reveal()
-                            }
-                        }
-
-                        GlassButtonGroup {
                             optionsMenu
                             GlassGroupDivider()
                             groupingModeButton
