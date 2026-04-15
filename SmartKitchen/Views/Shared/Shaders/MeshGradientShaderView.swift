@@ -80,6 +80,7 @@ class MeshGradientSceneRenderer: NSObject, SCNSceneRendererDelegate {
     private let color1 = SCNVector3(0.0, 0.0, 0.0)      // Preto puro #000000
     private let color2 = SCNVector3(0.12, 0.65, 0.25)   // Verde claro e vibrante
     
+    @MainActor
     func setup(in view: SCNView) {
         self.sceneView = view
         self.startTime = CACurrentMediaTime()
@@ -163,8 +164,8 @@ struct MeshGradientSceneView: NSViewRepresentable {
 extension MeshGradientSceneView {
     func createView(context: Context) -> SCNView {
         let scnView = SCNView()
-        scnView.antialiasingMode = .multisampling2X
-        scnView.preferredFramesPerSecond = 30
+        scnView.antialiasingMode = .none
+        scnView.preferredFramesPerSecond = 20
         context.coordinator.setup(in: scnView)
         return scnView
     }

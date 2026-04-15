@@ -330,6 +330,7 @@ class CPPNSceneRenderer: NSObject, SCNSceneRendererDelegate {
     var tintColor: PlatformColor = .white
     var tintStrength: Float = 0.0
 
+    @MainActor
     func setup(in view: SCNView) {
         self.sceneView = view
         self.startTime = CACurrentMediaTime()
@@ -443,8 +444,8 @@ struct CPPNSceneView: NSViewRepresentable {
 extension CPPNSceneView {
     func createView(context: Context) -> SCNView {
         let scnView = SCNView()
-        scnView.antialiasingMode = .multisampling2X
-        scnView.preferredFramesPerSecond = 30
+        scnView.antialiasingMode = .none
+        scnView.preferredFramesPerSecond = 20
         context.coordinator.setup(in: scnView)
         let scale = scnView.displayScale
         context.coordinator.updateParams(

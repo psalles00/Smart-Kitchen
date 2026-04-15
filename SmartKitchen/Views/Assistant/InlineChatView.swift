@@ -845,7 +845,7 @@ struct InlineChatView: View {
         let wantsDessert = normalizedPrompt.contains("sobremesa") || normalizedPrompt.contains("doce")
 
         // Check for specific keywords beyond generic recipe request
-        let isSpecificRequest = detectSpecificRequest(normalizedPrompt)
+        _ = detectSpecificRequest(normalizedPrompt)
 
         let thresholdPercent = Double(settings?.recipeCompatibilityThresholdPercentValue ?? 80) / 100.0
 

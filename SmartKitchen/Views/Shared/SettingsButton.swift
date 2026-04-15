@@ -16,7 +16,7 @@ extension EnvironmentValues {
 // MARK: - Environment key for scroll-to-top trigger
 
 struct ScrollToTopTriggerKey: EnvironmentKey {
-    nonisolated(unsafe) static let defaultValue: Int = 0
+    static let defaultValue: Int = 0
 }
 
 extension EnvironmentValues {

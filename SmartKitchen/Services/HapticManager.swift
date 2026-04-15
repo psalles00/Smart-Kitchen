@@ -10,6 +10,7 @@ enum HapticStyle {
     case light, medium, heavy
 }
 
+@MainActor
 enum HapticManager {
     static func impact(style: HapticStyle = .medium) {
         #if os(iOS)
@@ -30,7 +31,7 @@ enum HapticManager {
     }
 
     /// Satisfying haptic sequence for search bar reveal: light tap followed by medium tap.
-    static func searchReveal() {
+    @MainActor static func searchReveal() {
         #if os(iOS)
         let light = UIImpactFeedbackGenerator(style: .light)
         let medium = UIImpactFeedbackGenerator(style: .medium)
@@ -48,3 +49,4 @@ enum HapticManager {
         #endif
     }
 }
+

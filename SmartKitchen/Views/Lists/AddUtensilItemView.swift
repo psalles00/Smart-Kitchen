@@ -163,11 +163,9 @@ struct AddUtensilItemView: View {
 
     private func loadPhoto() {
         guard let selectedPhoto else { return }
-        Task {
+        Task { @MainActor in
             guard let data = try? await selectedPhoto.loadTransferable(type: Data.self) else { return }
-            await MainActor.run {
-                imageData = data
-            }
+            imageData = data
         }
     }
 }
@@ -283,11 +281,9 @@ struct EditUtensilItemView: View {
 
     private func loadPhoto() {
         guard let selectedPhoto else { return }
-        Task {
+        Task { @MainActor in
             guard let data = try? await selectedPhoto.loadTransferable(type: Data.self) else { return }
-            await MainActor.run {
-                item.imageData = data
-            }
+            item.imageData = data
         }
     }
 }

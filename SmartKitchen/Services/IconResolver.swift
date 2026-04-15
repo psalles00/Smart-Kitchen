@@ -4,6 +4,23 @@ import Foundation
 /// Uses a keyword → filename mapping for common kitchen items, with a fuzzy fallback.
 enum IconResolver {
 
+    // MARK: - Image Cache
+
+    nonisolated(unsafe) private static let imageCache: NSCache<NSString, PlatformImage> = {
+        let cache = NSCache<NSString, PlatformImage>()
+        cache.countLimit = 200
+        return cache
+    }()
+
+    nonisolated(unsafe) private static let resolveCache: NSCache<NSString, NSString> = {
+        let cache = NSCache<NSString, NSString>()
+        cache.countLimit = 500
+        return cache
+    }()
+
+    // Sentinel to cache negative resolve results
+    nonisolated(unsafe) private static let resolveNilSentinel = NSString(string: "__nil__")
+
     // MARK: - Public
 
     /// Returns a PlatformImage for a given item name, or nil if no match.
@@ -21,51 +38,72 @@ enum IconResolver {
     static func resolve(_ name: String) -> String? {
         let lower = name.lowercased()
             .trimmingCharacters(in: .whitespacesAndNewlines)
+        let cacheKey = NSString(string: lower)
 
-        // 1. Exact match in mapping
-        if let file = keywordMap[lower] {
-            return file
+        // Check resolve cache first
+        if let cached = resolveCache.object(forKey: cacheKey) {
+            return cached == resolveNilSentinel ? nil : cached as String
         }
 
-        // 2. Partial match — check if any keyword is contained in the name
-        for (keyword, file) in keywordMap where lower.contains(keyword) {
-            return file
-        }
+        let result: String? = {
+            // 1. Exact match in mapping
+            if let file = keywordMap[lower] {
+                return file
+            }
 
-        // 3. Slug-based guess: "name" → "name.png"
-        let slug = lower
-            .replacingOccurrences(of: " ", with: "-")
-            .replacingOccurrences(of: "á", with: "a")
-            .replacingOccurrences(of: "ã", with: "a")
-            .replacingOccurrences(of: "â", with: "a")
-            .replacingOccurrences(of: "é", with: "e")
-            .replacingOccurrences(of: "ê", with: "e")
-            .replacingOccurrences(of: "í", with: "i")
-            .replacingOccurrences(of: "ó", with: "o")
-            .replacingOccurrences(of: "õ", with: "o")
-            .replacingOccurrences(of: "ô", with: "o")
-            .replacingOccurrences(of: "ú", with: "u")
-            .replacingOccurrences(of: "ç", with: "c")
+            // 2. Partial match — check if any keyword is contained in the name
+            for (keyword, file) in keywordMap where lower.contains(keyword) {
+                return file
+            }
 
-        let slugFile = slug + ".png"
-        if loadBundledIcon(slugFile) != nil {
-            return slugFile
-        }
+            // 3. Slug-based guess: "name" → "name.png"
+            let slug = lower
+                .replacingOccurrences(of: " ", with: "-")
+                .replacingOccurrences(of: "á", with: "a")
+                .replacingOccurrences(of: "ã", with: "a")
+                .replacingOccurrences(of: "â", with: "a")
+                .replacingOccurrences(of: "é", with: "e")
+                .replacingOccurrences(of: "ê", with: "e")
+                .replacingOccurrences(of: "í", with: "i")
+                .replacingOccurrences(of: "ó", with: "o")
+                .replacingOccurrences(of: "õ", with: "o")
+                .replacingOccurrences(of: "ô", with: "o")
+                .replacingOccurrences(of: "ú", with: "u")
+                .replacingOccurrences(of: "ç", with: "c")
 
-        return nil
+            let slugFile = slug + ".png"
+            if loadBundledIcon(slugFile) != nil {
+                return slugFile
+            }
+
+            return nil
+        }()
+
+        resolveCache.setObject(result.map { NSString(string: $0) } ?? resolveNilSentinel, forKey: cacheKey)
+        return result
     }
 
     // MARK: - Bundle Loading
 
     private static func loadBundledIcon(_ filename: String) -> PlatformImage? {
-        guard let path = Bundle.main.path(forResource: filename, ofType: nil, inDirectory: "images-128") else {
-            // Try without directory (flat copy)
-            guard let path2 = Bundle.main.path(forResource: filename, ofType: nil) else {
-                return nil
-            }
-            return PlatformImage(contentsOfFile: path2)
+        let cacheKey = NSString(string: filename)
+        if let cached = imageCache.object(forKey: cacheKey) {
+            return cached
         }
-        return PlatformImage(contentsOfFile: path)
+
+        let image: PlatformImage?
+        if let path = Bundle.main.path(forResource: filename, ofType: nil, inDirectory: "images-128") {
+            image = PlatformImage(contentsOfFile: path)
+        } else if let path2 = Bundle.main.path(forResource: filename, ofType: nil) {
+            image = PlatformImage(contentsOfFile: path2)
+        } else {
+            image = nil
+        }
+
+        if let image {
+            imageCache.setObject(image, forKey: cacheKey)
+        }
+        return image
     }
 
     // MARK: - Keyword Map (PT-BR → icon filename)

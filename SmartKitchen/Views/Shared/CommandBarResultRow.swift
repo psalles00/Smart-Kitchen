@@ -82,7 +82,7 @@ struct CommandBarResultRow: View {
                 Spacer(minLength: 4)
 
                 // Quick action checkbox: only for single-list items
-                if let onQuickAction, !result.isAlsoInOtherList,
+                if let _ = onQuickAction, !result.isAlsoInOtherList,
                    (result.type == .pantryItem || result.type == .groceryItem) {
                     Button {
                         guard !isAnimating else { return }

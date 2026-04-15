@@ -1,5 +1,5 @@
 import Foundation
-import UserNotifications
+@preconcurrency import UserNotifications
 import SwiftData
 
 @MainActor
@@ -10,10 +10,16 @@ final class NotificationService {
     // MARK: - Permission
 
     func requestPermissionIfNeeded() {
-        let center = UNUserNotificationCenter.current()
-        center.getNotificationSettings { settings in
+        Task {
+            let center = UNUserNotificationCenter.current()
+            let settings = await center.notificationSettings()
             if settings.authorizationStatus == .notDetermined {
-                center.requestAuthorization(options: [.alert, .sound, .badge]) { _, _ in }
+                let granted = (try? await center.requestAuthorization(options: [.alert, .sound, .badge])) ?? false
+                if !granted {
+                    // Authorization was denied or an error occurred
+                    // Consider guiding the user to Settings if needed
+                    // print("Notification authorization not granted")
+                }
             }
         }
     }
@@ -31,15 +37,12 @@ final class NotificationService {
     func rescheduleExpiryNotifications(context: ModelContext, settings: AppSettings) {
         let center = UNUserNotificationCenter.current()
 
-        // Remove all existing expiry notifications
-        center.removePendingNotificationRequests(withIdentifiers: []) // we'll remove by prefix below
-        center.getPendingNotificationRequests { existing in
+        // Remove all existing expiry notifications then reschedule
+        Task { @MainActor in
+            let existing = await center.pendingNotificationRequests()
             let expiryIDs = existing.filter { $0.identifier.hasPrefix("expiry-") }.map(\.identifier)
             center.removePendingNotificationRequests(withIdentifiers: expiryIDs)
-
-            Task { @MainActor in
-                self.scheduleExpiryNotificationsInternal(context: context, settings: settings)
-            }
+            self.scheduleExpiryNotificationsInternal(context: context, settings: settings)
         }
     }
 

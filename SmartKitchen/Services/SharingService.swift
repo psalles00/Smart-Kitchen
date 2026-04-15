@@ -146,7 +146,7 @@ final class SharingService: @unchecked Sendable {
         share[CKShare.SystemFieldKey.title] = "Smart Kitchen"
         share.publicPermission = .none
 
-        try await ckContainer.privateCloudDatabase.modifyRecords(saving: [share], deleting: [])
+        _ = try await ckContainer.privateCloudDatabase.modifyRecords(saving: [share], deleting: [])
 
         activeShare = share
         isSharing = true
@@ -163,7 +163,7 @@ final class SharingService: @unchecked Sendable {
         defer { isLoading = false }
 
         if let share = activeShare {
-            try await ckContainer.privateCloudDatabase.modifyRecords(saving: [], deleting: [share.recordID])
+            _ = try await ckContainer.privateCloudDatabase.modifyRecords(saving: [], deleting: [share.recordID])
         }
 
         activeShare = nil
@@ -211,7 +211,7 @@ final class SharingService: @unchecked Sendable {
         defer { isLoading = false }
 
         share.removeParticipant(participant)
-        try await ckContainer.privateCloudDatabase.modifyRecords(saving: [share], deleting: [])
+        _ = try await ckContainer.privateCloudDatabase.modifyRecords(saving: [share], deleting: [])
 
         await refreshParticipants()
     }
