@@ -239,7 +239,7 @@ struct InlineSearchResultsView: View {
                 }
             }
             .padding(.top, 12)
-            .padding(.bottom, 70)
+            .padding(.bottom, 16)
         }
         .scrollDismissesKeyboard(.interactively)
     }

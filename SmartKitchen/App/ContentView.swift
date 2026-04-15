@@ -245,8 +245,8 @@ struct ContentView: View {
                         }
                     )
                 }
-                .safeAreaInset(edge: .bottom, spacing: 0) { bottomSearchBarArea }
                 .overlay { searchResultsOverlay }
+                .safeAreaInset(edge: .bottom, spacing: 0) { bottomSearchBarArea }
             } label: {
                 Label("Início", systemImage: AppTab.assistant.icon)
             }
@@ -255,8 +255,8 @@ struct ContentView: View {
                 NavigationStack {
                     ListsTabView()
                 }
-                .safeAreaInset(edge: .bottom, spacing: 0) { bottomSearchBarArea }
                 .overlay { searchResultsOverlay }
+                .safeAreaInset(edge: .bottom, spacing: 0) { bottomSearchBarArea }
             } label: {
                 Label("Listas", systemImage: AppTab.lists.icon)
             }
@@ -265,8 +265,8 @@ struct ContentView: View {
                 NavigationStack {
                     RecipesView()
                 }
-                .safeAreaInset(edge: .bottom, spacing: 0) { bottomSearchBarArea }
                 .overlay { searchResultsOverlay }
+                .safeAreaInset(edge: .bottom, spacing: 0) { bottomSearchBarArea }
             } label: {
                 Label("Receitas", systemImage: AppTab.recipes.icon)
             }
@@ -275,8 +275,8 @@ struct ContentView: View {
                 NavigationStack {
                     NutrientsPlaceholderView()
                 }
-                .safeAreaInset(edge: .bottom, spacing: 0) { bottomSearchBarArea }
                 .overlay { searchResultsOverlay }
+                .safeAreaInset(edge: .bottom, spacing: 0) { bottomSearchBarArea }
             } label: {
                 Label("Nutrientes", systemImage: AppTab.nutrients.icon)
             }
@@ -380,9 +380,11 @@ struct ContentView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(.regularMaterial)
-        .clipShape(UnevenRoundedRectangle(topLeadingRadius: 20, topTrailingRadius: 20))
-        .ignoresSafeArea(edges: .bottom)
+        .background {
+            UnevenRoundedRectangle(topLeadingRadius: 20, topTrailingRadius: 20)
+                .fill(.regularMaterial)
+                .ignoresSafeArea(edges: .bottom)
+        }
         .offset(y: max(searchDragOffset, 0))
         .gesture(
             DragGesture(minimumDistance: 30)

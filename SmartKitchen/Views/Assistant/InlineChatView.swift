@@ -133,7 +133,6 @@ struct InlineChatView: View {
                         }
                     }
                     .padding(.vertical, 12)
-                    .padding(.bottom, 60)
                 }
                 .onChange(of: messages.count) {
                     scrollToBottom(proxy: proxy)

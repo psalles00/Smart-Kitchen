@@ -23,7 +23,6 @@ struct ConversationHistoryView: View {
                         }
                     }
                     .padding(.vertical, 8)
-                    .padding(.bottom, 60)
                 }
             }
         }
