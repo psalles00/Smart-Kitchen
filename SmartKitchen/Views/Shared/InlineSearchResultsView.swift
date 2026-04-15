@@ -110,6 +110,7 @@ struct InlineSearchResultsView: View {
     private var searchResultsList: some View {
         let trimmedQuery = searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         let isQuestion = looksLikeQuestion(trimmedQuery)
+        let isTyping = searchBarState.searchText != searchBarState.debouncedSearchText
 
         return ScrollView {
             VStack(alignment: .leading, spacing: 16) {
@@ -154,6 +155,19 @@ struct InlineSearchResultsView: View {
                     }
                     .buttonStyle(.plain)
                     .padding(.horizontal, 4)
+                }
+
+                // Loading indicator while debouncing
+                if (isTyping || searchService.isSearching) && !trimmedQuery.isEmpty {
+                    HStack(spacing: 8) {
+                        ProgressView()
+                            .controlSize(.small)
+                        Text("Buscando resultados…")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 4)
                 }
 
                 // Results

@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 
 struct ItemIconPickerView: View {
     @Environment(\.dismiss) private var dismiss
@@ -12,6 +13,8 @@ struct ItemIconPickerView: View {
     let onItemSelected: (ItemEntry) -> Void
 
     @State private var searchText: String
+    @State private var debouncedSearchText: String
+    @State private var results: [ItemEntry] = []
 
     init(
         title: String = "Escolher Ícone",
@@ -25,11 +28,12 @@ struct ItemIconPickerView: View {
         self.fallbackSymbol = fallbackSymbol
         self.onItemSelected = onItemSelected
         _searchText = State(initialValue: initialQuery)
+        _debouncedSearchText = State(initialValue: initialQuery)
     }
 
-    private var results: [ItemEntry] {
+    private func computeResults(for query: String) -> [ItemEntry] {
         let matches = ItemDatabase.shared.search(
-            query: searchText,
+            query: query,
             limit: 60,
             fallbackToFeatured: true
         )
@@ -62,7 +66,7 @@ struct ItemIconPickerView: View {
                                 } label: {
                                     ZStack(alignment: .topTrailing) {
                                         IconImage(
-                                            name: entry.preferredTitle(matching: searchText),
+                                            name: entry.preferredTitle(matching: debouncedSearchText),
                                             iconFileName: entry.nomeDoArquivo,
                                             fallbackSymbol: fallbackSymbol,
                                             size: 40,
@@ -96,6 +100,18 @@ struct ItemIconPickerView: View {
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .searchable(text: $searchText, prompt: "Buscar item ou utensílio")
+            .onChange(of: searchText) { _, newValue in
+                // Debounce: schedule update after 250ms
+                let query = newValue
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                    guard searchText == query else { return }
+                    debouncedSearchText = query
+                    results = computeResults(for: query)
+                }
+            }
+            .onAppear {
+                results = computeResults(for: searchText)
+            }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Fechar") { dismiss() }

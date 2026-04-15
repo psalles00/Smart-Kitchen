@@ -146,7 +146,7 @@ struct ListsTabView: View {
                         switch selectedSubtab {
                         case .pantry:
                             PantryView(
-                                searchText: searchBarState.searchText,
+                                searchText: searchBarState.debouncedSearchText,
                                 sortOption: sortOption,
                                 filterOption: pantryFilter,
                                 expiringLeadDays: settings?.expiringItemsLeadDays ?? 30,
@@ -163,7 +163,7 @@ struct ListsTabView: View {
                             )
                         case .grocery:
                             GroceryListView(
-                                searchText: searchBarState.searchText,
+                                searchText: searchBarState.debouncedSearchText,
                                 sortOption: sortOption,
                                 filterOption: groceryFilter,
                                 onAcquired: {
@@ -179,7 +179,7 @@ struct ListsTabView: View {
                             )
                         case .utensils:
                             UtensilsView(
-                                searchText: searchBarState.searchText,
+                                searchText: searchBarState.debouncedSearchText,
                                 sortOption: sortOption,
                                 onPullToAdd: { showAddUtensil = true },
                                 onScrollOffsetChange: updateInlineTitle

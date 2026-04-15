@@ -281,7 +281,8 @@ struct ContentView: View {
                 Label("Nutrientes", systemImage: AppTab.nutrients.icon)
             }
         }
-        .onChange(of: searchBarState.searchText) { _, newValue in
+        .onChange(of: searchBarState.debouncedSearchText) { _, newValue in
+            guard searchBarState.mode != .aiChat else { return }
             searchService.search(query: newValue, context: modelContext, showUtensils: settings?.showUtensils == true)
         }
         .environment(\.searchOverlay, searchOverlayView)

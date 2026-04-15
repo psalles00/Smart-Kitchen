@@ -28,6 +28,10 @@ final class SearchBarState: ObservableObject {
     @Published var mode: SearchMode = .idle
     @Published var pageContext: SearchPageContext = .home
 
+    /// Debounced version of searchText for expensive operations (search, filtering).
+    /// Updates 250ms after the user stops typing.
+    @Published var debouncedSearchText: String = ""
+
     /// Triggers defocus on the TextField (incremented each time we dismiss).
     @Published var defocusTrigger: Int = 0
 
@@ -39,6 +43,16 @@ final class SearchBarState: ObservableObject {
 
     /// Message to send to the AI chat (populated by the search bar in AI mode).
     @Published var pendingChatMessage: String? = nil
+
+    private var debounceCancellable: AnyCancellable?
+
+    init() {
+        debounceCancellable = $searchText
+            .debounce(for: .milliseconds(250), scheduler: RunLoop.main)
+            .sink { [weak self] value in
+                self?.debouncedSearchText = value
+            }
+    }
 
     /// Reveal the search bar with animation, haptic, and immediate focus.
     func reveal() {
@@ -70,6 +84,7 @@ final class SearchBarState: ObservableObject {
         // Clear after animation starts so the text doesn't flash
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
             self?.searchText = ""
+            self?.debouncedSearchText = ""
             self?.mode = .idle
         }
     }
@@ -79,6 +94,7 @@ final class SearchBarState: ObservableObject {
         defocusTrigger += 1
         isVisible = false
         searchText = ""
+        debouncedSearchText = ""
         mode = .idle
     }
 }
