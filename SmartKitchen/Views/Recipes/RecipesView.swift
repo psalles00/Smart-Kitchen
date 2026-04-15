@@ -246,11 +246,11 @@ struct RecipesView: View {
     private var categoryFilter: some View {
         #if os(macOS)
         HStack(spacing: 0) {
-            filterChip(label: "Todos", isSelected: selectedCategory == nil) {
+            filterChip(label: "Todos", systemImage: "square.grid.2x2", isSelected: selectedCategory == nil) {
                 selectedCategory = nil
             }
             ForEach(recipeCategories) { cat in
-                filterChip(label: cat.name, isSelected: selectedCategory == cat.name) {
+                filterChip(label: cat.name, systemImage: categorySymbol(for: cat.name), isSelected: selectedCategory == cat.name) {
                     selectedCategory = cat.name
                 }
             }
@@ -263,11 +263,11 @@ struct RecipesView: View {
         #else
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 0) {
-                filterChip(label: "Todos", isSelected: selectedCategory == nil) {
+                filterChip(label: "Todos", systemImage: "square.grid.2x2", isSelected: selectedCategory == nil) {
                     selectedCategory = nil
                 }
                 ForEach(recipeCategories) { cat in
-                    filterChip(label: cat.name, isSelected: selectedCategory == cat.name) {
+                    filterChip(label: cat.name, systemImage: categorySymbol(for: cat.name), isSelected: selectedCategory == cat.name) {
                         selectedCategory = cat.name
                     }
                 }
@@ -284,10 +284,29 @@ struct RecipesView: View {
         #endif
     }
 
-    private func filterChip(label: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
+    private func categorySymbol(for name: String) -> String {
+        switch name {
+        case "Café da manhã": return "sunrise"
+        case "Almoço": return "fork.knife"
+        case "Jantar": return "moon.stars"
+        case "Lanche": return "takeoutbag.and.cup.and.straw"
+        case "Sobremesa": return "birthday.cake"
+        case "Bebida": return "cup.and.saucer"
+        default: return "square.grid.2x2"
+        }
+    }
+
+    private func filterChip(label: String, systemImage: String? = nil, isSelected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Text(label)
-                .font(.footnote.weight(.medium))
+            HStack(spacing: 4) {
+                if let systemImage {
+                    Image(systemName: systemImage)
+                        .font(.system(size: 11))
+                        .symbolRenderingMode(.monochrome)
+                }
+                Text(label)
+                    .font(.footnote.weight(.medium))
+            }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 8)
                 .padding(.horizontal, 12)
@@ -420,9 +439,6 @@ struct RecipesView: View {
 
     private func recipeSectionHeader(_ title: String) -> some View {
         HStack(spacing: 6) {
-            if let iconName = allCategories.first(where: { $0.name == title && $0.type == .recipe })?.iconName {
-                IconImage(name: title, iconFileName: iconName, fallbackSymbol: "folder", size: 18)
-            }
             Text(title)
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.primary.opacity(0.72))

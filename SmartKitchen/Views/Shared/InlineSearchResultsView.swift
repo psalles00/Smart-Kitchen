@@ -98,6 +98,7 @@ struct InlineSearchResultsView: View {
                                 action: {
                                     executeResult(result)
                                 },
+                                onNavigate: navigateActionForResult(result),
                                 onQuickAction: quickActionForResult(result),
                                 onReverseAction: reverseActionForResult(result)
                             )
@@ -223,14 +224,30 @@ struct InlineSearchResultsView: View {
         ))
         guard let objectID = result.objectID else { return }
         switch result.type {
-        case .pantryItem:  onAction(.openPantryItem(objectID))
-        case .groceryItem: onAction(.openGroceryItem(objectID))
-        case .recipe:      onAction(.openRecipe(objectID))
-        case .utensil:     onAction(.openUtensil(objectID))
+        case .pantryItem:  onAction(.editPantryItem(objectID))
+        case .groceryItem: onAction(.editGroceryItem(objectID))
+        case .recipe:      onAction(.editRecipe(objectID))
+        case .utensil:     onAction(.editUtensil(objectID))
         case .suggestion:  onAction(.addPantryItem(prefill: result.title))
         case .action:      break
         }
         searchBarState.selectResult()
+    }
+
+    private func navigateActionForResult(_ result: SearchResult) -> (() -> Void)? {
+        guard let objectID = result.objectID else { return nil }
+        switch result.type {
+        case .pantryItem:
+            return { onAction(.openPantryItem(objectID)); searchBarState.selectResult() }
+        case .groceryItem:
+            return { onAction(.openGroceryItem(objectID)); searchBarState.selectResult() }
+        case .recipe:
+            return { onAction(.openRecipe(objectID)); searchBarState.selectResult() }
+        case .utensil:
+            return { onAction(.openUtensil(objectID)); searchBarState.selectResult() }
+        default:
+            return nil
+        }
     }
 
     /// Execute the top (pre-selected) result when user presses Enter.

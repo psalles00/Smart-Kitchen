@@ -5,6 +5,7 @@ struct CommandBarResultRow: View {
     let result: SearchResult
     let isPreSelected: Bool
     let action: () -> Void
+    var onNavigate: (() -> Void)? = nil
     var onQuickAction: (() -> Void)? = nil
     var onReverseAction: (() -> Void)? = nil
 
@@ -67,6 +68,18 @@ struct CommandBarResultRow: View {
                 }
 
                 Spacer(minLength: 4)
+
+                // Navigate to item in its list
+                if let onNavigate {
+                    Button {
+                        onNavigate()
+                    } label: {
+                        Image(systemName: "arrow.right.circle")
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                }
 
                 // Quick action checkbox: only for single-list items
                 if let onQuickAction, !result.isAlsoInOtherList,

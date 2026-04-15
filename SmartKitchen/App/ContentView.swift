@@ -54,6 +54,12 @@ struct ContentView: View {
     @StateObject private var searchService = UniversalSearchService()
     @StateObject private var searchBarState = SearchBarState()
 
+    // Search-triggered edit sheets
+    @State private var searchEditPantryItem: PantryItem?
+    @State private var searchEditGroceryItem: GroceryItem?
+    @State private var searchEditUtensilItem: UtensilItem?
+    @State private var searchEditRecipe: Recipe?
+
     /// When non-nil, the CommandBar tab will open inline chat with this query on next activation.
     @State private var pendingChatQuery: String? = nil
     @State private var pendingOpenChat = false
@@ -155,6 +161,30 @@ struct ContentView: View {
                 addItemCategory = nil
             }
         }
+        .sheet(item: $searchEditPantryItem) { (item: PantryItem) in
+            NavigationStack {
+                EditPantryItemView(item: item)
+            }
+            .forceLightStatusBar()
+        }
+        .sheet(item: $searchEditGroceryItem) { (item: GroceryItem) in
+            NavigationStack {
+                EditGroceryItemView(item: item)
+            }
+            .forceLightStatusBar()
+        }
+        .sheet(item: $searchEditUtensilItem) { (item: UtensilItem) in
+            NavigationStack {
+                EditUtensilItemView(item: item)
+            }
+            .forceLightStatusBar()
+        }
+        .sheet(item: $searchEditRecipe) { (recipe: Recipe) in
+            NavigationStack {
+                EditRecipeView(recipe: recipe)
+            }
+            .forceLightStatusBar()
+        }
         .environment(\.openSettings, {
             #if os(macOS)
             selectedSidebar = .settings
@@ -250,7 +280,7 @@ struct ContentView: View {
                 Label("Nutrientes", systemImage: AppTab.nutrients.icon)
             }
 
-            Tab(value: AppTab.commandBar, role: .search) {
+            Tab(value: AppTab.commandBar) {
                 Color.clear
             } label: {
                 Label(
@@ -513,6 +543,26 @@ struct ContentView: View {
         case .openUtensil(let id):
             scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "utensil")
             selectedTab = .lists
+        case .editPantryItem(let id):
+            let descriptor = FetchDescriptor<PantryItem>(predicate: #Predicate { $0.id == id })
+            if let item = try? modelContext.fetch(descriptor).first {
+                searchEditPantryItem = item
+            }
+        case .editGroceryItem(let id):
+            let descriptor = FetchDescriptor<GroceryItem>(predicate: #Predicate { $0.id == id })
+            if let item = try? modelContext.fetch(descriptor).first {
+                searchEditGroceryItem = item
+            }
+        case .editRecipe(let id):
+            let descriptor = FetchDescriptor<Recipe>(predicate: #Predicate { $0.id == id })
+            if let item = try? modelContext.fetch(descriptor).first {
+                searchEditRecipe = item
+            }
+        case .editUtensil(let id):
+            let descriptor = FetchDescriptor<UtensilItem>(predicate: #Predicate { $0.id == id })
+            if let item = try? modelContext.fetch(descriptor).first {
+                searchEditUtensilItem = item
+            }
         case .addPantryItem(let prefill):
             addItemPrefill = prefill
             showAddPantry = true
@@ -536,12 +586,16 @@ struct ContentView: View {
             searchBarState.reveal()
         case .movePantryToGrocery(let id):
             movePantryItemToGrocery(id: id)
+            refreshSearchAfterMove()
         case .moveGroceryToPantry(let id):
             moveGroceryItemToPantry(id: id)
+            refreshSearchAfterMove()
         case .movePantryToGroceryByName(let name):
             movePantryItemToGroceryByName(name)
+            refreshSearchAfterMove()
         case .moveGroceryToPantryByName(let name):
             moveGroceryItemToPantryByName(name)
+            refreshSearchAfterMove()
         }
 
         // Clear scroll request after views have consumed it
@@ -571,10 +625,10 @@ struct ContentView: View {
                     iconName: first.iconFilename
                 ))
                 switch first.type {
-                case .pantryItem:  handleCommandBarAction(.openPantryItem(objectID))
-                case .groceryItem: handleCommandBarAction(.openGroceryItem(objectID))
-                case .recipe:      handleCommandBarAction(.openRecipe(objectID))
-                case .utensil:     handleCommandBarAction(.openUtensil(objectID))
+                case .pantryItem:  handleCommandBarAction(.editPantryItem(objectID))
+                case .groceryItem: handleCommandBarAction(.editGroceryItem(objectID))
+                case .recipe:      handleCommandBarAction(.editRecipe(objectID))
+                case .utensil:     handleCommandBarAction(.editUtensil(objectID))
                 default:           handleCommandBarAction(.addItem(prefill: trimmedQuery, iconFileName: nil, category: nil))
                 }
                 return
@@ -587,6 +641,12 @@ struct ContentView: View {
         } else {
             // Default: open AddItemView with destination picker
             handleCommandBarAction(.addItem(prefill: trimmedQuery, iconFileName: nil, category: nil))
+        }
+    }
+
+    private func refreshSearchAfterMove() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            searchService.search(query: searchBarState.searchText, context: modelContext, showUtensils: settings?.showUtensils == true)
         }
     }
 

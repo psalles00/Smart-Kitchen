@@ -209,9 +209,6 @@ struct GroceryListView: View {
 
     private func groceryHeader(for category: String) -> some View {
         HStack(spacing: 6) {
-            if let iconName = allCategories.first(where: { $0.name == category && ($0.type == .grocery || $0.type == .pantry) })?.iconName {
-                IconImage(name: category, iconFileName: iconName, fallbackSymbol: "folder", size: 18)
-            }
             Text(category)
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.primary.opacity(0.72))

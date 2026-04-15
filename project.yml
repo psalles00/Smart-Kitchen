@@ -32,6 +32,7 @@ targets:
           - Boska-Medium.otf
           - Boska-Regular.otf
           - Boska-Light.otf
+          - BricolageGrotesque-Variable.ttf
         ATSApplicationFontsPath: "."
         UILaunchScreen: {}
         NSCameraUsageDescription: O Smart Kitchen usa a câmera para tirar fotos das suas receitas.

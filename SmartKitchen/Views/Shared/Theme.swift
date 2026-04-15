@@ -9,14 +9,14 @@ import UIKit
 // MARK: - Typography
 
 extension Font {
-    /// Boska Black — page titles (H1)
-    static let pageTitle: Font = .custom("Boska-Black", size: 34, relativeTo: .largeTitle)
-    /// Boska Medium — section titles (H2)
-    static let sectionTitle: Font = .custom("Boska-Medium", size: 24, relativeTo: .title)
-    /// Boska Medium — card & inline titles (H3)
-    static let cardTitle: Font = .custom("Boska-Medium", size: 18, relativeTo: .title3)
-    /// Boska Regular — decorative subtitle
-    static let serifBody: Font = .custom("Boska-Regular", size: 16, relativeTo: .body)
+    /// Bricolage Grotesque ExtraBold — page titles (H1)
+    static let pageTitle: Font = .custom("Bricolage Grotesque", size: 34, relativeTo: .largeTitle).weight(.heavy)
+    /// Bricolage Grotesque SemiBold — section titles (H2)
+    static let sectionTitle: Font = .custom("Bricolage Grotesque", size: 24, relativeTo: .title).weight(.semibold)
+    /// Bricolage Grotesque Medium — card & inline titles (H3)
+    static let cardTitle: Font = .custom("Bricolage Grotesque", size: 18, relativeTo: .title3).weight(.medium)
+    /// Bricolage Grotesque Regular — decorative subtitle
+    static let serifBody: Font = .custom("Bricolage Grotesque", size: 16, relativeTo: .body)
 }
 
 // MARK: - Glass Header Button Group

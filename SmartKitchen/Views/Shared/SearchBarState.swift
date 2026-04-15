@@ -46,7 +46,11 @@ final class SearchBarState: ObservableObject {
             isVisible = true
         }
         // Delay focus so the TextField is in the hierarchy when focus fires
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
+            self?.focusTrigger += 1
+        }
+        // Second attempt in case the first was too early (e.g. tab bouncing)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
             self?.focusTrigger += 1
         }
     }

@@ -16,6 +16,14 @@ enum ListSubtab: String, CaseIterable, Codable {
         }
     }
 
+    var icon: String {
+        switch self {
+        case .pantry:  "refrigerator"
+        case .grocery: "cart"
+        case .utensils: "fork.knife"
+        }
+    }
+
     var newItemTitle: String {
         switch self {
         case .pantry: "Novo Item da Despensa"
@@ -477,7 +485,11 @@ private struct ListsSubtabDropButton: View {
 
     var body: some View {
         Button(action: onTap) {
-            HStack(spacing: 6) {
+            HStack(spacing: 4) {
+                Image(systemName: tab.icon)
+                    .font(.system(size: 11))
+                    .symbolRenderingMode(.monochrome)
+
                 Text(tab.title)
                     .font(.footnote.weight(.medium))
 

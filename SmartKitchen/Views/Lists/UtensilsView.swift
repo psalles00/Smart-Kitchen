@@ -144,10 +144,6 @@ struct UtensilsView: View {
         } header: {
             if groupedItems.count > 1 {
                 HStack {
-                    let catIcon = utensilCategories.first(where: { $0.name == categoryName })
-                    if let iconName = catIcon?.iconName {
-                        IconImage(name: iconName, fallbackSymbol: "fork.knife", size: 18)
-                    }
                     Text(categoryName)
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.secondary)

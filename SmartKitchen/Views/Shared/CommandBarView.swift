@@ -7,6 +7,10 @@ enum CommandBarAction {
     case openGroceryItem(UUID)
     case openRecipe(UUID)
     case openUtensil(UUID)
+    case editPantryItem(UUID)
+    case editGroceryItem(UUID)
+    case editRecipe(UUID)
+    case editUtensil(UUID)
     case addPantryItem(prefill: String)
     case addGroceryItem(prefill: String)
     case addItem(prefill: String, iconFileName: String?, category: String?)
@@ -772,7 +776,6 @@ enum CommandBarHelpers {
                 Text(title)
                     .font(.caption.weight(.medium))
                     .foregroundStyle(.primary)
-                    .lineLimit(1)
 
                 Spacer(minLength: 0)
             }
