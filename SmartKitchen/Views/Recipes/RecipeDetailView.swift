@@ -218,6 +218,7 @@ struct RecipeDetailView: View {
             }
         }
         .padding(20)
+        .padding(.bottom, 40)
     }
 
     // MARK: - Metadata

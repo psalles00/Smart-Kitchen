@@ -245,8 +245,8 @@ struct ContentView: View {
                         }
                     )
                 }
-                .overlay { searchResultsOverlay }
                 .safeAreaInset(edge: .bottom, spacing: 0) { bottomSearchBarArea }
+                .overlay { searchResultsOverlay }
             } label: {
                 Label("Início", systemImage: AppTab.assistant.icon)
             }
@@ -255,8 +255,8 @@ struct ContentView: View {
                 NavigationStack {
                     ListsTabView()
                 }
-                .overlay { searchResultsOverlay }
                 .safeAreaInset(edge: .bottom, spacing: 0) { bottomSearchBarArea }
+                .overlay { searchResultsOverlay }
             } label: {
                 Label("Listas", systemImage: AppTab.lists.icon)
             }
@@ -265,8 +265,8 @@ struct ContentView: View {
                 NavigationStack {
                     RecipesView()
                 }
-                .overlay { searchResultsOverlay }
                 .safeAreaInset(edge: .bottom, spacing: 0) { bottomSearchBarArea }
+                .overlay { searchResultsOverlay }
             } label: {
                 Label("Receitas", systemImage: AppTab.recipes.icon)
             }
@@ -275,8 +275,8 @@ struct ContentView: View {
                 NavigationStack {
                     NutrientsPlaceholderView()
                 }
-                .overlay { searchResultsOverlay }
                 .safeAreaInset(edge: .bottom, spacing: 0) { bottomSearchBarArea }
+                .overlay { searchResultsOverlay }
             } label: {
                 Label("Nutrientes", systemImage: AppTab.nutrients.icon)
             }
@@ -382,6 +382,7 @@ struct ContentView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(.regularMaterial)
         .clipShape(UnevenRoundedRectangle(topLeadingRadius: 20, topTrailingRadius: 20))
+        .ignoresSafeArea(edges: .bottom)
         .offset(y: max(searchDragOffset, 0))
         .gesture(
             DragGesture(minimumDistance: 30)
@@ -397,7 +398,6 @@ struct ContentView: View {
                     }
                 }
         )
-        .ignoresSafeArea(edges: .bottom)
     }
 
     /// Search results view injected into ExpandedPageLayout's content panel via environment.

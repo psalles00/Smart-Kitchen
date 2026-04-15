@@ -103,6 +103,36 @@ struct InlineSearchResultsView: View {
                 showConversationHistory = true
             }
         }
+        .onAppear {
+            // Handle pending flags that were set before the view appeared
+            // (.onChange doesn't fire for values already set at appearance time)
+            if pendingOpenChat {
+                pendingOpenChat = false
+                chatInitialQuery = nil
+                chatExistingConversationId = nil
+                showInlineChat = true
+                searchBarState.mode = .aiChat
+            }
+            if let query = pendingChatQuery {
+                pendingChatQuery = nil
+                chatInitialQuery = query
+                chatExistingConversationId = nil
+                showInlineChat = true
+                searchBarState.mode = .aiChat
+            }
+            if pendingNewConversation {
+                pendingNewConversation = false
+                chatInitialQuery = nil
+                chatExistingConversationId = nil
+                showInlineChat = true
+                searchBarState.mode = .aiChat
+                searchBarState.searchText = ""
+            }
+            if pendingShowHistory {
+                pendingShowHistory = false
+                showConversationHistory = true
+            }
+        }
     }
 
     // MARK: - Search Results List
@@ -209,7 +239,7 @@ struct InlineSearchResultsView: View {
                 }
             }
             .padding(.top, 12)
-            .padding(.bottom, 16)
+            .padding(.bottom, 70)
         }
         .scrollDismissesKeyboard(.interactively)
     }
