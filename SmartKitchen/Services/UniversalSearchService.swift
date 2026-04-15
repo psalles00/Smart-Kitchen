@@ -65,7 +65,8 @@ final class UniversalSearchService: ObservableObject {
                     type: .pantryItem,
                     score: score + recencyBoost,
                     objectID: item.id,
-                    iconFilename: item.iconName
+                    iconFilename: item.iconName,
+                    imageData: nil
                 ))
             }
         }
@@ -84,7 +85,8 @@ final class UniversalSearchService: ObservableObject {
                     type: .groceryItem,
                     score: score + recencyBoost,
                     objectID: item.id,
-                    iconFilename: item.iconName
+                    iconFilename: item.iconName,
+                    imageData: nil
                 ))
             }
         }
@@ -103,7 +105,8 @@ final class UniversalSearchService: ObservableObject {
                     type: .recipe,
                     score: score + recencyBoost,
                     objectID: recipe.id,
-                    iconFilename: nil
+                    iconFilename: nil,
+                    imageData: recipe.imageData
                 ))
             }
         }
@@ -122,7 +125,8 @@ final class UniversalSearchService: ObservableObject {
                         type: .utensil,
                         score: score,
                         objectID: item.id,
-                        iconFilename: item.iconName
+                        iconFilename: item.iconName,
+                        imageData: nil
                     ))
                 }
             }

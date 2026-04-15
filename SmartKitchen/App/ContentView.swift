@@ -596,6 +596,11 @@ struct ContentView: View {
     private func handleTabSelectionChange(_ newValue: AppTab) {
         lastContentTab = newValue
 
+        // Dismiss assistant/AI mode when switching tabs
+        if searchBarState.isVisible {
+            searchBarState.dismiss()
+        }
+
         // Animate background theme change with a fade, independently of content swap
         if let newTheme = newValue.pageTheme, newTheme != displayedBgTheme {
             displayedBgTheme = newTheme

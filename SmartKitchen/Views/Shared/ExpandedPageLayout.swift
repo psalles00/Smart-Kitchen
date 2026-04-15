@@ -47,7 +47,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
     private let macHeaderHeight: CGFloat = 34
     private let macBottomInset: CGFloat = 8
     #endif
-    private let bottomTabBarContentInset: CGFloat = 84
+    private let bottomTabBarContentInset: CGFloat = 130
 
 
     // Background transition state

@@ -20,6 +20,8 @@ struct SearchResult: Identifiable {
     let score: Double           // higher = better match
     let objectID: UUID?         // reference to the underlying SwiftData model
     let iconFilename: String?   // for custom icon images (items_database)
+    /// Recipe main photo data (if available).
+    let imageData: Data?
     /// Whether the item with the same name exists in the other list too.
     var isAlsoInOtherList: Bool = false
 

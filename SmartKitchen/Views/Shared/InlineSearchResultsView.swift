@@ -300,7 +300,7 @@ struct InlineSearchResultsView: View {
         switch result.type {
         case .pantryItem:  onAction(.editPantryItem(objectID))
         case .groceryItem: onAction(.editGroceryItem(objectID))
-        case .recipe:      onAction(.editRecipe(objectID))
+        case .recipe:      onAction(.openRecipe(objectID))
         case .utensil:     onAction(.editUtensil(objectID))
         case .suggestion:  onAction(.addPantryItem(prefill: result.title))
         case .action:      break
