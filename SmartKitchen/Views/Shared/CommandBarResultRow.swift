@@ -1,4 +1,7 @@
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 /// A single row in the Command Bar results list.
 struct CommandBarResultRow: View {
@@ -268,6 +271,7 @@ struct CommandBarResultRow: View {
 
     @ViewBuilder
     private var resultIcon: some View {
+        #if canImport(UIKit)
         if result.type == .recipe, let data = result.imageData, let uiImage = UIImage(data: data) {
             Image(uiImage: uiImage)
                 .resizable()
@@ -291,6 +295,23 @@ struct CommandBarResultRow: View {
                     .background(typeTintColor.opacity(0.12), in: .rect(cornerRadius: 10))
             }
         }
+        #else
+        switch result.type {
+        case .pantryItem, .groceryItem, .utensil, .recipe, .suggestion:
+            IconImage(
+                name: result.title,
+                iconFileName: result.iconFilename,
+                fallbackSymbol: result.icon,
+                size: 36
+            )
+        case .action:
+            Image(systemName: result.icon)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(typeTintColor)
+                .frame(width: 36, height: 36)
+                .background(typeTintColor.opacity(0.12), in: .rect(cornerRadius: 10))
+        }
+        #endif
     }
 
     // MARK: - Animation

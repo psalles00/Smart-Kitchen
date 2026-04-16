@@ -62,17 +62,8 @@ final class SearchBarState: ObservableObject {
             return
         }
         HapticManager.searchReveal()
-        withAnimation(.spring(response: 0.38, dampingFraction: 0.78)) {
-            isVisible = true
-        }
-        // Delay focus so the TextField is in the hierarchy when focus fires
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
-            self?.focusTrigger += 1
-        }
-        // Second attempt in case the first was too early (e.g. tab bouncing)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-            self?.focusTrigger += 1
-        }
+        isVisible = true
+        focusTrigger += 1
     }
 
     /// Dismiss the search bar, clear text, and reset mode.

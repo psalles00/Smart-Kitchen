@@ -41,6 +41,8 @@ struct InlineChatView: View {
 
     @State private var messages: [ChatMessage] = []
     @State private var hasSentInitialQuery = false
+    @State private var showScrollToBottom: Bool = false
+    @State private var chatAreaHeight: CGFloat = 0
 
     init(
         initialQuery: String? = nil,
@@ -69,76 +71,111 @@ struct InlineChatView: View {
 
             // Chat messages
             ScrollViewReader { proxy in
-                ScrollView {
-                    LazyVStack(spacing: 14) {
-                        if messages.isEmpty && !aiService.isLoading {
-                            emptyState
-                        }
-
-                        if !messages.isEmpty {
-                            SuggestionChipsView { prompt in
-                                sendMessage(prompt)
+                ZStack(alignment: .bottom) {
+                    ScrollView {
+                        LazyVStack(spacing: 14) {
+                            if messages.isEmpty && !aiService.isLoading {
+                                emptyState
                             }
-                            .padding(.top, 8)
-                        }
 
-                        ForEach(messages) { message in
-                            VStack(spacing: 6) {
-                                if message.role == .system {
-                                    // Skip system messages
-                                } else if parseRecipeDetailCard(from: message) != nil {
-                                    // Recipe detail: show only the card, no text bubble
-                                    if let card = parseRecipeDetailCard(from: message) {
-                                        RecipeDetailCard(recipe: card) {
-                                            addRecipeFromCard(card)
-                                        }
-                                    }
-                                } else if !message.attachedRecipeIds.isEmpty {
-                                    // Recipe discovery: text → cards → prominent button
-                                    ChatBubbleView(
-                                        message: messageWithoutQuickActions(message),
-                                        onQuickAction: { _ in }
-                                    )
-                                    RecipeCardMessage(recipeIds: message.attachedRecipeIds)
-                                    ForEach(message.quickActions) { action in
-                                        createNewRecipesButton(action: action)
-                                    }
-                                } else if let split = splitMessageAroundOptions(message) {
-                                    // AI recipe options: intro → buttons → trailing
-                                    if !split.before.isEmpty {
-                                        assistantTextBubble(split.before)
-                                    }
-                                    RecipeOptionButtonsView(options: split.options) { selectedOption in
-                                        requestRecipeDetail(for: selectedOption)
-                                    }
-                                    if !split.after.isEmpty {
-                                        assistantTextBubble(split.after)
-                                    }
-                                } else {
-                                    // Regular message
-                                    ChatBubbleView(
-                                        message: message,
-                                        onQuickAction: { action in
-                                            sendMessage(action.prompt)
-                                        }
-                                    )
+                            if !messages.isEmpty {
+                                SuggestionChipsView { prompt in
+                                    sendMessage(prompt)
                                 }
+                                .padding(.top, 8)
                             }
-                            .id(message.id)
-                        }
 
-                        if aiService.isLoading {
-                            typingIndicator
-                                .id("typing")
+                            ForEach(messages) { message in
+                                VStack(spacing: 6) {
+                                    if message.role == .system {
+                                        // Skip system messages
+                                    } else if parseRecipeDetailCard(from: message) != nil {
+                                        if let card = parseRecipeDetailCard(from: message) {
+                                            RecipeDetailCard(recipe: card) {
+                                                addRecipeFromCard(card)
+                                            }
+                                        }
+                                    } else if !message.attachedRecipeIds.isEmpty {
+                                        ChatBubbleView(
+                                            message: messageWithoutQuickActions(message),
+                                            onQuickAction: { _ in }
+                                        )
+                                        RecipeCardMessage(recipeIds: message.attachedRecipeIds)
+                                        ForEach(message.quickActions) { action in
+                                            createNewRecipesButton(action: action)
+                                        }
+                                    } else if let split = splitMessageAroundOptions(message) {
+                                        if !split.before.isEmpty {
+                                            assistantTextBubble(split.before)
+                                        }
+                                        RecipeOptionButtonsView(options: split.options) { selectedOption in
+                                            requestRecipeDetail(for: selectedOption)
+                                        }
+                                        if !split.after.isEmpty {
+                                            assistantTextBubble(split.after)
+                                        }
+                                    } else {
+                                        ChatBubbleView(
+                                            message: message,
+                                            onQuickAction: { action in
+                                                sendMessage(action.prompt)
+                                            }
+                                        )
+                                    }
+                                }
+                                .id(message.id)
+                            }
+
+                            if aiService.isLoading {
+                                typingIndicator
+                                    .id("typing")
+                            }
+
+                            // Invisible bottom anchor for scroll tracking
+                            Color.clear.frame(height: 1)
+                                .id("bottomAnchor")
+                                .onAppear { showScrollToBottom = false }
+                                .onDisappear { showScrollToBottom = true }
+
+                            // Bottom spacer — allows user messages to always scroll to the top
+                            // of the chat area even when there isn't enough content below
+                            Spacer()
+                                .frame(height: max(chatAreaHeight - 80, 0))
+                        }
+                        .padding(.vertical, 12)
+                    }
+                    .background(
+                        GeometryReader { geo in
+                            Color.clear
+                                .onAppear { chatAreaHeight = geo.size.height }
+                                .onChange(of: geo.size.height) { _, newH in chatAreaHeight = newH }
+                        }
+                    )
+                    .onChange(of: messages.count) { oldCount, newCount in
+                        guard newCount > oldCount, let last = messages.last else { return }
+                        if last.role == .user {
+                            withAnimation { proxy.scrollTo(last.id, anchor: .top) }
                         }
                     }
-                    .padding(.vertical, 12)
-                }
-                .onChange(of: messages.count) {
-                    scrollToBottom(proxy: proxy)
-                }
-                .onChange(of: aiService.isLoading) {
-                    scrollToBottom(proxy: proxy)
+
+                    // Floating "scroll to bottom" button
+                    if showScrollToBottom {
+                        Button {
+                            withAnimation(.easeOut(duration: 0.4)) {
+                                proxy.scrollTo("bottomAnchor", anchor: .bottom)
+                            }
+                        } label: {
+                            Image(systemName: "chevron.down")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundStyle(.secondary)
+                                .frame(width: 36, height: 36)
+                                .background(.regularMaterial, in: Circle())
+                                .shadow(color: .black.opacity(0.1), radius: 4, y: 2)
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.bottom, 8)
+                        .transition(.scale.combined(with: .opacity))
+                    }
                 }
             }
 
@@ -996,11 +1033,7 @@ struct InlineChatView: View {
     }
 
     private func scrollToBottom(proxy: ScrollViewProxy) {
-        if aiService.isLoading {
-            withAnimation { proxy.scrollTo("typing", anchor: .bottom) }
-        } else if let lastId = messages.last?.id {
-            withAnimation { proxy.scrollTo(lastId, anchor: .bottom) }
-        }
+        withAnimation { proxy.scrollTo("bottomAnchor", anchor: .bottom) }
     }
 
     private func requiresConfirmation(for toolCall: ToolCallRequest) -> Bool {

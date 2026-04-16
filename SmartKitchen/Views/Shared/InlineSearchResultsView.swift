@@ -77,6 +77,17 @@ struct InlineSearchResultsView: View {
                 pendingOpenChat = false
             }
         }
+        .onChange(of: searchBarState.pendingChatMessage) { _, newValue in
+            if let query = newValue {
+                // Open the inline chat when the unified search bar sends a pending chat message
+                chatInitialQuery = query
+                chatExistingConversationId = nil
+                showInlineChat = true
+                searchBarState.mode = .aiChat
+                // Clear the pending message now that we've consumed it
+                searchBarState.pendingChatMessage = nil
+            }
+        }
         .onChange(of: searchBarState.submitTrigger) { _, _ in
             executeTopResult()
         }

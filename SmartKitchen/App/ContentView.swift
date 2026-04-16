@@ -301,7 +301,6 @@ struct ContentView: View {
     private var bottomSearchBarArea: some View {
         UnifiedSearchBar(state: searchBarState) { _ in }
             .padding(.vertical, 2)
-            .contentShape(Rectangle())
             .ignoresSafeArea(.keyboard, edges: .bottom)
     }
 
@@ -318,60 +317,79 @@ struct ContentView: View {
     @ViewBuilder
     private var searchResultsPanel: some View {
         VStack(spacing: 0) {
-            // Drag indicator
-            Capsule()
-                .fill(Color(.tertiarySystemFill))
-                .frame(width: 36, height: 5)
-                .padding(.top, 8)
-                .padding(.bottom, 4)
+            // Header area — only this region dismisses the modal on drag
+            VStack(spacing: 0) {
+                // Drag indicator
+                Capsule()
+                    .fill(Color(.tertiarySystemFill))
+                    .frame(width: 36, height: 5)
+                    .padding(.top, 8)
+                    .padding(.bottom, 4)
 
-            // Header: title + close button
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(searchBarState.mode == .aiChat ? "Modo IA" : "Assistente")
-                        .font(.pageTitle)
-                    Text(searchBarState.mode == .aiChat
-                         ? "Converse com a IA sobre sua cozinha."
-                         : "Adicione itens, busque na despensa ou pergunte à IA.")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
-                if searchBarState.mode == .aiChat {
+                // Title + action buttons (aligned to bottom-right of subtitle)
+                HStack(alignment: .bottom) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(searchBarState.mode == .aiChat ? "Modo IA" : "Assistente")
+                            .font(.pageTitle)
+                        Text(searchBarState.mode == .aiChat
+                             ? "Converse com a IA sobre sua cozinha."
+                             : "Adicione itens, busque na despensa ou pergunte à IA.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    if searchBarState.mode == .aiChat {
+                        Button {
+                            startNewConversation()
+                        } label: {
+                            Image(systemName: "square.and.pencil")
+                                .font(.system(size: 15, weight: .medium))
+                                .foregroundStyle(.secondary)
+                                .frame(width: 32, height: 32)
+                        }
+                        .buttonStyle(.plain)
+
+                        Button {
+                            showConversationHistory()
+                        } label: {
+                            Image(systemName: "clock.arrow.circlepath")
+                                .font(.system(size: 15, weight: .medium))
+                                .foregroundStyle(.secondary)
+                                .frame(width: 32, height: 32)
+                        }
+                        .buttonStyle(.plain)
+                    }
                     Button {
-                        startNewConversation()
+                        searchBarState.dismiss()
                     } label: {
-                        Image(systemName: "square.and.pencil")
+                        Image(systemName: "xmark.circle.fill")
                             .font(.system(size: 15, weight: .medium))
+                            .symbolRenderingMode(.hierarchical)
                             .foregroundStyle(.secondary)
                             .frame(width: 32, height: 32)
                     }
                     .buttonStyle(.plain)
-
-                    Button {
-                        showConversationHistory()
-                    } label: {
-                        Image(systemName: "clock.arrow.circlepath")
-                            .font(.system(size: 15, weight: .medium))
-                            .foregroundStyle(.secondary)
-                            .frame(width: 32, height: 32)
-                    }
-                    .buttonStyle(.plain)
                 }
-                Button {
-                    searchBarState.dismiss()
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.title2)
-                        .symbolRenderingMode(.hierarchical)
-                        .foregroundStyle(.secondary)
-                }
-                .buttonStyle(.plain)
+                .padding(.horizontal, 20)
+                .padding(.bottom, 10)
             }
-            .padding(.horizontal, 20)
-            .padding(.bottom, 10)
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 30)
+                    .onChanged { value in
+                        searchDragOffset = value.translation.height
+                    }
+                    .onEnded { value in
+                        if value.translation.height > 120 || value.predictedEndTranslation.height > 200 {
+                            searchBarState.dismiss()
+                        }
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                            searchDragOffset = 0
+                        }
+                    }
+            )
 
-            // Results area
+            // Results area — scrollable, does NOT dismiss the modal
             if let overlay = searchOverlayView {
                 overlay
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -386,20 +404,6 @@ struct ContentView: View {
                 .ignoresSafeArea(edges: .bottom)
         }
         .offset(y: max(searchDragOffset, 0))
-        .gesture(
-            DragGesture(minimumDistance: 30)
-                .onChanged { value in
-                    searchDragOffset = value.translation.height
-                }
-                .onEnded { value in
-                    if value.translation.height > 120 || value.predictedEndTranslation.height > 200 {
-                        searchBarState.dismiss()
-                    }
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                        searchDragOffset = 0
-                    }
-                }
-        )
     }
 
     /// Search results view injected into ExpandedPageLayout's content panel via environment.

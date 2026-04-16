@@ -208,7 +208,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
     // MARK: - Drag to Reveal Gesture
 
     private var dragToRevealGesture: some Gesture {
-        DragGesture(minimumDistance: 10)
+        DragGesture(minimumDistance: 30)
             .onChanged { value in
                 let dy = value.translation.height
                 if searchBarState.isVisible {
