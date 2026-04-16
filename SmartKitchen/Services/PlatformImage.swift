@@ -10,6 +10,7 @@ typealias PlatformColor = NSColor
 
 import SwiftUI
 import SceneKit
+import UniformTypeIdentifiers
 
 // MARK: - SwiftUI Image Initializer
 
@@ -93,6 +94,7 @@ extension SCNView {
 // MARK: - Clipboard Image Paste
 
 /// Reads an image from the system clipboard and returns its data via completion.
+@MainActor
 func pasteImageFromClipboard(completion: @escaping (Data?) -> Void) {
     #if canImport(UIKit)
     if let image = UIPasteboard.general.image, let data = image.pngData() {
@@ -102,20 +104,55 @@ func pasteImageFromClipboard(completion: @escaping (Data?) -> Void) {
     }
     #elseif canImport(AppKit)
     let pasteboard = NSPasteboard.general
+
     // Try reading TIFF data first (most common on macOS clipboard)
     if let tiffData = pasteboard.data(forType: .tiff),
        let image = NSImage(data: tiffData),
        let pngData = image.pngData() {
         completion(pngData)
+
     // Try PNG directly
     } else if let pngData = pasteboard.data(forType: .png) {
         completion(pngData)
+
     // Try reading file URLs from clipboard
     } else if let urls = pasteboard.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL],
               let url = urls.first,
               let data = try? Data(contentsOf: url),
               NSImage(data: data) != nil {
         completion(data)
+
+    // Try raw pasteboard items (screenshots/app-specific image types)
+    } else if let items = pasteboard.pasteboardItems {
+        for item in items {
+            for type in item.types {
+                if type == .fileURL,
+                   let rawURL = item.string(forType: .fileURL),
+                   let url = URL(string: rawURL),
+                   let data = try? Data(contentsOf: url),
+                   NSImage(data: data) != nil {
+                    completion(data)
+                    return
+                }
+
+                if let utType = UTType(type.rawValue),
+                   utType.conforms(to: .image),
+                   let rawData = item.data(forType: type) {
+                    if NSImage(data: rawData) != nil {
+                        completion(rawData)
+                        return
+                    }
+                    if let image = NSImage(data: rawData), let pngData = image.pngData() {
+                        completion(pngData)
+                        return
+                    }
+                }
+            }
+        }
+
+        // Fallback after scanning pasteboard items
+        completion(nil)
+
     // Fallback: try NSImage(pasteboard:)
     } else if let image = NSImage(pasteboard: pasteboard),
               let data = image.pngData() {

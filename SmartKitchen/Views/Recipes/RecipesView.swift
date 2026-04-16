@@ -177,6 +177,7 @@ struct RecipesView: View {
             \.newItemCommandAction,
             NewItemCommandAction(title: "Nova Receita", perform: { showAddRecipe = true })
         )
+        .background(Color(.windowBackgroundColor).ignoresSafeArea())
         #endif
         .onAppear { recomputeCompatibilities() }
         .onChange(of: pantryItems) { _, _ in recomputeCompatibilities() }
