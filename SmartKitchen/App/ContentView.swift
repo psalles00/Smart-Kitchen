@@ -1523,7 +1523,8 @@ private struct ForceLightSheetModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .environment(\.colorScheme, .light)
-            .presentationBackground(Color(nsColor: .windowBackgroundColor))
+            .background(Color.white.ignoresSafeArea())
+            .presentationBackground(Color.white)
             .colorScheme(.light)
     }
 }

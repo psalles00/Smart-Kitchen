@@ -50,6 +50,7 @@ struct RecipesView: View {
     @State private var currentScrollOffset: CGFloat = 0
     @State private var contentResetToken: Int = 0
     @State private var highlightedRecipeID: UUID?
+    @State private var selectedRecipeID: UUID?
 
     // Cached expensive computations
     @State private var cachedPantryNames: [String] = []
@@ -124,33 +125,28 @@ struct RecipesView: View {
         ExpandedPageLayout(
             pageTheme: .recipes,
             header: { isInverted in
-                PageHeader(title: "Receitas", isInverted: isInverted) {
-                    HStack(spacing: 6) {
-                        GlassButtonGroup {
-                            optionsMenu
-                        }
-
-                        GlassButtonGroup {
-                            GlassGroupButton(systemImage: "plus") {
-                                showAddRecipe = true
-                            }
-                        }
-
-                        SettingsButton()
-                    }
+                #if os(macOS)
+                if let recipeID = selectedRecipeID,
+                   let recipe = allRecipes.first(where: { $0.id == recipeID }) {
+                    macRecipeDetailHeader(recipe: recipe, isInverted: isInverted)
+                } else {
+                    recipesListHeader(isInverted: isInverted)
                 }
+                #else
+                recipesListHeader(isInverted: isInverted)
+                #endif
             },
             content: {
-                Group {
-                    if allRecipes.isEmpty {
-                        emptyState
-                    } else if recipes.isEmpty {
-                        searchEmptyState
-                    } else {
-                        recipeContent
-                    }
+                #if os(macOS)
+                if let recipeID = selectedRecipeID,
+                   let recipe = allRecipes.first(where: { $0.id == recipeID }) {
+                    RecipeDetailView(recipe: recipe)
+                } else {
+                    recipesListContent
                 }
-                .id(contentResetToken)
+                #else
+                recipesListContent
+                #endif
             },
             infoContent: {
                 EmptyView()
@@ -185,6 +181,85 @@ struct RecipesView: View {
         .onChange(of: scrollToTopTrigger) { _, _ in
             handleActiveTabRetap()
         }
+    }
+
+    // MARK: - Headers
+
+    @ViewBuilder
+    private func recipesListHeader(isInverted: Bool) -> some View {
+        PageHeader(title: "Receitas", isInverted: isInverted) {
+            HStack(spacing: 6) {
+                GlassButtonGroup {
+                    optionsMenu
+                }
+
+                GlassButtonGroup {
+                    GlassGroupButton(systemImage: "plus") {
+                        showAddRecipe = true
+                    }
+                }
+
+                SettingsButton()
+            }
+        }
+    }
+
+    #if os(macOS)
+    @ViewBuilder
+    private func macRecipeDetailHeader(recipe: Recipe, isInverted: Bool) -> some View {
+        HStack(alignment: .center) {
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    selectedRecipeID = nil
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: "chevron.left")
+                    Text("Receitas")
+                }
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(PageTheme.recipes.accentColor)
+            }
+            .buttonStyle(.plain)
+
+            Spacer()
+
+            HStack(spacing: 6) {
+                GlassButtonGroup {
+                    GlassGroupMenu(systemImage: "ellipsis.circle") {
+                        Button("Editar", systemImage: "pencil") {
+                            editingRecipe = recipe
+                        }
+                        Button(
+                            recipe.isFavorite ? "Desfavoritar" : "Favoritar",
+                            systemImage: recipe.isFavorite ? "heart.slash" : "heart"
+                        ) {
+                            recipe.isFavorite.toggle()
+                        }
+                    }
+                }
+
+                SettingsButton()
+            }
+        }
+        .padding(.horizontal)
+    }
+    #endif
+
+    // MARK: - List Content
+
+    @ViewBuilder
+    private var recipesListContent: some View {
+        Group {
+            if allRecipes.isEmpty {
+                emptyState
+            } else if recipes.isEmpty {
+                searchEmptyState
+            } else {
+                recipeContent
+            }
+        }
+        .id(contentResetToken)
     }
 
     private func recomputeCompatibilities() {
@@ -356,11 +431,13 @@ struct RecipesView: View {
                 }
         )
         .onScrollOffsetChange(perform: updateInlineTitle)
+        #if os(iOS)
         .navigationDestination(for: UUID.self) { id in
             if let recipe = allRecipes.first(where: { $0.id == id }) {
                 RecipeDetailView(recipe: recipe)
             }
         }
+        #endif
     }
 
     // MARK: - List
@@ -381,59 +458,94 @@ struct RecipesView: View {
         .padding(.top, 0)
         .padding(.bottom, 20)
         .onScrollOffsetChange(perform: updateInlineTitle)
+        #if os(iOS)
         .navigationDestination(for: UUID.self) { id in
             if let recipe = allRecipes.first(where: { $0.id == id }) {
                 RecipeDetailView(recipe: recipe)
             }
         }
+        #endif
     }
 
     // MARK: - Context Menu
 
+    @ViewBuilder
     private func recipeGalleryCard(_ recipe: Recipe) -> some View {
-        NavigationLink(value: recipe.id) {
-            RecipeCardView(
-                recipe: recipe,
-                compatibility: compatibilities[recipe.id],
-                columns: settings?.recipeGalleryColumns ?? 2
-            )
-            .overlay {
-                if highlightedRecipeID == recipe.id {
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .stroke(Color.accentColor, lineWidth: 2)
-                        .shadow(color: .accentColor.opacity(0.4), radius: 8)
+        let card = RecipeCardView(
+            recipe: recipe,
+            compatibility: compatibilities[recipe.id],
+            columns: settings?.recipeGalleryColumns ?? 2
+        )
+        .overlay {
+            if highlightedRecipeID == recipe.id {
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(Color.accentColor, lineWidth: 2)
+                    .shadow(color: .accentColor.opacity(0.4), radius: 8)
+            }
+        }
+
+        #if os(macOS)
+        card
+            .contentShape(Rectangle())
+            .onTapGesture {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    selectedRecipeID = recipe.id
                 }
             }
+            .contextMenu {
+                recipeContextMenu(for: recipe)
+            }
+            .id(recipe.id)
+        #else
+        NavigationLink(value: recipe.id) {
+            card
         }
         .buttonStyle(.plain)
         .contextMenu {
             recipeContextMenu(for: recipe)
         }
         .id(recipe.id)
+        #endif
     }
 
     @ViewBuilder
     private func recipeRows(_ recipes: [Recipe]) -> some View {
         VStack(spacing: 10) {
             ForEach(recipes) { recipe in
-                NavigationLink(value: recipe.id) {
-                    RecipeRowView(
-                        recipe: recipe,
-                        compatibility: compatibilities[recipe.id]
-                    )
-                    .overlay {
-                        if highlightedRecipeID == recipe.id {
-                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .stroke(Color.accentColor, lineWidth: 2)
-                                .shadow(color: .accentColor.opacity(0.4), radius: 8)
+                let row = RecipeRowView(
+                    recipe: recipe,
+                    compatibility: compatibilities[recipe.id]
+                )
+                .overlay {
+                    if highlightedRecipeID == recipe.id {
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .stroke(Color.accentColor, lineWidth: 2)
+                            .shadow(color: .accentColor.opacity(0.4), radius: 8)
+                    }
+                }
+
+                #if os(macOS)
+                row
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            selectedRecipeID = recipe.id
                         }
                     }
+                    .contextMenu {
+                        recipeContextMenu(for: recipe)
+                    }
+                    .id(recipe.id)
+                #else
+                NavigationLink(value: recipe.id) {
+                    row
                 }
                 .buttonStyle(.plain)
                 .contextMenu {
                     recipeContextMenu(for: recipe)
                 }
                 .id(recipe.id)
+                #endif
             }
         }
     }
