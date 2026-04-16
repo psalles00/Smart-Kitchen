@@ -59,6 +59,38 @@ extension NSColor {
 }
 #endif
 
+// MARK: - Average Color Extraction
+
+extension PlatformImage {
+    /// Returns the average color of the image by downsampling to 1×1.
+    func averageColor() -> Color {
+        #if canImport(UIKit)
+        guard let cgImage = self.cgImage else { return .gray }
+        #elseif canImport(AppKit)
+        guard let tiff = self.tiffRepresentation,
+              let bitmap = NSBitmapImageRep(data: tiff),
+              let cgImage = bitmap.cgImage else { return .gray }
+        #endif
+
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        var pixelData: [UInt8] = [0, 0, 0, 0]
+        let context = CGContext(
+            data: &pixelData,
+            width: 1, height: 1,
+            bitsPerComponent: 8,
+            bytesPerRow: 4,
+            space: colorSpace,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        )
+        context?.draw(cgImage, in: CGRect(x: 0, y: 0, width: 1, height: 1))
+
+        let r = Double(pixelData[0]) / 255.0
+        let g = Double(pixelData[1]) / 255.0
+        let b = Double(pixelData[2]) / 255.0
+        return Color(red: r, green: g, blue: b)
+    }
+}
+
 // MARK: - Cross-Platform Toolbar Placement
 
 extension ToolbarItemPlacement {

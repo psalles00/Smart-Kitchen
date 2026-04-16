@@ -330,6 +330,31 @@ struct EditRecipeView: View {
                 }
             }
             .buttonStyle(.plain)
+            #if os(macOS)
+            .onDrop(of: [.image, .fileURL], isTargeted: nil) { providers in
+                for provider in providers {
+                    if provider.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
+                        provider.loadDataRepresentation(forTypeIdentifier: UTType.image.identifier) { data, _ in
+                            if let data, NSImage(data: data) != nil {
+                                DispatchQueue.main.async { recipe.imageData = data }
+                            }
+                        }
+                        return true
+                    }
+                    if provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) {
+                        provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier) { item, _ in
+                            guard let data = item as? Data,
+                                  let url = URL(dataRepresentation: data, relativeTo: nil),
+                                  let imageData = try? Data(contentsOf: url),
+                                  NSImage(data: imageData) != nil else { return }
+                            DispatchQueue.main.async { recipe.imageData = imageData }
+                        }
+                        return true
+                    }
+                }
+                return false
+            }
+            #endif
         }
         .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
     }
@@ -417,6 +442,40 @@ struct EditRecipeView: View {
     private var ingredientsSection: some View {
         Section {
             ForEach($ingredientRows) { $row in
+                #if os(macOS)
+                HStack(spacing: 12) {
+                    ItemSearchField(
+                        text: $row.name,
+                        placeholder: "",
+                        iconFileName: row.iconName,
+                        fallbackSymbol: "leaf",
+                        showsLeadingIcon: true,
+                        onIconTapped: { activeIngredientPicker = EditIngredientPickerTarget(id: row.id) }
+                    ) { entry in
+                        row.name = entry.preferredTitle(matching: row.name)
+                        row.iconName = entry.nomeDoArquivo
+                        row.category = entry.categoria
+                    }
+
+                    HStack(spacing: 4) {
+                        Text("Qt:")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.secondary)
+
+                        TextField("0", text: $row.quantity)
+                            .frame(width: 50)
+                    }
+
+                    RecipeOptionMenuField(kind: .unit, selection: $row.unit)
+                        .frame(minWidth: 120)
+
+                    RecipeOptionMenuField(kind: .state, selection: $row.preparationState)
+                        .frame(minWidth: 140)
+
+                    Spacer(minLength: 0)
+                }
+                .padding(.vertical, 2)
+                #else
                 VStack(alignment: .leading, spacing: 8) {
                     ItemSearchField(
                         text: $row.name,
@@ -434,6 +493,7 @@ struct EditRecipeView: View {
                     ingredientMetadataRow(for: $row)
                 }
                 .padding(.vertical, 4)
+                #endif
             }
             .onDelete { offsets in
                 ingredientRows.remove(atOffsets: offsets)

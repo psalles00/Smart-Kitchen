@@ -96,13 +96,7 @@ struct RecipeCardView: View {
                     .clipped()
             }
         } else {
-            // Placeholder with recipe icon
-            ZStack {
-                Color(.tertiarySystemBackground)
-                Image(systemName: "book.closed")
-                    .font(.system(size: 40))
-                    .foregroundStyle(.quaternary)
-            }
+            RecipeImagePlaceholder(ingredients: (recipe.ingredients ?? []).sorted { $0.sortOrder < $1.sortOrder })
         }
     }
 

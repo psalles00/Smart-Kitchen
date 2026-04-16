@@ -64,6 +64,13 @@ final class SearchBarState: ObservableObject {
         HapticManager.searchReveal()
         isVisible = true
         focusTrigger += 1
+        // Re-trigger focus after view transition completes (tab bar press timing)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
+            self?.focusTrigger += 1
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            self?.focusTrigger += 1
+        }
     }
 
     /// Dismiss the search bar, clear text, and reset mode.

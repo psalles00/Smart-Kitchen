@@ -61,12 +61,7 @@ struct RecipeRowView: View {
                 .resizable()
                 .scaledToFill()
         } else {
-            ZStack {
-                Color(.tertiarySystemBackground)
-                Image(systemName: "book.closed")
-                    .font(.title3)
-                    .foregroundStyle(.quaternary)
-            }
+            RecipeImagePlaceholder(ingredients: (recipe.ingredients ?? []).sorted { $0.sortOrder < $1.sortOrder })
         }
     }
 }

@@ -1487,16 +1487,7 @@ private struct HomeRecipeMatchCard: View {
                 .resizable()
                 .scaledToFill()
         } else {
-            ZStack {
-                LinearGradient(
-                    colors: [Color(.tertiarySystemFill), Color(.secondarySystemFill)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                Image(systemName: "birthday.cake")
-                    .font(.system(size: 28, weight: .medium))
-                    .foregroundStyle(.quaternary)
-            }
+            RecipeImagePlaceholder(ingredients: (match.recipe.ingredients ?? []).sorted { $0.sortOrder < $1.sortOrder })
         }
     }
 }
@@ -1522,10 +1513,10 @@ extension View {
 private struct ForceLightSheetModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
-            .environment(\.colorScheme, .light)
-            .background(Color.white.ignoresSafeArea())
-            .presentationBackground(Color.white)
-            .colorScheme(.light)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .scrollContentBackground(.hidden)
+            .background(Color.white)
+            .presentationBackground(.white)
     }
 }
 extension View {

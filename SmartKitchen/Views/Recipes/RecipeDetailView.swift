@@ -68,13 +68,18 @@ struct RecipeDetailView: View {
                 content
             }
         }
+        #if os(macOS)
+        .padding(.top, -10)
+        #else
         .ignoresSafeArea(edges: .top)
+        #endif
         .navigationTitle(recipe.name)
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
         #endif
         .tint(PageTheme.recipes.accentColor)
+        #if os(iOS)
         .toolbar {
             ToolbarItem(placement: .adaptiveTrailing) {
                 Menu {
@@ -92,6 +97,7 @@ struct RecipeDetailView: View {
                 }
             }
         }
+        #endif
         #if os(iOS)
         .fullScreenCover(isPresented: $showCookingMode) {
             CookingModeView(recipe: recipe)
@@ -156,13 +162,8 @@ struct RecipeDetailView: View {
                 .frame(height: 420)
                 .clipped()
         } else {
-            ZStack {
-                Color(.tertiarySystemBackground)
-                Image(systemName: "book.closed")
-                    .font(.system(size: 48))
-                    .foregroundStyle(.quaternary)
-            }
-            .frame(height: 300)
+            RecipeImagePlaceholder(ingredients: sortedIngredients)
+                .frame(height: 300)
         }
     }
 
