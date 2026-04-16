@@ -96,7 +96,10 @@ struct RecipeCardView: View {
                     .clipped()
             }
         } else {
-            RecipeImagePlaceholder(ingredients: (recipe.ingredients ?? []).sorted { $0.sortOrder < $1.sortOrder })
+            RecipeImagePlaceholderCompact(
+                ingredients: (recipe.ingredients ?? []).sorted { $0.sortOrder < $1.sortOrder },
+                darkenOverlay: true
+            )
         }
     }
 

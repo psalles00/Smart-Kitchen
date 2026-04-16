@@ -1487,7 +1487,7 @@ private struct HomeRecipeMatchCard: View {
                 .resizable()
                 .scaledToFill()
         } else {
-            RecipeImagePlaceholder(ingredients: (match.recipe.ingredients ?? []).sorted { $0.sortOrder < $1.sortOrder })
+            RecipeImagePlaceholderCompact(ingredients: (match.recipe.ingredients ?? []).sorted { $0.sortOrder < $1.sortOrder })
         }
     }
 }

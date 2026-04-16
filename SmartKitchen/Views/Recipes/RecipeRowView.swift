@@ -61,7 +61,7 @@ struct RecipeRowView: View {
                 .resizable()
                 .scaledToFill()
         } else {
-            RecipeImagePlaceholder(ingredients: (recipe.ingredients ?? []).sorted { $0.sortOrder < $1.sortOrder })
+            RecipeImagePlaceholderCompact(ingredients: (recipe.ingredients ?? []).sorted { $0.sortOrder < $1.sortOrder })
         }
     }
 }
