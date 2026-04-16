@@ -42,18 +42,17 @@ private let tileBackgroundColor = Color.white.opacity(0.08)
 
 // MARK: - Full placeholder (recipe detail page)
 
-/// Full-size placeholder with 4 rows of ingredient icons.
-/// Rows 1 & 3: 6 cols. Rows 2 & 4: 7 cols (offset right).
-/// First/last tiles in each row are cropped at the edges for continuity.
-/// Rows 2 & 3 start at a different horizontal offset from rows 1 & 4.
+/// Full-size placeholder with 5 rows of ingredient icons (5 cols each).
+/// Rows 1, 3, 5 (indices 0, 2, 4): slightly cropped on the left edge.
+/// Rows 2, 4 (indices 1, 3): shifted to a different horizontal offset.
+/// This creates a staggered, dynamic look across the grid.
 struct RecipeImagePlaceholder: View {
     let ingredients: [RecipeIngredient]
     var darkenOverlay: Bool = false
 
-    private static let normalCols = 6
-    private static let offsetCols = 7
-    private static let rows = 4
-    private static let totalSlots = normalCols * 2 + offsetCols * 2 // 26
+    private static let cols = 6
+    private static let rows = 5
+    private static let totalSlots = cols * rows // 30
 
     var body: some View {
         let slots = buildIconSlots(from: ingredients, count: Self.totalSlots)
@@ -72,12 +71,10 @@ struct RecipeImagePlaceholder: View {
 
                     VStack(spacing: spacing) {
                         ForEach(0..<Self.rows, id: \.self) { row in
-                            let isOffset = row == 1 || row == 3
-                            let cols = isOffset ? Self.offsetCols : Self.normalCols
-                            let start = Self.startIndex(forRow: row)
-                            let rowSlots = Array(slots[start..<start + cols])
-                            // Rows 2 & 4 (index 1, 3) get the same extra shift.
-                            // Rows 1 & 3 (index 0, 2) share the base start position.
+                            let start = row * Self.cols
+                            let rowSlots = Array(slots[start..<start + Self.cols])
+                            // Rows 2 & 4 (indices 1, 3) get different horizontal shift.
+                            // Rows 1, 3, 5 (indices 0, 2, 4) share the base cropped start.
                             let rowShift: CGFloat = (row == 1 || row == 3) ? halfShift : 0
 
                             HStack(spacing: spacing) {
@@ -95,12 +92,6 @@ struct RecipeImagePlaceholder: View {
                 }
                 .clipped()
             }
-        }
-    }
-
-    private static func startIndex(forRow row: Int) -> Int {
-        (0..<row).reduce(0) { sum, r in
-            sum + ((r % 2 == 0) ? normalCols : offsetCols)
         }
     }
 
