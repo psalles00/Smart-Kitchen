@@ -208,7 +208,24 @@ struct EditRecipeView: View {
         }
 
         Button("Selecionar dos Arquivos") {
+            #if os(macOS)
+            let panel = NSOpenPanel()
+            panel.allowedContentTypes = [.image]
+            panel.allowsMultipleSelection = false
+            panel.canChooseDirectories = false
+            if panel.runModal() == .OK, let url = panel.url,
+               let data = try? Data(contentsOf: url) {
+                recipe.imageData = data
+            }
+            #else
             showPhotoFileImporter = true
+            #endif
+        }
+
+        Button("Colar da Área de Transferência") {
+            pasteImageFromClipboard { data in
+                if let data { recipe.imageData = data }
+            }
         }
 
         if recipe.imageData != nil {
@@ -238,7 +255,29 @@ struct EditRecipeView: View {
         }
 
         Button("Selecionar dos Arquivos") {
+            #if os(macOS)
+            let panel = NSOpenPanel()
+            panel.allowedContentTypes = [.image, .movie]
+            panel.allowsMultipleSelection = true
+            panel.canChooseDirectories = false
+            if panel.runModal() == .OK {
+                for url in panel.urls {
+                    if let data = try? Data(contentsOf: url) {
+                        let ext = url.pathExtension.lowercased()
+                        let isVideo = ["mp4", "mov", "m4v"].contains(ext)
+                        preparationMediaRows.append(
+                            EditPreparationMediaRow(
+                                type: isVideo ? .video : .photo,
+                                data: data,
+                                fileExtension: ext
+                            )
+                        )
+                    }
+                }
+            }
+            #else
             showPreparationFileImporter = true
+            #endif
         }
     }
 

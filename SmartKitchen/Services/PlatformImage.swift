@@ -89,3 +89,39 @@ extension SCNView {
         #endif
     }
 }
+
+// MARK: - Clipboard Image Paste
+
+/// Reads an image from the system clipboard and returns its data via completion.
+func pasteImageFromClipboard(completion: @escaping (Data?) -> Void) {
+    #if canImport(UIKit)
+    if let image = UIPasteboard.general.image, let data = image.pngData() {
+        completion(data)
+    } else {
+        completion(nil)
+    }
+    #elseif canImport(AppKit)
+    let pasteboard = NSPasteboard.general
+    // Try reading TIFF data first (most common on macOS clipboard)
+    if let tiffData = pasteboard.data(forType: .tiff),
+       let image = NSImage(data: tiffData),
+       let pngData = image.pngData() {
+        completion(pngData)
+    // Try PNG directly
+    } else if let pngData = pasteboard.data(forType: .png) {
+        completion(pngData)
+    // Try reading file URLs from clipboard
+    } else if let urls = pasteboard.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL],
+              let url = urls.first,
+              let data = try? Data(contentsOf: url),
+              NSImage(data: data) != nil {
+        completion(data)
+    // Fallback: try NSImage(pasteboard:)
+    } else if let image = NSImage(pasteboard: pasteboard),
+              let data = image.pngData() {
+        completion(data)
+    } else {
+        completion(nil)
+    }
+    #endif
+}

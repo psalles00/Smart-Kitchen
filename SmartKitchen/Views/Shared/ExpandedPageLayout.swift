@@ -261,11 +261,14 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
             guard newTheme != backgroundToTheme else { return }
             backgroundFromTheme = backgroundToTheme
             backgroundToTheme = newTheme
+            #if os(macOS)
+            backgroundTransitionProgress = 1.0
+            #else
             backgroundTransitionProgress = 0.0
-
             withAnimation(.easeInOut(duration: 0.35)) {
                 backgroundTransitionProgress = 1.0
             }
+            #endif
         }
     }
 

@@ -78,6 +78,14 @@ struct AddGroceryItemView: View {
                     Label(imageData == nil ? "Adicionar Foto" : "Alterar Foto", systemImage: "photo")
                 }
 
+                Button {
+                    pasteImageFromClipboard { data in
+                        if let data { imageData = data }
+                    }
+                } label: {
+                    Label("Colar da Área de Transferência", systemImage: "doc.on.clipboard")
+                }
+
                 if imageData != nil {
                     Button("Remover Foto", role: .destructive) {
                         imageData = nil

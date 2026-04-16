@@ -140,6 +140,9 @@ struct RecipeDetailView: View {
             )
             .forceLightStatusBar()
         }
+        #if os(macOS)
+        .background(Color(.windowBackgroundColor).ignoresSafeArea())
+        #endif
     }
 
     // MARK: - Hero Image

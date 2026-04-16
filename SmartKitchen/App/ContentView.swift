@@ -70,6 +70,7 @@ struct ContentView: View {
     @State private var macBackgroundFromTheme: PageTheme = .home
     @State private var macBackgroundToTheme: PageTheme = .home
     @State private var macBackgroundTransitionProgress: Double = 1.0
+    @FocusState private var macSearchFieldFocused: Bool
 
     private var macActivePageTheme: PageTheme {
         switch selectedSidebar ?? .home {
@@ -408,11 +409,17 @@ struct ContentView: View {
 
     /// Search results view injected into ExpandedPageLayout's content panel via environment.
     private var searchOverlayView: AnyView? {
+        #if os(macOS)
+        let hasText = !searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        let showChat = searchBarState.mode == .aiChat
+        guard hasText || showChat || pendingOpenChat || pendingChatQuery != nil else { return nil }
+        #else
         guard searchBarState.isVisible else { return nil }
         let hasText = !searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         let showChat = searchBarState.mode == .aiChat
 
         guard hasText || showChat || pendingOpenChat || pendingChatQuery != nil else { return nil }
+        #endif
 
         return AnyView(
             InlineSearchResultsView(
@@ -455,15 +462,40 @@ struct ContentView: View {
             .navigationTitle("")
             .tint(macActivePageTheme.accentColor)
             .safeAreaInset(edge: .bottom) {
-                Button {
-                    searchBarState.reveal()
-                } label: {
+                VStack(spacing: 0) {
                     HStack(spacing: 8) {
-                        Image(systemName: "sparkle.magnifyingglass")
+                        Image(systemName: searchBarState.mode == .aiChat ? "paperplane.fill" : "sparkle.magnifyingglass")
                             .font(.system(size: 14, weight: .semibold))
-                        Text("Buscar e Adicionar")
-                            .font(.subheadline.weight(.medium))
-                        Spacer()
+                            .foregroundStyle(.secondary)
+                        TextField(
+                            searchBarState.mode == .aiChat ? "Converse com a IA…" : "Adicione, busque, ou pergunte…",
+                            text: $searchBarState.searchText
+                        )
+                        .textFieldStyle(.plain)
+                        .font(.subheadline)
+                        .focused($macSearchFieldFocused)
+                        .onSubmit {
+                            let trimmed = searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+                            guard !trimmed.isEmpty else { return }
+                            if searchBarState.mode == .aiChat {
+                                searchBarState.pendingChatMessage = trimmed
+                                searchBarState.searchText = ""
+                            } else {
+                                submitSearchAction()
+                            }
+                        }
+
+                        if !searchBarState.searchText.isEmpty {
+                            Button {
+                                searchBarState.searchText = ""
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.system(size: 14))
+                                    .foregroundStyle(.tertiary)
+                            }
+                            .buttonStyle(.plain)
+                        }
+
                         Text("⌘K")
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(.tertiary)
@@ -473,14 +505,13 @@ struct ContentView: View {
                     .background(.white.opacity(0.08), in: .rect(cornerRadius: 10))
                     .contentShape(.rect)
                 }
-                .buttonStyle(.plain)
                 .padding(.horizontal, 12)
                 .padding(.bottom, 8)
             }
             .toolbar {
                 ToolbarItem(placement: .automatic) {
                     Button {
-                        searchBarState.reveal()
+                        macSearchFieldFocused = true
                     } label: {
                         Label("Buscar", systemImage: "sparkle.magnifyingglass")
                     }
@@ -488,36 +519,55 @@ struct ContentView: View {
                 }
             }
         } detail: {
-            switch selectedSidebar ?? .home {
-            case .home:
+            ZStack {
                 NavigationStack {
                     HomeView(
                         onSettingsTap: { selectedSidebar = .settings },
                         onOpenChat: {
                             pendingOpenChat = true
-                            searchBarState.reveal()
+                            macSearchFieldFocused = true
                         }
                     )
                 }
-                    .background(Color.clear)
-                    .environment(\.colorScheme, .light)
-            case .lists:
+                .background(Color.clear)
+                .environment(\.colorScheme, .light)
+                .opacity(selectedSidebar == .home || selectedSidebar == nil ? 1 : 0)
+                .allowsHitTesting(selectedSidebar == .home || selectedSidebar == nil)
+
                 NavigationStack { ListsTabView() }
                     .background(Color.clear)
                     .environment(\.colorScheme, .light)
-            case .recipes:
+                    .opacity(selectedSidebar == .lists ? 1 : 0)
+                    .allowsHitTesting(selectedSidebar == .lists)
+
                 NavigationStack { RecipesView() }
                     .background(Color.clear)
                     .environment(\.colorScheme, .light)
-            case .nutrients:
+                    .opacity(selectedSidebar == .recipes ? 1 : 0)
+                    .allowsHitTesting(selectedSidebar == .recipes)
+
                 NavigationStack { NutrientsPlaceholderView() }
                     .background(Color.clear)
                     .environment(\.colorScheme, .light)
-            case .settings:
+                    .opacity(selectedSidebar == .nutrients ? 1 : 0)
+                    .allowsHitTesting(selectedSidebar == .nutrients)
+
                 NavigationStack { SettingsView() }
                     .background(Color.clear)
                     .environment(\.colorScheme, .light)
+                    .opacity(selectedSidebar == .settings ? 1 : 0)
+                    .allowsHitTesting(selectedSidebar == .settings)
             }
+            .overlay {
+                if macHasSearchContent {
+                    macSearchResultsOverlay
+                        .transition(.opacity)
+                }
+            }
+        }
+        .onChange(of: searchBarState.debouncedSearchText) { _, newValue in
+            guard searchBarState.mode != .aiChat else { return }
+            searchService.search(query: newValue, context: modelContext, showUtensils: settings?.showUtensils == true)
         }
         .toolbarBackground(.hidden, for: .windowToolbar)
         .toolbarColorScheme(.dark, for: .windowToolbar)
@@ -547,12 +597,86 @@ struct ContentView: View {
             if newTheme != macBackgroundToTheme {
                 macBackgroundFromTheme = macBackgroundToTheme
                 macBackgroundToTheme = newTheme
-                macBackgroundTransitionProgress = 0.0
-                withAnimation(.easeInOut(duration: 0.35)) {
-                    macBackgroundTransitionProgress = 1.0
-                }
+                macBackgroundTransitionProgress = 1.0
             }
         }
+    }
+
+    private var macHasSearchContent: Bool {
+        let hasText = !searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        return hasText || searchBarState.mode == .aiChat || pendingOpenChat || pendingChatQuery != nil
+    }
+
+    @ViewBuilder
+    private var macSearchResultsOverlay: some View {
+        VStack(spacing: 0) {
+            // Header
+            HStack(alignment: .bottom) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(searchBarState.mode == .aiChat ? "Modo IA" : "Assistente")
+                        .font(.pageTitle)
+                    Text(searchBarState.mode == .aiChat
+                         ? "Converse com a IA sobre sua cozinha."
+                         : "Adicione itens, busque na despensa ou pergunte à IA.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                if searchBarState.mode == .aiChat {
+                    Button {
+                        pendingNewConversation = true
+                    } label: {
+                        Image(systemName: "square.and.pencil")
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundStyle(.secondary)
+                            .frame(width: 32, height: 32)
+                    }
+                    .buttonStyle(.plain)
+
+                    Button {
+                        pendingShowHistory = true
+                    } label: {
+                        Image(systemName: "clock.arrow.circlepath")
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundStyle(.secondary)
+                            .frame(width: 32, height: 32)
+                    }
+                    .buttonStyle(.plain)
+                }
+                Button {
+                    searchBarState.searchText = ""
+                    searchBarState.debouncedSearchText = ""
+                    searchBarState.mode = .idle
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 15, weight: .medium))
+                        .symbolRenderingMode(.hierarchical)
+                        .foregroundStyle(.secondary)
+                        .frame(width: 32, height: 32)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 16)
+            .padding(.bottom, 10)
+
+            // Results
+            if let overlay = searchOverlayView {
+                overlay
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                Spacer(minLength: 0)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background {
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(.regularMaterial)
+                .environment(\.colorScheme, .light)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .padding(16)
+        .environment(\.colorScheme, .light)
     }
 
     @ViewBuilder
@@ -1395,9 +1519,17 @@ extension View {
     }
 }
 #else
+private struct ForceLightSheetModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .environment(\.colorScheme, .light)
+            .presentationBackground(Color(nsColor: .windowBackgroundColor))
+            .colorScheme(.light)
+    }
+}
 extension View {
     func forceLightStatusBar() -> some View {
-        self.environment(\.colorScheme, .light)
+        self.modifier(ForceLightSheetModifier())
     }
 }
 #endif

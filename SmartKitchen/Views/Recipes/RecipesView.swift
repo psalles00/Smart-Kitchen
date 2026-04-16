@@ -130,6 +130,12 @@ struct RecipesView: View {
                             optionsMenu
                         }
 
+                        GlassButtonGroup {
+                            GlassGroupButton(systemImage: "plus") {
+                                showAddRecipe = true
+                            }
+                        }
+
                         SettingsButton()
                     }
                 }
