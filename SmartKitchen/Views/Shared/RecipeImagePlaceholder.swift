@@ -160,6 +160,7 @@ struct RecipeImagePlaceholderCompact: View {
                             .offset(x: baseOffset + rowShift)
                         }
                     }
+                    .scaleEffect(1.25)
 
                     if darkenOverlay {
                         Color.black.opacity(0.36)
