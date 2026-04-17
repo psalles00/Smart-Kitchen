@@ -1015,10 +1015,10 @@ private struct HomeView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 24) {
                         assistantLauncher
+                        actionDeck
                         if !expiringItemsState.isEmpty {
                             expiringSection
                         }
-                        actionDeck
                         dessertShelf
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -1163,130 +1163,131 @@ private struct HomeView: View {
     }
 
     private var actionDeck: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Atalhos")
-                .font(.headline.weight(.semibold))
+        GeometryReader { geo in
+            let spacing = homeShortcutSpacing
+            let smallSide = homeShortcutSmallSide(for: geo.size.width)
+            let topSide = smallSide * 2 + spacing
 
-            GeometryReader { geo in
-                let spacing = homeShortcutSpacing
-                let smallSide = homeShortcutSmallSide(for: geo.size.width)
-                let topSide = smallSide * 2 + spacing
+            VStack(spacing: spacing) {
+                // Linha superior: Assistente (featured) + Modo IA / Receitas (wide)
+                HStack(spacing: spacing) {
+                    homeShortcutButton(
+                        title: "Assistente",
+                        subtitle: "Adicione, busque ou pergunte...",
+                        imageName: "assistente",
+                        style: .featured
+                    ) {
+                        onOpenChat()
+                    }
+                    .frame(width: topSide, height: topSide)
 
-                VStack(spacing: spacing) {
-                    // Linha superior: Assistente (featured) + Modo IA / Receitas (wide)
-                    HStack(spacing: spacing) {
+                    VStack(spacing: spacing) {
                         homeShortcutButton(
-                            title: "Assistente",
-                            subtitle: "Adicione, busque ou pergunte...",
-                            imageName: "assistente",
-                            style: .featured
+                            title: "Modo IA",
+                            subtitle: "",
+                            imageName: "modo ia",
+                            style: .wide,
+                            imageSize: 110,
+                            imageOffset: CGSize(width: 80, height: 25)
                         ) {
                             onOpenChat()
                         }
-                        .frame(width: topSide, height: topSide)
+                        .frame(height: smallSide)
 
-                        VStack(spacing: spacing) {
-                            homeShortcutButton(
-                                title: "Modo IA",
-                                subtitle: "",
-                                imageName: "modo ia",
-                                style: .wide
-                            ) {
-                                onOpenChat()
-                            }
-                            .frame(height: smallSide)
-
-                            homeShortcutLink(
-                                title: "Receitas",
-                                subtitle: "",
-                                imageName: "receitas",
-                                style: .wide
-                            ) {
-                                RecipesView()
-                            }
-                            .frame(height: smallSide)
+                        homeShortcutLink(
+                            title: "Receitas",
+                            subtitle: "",
+                            imageName: "receitas",
+                            style: .wide,
+                            imageSize: 90
+                        ) {
+                            RecipesView()
                         }
-                        .frame(width: topSide, height: topSide)
+                        .frame(height: smallSide)
+                    }
+                    .frame(width: topSide, height: topSide)
+                }
+
+                // Linha inferior: 4 tiles compactos com label abaixo
+                HStack(spacing: spacing) {
+                    VStack(spacing: 6) {
+                        homeShortcutLink(
+                            title: "",
+                            subtitle: "",
+                            imageName: "despensa",
+                            style: .compact,
+                            imageSize: 68
+                        ) {
+                            ListsTabView(initialSubtab: .pantry)
+                        }
+                        .frame(height: smallSide)
+                        Text("Despensa")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.primary)
                     }
 
-                    // Linha inferior: 4 tiles compactos com label abaixo
-                    HStack(spacing: spacing) {
-                        VStack(spacing: 6) {
-                            homeShortcutLink(
-                                title: "",
-                                subtitle: "",
-                                imageName: "despensa",
-                                style: .compact
-                            ) {
-                                ListsTabView(initialSubtab: .pantry)
-                            }
-                            .frame(height: smallSide)
-                            Text("Despensa")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(.primary)
+                    VStack(spacing: 6) {
+                        homeShortcutLink(
+                            title: "",
+                            subtitle: "",
+                            imageName: "mercado",
+                            style: .compact,
+                            imageSize: 84
+                        ) {
+                            ListsTabView(initialSubtab: .grocery)
                         }
+                        .frame(height: smallSide)
+                        Text("Mercado")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.primary)
+                    }
 
-                        VStack(spacing: 6) {
-                            homeShortcutLink(
-                                title: "",
-                                subtitle: "",
-                                imageName: "mercado",
-                                style: .compact
-                            ) {
-                                ListsTabView(initialSubtab: .grocery)
-                            }
-                            .frame(height: smallSide)
-                            Text("Mercado")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(.primary)
+                    VStack(spacing: 6) {
+                        homeShortcutButton(
+                            title: "",
+                            subtitle: "",
+                            imageName: "ideis",
+                            style: .compact
+                        ) {
+                            onOpenChat()
                         }
+                        .frame(height: smallSide)
+                        Text("Ideias")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.primary)
+                    }
 
-                        VStack(spacing: 6) {
-                            homeShortcutButton(
-                                title: "",
-                                subtitle: "",
-                                imageName: "ideis",
-                                style: .compact
-                            ) {
-                                onOpenChat()
-                            }
-                            .frame(height: smallSide)
-                            Text("Ideias")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(.primary)
+                    VStack(spacing: 6) {
+                        homeShortcutLink(
+                            title: "",
+                            subtitle: "",
+                            imageName: "nutrientes",
+                            style: .compact,
+                            imageSize: 68
+                        ) {
+                            NutrientsPlaceholderView()
                         }
-
-                        VStack(spacing: 6) {
-                            homeShortcutLink(
-                                title: "",
-                                subtitle: "",
-                                imageName: "nutrientes",
-                                style: .compact
-                            ) {
-                                NutrientsPlaceholderView()
-                            }
-                            .frame(height: smallSide)
-                            Text("Nutrientes")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(.primary)
-                        }
+                        .frame(height: smallSide)
+                        Text("Nutrientes")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.primary)
                     }
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             }
-            .frame(maxWidth: .infinity)
-            .frame(height: homeShortcutDeckHeight(for: shortcutDeckWidth))
-            .background {
-                GeometryReader { proxy in
-                    Color.clear
-                        .preference(key: HomeShortcutDeckWidthKey.self, value: proxy.size.width)
-                }
-            }
-            .onPreferenceChange(HomeShortcutDeckWidthKey.self) { newWidth in
-                shortcutDeckWidth = newWidth
-            }
-            .padding(.bottom, 24)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
+        .frame(maxWidth: .infinity)
+        .frame(height: homeShortcutDeckHeight(for: shortcutDeckWidth))
+        .background {
+            GeometryReader { proxy in
+                Color.clear
+                    .preference(key: HomeShortcutDeckWidthKey.self, value: proxy.size.width)
+            }
+        }
+        .onPreferenceChange(HomeShortcutDeckWidthKey.self) { newWidth in
+            shortcutDeckWidth = newWidth
+        }
+        .padding(.bottom, 40)
     }
 
     private var expiringSection: some View {
@@ -1466,10 +1467,19 @@ private struct HomeView: View {
         subtitle: String,
         imageName: String,
         style: HomeShortcutTileStyle,
+        imageSize: CGFloat? = nil,
+        imageOffset: CGSize? = nil,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
-            homeShortcutTileBody(title: title, subtitle: subtitle, imageName: imageName, style: style)
+            homeShortcutTileBody(
+                title: title,
+                subtitle: subtitle,
+                imageName: imageName,
+                style: style,
+                customSize: imageSize,
+                customOffset: imageOffset
+            )
         }
         .buttonStyle(.plain)
     }
@@ -1479,10 +1489,19 @@ private struct HomeView: View {
         subtitle: String,
         imageName: String,
         style: HomeShortcutTileStyle,
+        imageSize: CGFloat? = nil,
+        imageOffset: CGSize? = nil,
         @ViewBuilder destination: @escaping () -> Destination
     ) -> some View {
         NavigationLink(destination: destination) {
-            homeShortcutTileBody(title: title, subtitle: subtitle, imageName: imageName, style: style)
+            homeShortcutTileBody(
+                title: title,
+                subtitle: subtitle,
+                imageName: imageName,
+                style: style,
+                customSize: imageSize,
+                customOffset: imageOffset
+            )
         }
         .buttonStyle(.plain)
     }
@@ -1491,14 +1510,15 @@ private struct HomeView: View {
         title: String,
         subtitle: String,
         imageName: String,
-        style: HomeShortcutTileStyle
+        style: HomeShortcutTileStyle,
+        customSize: CGFloat? = nil,
+        customOffset: CGSize? = nil
     ) -> some View {
         ZStack {
             homeShortcutBackgroundColor
 
             switch style {
             case .featured:
-                // Text top-left
                 VStack(alignment: .leading, spacing: 6) {
                     Text(title)
                         .font(.title2.weight(.bold))
@@ -1510,40 +1530,78 @@ private struct HomeView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 .padding(18)
-                // Image bottom-right, partially clipped
-                Image(imageName)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 120)            // ← TAMANHO do ícone featured
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
-                    .offset(x: 28, y: 28)         // ← POSIÇÃO do ícone featured (x=direita, y=baixo)
 
             case .wide:
-                // Text bottom-left
                 Text(title)
                     .font(.headline.weight(.bold))
                     .foregroundStyle(.primary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
                     .padding(16)
-                // Image right side, partially clipped
-                Image(imageName)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(height: 72)            // ← TAMANHO do ícone wide
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .trailing)
-                    .offset(x: 16, y: -6)         // ← POSIÇÃO do ícone wide (x=direita, y=cima/baixo)
 
             case .compact:
-                // Ícone centralizado dentro do tile; título é renderizado fora
+                Color.clear
+            }
+        }
+        .overlay(alignment: homeShortcutImageAlignment(for: style)) {
+            homeShortcutTileImage(
+                imageName: imageName,
+                style: style,
+                customSize: customSize,
+                customOffset: customOffset
+            )
+        }
+        .clipShape(.rect(cornerRadius: 16))
+    }
+
+    private func homeShortcutTileImage(
+        imageName: String,
+        style: HomeShortcutTileStyle,
+        customSize: CGFloat?,
+        customOffset: CGSize?
+    ) -> some View {
+        let defaultOffset: CGSize = switch style {
+        case .featured:
+            CGSize(width: 28, height: 28)
+        case .wide:
+            CGSize(width: 95, height: 25)
+        case .compact:
+            .zero
+        }
+
+        let finalOffset = customOffset ?? defaultOffset
+
+        return Group {
+            switch style {
+            case .featured:
                 Image(imageName)
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 64)             // ← TAMANHO do ícone compact
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                    .offset(x: 0, y: 0)           // ← POSIÇÃO do ícone compact (x=horizontal, y=vertical)
+                    .frame(width: customSize ?? 150)
+            case .wide:
+                Image(imageName)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: customSize ?? 80)
+            case .compact:
+                Image(imageName)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: customSize ?? 76)
             }
         }
-        .clipShape(.rect(cornerRadius: 16))
+        .offset(finalOffset)
+        .allowsHitTesting(false)
+    }
+
+    private func homeShortcutImageAlignment(for style: HomeShortcutTileStyle) -> Alignment {
+        switch style {
+        case .featured:
+            .bottomTrailing
+        case .wide:
+            .bottomLeading
+        case .compact:
+            .center
+        }
     }
 
     private func normalized(_ text: String) -> String {
