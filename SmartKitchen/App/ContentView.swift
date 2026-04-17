@@ -1169,17 +1169,16 @@ private struct HomeView: View {
 
             GeometryReader { geo in
                 let spacing = homeShortcutSpacing
-                let rowGap = spacing
                 let smallSide = homeShortcutSmallSide(for: geo.size.width)
                 let topSide = smallSide * 2 + spacing
 
-                VStack(spacing: rowGap) {
+                VStack(spacing: spacing) {
+                    // Linha superior: Assistente (featured) + Modo IA / Receitas (wide)
                     HStack(spacing: spacing) {
                         homeShortcutButton(
-                            title: "IA",
-                            subtitle: "Conversar",
-                            systemImage: "sparkles",
-                            tint: .blue,
+                            title: "Assistente",
+                            subtitle: "Adicione, busque ou pergunte...",
+                            imageName: "assistente",
                             style: .featured
                         ) {
                             onOpenChat()
@@ -1187,81 +1186,91 @@ private struct HomeView: View {
                         .frame(width: topSide, height: topSide)
 
                         VStack(spacing: spacing) {
-                            homeShortcutLink(
-                                title: "Listas",
-                                subtitle: "Abrir despensa",
-                                systemImage: "list.bullet.clipboard",
-                                tint: .indigo,
+                            homeShortcutButton(
+                                title: "Modo IA",
+                                subtitle: "",
+                                imageName: "modo ia",
                                 style: .wide
                             ) {
-                                ListsTabView(initialSubtab: .pantry)
+                                onOpenChat()
                             }
                             .frame(height: smallSide)
 
                             homeShortcutLink(
                                 title: "Receitas",
-                                subtitle: "Ver combinações",
-                                systemImage: "book.closed",
-                                tint: PageTheme.recipes.accentColor,
+                                subtitle: "",
+                                imageName: "receitas",
                                 style: .wide
                             ) {
                                 RecipesView()
                             }
                             .frame(height: smallSide)
                         }
-                        .frame(width: topSide)
+                        .frame(width: topSide, height: topSide)
                     }
 
+                    // Linha inferior: 4 tiles compactos com label abaixo
                     HStack(spacing: spacing) {
-                        homeShortcutButton(
-                            title: "Mercado",
-                            subtitle: "Adicionar",
-                            systemImage: "cart.badge.plus",
-                            tint: .green,
-                            style: .compact
-                        ) {
-                            showAddGrocery = true
+                        VStack(spacing: 6) {
+                            homeShortcutLink(
+                                title: "",
+                                subtitle: "",
+                                imageName: "despensa",
+                                style: .compact
+                            ) {
+                                ListsTabView(initialSubtab: .pantry)
+                            }
+                            .frame(height: smallSide)
+                            Text("Despensa")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.primary)
                         }
-                        .frame(height: smallSide)
-                        .clipped()
 
-                        homeShortcutButton(
-                            title: "Despensa",
-                            subtitle: "Adicionar",
-                            systemImage: "square.and.pencil",
-                            tint: .orange,
-                            style: .compact
-                        ) {
-                            showAddPantry = true
+                        VStack(spacing: 6) {
+                            homeShortcutLink(
+                                title: "",
+                                subtitle: "",
+                                imageName: "mercado",
+                                style: .compact
+                            ) {
+                                ListsTabView(initialSubtab: .grocery)
+                            }
+                            .frame(height: smallSide)
+                            Text("Mercado")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.primary)
                         }
-                        .frame(height: smallSide)
-                        .clipped()
 
-                        homeShortcutLink(
-                            title: "Mercado",
-                            subtitle: "Abrir lista",
-                            systemImage: "cart",
-                            tint: .mint,
-                            style: .compact
-                        ) {
-                            ListsTabView(initialSubtab: .grocery)
+                        VStack(spacing: 6) {
+                            homeShortcutButton(
+                                title: "",
+                                subtitle: "",
+                                imageName: "ideis",
+                                style: .compact
+                            ) {
+                                onOpenChat()
+                            }
+                            .frame(height: smallSide)
+                            Text("Ideias")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.primary)
                         }
-                        .frame(height: smallSide)
-                        .clipped()
 
-                        homeShortcutLink(
-                            title: "Nutrientes",
-                            subtitle: "Em breve",
-                            systemImage: "chart.bar.doc.horizontal",
-                            tint: PageTheme.nutrients.accentColor,
-                            style: .compact
-                        ) {
-                            NutrientsPlaceholderView()
+                        VStack(spacing: 6) {
+                            homeShortcutLink(
+                                title: "",
+                                subtitle: "",
+                                imageName: "nutrientes",
+                                style: .compact
+                            ) {
+                                NutrientsPlaceholderView()
+                            }
+                            .frame(height: smallSide)
+                            Text("Nutrientes")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.primary)
                         }
-                        .frame(height: smallSide)
-                        .clipped()
                     }
-                    .frame(height: smallSide)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             }
@@ -1449,25 +1458,18 @@ private struct HomeView: View {
 
     private func homeShortcutDeckHeight(for width: CGFloat) -> CGFloat {
         let smallSide = homeShortcutSmallSide(for: width)
-        return smallSide * 3 + homeShortcutSpacing * 2
+        return smallSide * 3 + homeShortcutSpacing * 2 + 22
     }
 
     private func homeShortcutButton(
         title: String,
         subtitle: String,
-        systemImage: String,
-        tint: Color,
+        imageName: String,
         style: HomeShortcutTileStyle,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
-            homeShortcutTileBody(
-                title: title,
-                subtitle: subtitle,
-                systemImage: systemImage,
-                tint: tint,
-                style: style
-            )
+            homeShortcutTileBody(title: title, subtitle: subtitle, imageName: imageName, style: style)
         }
         .buttonStyle(.plain)
     }
@@ -1475,19 +1477,12 @@ private struct HomeView: View {
     private func homeShortcutLink<Destination: View>(
         title: String,
         subtitle: String,
-        systemImage: String,
-        tint: Color,
+        imageName: String,
         style: HomeShortcutTileStyle,
         @ViewBuilder destination: @escaping () -> Destination
     ) -> some View {
         NavigationLink(destination: destination) {
-            homeShortcutTileBody(
-                title: title,
-                subtitle: subtitle,
-                systemImage: systemImage,
-                tint: tint,
-                style: style
-            )
+            homeShortcutTileBody(title: title, subtitle: subtitle, imageName: imageName, style: style)
         }
         .buttonStyle(.plain)
     }
@@ -1495,72 +1490,60 @@ private struct HomeView: View {
     private func homeShortcutTileBody(
         title: String,
         subtitle: String,
-        systemImage: String,
-        tint: Color,
+        imageName: String,
         style: HomeShortcutTileStyle
     ) -> some View {
-        Group {
+        ZStack {
+            homeShortcutBackgroundColor
+
             switch style {
             case .featured:
-                VStack(alignment: .leading, spacing: 12) {
-                    shortcutIcon(systemImage: systemImage, tint: tint, style: style)
-
-                    Spacer(minLength: 0)
-
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(title)
-                            .font(.title3.weight(.semibold))
-                            .foregroundStyle(.primary)
-                        Text(subtitle)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
+                // Text top-left
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(title)
+                        .font(.title2.weight(.bold))
+                        .foregroundStyle(.primary)
+                    Text(subtitle)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .padding(18)
+                // Image bottom-right, partially clipped
+                Image(imageName)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 120)            // ← TAMANHO do ícone featured
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                    .offset(x: 28, y: 28)         // ← POSIÇÃO do ícone featured (x=direita, y=baixo)
 
             case .wide:
-                HStack(spacing: 12) {
-                    shortcutIcon(systemImage: systemImage, tint: tint, style: style)
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(title)
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(.primary)
-                        Text(subtitle)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-
-                    Spacer(minLength: 0)
-                }
+                // Text bottom-left
+                Text(title)
+                    .font(.headline.weight(.bold))
+                    .foregroundStyle(.primary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+                    .padding(16)
+                // Image right side, partially clipped
+                Image(imageName)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 72)            // ← TAMANHO do ícone wide
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .trailing)
+                    .offset(x: 16, y: -6)         // ← POSIÇÃO do ícone wide (x=direita, y=cima/baixo)
 
             case .compact:
-                VStack(alignment: .leading, spacing: 6) {
-                    shortcutIcon(systemImage: systemImage, tint: tint, style: style)
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(title)
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.primary)
-                            .lineLimit(1)
-                        Text(subtitle)
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                    }
-                }
+                // Ícone centralizado dentro do tile; título é renderizado fora
+                Image(imageName)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 64)             // ← TAMANHO do ícone compact
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                    .offset(x: 0, y: 0)           // ← POSIÇÃO do ícone compact (x=horizontal, y=vertical)
             }
         }
-        .padding(style.contentPadding)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-        .background(homeShortcutBackgroundColor, in: .rect(cornerRadius: 16))
-    }
-
-    private func shortcutIcon(systemImage: String, tint: Color, style: HomeShortcutTileStyle) -> some View {
-        Image(systemName: systemImage)
-            .font(style.iconFont)
-            .foregroundStyle(tint)
-            .frame(width: style.iconFrame, height: style.iconFrame)
-            .background(tint.opacity(0.14), in: .rect(cornerRadius: style.iconCornerRadius))
+        .clipShape(.rect(cornerRadius: 16))
     }
 
     private func normalized(_ text: String) -> String {
@@ -1592,40 +1575,6 @@ private enum HomeShortcutTileStyle {
     case wide
     case compact
 
-    var contentPadding: CGFloat {
-        switch self {
-        case .featured: 18
-        case .wide: 16
-        case .compact: 8
-        }
-    }
-
-    var iconFrame: CGFloat {
-        switch self {
-        case .featured: 52
-        case .wide: 40
-        case .compact: 30
-        }
-    }
-
-    var iconCornerRadius: CGFloat {
-        switch self {
-        case .featured: 16
-        case .wide: 12
-        case .compact: 10
-        }
-    }
-
-    var iconFont: Font {
-        switch self {
-        case .featured:
-            .title2.weight(.semibold)
-        case .wide:
-            .headline.weight(.semibold)
-        case .compact:
-            .footnote.weight(.semibold)
-        }
-    }
 }
 
 private struct HomeShortcutDeckWidthKey: PreferenceKey {
