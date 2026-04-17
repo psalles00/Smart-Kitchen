@@ -9,6 +9,8 @@ float iTime;
 float2 iResolution;
 float3 tintColor;
 float tintStrength;
+float3 tintColor2;
+float tint2Strength;
 
 #pragma body
 float2 uv = _surface.diffuseTexcoord * 2.0 - 1.0;
@@ -307,7 +309,12 @@ totalGrain *= smoothstep(0.0, 0.3, colorIntensity);
 float3 outputColor;
 if (tintStrength > 0.0) {
     float luminance = dot(baseColor, float3(0.299, 0.587, 0.114));
-    float3 tinted = float3(luminance) * tintColor * 2.0;
+    float3 tinted1 = float3(luminance) * tintColor * 2.0;
+    float3 tinted2 = float3(luminance) * tintColor2 * 2.0;
+
+    // Position-based blend: use the CPPN base pattern to drive distinct zones
+    float zoneMix = smoothstep(0.3, 0.7, baseColor.z * 0.6 + uv.y * 0.25 + 0.35 + 0.15 * sin(iTime * 0.4 + uv.x * 2.0));
+    float3 tinted = mix(tinted1, tinted2, zoneMix * tint2Strength);
     outputColor = mix(baseColor, tinted, tintStrength);
 } else {
     outputColor = baseColor;
@@ -329,6 +336,8 @@ class CPPNSceneRenderer: NSObject, SCNSceneRendererDelegate {
 
     var tintColor: PlatformColor = .white
     var tintStrength: Float = 0.0
+    var tintColor2: PlatformColor = .white
+    var tint2Strength: Float = 0.0
 
     @MainActor
     func setup(in view: SCNView) {
@@ -364,6 +373,8 @@ class CPPNSceneRenderer: NSObject, SCNSceneRendererDelegate {
         material.setValue(SCNVector3(1, 1, 0), forKey: "iResolution")
         material.setValue(SCNVector3(1, 1, 1), forKey: "tintColor")
         material.setValue(Float(0), forKey: "tintStrength")
+        material.setValue(SCNVector3(1, 1, 1), forKey: "tintColor2")
+        material.setValue(Float(0), forKey: "tint2Strength")
 
         plane.materials = [material]
         self.material = material
@@ -381,6 +392,16 @@ class CPPNSceneRenderer: NSObject, SCNSceneRendererDelegate {
         #endif
         material.setValue(SCNVector3(Float(r), Float(g), Float(b)), forKey: "tintColor")
         material.setValue(tintStrength, forKey: "tintStrength")
+
+        var r2: CGFloat = 0, g2: CGFloat = 0, b2: CGFloat = 0, a2: CGFloat = 0
+        #if os(macOS)
+        let convertedColor2 = tintColor2.usingColorSpace(.deviceRGB) ?? tintColor2
+        convertedColor2.getRed(&r2, green: &g2, blue: &b2, alpha: &a2)
+        #else
+        tintColor2.getRed(&r2, green: &g2, blue: &b2, alpha: &a2)
+        #endif
+        material.setValue(SCNVector3(Float(r2), Float(g2), Float(b2)), forKey: "tintColor2")
+        material.setValue(tint2Strength, forKey: "tint2Strength")
     }
 
     private var _cachedSize: CGSize = .zero
@@ -412,9 +433,11 @@ class CPPNSceneRenderer: NSObject, SCNSceneRendererDelegate {
         }
     }
 
-    func updateParams(tintColor: PlatformColor, tintStrength: Float, size: CGSize, scale: CGFloat) {
+    func updateParams(tintColor: PlatformColor, tintStrength: Float, tintColor2: PlatformColor = .white, tint2Strength: Float = 0.0, size: CGSize, scale: CGFloat) {
         self.tintColor = tintColor
         self.tintStrength = tintStrength
+        self.tintColor2 = tintColor2
+        self.tint2Strength = tint2Strength
         self.cachedSize = size
         self.cachedScale = scale
         updateUniforms()
@@ -427,6 +450,8 @@ class CPPNSceneRenderer: NSObject, SCNSceneRendererDelegate {
 struct CPPNSceneView: UIViewRepresentable {
     var tintColor: PlatformColor
     var tintStrength: Float
+    var tintColor2: PlatformColor = .white
+    var tint2Strength: Float = 0.0
     func makeCoordinator() -> CPPNSceneRenderer { CPPNSceneRenderer() }
     func makeUIView(context: Context) -> SCNView { createView(context: context) }
     func updateUIView(_ uiView: SCNView, context: Context) { updateView(uiView, context: context) }
@@ -435,6 +460,8 @@ struct CPPNSceneView: UIViewRepresentable {
 struct CPPNSceneView: NSViewRepresentable {
     var tintColor: PlatformColor
     var tintStrength: Float
+    var tintColor2: PlatformColor = .white
+    var tint2Strength: Float = 0.0
     func makeCoordinator() -> CPPNSceneRenderer { CPPNSceneRenderer() }
     func makeNSView(context: Context) -> SCNView { createView(context: context) }
     func updateNSView(_ nsView: SCNView, context: Context) { updateView(nsView, context: context) }
@@ -451,6 +478,8 @@ extension CPPNSceneView {
         context.coordinator.updateParams(
             tintColor: tintColor,
             tintStrength: tintStrength,
+            tintColor2: tintColor2,
+            tint2Strength: tint2Strength,
             size: scnView.bounds.size,
             scale: scale
         )
@@ -462,6 +491,8 @@ extension CPPNSceneView {
         context.coordinator.updateParams(
             tintColor: tintColor,
             tintStrength: tintStrength,
+            tintColor2: tintColor2,
+            tint2Strength: tint2Strength,
             size: view.bounds.size,
             scale: scale
         )
@@ -488,29 +519,38 @@ struct NebulaShaderView: View {
 
     var body: some View {
         ZStack {
-            let tintInfo: (color: Color, strength: Float) = {
+            let tintInfo: (color: Color, strength: Float, color2: Color, strength2: Float) = {
                 switch theme {
                 case .home:
-                    // Golden: yellow-orange blend
-                    return (Color(red: 1.0, green: 0.72, blue: 0.08), 1.3)
+                    // Red-crimson primary zones + deep blue secondary zones
+                    return (Color(red: 0.82, green: 0.10, blue: 0.18), 1.1,
+                            Color(red: 0.10, green: 0.18, blue: 0.72), 1.0)
                 case .lists:
-                    // Cool blue
-                    return (Color(red: 0.2, green: 0.5, blue: 1.0), 1.0)
+                    return (Color(red: 0.2, green: 0.5, blue: 1.0), 1.0,
+                            Color.white, 0.0)
                 case .recipes:
-                    // Deep warm red
-                    return (Color(red: 0.95, green: 0.15, blue: 0.08), 1.0)
+                    return (Color(red: 0.95, green: 0.15, blue: 0.08), 1.0,
+                            Color.white, 0.0)
                 case .nutrients:
-                    // Health green
-                    return (Color(red: 0.1, green: 0.9, blue: 0.3), 1.0)
+                    return (Color(red: 0.1, green: 0.9, blue: 0.3), 1.0,
+                            Color.white, 0.0)
                 }
             }()
 
             CPPNSceneView(
                 tintColor: PlatformColor(tintInfo.color),
-                tintStrength: tintInfo.strength
+                tintStrength: tintInfo.strength,
+                tintColor2: PlatformColor(tintInfo.color2),
+                tint2Strength: tintInfo.strength2
             )
             .ignoresSafeArea()
             .opacity(progress)
+
+            // Darken layer for home
+            if theme == .home {
+                Color.black.opacity(0.18)
+                    .ignoresSafeArea()
+            }
 
             GeometryReader { geo in
                 RadialGradient(

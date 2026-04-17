@@ -9,7 +9,7 @@ enum PageTheme: String, Codable, CaseIterable {
     var accentColor: Color {
         switch self {
         case .home:
-            Color(red: 0.79, green: 0.57, blue: 0.23)
+            Color(red: 0.62, green: 0.15, blue: 0.42)
         case .lists:
             Color(red: 0.20, green: 0.50, blue: 0.93)
         case .recipes:
@@ -22,7 +22,7 @@ enum PageTheme: String, Codable, CaseIterable {
     var secondaryAccentColor: Color {
         switch self {
         case .home:
-            Color(red: 0.96, green: 0.78, blue: 0.44)
+            Color(red: 0.85, green: 0.35, blue: 0.55)
         case .lists:
             Color(red: 0.42, green: 0.73, blue: 0.98)
         case .recipes:

@@ -1118,8 +1118,6 @@ private struct HomeView: View {
 
     private var actionDeck: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("Seu centro de cozinha")
-                .font(.headline.weight(.semibold))
 
         GeometryReader { geo in
             let spacing = homeShortcutSpacing
@@ -1271,8 +1269,8 @@ private struct HomeView: View {
                     .background(Color.orange.opacity(0.14), in: .capsule)
             }
 
-            VStack(spacing: 10) {
-                ForEach(expiringItemsState.prefix(5)) { item in
+            VStack(spacing: 0) {
+                ForEach(Array(expiringItemsState.prefix(5).enumerated()), id: \.element.id) { index, item in
                     Button {
                         editingExpiringItem = item
                     } label: {
@@ -1297,8 +1295,8 @@ private struct HomeView: View {
                                     .foregroundStyle(expirationHighlightColor(for: expirationDate))
                             }
                         }
-                        .padding(14)
-                        .background(homeShortcutBackgroundColor, in: .rect(cornerRadius: 18))
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 10)
                     }
                     .buttonStyle(.plain)
                     .contextMenu {
@@ -1312,8 +1310,14 @@ private struct HomeView: View {
                             }
                         }
                     }
+
+                    if index < min(expiringItemsState.count, 5) - 1 {
+                        ItemListDivider()
+                            .padding(.horizontal, 14)
+                    }
                 }
             }
+            .background(homeShortcutBackgroundColor, in: .rect(cornerRadius: 18))
         }
     }
 
