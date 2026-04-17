@@ -378,9 +378,31 @@ struct EditRecipeView: View {
                 #endif
                 .autocorrectionDisabled()
 
-            Picker("Categoria", selection: $recipe.category) {
-                ForEach(recipeCategories) { cat in
-                    Text(cat.name).tag(cat.name)
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Categorias")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                FlowLayout(spacing: 8) {
+                    ForEach(recipeCategories) { cat in
+                        let isSelected = recipe.categories.contains(cat.name)
+                        Button {
+                            var current = recipe.categories
+                            if isSelected {
+                                current.removeAll { $0 == cat.name }
+                            } else {
+                                current.append(cat.name)
+                            }
+                            recipe.categories = current
+                        } label: {
+                            Text(cat.name)
+                                .font(.subheadline)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(isSelected ? Color.accentColor.opacity(0.15) : Color(.tertiarySystemFill), in: .capsule)
+                                .foregroundStyle(isSelected ? Color.accentColor : .primary)
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
             }
 

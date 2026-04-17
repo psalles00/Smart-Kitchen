@@ -95,7 +95,18 @@ struct RecipesView: View {
     }
 
     private var groupedRecipes: [(category: String, recipes: [Recipe])] {
-        let grouped = Dictionary(grouping: recipes) { $0.category }
+        // Group recipes supporting multi-category (comma-separated)
+        var grouped: [String: [Recipe]] = [:]
+        for recipe in recipes {
+            let cats = recipe.categories
+            if cats.isEmpty {
+                grouped["", default: []].append(recipe)
+            } else {
+                for cat in cats {
+                    grouped[cat, default: []].append(recipe)
+                }
+            }
+        }
 
         let categoryNames: [String]
         if let selectedCategory {

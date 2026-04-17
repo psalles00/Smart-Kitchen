@@ -267,43 +267,29 @@ struct InlineChatView: View {
     // MARK: - Empty State (Skills)
 
     private var emptyState: some View {
-        VStack(spacing: 24) {
-            Spacer().frame(height: 30)
+        VStack(spacing: 20) {
+            Spacer()
 
             Image(systemName: "sparkles")
-                .font(.system(size: 48))
+                .font(.system(size: 40))
                 .foregroundStyle(.tertiary)
 
-            Text("IA de Cozinha")
-                .font(.pageTitle)
+            Text("Como posso ajudar?")
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(.primary)
 
-            Text("O que posso fazer por você?")
+            Text("Pergunte sobre receitas, gerencie sua despensa ou descubra o que cozinhar com o que você tem.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 24)
 
-            VStack(spacing: 10) {
-                skillCard(
-                    icon: "frying.pan",
-                    title: "Cozinhar com Despensa",
-                    description: "Descubra receitas com o que você já tem",
-                    prompt: "Com base nos ingredientes da minha despensa, o que posso cozinhar?"
-                )
-                skillCard(
-                    icon: "book",
-                    title: "Minhas Receitas",
-                    description: "Crie, edite e gerencie suas receitas",
-                    prompt: "Quero gerenciar minhas receitas. O que posso fazer?"
-                )
-                skillCard(
-                    icon: "list.clipboard",
-                    title: "Minhas Listas",
-                    description: "Gerencie despensa, mercado e categorias",
-                    prompt: "Quero gerenciar minhas listas. O que posso fazer?"
-                )
+            SuggestionChipsView { prompt in
+                sendMessage(prompt)
             }
-            .padding(.horizontal, 16)
+            .padding(.top, 4)
 
-            Spacer().frame(height: 10)
+            Spacer()
         }
     }
 

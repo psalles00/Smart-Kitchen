@@ -244,10 +244,14 @@ struct ContentView: View {
                         onOpenChat: {
                             pendingOpenChat = true
                             searchBarState.reveal()
+                        },
+                        onOpenSearch: {
+                            searchBarState.reveal()
                         }
                     )
                 }
                 .overlay { searchResultsOverlay }
+                .overlay { searchBarDismissOverlay }
                 .safeAreaInset(edge: .bottom, spacing: 0) { bottomSearchBarArea }
             } label: {
                 Label("Início", systemImage: AppTab.assistant.icon)
@@ -258,6 +262,7 @@ struct ContentView: View {
                     ListsTabView()
                 }
                 .overlay { searchResultsOverlay }
+                .overlay { searchBarDismissOverlay }
                 .safeAreaInset(edge: .bottom, spacing: 0) { bottomSearchBarArea }
             } label: {
                 Label("Listas", systemImage: AppTab.lists.icon)
@@ -268,6 +273,7 @@ struct ContentView: View {
                     RecipesView()
                 }
                 .overlay { searchResultsOverlay }
+                .overlay { searchBarDismissOverlay }
                 .safeAreaInset(edge: .bottom, spacing: 0) { bottomSearchBarArea }
             } label: {
                 Label("Receitas", systemImage: AppTab.recipes.icon)
@@ -278,6 +284,7 @@ struct ContentView: View {
                     NutrientsPlaceholderView()
                 }
                 .overlay { searchResultsOverlay }
+                .overlay { searchBarDismissOverlay }
                 .safeAreaInset(edge: .bottom, spacing: 0) { bottomSearchBarArea }
             } label: {
                 Label("Nutrientes", systemImage: AppTab.nutrients.icon)
@@ -302,8 +309,21 @@ struct ContentView: View {
     @ViewBuilder
     private var bottomSearchBarArea: some View {
         UnifiedSearchBar(state: searchBarState) { _ in }
-            .padding(.vertical, 2)
+            .padding(.vertical, 6)
             .ignoresSafeArea(.keyboard, edges: .bottom)
+    }
+
+    /// Invisible tap catcher: when the search bar is visible but has no content,
+    /// tapping the background dismisses the search bar / keyboard.
+    @ViewBuilder
+    private var searchBarDismissOverlay: some View {
+        if searchBarState.isVisible && !hasSearchContent {
+            Color.clear
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    searchBarState.dismiss()
+                }
+        }
     }
 
     @ViewBuilder
@@ -526,6 +546,9 @@ struct ContentView: View {
                         onSettingsTap: { selectedSidebar = .settings },
                         onOpenChat: {
                             pendingOpenChat = true
+                            macSearchFieldFocused = true
+                        },
+                        onOpenSearch: {
                             macSearchFieldFocused = true
                         }
                     )
@@ -1002,6 +1025,7 @@ private struct HomeView: View {
     
     let onSettingsTap: () -> Void
     let onOpenChat: () -> Void
+    let onOpenSearch: () -> Void
 
     var body: some View {
         ExpandedPageLayout(
@@ -1082,16 +1106,25 @@ private struct HomeView: View {
     }
     private func updateCompatibleMatches() {
         let pantryNames = pantryItems.map { normalized($0.name) }
+        let threshold = Double(settings?.recipeCompatibilityThresholdPercent ?? 80) / 100.0
+        let mealKeywords = Self.mealKeywordsForCurrentTime()
+
         compatibleMatchesState = recipes
             .filter { recipe in
                 guard let selectedCompatibleCategory = selectedCompatibleCategory else { return true }
-                return recipe.category == selectedCompatibleCategory
+                return recipe.categories.contains(selectedCompatibleCategory)
             }
             .compactMap { recipe -> HomeRecipeMatch? in
                 guard let compatibility = recipe.compatibility(against: pantryNames) else { return nil }
-                return HomeRecipeMatch(recipe: recipe, compatibilityInfo: compatibility)
+                let match = HomeRecipeMatch(recipe: recipe, compatibilityInfo: compatibility)
+                guard match.compatibility >= threshold else { return nil }
+                return match
             }
             .sorted {
+                // Boost recipes whose category/tags match current meal time
+                let lhsMeal = Self.matchesMealTime($0.recipe, keywords: mealKeywords)
+                let rhsMeal = Self.matchesMealTime($1.recipe, keywords: mealKeywords)
+                if lhsMeal != rhsMeal { return lhsMeal }
                 if $0.compatibility != $1.compatibility { return $0.compatibility > $1.compatibility }
                 if $0.compatibilityInfo.matchedIngredients != $1.compatibilityInfo.matchedIngredients {
                     return $0.compatibilityInfo.matchedIngredients > $1.compatibilityInfo.matchedIngredients
@@ -1099,6 +1132,32 @@ private struct HomeView: View {
                 if $0.recipe.isFavorite != $1.recipe.isFavorite { return $0.recipe.isFavorite && !$1.recipe.isFavorite }
                 return $0.recipe.name.localizedCaseInsensitiveCompare($1.recipe.name) == .orderedAscending
             }
+    }
+
+    /// Returns keywords that match the current time-of-day meal.
+    private static func mealKeywordsForCurrentTime() -> [String] {
+        let hour = Calendar.current.component(.hour, from: .now)
+        switch hour {
+        case 5..<10:
+            return ["café da manhã", "café", "breakfast", "desjejum", "matinal"]
+        case 10..<14:
+            return ["almoço", "lunch", "prato principal", "refeição"]
+        case 14..<17:
+            return ["lanche", "snack", "sobremesa", "doce"]
+        case 17..<21:
+            return ["jantar", "dinner", "noturna", "prato principal", "refeição"]
+        default:
+            return ["lanche", "snack", "noturna"]
+        }
+    }
+
+    /// Checks if a recipe's category or tags match meal-time keywords.
+    private static func matchesMealTime(_ recipe: Recipe, keywords: [String]) -> Bool {
+        let lower = recipe.category.lowercased()
+        let tagSet = recipe.tags.map { $0.lowercased() }
+        return keywords.contains { kw in
+            lower.contains(kw) || tagSet.contains { $0.contains(kw) }
+        }
     }
     private func updateExpiringItems() {
         let leadDays = settings?.expiringItemsLeadDays ?? 30
@@ -1133,7 +1192,7 @@ private struct HomeView: View {
                         imageName: "assistente",
                         style: .featured
                     ) {
-                        onOpenChat()
+                        onOpenSearch()
                     }
                     .frame(width: topSide, height: topSide)
 
@@ -1178,7 +1237,7 @@ private struct HomeView: View {
                         }
                         .frame(height: smallSide)
                         Text("Despensa")
-                            .font(.caption)
+                            .font(.caption.weight(.bold))
                             .foregroundStyle(.primary)
                     }
 
@@ -1194,7 +1253,7 @@ private struct HomeView: View {
                         }
                         .frame(height: smallSide)
                         Text("Mercado")
-                            .font(.caption)
+                            .font(.caption.weight(.bold))
                             .foregroundStyle(.primary)
                     }
 
@@ -1209,7 +1268,7 @@ private struct HomeView: View {
                         }
                         .frame(height: smallSide)
                         Text("Ideias")
-                            .font(.caption)
+                            .font(.caption.weight(.bold))
                             .foregroundStyle(.primary)
                     }
 
@@ -1225,8 +1284,7 @@ private struct HomeView: View {
                         }
                         .frame(height: smallSide)
                         Text("Nutrientes")
-                            .font(.caption)
-                            .foregroundStyle(.primary)
+                            .font(.caption.weight(.bold))
                             .foregroundStyle(.primary)
                     }
                 }
@@ -1325,9 +1383,9 @@ private struct HomeView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Receitas compatíveis")
+                    Text("Receitas sugeridas")
                         .font(.headline.weight(.semibold))
-                    Text("Ordenadas por compatibilidade com a sua despensa")
+                    Text("Com base na sua despensa e horário do dia")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -1348,9 +1406,9 @@ private struct HomeView: View {
 
             if compatibleMatchesState.isEmpty {
                 ContentUnavailableView(
-                    "Sem receitas compatíveis",
+                    "Sem receitas sugeridas",
                     systemImage: "fork.knife",
-                    description: Text("Ajuste o grupo de receitas ou atualize a despensa para ver combinações aqui.")
+                    description: Text("Ajuste o nível de compatibilidade nas configurações ou adicione mais itens à despensa.")
                 )
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
@@ -1462,6 +1520,9 @@ private struct HomeView: View {
             )
         }
         .buttonStyle(HomeShortcutButtonStyle())
+        .simultaneousGesture(TapGesture().onEnded {
+            HapticManager.impact(style: .light)
+        })
     }
 
     private func homeShortcutTileBody(
@@ -1477,7 +1538,7 @@ private struct HomeView: View {
 
             switch style {
             case .featured:
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: 2) {
                     Text(title)
                         .font(.title2.weight(.bold))
                         .foregroundStyle(.primary)

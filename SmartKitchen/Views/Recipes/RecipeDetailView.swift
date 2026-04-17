@@ -241,7 +241,7 @@ struct RecipeDetailView: View {
                 if let cal = recipe.calories {
                     metadataChip(icon: "flame", text: "\(cal) kcal")
                 }
-                metadataChip(icon: "tag", text: recipe.category)
+                metadataChip(icon: "tag", text: recipe.categories.joined(separator: ", "))
             }
         }
     }

@@ -695,8 +695,8 @@ struct AITools {
             }
         case .recipe:
             let descriptor = FetchDescriptor<Recipe>()
-            for recipe in (try? context.fetch(descriptor)) ?? [] where recipe.category == oldName {
-                recipe.category = newName
+            for recipe in (try? context.fetch(descriptor)) ?? [] where recipe.categories.contains(oldName) {
+                recipe.categories = recipe.categories.map { $0 == oldName ? newName : $0 }
             }
         case .utensil:
             let descriptor = FetchDescriptor<UtensilItem>()

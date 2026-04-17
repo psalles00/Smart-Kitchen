@@ -312,7 +312,7 @@ if (tintStrength > 0.0) {
     float3 tinted1 = float3(luminance) * tintColor * 2.0;
     float3 tinted2 = float3(luminance) * tintColor2 * 2.0;
 
-    // Position-based blend: use the CPPN base pattern to drive distinct zones
+    // Position-based blend between tint1 and tint2
     float zoneMix = smoothstep(0.3, 0.7, baseColor.z * 0.6 + uv.y * 0.25 + 0.35 + 0.15 * sin(iTime * 0.4 + uv.x * 2.0));
     float3 tinted = mix(tinted1, tinted2, zoneMix * tint2Strength);
     outputColor = mix(baseColor, tinted, tintStrength);
@@ -522,9 +522,9 @@ struct NebulaShaderView: View {
             let tintInfo: (color: Color, strength: Float, color2: Color, strength2: Float) = {
                 switch theme {
                 case .home:
-                    // Red-crimson primary zones + deep blue secondary zones
+                    // Red-crimson tint only
                     return (Color(red: 0.82, green: 0.10, blue: 0.18), 1.1,
-                            Color(red: 0.10, green: 0.18, blue: 0.72), 1.0)
+                            Color.white, 0.0)
                 case .lists:
                     return (Color(red: 0.2, green: 0.5, blue: 1.0), 1.0,
                             Color.white, 0.0)

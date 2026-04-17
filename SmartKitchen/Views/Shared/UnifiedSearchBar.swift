@@ -14,6 +14,10 @@ struct UnifiedSearchBar: View {
     @FocusState private var isFocused: Bool
     @State private var showDictation = false
 
+    private var isEmpty: Bool {
+        state.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     var body: some View {
         HStack(spacing: 10) {
             Image(systemName: state.mode == .aiChat ? "paperplane.fill" : "sparkle.magnifyingglass")
@@ -27,10 +31,13 @@ struct UnifiedSearchBar: View {
                 #endif
                 .disableAutocorrection(true)
                 .focused($isFocused)
-                .submitLabel(state.mode == .aiChat ? .send : .search)
+                .submitLabel(isFocused && isEmpty && state.mode != .aiChat ? .done : (state.mode == .aiChat ? .send : .search))
                 .onSubmit {
                     let trimmed = state.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-                    guard !trimmed.isEmpty else { return }
+                    if trimmed.isEmpty {
+                        state.dismiss()
+                        return
+                    }
                     if state.mode == .aiChat {
                         state.pendingChatMessage = trimmed
                         state.searchText = ""

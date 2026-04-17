@@ -149,6 +149,17 @@ final class Recipe {
     var externalURLString: String = ""
     var category: String = ""
     var tags: [String] = []
+
+    /// Categories as an array (supports comma-separated multi-category storage).
+    @Transient
+    var categories: [String] {
+        get {
+            category.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        }
+        set {
+            category = newValue.joined(separator: ", ")
+        }
+    }
     var prepTime: Int = 0       // minutes
     var cookTime: Int = 0       // minutes
     var servings: Int = 1

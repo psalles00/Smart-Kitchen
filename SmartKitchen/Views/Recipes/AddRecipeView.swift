@@ -16,7 +16,7 @@ struct AddRecipeView: View {
     // Basic info
     @State private var name = ""
     @State private var descriptionText = ""
-    @State private var selectedCategory = "Outros"
+    @State private var selectedCategories: [String] = ["Outros"]
     @State private var difficulty: Difficulty = .easy
     @State private var prepTime = 0
     @State private var cookTime = 0
@@ -379,9 +379,29 @@ struct AddRecipeView: View {
                 #endif
                 .autocorrectionDisabled()
 
-            Picker("Categoria", selection: $selectedCategory) {
-                ForEach(recipeCategories) { cat in
-                    Text(cat.name).tag(cat.name)
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Categorias")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                FlowLayout(spacing: 8) {
+                    ForEach(recipeCategories) { cat in
+                        let isSelected = selectedCategories.contains(cat.name)
+                        Button {
+                            if isSelected {
+                                selectedCategories.removeAll { $0 == cat.name }
+                            } else {
+                                selectedCategories.append(cat.name)
+                            }
+                        } label: {
+                            Text(cat.name)
+                                .font(.subheadline)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(isSelected ? Color.accentColor.opacity(0.15) : Color(.tertiarySystemFill), in: .capsule)
+                                .foregroundStyle(isSelected ? Color.accentColor : .primary)
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
             }
 
@@ -528,7 +548,7 @@ struct AddRecipeView: View {
             descriptionText: descriptionText.trimmingCharacters(in: .whitespaces),
             imageData: imageData,
             externalURLString: externalURLString.trimmingCharacters(in: .whitespacesAndNewlines),
-            category: selectedCategory,
+            category: selectedCategories.joined(separator: ", "),
             prepTime: prepTime,
             cookTime: cookTime,
             servings: servings,
