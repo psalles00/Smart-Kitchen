@@ -139,6 +139,8 @@ struct PantryView: View {
                     pantrySection(categoryIndex: categoryIndex, category: entry.0, items: entry.1)
                 }
             }
+            .listRowInsets(EdgeInsets())
+            .padding(.top, -16) // Remove o espaçamento do topo da primeira seção
             #if os(macOS)
             .listStyle(.inset)
             #else
@@ -287,7 +289,7 @@ struct PantryView: View {
         HStack(spacing: 6) {
             Text(category)
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.primary.opacity(0.72))
+                .foregroundStyle(.secondary)
             Spacer()
         }
         .textCase(nil)

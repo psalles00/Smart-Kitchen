@@ -408,9 +408,9 @@ struct RecipesView: View {
     // MARK: - Gallery
 
     private var galleryView: some View {
-        LazyVStack(alignment: .leading, spacing: 12) {
+        LazyVStack(alignment: .leading, spacing: 32) {
             ForEach(groupedRecipes, id: \.category) { group in
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: 12) {
                     if selectedCategory == nil {
                         recipeSectionHeader(group.category)
                     }
@@ -454,9 +454,9 @@ struct RecipesView: View {
     // MARK: - List
 
     private var listView: some View {
-        LazyVStack(alignment: .leading, spacing: 12) {
+        LazyVStack(alignment: .leading, spacing: 32) {
             ForEach(groupedRecipes, id: \.category) { group in
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: 12) {
                     if selectedCategory == nil {
                         recipeSectionHeader(group.category)
                     }
@@ -565,7 +565,7 @@ struct RecipesView: View {
         HStack(spacing: 6) {
             Text(title)
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.primary.opacity(0.72))
+                .foregroundStyle(.secondary.opacity(0.6))
             Spacer()
         }
         .textCase(nil)

@@ -94,6 +94,7 @@ struct RecipeDetailView: View {
                     }
                 } label: {
                     Image(systemName: "ellipsis.circle")
+                        .foregroundStyle(.primary)
                 }
             }
         }
@@ -156,10 +157,13 @@ struct RecipeDetailView: View {
     @ViewBuilder
     private var heroImage: some View {
         if let data = recipe.imageData, let image = PlatformImage(data: data) {
-            Image(platformImage: image)
-                .resizable()
-                .scaledToFill()
+            Color.clear
                 .frame(height: 420)
+                .overlay {
+                    Image(platformImage: image)
+                        .resizable()
+                        .scaledToFill()
+                }
                 .clipped()
         } else {
             RecipeImagePlaceholder(ingredients: sortedIngredients)

@@ -1226,7 +1226,8 @@ private struct HomeView: View {
                             subtitle: "",
                             imageName: "ideis",
                             style: .wide,
-                            imageSize: 90
+                            imageSize: 99,
+                            imageOffset: CGSize(width: 95, height: 20)
                         ) {
                             onOpenChat()
                         }
@@ -1238,75 +1239,39 @@ private struct HomeView: View {
                 // Linha inferior: 4 tiles compactos com label abaixo
                 HStack(spacing: spacing) {
                     VStack(spacing: 6) {
-                        homeShortcutLink(
-                            title: "",
-                            subtitle: "",
-                            imageName: "receitas",
-                            style: .compact
-                        ) {
-                            RecipesView()
+                        homeShortcutAddTile(imageName: "mercado", imageSize: 84) {
+                            showAddGrocery = true
                         }
                         .frame(height: smallSide)
-                        .overlay(alignment: .topTrailing) {
-                            homeShortcutAddButton { showAddRecipe = true }
-                        }
-                        Text("Receitas")
-                            .font(.caption.weight(.bold))
-                            .foregroundStyle(.primary)
-                    }
-
-                    VStack(spacing: 6) {
-                        homeShortcutLink(
-                            title: "",
-                            subtitle: "",
-                            imageName: "despensa",
-                            style: .compact,
-                            imageSize: 68
-                        ) {
-                            ListsTabView(initialSubtab: .pantry)
-                        }
-                        .frame(height: smallSide)
-                        .overlay(alignment: .topTrailing) {
-                            homeShortcutAddButton { showAddPantry = true }
-                        }
-                        Text("Despensa")
-                            .font(.caption.weight(.bold))
-                            .foregroundStyle(.primary)
-                    }
-
-                    VStack(spacing: 6) {
-                        homeShortcutLink(
-                            title: "",
-                            subtitle: "",
-                            imageName: "mercado",
-                            style: .compact,
-                            imageSize: 84
-                        ) {
-                            ListsTabView(initialSubtab: .grocery)
-                        }
-                        .frame(height: smallSide)
-                        .overlay(alignment: .topTrailing) {
-                            homeShortcutAddButton { showAddGrocery = true }
-                        }
                         Text("Mercado")
                             .font(.caption.weight(.bold))
                             .foregroundStyle(.primary)
                     }
 
                     VStack(spacing: 6) {
-                        homeShortcutLink(
-                            title: "",
-                            subtitle: "",
-                            imageName: "nutrientes",
-                            style: .compact,
-                            imageSize: 68
-                        ) {
-                            NutrientsPlaceholderView()
+                        homeShortcutAddTile(imageName: "despensa", imageSize: 68) {
+                            showAddPantry = true
                         }
                         .frame(height: smallSide)
-                        .overlay(alignment: .topTrailing) {
-                            homeShortcutAddButton { }
+                        Text("Despensa")
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(.primary)
+                    }
+
+                    VStack(spacing: 6) {
+                        homeShortcutAddTile(imageName: "receitas") {
+                            showAddRecipe = true
                         }
+                        .frame(height: smallSide)
+                        Text("Receitas")
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(.primary)
+                    }
+
+                    VStack(spacing: 6) {
+                        homeShortcutAddTile(imageName: "nutrientes", imageSize: 68) {
+                        }
+                        .frame(height: smallSide)
                         Text("Nutrientes")
                             .font(.caption.weight(.bold))
                             .foregroundStyle(.primary)
@@ -1419,10 +1384,10 @@ private struct HomeView: View {
                 if !compatibleMatchesState.isEmpty {
                     Text("\(compatibleMatchesState.count)")
                         .font(.caption.weight(.bold))
-                        .foregroundStyle(PageTheme.home.accentColor)
+                        .foregroundStyle(.secondary)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 5)
-                        .background(PageTheme.home.accentColor.opacity(0.12), in: .capsule)
+                        .background(homeShortcutBackgroundColor, in: .capsule)
                 }
             }
 
@@ -1647,19 +1612,41 @@ private struct HomeView: View {
         }
     }
 
-    private func homeShortcutAddButton(action: @escaping () -> Void) -> some View {
+    private func homeShortcutAddTile(
+        imageName: String,
+        imageSize: CGFloat? = nil,
+        action: @escaping () -> Void
+    ) -> some View {
         Button {
             HapticManager.impact(style: .light)
             action()
         } label: {
-            Image(systemName: "plus")
-                .font(.system(size: 10, weight: .bold))
-                .foregroundStyle(.secondary)
-                .frame(width: 22, height: 22)
-                .background(.ultraThinMaterial, in: Circle())
+            ZStack {
+                homeShortcutBackgroundColor
+
+                Image(imageName)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: imageSize ?? 76)
+                    .allowsHitTesting(false)
+
+                // "+" badge
+                VStack {
+                    HStack {
+                        Spacer()
+                        Image(systemName: "plus")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(.secondary)
+                            .frame(width: 22, height: 22)
+                            .background(.ultraThinMaterial, in: Circle())
+                            .padding(6)
+                    }
+                    Spacer()
+                }
+            }
+            .clipShape(.rect(cornerRadius: 16))
         }
-        .buttonStyle(.plain)
-        .padding(6)
+        .buttonStyle(HomeShortcutButtonStyle())
     }
 
     private func normalized(_ text: String) -> String {
@@ -1744,12 +1731,11 @@ private struct HomeRecipeMatchCard: View {
                     .lineLimit(1)
 
                 HStack(spacing: 6) {
+                    Label("\(match.compatibilityInfo.matchedIngredients)/\(match.compatibilityInfo.totalIngredients) ingr.", systemImage: "basket")
                     if match.recipe.totalTime > 0 {
                         Label("\(match.recipe.totalTime) min", systemImage: "clock")
                     }
                     Label(match.recipe.difficulty.rawValue, systemImage: match.recipe.difficulty.icon)
-                    Label("\(match.compatibilityInfo.matchedIngredients)/\(match.compatibilityInfo.totalIngredients) ingr.", systemImage: "basket")
-                        .foregroundStyle(PageTheme.home.accentColor)
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)

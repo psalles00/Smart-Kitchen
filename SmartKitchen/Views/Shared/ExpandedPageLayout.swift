@@ -163,7 +163,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
                 .padding(.horizontal, 20)
                 .padding(.top, 4)
 
-            Spacer().frame(height: 8)
+            Spacer().frame(height: 16)
         }
         .frame(maxWidth: .infinity)
         .contentShape(Rectangle())
