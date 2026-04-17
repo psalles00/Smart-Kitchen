@@ -29,9 +29,9 @@ private func buildIconSlots(from ingredients: [RecipeIngredient], count: Int) ->
 /// Shared gradient background for recipe placeholders.
 private let recipePlaceholderGradient = LinearGradient(
     colors: [
-        Color(red: 0.12, green: 0.04, blue: 0.02),
-        Color(red: 0.20, green: 0.06, blue: 0.03),
-        Color(red: 0.14, green: 0.03, blue: 0.01),
+        Color(red: 0.28, green: 0.12, blue: 0.06),
+        Color(red: 0.42, green: 0.15, blue: 0.08),
+        Color(red: 0.32, green: 0.10, blue: 0.04),
     ],
     startPoint: .topLeading,
     endPoint: .bottomTrailing
