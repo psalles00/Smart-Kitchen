@@ -3,56 +3,73 @@ import SwiftUI
 #if os(iOS)
 import UIKit
 
-struct StatusBarStyleView: UIViewControllerRepresentable {
-    let style: UIStatusBarStyle
+// MARK: - Shared status bar style state
 
-    func makeUIViewController(context: Context) -> StatusBarStyleController {
-        StatusBarStyleController(style: style)
-    }
+/// Global holder so that any `StatusBarStyleView` can publish the desired style
+/// and the swizzled hosting controller reads it.
+enum StatusBarStyleManager {
+    nonisolated(unsafe) static var style: UIStatusBarStyle = .lightContent
+}
 
-    func updateUIViewController(_ uiViewController: StatusBarStyleController, context: Context) {
-        uiViewController.style = style
-        uiViewController.refreshStatusBarAppearance()
+// MARK: - UIHostingController swizzle
+
+/// Swizzle `preferredStatusBarStyle` on the root hosting VC so the system
+/// respects the value from StatusBarStyleManager.
+enum StatusBarSwizzle {
+    nonisolated(unsafe) static let install: Void = {
+        let hostingClass: AnyClass = UIHostingController<AnyView>.self
+        if let original = class_getInstanceMethod(
+               hostingClass,
+               #selector(getter: UIViewController.preferredStatusBarStyle)),
+           let replacement = class_getInstanceMethod(
+               StatusBarSwizzleHelper.self,
+               #selector(getter: StatusBarSwizzleHelper.swizzled_preferredStatusBarStyle))
+        {
+            method_exchangeImplementations(original, replacement)
+        }
+    }()
+}
+
+private class StatusBarSwizzleHelper: UIViewController {
+    @objc dynamic var swizzled_preferredStatusBarStyle: UIStatusBarStyle {
+        StatusBarStyleManager.style
     }
 }
 
-final class StatusBarStyleController: UIViewController {
-    var style: UIStatusBarStyle
+// MARK: - SwiftUI helper view
 
-    init(style: UIStatusBarStyle) {
-        self.style = style
-        super.init(nibName: nil, bundle: nil)
-        view.backgroundColor = .clear
+struct StatusBarStyleView: UIViewControllerRepresentable {
+    let style: UIStatusBarStyle
+
+    func makeUIViewController(context: Context) -> Controller {
+        let controller = Controller()
+        controller.style = style
+        return controller
     }
 
-    @available(*, unavailable)
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+    func updateUIViewController(_ uiViewController: Controller, context: Context) {
+        uiViewController.style = style
     }
 
-    override var preferredStatusBarStyle: UIStatusBarStyle {
-        style
-    }
+    final class Controller: UIViewController {
+        var style: UIStatusBarStyle = .default {
+            didSet {
+                StatusBarStyleManager.style = style
+                var vc: UIViewController? = self
+                while let parent = vc?.parent { vc = parent }
+                vc?.setNeedsStatusBarAppearanceUpdate()
+            }
+        }
 
-    override var childForStatusBarStyle: UIViewController? {
-        nil
-    }
+        override var preferredStatusBarStyle: UIStatusBarStyle { style }
 
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        refreshStatusBarAppearance()
-    }
-
-    override func didMove(toParent parent: UIViewController?) {
-        super.didMove(toParent: parent)
-        refreshStatusBarAppearance()
-    }
-
-    func refreshStatusBarAppearance() {
-        setNeedsStatusBarAppearanceUpdate()
-        parent?.setNeedsStatusBarAppearanceUpdate()
-        navigationController?.setNeedsStatusBarAppearanceUpdate()
-        tabBarController?.setNeedsStatusBarAppearanceUpdate()
+        override func viewDidAppear(_ animated: Bool) {
+            super.viewDidAppear(animated)
+            StatusBarStyleManager.style = style
+            var vc: UIViewController? = self
+            while let parent = vc?.parent { vc = parent }
+            vc?.setNeedsStatusBarAppearanceUpdate()
+        }
     }
 }
 #endif

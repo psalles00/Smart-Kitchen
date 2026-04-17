@@ -2,6 +2,41 @@
 import SwiftUI
 import UIKit
 
+// MARK: - Shared status bar style state
+
+/// Global holder so that any `StatusBarStyleView` can publish the desired style
+/// and the swizzled hosting controller reads it.
+enum StatusBarStyleManager {
+    nonisolated(unsafe) static var style: UIStatusBarStyle = .lightContent
+}
+
+// MARK: - UIHostingController swizzle
+
+/// Swizzle `preferredStatusBarStyle` on the root hosting VC so the system
+/// respects the value from StatusBarStyleManager.
+enum StatusBarSwizzle {
+    nonisolated(unsafe) static let install: Void = {
+        let hostingClass: AnyClass = UIHostingController<AnyView>.self
+        if let original = class_getInstanceMethod(
+               hostingClass,
+               #selector(getter: UIViewController.preferredStatusBarStyle)),
+           let replacement = class_getInstanceMethod(
+               StatusBarSwizzleHelper.self,
+               #selector(getter: StatusBarSwizzleHelper.swizzled_preferredStatusBarStyle))
+        {
+            method_exchangeImplementations(original, replacement)
+        }
+    }()
+}
+
+private class StatusBarSwizzleHelper: UIViewController {
+    @objc dynamic var swizzled_preferredStatusBarStyle: UIStatusBarStyle {
+        StatusBarStyleManager.style
+    }
+}
+
+// MARK: - SwiftUI helper view
+
 /// A tiny helper view that allows setting the status bar style from SwiftUI.
 ///
 /// Usage:
@@ -11,7 +46,6 @@ import UIKit
 ///             .allowsHitTesting(false)
 ///     }
 struct StatusBarStyleView: UIViewControllerRepresentable {
-    /// The desired UIKit status bar style.
     let style: UIStatusBarStyle
 
     func makeUIViewController(context: Context) -> Controller {
@@ -24,22 +58,25 @@ struct StatusBarStyleView: UIViewControllerRepresentable {
         uiViewController.style = style
     }
 
-    /// An internal view controller that reports the preferredStatusBarStyle.
     final class Controller: UIViewController {
         var style: UIStatusBarStyle = .default {
-            didSet { setNeedsStatusBarAppearanceUpdate() }
+            didSet {
+                StatusBarStyleManager.style = style
+                // Walk up to the root to trigger a status bar refresh
+                var vc: UIViewController? = self
+                while let parent = vc?.parent { vc = parent }
+                vc?.setNeedsStatusBarAppearanceUpdate()
+            }
         }
 
         override var preferredStatusBarStyle: UIStatusBarStyle { style }
 
         override func viewDidAppear(_ animated: Bool) {
             super.viewDidAppear(animated)
-            setNeedsStatusBarAppearanceUpdate()
-        }
-
-        override func viewWillAppear(_ animated: Bool) {
-            super.viewWillAppear(animated)
-            setNeedsStatusBarAppearanceUpdate()
+            StatusBarStyleManager.style = style
+            var vc: UIViewController? = self
+            while let parent = vc?.parent { vc = parent }
+            vc?.setNeedsStatusBarAppearanceUpdate()
         }
     }
 }

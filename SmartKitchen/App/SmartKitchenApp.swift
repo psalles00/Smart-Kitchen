@@ -104,6 +104,7 @@ struct SmartKitchenApp: App {
 
         // Must be called after all stored properties are initialized
         #if os(iOS)
+        _ = StatusBarSwizzle.install
         Self.configureNavigationAppearance()
         #endif
     }
