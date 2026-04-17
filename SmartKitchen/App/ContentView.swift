@@ -1014,7 +1014,6 @@ private struct HomeView: View {
             content: {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 24) {
-                        assistantLauncher
                         actionDeck
                         if !expiringItemsState.isEmpty {
                             expiringSection
@@ -1117,52 +1116,11 @@ private struct HomeView: View {
             }
     }
 
-    private var assistantLauncher: some View {
-        Button {
-            onOpenChat()
-        } label: {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack(alignment: .top) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Seu centro de cozinha")
-                            .font(.sectionTitle)
-                            .foregroundStyle(.primary)
-
-                        Text("Converse com a IA, acesse listas rápido e veja combinações da despensa.")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                            .multilineTextAlignment(.leading)
-                    }
-
-                    Spacer(minLength: 12)
-
-                    Image(systemName: "sparkles")
-                        .font(.title2.weight(.semibold))
-                        .foregroundStyle(PageTheme.home.accentColor)
-                        .frame(width: 46, height: 46)
-                        .background(PageTheme.home.accentColor.opacity(0.14), in: .circle)
-                }
-
-                HStack(spacing: 8) {
-                    compactPill("Conversar com IA", systemImage: "bubble.left.and.text.bubble.right.fill")
-                    compactPill("Descubra receitas", systemImage: "fork.knife")
-                }
-            }
-            .padding(18)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                PageTheme.home.cardGradient,
-                in: .rect(cornerRadius: 24)
-            )
-            .overlay {
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .strokeBorder(Color.white.opacity(0.16), lineWidth: 1)
-            }
-        }
-        .buttonStyle(.plain)
-    }
-
     private var actionDeck: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Seu centro de cozinha")
+                .font(.headline.weight(.semibold))
+
         GeometryReader { geo in
             let spacing = homeShortcutSpacing
             let smallSide = homeShortcutSmallSide(for: geo.size.width)
@@ -1222,7 +1180,7 @@ private struct HomeView: View {
                         }
                         .frame(height: smallSide)
                         Text("Despensa")
-                            .font(.caption.weight(.semibold))
+                            .font(.caption)
                             .foregroundStyle(.primary)
                     }
 
@@ -1238,7 +1196,7 @@ private struct HomeView: View {
                         }
                         .frame(height: smallSide)
                         Text("Mercado")
-                            .font(.caption.weight(.semibold))
+                            .font(.caption)
                             .foregroundStyle(.primary)
                     }
 
@@ -1253,7 +1211,7 @@ private struct HomeView: View {
                         }
                         .frame(height: smallSide)
                         Text("Ideias")
-                            .font(.caption.weight(.semibold))
+                            .font(.caption)
                             .foregroundStyle(.primary)
                     }
 
@@ -1269,7 +1227,8 @@ private struct HomeView: View {
                         }
                         .frame(height: smallSide)
                         Text("Nutrientes")
-                            .font(.caption.weight(.semibold))
+                            .font(.caption)
+                            .foregroundStyle(.primary)
                             .foregroundStyle(.primary)
                     }
                 }
@@ -1288,6 +1247,7 @@ private struct HomeView: View {
             shortcutDeckWidth = newWidth
         }
         .padding(.bottom, 40)
+        } // end outer VStack
     }
 
     private var expiringSection: some View {
@@ -1338,7 +1298,7 @@ private struct HomeView: View {
                             }
                         }
                         .padding(14)
-                        .background(Color(.secondarySystemBackground), in: .rect(cornerRadius: 18))
+                        .background(homeShortcutBackgroundColor, in: .rect(cornerRadius: 18))
                     }
                     .buttonStyle(.plain)
                     .contextMenu {
@@ -1439,15 +1399,6 @@ private struct HomeView: View {
         .buttonStyle(.plain)
     }
 
-    private func compactPill(_ title: String, systemImage: String) -> some View {
-        Label(title, systemImage: systemImage)
-            .font(.caption.weight(.semibold))
-            .foregroundStyle(.primary)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 7)
-            .background(.ultraThinMaterial, in: .capsule)
-    }
-
     private var homeShortcutSpacing: CGFloat {
         8
     }
@@ -1471,7 +1422,10 @@ private struct HomeView: View {
         imageOffset: CGSize? = nil,
         action: @escaping () -> Void
     ) -> some View {
-        Button(action: action) {
+        Button {
+            HapticManager.impact(style: .light)
+            action()
+        } label: {
             homeShortcutTileBody(
                 title: title,
                 subtitle: subtitle,
@@ -1481,7 +1435,7 @@ private struct HomeView: View {
                 customOffset: imageOffset
             )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(HomeShortcutButtonStyle())
     }
 
     private func homeShortcutLink<Destination: View>(
@@ -1503,7 +1457,7 @@ private struct HomeView: View {
                 customOffset: imageOffset
             )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(HomeShortcutButtonStyle())
     }
 
     private func homeShortcutTileBody(
@@ -1628,6 +1582,14 @@ private struct HomeView: View {
 
 private let homeShortcutBackgroundColor = Color(red: 248 / 255, green: 248 / 255, blue: 250 / 255)
 
+private struct HomeShortcutButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
+            .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
+    }
+}
+
 private enum HomeShortcutTileStyle {
     case featured
     case wide
@@ -1675,7 +1637,7 @@ private struct HomeRecipeMatchCard: View {
                 Text(match.recipe.name)
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.primary)
-                    .lineLimit(2)
+                    .lineLimit(1)
 
                 HStack(spacing: 8) {
                     if match.recipe.totalTime > 0 {
@@ -1693,7 +1655,7 @@ private struct HomeRecipeMatchCard: View {
         }
         .frame(width: 210, alignment: .leading)
         .padding(12)
-        .background(Color(.secondarySystemBackground), in: .rect(cornerRadius: 18))
+        .background(homeShortcutBackgroundColor, in: .rect(cornerRadius: 18))
     }
 
     @ViewBuilder

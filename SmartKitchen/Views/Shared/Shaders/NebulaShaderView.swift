@@ -491,8 +491,8 @@ struct NebulaShaderView: View {
             let tintInfo: (color: Color, strength: Float) = {
                 switch theme {
                 case .home:
-                    // Warm golden amber, less yellow than before
-                    return (Color(red: 0.82, green: 0.60, blue: 0.24), 1.0)
+                    // Golden: yellow-orange blend
+                    return (Color(red: 1.0, green: 0.72, blue: 0.08), 1.3)
                 case .lists:
                     // Cool blue
                     return (Color(red: 0.2, green: 0.5, blue: 1.0), 1.0)

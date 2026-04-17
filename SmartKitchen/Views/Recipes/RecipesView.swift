@@ -332,7 +332,7 @@ struct RecipesView: View {
             }
         }
         .padding(4)
-        .background(Color(.tertiarySystemFill), in: .rect(cornerRadius: 12))
+        .background(Color(red: 248 / 255, green: 248 / 255, blue: 250 / 255), in: .rect(cornerRadius: 12))
         .padding(.horizontal, 16)
         .padding(.top, 8)
         .padding(.bottom, 8)
@@ -352,7 +352,7 @@ struct RecipesView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(.tertiarySystemFill), in: .rect(cornerRadius: 12))
+        .background(Color(red: 248 / 255, green: 248 / 255, blue: 250 / 255), in: .rect(cornerRadius: 12))
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .padding(.horizontal, 16)
         .padding(.top, 8)
