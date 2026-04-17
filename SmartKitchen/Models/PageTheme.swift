@@ -9,11 +9,11 @@ enum PageTheme: String, Codable, CaseIterable {
     var accentColor: Color {
         switch self {
         case .home:
-            Color(red: 0.62, green: 0.15, blue: 0.42)
+            Color(red: 0.75, green: 0.12, blue: 0.18)
         case .lists:
             Color(red: 0.20, green: 0.50, blue: 0.93)
         case .recipes:
-            Color(red: 0.91, green: 0.39, blue: 0.16)
+            Color(red: 0.85, green: 0.58, blue: 0.12)
         case .nutrients:
             Color(red: 0.18, green: 0.66, blue: 0.36)
         }
@@ -22,11 +22,11 @@ enum PageTheme: String, Codable, CaseIterable {
     var secondaryAccentColor: Color {
         switch self {
         case .home:
-            Color(red: 0.85, green: 0.35, blue: 0.55)
+            Color(red: 0.90, green: 0.30, blue: 0.25)
         case .lists:
             Color(red: 0.42, green: 0.73, blue: 0.98)
         case .recipes:
-            Color(red: 0.98, green: 0.60, blue: 0.28)
+            Color(red: 0.95, green: 0.70, blue: 0.20)
         case .nutrients:
             Color(red: 0.42, green: 0.84, blue: 0.58)
         }

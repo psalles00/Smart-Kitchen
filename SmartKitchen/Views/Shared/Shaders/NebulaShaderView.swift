@@ -529,7 +529,7 @@ struct NebulaShaderView: View {
                     return (Color(red: 0.2, green: 0.5, blue: 1.0), 1.0,
                             Color.white, 0.0)
                 case .recipes:
-                    return (Color(red: 0.95, green: 0.15, blue: 0.08), 1.0,
+                    return (Color(red: 0.90, green: 0.62, blue: 0.12), 1.0,
                             Color.white, 0.0)
                 case .nutrients:
                     return (Color(red: 0.1, green: 0.9, blue: 0.3), 1.0,

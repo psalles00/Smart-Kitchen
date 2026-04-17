@@ -1012,6 +1012,7 @@ private struct HomeView: View {
 
     @State private var showAddGrocery = false
     @State private var showAddPantry = false
+    @State private var showAddRecipe = false
     @State private var selectedCompatibleCategory: String? = nil
     @State private var editingExpiringItem: PantryItem?
 
@@ -1071,6 +1072,12 @@ private struct HomeView: View {
             }
             .forceLightStatusBar()
         }
+        .sheet(isPresented: $showAddRecipe) {
+            NavigationStack {
+                AddRecipeView()
+            }
+            .forceLightStatusBar()
+        }
         .sheet(item: $editingExpiringItem) { item in
             NavigationStack {
                 EditPantryItemView(item: item)
@@ -1107,7 +1114,8 @@ private struct HomeView: View {
     private func updateCompatibleMatches() {
         let pantryNames = pantryItems.map { normalized($0.name) }
         let threshold = Double(settings?.recipeCompatibilityThresholdPercent ?? 80) / 100.0
-        let mealKeywords = Self.mealKeywordsForCurrentTime()
+        let applyTimeFilter = selectedCompatibleCategory == nil
+        let mealKeywords = applyTimeFilter ? Self.mealKeywordsForCurrentTime() : []
 
         compatibleMatchesState = recipes
             .filter { recipe in
@@ -1121,10 +1129,12 @@ private struct HomeView: View {
                 return match
             }
             .sorted {
-                // Boost recipes whose category/tags match current meal time
-                let lhsMeal = Self.matchesMealTime($0.recipe, keywords: mealKeywords)
-                let rhsMeal = Self.matchesMealTime($1.recipe, keywords: mealKeywords)
-                if lhsMeal != rhsMeal { return lhsMeal }
+                // Boost recipes whose category/tags match current meal time (only for Sugestões)
+                if applyTimeFilter {
+                    let lhsMeal = Self.matchesMealTime($0.recipe, keywords: mealKeywords)
+                    let rhsMeal = Self.matchesMealTime($1.recipe, keywords: mealKeywords)
+                    if lhsMeal != rhsMeal { return lhsMeal }
+                }
                 if $0.compatibility != $1.compatibility { return $0.compatibility > $1.compatibility }
                 if $0.compatibilityInfo.matchedIngredients != $1.compatibilityInfo.matchedIngredients {
                     return $0.compatibilityInfo.matchedIngredients > $1.compatibilityInfo.matchedIngredients
@@ -1190,7 +1200,9 @@ private struct HomeView: View {
                         title: "Assistente",
                         subtitle: "Adicione, busque ou pergunte...",
                         imageName: "assistente",
-                        style: .featured
+                        style: .featured,
+                        imageSize: 135,
+                        imageOffset: CGSize(width: 28, height: 21)
                     ) {
                         onOpenSearch()
                     }
@@ -1202,21 +1214,21 @@ private struct HomeView: View {
                             subtitle: "",
                             imageName: "modo ia",
                             style: .wide,
-                            imageSize: 110,
-                            imageOffset: CGSize(width: 80, height: 25)
+                            imageSize: 126,
+                            imageOffset: CGSize(width: 80, height: 36)
                         ) {
                             onOpenChat()
                         }
                         .frame(height: smallSide)
 
-                        homeShortcutLink(
-                            title: "Receitas",
+                        homeShortcutButton(
+                            title: "Ideias",
                             subtitle: "",
-                            imageName: "receitas",
+                            imageName: "ideis",
                             style: .wide,
                             imageSize: 90
                         ) {
-                            RecipesView()
+                            onOpenChat()
                         }
                         .frame(height: smallSide)
                     }
@@ -1229,6 +1241,24 @@ private struct HomeView: View {
                         homeShortcutLink(
                             title: "",
                             subtitle: "",
+                            imageName: "receitas",
+                            style: .compact
+                        ) {
+                            RecipesView()
+                        }
+                        .frame(height: smallSide)
+                        .overlay(alignment: .topTrailing) {
+                            homeShortcutAddButton { showAddRecipe = true }
+                        }
+                        Text("Receitas")
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(.primary)
+                    }
+
+                    VStack(spacing: 6) {
+                        homeShortcutLink(
+                            title: "",
+                            subtitle: "",
                             imageName: "despensa",
                             style: .compact,
                             imageSize: 68
@@ -1236,6 +1266,9 @@ private struct HomeView: View {
                             ListsTabView(initialSubtab: .pantry)
                         }
                         .frame(height: smallSide)
+                        .overlay(alignment: .topTrailing) {
+                            homeShortcutAddButton { showAddPantry = true }
+                        }
                         Text("Despensa")
                             .font(.caption.weight(.bold))
                             .foregroundStyle(.primary)
@@ -1252,22 +1285,10 @@ private struct HomeView: View {
                             ListsTabView(initialSubtab: .grocery)
                         }
                         .frame(height: smallSide)
-                        Text("Mercado")
-                            .font(.caption.weight(.bold))
-                            .foregroundStyle(.primary)
-                    }
-
-                    VStack(spacing: 6) {
-                        homeShortcutButton(
-                            title: "",
-                            subtitle: "",
-                            imageName: "ideis",
-                            style: .compact
-                        ) {
-                            onOpenChat()
+                        .overlay(alignment: .topTrailing) {
+                            homeShortcutAddButton { showAddGrocery = true }
                         }
-                        .frame(height: smallSide)
-                        Text("Ideias")
+                        Text("Mercado")
                             .font(.caption.weight(.bold))
                             .foregroundStyle(.primary)
                     }
@@ -1283,6 +1304,9 @@ private struct HomeView: View {
                             NutrientsPlaceholderView()
                         }
                         .frame(height: smallSide)
+                        .overlay(alignment: .topTrailing) {
+                            homeShortcutAddButton { }
+                        }
                         Text("Nutrientes")
                             .font(.caption.weight(.bold))
                             .foregroundStyle(.primary)
@@ -1433,7 +1457,7 @@ private struct HomeView: View {
     private var compatibleCategoryFilter: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                filterChip(label: "Todos", isSelected: selectedCompatibleCategory == nil) {
+                filterChip(label: "Sugestões", isSelected: selectedCompatibleCategory == nil) {
                     selectedCompatibleCategory = nil
                 }
 
@@ -1623,6 +1647,21 @@ private struct HomeView: View {
         }
     }
 
+    private func homeShortcutAddButton(action: @escaping () -> Void) -> some View {
+        Button {
+            HapticManager.impact(style: .light)
+            action()
+        } label: {
+            Image(systemName: "plus")
+                .font(.system(size: 10, weight: .bold))
+                .foregroundStyle(.secondary)
+                .frame(width: 22, height: 22)
+                .background(.ultraThinMaterial, in: Circle())
+        }
+        .buttonStyle(.plain)
+        .padding(6)
+    }
+
     private func normalized(_ text: String) -> String {
         text
             .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
@@ -1704,18 +1743,17 @@ private struct HomeRecipeMatchCard: View {
                     .foregroundStyle(.primary)
                     .lineLimit(1)
 
-                HStack(spacing: 8) {
+                HStack(spacing: 6) {
                     if match.recipe.totalTime > 0 {
                         Label("\(match.recipe.totalTime) min", systemImage: "clock")
                     }
                     Label(match.recipe.difficulty.rawValue, systemImage: match.recipe.difficulty.icon)
+                    Label("\(match.compatibilityInfo.matchedIngredients)/\(match.compatibilityInfo.totalIngredients) ingr.", systemImage: "basket")
+                        .foregroundStyle(PageTheme.home.accentColor)
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)
-
-                Text(match.compatibilityInfo.longText)
-                    .font(.caption.weight(.medium))
-                    .foregroundStyle(PageTheme.home.accentColor)
+                .lineLimit(1)
             }
         }
         .frame(width: 210, alignment: .leading)
