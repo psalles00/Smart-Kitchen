@@ -91,6 +91,7 @@
 		AB3B06A6A7827DA0150A8FB4 /* TexturedGradientView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 223EEEC2E6E5C6F3572B0A85 /* TexturedGradientView.swift */; };
 		AC4DD1B6FCADCFDC1504D7E3 /* MacCameraMediaPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3D1EB5B18D19836B0A5C38 /* MacCameraMediaPicker.swift */; };
 		AD36E33810961850E5D206DF /* AddItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65B9C18EA33BF7B878D2662E /* AddItemView.swift */; };
+		F1A2B3C4D5E6F7089ABCDE01 /* ItemDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A2B3C4D5E6F7089ABCDE02 /* ItemDetailView.swift */; };
 		AE0AA146C5EBFCFD64C639C4 /* CommandBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D3A8A7840E1C2C1529B3007 /* CommandBarView.swift */; };
 		AFC3471AAA45729E4EA43EE4 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1613EA3D56DD17FDE15B699 /* AppSettings.swift */; };
 		B063114564F04045630F99B0 /* RecipeDetailCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AA5493DC675E50A63A65459 /* RecipeDetailCard.swift */; };
@@ -167,6 +168,7 @@
 		600EDD530C0ABD3D8C83E88F /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		60DB5C2D28F6CAD1D2ADA37E /* AddPantryItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddPantryItemView.swift; sourceTree = "<group>"; };
 		65B9C18EA33BF7B878D2662E /* AddItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddItemView.swift; sourceTree = "<group>"; };
+		F1A2B3C4D5E6F7089ABCDE02 /* ItemDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemDetailView.swift; sourceTree = "<group>"; };
 		6762814ECB350EDAE1E3C831 /* Telma-Regular.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Telma-Regular.otf"; sourceTree = "<group>"; };
 		6CD351710E6E853F0407AB7E /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		6D3A8A7840E1C2C1529B3007 /* CommandBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandBarView.swift; sourceTree = "<group>"; };
@@ -331,6 +333,7 @@
 				60DB5C2D28F6CAD1D2ADA37E /* AddPantryItemView.swift */,
 				A01C258879867293F931BB38 /* AddUtensilItemView.swift */,
 				09F9921AD0C3BA1FB3F6B9E0 /* GroceryListView.swift */,
+				F1A2B3C4D5E6F7089ABCDE02 /* ItemDetailView.swift */,
 				B8E44E925C852E9239F7790A /* ListsInfoContent.swift */,
 				9B980A13F716E381A6DB58AD /* ListsTabView.swift */,
 				021D59E8DBF140C2A6411386 /* PantryView.swift */,
@@ -602,6 +605,7 @@
 				F1775ABB009A6F3A4BB4E233 /* AddGroceryItemView 2.swift in Sources */,
 				13D3339D5C01016C338DF5F8 /* AddGroceryItemView.swift in Sources */,
 				AD36E33810961850E5D206DF /* AddItemView.swift in Sources */,
+				F1A2B3C4D5E6F7089ABCDE01 /* ItemDetailView.swift in Sources */,
 				6D3FE9F146E85EB5360046D9 /* AddPantryItemView.swift in Sources */,
 				76B7379BFC060F245F9CB736 /* AddRecipeView.swift in Sources */,
 				8DCF1B518A6D4FBA6FE722F6 /* AddUtensilItemView.swift in Sources */,

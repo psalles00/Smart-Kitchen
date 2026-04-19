@@ -123,22 +123,16 @@ struct RecipeDetailView: View {
             .forceLightStatusBar()
         }
         .sheet(item: $editingPantryItem) { item in
-            NavigationStack {
-                EditPantryItemView(item: item)
-            }
-            .forceLightStatusBar()
+            ItemDetailView(mode: .editPantry(item))
+                .forceLightStatusBar()
         }
         .sheet(item: $editingGroceryItem) { item in
-            NavigationStack {
-                EditGroceryItemView(item: item)
-            }
-            .forceLightStatusBar()
+            ItemDetailView(mode: .editGrocery(item))
+                .forceLightStatusBar()
         }
         .sheet(item: $editingUtensilItem) { item in
-            NavigationStack {
-                EditUtensilItemView(item: item)
-            }
-            .forceLightStatusBar()
+            ItemDetailView(mode: .editUtensil(item))
+                .forceLightStatusBar()
         }
         .sheet(item: $previewSelection) { selection in
             PreparationMediaPreviewView(

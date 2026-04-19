@@ -65,10 +65,8 @@ struct UtensilsView: View {
             }
         }
         .sheet(item: $editingItem) { item in
-            NavigationStack {
-                EditUtensilItemView(item: item)
-            }
-            .forceLightStatusBar()
+            ItemDetailView(mode: .editUtensil(item))
+                .forceLightStatusBar()
         }
     }
 

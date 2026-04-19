@@ -66,16 +66,12 @@ struct GroceryListView: View {
             }
         }
         .sheet(item: $editingItem) { item in
-            NavigationStack {
-                EditGroceryItemView(item: item)
-            }
-            .forceLightStatusBar()
+            ItemDetailView(mode: .editGrocery(item))
+                .forceLightStatusBar()
         }
         .sheet(item: $acquiredPantryItem) { item in
-            NavigationStack {
-                EditPantryItemView(item: item)
-            }
-            .forceLightStatusBar()
+            ItemDetailView(mode: .editPantry(item))
+                .forceLightStatusBar()
         }
     }
 

@@ -125,10 +125,8 @@ struct PantryView: View {
             }
         }
         .sheet(item: $editingItem) { item in
-            NavigationStack {
-                EditPantryItemView(item: item)
-            }
-            .forceLightStatusBar()
+            ItemDetailView(mode: .editPantry(item))
+                .forceLightStatusBar()
         }
     }
 

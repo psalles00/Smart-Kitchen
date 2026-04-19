@@ -219,22 +219,16 @@ struct ListsTabView: View {
             }
         }
         .sheet(isPresented: $showAddPantry) {
-            NavigationStack {
-                AddPantryItemView()
-            }
-            .forceLightStatusBar()
+            ItemDetailView(mode: .create(destinations: [.pantry]))
+                .forceLightStatusBar()
         }
         .sheet(isPresented: $showAddGrocery) {
-            NavigationStack {
-                AddGroceryItemView()
-            }
-            .forceLightStatusBar()
+            ItemDetailView(mode: .create(destinations: [.grocery]))
+                .forceLightStatusBar()
         }
         .sheet(isPresented: $showAddUtensil) {
-            NavigationStack {
-                AddUtensilItemView()
-            }
-            .forceLightStatusBar()
+            ItemDetailView(mode: .create(destinations: [.utensil]))
+                .forceLightStatusBar()
         }
         #if os(macOS)
         .focusedSceneValue(

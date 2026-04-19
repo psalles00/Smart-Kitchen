@@ -105,22 +105,26 @@ struct ContentView: View {
         .environment(\.scrollToItem, scrollToItemRequest)
         .environment(\.backgroundTheme, displayedBgTheme)
         .sheet(isPresented: $showAddPantry) {
-            NavigationStack {
-                AddPantryItemView(initialName: addItemPrefill, onCreated: { id in
+            ItemDetailView(
+                mode: .create(destinations: [.pantry]),
+                initialName: addItemPrefill,
+                onCreated: { id, _ in
                     scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "pantryItem")
                     selectedTab = .lists
-                })
-            }
+                }
+            )
             .forceLightStatusBar()
             .onDisappear { addItemPrefill = "" }
         }
         .sheet(isPresented: $showAddGrocery) {
-            NavigationStack {
-                AddGroceryItemView(initialName: addItemPrefill, onCreated: { id in
+            ItemDetailView(
+                mode: .create(destinations: [.grocery]),
+                initialName: addItemPrefill,
+                onCreated: { id, _ in
                     scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "groceryItem")
                     selectedTab = .lists
-                })
-            }
+                }
+            )
             .forceLightStatusBar()
             .onDisappear { addItemPrefill = "" }
         }
@@ -131,32 +135,29 @@ struct ContentView: View {
             .forceLightStatusBar()
         }
         .sheet(isPresented: $showAddUtensil) {
-            NavigationStack {
-                AddUtensilItemView()
-            }
-            .forceLightStatusBar()
+            ItemDetailView(mode: .create(destinations: [.utensil]))
+                .forceLightStatusBar()
         }
         .sheet(isPresented: $showAddItem) {
-            NavigationStack {
-                AddItemView(
-                    initialName: addItemPrefill,
-                    initialIconFileName: addItemIconFileName,
-                    initialCategory: addItemCategory,
-                    onCreated: { id, destination in
-                        switch destination {
-                        case .pantry:
-                            scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "pantryItem")
-                            selectedTab = .lists
-                        case .grocery:
-                            scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "groceryItem")
-                            selectedTab = .lists
-                        case .utensil:
-                            scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "utensil")
-                            selectedTab = .lists
-                        }
+            ItemDetailView(
+                mode: .create(),
+                initialName: addItemPrefill,
+                initialIconFileName: addItemIconFileName,
+                initialCategory: addItemCategory,
+                onCreated: { id, destination in
+                    switch destination {
+                    case .pantry:
+                        scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "pantryItem")
+                        selectedTab = .lists
+                    case .grocery:
+                        scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "groceryItem")
+                        selectedTab = .lists
+                    case .utensil:
+                        scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "utensil")
+                        selectedTab = .lists
                     }
-                )
-            }
+                }
+            )
             .forceLightStatusBar()
             .onDisappear {
                 addItemPrefill = ""
@@ -165,22 +166,16 @@ struct ContentView: View {
             }
         }
         .sheet(item: $searchEditPantryItem) { (item: PantryItem) in
-            NavigationStack {
-                EditPantryItemView(item: item)
-            }
-            .forceLightStatusBar()
+            ItemDetailView(mode: .editPantry(item))
+                .forceLightStatusBar()
         }
         .sheet(item: $searchEditGroceryItem) { (item: GroceryItem) in
-            NavigationStack {
-                EditGroceryItemView(item: item)
-            }
-            .forceLightStatusBar()
+            ItemDetailView(mode: .editGrocery(item))
+                .forceLightStatusBar()
         }
         .sheet(item: $searchEditUtensilItem) { (item: UtensilItem) in
-            NavigationStack {
-                EditUtensilItemView(item: item)
-            }
-            .forceLightStatusBar()
+            ItemDetailView(mode: .editUtensil(item))
+                .forceLightStatusBar()
         }
         .sheet(item: $searchEditRecipe) { (recipe: Recipe) in
             NavigationStack {
@@ -1061,16 +1056,12 @@ private struct HomeView: View {
         #endif
         .tint(PageTheme.home.accentColor)
         .sheet(isPresented: $showAddGrocery) {
-            NavigationStack {
-                AddGroceryItemView()
-            }
-            .forceLightStatusBar()
+            ItemDetailView(mode: .create(destinations: [.grocery]))
+                .forceLightStatusBar()
         }
         .sheet(isPresented: $showAddPantry) {
-            NavigationStack {
-                AddPantryItemView()
-            }
-            .forceLightStatusBar()
+            ItemDetailView(mode: .create(destinations: [.pantry]))
+                .forceLightStatusBar()
         }
         .sheet(isPresented: $showAddRecipe) {
             NavigationStack {
@@ -1079,10 +1070,8 @@ private struct HomeView: View {
             .forceLightStatusBar()
         }
         .sheet(item: $editingExpiringItem) { item in
-            NavigationStack {
-                EditPantryItemView(item: item)
-            }
-            .forceLightStatusBar()
+            ItemDetailView(mode: .editPantry(item))
+                .forceLightStatusBar()
         }
         .onAppear {
             updateRecipeCategories()
