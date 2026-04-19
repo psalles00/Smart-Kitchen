@@ -242,9 +242,10 @@ struct InlineSearchResultsView: View {
                 // Suggestions from item database
                 if !searchService.suggestions.isEmpty && !isQuestion {
                     CommandBarSuggestionChips(
-                        suggestions: Array(searchService.suggestions.prefix(12))
+                        suggestions: Array(searchService.suggestions.prefix(12)),
+                        query: trimmedQuery
                     ) { entry in
-                        onAction(.addItem(prefill: entry.preferredTitle(), iconFileName: entry.nomeDoArquivo, category: entry.categoria))
+                        onAction(.addItem(prefill: entry.preferredTitle(matching: trimmedQuery), iconFileName: entry.nomeDoArquivo, category: entry.categoria))
                         searchBarState.selectResult()
                     }
                 }

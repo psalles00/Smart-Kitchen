@@ -44,19 +44,16 @@ final class ItemDatabase: Sendable {
             return fallbackToFeatured ? featuredEntries(limit: limit) : []
         }
 
-        let shortQuery = q.count < 4
         var seen = Set<String>()
         var results: [ItemEntry] = []
 
-        // Gather candidates
+        // Gather candidates – always use word-prefix matching to avoid
+        // noise (e.g. "Pera" matching "Paciente Pré-Operatório" via
+        // substring "opera" containing "pera").
         for (normalized, entry) in index {
-            let matches: Bool
-            if shortQuery {
-                // For short queries, only match prefix or word-prefix to avoid noise
-                matches = normalized.hasPrefix(q) || normalized.split(separator: " ").contains { $0.hasPrefix(q) }
-            } else {
-                matches = normalized.contains(q)
-            }
+            let matches = normalized.hasPrefix(q)
+                || normalized.split(whereSeparator: { $0 == " " || $0 == "-" })
+                    .contains { $0.hasPrefix(q) }
             if matches {
                 if seen.insert(entry.nomeDoArquivo).inserted {
                     results.append(entry)

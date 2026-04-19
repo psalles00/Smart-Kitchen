@@ -168,15 +168,15 @@ struct ItemDetailView: View {
                 descriptionPhotoSection
                     .padding(.top, 16)
 
-                // Quantity (always show when not utensil)
-                if !isUtensil {
-                    quantitySection
+                // Expiry (conditional)
+                if (hasPantry || hasGrocery) && !isUtensil {
+                    expirySection
                         .padding(.top, 16)
                 }
 
-                // Expiry (conditional)
-                if hasPantry && !isUtensil {
-                    expirySection
+                // Quantity (always show when not utensil)
+                if !isUtensil {
+                    quantitySection
                         .padding(.top, 16)
                 }
 
@@ -194,6 +194,7 @@ struct ItemDetailView: View {
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .navigationBar)
+        .presentationDetents([.medium, .large])
         #endif
         .tint(PageTheme.lists.accentColor)
         .sheet(isPresented: $showIconPicker) {
@@ -267,7 +268,6 @@ struct ItemDetailView: View {
                 .scaleEffect(x: 1.5, y: 0.5)
                 .blur(radius: 10)
                 .opacity(0.5)
-                .offset(y: 20)
 
                 // Main icon (no balloon background)
                 IconImage(
@@ -286,10 +286,13 @@ struct ItemDetailView: View {
     @ViewBuilder
     private var nameSection: some View {
         ZStack(alignment: .trailing) {
-            // Centered title - takes full width for true centering
+            // Centered title - takes full width, padded to avoid sparkle overlap
             TextField("Nome do item", text: isCreateMode ? $name : editNameBinding)
                 .font(.pageTitle)
+                .minimumScaleFactor(0.5)
                 .multilineTextAlignment(.center)
+                .lineLimit(1)
+                .padding(.horizontal, 40)
                 .focused($nameFieldFocused)
                 #if os(iOS)
                 .textInputAutocapitalization(.words)
@@ -493,7 +496,13 @@ struct ItemDetailView: View {
                 .foregroundStyle(.secondary)
 
             HStack(alignment: .top, spacing: 12) {
-                // Photo thumbnail (left)
+                // Description field
+                TextField("Descrição (opcional)", text: isCreateMode ? $descriptionText : editDescriptionBinding, axis: .vertical)
+                    .lineLimit(3...6)
+                    .font(.body)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                // Photo area (right)
                 if let data = resolvedImageData, let image = PlatformImage(data: data) {
                     Button {
                         showPhotoPreview = true
@@ -501,7 +510,7 @@ struct ItemDetailView: View {
                         Image(platformImage: image)
                             .resizable()
                             .scaledToFill()
-                            .frame(width: 80, height: 80)
+                            .frame(width: 72, height: 72)
                             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     }
                     .buttonStyle(.plain)
@@ -509,32 +518,24 @@ struct ItemDetailView: View {
                         Button("Remover Foto", systemImage: "trash", role: .destructive) {
                             removePhoto()
                         }
+                        PhotosPicker(selection: $selectedPhoto, matching: .images) {
+                            Label("Alterar Foto", systemImage: "photo")
+                        }
                     }
-                }
-
-                // Description field
-                TextField("Descrição (opcional)", text: isCreateMode ? $descriptionText : editDescriptionBinding, axis: .vertical)
-                    .lineLimit(3...6)
-                    .font(.body)
-            }
-
-            // Photo actions
-            HStack(spacing: 12) {
-                PhotosPicker(selection: $selectedPhoto, matching: .images) {
-                    Label(resolvedImageData == nil ? "Adicionar Foto" : "Alterar Foto", systemImage: "photo")
-                        .font(.subheadline)
-                }
-
-                Button {
-                    pasteImageFromClipboard { data in
-                        if let data { setImageData(data) }
+                } else {
+                    PhotosPicker(selection: $selectedPhoto, matching: .images) {
+                        VStack(spacing: 6) {
+                            Image(systemName: "photo.badge.plus")
+                                .font(.system(size: 20))
+                            Text("Foto")
+                                .font(.caption2)
+                        }
+                        .foregroundStyle(.secondary)
+                        .frame(width: 72, height: 72)
+                        .background(Color(.tertiarySystemFill), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                     }
-                } label: {
-                    Label("Colar", systemImage: "doc.on.clipboard")
-                        .font(.subheadline)
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
-                .foregroundStyle(.secondary)
             }
         }
     }
@@ -566,6 +567,11 @@ struct ItemDetailView: View {
 
     // MARK: - Expiry
 
+    /// Whether we're in grocery-only mode (duration + auto-apply forced)
+    private var isGroceryOnlyExpiry: Bool {
+        !hasPantry && hasGrocery && editingPantryItem == nil
+    }
+
     @ViewBuilder
     private var expirySection: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -573,62 +579,53 @@ struct ItemDetailView: View {
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(.secondary)
 
-            Toggle("Possui validade", isOn: isCreateMode ? $hasExpirationDate.animation() : editHasExpiryBinding)
-                .tint(PageTheme.lists.accentColor)
+            if !isGroceryOnlyExpiry {
+                Toggle("Possui validade", isOn: isCreateMode ? $hasExpirationDate.animation() : editHasExpiryBinding)
+                    .tint(PageTheme.lists.accentColor)
+            }
 
-            if resolvedHasExpiry {
+            if resolvedHasExpiry || isGroceryOnlyExpiry {
                 VStack(spacing: 12) {
-                    Picker("Modo", selection: $expiryMode.animation()) {
-                        Text("Duração").tag(ExpiryInputMode.duration)
-                        Text("Data").tag(ExpiryInputMode.date)
-                    }
-                    .pickerStyle(.segmented)
-
-                    if expiryMode == .duration {
-                        HStack(spacing: 0) {
-                            Picker("Quantidade", selection: $expiryDurationValue) {
-                                ForEach(1...365, id: \.self) { n in
-                                    Text("\(n)").tag(n)
-                                }
-                            }
-                            #if os(iOS)
-                            .pickerStyle(.wheel)
-                            .frame(width: 80, height: 120)
-                            .clipped()
-                            #else
-                            .pickerStyle(.menu)
-                            .frame(width: 120)
-                            #endif
-
-                            Picker("Unidade", selection: $expiryDurationUnit) {
-                                Text("dias").tag(ExpiryDurationUnit.days)
-                                Text("meses").tag(ExpiryDurationUnit.months)
-                            }
-                            #if os(iOS)
-                            .pickerStyle(.wheel)
-                            .frame(width: 100, height: 120)
-                            .clipped()
-                            #else
-                            .pickerStyle(.menu)
-                            .frame(width: 140)
-                            #endif
+                    if !isGroceryOnlyExpiry {
+                        Picker("Modo", selection: $expiryMode.animation()) {
+                            Text("Duração").tag(ExpiryInputMode.duration)
+                            Text("Data").tag(ExpiryInputMode.date)
                         }
-                        .onChange(of: expiryDurationValue) { _, _ in syncDateFromDuration() }
-                        .onChange(of: expiryDurationUnit) { _, _ in syncDateFromDuration() }
+                        .pickerStyle(.segmented)
+                    }
 
-                        // "Keep expiry on move" — contextual explanation
+                    if expiryMode == .duration || isGroceryOnlyExpiry {
+                        expiryDurationPicker
+
+                        // Auto-apply expiry explanation
                         if hasGrocery || editingGroceryItem != nil {
                             VStack(alignment: .leading, spacing: 6) {
-                                Toggle(isOn: $keepExpiryOnAcquire) {
+                                if isGroceryOnlyExpiry {
+                                    // Forced on, non-toggleable
                                     VStack(alignment: .leading, spacing: 2) {
-                                        Text("Aplicar validade automaticamente")
-                                            .font(.subheadline)
-                                        Text("Ao comprar no Mercado e mover para a Despensa, a validade de \(formattedExpiryDuration) será aplicada automaticamente.")
+                                        HStack(spacing: 6) {
+                                            Image(systemName: "checkmark.circle.fill")
+                                                .foregroundStyle(PageTheme.lists.accentColor)
+                                                .font(.subheadline)
+                                            Text("Validade aplicada automaticamente")
+                                                .font(.subheadline)
+                                        }
+                                        Text("Ao comprar e mover para a Despensa, a validade de \(formattedExpiryDuration) será aplicada.")
                                             .font(.caption)
                                             .foregroundStyle(.secondary)
                                     }
+                                } else {
+                                    Toggle(isOn: $keepExpiryOnAcquire) {
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text("Aplicar validade automaticamente")
+                                                .font(.subheadline)
+                                            Text("Ao comprar no Mercado e mover para a Despensa, a validade de \(formattedExpiryDuration) será aplicada automaticamente.")
+                                                .font(.caption)
+                                                .foregroundStyle(.secondary)
+                                        }
+                                    }
+                                    .tint(PageTheme.lists.accentColor)
                                 }
-                                .tint(PageTheme.lists.accentColor)
                             }
                             .padding(12)
                             .background(Color(.tertiarySystemFill), in: RoundedRectangle(cornerRadius: 12))
@@ -648,6 +645,40 @@ struct ItemDetailView: View {
                 .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
+    }
+
+    @ViewBuilder
+    private var expiryDurationPicker: some View {
+        HStack(spacing: 0) {
+            Picker("Quantidade", selection: $expiryDurationValue) {
+                ForEach(1...365, id: \.self) { n in
+                    Text("\(n)").tag(n)
+                }
+            }
+            #if os(iOS)
+            .pickerStyle(.wheel)
+            .frame(width: 80, height: 120)
+            .clipped()
+            #else
+            .pickerStyle(.menu)
+            .frame(width: 120)
+            #endif
+
+            Picker("Unidade", selection: $expiryDurationUnit) {
+                Text("dias").tag(ExpiryDurationUnit.days)
+                Text("meses").tag(ExpiryDurationUnit.months)
+            }
+            #if os(iOS)
+            .pickerStyle(.wheel)
+            .frame(width: 100, height: 120)
+            .clipped()
+            #else
+            .pickerStyle(.menu)
+            .frame(width: 140)
+            #endif
+        }
+        .onChange(of: expiryDurationValue) { _, _ in syncDateFromDuration() }
+        .onChange(of: expiryDurationUnit) { _, _ in syncDateFromDuration() }
     }
 
     private var formattedExpiryDuration: String {
@@ -1065,7 +1096,7 @@ struct ItemDetailView: View {
                     unit: unit.isEmpty ? nil : unit,
                     iconName: finalIcon,
                     isFixed: false,
-                    defaultExpiryDays: hasExpirationDate ? computeExpiryDays() : nil,
+                    defaultExpiryDays: (hasExpirationDate && keepExpiryOnAcquire) || isGroceryOnlyExpiry ? computeExpiryDays() : nil,
                     sortOrder: (allGroceryItems.map(\.sortOrder).max() ?? -1) + 1
                 )
                 if let pantryID = createdID {

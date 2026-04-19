@@ -3,6 +3,7 @@ import SwiftUI
 /// Horizontal flow of suggestion chips from the item database.
 struct CommandBarSuggestionChips: View {
     let suggestions: [ItemEntry]
+    var query: String = ""
     let onSelect: (ItemEntry) -> Void
 
     var body: some View {
@@ -18,9 +19,9 @@ struct CommandBarSuggestionChips: View {
                         onSelect(entry)
                     } label: {
                         HStack(spacing: 5) {
-                            IconImage(name: entry.preferredTitle(), iconFileName: entry.nomeDoArquivo, fallbackSymbol: "leaf", size: 18)
+                            IconImage(name: entry.preferredTitle(matching: query), iconFileName: entry.nomeDoArquivo, fallbackSymbol: "leaf", size: 18)
 
-                            Text(entry.preferredTitle())
+                            Text(entry.preferredTitle(matching: query))
                                 .font(.caption.weight(.medium))
                                 .foregroundStyle(.primary)
                                 .lineLimit(1)
