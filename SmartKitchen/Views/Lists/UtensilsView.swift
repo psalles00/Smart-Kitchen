@@ -80,6 +80,9 @@ struct UtensilsView: View {
                 }
                 .padding(.top, 8)
             }
+            #if os(iOS)
+            .contentMargins(.top, 8, for: .scrollIndicators)
+            #endif
             .coordinateSpace(name: "lists_scroll")
             .onScrollOffsetChange(perform: onScrollOffsetChange)
             .onChange(of: scrollToItem, initial: true) { _, request in

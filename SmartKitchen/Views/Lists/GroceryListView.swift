@@ -85,6 +85,7 @@ struct GroceryListView: View {
             .listStyle(.inset)
             #else
             .listStyle(.plain)
+            .contentMargins(.top, 8, for: .scrollIndicators)
             #endif
             .scrollContentBackground(.hidden)
             .listSectionSeparator(.hidden)
