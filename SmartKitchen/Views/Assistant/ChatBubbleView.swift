@@ -110,3 +110,70 @@ struct FlowLayout: Layout {
         return rows
     }
 }
+
+struct ExpandingFlowLayout: Layout {
+    var spacing: CGFloat = 8
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let rows = computeRows(proposal: proposal, subviews: subviews)
+        var height: CGFloat = 0
+        for (index, row) in rows.enumerated() {
+            let maxHeight = row.map { $0.sizeThatFits(.unspecified).height }.max() ?? 0
+            height += maxHeight + (index > 0 ? spacing : 0)
+        }
+        return CGSize(width: proposal.width ?? 0, height: height)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let widthProposal = ProposedViewSize(width: bounds.width, height: bounds.height)
+        let rows = computeRows(proposal: widthProposal, subviews: subviews)
+        var y = bounds.minY
+
+        for row in rows {
+            let intrinsicSizes = row.map { $0.sizeThatFits(.unspecified) }
+            let maxHeight = intrinsicSizes.map(\.height).max() ?? 0
+            let totalIntrinsicWidth = intrinsicSizes.map(\.width).reduce(0, +)
+            let totalSpacing = spacing * CGFloat(max(row.count - 1, 0))
+            let extraWidth = max(0, bounds.width - totalIntrinsicWidth - totalSpacing)
+            let extraPerItem = row.isEmpty ? 0 : extraWidth / CGFloat(row.count)
+
+            var x = bounds.minX
+            for (index, subview) in row.enumerated() {
+                let size = intrinsicSizes[index]
+                let expandedWidth = size.width + extraPerItem
+                subview.place(
+                    at: CGPoint(x: x, y: y),
+                    proposal: ProposedViewSize(width: expandedWidth, height: maxHeight)
+                )
+                x += expandedWidth + spacing
+            }
+
+            y += maxHeight + spacing
+        }
+    }
+
+    private func computeRows(proposal: ProposedViewSize, subviews: Subviews) -> [[LayoutSubviews.Element]] {
+        let maxWidth = proposal.width ?? .infinity
+        var rows = [[LayoutSubviews.Element]]()
+        var currentRow = [LayoutSubviews.Element]()
+        var currentWidth: CGFloat = 0
+
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+            if !currentRow.isEmpty && currentWidth + spacing + size.width > maxWidth {
+                rows.append(currentRow)
+                currentRow = [subview]
+                currentWidth = size.width
+            } else {
+                currentRow.append(subview)
+                currentWidth += (currentRow.count > 1 ? spacing : 0) + size.width
+            }
+        }
+
+        if !currentRow.isEmpty {
+            rows.append(currentRow)
+        }
+
+        return rows
+    }
+}

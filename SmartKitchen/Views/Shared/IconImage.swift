@@ -55,7 +55,7 @@ struct IconImage: View {
 
     private var balloonBackgroundColor: Color {
         colorScheme == .dark
-            ? Color(red: 28/255, green: 28/255, blue: 31/255)
-            : Color(red: 243/255, green: 243/255, blue: 244/255)
+            ? Color(red: 28 / 255, green: 28 / 255, blue: 31 / 255)
+            : neutralSurfaceColor
     }
 }

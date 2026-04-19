@@ -78,7 +78,7 @@ struct UtensilsView: View {
                         utensilSection(categoryIndex: categoryIndex, categoryName: group.0, items: group.1)
                     }
                 }
-                .padding(.top, 8)
+                .padding(.top, 0)
             }
             #if os(iOS)
             .contentMargins(.top, 8, for: .scrollIndicators)

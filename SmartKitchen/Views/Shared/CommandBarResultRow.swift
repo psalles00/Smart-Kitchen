@@ -10,18 +10,16 @@ struct CommandBarResultRow: View {
     let action: () -> Void
     var onNavigate: (() -> Void)? = nil
     var onQuickAction: (() -> Void)? = nil
-    var onReverseAction: (() -> Void)? = nil
 
     private let checkboxSize: CGFloat = 30
     private let checkboxLineWidth: CGFloat = 3.5
 
-    /// Tracks whether the item has been moved to the other list.
-    @State private var isToggled = false
     @State private var strokeProgress: CGFloat = 0
     @State private var fillOpacity: CGFloat = 0
     @State private var showDestIcon: Bool = false
     @State private var destIconScale: CGFloat = 0
     @State private var isAnimating = false
+    @State private var animationSourceType: SearchResultType?
 
     // Navigate button animation state
     @State private var navStrokeProgress: CGFloat = 0
@@ -37,28 +35,37 @@ struct CommandBarResultRow: View {
 
     /// The icon for the current target list.
     private var currentIcon: String {
-        if result.type == .pantryItem {
-            return isToggled ? "refrigerator" : "cart.badge.plus"
-        } else {
-            return isToggled ? "cart.badge.plus" : "refrigerator"
+        switch result.type {
+        case .pantryItem:
+            return "cart.badge.plus"
+        case .groceryItem:
+            return "refrigerator"
+        default:
+            return "circle"
         }
     }
 
     /// The tint for the current target.
     private var currentTint: Color {
-        if result.type == .pantryItem {
-            return isToggled ? .orange : .green
-        } else {
-            return isToggled ? .green : .orange
+        switch result.type {
+        case .pantryItem:
+            return .green
+        case .groceryItem:
+            return .orange
+        default:
+            return .secondary
         }
     }
 
     /// The destination icon shown during animation fill.
     private var destIcon: String {
-        if result.type == .pantryItem {
-            return isToggled ? "cart.badge.plus" : "refrigerator"
-        } else {
-            return isToggled ? "refrigerator" : "cart.badge.plus"
+        switch animationSourceType ?? result.type {
+        case .pantryItem:
+            return "refrigerator"
+        case .groceryItem:
+            return "cart.badge.plus"
+        default:
+            return "circle"
         }
     }
 
@@ -211,21 +218,6 @@ struct CommandBarResultRow: View {
         }
     }
 
-    @ViewBuilder
-    private var typeIndicators: some View {
-        let primary = isToggled ? (altTypeIcon, altTypeTint) : (typeIcon(for: result.type), typeTintColor)
-        circleIndicator(icon: primary.0, tint: primary.1)
-
-        if result.isAlsoInOtherList || isToggled {
-            let secondary = isToggled
-                ? (typeIcon(for: result.type), typeTintColor)
-                : (typeIcon(forTint: result.secondaryTypeTint), tintColor(for: result.secondaryTypeTint ?? ""))
-            circleIndicator(icon: secondary.0, tint: secondary.1)
-        } else if let secondaryTint = result.secondaryTypeTint {
-            circleIndicator(icon: typeIcon(forTint: secondaryTint), tint: tintColor(for: secondaryTint))
-        }
-    }
-
     private func typeIcon(for type: SearchResultType) -> String {
         switch type {
         case .pantryItem: return "refrigerator"
@@ -245,10 +237,6 @@ struct CommandBarResultRow: View {
         case "red": return "book"
         default: return "circle"
         }
-    }
-
-    private var altTypeIcon: String {
-        result.type == .pantryItem ? "cart" : "refrigerator"
     }
 
     private var displayedListTypes: [SearchResultType] {
@@ -375,6 +363,7 @@ struct CommandBarResultRow: View {
 
     private func performToggleAnimation() {
         isAnimating = true
+        animationSourceType = result.type
         HapticManager.impact(style: .medium)
 
         // Phase 1: stroke fill
@@ -397,11 +386,7 @@ struct CommandBarResultRow: View {
             HapticManager.impact(style: .light)
 
             // Fire the action
-            if isToggled {
-                onReverseAction?()
-            } else {
-                onQuickAction?()
-            }
+            onQuickAction?()
 
             // Phase 4: reverse animation after a pause
             try? await Task.sleep(for: .milliseconds(350))
@@ -416,8 +401,7 @@ struct CommandBarResultRow: View {
             }
             try? await Task.sleep(for: .milliseconds(200))
 
-            // Toggle state
-            isToggled.toggle()
+            animationSourceType = nil
             isAnimating = false
         }
     }

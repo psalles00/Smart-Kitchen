@@ -6,6 +6,8 @@ import UniformTypeIdentifiers
 import UIKit
 #endif
 
+let neutralSurfaceColor = Color(red: 248 / 255, green: 248 / 255, blue: 250 / 255)
+
 // MARK: - Typography
 
 extension Font {

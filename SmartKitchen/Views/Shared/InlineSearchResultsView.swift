@@ -226,8 +226,7 @@ struct InlineSearchResultsView: View {
                                     executeResult(result)
                                 },
                                 onNavigate: navigateActionForResult(result),
-                                onQuickAction: quickActionForResult(result),
-                                onReverseAction: reverseActionForResult(result)
+                                onQuickAction: quickActionForResult(result)
                             )
                             .id(result.id)
                             .padding(.horizontal, 4)
@@ -324,21 +323,6 @@ struct InlineSearchResultsView: View {
             return { onAction(.movePantryToGrocery(objectID)) }
         case .groceryItem:
             return { onAction(.moveGroceryToPantry(objectID)) }
-        default:
-            return nil
-        }
-    }
-
-    /// Reverse action: move the item back by name (since the original UUID is gone after moves).
-    private func reverseActionForResult(_ result: SearchResult) -> (() -> Void)? {
-        let name = result.title
-        switch result.type {
-        case .pantryItem:
-            // Was moved to grocery, now move back to pantry
-            return { onAction(.moveGroceryToPantryByName(name)) }
-        case .groceryItem:
-            // Was moved to pantry, now move back to grocery
-            return { onAction(.movePantryToGroceryByName(name)) }
         default:
             return nil
         }

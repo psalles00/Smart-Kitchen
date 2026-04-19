@@ -25,10 +25,13 @@ struct CommandBarSuggestionChips: View {
                                 .font(.caption.weight(.medium))
                                 .foregroundStyle(.primary)
                                 .lineLimit(1)
+
+                            Spacer(minLength: 0)
                         }
+                        .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 7)
-                        .background(Color(.tertiarySystemFill), in: .capsule)
+                        .background(neutralSurfaceColor, in: .capsule)
                     }
                     .buttonStyle(.plain)
                 }
@@ -51,7 +54,7 @@ private struct WrappingHStack<Data: RandomAccessCollection, Content: View>: View
     }
 
     var body: some View {
-        FlowLayout(spacing: 6) {
+        ExpandingFlowLayout(spacing: 6) {
             ForEach(items) { item in
                 content(item)
             }

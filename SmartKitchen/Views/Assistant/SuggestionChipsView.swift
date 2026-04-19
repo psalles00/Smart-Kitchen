@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Horizontal scrolling suggestion chips shown at the top of the chat.
+/// Suggestion chips shown in the assistant empty states.
 struct SuggestionChipsView: View {
     let onTap: (String) -> Void
 
@@ -16,22 +16,24 @@ struct SuggestionChipsView: View {
     ]
 
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 10) {
-                ForEach(suggestions, id: \.label) { chip in
-                    Button {
-                        onTap(chip.prompt)
-                    } label: {
-                        Text(chip.label)
-                            .font(.subheadline)
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 9)
-                            .background(.ultraThinMaterial, in: .capsule)
-                    }
-                    .buttonStyle(.plain)
+        ExpandingFlowLayout(spacing: 6) {
+            ForEach(suggestions, id: \.label) { chip in
+                Button {
+                    onTap(chip.prompt)
+                } label: {
+                    Text(chip.label)
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 7)
+                        .background(neutralSurfaceColor, in: .capsule)
                 }
+                .buttonStyle(.plain)
             }
-            .padding(.horizontal, 16)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 16)
     }
 }

@@ -298,7 +298,7 @@ struct ItemDetailView: View {
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(showSuggestions ? Color.accentColor : .secondary)
                     .frame(width: 32, height: 32)
-                    .background(Color(.tertiarySystemFill), in: Circle())
+                    .background(neutralSurfaceColor, in: Circle())
             }
             .buttonStyle(.plain)
         }
@@ -310,7 +310,7 @@ struct ItemDetailView: View {
     private var suggestionsSection: some View {
         if showSuggestions && !suggestions.isEmpty {
             VStack(spacing: 0) {
-                FlowLayout(spacing: 6) {
+                ExpandingFlowLayout(spacing: 6) {
                     ForEach(suggestions.prefix(12)) { entry in
                         let matchedTitle = entry.preferredTitle(matching: name)
                         Button {
@@ -327,10 +327,13 @@ struct ItemDetailView: View {
                                     .font(.caption.weight(.medium))
                                     .foregroundStyle(.primary)
                                     .lineLimit(1)
+
+                                Spacer(minLength: 0)
                             }
+                            .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 10)
                             .padding(.vertical, 7)
-                            .background(Color(.tertiarySystemFill), in: .capsule)
+                            .background(neutralSurfaceColor, in: .capsule)
                         }
                         .buttonStyle(.plain)
                     }

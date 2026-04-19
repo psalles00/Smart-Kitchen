@@ -137,11 +137,11 @@ struct PantryView: View {
                 }
             }
             .listRowInsets(EdgeInsets())
-            .padding(.top, -16) // Remove o espaçamento do topo da primeira seção
             #if os(macOS)
             .listStyle(.inset)
             #else
             .listStyle(.plain)
+            .contentMargins(.top, -8, for: .scrollContent)
             .contentMargins(.top, 8, for: .scrollIndicators)
             #endif
             .scrollContentBackground(.hidden)
