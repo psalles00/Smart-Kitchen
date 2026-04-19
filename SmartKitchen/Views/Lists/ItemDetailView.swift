@@ -26,6 +26,14 @@ enum ItemListType: String, CaseIterable, Identifiable {
         case .utensil: "fork.knife"
         }
     }
+
+    var color: Color {
+        switch self {
+        case .pantry:  Color.orange
+        case .grocery: Color.blue
+        case .utensil: Color.purple
+        }
+    }
 }
 
 enum ItemDetailMode {
@@ -105,6 +113,7 @@ struct ItemDetailView: View {
     }
 
     private var hasPantry: Bool { selectedLists.contains(.pantry) }
+    private var hasGrocery: Bool { selectedLists.contains(.grocery) }
     private var isValid: Bool { !name.trimmingCharacters(in: .whitespaces).isEmpty }
 
     // Edit-mode bindings
@@ -126,20 +135,26 @@ struct ItemDetailView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
+                // Drag indicator
+                Capsule()
+                    .fill(Color(.tertiaryLabel))
+                    .frame(width: 36, height: 5)
+                    .padding(.top, 8)
+
                 // Icon area
                 iconHeader
-                    .padding(.top, 24)
+                    .padding(.top, 16)
 
                 // Name field
                 nameSection
                     .padding(.top, 12)
 
-                // Suggestion chips
-                suggestionsSection
-
                 // Category
                 categorySection
                     .padding(.top, 4)
+
+                // Suggestion chips (below category)
+                suggestionsSection
 
                 // List toggle
                 listToggleSection
@@ -153,8 +168,8 @@ struct ItemDetailView: View {
                 descriptionPhotoSection
                     .padding(.top, 16)
 
-                // Quantity (conditional)
-                if hasPantry && isDetailed && !isUtensil {
+                // Quantity (always show when not utensil)
+                if !isUtensil {
                     quantitySection
                         .padding(.top, 16)
                 }
@@ -238,44 +253,40 @@ struct ItemDetailView: View {
 
     @ViewBuilder
     private var iconHeader: some View {
-        VStack(spacing: 0) {
-            // Main icon
-            Button {
-                showIconPicker = true
-            } label: {
+        Button {
+            showIconPicker = true
+        } label: {
+            ZStack {
+                // Shadow icon (behind, stretched + blurred)
                 IconImage(
                     name: currentName,
                     iconFileName: currentIconName,
                     fallbackSymbol: "leaf",
-                    size: 56,
-                    showBalloon: true
+                    size: 84
+                )
+                .scaleEffect(x: 1.5, y: 0.5)
+                .blur(radius: 10)
+                .opacity(0.5)
+                .offset(y: 20)
+
+                // Main icon (no balloon background)
+                IconImage(
+                    name: currentName,
+                    iconFileName: currentIconName,
+                    fallbackSymbol: "leaf",
+                    size: 84
                 )
             }
-            .buttonStyle(.plain)
-
-            // Shadow icon (stretched + blurred)
-            IconImage(
-                name: currentName,
-                iconFileName: currentIconName,
-                fallbackSymbol: "leaf",
-                size: 56,
-                showBalloon: false
-            )
-            .scaleEffect(x: 1.5, y: 0.5)
-            .blur(radius: 8)
-            .opacity(0.6)
-            .offset(y: -10)
-            .allowsHitTesting(false)
         }
+        .buttonStyle(.plain)
     }
 
     // MARK: - Name Section
 
     @ViewBuilder
     private var nameSection: some View {
-        HStack(spacing: 8) {
-            Spacer()
-
+        ZStack(alignment: .trailing) {
+            // Centered title - takes full width for true centering
             TextField("Nome do item", text: isCreateMode ? $name : editNameBinding)
                 .font(.pageTitle)
                 .multilineTextAlignment(.center)
@@ -290,6 +301,7 @@ struct ItemDetailView: View {
                     }
                 }
 
+            // Sparkle button overlaid on the right
             Button {
                 toggleSuggestions()
             } label: {
@@ -300,8 +312,6 @@ struct ItemDetailView: View {
                     .background(Color(.tertiarySystemFill), in: Circle())
             }
             .buttonStyle(.plain)
-
-            Spacer()
         }
     }
 
@@ -337,10 +347,7 @@ struct ItemDetailView: View {
                 }
                 .padding(.top, 8)
             }
-            .transition(.asymmetric(
-                insertion: .move(edge: .top).combined(with: .opacity),
-                removal: .move(edge: .top).combined(with: .opacity)
-            ))
+            .transition(.opacity.combined(with: .scale(scale: 0.95, anchor: .top)))
         }
     }
 
@@ -366,39 +373,114 @@ struct ItemDetailView: View {
 
     @ViewBuilder
     private var listToggleSection: some View {
-        let available: [ItemListType] = showUtensilOption
-            ? [.pantry, .grocery, .utensil]
-            : [.pantry, .grocery]
+        VStack(spacing: 12) {
+            // Pantry + Grocery joined toggle
+            pantryGroceryToggle
 
-        HStack(spacing: 8) {
-            ForEach(available) { listType in
-                let isSelected = selectedLists.contains(listType)
-                Button {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                        toggleList(listType)
-                    }
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: listType.icon)
-                            .font(.system(size: 13, weight: .medium))
-                        Text(listType.label)
-                            .font(.subheadline.weight(.medium))
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 10)
-                    .frame(maxWidth: .infinity)
-                    .background(
-                        isSelected
-                            ? Color.primary.opacity(0.9)
-                            : Color(.tertiarySystemFill),
-                        in: .capsule
-                    )
-                    .foregroundStyle(isSelected ? Color(.systemBackground) : .primary)
-                }
-                .buttonStyle(.plain)
-                .disabled(!isCreateMode && !canToggleList(listType))
+            // Utensil (separate, only when applicable)
+            if showUtensilOption {
+                utensilToggle
             }
         }
+    }
+
+    @ViewBuilder
+    private var pantryGroceryToggle: some View {
+        let pantrySelected = selectedLists.contains(.pantry)
+        let grocerySelected = selectedLists.contains(.grocery)
+        let bothSelected = pantrySelected && grocerySelected
+
+        HStack(spacing: 0) {
+            // Pantry button
+            Button {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                    togglePantryGrocery(.pantry)
+                }
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: ItemListType.pantry.icon)
+                        .font(.system(size: 13, weight: .medium))
+                    Text(ItemListType.pantry.label)
+                        .font(.subheadline.weight(.medium))
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .frame(maxWidth: .infinity)
+                .background(pantrySelected ? ItemListType.pantry.color : Color(.tertiarySystemFill))
+                .foregroundStyle(pantrySelected ? .white : .primary)
+            }
+            .buttonStyle(.plain)
+            .disabled(!isCreateMode && editingUtensilItem != nil)
+
+            // Divider line between joined buttons
+            Rectangle()
+                .fill(Color(.systemBackground))
+                .frame(width: 1)
+
+            // Grocery button
+            Button {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                    togglePantryGrocery(.grocery)
+                }
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: ItemListType.grocery.icon)
+                        .font(.system(size: 13, weight: .medium))
+                    Text(ItemListType.grocery.label)
+                        .font(.subheadline.weight(.medium))
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .frame(maxWidth: .infinity)
+                .background(grocerySelected ? ItemListType.grocery.color : Color(.tertiarySystemFill))
+                .foregroundStyle(grocerySelected ? .white : .primary)
+            }
+            .buttonStyle(.plain)
+            .disabled(!isCreateMode && editingUtensilItem != nil)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+
+        // "Add to both" hint when one is selected
+        if !bothSelected && !isUtensil {
+            Button {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                    selectedLists = [.pantry, .grocery]
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 12))
+                    Text("Adicionar em ambos")
+                        .font(.caption)
+                }
+                .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+            .transition(.opacity)
+        }
+    }
+
+    @ViewBuilder
+    private var utensilToggle: some View {
+        let isSelected = selectedLists.contains(.utensil)
+        Button {
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                toggleList(.utensil)
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: ItemListType.utensil.icon)
+                    .font(.system(size: 13, weight: .medium))
+                Text(ItemListType.utensil.label)
+                    .font(.subheadline.weight(.medium))
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .frame(maxWidth: .infinity)
+            .background(isSelected ? ItemListType.utensil.color : Color(.tertiarySystemFill), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .foregroundStyle(isSelected ? .white : .primary)
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - Description + Photo
@@ -534,9 +616,23 @@ struct ItemDetailView: View {
                         .onChange(of: expiryDurationValue) { _, _ in syncDateFromDuration() }
                         .onChange(of: expiryDurationUnit) { _, _ in syncDateFromDuration() }
 
-                        Toggle("Manter ao mover para Despensa", isOn: $keepExpiryOnAcquire)
-                            .font(.subheadline)
-                            .tint(PageTheme.lists.accentColor)
+                        // "Keep expiry on move" — contextual explanation
+                        if hasGrocery || editingGroceryItem != nil {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Toggle(isOn: $keepExpiryOnAcquire) {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("Aplicar validade automaticamente")
+                                            .font(.subheadline)
+                                        Text("Ao comprar no Mercado e mover para a Despensa, a validade de \(formattedExpiryDuration) será aplicada automaticamente.")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                }
+                                .tint(PageTheme.lists.accentColor)
+                            }
+                            .padding(12)
+                            .background(Color(.tertiarySystemFill), in: RoundedRectangle(cornerRadius: 12))
+                        }
                     } else {
                         DatePicker(
                             "Validade",
@@ -551,6 +647,14 @@ struct ItemDetailView: View {
                 }
                 .transition(.opacity.combined(with: .move(edge: .top)))
             }
+        }
+    }
+
+    private var formattedExpiryDuration: String {
+        if expiryDurationUnit == .months {
+            return expiryDurationValue == 1 ? "1 mês" : "\(expiryDurationValue) meses"
+        } else {
+            return expiryDurationValue == 1 ? "1 dia" : "\(expiryDurationValue) dias"
         }
     }
 
@@ -716,6 +820,7 @@ struct ItemDetailView: View {
             if let days = item.defaultExpiryDays {
                 expiryDurationValue = days
                 expiryDurationUnit = .days
+                keepExpiryOnAcquire = true
             }
 
         case .editUtensil(let item):
@@ -727,37 +832,44 @@ struct ItemDetailView: View {
 
     // MARK: - List Toggle Logic
 
+    private func togglePantryGrocery(_ listType: ItemListType) {
+        guard listType == .pantry || listType == .grocery else { return }
+
+        if selectedLists.contains(.utensil) {
+            // Switch from utensil to this list
+            selectedLists = [listType]
+            return
+        }
+
+        let other: ItemListType = listType == .pantry ? .grocery : .pantry
+
+        if selectedLists.contains(listType) {
+            // Already selected — if both are on, turn off the tapped one
+            if selectedLists.contains(other) {
+                selectedLists.remove(listType)
+            }
+            // If only this one is on, switch to the other
+            else {
+                selectedLists = [other]
+            }
+        } else {
+            // Not selected — default exclusive: turn on this, turn off other
+            selectedLists = [listType]
+        }
+    }
+
     private func toggleList(_ listType: ItemListType) {
         if listType == .utensil {
             if selectedLists.contains(.utensil) {
-                // Can't deselect the only selection
                 if selectedLists.count > 1 {
                     selectedLists.remove(.utensil)
                 }
             } else {
-                // Utensil is exclusive
                 selectedLists = [.utensil]
             }
         } else {
-            // Pantry or Grocery
-            if selectedLists.contains(.utensil) {
-                // Switch from utensil to this list
-                selectedLists = [listType]
-            } else if selectedLists.contains(listType) {
-                // Don't allow empty selection
-                if selectedLists.count > 1 {
-                    selectedLists.remove(listType)
-                }
-            } else {
-                selectedLists.insert(listType)
-            }
+            togglePantryGrocery(listType)
         }
-    }
-
-    private func canToggleList(_ listType: ItemListType) -> Bool {
-        // In edit mode, you can't change the primary list type
-        // but we allow toggling for potential cross-list additions
-        return true
     }
 
     // MARK: - Suggestions
@@ -931,8 +1043,8 @@ struct ItemDetailView: View {
                     descriptionText: trimmedDescription,
                     imageData: imageData,
                     category: finalCategory,
-                    quantity: isDetailed ? quantity : nil,
-                    unit: isDetailed ? (unit.isEmpty ? nil : unit) : nil,
+                    quantity: quantity,
+                    unit: unit.isEmpty ? nil : unit,
                     iconName: finalIcon,
                     expirationDate: hasExpirationDate ? expirationDate : nil,
                     defaultExpiryDays: hasExpirationDate && keepExpiryOnAcquire ? computeExpiryDays() : nil,

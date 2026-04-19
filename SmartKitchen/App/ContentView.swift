@@ -1228,7 +1228,7 @@ private struct HomeView: View {
                 // Linha inferior: 4 tiles compactos com label abaixo
                 HStack(spacing: spacing) {
                     VStack(spacing: 6) {
-                        homeShortcutAddTile(imageName: "mercado", imageSize: 84) {
+                        homeShortcutAddTile(imageName: "mercado", imageSize: 71) {
                             showAddGrocery = true
                         }
                         .frame(height: smallSide)
@@ -1238,7 +1238,7 @@ private struct HomeView: View {
                     }
 
                     VStack(spacing: 6) {
-                        homeShortcutAddTile(imageName: "despensa", imageSize: 68) {
+                        homeShortcutAddTile(imageName: "despensa", imageSize: 58) {
                             showAddPantry = true
                         }
                         .frame(height: smallSide)
@@ -1248,7 +1248,7 @@ private struct HomeView: View {
                     }
 
                     VStack(spacing: 6) {
-                        homeShortcutAddTile(imageName: "receitas") {
+                        homeShortcutAddTile(imageName: "receitas", imageSize: 65) {
                             showAddRecipe = true
                         }
                         .frame(height: smallSide)
@@ -1258,7 +1258,7 @@ private struct HomeView: View {
                     }
 
                     VStack(spacing: 6) {
-                        homeShortcutAddTile(imageName: "nutrientes", imageSize: 68) {
+                        homeShortcutAddTile(imageName: "nutrientes", imageSize: 58) {
                         }
                         .frame(height: smallSide)
                         Text("Nutrientes")
