@@ -24,7 +24,7 @@ struct UnifiedSearchBar: View {
                 .font(.system(size: 16, weight: .medium))
                 .foregroundStyle(.secondary)
 
-            TextField(state.mode == .aiChat ? "Converse com a IA…" : "Adicione, busque, ou pergunte…", text: $state.searchText)
+            TextField(state.mode == .aiChat ? "Converse com a IA…" : "Digite aqui…", text: $state.searchText)
                 .foregroundStyle(.primary)
                 #if os(iOS)
                 .textInputAutocapitalization(.never)
@@ -71,8 +71,27 @@ struct UnifiedSearchBar: View {
             .buttonStyle(.plain)
             #endif
 
-            // Attachment menu (gallery + camera)
-            attachmentMenu
+            // Gallery button
+            Button {
+                // Placeholder: photo picker
+            } label: {
+                Image(systemName: "photo.on.rectangle")
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 30, height: 30)
+            }
+            .buttonStyle(.plain)
+
+            // Camera button
+            Button {
+                // Placeholder: camera capture
+            } label: {
+                Image(systemName: "camera")
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 30, height: 30)
+            }
+            .buttonStyle(.plain)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
@@ -103,31 +122,6 @@ struct UnifiedSearchBar: View {
             RoundedRectangle(cornerRadius: 22, style: .continuous)
                 .fill(Color(.tertiarySystemFill))
         }
-    }
-
-    // MARK: - Attachment Menu
-
-    private var attachmentMenu: some View {
-        Menu {
-            Button {
-                // Placeholder: photo picker
-            } label: {
-                Label("Inserir da Galeria", systemImage: "photo.on.rectangle")
-            }
-
-            Button {
-                // Placeholder: camera capture
-            } label: {
-                Label("Tirar Foto", systemImage: "camera")
-            }
-        } label: {
-            Image(systemName: "plus.circle.fill")
-                .font(.system(size: 20, weight: .medium))
-                .symbolRenderingMode(.hierarchical)
-                .foregroundStyle(.secondary)
-                .frame(width: 30, height: 30)
-        }
-        .buttonStyle(.plain)
     }
 
     // MARK: - Dictation

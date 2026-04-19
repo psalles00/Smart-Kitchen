@@ -115,12 +115,6 @@ struct ListsTabView: View {
                 PageHeader(title: "Listas", isInverted: isInverted) {
                     HStack(spacing: 6) {
                         GlassButtonGroup {
-                            optionsMenu
-                            GlassGroupDivider()
-                            groupingModeButton
-                        }
-
-                        GlassButtonGroup {
                             GlassGroupButton(systemImage: "plus") {
                                 if selectedSubtab == .pantry {
                                     showAddPantry = true
@@ -130,6 +124,10 @@ struct ListsTabView: View {
                                     showAddGrocery = true
                                 }
                             }
+                        }
+
+                        GlassButtonGroup {
+                            optionsMenu
                         }
 
                         SettingsButton()
@@ -186,6 +184,7 @@ struct ListsTabView: View {
                             )
                         }
                     }
+                    .clipped()
                     .id("\(selectedSubtab.rawValue)-\(contentResetToken)")
                 }
             },
@@ -253,6 +252,19 @@ struct ListsTabView: View {
                 }
             }
 
+            Section("Agrupar por") {
+                ForEach(availableGroupingModes) { mode in
+                    Button {
+                        setGroupingMode(mode)
+                    } label: {
+                        Label(mode.displayName, systemImage: mode.icon)
+                        if currentGroupingMode == mode {
+                            Image(systemName: "checkmark")
+                        }
+                    }
+                }
+            }
+
             Section("Filtrar") {
                 if selectedSubtab == .pantry {
                     ForEach(PantryListFilterOption.allCases) { option in
@@ -286,23 +298,6 @@ struct ListsTabView: View {
         case .pantry: ListGroupingMode.allCases
         case .grocery: ListGroupingMode.allCases.filter { $0 != .validade }
         case .utensils: [.category]
-        }
-    }
-
-    private var groupingModeButton: some View {
-        GlassGroupMenu(systemImage: currentGroupingMode.icon) {
-            Section("Agrupar por") {
-                ForEach(availableGroupingModes) { mode in
-                    Button {
-                        setGroupingMode(mode)
-                    } label: {
-                        Label(mode.displayName, systemImage: mode.icon)
-                        if currentGroupingMode == mode {
-                            Image(systemName: "checkmark")
-                        }
-                    }
-                }
-            }
         }
     }
 

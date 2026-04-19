@@ -423,7 +423,7 @@ struct CommandBarView: View {
                 .font(.system(size: 18, weight: .medium))
                 .foregroundStyle(.secondary)
 
-            TextField("Buscar, adicionar ou perguntar…", text: $query)
+            TextField("Digite aqui…", text: $query)
                 .font(.title3)
                 .textFieldStyle(.plain)
                 .focused($isTextFieldFocused)

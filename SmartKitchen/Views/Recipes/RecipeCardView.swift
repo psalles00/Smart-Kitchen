@@ -33,7 +33,7 @@ struct RecipeCardView: View {
                             if compatibility.ratio >= 1.0 {
                                 Label(availableIngredientsText(for: compatibility), systemImage: "checkmark.seal.fill")
                             } else {
-                                Label(availableIngredientsText(for: compatibility), systemImage: "checklist")
+                                Label(availableIngredientsText(for: compatibility), systemImage: "basket")
                             }
                         } else if recipe.totalTime > 0 {
                             Label("\(recipe.totalTime)\(columns == 3 ? "m" : " min")", systemImage: "clock")

@@ -67,11 +67,11 @@ struct CategorySelectionView: View {
                                 .foregroundStyle(Color.accentColor)
                         }
                     }
-                    .frame(minHeight: 40, alignment: .leading)
+                    .frame(minHeight: 46, alignment: .leading)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
             }
         }
         #if os(iOS)

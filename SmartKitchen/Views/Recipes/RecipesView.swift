@@ -128,7 +128,7 @@ struct RecipesView: View {
         #if os(macOS)
         [GridItem(.adaptive(minimum: 150, maximum: 200), spacing: 1)]
         #else
-        Array(repeating: GridItem(.flexible(), spacing: 1), count: settings?.recipeGalleryColumns ?? 2)
+        Array(repeating: GridItem(.flexible(), spacing: 1), count: settings?.recipeGalleryColumns ?? 3)
         #endif
     }
 
@@ -201,13 +201,13 @@ struct RecipesView: View {
         PageHeader(title: "Receitas", isInverted: isInverted) {
             HStack(spacing: 6) {
                 GlassButtonGroup {
-                    optionsMenu
-                }
-
-                GlassButtonGroup {
                     GlassGroupButton(systemImage: "plus") {
                         showAddRecipe = true
                     }
+                }
+
+                GlassButtonGroup {
+                    optionsMenu
                 }
 
                 SettingsButton()
@@ -416,7 +416,7 @@ struct RecipesView: View {
                     }
 
                     LazyVGrid(columns: galleryColumns, spacing: 1) {
-                        let cols = settings?.recipeGalleryColumns ?? 2
+                        let cols = settings?.recipeGalleryColumns ?? 3
                         ForEach(Array(group.recipes.enumerated()), id: \.element.id) { index, recipe in
                             recipeGalleryCard(recipe, cornerRadii: galleryCornerRadii(index: index, total: group.recipes.count, columns: cols))
                         }
@@ -486,7 +486,7 @@ struct RecipesView: View {
         let card = RecipeCardView(
             recipe: recipe,
             compatibility: compatibilities[recipe.id],
-            columns: settings?.recipeGalleryColumns ?? 2,
+            columns: settings?.recipeGalleryColumns ?? 3,
             cornerRadii: cornerRadii
         )
         .overlay {

@@ -975,7 +975,7 @@ private struct HomeView: View {
             },
             content: {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 24) {
+                    VStack(alignment: .leading, spacing: 32) {
                         actionDeck
                         if !expiringItemsState.isEmpty {
                             expiringSection

@@ -132,7 +132,7 @@ final class AppSettings {
     var openAIAPIKey: String = ""
     var hasCompletedOnboarding: Bool = false
     var showUtensils: Bool = false
-    var recipeGalleryColumns: Int = 2
+    var recipeGalleryColumns: Int = 3
     /// Stored as raw strings to keep persisted settings resilient to schema changes.
     var pantryGroupingModeRaw: String = ListGroupingMode.category.rawValue
     var groceryGroupingModeRaw: String = ListGroupingMode.marketSection.rawValue
@@ -153,7 +153,7 @@ final class AppSettings {
         self.accentColorRaw = AccentColorChoice.green.rawValue
         self.appearanceMode = .system
         self.recipeViewMode = .gallery
-        self.recipeGalleryColumns = 2
+        self.recipeGalleryColumns = 3
         self.expiringItemsLeadDays = 30
         self.recipeCompatibilityThresholdPercentValue = 80
         self.openAIAPIKey = ""

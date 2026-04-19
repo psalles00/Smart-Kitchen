@@ -64,7 +64,7 @@ struct CommandBarResultRow: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 12) {
+            HStack(spacing: 8) {
                 resultIcon
                     .frame(width: 36, height: 36)
 
@@ -74,25 +74,20 @@ struct CommandBarResultRow: View {
                         .foregroundStyle(.primary)
                         .lineLimit(1)
 
-                    HStack(spacing: 4) {
-                        if !result.subtitle.isEmpty && result.type != .action {
-                            Text(smartSubtitle)
-                                .font(.caption)
-                                .foregroundStyle(.primary.opacity(0.55))
-                                .lineLimit(1)
-                        }
-
-                        if !result.listTypes.isEmpty {
-                            ForEach(result.listTypes, id: \.rawValue) { listType in
-                                listTag(for: listType)
-                            }
-                        } else if result.type != .action {
-                            listTag(for: result.type)
-                        }
+                    if !result.subtitle.isEmpty && result.type != .action {
+                        Text(smartCategory)
+                            .font(.caption)
+                            .foregroundStyle(.primary.opacity(0.55))
+                            .lineLimit(1)
                     }
                 }
 
-                Spacer(minLength: 4)
+                Spacer(minLength: 0)
+
+                // Tags (stacked if multiple, inline if single)
+                if !displayedListTypes.isEmpty {
+                    listTagsView
+                }
 
                 // Quick action checkbox: only for single-list items
                 if let _ = onQuickAction, !result.isAlsoInOtherList,
@@ -254,6 +249,30 @@ struct CommandBarResultRow: View {
 
     private var altTypeIcon: String {
         result.type == .pantryItem ? "cart" : "refrigerator"
+    }
+
+    private var displayedListTypes: [SearchResultType] {
+        if !result.listTypes.isEmpty {
+            return result.listTypes
+        }
+        return result.type == .action ? [] : [result.type]
+    }
+
+    @ViewBuilder
+    private var listTagsView: some View {
+        if displayedListTypes.count > 1 {
+            VStack(alignment: .leading, spacing: 3) {
+                ForEach(displayedListTypes, id: \.rawValue) { listType in
+                    listTag(for: listType)
+                }
+            }
+        } else {
+            HStack(spacing: 4) {
+                ForEach(displayedListTypes, id: \.rawValue) { listType in
+                    listTag(for: listType)
+                }
+            }
+        }
     }
 
     @ViewBuilder
@@ -454,14 +473,9 @@ struct CommandBarResultRow: View {
 
     // MARK: - Helpers
 
-    /// Shows "Category, em Lista" combining the existing subtitle with the type label.
-    private var smartSubtitle: String {
-        let category = result.subtitle
-        let list = result.typeLabel
-        if category.isEmpty && list.isEmpty { return "" }
-        if list.isEmpty { return category }
-        if category.isEmpty { return "em \(list)" }
-        return "\(category), em \(list)"
+    /// Shows only the category portion of the subtitle (without list info).
+    private var smartCategory: String {
+        result.subtitle
     }
 
     private var typeTintColor: Color {

@@ -402,11 +402,6 @@ struct ItemDetailView: View {
             .buttonStyle(.plain)
             .disabled(!isCreateMode && isUtensil)
 
-            // Divider line between joined buttons
-            Rectangle()
-                .fill(Color(.systemBackground))
-                .frame(width: 1)
-
             // Grocery button
             Button {
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
