@@ -28,6 +28,7 @@ final class CloudSyncService: @unchecked Sendable {
         RecipeIngredient.self,
         RecipeStep.self,
         RecipePreparationMedia.self,
+        UnifiedItem.self,
         PantryItem.self,
         GroceryItem.self,
         UtensilItem.self,
@@ -265,6 +266,9 @@ final class CloudSyncService: @unchecked Sendable {
             for item in try oldContext.fetch(FetchDescriptor<Category>()) {
                 newContext.insert(copyCategory(item))
             }
+            for item in try oldContext.fetch(FetchDescriptor<UnifiedItem>()) {
+                newContext.insert(copyUnifiedItem(item))
+            }
             for item in try oldContext.fetch(FetchDescriptor<PantryItem>()) {
                 newContext.insert(copyPantryItem(item))
             }
@@ -295,7 +299,7 @@ final class CloudSyncService: @unchecked Sendable {
     private static func makeContainer(usingCloudKit: Bool) throws -> ModelContainer {
         let privateSchema = Schema([AppSettings.self, ChatMessage.self, ChatConversation.self])
         let sharedSchema = Schema([
-            PantryItem.self, GroceryItem.self, UtensilItem.self, Category.self,
+            UnifiedItem.self, PantryItem.self, GroceryItem.self, UtensilItem.self, Category.self,
             Recipe.self, RecipeIngredient.self, RecipeStep.self, RecipePreparationMedia.self,
         ])
 
@@ -338,7 +342,7 @@ final class CloudSyncService: @unchecked Sendable {
 
         let privateSchema = Schema([AppSettings.self, ChatMessage.self, ChatConversation.self])
         let sharedSchema = Schema([
-            PantryItem.self, GroceryItem.self, UtensilItem.self, Category.self,
+            UnifiedItem.self, PantryItem.self, GroceryItem.self, UtensilItem.self, Category.self,
             Recipe.self, RecipeIngredient.self, RecipeStep.self, RecipePreparationMedia.self,
         ])
 
@@ -445,6 +449,7 @@ final class CloudSyncService: @unchecked Sendable {
         context.autosaveEnabled = false
 
         var totalDeleted = 0
+        totalDeleted += deduplicateByID(UnifiedItem.self, keyPath: \.id, context: context)
         totalDeleted += deduplicateByID(PantryItem.self, keyPath: \.id, context: context)
         totalDeleted += deduplicateByID(GroceryItem.self, keyPath: \.id, context: context)
         totalDeleted += deduplicateByID(UtensilItem.self, keyPath: \.id, context: context)
@@ -550,6 +555,33 @@ final class CloudSyncService: @unchecked Sendable {
             sortOrder: source.sortOrder
         )
         copy.id = source.id
+        return copy
+    }
+
+    private static func copyUnifiedItem(_ source: UnifiedItem) -> UnifiedItem {
+        let copy = UnifiedItem(
+            name: source.name,
+            descriptionText: source.descriptionText,
+            imageData: source.imageData,
+            category: source.category,
+            quantity: source.quantity,
+            unit: source.unit,
+            iconName: source.iconName,
+            isPantry: source.isPantry,
+            isGrocery: source.isGrocery,
+            isUtensil: source.isUtensil,
+            pantrySortOrder: source.pantrySortOrder,
+            grocerySortOrder: source.grocerySortOrder,
+            utensilSortOrder: source.utensilSortOrder,
+            isLinkedToGrocery: source.isLinkedToGrocery,
+            expirationDate: source.expirationDate,
+            defaultExpiryDays: source.defaultExpiryDays,
+            isChecked: source.isChecked,
+            isFixed: source.isFixed,
+            linkedPantryItemId: source.linkedPantryItemId
+        )
+        copy.id = source.id
+        copy.addedAt = source.addedAt
         return copy
     }
 

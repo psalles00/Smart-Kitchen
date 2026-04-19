@@ -21,9 +21,9 @@ enum AddItemDestination: String, CaseIterable {
 struct AddItemView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @Query(sort: \PantryItem.sortOrder) private var pantryItems: [PantryItem]
-    @Query(sort: \GroceryItem.sortOrder) private var groceryItems: [GroceryItem]
-    @Query(sort: \UtensilItem.sortOrder) private var utensilItems: [UtensilItem]
+    @Query(sort: \UnifiedItem.pantrySortOrder) private var pantryItems: [UnifiedItem]
+    @Query(sort: \UnifiedItem.grocerySortOrder) private var groceryItems: [UnifiedItem]
+    @Query(sort: \UnifiedItem.utensilSortOrder) private var utensilItems: [UnifiedItem]
     @Query(sort: \Category.sortOrder) private var allCategories: [Category]
     @Query private var settingsArray: [AppSettings]
 
@@ -250,7 +250,7 @@ struct AddItemView: View {
 
         switch destination {
         case .grocery:
-            let item = GroceryItem(
+            let item = UnifiedItem(
                 name: trimmed,
                 descriptionText: trimmedDescription,
                 imageData: imageData,
@@ -258,14 +258,17 @@ struct AddItemView: View {
                 quantity: quantity,
                 unit: unit.isEmpty ? nil : unit,
                 iconName: finalIcon,
-                isFixed: false,
+                isPantry: false,
+                isGrocery: true,
+                isUtensil: false,
+                grocerySortOrder: (groceryItems.filter(\.isGrocery).map(\.grocerySortOrder).max() ?? -1) + 1,
                 defaultExpiryDays: hasExpirationDate ? computeExpiryDays() : nil,
-                sortOrder: (groceryItems.map(\.sortOrder).max() ?? -1) + 1
+                isFixed: false
             )
             modelContext.insert(item)
             onCreated?(item.id, .grocery)
         case .pantry:
-            let item = PantryItem(
+            let item = UnifiedItem(
                 name: trimmed,
                 descriptionText: trimmedDescription,
                 imageData: imageData,
@@ -273,18 +276,24 @@ struct AddItemView: View {
                 quantity: quantity,
                 unit: unit.isEmpty ? nil : unit,
                 iconName: finalIcon,
+                isPantry: true,
+                isGrocery: false,
+                isUtensil: false,
+                pantrySortOrder: (pantryItems.filter(\.isPantry).map(\.pantrySortOrder).max() ?? -1) + 1,
                 expirationDate: hasExpirationDate ? expirationDate : nil,
-                defaultExpiryDays: hasExpirationDate && keepExpiryOnAcquire ? computeExpiryDays() : nil,
-                sortOrder: (pantryItems.map(\.sortOrder).max() ?? -1) + 1
+                defaultExpiryDays: hasExpirationDate && keepExpiryOnAcquire ? computeExpiryDays() : nil
             )
             modelContext.insert(item)
             onCreated?(item.id, .pantry)
         case .utensil:
-            let item = UtensilItem(
+            let item = UnifiedItem(
                 name: trimmed,
                 category: finalCategory,
                 iconName: finalIcon,
-                sortOrder: (utensilItems.map(\.sortOrder).max() ?? -1) + 1
+                isPantry: false,
+                isGrocery: false,
+                isUtensil: true,
+                utensilSortOrder: (utensilItems.filter(\.isUtensil).map(\.utensilSortOrder).max() ?? -1) + 1
             )
             modelContext.insert(item)
             onCreated?(item.id, .utensil)

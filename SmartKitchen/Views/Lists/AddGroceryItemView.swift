@@ -5,7 +5,7 @@ import PhotosUI
 struct AddGroceryItemView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @Query(sort: \GroceryItem.sortOrder) private var allItems: [GroceryItem]
+    @Query(filter: #Predicate<UnifiedItem> { $0.isGrocery }, sort: \UnifiedItem.grocerySortOrder) private var allItems: [UnifiedItem]
     @Query(sort: \Category.sortOrder) private var allCategories: [Category]
 
     var initialName: String = ""
@@ -220,7 +220,7 @@ struct AddGroceryItemView: View {
             }
         }
 
-        let item = GroceryItem(
+        let item = UnifiedItem(
             name: trimmed,
             descriptionText: descriptionText.trimmingCharacters(in: .whitespacesAndNewlines),
             imageData: imageData,
@@ -228,9 +228,12 @@ struct AddGroceryItemView: View {
             quantity: quantity,
             unit: unit.isEmpty ? nil : unit,
             iconName: finalIcon,
-            isFixed: false,
+            isPantry: false,
+            isGrocery: true,
+            isUtensil: false,
+            grocerySortOrder: (allItems.map(\.grocerySortOrder).max() ?? -1) + 1,
             defaultExpiryDays: hasDefaultExpiry ? computeGroceryExpiryDays() : nil,
-            sortOrder: (allItems.map(\.sortOrder).max() ?? -1) + 1
+            isFixed: false
         )
         modelContext.insert(item)
         onCreated?(item.id)
@@ -254,7 +257,7 @@ struct AddGroceryItemView: View {
 
 struct EditGroceryItemView: View {
     @Environment(\.dismiss) private var dismiss
-    @Bindable var item: GroceryItem
+    @Bindable var item: UnifiedItem
     @State private var showIconPicker = false
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var showPhotoPreview = false

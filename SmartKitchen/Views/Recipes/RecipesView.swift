@@ -35,7 +35,7 @@ struct RecipesView: View {
     @Environment(\.scrollToItem) private var scrollToItem
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Recipe.createdAt, order: .reverse) private var allRecipes: [Recipe]
-    @Query(sort: \PantryItem.name) private var pantryItems: [PantryItem]
+    @Query(filter: #Predicate<UnifiedItem> { $0.isPantry }, sort: \UnifiedItem.name) private var pantryItems: [UnifiedItem]
     @Query private var settingsArray: [AppSettings]
     @Query(sort: \Category.sortOrder) private var allCategories: [Category]
 
@@ -126,9 +126,9 @@ struct RecipesView: View {
 
     private var galleryColumns: [GridItem] {
         #if os(macOS)
-        [GridItem(.adaptive(minimum: 150, maximum: 200), spacing: 12)]
+        [GridItem(.adaptive(minimum: 150, maximum: 200), spacing: 1)]
         #else
-        Array(repeating: GridItem(.flexible(), spacing: 12), count: settings?.recipeGalleryColumns ?? 2)
+        Array(repeating: GridItem(.flexible(), spacing: 1), count: settings?.recipeGalleryColumns ?? 2)
         #endif
     }
 
@@ -415,9 +415,10 @@ struct RecipesView: View {
                         recipeSectionHeader(group.category)
                     }
 
-                    LazyVGrid(columns: galleryColumns, spacing: 12) {
-                        ForEach(group.recipes) { recipe in
-                            recipeGalleryCard(recipe)
+                    LazyVGrid(columns: galleryColumns, spacing: 1) {
+                        let cols = settings?.recipeGalleryColumns ?? 2
+                        ForEach(Array(group.recipes.enumerated()), id: \.element.id) { index, recipe in
+                            recipeGalleryCard(recipe, cornerRadii: galleryCornerRadii(index: index, total: group.recipes.count, columns: cols))
                         }
                     }
                 }
@@ -481,15 +482,16 @@ struct RecipesView: View {
     // MARK: - Context Menu
 
     @ViewBuilder
-    private func recipeGalleryCard(_ recipe: Recipe) -> some View {
+    private func recipeGalleryCard(_ recipe: Recipe, cornerRadii: RectangleCornerRadii = .init(topLeading: 16, bottomLeading: 16, bottomTrailing: 16, topTrailing: 16)) -> some View {
         let card = RecipeCardView(
             recipe: recipe,
             compatibility: compatibilities[recipe.id],
-            columns: settings?.recipeGalleryColumns ?? 2
+            columns: settings?.recipeGalleryColumns ?? 2,
+            cornerRadii: cornerRadii
         )
         .overlay {
             if highlightedRecipeID == recipe.id {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                UnevenRoundedRectangle(cornerRadii: cornerRadii, style: .continuous)
                     .stroke(Color.accentColor, lineWidth: 2)
                     .shadow(color: .accentColor.opacity(0.4), radius: 8)
             }
@@ -671,6 +673,25 @@ struct RecipesView: View {
     }
 
     // MARK: - Actions
+
+    private func galleryCornerRadii(index: Int, total: Int, columns: Int) -> RectangleCornerRadii {
+        let radius: CGFloat = 16
+        let row = index / columns
+        let col = index % columns
+        let totalRows = (total + columns - 1) / columns
+        let isFirstRow = row == 0
+        let isLastRow = row == totalRows - 1
+        let lastRowCount = total - (totalRows - 1) * columns
+        let isFirstCol = col == 0
+        let isLastCol = isLastRow ? (col == lastRowCount - 1) : (col == columns - 1)
+
+        return RectangleCornerRadii(
+            topLeading: (isFirstRow && isFirstCol) ? radius : 0,
+            bottomLeading: (isLastRow && isFirstCol) ? radius : 0,
+            bottomTrailing: (isLastRow && isLastCol) ? radius : 0,
+            topTrailing: (isFirstRow && isLastCol) ? radius : 0
+        )
+    }
 
     private func deleteRecipe(_ recipe: Recipe) {
         modelContext.delete(recipe)

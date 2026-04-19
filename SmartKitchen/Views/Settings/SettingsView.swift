@@ -172,6 +172,7 @@ struct SettingsView: View {
 
     private func resetData() {
         try? modelContext.delete(model: Recipe.self)
+        try? modelContext.delete(model: UnifiedItem.self)
         try? modelContext.delete(model: PantryItem.self)
         try? modelContext.delete(model: GroceryItem.self)
         try? modelContext.delete(model: UtensilItem.self)

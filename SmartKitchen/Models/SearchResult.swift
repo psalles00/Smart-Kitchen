@@ -24,6 +24,8 @@ struct SearchResult: Identifiable {
     let imageData: Data?
     /// Whether the item with the same name exists in the other list too.
     var isAlsoInOtherList: Bool = false
+    /// All list types this item belongs to (for rendering multiple tags).
+    var listTypes: [SearchResultType] = []
 
     /// Section label displayed as a badge next to the result.
     var typeLabel: String {

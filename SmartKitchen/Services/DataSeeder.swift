@@ -66,7 +66,7 @@ struct DataSeeder {
         // Also check if synced data already exists (another device may have
         // pushed items before AppSettings arrived via CloudKit).
         let hasSyncedData: Bool = {
-            var fd = FetchDescriptor<PantryItem>()
+            var fd = FetchDescriptor<UnifiedItem>()
             fd.fetchLimit = 1
             return (try? !context.fetch(fd).isEmpty) ?? false
         }()
@@ -152,9 +152,9 @@ struct DataSeeder {
     }
 
     private static func migratePantryCategories(context: ModelContext) {
-        let descriptor = FetchDescriptor<PantryItem>()
+        let descriptor = FetchDescriptor<UnifiedItem>()
         let items = (try? context.fetch(descriptor)) ?? []
-        for item in items {
+        for item in items where item.isPantry {
             if let replacement = legacyPantryCategoryMapping[item.category] {
                 item.category = replacement
             }
@@ -162,9 +162,9 @@ struct DataSeeder {
     }
 
     private static func migrateGroceryCategories(context: ModelContext) {
-        let descriptor = FetchDescriptor<GroceryItem>()
+        let descriptor = FetchDescriptor<UnifiedItem>()
         let items = (try? context.fetch(descriptor)) ?? []
-        for item in items {
+        for item in items where item.isGrocery {
             if let replacement = legacyPantryCategoryMapping[item.category] {
                 item.category = replacement
             }
@@ -172,9 +172,9 @@ struct DataSeeder {
     }
 
     private static func migrateUtensilCategories(context: ModelContext) {
-        let descriptor = FetchDescriptor<UtensilItem>()
+        let descriptor = FetchDescriptor<UnifiedItem>()
         let items = (try? context.fetch(descriptor)) ?? []
-        for item in items {
+        for item in items where item.isUtensil {
             if let replacement = legacyUtensilCategoryMapping[item.category] {
                 item.category = replacement
             }
@@ -206,7 +206,7 @@ struct DataSeeder {
             ("Leite", "Laticínios", "milk.png"),
         ]
         for (name, category, icon) in items {
-            let item = PantryItem(name: name, category: category, iconName: icon)
+            let item = UnifiedItem(name: name, category: category, iconName: icon, isPantry: true)
             context.insert(item)
         }
     }
@@ -220,7 +220,7 @@ struct DataSeeder {
             ("Azeite", "Outros", "olive-oil.png", 2),
         ]
         for (name, category, icon, order) in items {
-            let item = GroceryItem(name: name, category: category, iconName: icon, sortOrder: order)
+            let item = UnifiedItem(name: name, category: category, iconName: icon, isGrocery: true, grocerySortOrder: order)
             context.insert(item)
         }
     }

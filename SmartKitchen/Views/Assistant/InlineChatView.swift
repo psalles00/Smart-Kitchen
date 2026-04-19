@@ -885,18 +885,17 @@ struct InlineChatView: View {
 
         var inventoryParts = [String]()
 
-        let pantryDescriptor = FetchDescriptor<PantryItem>(sortBy: [SortDescriptor(\.category)])
-        if let pantryItems = try? modelContext.fetch(pantryDescriptor) {
+        let pantryDescriptor = FetchDescriptor<UnifiedItem>(sortBy: [SortDescriptor(\.category)])
+        if let allItems = try? modelContext.fetch(pantryDescriptor) {
+            let pantryItems = allItems.filter { $0.isPantry }
             if pantryItems.isEmpty {
                 inventoryParts.append("## Despensa atual\nA despensa está vazia.")
             } else {
                 let itemDescriptions = pantryItems.map { $0.aiReadableDescription }
                 inventoryParts.append("## Despensa atual (\(pantryItems.count) itens)\n\(itemDescriptions.joined(separator: "\n"))")
             }
-        }
 
-        let groceryDescriptor = FetchDescriptor<GroceryItem>(sortBy: [SortDescriptor(\.category)])
-        if let groceryItems = try? modelContext.fetch(groceryDescriptor) {
+            let groceryItems = allItems.filter { $0.isGrocery }
             if groceryItems.isEmpty {
                 inventoryParts.append("## Lista de compras\nA lista de compras está vazia.")
             } else {
@@ -936,8 +935,8 @@ struct InlineChatView: View {
         let normalizedPrompt = normalized(text)
         guard isRecipeSuggestionPrompt(normalizedPrompt) else { return nil }
 
-        let pantryItems = (try? modelContext.fetch(FetchDescriptor<PantryItem>())) ?? []
-        let pantryNames = pantryItems.map { normalized($0.name) }
+        let pantryItems = (try? modelContext.fetch(FetchDescriptor<UnifiedItem>())) ?? []
+        let pantryNames = pantryItems.filter { $0.isPantry }.map { normalized($0.name) }
         let wantsDessert = normalizedPrompt.contains("sobremesa") || normalizedPrompt.contains("doce")
 
         // Check for specific keywords beyond generic recipe request

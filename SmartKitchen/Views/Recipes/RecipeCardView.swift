@@ -5,6 +5,7 @@ struct RecipeCardView: View {
     let recipe: Recipe
     var compatibility: RecipeCompatibility? = nil
     var columns: Int = 2
+    var cornerRadii: RectangleCornerRadii = .init(topLeading: 16, bottomLeading: 16, bottomTrailing: 16, topTrailing: 16)
 
     var body: some View {
         ZStack(alignment: .bottomLeading) {
@@ -65,7 +66,7 @@ struct RecipeCardView: View {
         .aspectRatio(1, contentMode: .fit)
         #endif
         .background(Color(.secondarySystemBackground))
-        .clipShape(.rect(cornerRadius: 16))
+        .clipShape(.rect(cornerRadii: cornerRadii))
         .overlay {
             // Favorite badge
             if recipe.isFavorite {

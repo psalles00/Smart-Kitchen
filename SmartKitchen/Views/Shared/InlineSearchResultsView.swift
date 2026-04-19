@@ -187,16 +187,6 @@ struct InlineSearchResultsView: View {
                             }
 
                             Spacer(minLength: 4)
-
-                            ZStack {
-                                Circle()
-                                    .stroke(lineWidth: 3.5)
-                                    .foregroundStyle(Color(.tertiarySystemFill))
-                                    .frame(width: 30, height: 30)
-                                Image(systemName: "return")
-                                    .font(.system(size: 30 * 0.38, weight: .bold))
-                                    .foregroundStyle(.secondary.opacity(0.6))
-                            }
                         }
                         .padding(.horizontal, 14)
                         .padding(.vertical, 10)

@@ -200,22 +200,26 @@ struct AppBackupSnapshot: Codable {
     let exportedAt: Date
     let appSettings: [AppSettingsRecord]
     let categories: [CategoryRecord]
-    let pantryItems: [PantryItemRecord]
-    let groceryItems: [GroceryItemRecord]
-    let utensilItems: [UtensilItemRecord]
+    let unifiedItems: [UnifiedItemRecord]
     let recipes: [RecipeRecord]
     let recipeIngredients: [RecipeIngredientRecord]
     let recipeSteps: [RecipeStepRecord]
     let recipePreparationMedia: [RecipePreparationMediaRecord]
     let chatMessages: [ChatMessageRecord]
 
+    // Legacy keys for backward-compat decoding
+    private enum CodingKeys: String, CodingKey {
+        case exportedAt, appSettings, categories
+        case unifiedItems
+        case pantryItems, groceryItems, utensilItems // legacy
+        case recipes, recipeIngredients, recipeSteps, recipePreparationMedia, chatMessages
+    }
+
     init(context: ModelContext) throws {
         exportedAt = .now
         appSettings = try context.fetch(FetchDescriptor<AppSettings>()).map(AppSettingsRecord.init)
         categories = try context.fetch(FetchDescriptor<Category>()).map(CategoryRecord.init)
-        pantryItems = try context.fetch(FetchDescriptor<PantryItem>()).map(PantryItemRecord.init)
-        groceryItems = try context.fetch(FetchDescriptor<GroceryItem>()).map(GroceryItemRecord.init)
-        utensilItems = try context.fetch(FetchDescriptor<UtensilItem>()).map(UtensilItemRecord.init)
+        unifiedItems = try context.fetch(FetchDescriptor<UnifiedItem>()).map(UnifiedItemRecord.init)
 
         let recipeList = try context.fetch(FetchDescriptor<Recipe>())
         recipes = recipeList.map(RecipeRecord.init)
@@ -232,14 +236,71 @@ struct AppBackupSnapshot: Codable {
         chatMessages = try context.fetch(FetchDescriptor<ChatMessage>()).map(ChatMessageRecord.init)
     }
 
+    func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(exportedAt, forKey: .exportedAt)
+        try container.encode(appSettings, forKey: .appSettings)
+        try container.encode(categories, forKey: .categories)
+        try container.encode(unifiedItems, forKey: .unifiedItems)
+        try container.encode(recipes, forKey: .recipes)
+        try container.encode(recipeIngredients, forKey: .recipeIngredients)
+        try container.encode(recipeSteps, forKey: .recipeSteps)
+        try container.encode(recipePreparationMedia, forKey: .recipePreparationMedia)
+        try container.encode(chatMessages, forKey: .chatMessages)
+    }
+
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         exportedAt = try container.decode(Date.self, forKey: .exportedAt)
         appSettings = try container.decode([AppSettingsRecord].self, forKey: .appSettings)
         categories = try container.decode([CategoryRecord].self, forKey: .categories)
-        pantryItems = try container.decode([PantryItemRecord].self, forKey: .pantryItems)
-        groceryItems = try container.decode([GroceryItemRecord].self, forKey: .groceryItems)
-        utensilItems = try container.decodeIfPresent([UtensilItemRecord].self, forKey: .utensilItems) ?? []
+
+        // Try new unified format first, fall back to legacy
+        if let unified = try? container.decode([UnifiedItemRecord].self, forKey: .unifiedItems) {
+            unifiedItems = unified
+        } else {
+            // Legacy: convert from old 3-array format
+            var converted: [UnifiedItemRecord] = []
+            let pantry = try container.decodeIfPresent([LegacyPantryItemRecord].self, forKey: .pantryItems) ?? []
+            let grocery = try container.decodeIfPresent([LegacyGroceryItemRecord].self, forKey: .groceryItems) ?? []
+            let utensils = try container.decodeIfPresent([LegacyUtensilItemRecord].self, forKey: .utensilItems) ?? []
+
+            for p in pantry {
+                converted.append(UnifiedItemRecord(
+                    id: p.id, name: p.name, descriptionText: p.descriptionText, imageData: p.imageData,
+                    category: p.category, quantity: p.quantity, unit: p.unit, iconName: p.iconName,
+                    isPantry: true, isGrocery: false, isUtensil: false,
+                    pantrySortOrder: p.sortOrder, grocerySortOrder: 0, utensilSortOrder: 0,
+                    isLinkedToGrocery: p.isLinkedToGrocery, expirationDate: p.expirationDate,
+                    defaultExpiryDays: p.defaultExpiryDays,
+                    isChecked: false, isFixed: false, linkedPantryItemId: nil, addedAt: p.addedAt
+                ))
+            }
+            for g in grocery {
+                converted.append(UnifiedItemRecord(
+                    id: g.id, name: g.name, descriptionText: g.descriptionText, imageData: g.imageData,
+                    category: g.category, quantity: g.quantity, unit: g.unit, iconName: g.iconName,
+                    isPantry: false, isGrocery: true, isUtensil: false,
+                    pantrySortOrder: 0, grocerySortOrder: g.sortOrder, utensilSortOrder: 0,
+                    isLinkedToGrocery: false, expirationDate: nil,
+                    defaultExpiryDays: g.defaultExpiryDays,
+                    isChecked: g.isChecked, isFixed: g.isFixed, linkedPantryItemId: g.linkedPantryItemId,
+                    addedAt: g.addedAt
+                ))
+            }
+            for u in utensils {
+                converted.append(UnifiedItemRecord(
+                    id: u.id, name: u.name, descriptionText: u.descriptionText, imageData: u.imageData,
+                    category: u.category, quantity: nil, unit: nil, iconName: u.iconName,
+                    isPantry: false, isGrocery: false, isUtensil: true,
+                    pantrySortOrder: 0, grocerySortOrder: 0, utensilSortOrder: u.sortOrder,
+                    isLinkedToGrocery: false, expirationDate: nil, defaultExpiryDays: nil,
+                    isChecked: false, isFixed: false, linkedPantryItemId: nil, addedAt: u.addedAt
+                ))
+            }
+            unifiedItems = converted
+        }
+
         recipes = try container.decode([RecipeRecord].self, forKey: .recipes)
         recipeIngredients = try container.decode([RecipeIngredientRecord].self, forKey: .recipeIngredients)
         recipeSteps = try container.decode([RecipeStepRecord].self, forKey: .recipeSteps)
@@ -250,6 +311,7 @@ struct AppBackupSnapshot: Codable {
     func restore(into context: ModelContext) throws {
         try context.delete(model: Recipe.self)
         try context.delete(model: RecipePreparationMedia.self)
+        try context.delete(model: UnifiedItem.self)
         try context.delete(model: PantryItem.self)
         try context.delete(model: GroceryItem.self)
         try context.delete(model: UtensilItem.self)
@@ -283,8 +345,8 @@ struct AppBackupSnapshot: Codable {
             context.insert(category)
         }
 
-        for record in pantryItems {
-            let item = PantryItem(
+        for record in unifiedItems {
+            let item = UnifiedItem(
                 name: record.name,
                 descriptionText: record.descriptionText,
                 imageData: record.imageData,
@@ -292,44 +354,18 @@ struct AppBackupSnapshot: Codable {
                 quantity: record.quantity,
                 unit: record.unit,
                 iconName: record.iconName,
+                isPantry: record.isPantry,
+                isGrocery: record.isGrocery,
+                isUtensil: record.isUtensil,
+                pantrySortOrder: record.pantrySortOrder,
+                grocerySortOrder: record.grocerySortOrder,
+                utensilSortOrder: record.utensilSortOrder,
                 isLinkedToGrocery: record.isLinkedToGrocery,
                 expirationDate: record.expirationDate,
                 defaultExpiryDays: record.defaultExpiryDays,
-                sortOrder: record.sortOrder
-            )
-            item.id = record.id
-            item.addedAt = record.addedAt
-            context.insert(item)
-        }
-
-        for record in groceryItems {
-            let item = GroceryItem(
-                name: record.name,
-                descriptionText: record.descriptionText,
-                imageData: record.imageData,
-                category: record.category,
-                quantity: record.quantity,
-                unit: record.unit,
-                iconName: record.iconName,
                 isChecked: record.isChecked,
                 isFixed: record.isFixed,
-                linkedPantryItemId: record.linkedPantryItemId,
-                defaultExpiryDays: record.defaultExpiryDays,
-                sortOrder: record.sortOrder
-            )
-            item.id = record.id
-            item.addedAt = record.addedAt
-            context.insert(item)
-        }
-
-        for record in utensilItems {
-            let item = UtensilItem(
-                name: record.name,
-                descriptionText: record.descriptionText,
-                imageData: record.imageData,
-                category: record.category,
-                iconName: record.iconName,
-                sortOrder: record.sortOrder
+                linkedPantryItemId: record.linkedPantryItemId
             )
             item.id = record.id
             item.addedAt = record.addedAt
@@ -469,7 +505,77 @@ struct CategoryRecord: Codable {
     }
 }
 
-struct PantryItemRecord: Codable {
+struct UnifiedItemRecord: Codable {
+    let id: UUID
+    let name: String
+    let descriptionText: String
+    let imageData: Data?
+    let category: String
+    let quantity: Double?
+    let unit: String?
+    let iconName: String?
+    let isPantry: Bool
+    let isGrocery: Bool
+    let isUtensil: Bool
+    let pantrySortOrder: Int
+    let grocerySortOrder: Int
+    let utensilSortOrder: Int
+    let isLinkedToGrocery: Bool
+    let expirationDate: Date?
+    let defaultExpiryDays: Int?
+    let isChecked: Bool
+    let isFixed: Bool
+    let linkedPantryItemId: UUID?
+    let addedAt: Date
+
+    init(_ item: UnifiedItem) {
+        id = item.id
+        name = item.name
+        descriptionText = item.descriptionText
+        imageData = item.imageData
+        category = item.category
+        quantity = item.quantity
+        unit = item.unit
+        iconName = item.iconName
+        isPantry = item.isPantry
+        isGrocery = item.isGrocery
+        isUtensil = item.isUtensil
+        pantrySortOrder = item.pantrySortOrder
+        grocerySortOrder = item.grocerySortOrder
+        utensilSortOrder = item.utensilSortOrder
+        isLinkedToGrocery = item.isLinkedToGrocery
+        expirationDate = item.expirationDate
+        defaultExpiryDays = item.defaultExpiryDays
+        isChecked = item.isChecked
+        isFixed = item.isFixed
+        linkedPantryItemId = item.linkedPantryItemId
+        addedAt = item.addedAt
+    }
+
+    init(
+        id: UUID, name: String, descriptionText: String, imageData: Data?,
+        category: String, quantity: Double?, unit: String?, iconName: String?,
+        isPantry: Bool, isGrocery: Bool, isUtensil: Bool,
+        pantrySortOrder: Int, grocerySortOrder: Int, utensilSortOrder: Int,
+        isLinkedToGrocery: Bool, expirationDate: Date?, defaultExpiryDays: Int?,
+        isChecked: Bool, isFixed: Bool, linkedPantryItemId: UUID?, addedAt: Date
+    ) {
+        self.id = id; self.name = name; self.descriptionText = descriptionText
+        self.imageData = imageData; self.category = category; self.quantity = quantity
+        self.unit = unit; self.iconName = iconName
+        self.isPantry = isPantry; self.isGrocery = isGrocery; self.isUtensil = isUtensil
+        self.pantrySortOrder = pantrySortOrder; self.grocerySortOrder = grocerySortOrder
+        self.utensilSortOrder = utensilSortOrder
+        self.isLinkedToGrocery = isLinkedToGrocery; self.expirationDate = expirationDate
+        self.defaultExpiryDays = defaultExpiryDays
+        self.isChecked = isChecked; self.isFixed = isFixed
+        self.linkedPantryItemId = linkedPantryItemId; self.addedAt = addedAt
+    }
+}
+
+// MARK: - Legacy Records (for backward-compat backup decoding only)
+
+struct LegacyPantryItemRecord: Codable {
     let id: UUID
     let name: String
     let descriptionText: String
@@ -483,22 +589,6 @@ struct PantryItemRecord: Codable {
     let defaultExpiryDays: Int?
     let sortOrder: Int
     let addedAt: Date
-
-    init(_ item: PantryItem) {
-        id = item.id
-        name = item.name
-        descriptionText = item.descriptionText
-        imageData = item.imageData
-        category = item.category
-        quantity = item.quantity
-        unit = item.unit
-        iconName = item.iconName
-        isLinkedToGrocery = item.isLinkedToGrocery
-        expirationDate = item.expirationDate
-        defaultExpiryDays = item.defaultExpiryDays
-        sortOrder = item.sortOrder
-        addedAt = item.addedAt
-    }
 
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -518,7 +608,7 @@ struct PantryItemRecord: Codable {
     }
 }
 
-struct GroceryItemRecord: Codable {
+struct LegacyGroceryItemRecord: Codable {
     let id: UUID
     let name: String
     let descriptionText: String
@@ -533,23 +623,6 @@ struct GroceryItemRecord: Codable {
     let defaultExpiryDays: Int?
     let sortOrder: Int
     let addedAt: Date
-
-    init(_ item: GroceryItem) {
-        id = item.id
-        name = item.name
-        descriptionText = item.descriptionText
-        imageData = item.imageData
-        category = item.category
-        quantity = item.quantity
-        unit = item.unit
-        iconName = item.iconName
-        isChecked = item.isChecked
-        isFixed = item.isFixed
-        linkedPantryItemId = item.linkedPantryItemId
-        defaultExpiryDays = item.defaultExpiryDays
-        sortOrder = item.sortOrder
-        addedAt = item.addedAt
-    }
 
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -570,7 +643,7 @@ struct GroceryItemRecord: Codable {
     }
 }
 
-struct UtensilItemRecord: Codable {
+struct LegacyUtensilItemRecord: Codable {
     let id: UUID
     let name: String
     let descriptionText: String
@@ -579,17 +652,6 @@ struct UtensilItemRecord: Codable {
     let iconName: String?
     let sortOrder: Int
     let addedAt: Date
-
-    init(_ item: UtensilItem) {
-        id = item.id
-        name = item.name
-        descriptionText = item.descriptionText
-        imageData = item.imageData
-        category = item.category
-        iconName = item.iconName
-        sortOrder = item.sortOrder
-        addedAt = item.addedAt
-    }
 }
 
 struct RecipeRecord: Codable {

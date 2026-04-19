@@ -314,18 +314,17 @@ final class AssistantChatManager: ObservableObject {
 
         var inventoryParts = [String]()
 
-        let pantryDescriptor = FetchDescriptor<PantryItem>(sortBy: [SortDescriptor(\.category)])
-        if let pantryItems = try? context.fetch(pantryDescriptor) {
+        let pantryDescriptor = FetchDescriptor<UnifiedItem>(sortBy: [SortDescriptor(\.category)])
+        if let allItems = try? context.fetch(pantryDescriptor) {
+            let pantryItems = allItems.filter { $0.isPantry }
             if pantryItems.isEmpty {
                 inventoryParts.append("## Despensa atual\nA despensa está vazia.")
             } else {
                 let itemDescriptions = pantryItems.map { $0.aiReadableDescription }
                 inventoryParts.append("## Despensa atual (\(pantryItems.count) itens)\n\(itemDescriptions.joined(separator: "\n"))")
             }
-        }
 
-        let groceryDescriptor = FetchDescriptor<GroceryItem>(sortBy: [SortDescriptor(\.category)])
-        if let groceryItems = try? context.fetch(groceryDescriptor) {
+            let groceryItems = allItems.filter { $0.isGrocery }
             if groceryItems.isEmpty {
                 inventoryParts.append("## Lista de compras\nA lista de compras está vazia.")
             } else {
@@ -373,8 +372,8 @@ final class AssistantChatManager: ObservableObject {
         let normalizedPrompt = normalized(text)
         guard isRecipeSuggestionPrompt(normalizedPrompt) else { return nil }
 
-        let pantryItems = (try? context.fetch(FetchDescriptor<PantryItem>())) ?? []
-        let pantryNames = pantryItems.map { normalized($0.name) }
+        let pantryItems = (try? context.fetch(FetchDescriptor<UnifiedItem>())) ?? []
+        let pantryNames = pantryItems.filter { $0.isPantry }.map { normalized($0.name) }
         let wantsDessert = normalizedPrompt.contains("sobremesa") || normalizedPrompt.contains("doce")
 
         let rankedRecipes = allRecipes

@@ -99,6 +99,9 @@ struct SmartKitchenApp: App {
         let context = ModelContext(CloudSyncService.shared.container)
         DataSeeder.seedIfNeeded(context: context)
 
+        // Migrate to unified item model
+        UnifiedItemMigration.migrateIfNeeded(context: context)
+
         // Clean any existing duplicates from prior sync issues
         CloudSyncService.shared.performDeduplication()
 

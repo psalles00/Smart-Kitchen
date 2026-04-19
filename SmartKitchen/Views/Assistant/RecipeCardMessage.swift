@@ -6,7 +6,7 @@ import SwiftData
 struct RecipeCardMessage: View {
     let recipeIds: [UUID]
     @Query(sort: \Recipe.name) private var allRecipes: [Recipe]
-    @Query private var pantryItems: [PantryItem]
+    @Query(filter: #Predicate<UnifiedItem> { $0.isPantry }) private var pantryItems: [UnifiedItem]
 
     private var pantryNames: [String] {
         pantryItems.map {

@@ -5,7 +5,7 @@ import PhotosUI
 struct AddUtensilItemView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @Query(sort: \UtensilItem.sortOrder) private var allItems: [UtensilItem]
+    @Query(filter: #Predicate<UnifiedItem> { $0.isUtensil }, sort: \UnifiedItem.utensilSortOrder) private var allItems: [UnifiedItem]
     @Query(sort: \Category.sortOrder) private var allCategories: [Category]
 
     @State private var name = ""
@@ -156,14 +156,17 @@ struct AddUtensilItemView: View {
             }
         }
 
-        let nextOrder = (allItems.map(\.sortOrder).max() ?? -1) + 1
-        let item = UtensilItem(
+        let nextOrder = (allItems.map(\.utensilSortOrder).max() ?? -1) + 1
+        let item = UnifiedItem(
             name: trimmed,
             descriptionText: descriptionText.trimmingCharacters(in: .whitespacesAndNewlines),
             imageData: imageData,
             category: finalCategory,
             iconName: finalIcon,
-            sortOrder: nextOrder
+            isPantry: false,
+            isGrocery: false,
+            isUtensil: true,
+            utensilSortOrder: nextOrder
         )
         modelContext.insert(item)
         dismiss()
@@ -180,7 +183,7 @@ struct AddUtensilItemView: View {
 
 struct EditUtensilItemView: View {
     @Environment(\.dismiss) private var dismiss
-    @Bindable var item: UtensilItem
+    @Bindable var item: UnifiedItem
     @State private var showIconPicker = false
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var showPhotoPreview = false

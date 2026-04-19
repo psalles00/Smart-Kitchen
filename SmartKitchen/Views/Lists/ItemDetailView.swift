@@ -38,9 +38,7 @@ enum ItemListType: String, CaseIterable, Identifiable {
 
 enum ItemDetailMode {
     case create(destinations: Set<ItemListType> = [.grocery])
-    case editPantry(PantryItem)
-    case editGrocery(GroceryItem)
-    case editUtensil(UtensilItem)
+    case edit(UnifiedItem)
 }
 
 // MARK: - View
@@ -48,9 +46,7 @@ enum ItemDetailMode {
 struct ItemDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @Query(sort: \PantryItem.sortOrder) private var allPantryItems: [PantryItem]
-    @Query(sort: \GroceryItem.sortOrder) private var allGroceryItems: [GroceryItem]
-    @Query(sort: \UtensilItem.sortOrder) private var allUtensilItems: [UtensilItem]
+    @Query private var allUnifiedItems: [UnifiedItem]
     @Query(sort: \Category.sortOrder) private var allCategories: [Category]
     @Query private var settingsArray: [AppSettings]
 
@@ -100,15 +96,14 @@ struct ItemDetailView: View {
     }
 
     private var isUtensil: Bool {
-        if case .editUtensil = mode { return true }
+        if let item = editingItem { return item.isUtensil && !item.isPantry && !item.isGrocery }
         return selectedLists == [.utensil]
     }
 
     private var showUtensilOption: Bool {
         switch mode {
         case .create: return showUtensils
-        case .editUtensil: return true
-        default: return false
+        case .edit: return false
         }
     }
 
@@ -116,17 +111,9 @@ struct ItemDetailView: View {
     private var hasGrocery: Bool { selectedLists.contains(.grocery) }
     private var isValid: Bool { !name.trimmingCharacters(in: .whitespaces).isEmpty }
 
-    // Edit-mode bindings
-    private var editingPantryItem: PantryItem? {
-        if case .editPantry(let item) = mode { return item }
-        return nil
-    }
-    private var editingGroceryItem: GroceryItem? {
-        if case .editGrocery(let item) = mode { return item }
-        return nil
-    }
-    private var editingUtensilItem: UtensilItem? {
-        if case .editUtensil(let item) = mode { return item }
+    // Edit-mode binding
+    private var editingItem: UnifiedItem? {
+        if case .edit(let item) = mode { return item }
         return nil
     }
 
@@ -200,9 +187,7 @@ struct ItemDetailView: View {
                 if isCreateMode {
                     iconName = entry.nomeDoArquivo
                 } else {
-                    editingPantryItem?.iconName = entry.nomeDoArquivo
-                    editingGroceryItem?.iconName = entry.nomeDoArquivo
-                    editingUtensilItem?.iconName = entry.nomeDoArquivo
+                    editingItem?.iconName = entry.nomeDoArquivo
                     iconName = entry.nomeDoArquivo
                 }
             }
@@ -226,6 +211,13 @@ struct ItemDetailView: View {
         .onChange(of: selectedPhoto) {
             loadPhoto()
         }
+        .onChange(of: selectedLists) { _, newLists in
+            if let item = editingItem {
+                item.isPantry = newLists.contains(.pantry)
+                item.isGrocery = newLists.contains(.grocery)
+                item.isUtensil = newLists.contains(.utensil)
+            }
+        }
         .onAppear {
             setupInitialState()
         }
@@ -234,7 +226,7 @@ struct ItemDetailView: View {
     // MARK: - Icon Header
 
     private var currentIconName: String? {
-        iconName ?? editingPantryItem?.iconName ?? editingGroceryItem?.iconName ?? editingUtensilItem?.iconName
+        iconName ?? editingItem?.iconName
     }
 
     private var currentName: String {
@@ -243,7 +235,7 @@ struct ItemDetailView: View {
 
     private var resolvedImageData: Data? {
         if isCreateMode { return imageData }
-        return editingPantryItem?.imageData ?? editingGroceryItem?.imageData ?? editingUtensilItem?.imageData ?? imageData
+        return editingItem?.imageData ?? imageData
     }
 
     @ViewBuilder
@@ -357,7 +349,7 @@ struct ItemDetailView: View {
             showCategorySelection = true
         } label: {
             CategoryLabelView(
-                categoryName: isCreateMode ? selectedCategory : (editingPantryItem?.category ?? editingGroceryItem?.category ?? editingUtensilItem?.category ?? selectedCategory),
+                categoryName: isCreateMode ? selectedCategory : (editingItem?.category ?? selectedCategory),
                 iconSize: 16,
                 spacing: 6,
                 font: .subheadline
@@ -408,7 +400,7 @@ struct ItemDetailView: View {
                 .foregroundStyle(pantrySelected ? .white : .primary)
             }
             .buttonStyle(.plain)
-            .disabled(!isCreateMode && editingUtensilItem != nil)
+            .disabled(!isCreateMode && isUtensil)
 
             // Divider line between joined buttons
             Rectangle()
@@ -434,7 +426,7 @@ struct ItemDetailView: View {
                 .foregroundStyle(grocerySelected ? .white : .primary)
             }
             .buttonStyle(.plain)
-            .disabled(!isCreateMode && editingUtensilItem != nil)
+            .disabled(!isCreateMode && isUtensil)
         }
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
 
@@ -527,7 +519,7 @@ struct ItemDetailView: View {
                         }
                         .foregroundStyle(.secondary)
                         .frame(width: 72, height: 72)
-                        .background(Color(.tertiarySystemFill), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Color(.tertiarySystemFill), lineWidth: 1.5))
                     }
                     .buttonStyle(.plain)
                 }
@@ -564,7 +556,10 @@ struct ItemDetailView: View {
 
     /// Whether we're in grocery-only mode (duration + auto-apply forced)
     private var isGroceryOnlyExpiry: Bool {
-        !hasPantry && hasGrocery && editingPantryItem == nil
+        if let item = editingItem {
+            return item.isGrocery && !item.isPantry
+        }
+        return !hasPantry && hasGrocery
     }
 
     @ViewBuilder
@@ -596,7 +591,7 @@ struct ItemDetailView: View {
                         expiryDurationPicker
 
                         // Auto-apply expiry explanation
-                        if hasPantry || hasGrocery || editingGroceryItem != nil || editingPantryItem != nil {
+                        if hasPantry || hasGrocery || editingItem != nil {
                             VStack(alignment: .leading, spacing: 6) {
                                 if isGroceryOnlyExpiry {
                                     // Forced on, non-toggleable
@@ -635,7 +630,7 @@ struct ItemDetailView: View {
                             in: Date()...,
                             displayedComponents: .date
                         )
-                        .onChange(of: isCreateMode ? expirationDate : (editingPantryItem?.expirationDate ?? Date())) { _, newDate in
+                        .onChange(of: isCreateMode ? expirationDate : (editingItem?.expirationDate ?? Date())) { _, newDate in
                             syncDurationFromDate(newDate)
                         }
                     }
@@ -709,74 +704,55 @@ struct ItemDetailView: View {
 
     private var resolvedHasExpiry: Bool {
         if isCreateMode { return hasExpirationDate }
-        return editingPantryItem?.expirationDate != nil
+        return editingItem?.expirationDate != nil
     }
 
     // MARK: - Edit Bindings
 
     private var editNameBinding: Binding<String> {
         Binding(
-            get: { editingPantryItem?.name ?? editingGroceryItem?.name ?? editingUtensilItem?.name ?? name },
-            set: { newValue in
-                editingPantryItem?.name = newValue
-                editingGroceryItem?.name = newValue
-                editingUtensilItem?.name = newValue
-            }
+            get: { editingItem?.name ?? name },
+            set: { newValue in editingItem?.name = newValue }
         )
     }
 
     private var editCategoryBinding: Binding<String> {
         Binding(
-            get: { editingPantryItem?.category ?? editingGroceryItem?.category ?? editingUtensilItem?.category ?? selectedCategory },
-            set: { newValue in
-                editingPantryItem?.category = newValue
-                editingGroceryItem?.category = newValue
-                editingUtensilItem?.category = newValue
-            }
+            get: { editingItem?.category ?? selectedCategory },
+            set: { newValue in editingItem?.category = newValue }
         )
     }
 
     private var editDescriptionBinding: Binding<String> {
         Binding(
-            get: { editingPantryItem?.descriptionText ?? editingGroceryItem?.descriptionText ?? editingUtensilItem?.descriptionText ?? descriptionText },
-            set: { newValue in
-                editingPantryItem?.descriptionText = newValue
-                editingGroceryItem?.descriptionText = newValue
-                editingUtensilItem?.descriptionText = newValue
-            }
+            get: { editingItem?.descriptionText ?? descriptionText },
+            set: { newValue in editingItem?.descriptionText = newValue }
         )
     }
 
     private var editQuantityBinding: Binding<Double?> {
         Binding(
-            get: { editingPantryItem?.quantity ?? editingGroceryItem?.quantity },
-            set: { newValue in
-                editingPantryItem?.quantity = newValue
-                editingGroceryItem?.quantity = newValue
-            }
+            get: { editingItem?.quantity },
+            set: { newValue in editingItem?.quantity = newValue }
         )
     }
 
     private var editUnitBinding: Binding<String> {
         Binding(
-            get: { editingPantryItem?.unit ?? editingGroceryItem?.unit ?? "" },
-            set: { newValue in
-                let val = newValue.isEmpty ? nil : newValue
-                editingPantryItem?.unit = val
-                editingGroceryItem?.unit = val
-            }
+            get: { editingItem?.unit ?? "" },
+            set: { newValue in editingItem?.unit = newValue.isEmpty ? nil : newValue }
         )
     }
 
     private var editHasExpiryBinding: Binding<Bool> {
         Binding(
-            get: { editingPantryItem?.expirationDate != nil },
+            get: { editingItem?.expirationDate != nil },
             set: { hasDate in
                 withAnimation {
                     if hasDate {
-                        editingPantryItem?.expirationDate = editingPantryItem?.expirationDate ?? Date()
+                        editingItem?.expirationDate = editingItem?.expirationDate ?? Date()
                     } else {
-                        editingPantryItem?.expirationDate = nil
+                        editingItem?.expirationDate = nil
                     }
                 }
             }
@@ -785,9 +761,9 @@ struct ItemDetailView: View {
 
     private var editExpiryDateBinding: Binding<Date> {
         Binding(
-            get: { editingPantryItem?.expirationDate ?? Date() },
+            get: { editingItem?.expirationDate ?? Date() },
             set: { newDate in
-                editingPantryItem?.expirationDate = newDate
+                editingItem?.expirationDate = newDate
                 syncDurationFromDate(newDate)
             }
         )
@@ -834,28 +810,24 @@ struct ItemDetailView: View {
                 nameFieldFocused = true
             }
 
-        case .editPantry(let item):
+        case .edit(let item):
             name = item.name
             iconName = item.iconName
-            selectedLists = [.pantry]
+            var lists = Set<ItemListType>()
+            if item.isPantry { lists.insert(.pantry) }
+            if item.isGrocery { lists.insert(.grocery) }
+            if item.isUtensil { lists.insert(.utensil) }
+            if lists.isEmpty { lists.insert(.pantry) }
+            selectedLists = lists
             if let date = item.expirationDate {
+                hasExpirationDate = true
                 syncDurationFromDate(date)
             }
-
-        case .editGrocery(let item):
-            name = item.name
-            iconName = item.iconName
-            selectedLists = [.grocery]
             if let days = item.defaultExpiryDays {
                 expiryDurationValue = days
                 expiryDurationUnit = .days
                 keepExpiryOnAcquire = true
             }
-
-        case .editUtensil(let item):
-            name = item.name
-            iconName = item.iconName
-            selectedLists = [.utensil]
         }
     }
 
@@ -945,9 +917,7 @@ struct ItemDetailView: View {
             userChangedCategory = true
         } else {
             editNameBinding.wrappedValue = resolvedTitle
-            editingPantryItem?.iconName = entry.nomeDoArquivo
-            editingGroceryItem?.iconName = entry.nomeDoArquivo
-            editingUtensilItem?.iconName = entry.nomeDoArquivo
+            editingItem?.iconName = entry.nomeDoArquivo
             iconName = entry.nomeDoArquivo
             if CategoryDatabase.shared.entry(for: entry.categoria) != nil {
                 editCategoryBinding.wrappedValue = entry.categoria
@@ -975,9 +945,7 @@ struct ItemDetailView: View {
         if isCreateMode {
             imageData = data
         } else {
-            editingPantryItem?.imageData = data
-            editingGroceryItem?.imageData = data
-            editingUtensilItem?.imageData = data
+            editingItem?.imageData = data
             imageData = data
         }
     }
@@ -986,9 +954,7 @@ struct ItemDetailView: View {
         if isCreateMode {
             imageData = nil
         } else {
-            editingPantryItem?.imageData = nil
-            editingGroceryItem?.imageData = nil
-            editingUtensilItem?.imageData = nil
+            editingItem?.imageData = nil
             imageData = nil
         }
         selectedPhoto = nil
@@ -1017,7 +983,7 @@ struct ItemDetailView: View {
         if isCreateMode {
             expirationDate = newDate
         } else {
-            editingPantryItem?.expirationDate = newDate
+            editingItem?.expirationDate = newDate
         }
     }
 
@@ -1052,62 +1018,45 @@ struct ItemDetailView: View {
         var createdID: UUID?
         var createdType: ItemListType = .grocery
 
-        if selectedLists.contains(.utensil) {
-            let item = UtensilItem(
-                name: trimmed,
-                category: finalCategory,
-                iconName: finalIcon,
-                sortOrder: (allUtensilItems.map(\.sortOrder).max() ?? -1) + 1
-            )
-            item.descriptionText = trimmedDescription
-            item.imageData = imageData
-            modelContext.insert(item)
-            createdID = item.id
-            createdType = .utensil
+        let wantsPantry = selectedLists.contains(.pantry)
+        let wantsGrocery = selectedLists.contains(.grocery)
+        let wantsUtensil = selectedLists.contains(.utensil)
+
+        let allPantry = allUnifiedItems.filter { $0.isPantry }
+        let allGrocery = allUnifiedItems.filter { $0.isGrocery }
+        let allUtensils = allUnifiedItems.filter { $0.isUtensil }
+
+        let item = UnifiedItem(
+            name: trimmed,
+            category: finalCategory,
+            iconName: finalIcon,
+            isPantry: wantsPantry,
+            isGrocery: wantsGrocery,
+            isUtensil: wantsUtensil,
+            pantrySortOrder: wantsPantry ? (allPantry.map(\.pantrySortOrder).max() ?? -1) + 1 : 0,
+            grocerySortOrder: wantsGrocery ? (allGrocery.map(\.grocerySortOrder).max() ?? -1) + 1 : 0,
+            utensilSortOrder: wantsUtensil ? (allUtensils.map(\.utensilSortOrder).max() ?? -1) + 1 : 0
+        )
+        item.descriptionText = trimmedDescription
+        item.imageData = imageData
+        item.quantity = quantity
+        item.unit = unit.isEmpty ? nil : unit
+
+        if hasExpirationDate && (wantsPantry || wantsGrocery) {
+            item.expirationDate = expirationDate
+        }
+        if (hasExpirationDate && keepExpiryOnAcquire) || isGroceryOnlyExpiry {
+            item.defaultExpiryDays = computeExpiryDays()
+        }
+
+        modelContext.insert(item)
+        createdID = item.id
+        createdType = wantsPantry ? .pantry : (wantsGrocery ? .grocery : .utensil)
+
+        if wantsUtensil {
             settings?.lastAddItemDestinationRaw = "utensil"
         } else {
-            if selectedLists.contains(.pantry) {
-                let item = PantryItem(
-                    name: trimmed,
-                    descriptionText: trimmedDescription,
-                    imageData: imageData,
-                    category: finalCategory,
-                    quantity: quantity,
-                    unit: unit.isEmpty ? nil : unit,
-                    iconName: finalIcon,
-                    expirationDate: hasExpirationDate ? expirationDate : nil,
-                    defaultExpiryDays: hasExpirationDate && keepExpiryOnAcquire ? computeExpiryDays() : nil,
-                    sortOrder: (allPantryItems.map(\.sortOrder).max() ?? -1) + 1
-                )
-                modelContext.insert(item)
-                createdID = item.id
-                createdType = .pantry
-            }
-
-            if selectedLists.contains(.grocery) {
-                let item = GroceryItem(
-                    name: trimmed,
-                    descriptionText: trimmedDescription,
-                    imageData: imageData,
-                    category: finalCategory,
-                    quantity: quantity,
-                    unit: unit.isEmpty ? nil : unit,
-                    iconName: finalIcon,
-                    isFixed: false,
-                    defaultExpiryDays: (hasExpirationDate && keepExpiryOnAcquire) || isGroceryOnlyExpiry ? computeExpiryDays() : nil,
-                    sortOrder: (allGroceryItems.map(\.sortOrder).max() ?? -1) + 1
-                )
-                if let pantryID = createdID {
-                    item.linkedPantryItemId = pantryID
-                }
-                modelContext.insert(item)
-                if createdID == nil {
-                    createdID = item.id
-                    createdType = .grocery
-                }
-            }
-
-            settings?.lastAddItemDestinationRaw = selectedLists.contains(.pantry) ? "pantry" : "grocery"
+            settings?.lastAddItemDestinationRaw = wantsPantry ? "pantry" : "grocery"
         }
 
         if let id = createdID {

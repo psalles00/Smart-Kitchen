@@ -4,12 +4,11 @@ import SwiftData
 struct PantryView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scrollToItem) private var scrollToItem
-    @Query(sort: \PantryItem.sortOrder) private var allItems: [PantryItem]
-    @Query(sort: \GroceryItem.sortOrder) private var groceryItems: [GroceryItem]
+    @Query(filter: #Predicate<UnifiedItem> { $0.isPantry }, sort: \UnifiedItem.pantrySortOrder) private var allItems: [UnifiedItem]
     @Query(sort: \Category.sortOrder) private var allCategories: [Category]
     @Query private var settingsArray: [AppSettings]
 
-    @State private var editingItem: PantryItem?
+    @State private var editingItem: UnifiedItem?
     @State private var targetedItemID: UUID?
     @State private var targetedCategoryName: String?
     @State private var highlightedItemID: UUID?
@@ -27,7 +26,7 @@ struct PantryView: View {
     private var groupingMode: ListGroupingMode { settings?.pantryGroupingMode ?? .category }
     private var categoryOrder: [String] { allCategories.filter { $0.type == .pantry }.map(\.name) }
 
-    private var filteredItems: [PantryItem] {
+    private var filteredItems: [UnifiedItem] {
         var items = searchText.isEmpty
             ? allItems
             : allItems.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
@@ -50,12 +49,12 @@ struct PantryView: View {
         return items
     }
 
-    private var groupedItems: [(String, [PantryItem])] {
+    private var groupedItems: [(String, [UnifiedItem])] {
         if groupingMode == .validade {
             return expirationGroupedItems
         }
 
-        let keyForItem: (PantryItem) -> String = groupingMode == .marketSection
+        let keyForItem: (UnifiedItem) -> String = groupingMode == .marketSection
             ? { ItemDatabase.marketSection(for: $0.category) }
             : { $0.category }
 
@@ -77,7 +76,7 @@ struct PantryView: View {
             }
     }
 
-    private var expirationGroupedItems: [(String, [PantryItem])] {
+    private var expirationGroupedItems: [(String, [UnifiedItem])] {
         let now = Calendar.current.startOfDay(for: .now)
         let threeDays = Calendar.current.date(byAdding: .day, value: 3, to: now)!
         let twoWeeks = Calendar.current.date(byAdding: .day, value: 14, to: now)!
@@ -91,7 +90,7 @@ struct PantryView: View {
             "Sem validade"
         ]
 
-        func sectionKey(for item: PantryItem) -> String {
+        func sectionKey(for item: UnifiedItem) -> String {
             guard let expDate = item.expirationDate else { return "Sem validade" }
             let day = Calendar.current.startOfDay(for: expDate)
             if day < now { return "Expirados" }
@@ -125,7 +124,7 @@ struct PantryView: View {
             }
         }
         .sheet(item: $editingItem) { item in
-            ItemDetailView(mode: .editPantry(item))
+            ItemDetailView(mode: .edit(item))
                 .forceLightStatusBar()
         }
     }
@@ -170,7 +169,7 @@ struct PantryView: View {
     }
 
     @ViewBuilder
-    private func pantrySection(categoryIndex: Int, category: String, items: [PantryItem]) -> some View {
+    private func pantrySection(categoryIndex: Int, category: String, items: [UnifiedItem]) -> some View {
         Section {
             ForEach(Array(items.enumerated()), id: \.element.id) { itemIndex, item in
                 pantryRow(categoryIndex: categoryIndex, itemIndex: itemIndex, category: category, item: item)
@@ -182,17 +181,16 @@ struct PantryView: View {
     }
 
     @ViewBuilder
-    private func pantryRow(categoryIndex: Int, itemIndex: Int, category: String, item: PantryItem) -> some View {
+    private func pantryRow(categoryIndex: Int, itemIndex: Int, category: String, item: UnifiedItem) -> some View {
         Button {
             editingItem = item
         } label: {
             let categoryIconName = allCategories.first(where: { $0.name == category && $0.type == .pantry })?.iconName
-            let inGrocery = groceryItems.contains { $0.name.localizedCaseInsensitiveCompare(item.name) == .orderedSame }
             PantryItemRow(
                 item: item,
                 categoryIconName: categoryIconName,
                 isDetailed: isDetailed,
-                isAlsoInGrocery: inGrocery,
+                isAlsoInGrocery: item.isGrocery,
                 onSendToGrocery: { sendToGrocery(item) },
                 showsDivider: itemIndex > 0
             )
@@ -208,19 +206,18 @@ struct PantryView: View {
         }
         .buttonStyle(.plain)
         .contextMenu {
-            let inGrocery = groceryItems.contains { $0.name.localizedCaseInsensitiveCompare(item.name) == .orderedSame }
             Button("Editar", systemImage: "pencil") {
                 editingItem = item
             }
             Button("Mover ao Mercado", systemImage: "cart.badge.plus") {
                 sendToGrocery(item)
             }
-            if !inGrocery {
-                Button("Copiar ao Mercado", systemImage: "doc.on.doc") {
+            if !item.isGrocery {
+                Button("Em Ambos", systemImage: "square.on.square") {
                     copyToGrocery(item)
                 }
             }
-            if inGrocery {
+            if item.isGrocery {
                 Label("Também no Mercado", systemImage: "cart")
             }
             Divider()
@@ -237,13 +234,11 @@ struct PantryView: View {
             .tint(.red)
         }
         .swipeActions(edge: .leading, allowsFullSwipe: true) {
-            let inGrocery = groceryItems.contains { $0.name.localizedCaseInsensitiveCompare(item.name) == .orderedSame }
-
-            if !inGrocery {
+            if !item.isGrocery {
                 Button {
                     copyToGrocery(item)
                 } label: {
-                    Label("Copiar", systemImage: "cart.badge.plus")
+                    Label("Em Ambos", systemImage: "square.on.square")
                 }
                 .tint(.blue)
             }
@@ -251,9 +246,9 @@ struct PantryView: View {
             Button {
                 sendToGrocery(item)
             } label: {
-                Label(inGrocery ? "Remover" : "Mover", systemImage: inGrocery ? "cart.badge.minus" : "cart.badge.plus")
+                Label(item.isGrocery ? "Remover" : "Mover", systemImage: item.isGrocery ? "cart.badge.minus" : "cart.badge.plus")
             }
-            .tint(inGrocery ? .orange : .green)
+            .tint(item.isGrocery ? .orange : .green)
         }
         .draggable(ListsDragPayload(itemID: item.id, sourceList: .pantry)) {
             DragLiftPreviewCard(
@@ -328,75 +323,37 @@ struct PantryView: View {
         ContentUnavailableView.search(text: searchText)
     }
 
-    private func deleteItem(_ item: PantryItem) {
+    private func deleteItem(_ item: UnifiedItem) {
         withAnimation {
-            if item.isLinkedToGrocery {
-                let grocery = GroceryItem(
-                    name: item.name,
-                    category: item.category,
-                    iconName: item.iconName,
-                    isFixed: true,
-                    linkedPantryItemId: item.id,
-                    defaultExpiryDays: expiryDaysForGrocery(from: item),
-                    sortOrder: (groceryItems.map(\.sortOrder).max() ?? -1) + 1
-                )
-                modelContext.insert(grocery)
+            if item.isGrocery || item.isUtensil {
+                item.isPantry = false
+            } else {
+                modelContext.delete(item)
             }
-            modelContext.delete(item)
         }
     }
 
-    private func sendToGrocery(_ item: PantryItem) {
-        // If already exists in grocery, just remove from pantry
-        let alreadyInGrocery = groceryItems.contains { $0.name.localizedCaseInsensitiveCompare(item.name) == .orderedSame }
-        if !alreadyInGrocery {
-            let grocery = GroceryItem(
-                name: item.name,
-                category: item.category,
-                quantity: item.quantity,
-                unit: item.unit,
-                iconName: item.iconName,
-                isFixed: item.isLinkedToGrocery,
-                linkedPantryItemId: item.isLinkedToGrocery ? item.id : nil,
-                defaultExpiryDays: expiryDaysForGrocery(from: item),
-                sortOrder: (groceryItems.map(\.sortOrder).max() ?? -1) + 1
-            )
-            withAnimation {
-                modelContext.insert(grocery)
-            }
-        }
+    private func sendToGrocery(_ item: UnifiedItem) {
         withAnimation {
-            modelContext.delete(item)
+            item.isGrocery = true
+            item.isPantry = false
             onSentToGrocery?()
         }
     }
 
-    private func copyToGrocery(_ item: PantryItem) {
-        // Check if already in grocery
-        let alreadyInGrocery = groceryItems.contains { $0.name.localizedCaseInsensitiveCompare(item.name) == .orderedSame }
-        guard !alreadyInGrocery else { return }
-        let grocery = GroceryItem(
-            name: item.name,
-            category: item.category,
-            quantity: item.quantity,
-            unit: item.unit,
-            iconName: item.iconName,
-            isFixed: item.isLinkedToGrocery,
-            linkedPantryItemId: item.isLinkedToGrocery ? item.id : nil,
-            defaultExpiryDays: expiryDaysForGrocery(from: item),
-            sortOrder: (groceryItems.map(\.sortOrder).max() ?? -1) + 1
-        )
+    private func copyToGrocery(_ item: UnifiedItem) {
+        guard !item.isGrocery else { return }
         withAnimation {
-            modelContext.insert(grocery)
+            item.isGrocery = true
             onSentToGrocery?()
         }
     }
 
-    private func sortedItems(_ items: [PantryItem]) -> [PantryItem] {
+    private func sortedItems(_ items: [UnifiedItem]) -> [UnifiedItem] {
         switch sortOption {
         case .custom:
             return items.sorted {
-                if $0.sortOrder != $1.sortOrder { return $0.sortOrder < $1.sortOrder }
+                if $0.pantrySortOrder != $1.pantrySortOrder { return $0.pantrySortOrder < $1.pantrySortOrder }
                 return $0.addedAt > $1.addedAt
             }
         case .name:
@@ -415,9 +372,7 @@ struct PantryView: View {
         }
     }
 
-    private func handleDrop(_ payload: ListsDragPayload, targetCategory: String, targetItem: PantryItem?) -> Bool {
-        // When grouping by market section, the drop target is a section name, not a category.
-        // Keep the item's original category; only reorder within the visual group.
+    private func handleDrop(_ payload: ListsDragPayload, targetCategory: String, targetItem: UnifiedItem?) -> Bool {
         let resolvedCategory: (String) -> String = { original in
             groupingMode == .marketSection ? original : targetCategory
         }
@@ -432,31 +387,28 @@ struct PantryView: View {
             normalizePantrySortOrder(in: previousCategory)
             return true
         case .grocery:
-            guard let groceryItem = groceryItems.first(where: { $0.id == payload.itemID }) else { return false }
-            let newCategory = resolvedCategory(groceryItem.category)
-            let pantryItem = PantryItem(
-                name: groceryItem.name,
-                category: newCategory,
-                quantity: groceryItem.quantity,
-                unit: groceryItem.unit,
-                iconName: groceryItem.iconName,
-                isLinkedToGrocery: groceryItem.isFixed,
-                expirationDate: expirationDateForPantry(from: groceryItem),
-                defaultExpiryDays: groceryItem.defaultExpiryDays
-            )
-            modelContext.insert(pantryItem)
-            modelContext.delete(groceryItem)
-            reorderPantryItem(pantryItem, in: newCategory, before: targetItem)
+            // Find the unified item from grocery and flip flags
+            let fd = FetchDescriptor<UnifiedItem>(predicate: #Predicate { $0.isGrocery })
+            guard let groceryItems = try? modelContext.fetch(fd),
+                  let item = groceryItems.first(where: { $0.id == payload.itemID }) else { return false }
+            let newCategory = resolvedCategory(item.category)
+            item.isPantry = true
+            item.isGrocery = false
+            item.category = newCategory
+            if let days = item.defaultExpiryDays, days > 0 {
+                item.expirationDate = Calendar.current.date(byAdding: .day, value: days, to: Date())
+            }
+            reorderPantryItem(item, in: newCategory, before: targetItem)
             return true
         case .utensils:
             return false
         }
     }
 
-    private func reorderPantryItem(_ movingItem: PantryItem, in category: String, before targetItem: PantryItem?) {
+    private func reorderPantryItem(_ movingItem: UnifiedItem, in category: String, before targetItem: UnifiedItem?) {
         var items = allItems
             .filter { $0.id != movingItem.id && $0.category == category }
-            .sorted { $0.sortOrder < $1.sortOrder }
+            .sorted { $0.pantrySortOrder < $1.pantrySortOrder }
 
         let insertIndex = if let targetItem, let targetIndex = items.firstIndex(where: { $0.id == targetItem.id }) {
             targetIndex
@@ -466,7 +418,7 @@ struct PantryView: View {
 
         items.insert(movingItem, at: insertIndex)
         for (index, item) in items.enumerated() {
-            if item.sortOrder != index { item.sortOrder = index }
+            if item.pantrySortOrder != index { item.pantrySortOrder = index }
             if item.category != category { item.category = category }
         }
     }
@@ -474,33 +426,16 @@ struct PantryView: View {
     private func normalizePantrySortOrder(in category: String) {
         let items = allItems
             .filter { $0.category == category }
-            .sorted { $0.sortOrder < $1.sortOrder }
+            .sorted { $0.pantrySortOrder < $1.pantrySortOrder }
 
         for (index, item) in items.enumerated() {
-            if item.sortOrder != index { item.sortOrder = index }
+            if item.pantrySortOrder != index { item.pantrySortOrder = index }
         }
-    }
-
-    private func expiryDaysForGrocery(from item: PantryItem) -> Int? {
-        if let saved = item.defaultExpiryDays, saved > 0 { return saved }
-        guard let expirationDate = item.expirationDate else { return nil }
-        let days = Calendar.current.dateComponents(
-            [.day],
-            from: Calendar.current.startOfDay(for: .now),
-            to: Calendar.current.startOfDay(for: expirationDate)
-        ).day
-        guard let days, days > 0 else { return nil }
-        return days
-    }
-
-    private func expirationDateForPantry(from item: GroceryItem) -> Date? {
-        guard let days = item.defaultExpiryDays, days > 0 else { return nil }
-        return Calendar.current.date(byAdding: .day, value: days, to: Date())
     }
 }
 
 struct PantryItemRow: View {
-    let item: PantryItem
+    let item: UnifiedItem
     let categoryIconName: String?
     let isDetailed: Bool
     let isAlsoInGrocery: Bool

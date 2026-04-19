@@ -4,9 +4,9 @@ import SwiftData
 struct UtensilsView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scrollToItem) private var scrollToItem
-    @Query(sort: \UtensilItem.sortOrder) private var allItems: [UtensilItem]
+    @Query(filter: #Predicate<UnifiedItem> { $0.isUtensil }, sort: \UnifiedItem.utensilSortOrder) private var allItems: [UnifiedItem]
     @Query(sort: \Category.sortOrder) private var allCategories: [Category]
-    @State private var editingItem: UtensilItem?
+    @State private var editingItem: UnifiedItem?
     @State private var highlightedItemID: UUID?
 
     let searchText: String
@@ -18,8 +18,8 @@ struct UtensilsView: View {
         allCategories.filter { $0.type == .utensil }
     }
 
-    private var filteredItems: [UtensilItem] {
-        let items: [UtensilItem]
+    private var filteredItems: [UnifiedItem] {
+        let items: [UnifiedItem]
         if searchText.isEmpty {
             items = Array(allItems)
         } else {
@@ -28,19 +28,19 @@ struct UtensilsView: View {
 
         switch sortOption {
         case .custom:
-            return items.sorted { $0.sortOrder < $1.sortOrder }
+            return items.sorted { $0.utensilSortOrder < $1.utensilSortOrder }
         case .name:
             return items.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
         case .addedAt:
             return items.sorted { $0.addedAt > $1.addedAt }
         case .expirationDate:
-            return items.sorted { $0.sortOrder < $1.sortOrder }
+            return items.sorted { $0.utensilSortOrder < $1.utensilSortOrder }
         }
     }
 
-    private var groupedItems: [(String, [UtensilItem])] {
+    private var groupedItems: [(String, [UnifiedItem])] {
         let cats = utensilCategories.map(\.name)
-        var groups: [(String, [UtensilItem])] = []
+        var groups: [(String, [UnifiedItem])] = []
         for catName in cats {
             let items = filteredItems.filter { $0.category == catName }
             if !items.isEmpty { groups.append((catName, items)) }
@@ -65,7 +65,7 @@ struct UtensilsView: View {
             }
         }
         .sheet(item: $editingItem) { item in
-            ItemDetailView(mode: .editUtensil(item))
+            ItemDetailView(mode: .edit(item))
                 .forceLightStatusBar()
         }
     }
@@ -104,7 +104,7 @@ struct UtensilsView: View {
     }
 
     @ViewBuilder
-    private func utensilSection(categoryIndex: Int, categoryName: String, items: [UtensilItem]) -> some View {
+    private func utensilSection(categoryIndex: Int, categoryName: String, items: [UnifiedItem]) -> some View {
         Section {
             ForEach(Array(items.enumerated()), id: \.1.id) { itemIndex, item in
                 Button {
@@ -154,15 +154,19 @@ struct UtensilsView: View {
         }
     }
 
-    private func deleteItem(_ item: UtensilItem) {
+    private func deleteItem(_ item: UnifiedItem) {
         withAnimation {
-            modelContext.delete(item)
+            if item.isPantry || item.isGrocery {
+                item.isUtensil = false
+            } else {
+                modelContext.delete(item)
+            }
         }
     }
 }
 
 struct UtensilItemRow: View {
-    let item: UtensilItem
+    let item: UnifiedItem
     let showsDivider: Bool
 
     var body: some View {

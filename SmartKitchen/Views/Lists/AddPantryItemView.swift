@@ -16,7 +16,7 @@ struct AddPantryItemView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Query private var settingsArray: [AppSettings]
-    @Query(sort: \PantryItem.sortOrder) private var allItems: [PantryItem]
+    @Query(filter: #Predicate<UnifiedItem> { $0.isPantry }, sort: \UnifiedItem.pantrySortOrder) private var allItems: [UnifiedItem]
     @Query(sort: \Category.sortOrder) private var allCategories: [Category]
 
     var initialName: String = ""
@@ -275,7 +275,7 @@ struct AddPantryItemView: View {
             }
         }
 
-        let item = PantryItem(
+        let item = UnifiedItem(
             name: trimmed,
             descriptionText: descriptionText.trimmingCharacters(in: .whitespacesAndNewlines),
             imageData: imageData,
@@ -283,10 +283,13 @@ struct AddPantryItemView: View {
             quantity: isDetailed ? quantity : nil,
             unit: isDetailed ? (unit.isEmpty ? nil : unit) : nil,
             iconName: finalIcon,
+            isPantry: true,
+            isGrocery: false,
+            isUtensil: false,
+            pantrySortOrder: (allItems.map(\.pantrySortOrder).max() ?? -1) + 1,
             isLinkedToGrocery: false,
             expirationDate: hasExpirationDate ? expirationDate : nil,
-            defaultExpiryDays: hasExpirationDate && keepExpiryOnAcquire ? computeExpiryDays() : nil,
-            sortOrder: (allItems.map(\.sortOrder).max() ?? -1) + 1
+            defaultExpiryDays: hasExpirationDate && keepExpiryOnAcquire ? computeExpiryDays() : nil
         )
         modelContext.insert(item)
         onCreated?(item.id)
@@ -330,7 +333,7 @@ struct AddPantryItemView: View {
 struct EditPantryItemView: View {
     @Environment(\.dismiss) private var dismiss
     @Query private var settingsArray: [AppSettings]
-    @Bindable var item: PantryItem
+    @Bindable var item: UnifiedItem
     @State private var showIconPicker = false
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var showPhotoPreview = false

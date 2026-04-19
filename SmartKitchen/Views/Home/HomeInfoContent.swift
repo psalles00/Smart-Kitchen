@@ -2,9 +2,9 @@ import SwiftUI
 import SwiftData
 
 struct HomeInfoContent: View {
-    @Query(sort: \PantryItem.name) private var pantryItems: [PantryItem]
+    @Query(filter: #Predicate<UnifiedItem> { $0.isPantry }, sort: \UnifiedItem.name) private var pantryItems: [UnifiedItem]
     @Query(sort: \Recipe.name) private var recipes: [Recipe]
-    @Query(sort: \GroceryItem.name) private var groceryItems: [GroceryItem]
+    @Query(filter: #Predicate<UnifiedItem> { $0.isGrocery }, sort: \UnifiedItem.name) private var groceryItems: [UnifiedItem]
 
     private var expiringCount: Int {
         let limit = Calendar.current.date(byAdding: .day, value: 7, to: .now) ?? .now

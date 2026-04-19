@@ -29,6 +29,8 @@
 		2447B82F271152F2AB5DDEF9 /* Boska-Regular.otf in Resources */ = {isa = PBXBuildFile; fileRef = 4F4B90D9D920F1E391155645 /* Boska-Regular.otf */; };
 		2521390B8F30F5B0481B38E8 /* Boska-LightItalic.otf in Resources */ = {isa = PBXBuildFile; fileRef = 9F8E85CB792FE0502D695527 /* Boska-LightItalic.otf */; };
 		29529DB27EA073E686E14C07 /* PantryItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = F99E9F25BA500C5491E82BB8 /* PantryItem.swift */; };
+				F9D12045BC3D493349CF821D /* UnifiedItemMigration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 826B6AAD9ED23AD76910B988 /* UnifiedItemMigration.swift */; };
+				ECEA17FBB9F79E5891506588 /* UnifiedItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F135F954B1E0F322C13699 /* UnifiedItem.swift */; };
 		299FF7F64C77BA2DC4AB688A /* Telma-Black.otf in Resources */ = {isa = PBXBuildFile; fileRef = 4FFE418BF404A910C30CECCD /* Telma-Black.otf */; };
 		2A2F635024C73FC5AA58F4B2 /* ChatBubbleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E0128131D22D908484AA9D1 /* ChatBubbleView.swift */; };
 		2AAE39271190C16B25239D39 /* RecentActionsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80D2CBBBCC49CA560D36DA31 /* RecentActionsStore.swift */; };
@@ -239,6 +241,8 @@
 		F7E7518D46EAB3E5E9CC9537 /* RecipeCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeCardView.swift; sourceTree = "<group>"; };
 		F95839547159000637E07B07 /* AssistantChatManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssistantChatManager.swift; sourceTree = "<group>"; };
 		F99E9F25BA500C5491E82BB8 /* PantryItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PantryItem.swift; sourceTree = "<group>"; };
+				826B6AAD9ED23AD76910B988 /* UnifiedItemMigration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnifiedItemMigration.swift; sourceTree = "<group>"; };
+				D9F135F954B1E0F322C13699 /* UnifiedItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnifiedItem.swift; sourceTree = "<group>"; };
 		F9B3D291B4129B374AEF734A /* BackupManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupManager.swift; sourceTree = "<group>"; };
 		FA437725A0D6ADE89AD114C4 /* Boska-MediumItalic.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Boska-MediumItalic.otf"; sourceTree = "<group>"; };
 		FD5ABCE32502F5BC5C5CB4DF /* DataSeeder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataSeeder.swift; sourceTree = "<group>"; };
@@ -317,6 +321,8 @@
 				3EEFD07FFC5E5CD8A5B51DE2 /* ItemEntry+Display.swift */,
 				8553574E6585FF064B4CDA62 /* PageTheme.swift */,
 				F99E9F25BA500C5491E82BB8 /* PantryItem.swift */,
+								826B6AAD9ED23AD76910B988 /* UnifiedItemMigration.swift */,
+								D9F135F954B1E0F322C13699 /* UnifiedItem.swift */,
 				0D96FF55EC995E9D208E9D21 /* Recipe.swift */,
 				3C008A1A9BBF5854A3A74D36 /* SearchResult.swift */,
 				85EAF5921660EEAB83572103 /* UtensilItem.swift */,
@@ -660,6 +666,8 @@
 				2C0C4D6FC2E2899C31AB203F /* PageHeader.swift in Sources */,
 				85A628EC6800B959FFDFE4D5 /* PageTheme.swift in Sources */,
 				29529DB27EA073E686E14C07 /* PantryItem.swift in Sources */,
+								F9D12045BC3D493349CF821D /* UnifiedItemMigration.swift in Sources */,
+								ECEA17FBB9F79E5891506588 /* UnifiedItem.swift in Sources */,
 				A91BB979A0DB9D2E8595B207 /* PantryView.swift in Sources */,
 				1463A33CEB85EA5B7C145162 /* PlatformImage.swift in Sources */,
 				2AAE39271190C16B25239D39 /* RecentActionsStore.swift in Sources */,

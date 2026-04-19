@@ -54,8 +54,8 @@ final class NotificationService {
 
         let hour = settings.expiryNotificationHour
 
-        let descriptor = FetchDescriptor<PantryItem>(
-            predicate: #Predicate<PantryItem> { $0.expirationDate != nil }
+        let descriptor = FetchDescriptor<UnifiedItem>(
+            predicate: #Predicate<UnifiedItem> { $0.isPantry && $0.expirationDate != nil }
         )
         guard let items = try? context.fetch(descriptor) else { return }
 

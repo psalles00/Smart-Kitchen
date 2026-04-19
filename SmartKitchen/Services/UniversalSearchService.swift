@@ -51,47 +51,55 @@ final class UniversalSearchService: ObservableObject {
         let normalized = Self.normalize(query)
         var all: [SearchResult] = []
 
-        // 1. Pantry items
-        let pantryFD = FetchDescriptor<PantryItem>(sortBy: [SortDescriptor(\.addedAt, order: .reverse)])
-        let pantryItems = (try? context.fetch(pantryFD)) ?? []
-        for item in pantryItems {
-            if let score = Self.matchScore(normalized, against: item.name) {
-                let recencyBoost = Self.recencyBoost(item.addedAt)
-                all.append(SearchResult(
-                    id: "pantry-\(item.id)",
-                    title: item.name,
-                    subtitle: item.formattedQuantity.isEmpty ? item.category : "\(item.category) · \(item.formattedQuantity)",
-                    icon: "refrigerator",
-                    type: .pantryItem,
-                    score: score + recencyBoost,
-                    objectID: item.id,
-                    iconFilename: item.iconName,
-                    imageData: nil
-                ))
+        // 1. Unified items (pantry / grocery / utensil)
+        let itemFD = FetchDescriptor<UnifiedItem>(sortBy: [SortDescriptor(\.addedAt, order: .reverse)])
+        let items = (try? context.fetch(itemFD)) ?? []
+        for item in items {
+            // Skip utensil-only items when utensils are hidden
+            if !showUtensils && item.isUtensil && !item.isPantry && !item.isGrocery { continue }
+
+            guard let score = Self.matchScore(normalized, against: item.name) else { continue }
+            let recencyBoost = Self.recencyBoost(item.addedAt)
+
+            // Determine primary type & subtitle
+            let primaryType: SearchResultType
+            let icon: String
+            var subtitle = item.category
+            if item.isPantry {
+                primaryType = .pantryItem
+                icon = "refrigerator"
+                let qty = item.formattedQuantity
+                if !qty.isEmpty { subtitle = "\(item.category) · \(qty)" }
+            } else if item.isGrocery {
+                primaryType = .groceryItem
+                icon = "cart"
+                if item.isChecked { subtitle = "✓ \(item.category)" }
+            } else {
+                primaryType = .utensil
+                icon = "fork.knife"
             }
+
+            var result = SearchResult(
+                id: "item-\(item.id)",
+                title: item.name,
+                subtitle: subtitle,
+                icon: icon,
+                type: primaryType,
+                score: score + recencyBoost,
+                objectID: item.id,
+                iconFilename: item.iconName,
+                imageData: nil
+            )
+            result.isAlsoInOtherList = item.activeFlags.count > 1
+            var types: [SearchResultType] = []
+            if item.isPantry { types.append(.pantryItem) }
+            if item.isGrocery { types.append(.groceryItem) }
+            if item.isUtensil { types.append(.utensil) }
+            result.listTypes = types
+            all.append(result)
         }
 
-        // 2. Grocery items
-        let groceryFD = FetchDescriptor<GroceryItem>(sortBy: [SortDescriptor(\.addedAt, order: .reverse)])
-        let groceryItems = (try? context.fetch(groceryFD)) ?? []
-        for item in groceryItems {
-            if let score = Self.matchScore(normalized, against: item.name) {
-                let recencyBoost = Self.recencyBoost(item.addedAt)
-                all.append(SearchResult(
-                    id: "grocery-\(item.id)",
-                    title: item.name,
-                    subtitle: item.isChecked ? "✓ \(item.category)" : item.category,
-                    icon: "cart",
-                    type: .groceryItem,
-                    score: score + recencyBoost,
-                    objectID: item.id,
-                    iconFilename: item.iconName,
-                    imageData: nil
-                ))
-            }
-        }
-
-        // 3. Recipes
+        // 2. Recipes
         let recipeFD = FetchDescriptor<Recipe>(sortBy: [SortDescriptor(\.updatedAt, order: .reverse)])
         let recipes = (try? context.fetch(recipeFD)) ?? []
         for recipe in recipes {
@@ -111,55 +119,7 @@ final class UniversalSearchService: ObservableObject {
             }
         }
 
-        // 4. Utensils (if enabled)
-        if showUtensils {
-            let utensilFD = FetchDescriptor<UtensilItem>(sortBy: [SortDescriptor(\.addedAt, order: .reverse)])
-            let utensils = (try? context.fetch(utensilFD)) ?? []
-            for item in utensils {
-                if let score = Self.matchScore(normalized, against: item.name) {
-                    all.append(SearchResult(
-                        id: "utensil-\(item.id)",
-                        title: item.name,
-                        subtitle: item.category,
-                        icon: "fork.knife",
-                        type: .utensil,
-                        score: score,
-                        objectID: item.id,
-                        iconFilename: item.iconName,
-                        imageData: nil
-                    ))
-                }
-            }
-        }
-
-        // Sort by score descending
-        var sorted = all.sorted { $0.score > $1.score }
-
-        // Annotate cross-list items (pantry ↔ grocery) and deduplicate
-        let pantryNames = Set(pantryItems.map { Self.normalize($0.name) })
-        let groceryNames = Set(groceryItems.map { Self.normalize($0.name) })
-        var seenCrossListNames = Set<String>()
-        var deduped: [SearchResult] = []
-
-        for i in sorted.indices {
-            let normalizedTitle = Self.normalize(sorted[i].title)
-            let isPantry = sorted[i].type == .pantryItem
-            let isGrocery = sorted[i].type == .groceryItem
-
-            if isPantry && groceryNames.contains(normalizedTitle) {
-                sorted[i].isAlsoInOtherList = true
-                if seenCrossListNames.contains(normalizedTitle) { continue }
-                seenCrossListNames.insert(normalizedTitle)
-            } else if isGrocery && pantryNames.contains(normalizedTitle) {
-                sorted[i].isAlsoInOtherList = true
-                if seenCrossListNames.contains(normalizedTitle) { continue }
-                seenCrossListNames.insert(normalizedTitle)
-            }
-
-            deduped.append(sorted[i])
-        }
-
-        return deduped
+        return all.sorted { $0.score > $1.score }
     }
 
     // MARK: - Scoring

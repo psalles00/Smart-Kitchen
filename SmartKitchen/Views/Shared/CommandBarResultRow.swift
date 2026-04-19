@@ -74,11 +74,21 @@ struct CommandBarResultRow: View {
                         .foregroundStyle(.primary)
                         .lineLimit(1)
 
-                    if !result.subtitle.isEmpty || result.type != .action {
-                        Text(smartSubtitle)
-                            .font(.caption)
-                            .foregroundStyle(.primary.opacity(0.55))
-                            .lineLimit(1)
+                    HStack(spacing: 4) {
+                        if !result.subtitle.isEmpty && result.type != .action {
+                            Text(smartSubtitle)
+                                .font(.caption)
+                                .foregroundStyle(.primary.opacity(0.55))
+                                .lineLimit(1)
+                        }
+
+                        if !result.listTypes.isEmpty {
+                            ForEach(result.listTypes, id: \.rawValue) { listType in
+                                listTag(for: listType)
+                            }
+                        } else if result.type != .action {
+                            listTag(for: result.type)
+                        }
                     }
                 }
 
@@ -140,34 +150,11 @@ struct CommandBarResultRow: View {
                         )
                     } label: {
                         animatedCircleIndicator(
-                            icon: "arrow.right",
+                            icon: "magnifyingglass",
                             tint: .secondary,
                             strokeProgress: navStrokeProgress,
                             fillOpacity: navFillOpacity,
                             iconScale: navIconScale
-                        )
-                    }
-                    .buttonStyle(.plain)
-                }
-
-                if isPreSelected {
-                    Button {
-                        guard !enterIsAnimating else { return }
-                        performButtonAnimation(
-                            strokeProgress: $enterStrokeProgress,
-                            fillOpacity: $enterFillOpacity,
-                            iconScale: $enterIconScale,
-                            isAnimating: $enterIsAnimating,
-                            tint: .secondary,
-                            action: action
-                        )
-                    } label: {
-                        animatedCircleIndicator(
-                            icon: "return",
-                            tint: .secondary,
-                            strokeProgress: enterStrokeProgress,
-                            fillOpacity: enterFillOpacity,
-                            iconScale: enterIconScale
                         )
                     }
                     .buttonStyle(.plain)
@@ -267,6 +254,57 @@ struct CommandBarResultRow: View {
 
     private var altTypeIcon: String {
         result.type == .pantryItem ? "cart" : "refrigerator"
+    }
+
+    @ViewBuilder
+    private func listTag(for type: SearchResultType) -> some View {
+        if type == .action {
+            EmptyView()
+        } else {
+            HStack(spacing: 4) {
+                Image(systemName: tagIcon(for: type))
+                    .font(.system(size: 9, weight: .semibold))
+                Text(tagLabel(for: type))
+                    .font(.caption2.weight(.medium))
+            }
+            .foregroundStyle(tagTint(for: type))
+            .padding(.horizontal, 6)
+            .padding(.vertical, 3)
+            .background(tagTint(for: type).opacity(0.12), in: .capsule)
+        }
+    }
+
+    private func tagLabel(for type: SearchResultType) -> String {
+        switch type {
+        case .pantryItem:  return "Despensa"
+        case .groceryItem: return "Mercado"
+        case .recipe:      return "Receita"
+        case .utensil:     return "Utensílio"
+        case .suggestion:  return "Sugestão"
+        case .action:      return ""
+        }
+    }
+
+    private func tagIcon(for type: SearchResultType) -> String {
+        switch type {
+        case .pantryItem:  return "refrigerator"
+        case .groceryItem: return "cart"
+        case .recipe:      return "book"
+        case .utensil:     return "fork.knife"
+        case .suggestion:  return "plus"
+        case .action:      return "circle"
+        }
+    }
+
+    private func tagTint(for type: SearchResultType) -> Color {
+        switch type {
+        case .pantryItem:  return .orange
+        case .groceryItem: return .green
+        case .recipe:      return .red
+        case .utensil:     return .purple
+        case .suggestion:  return .blue
+        case .action:      return .secondary
+        }
     }
 
     @ViewBuilder

@@ -7,19 +7,17 @@ import AppKit
 
 struct RecipeDetailView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query(sort: \PantryItem.name) private var pantryItems: [PantryItem]
-    @Query(sort: \GroceryItem.sortOrder) private var groceryItems: [GroceryItem]
-    @Query(sort: \PantryItem.sortOrder) private var pantryListItems: [PantryItem]
+    @Query(filter: #Predicate<UnifiedItem> { $0.isPantry }, sort: \UnifiedItem.name) private var pantryItems: [UnifiedItem]
+    @Query(filter: #Predicate<UnifiedItem> { $0.isGrocery }, sort: \UnifiedItem.grocerySortOrder) private var groceryItems: [UnifiedItem]
+    @Query(filter: #Predicate<UnifiedItem> { $0.isPantry }, sort: \UnifiedItem.pantrySortOrder) private var pantryListItems: [UnifiedItem]
     @Query(sort: \Category.sortOrder) private var allCategories: [Category]
     @Query private var settingsArray: [AppSettings]
-    @Query(sort: \UtensilItem.name) private var utensilItems: [UtensilItem]
+    @Query(filter: #Predicate<UnifiedItem> { $0.isUtensil }, sort: \UnifiedItem.name) private var utensilItems: [UnifiedItem]
     @Bindable var recipe: Recipe
     @State private var showCookingMode = false
     @State private var showEditRecipe = false
     @State private var previewSelection: PreparationMediaSelection?
-    @State private var editingPantryItem: PantryItem?
-    @State private var editingGroceryItem: GroceryItem?
-    @State private var editingUtensilItem: UtensilItem?
+    @State private var editingItem: UnifiedItem?
 
     private var sortedIngredients: [RecipeIngredient] {
         (recipe.ingredients ?? []).sorted { $0.sortOrder < $1.sortOrder }
@@ -122,16 +120,8 @@ struct RecipeDetailView: View {
             }
             .forceLightStatusBar()
         }
-        .sheet(item: $editingPantryItem) { item in
-            ItemDetailView(mode: .editPantry(item))
-                .forceLightStatusBar()
-        }
-        .sheet(item: $editingGroceryItem) { item in
-            ItemDetailView(mode: .editGrocery(item))
-                .forceLightStatusBar()
-        }
-        .sheet(item: $editingUtensilItem) { item in
-            ItemDetailView(mode: .editUtensil(item))
+        .sheet(item: $editingItem) { item in
+            ItemDetailView(mode: .edit(item))
                 .forceLightStatusBar()
         }
         .sheet(item: $previewSelection) { selection in
@@ -550,12 +540,16 @@ struct RecipeDetailView: View {
         if let existingItem = groceryItems.first(where: { sameName($0.name, ingredient.name) && $0.category == category }) {
             applyQuantity(from: ingredient, to: existingItem)
         } else {
-            let item = GroceryItem(
+            let item = UnifiedItem(
                 name: ingredient.name,
                 category: category,
                 quantity: ingredient.quantity,
                 unit: ingredient.unit.isEmpty ? nil : ingredient.unit,
-                sortOrder: (groceryItems.map(\.sortOrder).max() ?? -1) + 1
+                iconName: ItemDatabase.shared.exactMatch(for: ingredient.name)?.nomeDoArquivo,
+                isPantry: false,
+                isGrocery: true,
+                isUtensil: false,
+                grocerySortOrder: (groceryItems.map(\.grocerySortOrder).max() ?? -1) + 1
             )
             modelContext.insert(item)
         }
@@ -567,15 +561,24 @@ struct RecipeDetailView: View {
             let existingItems = utensilItems.filter { sameName($0.name, utensilName) }
 
             if existingItems.isEmpty {
-                let item = UtensilItem(
+                let item = UnifiedItem(
                     name: utensilName,
                     category: resolvedUtensilCategory(for: utensilName),
                     iconName: ItemDatabase.shared.exactMatch(for: utensilName)?.nomeDoArquivo,
-                    sortOrder: (utensilItems.map(\.sortOrder).max() ?? -1) + 1
+                    isPantry: false,
+                    isGrocery: false,
+                    isUtensil: true,
+                    utensilSortOrder: (utensilItems.map(\.utensilSortOrder).max() ?? -1) + 1
                 )
                 modelContext.insert(item)
             } else {
-                existingItems.forEach(modelContext.delete)
+                for existing in existingItems {
+                    if existing.isPantry || existing.isGrocery {
+                        existing.isUtensil = false
+                    } else {
+                        modelContext.delete(existing)
+                    }
+                }
             }
         }
 
@@ -587,12 +590,16 @@ struct RecipeDetailView: View {
         if let existingItem = pantryListItems.first(where: { sameName($0.name, ingredient.name) && $0.category == category }) {
             applyQuantity(from: ingredient, to: existingItem)
         } else {
-            let item = PantryItem(
+            let item = UnifiedItem(
                 name: ingredient.name,
                 category: category,
                 quantity: ingredient.quantity,
                 unit: ingredient.unit.isEmpty ? nil : ingredient.unit,
-                sortOrder: (pantryListItems.map(\.sortOrder).max() ?? -1) + 1
+                iconName: ItemDatabase.shared.exactMatch(for: ingredient.name)?.nomeDoArquivo,
+                isPantry: true,
+                isGrocery: false,
+                isUtensil: false,
+                pantrySortOrder: (pantryListItems.map(\.pantrySortOrder).max() ?? -1) + 1
             )
             modelContext.insert(item)
         }
@@ -626,17 +633,17 @@ struct RecipeDetailView: View {
 
     private func openIngredientItem(_ ingredient: RecipeIngredient) {
         if let pantryItem = pantryListItems.first(where: { sameName($0.name, ingredient.name) }) {
-            editingPantryItem = pantryItem
+            editingItem = pantryItem
             return
         }
 
         if let groceryItem = groceryItems.first(where: { sameName($0.name, ingredient.name) }) {
-            editingGroceryItem = groceryItem
+            editingItem = groceryItem
         }
     }
 
     private func openUtensilItem(_ utensilName: String) {
-        editingUtensilItem = utensilItems.first(where: { sameName($0.name, utensilName) })
+        editingItem = utensilItems.first(where: { sameName($0.name, utensilName) })
     }
 
     private func sameName(_ lhs: String, _ rhs: String) -> Bool {
@@ -646,18 +653,7 @@ struct RecipeDetailView: View {
             .lowercased()
     }
 
-    private func applyQuantity(from ingredient: RecipeIngredient, to item: GroceryItem) {
-        if let quantity = ingredient.quantity {
-            item.quantity = (item.quantity ?? 0) + quantity
-        } else if item.quantity == nil {
-            item.quantity = 1
-        }
-        if !ingredient.unit.isEmpty {
-            item.unit = ingredient.unit
-        }
-    }
-
-    private func applyQuantity(from ingredient: RecipeIngredient, to item: PantryItem) {
+    private func applyQuantity(from ingredient: RecipeIngredient, to item: UnifiedItem) {
         if let quantity = ingredient.quantity {
             item.quantity = (item.quantity ?? 0) + quantity
         } else if item.quantity == nil {

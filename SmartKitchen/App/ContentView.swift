@@ -54,9 +54,7 @@ struct ContentView: View {
     @StateObject private var searchBarState = SearchBarState()
 
     // Search-triggered edit sheets
-    @State private var searchEditPantryItem: PantryItem?
-    @State private var searchEditGroceryItem: GroceryItem?
-    @State private var searchEditUtensilItem: UtensilItem?
+    @State private var searchEditItem: UnifiedItem?
     @State private var searchEditRecipe: Recipe?
 
     /// When non-nil, the CommandBar tab will open inline chat with this query on next activation.
@@ -165,16 +163,8 @@ struct ContentView: View {
                 addItemCategory = nil
             }
         }
-        .sheet(item: $searchEditPantryItem) { (item: PantryItem) in
-            ItemDetailView(mode: .editPantry(item))
-                .forceLightStatusBar()
-        }
-        .sheet(item: $searchEditGroceryItem) { (item: GroceryItem) in
-            ItemDetailView(mode: .editGrocery(item))
-                .forceLightStatusBar()
-        }
-        .sheet(item: $searchEditUtensilItem) { (item: UtensilItem) in
-            ItemDetailView(mode: .editUtensil(item))
+        .sheet(item: $searchEditItem) { item in
+            ItemDetailView(mode: .edit(item))
                 .forceLightStatusBar()
         }
         .sheet(item: $searchEditRecipe) { (recipe: Recipe) in
@@ -785,25 +775,15 @@ struct ContentView: View {
         case .openUtensil(let id):
             scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "utensil")
             selectedTab = .lists
-        case .editPantryItem(let id):
-            let descriptor = FetchDescriptor<PantryItem>(predicate: #Predicate { $0.id == id })
+        case .editPantryItem(let id), .editGroceryItem(let id), .editUtensil(let id):
+            let descriptor = FetchDescriptor<UnifiedItem>(predicate: #Predicate { $0.id == id })
             if let item = try? modelContext.fetch(descriptor).first {
-                searchEditPantryItem = item
-            }
-        case .editGroceryItem(let id):
-            let descriptor = FetchDescriptor<GroceryItem>(predicate: #Predicate { $0.id == id })
-            if let item = try? modelContext.fetch(descriptor).first {
-                searchEditGroceryItem = item
+                searchEditItem = item
             }
         case .editRecipe(let id):
             let descriptor = FetchDescriptor<Recipe>(predicate: #Predicate { $0.id == id })
             if let item = try? modelContext.fetch(descriptor).first {
                 searchEditRecipe = item
-            }
-        case .editUtensil(let id):
-            let descriptor = FetchDescriptor<UtensilItem>(predicate: #Predicate { $0.id == id })
-            if let item = try? modelContext.fetch(descriptor).first {
-                searchEditUtensilItem = item
             }
         case .addPantryItem(let prefill):
             addItemPrefill = prefill
@@ -893,66 +873,28 @@ struct ContentView: View {
     }
 
     private func movePantryItemToGrocery(id: UUID) {
-        let descriptor = FetchDescriptor<PantryItem>(predicate: #Predicate { $0.id == id })
+        let descriptor = FetchDescriptor<UnifiedItem>(predicate: #Predicate { $0.id == id })
         guard let item = try? modelContext.fetch(descriptor).first else { return }
-        let groceryDescriptor = FetchDescriptor<GroceryItem>(sortBy: [SortDescriptor(\GroceryItem.sortOrder)])
-        let groceryItems = (try? modelContext.fetch(groceryDescriptor)) ?? []
-        // Check if already exists in grocery
-        let alreadyInGrocery = groceryItems.contains { $0.name.localizedCaseInsensitiveCompare(item.name) == .orderedSame }
-        if alreadyInGrocery {
-            withAnimation { modelContext.delete(item) }
-        } else {
-            let grocery = GroceryItem(
-                name: item.name,
-                category: item.category,
-                quantity: item.quantity,
-                unit: item.unit,
-                iconName: item.iconName,
-                isFixed: item.isLinkedToGrocery,
-                linkedPantryItemId: item.isLinkedToGrocery ? item.id : nil,
-                sortOrder: (groceryItems.map(\.sortOrder).max() ?? -1) + 1
-            )
-            withAnimation {
-                modelContext.insert(grocery)
-                modelContext.delete(item)
-            }
+        withAnimation {
+            item.isGrocery = true
+            item.isPantry = false
         }
     }
 
     private func moveGroceryItemToPantry(id: UUID) {
-        let descriptor = FetchDescriptor<GroceryItem>(predicate: #Predicate { $0.id == id })
+        let descriptor = FetchDescriptor<UnifiedItem>(predicate: #Predicate { $0.id == id })
         guard let item = try? modelContext.fetch(descriptor).first else { return }
-        let pantryDescriptor = FetchDescriptor<PantryItem>(sortBy: [SortDescriptor(\PantryItem.sortOrder)])
-        let pantryItems = (try? modelContext.fetch(pantryDescriptor)) ?? []
-        // Check if already exists in pantry
-        let alreadyInPantry = pantryItems.contains { $0.name.localizedCaseInsensitiveCompare(item.name) == .orderedSame }
-        if alreadyInPantry {
-            withAnimation { modelContext.delete(item) }
-        } else {
-            var expirationDate: Date?
+        withAnimation {
             if let days = item.defaultExpiryDays, days > 0 {
-                expirationDate = Calendar.current.date(byAdding: .day, value: days, to: Date())
+                item.expirationDate = Calendar.current.date(byAdding: .day, value: days, to: Date())
             }
-            let pantryItem = PantryItem(
-                name: item.name,
-                category: item.category,
-                quantity: item.quantity,
-                unit: item.unit,
-                iconName: item.iconName,
-                isLinkedToGrocery: false,
-                expirationDate: expirationDate,
-                defaultExpiryDays: item.defaultExpiryDays,
-                sortOrder: (pantryItems.map(\.sortOrder).max() ?? -1) + 1
-            )
-            withAnimation {
-                modelContext.insert(pantryItem)
-                modelContext.delete(item)
-            }
+            item.isPantry = true
+            item.isGrocery = false
         }
     }
 
     private func movePantryItemToGroceryByName(_ name: String) {
-        let descriptor = FetchDescriptor<PantryItem>()
+        let descriptor = FetchDescriptor<UnifiedItem>(predicate: #Predicate<UnifiedItem> { $0.isPantry })
         guard let items = try? modelContext.fetch(descriptor),
               let item = items.first(where: { $0.name.localizedCaseInsensitiveCompare(name) == .orderedSame })
         else { return }
@@ -960,7 +902,7 @@ struct ContentView: View {
     }
 
     private func moveGroceryItemToPantryByName(_ name: String) {
-        let descriptor = FetchDescriptor<GroceryItem>()
+        let descriptor = FetchDescriptor<UnifiedItem>(predicate: #Predicate<UnifiedItem> { $0.isGrocery })
         guard let items = try? modelContext.fetch(descriptor),
               let item = items.first(where: { $0.name.localizedCaseInsensitiveCompare(name) == .orderedSame })
         else { return }
@@ -1000,7 +942,7 @@ private struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
     // Corrigido ciclo do AttributeGraph separando dependências reativas de SwiftData em @State com atualização manual para evitar travamentos no macOS.
 
-    @Query(sort: \PantryItem.name) private var pantryItems: [PantryItem]
+    @Query(filter: #Predicate<UnifiedItem> { $0.isPantry }, sort: \UnifiedItem.name) private var pantryItems: [UnifiedItem]
     @Query(sort: \Recipe.name) private var recipes: [Recipe]
     @Query(sort: \Category.sortOrder) private var categories: [Category]
     @Query private var settingsArray: [AppSettings]
@@ -1009,11 +951,11 @@ private struct HomeView: View {
     @State private var showAddPantry = false
     @State private var showAddRecipe = false
     @State private var selectedCompatibleCategory: String? = nil
-    @State private var editingExpiringItem: PantryItem?
+    @State private var editingExpiringItem: UnifiedItem?
 
     @State private var recipeCategoriesState: [Category] = []
     @State private var compatibleMatchesState: [HomeRecipeMatch] = []
-    @State private var expiringItemsState: [PantryItem] = []
+    @State private var expiringItemsState: [UnifiedItem] = []
     @State private var contentResetToken: Int = 0
     @State private var shortcutDeckWidth: CGFloat = 0
 
@@ -1070,7 +1012,7 @@ private struct HomeView: View {
             .forceLightStatusBar()
         }
         .sheet(item: $editingExpiringItem) { item in
-            ItemDetailView(mode: .editPantry(item))
+            ItemDetailView(mode: .edit(item))
                 .forceLightStatusBar()
         }
         .onAppear {

@@ -418,8 +418,9 @@ struct AITools {
     }
 
     private static func getAllPantry(context: ModelContext) -> String {
-        let descriptor = FetchDescriptor<PantryItem>(sortBy: [SortDescriptor(\.name)])
-        guard let items = try? context.fetch(descriptor) else { return "[]" }
+        let descriptor = FetchDescriptor<UnifiedItem>(sortBy: [SortDescriptor(\UnifiedItem.name)])
+        guard let allItems = try? context.fetch(descriptor) else { return "[]" }
+        let items = allItems.filter { $0.isPantry }
         if items.isEmpty { return "{\"items\": [], \"message\": \"A despensa está vazia.\"}" }
         let results = items.map { item -> [String: String] in
             var dict = ["name": item.name, "category": item.category]
@@ -431,10 +432,10 @@ struct AITools {
     }
 
     private static func searchPantry(query: String, context: ModelContext) -> String {
-        let descriptor = FetchDescriptor<PantryItem>()
-        guard let items = try? context.fetch(descriptor) else { return "[]" }
+        let descriptor = FetchDescriptor<UnifiedItem>()
+        guard let allItems = try? context.fetch(descriptor) else { return "[]" }
         let q = query.lowercased()
-        let matches = items.filter { $0.name.lowercased().contains(q) }
+        let matches = allItems.filter { $0.isPantry && $0.name.lowercased().contains(q) }
         let results = matches.map { $0.aiReadableDescription }
         return "[\(results.joined(separator: ", "))]"
     }
@@ -446,11 +447,12 @@ struct AITools {
         let unit = args["unit"] as? String
         let expirationDate = parseDate(args["expirationDate"] as? String)
 
-        let item = PantryItem(
+        let item = UnifiedItem(
             name: name,
             category: category,
             quantity: quantity,
             unit: unit,
+            isPantry: true,
             expirationDate: expirationDate
         )
         context.insert(item)
@@ -459,20 +461,26 @@ struct AITools {
     }
 
     private static func removePantryItem(name: String, context: ModelContext) -> String {
-        let descriptor = FetchDescriptor<PantryItem>()
-        guard let items = try? context.fetch(descriptor) else { return "{\"error\": \"not found\"}" }
+        let descriptor = FetchDescriptor<UnifiedItem>()
+        guard let allItems = try? context.fetch(descriptor) else { return "{\"error\": \"not found\"}" }
         let q = name.lowercased()
-        guard let item = items.first(where: { $0.name.lowercased().contains(q) }) else {
+        guard let item = allItems.first(where: { $0.isPantry && $0.name.lowercased().contains(q) }) else {
             return "{\"error\": \"Item not found: \(name)\"}"
         }
-        context.delete(item)
+        if item.isGrocery || item.isUtensil {
+            // Item is in other lists too, just remove the pantry flag
+            item.isPantry = false
+        } else {
+            context.delete(item)
+        }
         try? context.save()
         return "{\"success\": true, \"removed\": \"\(item.name)\"}"
     }
 
     private static func getAllGrocery(context: ModelContext) -> String {
-        let descriptor = FetchDescriptor<GroceryItem>(sortBy: [SortDescriptor(\.sortOrder)])
-        guard let items = try? context.fetch(descriptor) else { return "[]" }
+        let descriptor = FetchDescriptor<UnifiedItem>(sortBy: [SortDescriptor(\UnifiedItem.grocerySortOrder)])
+        guard let allItems = try? context.fetch(descriptor) else { return "[]" }
+        let items = allItems.filter { $0.isGrocery }
         if items.isEmpty { return "{\"items\": [], \"message\": \"A lista de compras está vazia.\"}" }
         let results = items.map { item -> [String: String] in
             var dict = ["name": item.name, "category": item.category]
@@ -492,11 +500,12 @@ struct AITools {
         let quantity = args["quantity"] as? Double
         let unit = args["unit"] as? String
 
-        let item = GroceryItem(
+        let item = UnifiedItem(
             name: name,
             category: category,
             quantity: quantity,
-            unit: unit
+            unit: unit,
+            isGrocery: true
         )
         context.insert(item)
         try? context.save()
@@ -609,9 +618,9 @@ struct AITools {
         var contextParts = [String]()
 
         if usePantry {
-            let descriptor = FetchDescriptor<PantryItem>()
-            if let items = try? context.fetch(descriptor) {
-                let names = items.map(\.name)
+            let descriptor = FetchDescriptor<UnifiedItem>()
+            if let allItems = try? context.fetch(descriptor) {
+                let names = allItems.filter { $0.isPantry }.map(\.name)
                 contextParts.append("Available pantry items: \(names.joined(separator: ", "))")
             }
         }
@@ -684,13 +693,13 @@ struct AITools {
     private static func reassignCategoryReferences(from oldName: String, to newName: String, type: CategoryType, context: ModelContext) {
         switch type.canonicalType {
         case .pantry:
-            let descriptor = FetchDescriptor<PantryItem>()
-            for item in (try? context.fetch(descriptor)) ?? [] where item.category == oldName {
+            let descriptor = FetchDescriptor<UnifiedItem>()
+            for item in (try? context.fetch(descriptor)) ?? [] where item.isPantry && item.category == oldName {
                 item.category = newName
             }
         case .grocery:
-            let descriptor = FetchDescriptor<GroceryItem>()
-            for item in (try? context.fetch(descriptor)) ?? [] where item.category == oldName {
+            let descriptor = FetchDescriptor<UnifiedItem>()
+            for item in (try? context.fetch(descriptor)) ?? [] where item.isGrocery && item.category == oldName {
                 item.category = newName
             }
         case .recipe:
@@ -699,8 +708,8 @@ struct AITools {
                 recipe.categories = recipe.categories.map { $0 == oldName ? newName : $0 }
             }
         case .utensil:
-            let descriptor = FetchDescriptor<UtensilItem>()
-            for item in (try? context.fetch(descriptor)) ?? [] where item.category == oldName {
+            let descriptor = FetchDescriptor<UnifiedItem>()
+            for item in (try? context.fetch(descriptor)) ?? [] where item.isUtensil && item.category == oldName {
                 item.category = newName
             }
         }

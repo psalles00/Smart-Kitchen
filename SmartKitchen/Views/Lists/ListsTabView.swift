@@ -74,8 +74,8 @@ struct ListsTabView: View {
     @Environment(\.scrollToTopTrigger) private var scrollToTopTrigger
     @Environment(\.scrollToItem) private var scrollToItem
     @Environment(\.modelContext) private var modelContext
-    @Query(sort: \PantryItem.sortOrder) private var pantryItems: [PantryItem]
-    @Query(sort: \GroceryItem.sortOrder) private var groceryItems: [GroceryItem]
+    @Query(filter: #Predicate<UnifiedItem> { $0.isPantry }, sort: \UnifiedItem.pantrySortOrder) private var pantryItems: [UnifiedItem]
+    @Query(filter: #Predicate<UnifiedItem> { $0.isGrocery }, sort: \UnifiedItem.grocerySortOrder) private var groceryItems: [UnifiedItem]
     @Query private var settingsArray: [AppSettings]
 
     @State private var selectedSubtab: ListSubtab
@@ -366,47 +366,17 @@ struct ListsTabView: View {
 
         switch (payload.sourceList, destination) {
         case (.pantry, .grocery):
-            guard let pantryItem = pantryItems.first(where: { $0.id == payload.itemID }) else { return }
-            var expiryDays: Int?
-            if let saved = pantryItem.defaultExpiryDays, saved > 0 {
-                expiryDays = saved
-            } else if let expDate = pantryItem.expirationDate {
-                let days = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: .now), to: Calendar.current.startOfDay(for: expDate)).day
-                if let d = days, d > 0 { expiryDays = d }
-            }
-            let groceryItem = GroceryItem(
-                name: pantryItem.name,
-                category: pantryItem.category,
-                quantity: pantryItem.quantity,
-                unit: pantryItem.unit,
-                iconName: pantryItem.iconName,
-                isFixed: pantryItem.isLinkedToGrocery,
-                linkedPantryItemId: pantryItem.isLinkedToGrocery ? pantryItem.id : nil,
-                defaultExpiryDays: expiryDays,
-                sortOrder: (groceryItems.map(\.sortOrder).max() ?? -1) + 1
-            )
-            modelContext.insert(groceryItem)
-            modelContext.delete(pantryItem)
+            guard let item = pantryItems.first(where: { $0.id == payload.itemID }) else { return }
+            item.isGrocery = true
+            item.isPantry = false
             selectedSubtab = .grocery
         case (.grocery, .pantry):
-            guard let groceryItem = groceryItems.first(where: { $0.id == payload.itemID }) else { return }
-            var expirationDate: Date?
-            if let days = groceryItem.defaultExpiryDays, days > 0 {
-                expirationDate = Calendar.current.date(byAdding: .day, value: days, to: Date())
+            guard let item = groceryItems.first(where: { $0.id == payload.itemID }) else { return }
+            item.isPantry = true
+            item.isGrocery = false
+            if let days = item.defaultExpiryDays, days > 0 {
+                item.expirationDate = Calendar.current.date(byAdding: .day, value: days, to: Date())
             }
-            let pantryItem = PantryItem(
-                name: groceryItem.name,
-                category: groceryItem.category,
-                quantity: groceryItem.quantity,
-                unit: groceryItem.unit,
-                iconName: groceryItem.iconName,
-                isLinkedToGrocery: groceryItem.isFixed,
-                expirationDate: expirationDate,
-                defaultExpiryDays: groceryItem.defaultExpiryDays,
-                sortOrder: (pantryItems.map(\.sortOrder).max() ?? -1) + 1
-            )
-            modelContext.insert(pantryItem)
-            modelContext.delete(groceryItem)
             selectedSubtab = .pantry
         default:
             break

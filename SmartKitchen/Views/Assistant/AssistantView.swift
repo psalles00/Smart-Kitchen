@@ -470,7 +470,7 @@ struct AssistantView: View {
         var inventoryParts = [String]()
 
         // Full RAG context: Pantry
-        let pantryDescriptor = FetchDescriptor<PantryItem>(sortBy: [SortDescriptor(\.category)])
+        let pantryDescriptor = FetchDescriptor<UnifiedItem>(predicate: #Predicate<UnifiedItem> { $0.isPantry }, sortBy: [SortDescriptor(\UnifiedItem.category)])
         if let pantryItems = try? modelContext.fetch(pantryDescriptor) {
             if pantryItems.isEmpty {
                 inventoryParts.append("## Despensa atual\nA despensa está vazia.")
@@ -481,7 +481,7 @@ struct AssistantView: View {
         }
 
         // Full RAG context: Grocery list
-        let groceryDescriptor = FetchDescriptor<GroceryItem>(sortBy: [SortDescriptor(\.category)])
+        let groceryDescriptor = FetchDescriptor<UnifiedItem>(predicate: #Predicate<UnifiedItem> { $0.isGrocery }, sortBy: [SortDescriptor(\UnifiedItem.category)])
         if let groceryItems = try? modelContext.fetch(groceryDescriptor) {
             if groceryItems.isEmpty {
                 inventoryParts.append("## Lista de compras\nA lista de compras está vazia.")
@@ -537,7 +537,7 @@ struct AssistantView: View {
         let normalizedPrompt = normalized(text)
         guard isRecipeSuggestionPrompt(normalizedPrompt) else { return nil }
 
-        let pantryItems = (try? modelContext.fetch(FetchDescriptor<PantryItem>())) ?? []
+        let pantryItems = (try? modelContext.fetch(FetchDescriptor<UnifiedItem>(predicate: #Predicate<UnifiedItem> { $0.isPantry }))) ?? []
         let pantryNames = pantryItems.map { normalized($0.name) }
         let wantsDessert = normalizedPrompt.contains("sobremesa") || normalizedPrompt.contains("doce")
 
