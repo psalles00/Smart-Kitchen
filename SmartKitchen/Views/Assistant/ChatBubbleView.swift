@@ -3,6 +3,7 @@ import SwiftUI
 struct ChatBubbleView: View {
     let message: ChatMessage
     let onQuickAction: (QuickAction) -> Void
+    var hideQuickActions: Bool = false
 
     private var isUser: Bool { message.role == .user }
 
@@ -20,7 +21,7 @@ struct ChatBubbleView: View {
                     .foregroundStyle(isUser ? .white : .primary)
 
                 // Quick actions
-                if !message.quickActions.isEmpty {
+                if !hideQuickActions, !message.quickActions.isEmpty {
                     FlowLayout(spacing: 8) {
                         ForEach(message.quickActions) { action in
                             Button {

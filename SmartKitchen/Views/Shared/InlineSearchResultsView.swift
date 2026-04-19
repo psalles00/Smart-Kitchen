@@ -15,6 +15,8 @@ struct InlineSearchResultsView: View {
     @State private var chatInitialQuery: String? = nil
     @State private var chatExistingConversationId: UUID? = nil
     @State private var showConversationHistory = false
+    /// Relay for pending external messages — @State Binding fires .onChange reliably.
+    @State private var pendingExternalChatMessage: String? = nil
 
     /// External trigger to open chat.
     @Binding var pendingChatQuery: String?
@@ -50,10 +52,10 @@ struct InlineSearchResultsView: View {
                         showConversationHistory = true
                     },
                     searchBarState: searchBarState,
-                    pendingExternalMessage: Binding(
-                        get: { searchBarState.pendingChatMessage },
-                        set: { searchBarState.pendingChatMessage = $0 }
-                    )
+                    pendingExternalMessage: $pendingExternalChatMessage,
+                    onConversationCreated: { id in
+                        chatExistingConversationId = id
+                    }
                 )
             } else {
                 searchResultsList
@@ -79,20 +81,27 @@ struct InlineSearchResultsView: View {
         }
         .onChange(of: searchBarState.pendingChatMessage) { _, newValue in
             if let query = newValue {
-                // Open the inline chat when the unified search bar sends a pending chat message
-                chatInitialQuery = query
-                chatExistingConversationId = nil
-                showInlineChat = true
-                searchBarState.mode = .aiChat
-                // Clear the pending message now that we've consumed it
                 searchBarState.pendingChatMessage = nil
+                if showInlineChat {
+                    // Chat already open — relay via @State Binding
+                    pendingExternalChatMessage = query
+                } else {
+                    // Open the inline chat when the unified search bar sends a pending chat message
+                    chatInitialQuery = query
+                    chatExistingConversationId = nil
+                    showInlineChat = true
+                    searchBarState.mode = .aiChat
+                }
             }
         }
         .onChange(of: searchBarState.submitTrigger) { _, _ in
             executeTopResult()
         }
         .onChange(of: searchBarState.mode) { _, newMode in
-            if newMode != .aiChat && showInlineChat {
+            if newMode == .aiChat && !showInlineChat && !showConversationHistory {
+                // Ensure chat view is shown whenever mode enters AI chat
+                showInlineChat = true
+            } else if newMode != .aiChat && showInlineChat {
                 showInlineChat = false
                 chatInitialQuery = nil
                 chatExistingConversationId = nil

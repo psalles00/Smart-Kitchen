@@ -135,15 +135,9 @@ struct ItemDetailView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
-                // Drag indicator
-                Capsule()
-                    .fill(Color(.tertiaryLabel))
-                    .frame(width: 36, height: 5)
-                    .padding(.top, 8)
-
                 // Icon area
                 iconHeader
-                    .padding(.top, 16)
+                    .padding(.top, 20)
 
                 // Name field
                 nameSection
@@ -263,7 +257,7 @@ struct ItemDetailView: View {
                     name: currentName,
                     iconFileName: currentIconName,
                     fallbackSymbol: "leaf",
-                    size: 84
+                    size: 97
                 )
                 .scaleEffect(x: 1.5, y: 0.5)
                 .blur(radius: 10)
@@ -274,7 +268,7 @@ struct ItemDetailView: View {
                     name: currentName,
                     iconFileName: currentIconName,
                     fallbackSymbol: "leaf",
-                    size: 84
+                    size: 97
                 )
             }
         }
@@ -326,17 +320,18 @@ struct ItemDetailView: View {
             VStack(spacing: 0) {
                 FlowLayout(spacing: 6) {
                     ForEach(suggestions.prefix(12)) { entry in
+                        let matchedTitle = entry.preferredTitle(matching: name)
                         Button {
                             selectSuggestion(entry)
                         } label: {
                             HStack(spacing: 5) {
                                 IconImage(
-                                    name: entry.preferredTitle(),
+                                    name: matchedTitle,
                                     iconFileName: entry.nomeDoArquivo,
                                     fallbackSymbol: "leaf",
                                     size: 18
                                 )
-                                Text(entry.preferredTitle())
+                                Text(matchedTitle)
                                     .font(.caption.weight(.medium))
                                     .foregroundStyle(.primary)
                                     .lineLimit(1)
@@ -579,12 +574,15 @@ struct ItemDetailView: View {
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(.secondary)
 
-            if !isGroceryOnlyExpiry {
-                Toggle("Possui validade", isOn: isCreateMode ? $hasExpirationDate.animation() : editHasExpiryBinding)
-                    .tint(PageTheme.lists.accentColor)
-            }
+            Toggle("Possui validade", isOn: isCreateMode ? $hasExpirationDate.animation() : editHasExpiryBinding)
+                .tint(PageTheme.lists.accentColor)
+                .onChange(of: hasExpirationDate) { _, newValue in
+                    if newValue && isGroceryOnlyExpiry {
+                        keepExpiryOnAcquire = true
+                    }
+                }
 
-            if resolvedHasExpiry || isGroceryOnlyExpiry {
+            if resolvedHasExpiry || (isGroceryOnlyExpiry && hasExpirationDate) {
                 VStack(spacing: 12) {
                     if !isGroceryOnlyExpiry {
                         Picker("Modo", selection: $expiryMode.animation()) {
@@ -598,7 +596,7 @@ struct ItemDetailView: View {
                         expiryDurationPicker
 
                         // Auto-apply expiry explanation
-                        if hasGrocery || editingGroceryItem != nil {
+                        if hasPantry || hasGrocery || editingGroceryItem != nil || editingPantryItem != nil {
                             VStack(alignment: .leading, spacing: 6) {
                                 if isGroceryOnlyExpiry {
                                     // Forced on, non-toggleable

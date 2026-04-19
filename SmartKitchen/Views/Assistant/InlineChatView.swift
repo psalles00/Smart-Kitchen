@@ -33,6 +33,8 @@ struct InlineChatView: View {
     var searchBarState: SearchBarState? = nil
     /// External message to send (received from the unified search bar).
     @Binding var pendingExternalMessage: String?
+    /// Called when a new conversation is created, so the parent can track the active ID.
+    var onConversationCreated: ((UUID) -> Void)? = nil
 
     /// Current conversation ID. Nil means a new conversation will be created on first message.
     @State private var conversationId: UUID?
@@ -50,7 +52,8 @@ struct InlineChatView: View {
         onDismiss: @escaping () -> Void,
         onShowHistory: @escaping () -> Void,
         searchBarState: SearchBarState? = nil,
-        pendingExternalMessage: Binding<String?> = .constant(nil)
+        pendingExternalMessage: Binding<String?> = .constant(nil),
+        onConversationCreated: ((UUID) -> Void)? = nil
     ) {
         self.initialQuery = initialQuery
         self.existingConversationId = existingConversationId
@@ -58,7 +61,11 @@ struct InlineChatView: View {
         self.onShowHistory = onShowHistory
         self.searchBarState = searchBarState
         self._pendingExternalMessage = pendingExternalMessage
+        self.onConversationCreated = onConversationCreated
     }
+
+    /// Whether this chat is in "AI Mode" (embedded with unified search bar) vs standalone assistant.
+    private var isAIMode: Bool { searchBarState != nil }
 
     private var settings: AppSettings? { settingsArray.first }
 
@@ -75,10 +82,14 @@ struct InlineChatView: View {
                     ScrollView {
                         LazyVStack(spacing: 14) {
                             if messages.isEmpty && !aiService.isLoading {
-                                emptyState
+                                if isAIMode {
+                                    aiModeEmptyState
+                                } else {
+                                    emptyState
+                                }
                             }
 
-                            if !messages.isEmpty {
+                            if !messages.isEmpty && !isAIMode {
                                 SuggestionChipsView { prompt in
                                     sendMessage(prompt)
                                 }
@@ -97,14 +108,17 @@ struct InlineChatView: View {
                                         }
                                     } else if !message.attachedRecipeIds.isEmpty {
                                         ChatBubbleView(
-                                            message: messageWithoutQuickActions(message),
-                                            onQuickAction: { _ in }
+                                            message: message,
+                                            onQuickAction: { _ in },
+                                            hideQuickActions: true
                                         )
                                         RecipeCardMessage(recipeIds: message.attachedRecipeIds)
-                                        ForEach(message.quickActions) { action in
-                                            createNewRecipesButton(action: action)
+                                        if !isAIMode {
+                                            ForEach(message.quickActions) { action in
+                                                createNewRecipesButton(action: action)
+                                            }
                                         }
-                                    } else if let split = splitMessageAroundOptions(message) {
+                                    } else if !isAIMode, let split = splitMessageAroundOptions(message) {
                                         if !split.before.isEmpty {
                                             assistantTextBubble(split.before)
                                         }
@@ -119,7 +133,8 @@ struct InlineChatView: View {
                                             message: message,
                                             onQuickAction: { action in
                                                 sendMessage(action.prompt)
-                                            }
+                                            },
+                                            hideQuickActions: isAIMode
                                         )
                                     }
                                 }
@@ -293,6 +308,64 @@ struct InlineChatView: View {
         }
     }
 
+    // MARK: - AI Mode Empty State
+
+    private var aiModeEmptyState: some View {
+        VStack(spacing: 20) {
+            Spacer()
+
+            Image(systemName: "sparkles")
+                .font(.system(size: 44))
+                .foregroundStyle(.linearGradient(
+                    colors: [.purple, .blue],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                ))
+
+            VStack(spacing: 8) {
+                Text("Modo IA")
+                    .font(.title3.weight(.bold))
+
+                Text("Converse com a inteligência artificial para gerenciar sua cozinha de forma natural.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 24)
+            }
+
+            VStack(alignment: .leading, spacing: 10) {
+                aiSuggestionRow(emoji: "🍳", text: "O que posso cozinhar com o que tenho?")
+                aiSuggestionRow(emoji: "📝", text: "Crie uma receita de bolo de chocolate")
+                aiSuggestionRow(emoji: "🛒", text: "Adicione leite e ovos ao mercado")
+                aiSuggestionRow(emoji: "🧊", text: "O que está vencendo na despensa?")
+            }
+            .padding(.horizontal, 32)
+            .padding(.top, 4)
+
+            Spacer()
+        }
+    }
+
+    private func aiSuggestionRow(emoji: String, text: String) -> some View {
+        Button {
+            sendMessage(text)
+        } label: {
+            HStack(spacing: 10) {
+                Text(emoji)
+                    .font(.title3)
+                Text(text)
+                    .font(.subheadline)
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                Spacer()
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(Color(.tertiarySystemFill), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        }
+        .buttonStyle(.plain)
+    }
+
     private func skillCard(icon: String, title: String, description: String, prompt: String) -> some View {
         Button {
             sendMessage(prompt)
@@ -406,6 +479,7 @@ struct InlineChatView: View {
         let conversation = ChatConversation()
         modelContext.insert(conversation)
         conversationId = conversation.id
+        onConversationCreated?(conversation.id)
         return conversation.id
     }
 
@@ -1069,16 +1143,6 @@ struct InlineChatView: View {
     }
 
     // MARK: - Display Helpers
-
-    /// Returns a copy of the message with quickActions removed (for separate rendering).
-    private func messageWithoutQuickActions(_ message: ChatMessage) -> ChatMessage {
-        ChatMessage(
-            role: message.role,
-            content: message.content,
-            attachedRecipeIds: message.attachedRecipeIds,
-            conversationId: message.conversationId
-        )
-    }
 
     /// A standalone assistant text bubble (no quick actions).
     private func assistantTextBubble(_ text: String) -> some View {
