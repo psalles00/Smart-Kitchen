@@ -10,6 +10,7 @@ struct InlineSearchResultsView: View {
     @ObservedObject var searchService: UniversalSearchService
     let onAction: (CommandBarAction) -> Void
     let topPinnedInset: CGFloat
+    @Binding var isScrollAtTop: Bool
 
     // Inline chat state
     @State private var showInlineChat = false
@@ -30,6 +31,7 @@ struct InlineSearchResultsView: View {
         searchService: UniversalSearchService,
         onAction: @escaping (CommandBarAction) -> Void,
         topPinnedInset: CGFloat,
+        isScrollAtTop: Binding<Bool> = .constant(true),
         pendingChatQuery: Binding<String?>,
         pendingOpenChat: Binding<Bool>,
         pendingNewConversation: Binding<Bool>,
@@ -39,6 +41,7 @@ struct InlineSearchResultsView: View {
         self.searchService = searchService
         self.onAction = onAction
         self.topPinnedInset = topPinnedInset
+        _isScrollAtTop = isScrollAtTop
         _pendingChatQuery = pendingChatQuery
         _pendingOpenChat = pendingOpenChat
         _pendingNewConversation = pendingNewConversation
@@ -167,6 +170,7 @@ struct InlineSearchResultsView: View {
         ConversationHistoryView(
             showsHeader: false,
             topPinnedInset: topPinnedInset,
+            isScrollAtTop: $isScrollAtTop,
             onSelect: handleConversationSelection,
             onDismiss: { showConversationHistory = false }
         )
@@ -180,6 +184,7 @@ struct InlineSearchResultsView: View {
             onShowHistory: { showConversationHistory = true },
             topPinnedInset: topPinnedInset,
             searchBarState: searchBarState,
+            isScrollAtTop: $isScrollAtTop,
             pendingExternalMessage: $pendingExternalChatMessage,
             onConversationCreated: { id in
                 chatExistingConversationId = id
@@ -197,6 +202,8 @@ struct InlineSearchResultsView: View {
         return GeometryReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
+                    ScrollOffsetReader(coordinateSpace: "AssistantSearchResultsScroll")
+
                     // Loading indicator while debouncing
                     if (isTyping || searchService.isSearching) && !trimmedQuery.isEmpty {
                         HStack(spacing: 8) {
@@ -258,6 +265,13 @@ struct InlineSearchResultsView: View {
                 .frame(maxWidth: .infinity, minHeight: proxy.size.height, alignment: .top)
                 .padding(.top, topPinnedInset)
                 .padding(.bottom, 16)
+            }
+            .coordinateSpace(name: "AssistantSearchResultsScroll")
+            .onScrollOffsetChange { offset in
+                isScrollAtTop = offset >= -10
+            }
+            .onAppear {
+                isScrollAtTop = true
             }
             .scrollDismissesKeyboard(.interactively)
         }

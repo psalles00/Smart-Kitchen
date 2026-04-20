@@ -8,17 +8,20 @@ struct ConversationHistoryView: View {
 
     let showsHeader: Bool
     let topPinnedInset: CGFloat
+    @Binding var isScrollAtTop: Bool
     let onSelect: (UUID) -> Void
     let onDismiss: () -> Void
 
     init(
         showsHeader: Bool = true,
         topPinnedInset: CGFloat = 0,
+        isScrollAtTop: Binding<Bool> = .constant(true),
         onSelect: @escaping (UUID) -> Void,
         onDismiss: @escaping () -> Void
     ) {
         self.showsHeader = showsHeader
         self.topPinnedInset = topPinnedInset
+        self._isScrollAtTop = isScrollAtTop
         self.onSelect = onSelect
         self.onDismiss = onDismiss
     }
@@ -31,15 +34,27 @@ struct ConversationHistoryView: View {
 
             if conversations.isEmpty {
                 emptyState
+                    .onAppear {
+                        isScrollAtTop = true
+                    }
             } else {
                 ScrollView {
                     LazyVStack(spacing: 2) {
+                        ScrollOffsetReader(coordinateSpace: "AssistantHistoryScroll")
+
                         ForEach(conversations) { conversation in
                             conversationRow(conversation)
                         }
                     }
                     .padding(.top, showsHeader ? 8 : topPinnedInset + 2)
                     .padding(.bottom, 8)
+                }
+                .coordinateSpace(name: "AssistantHistoryScroll")
+                .onScrollOffsetChange { offset in
+                    isScrollAtTop = offset >= -10
+                }
+                .onAppear {
+                    isScrollAtTop = true
                 }
             }
         }

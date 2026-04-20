@@ -25,6 +25,14 @@ struct UnifiedSearchBar: View {
         state.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
+    private func requestFocus() {
+        if state.isVisible {
+            state.focusTrigger += 1
+        } else {
+            state.reveal(mode: state.mode)
+        }
+    }
+
     var body: some View {
         HStack(spacing: 10) {
             Image(systemName: state.mode == .aiChat ? "paperplane.fill" : "sparkle.magnifyingglass")
@@ -111,6 +119,11 @@ struct UnifiedSearchBar: View {
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
         .background(searchBarBackground)
+        .padding(.vertical, 4)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            requestFocus()
+        }
         .padding(.horizontal, 20)
         .onChange(of: isFocused) { _, newValue in
             if newValue && !state.isVisible {

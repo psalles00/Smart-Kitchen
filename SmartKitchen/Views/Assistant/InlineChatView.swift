@@ -33,6 +33,7 @@ struct InlineChatView: View {
     let topPinnedInset: CGFloat
     /// Shared search bar state — when provided, the unified search bar acts as input.
     var searchBarState: SearchBarState? = nil
+    @Binding var isScrollAtTop: Bool
     /// External message to send (received from the unified search bar).
     @Binding var pendingExternalMessage: String?
     /// Called when a new conversation is created, so the parent can track the active ID.
@@ -55,6 +56,7 @@ struct InlineChatView: View {
         onShowHistory: @escaping () -> Void,
         topPinnedInset: CGFloat = 0,
         searchBarState: SearchBarState? = nil,
+        isScrollAtTop: Binding<Bool> = .constant(true),
         pendingExternalMessage: Binding<String?> = .constant(nil),
         onConversationCreated: ((UUID) -> Void)? = nil
     ) {
@@ -64,6 +66,7 @@ struct InlineChatView: View {
         self.onShowHistory = onShowHistory
         self.topPinnedInset = topPinnedInset
         self.searchBarState = searchBarState
+        self._isScrollAtTop = isScrollAtTop
         self._pendingExternalMessage = pendingExternalMessage
         self.onConversationCreated = onConversationCreated
     }
@@ -85,6 +88,8 @@ struct InlineChatView: View {
                 ZStack(alignment: .bottom) {
                     ScrollView {
                         LazyVStack(spacing: 14) {
+                            ScrollOffsetReader(coordinateSpace: "AssistantInlineChatScroll")
+
                             if messages.isEmpty && !aiService.isLoading {
                                 if isAIMode {
                                     aiModeEmptyState
@@ -167,6 +172,13 @@ struct InlineChatView: View {
                         }
                         .padding(.top, isAIMode ? topPinnedInset : 12)
                         .padding(.bottom, 12)
+                    }
+                    .coordinateSpace(name: "AssistantInlineChatScroll")
+                    .onScrollOffsetChange { offset in
+                        isScrollAtTop = offset >= -10
+                    }
+                    .onAppear {
+                        isScrollAtTop = true
                     }
                     .background(
                         GeometryReader { geo in

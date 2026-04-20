@@ -25,6 +25,7 @@ struct FullscreenAssistantView: View {
     // Drag-to-dismiss
     @State private var dragOffset: CGFloat = 0
     @State private var contentOpacity: Double = 0.88
+    @State private var isScrollableContentAtTop: Bool = true
     private let topPinnedInset: CGFloat = 72
 
     var body: some View {
@@ -53,10 +54,17 @@ struct FullscreenAssistantView: View {
     private var dismissDragGesture: some Gesture {
         DragGesture(minimumDistance: 24)
             .onChanged { value in
-                guard value.translation.height > 0 else { return }
+                guard value.translation.height > 0, isScrollableContentAtTop else { return }
                 dragOffset = value.translation.height
             }
             .onEnded { value in
+                guard isScrollableContentAtTop else {
+                    withAnimation(.snappy(duration: 0.2, extraBounce: 0.02)) {
+                        dragOffset = 0
+                    }
+                    return
+                }
+
                 if value.translation.height > 120 || value.predictedEndTranslation.height > 300 {
                     searchBarState.dismiss()
                 } else {
@@ -125,6 +133,7 @@ struct FullscreenAssistantView: View {
                 searchService: searchService,
                 onAction: onAction,
                 topPinnedInset: topPinnedInset,
+                isScrollAtTop: $isScrollableContentAtTop,
                 pendingChatQuery: $pendingChatQuery,
                 pendingOpenChat: $pendingOpenChat,
                 pendingNewConversation: $pendingNewConversation,
@@ -141,6 +150,8 @@ struct FullscreenAssistantView: View {
         GeometryReader { proxy in
             ScrollView {
                 VStack(spacing: 12) {
+                    ScrollOffsetReader(coordinateSpace: "AssistantIdleScroll")
+
                     Text("Adicione itens, busque na despensa ou pergunte à IA.")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
@@ -197,6 +208,13 @@ struct FullscreenAssistantView: View {
                 .frame(maxWidth: .infinity, minHeight: proxy.size.height, alignment: .top)
                 .padding(.bottom, 20)
             }
+            .coordinateSpace(name: "AssistantIdleScroll")
+            .onScrollOffsetChange { offset in
+                isScrollableContentAtTop = offset >= -10
+            }
+            .onAppear {
+                isScrollableContentAtTop = true
+            }
             .scrollDismissesKeyboard(.interactively)
         }
     }
@@ -213,12 +231,12 @@ struct FullscreenAssistantView: View {
 
             Rectangle()
                 .fill(.bar)
-                .frame(height: 38)
+                .frame(height: 28)
                 .mask {
                     LinearGradient(
                         stops: [
                             .init(color: .black.opacity(colorScheme == .dark ? 0.92 : 1), location: 0),
-                            .init(color: .black.opacity(colorScheme == .dark ? 0.55 : 0.65), location: 0.45),
+                            .init(color: .black.opacity(colorScheme == .dark ? 0.55 : 0.65), location: 0.34),
                             .init(color: .clear, location: 1)
                         ],
                         startPoint: .top,
