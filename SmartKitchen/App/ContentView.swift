@@ -295,11 +295,11 @@ struct ContentView: View {
                 )
                 .environmentObject(searchBarState)
                 .environment(\.modelContext, modelContext)
-                .transition(.opacity.combined(with: .move(edge: .bottom)))
+                .transition(.opacity)
                 .zIndex(1)
             }
         }
-        .animation(.spring(response: 0.4, dampingFraction: 0.85), value: searchBarState.isVisible)
+        .animation(.spring(response: 0.35, dampingFraction: 0.8), value: searchBarState.isVisible)
     }
 
     // MARK: - Bottom Search Bar
