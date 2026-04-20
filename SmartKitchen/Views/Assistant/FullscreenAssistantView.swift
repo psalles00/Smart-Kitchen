@@ -154,14 +154,37 @@ struct FullscreenAssistantView: View {
                     .padding(.top, topPinnedInset + 8)
 
                 VStack(alignment: .leading, spacing: 10) {
-                    idleActionRow(icon: "sparkles", iconColor: .purple, text: "Perguntar à IA") {
+                    CommandBarHelpers.fullWidthActionButton(
+                        title: "Perguntar à IA",
+                        icon: "sparkles",
+                        tint: .blue,
+                        imageName: "modo ia",
+                        imageHeight: 84,
+                        imageOffset: CGSize(width: 8, height: 23)
+                    ) {
                         pendingOpenChat = true
                     }
-                    idleActionRow(icon: "plus.circle.fill", iconColor: .green, text: "Adicionar item") {
+
+                    CommandBarHelpers.fullWidthActionButton(
+                        title: "Adicionar item",
+                        icon: "plus.circle.fill",
+                        tint: .orange,
+                        imageName: "despensa",
+                        imageHeight: 78,
+                        imageOffset: CGSize(width: 6, height: 21)
+                    ) {
                         onAction(.addItem(prefill: "", iconFileName: nil, category: nil))
                         searchBarState.selectResult()
                     }
-                    idleActionRow(icon: "book.closed", iconColor: .orange, text: "Adicionar receita") {
+
+                    CommandBarHelpers.fullWidthActionButton(
+                        title: "Adicionar receita",
+                        icon: "book.badge.plus",
+                        tint: .red,
+                        imageName: "receitas",
+                        imageHeight: 78,
+                        imageOffset: CGSize(width: 6, height: 21)
+                    ) {
                         onAction(.addRecipe(prefill: ""))
                         searchBarState.selectResult()
                     }
@@ -200,32 +223,6 @@ struct FullscreenAssistantView: View {
                 }
                 .allowsHitTesting(false)
         }
-    }
-
-    private func idleActionRow(icon: String, iconColor: Color, text: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack(spacing: 12) {
-                Image(systemName: icon)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(iconColor)
-                    .frame(width: 36, height: 36)
-                    .background(iconColor.opacity(0.12), in: .rect(cornerRadius: 10))
-
-                Text(text)
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(.primary)
-
-                Spacer()
-
-                Image(systemName: "chevron.right")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.tertiary)
-            }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 10)
-            .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 12))
-        }
-        .buttonStyle(.plain)
     }
 
     // MARK: - Background

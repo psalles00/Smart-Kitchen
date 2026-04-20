@@ -196,39 +196,6 @@ struct InlineSearchResultsView: View {
 
         return ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                // Ask AI as first result when query looks like a question
-                if isQuestion && !trimmedQuery.isEmpty {
-                    Button {
-                        openChat(initialQuery: trimmedQuery)
-                    } label: {
-                        HStack(spacing: 12) {
-                            Image(systemName: "sparkles")
-                                .font(.system(size: 15, weight: .semibold))
-                                .foregroundStyle(.purple)
-                                .frame(width: 36, height: 36)
-                                .background(Color.purple.opacity(0.12), in: .rect(cornerRadius: 10))
-
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Perguntar à IA")
-                                    .font(.subheadline.weight(.semibold))
-                                    .foregroundStyle(.primary)
-                                Text(trimmedQuery)
-                                    .font(.caption)
-                                    .foregroundStyle(.primary.opacity(0.55))
-                                    .lineLimit(1)
-                            }
-
-                            Spacer(minLength: 4)
-                        }
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 10)
-                        .background(Color(.tertiarySystemFill), in: .rect(cornerRadius: 12))
-                        .contentShape(.rect)
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.horizontal, 4)
-                }
-
                 // Loading indicator while debouncing
                 if (isTyping || searchService.isSearching) && !trimmedQuery.isEmpty {
                     HStack(spacing: 8) {
@@ -306,35 +273,51 @@ struct InlineSearchResultsView: View {
                     .padding(.horizontal, 16)
 
                 let actions = CommandBarHelpers.orderedActions(query: query, isQuestion: isQuestion)
+                let activeActionID = hasResults && !isQuestion ? nil : actions.first?.id
 
-                let rows = stride(from: 0, to: actions.count, by: 2).map { i in
-                    Array(actions[i..<min(i + 2, actions.count)])
-                }
-                VStack(spacing: 6) {
-                    ForEach(rows, id: \.first!.id) { pair in
-                        HStack(alignment: .top, spacing: 6) {
-                            ForEach(pair, id: \.id) { item in
-                                CommandBarHelpers.compactActionButton(item: item) {
-                                    if item.id == "ask-assistant" {
-                                        openChat(initialQuery: query)
-                                    } else {
-                                        item.perform(query, onAction)
-                                        searchBarState.selectResult()
-                                    }
-                                }
-                            }
-                            if pair.count == 1 {
-                                Spacer()
-                            }
-                        }
-                    }
-                }
-                .padding(.horizontal, 12)
+                actionPairRows(actions: actions, activeActionID: activeActionID, query: query)
+                    .padding(.horizontal, 12)
             }
         }
     }
 
     // MARK: - Helpers
+
+    private func actionPairRows(
+        actions: [CommandBarHelpers.ActionItem],
+        activeActionID: String?,
+        query: String
+    ) -> some View {
+        let rows = stride(from: 0, to: actions.count, by: 2).map { index in
+            Array(actions[index..<min(index + 2, actions.count)])
+        }
+
+        return VStack(spacing: 6) {
+            ForEach(rows, id: \.first!.id) { pair in
+                CompactActionPairRow(items: pair, activeActionID: activeActionID) { item in
+                    handleActionSelection(item, query: query)
+                }
+                .id(actionPairIdentity(for: pair, query: query, activeActionID: activeActionID))
+            }
+        }
+    }
+
+    private func handleActionSelection(_ item: CommandBarHelpers.ActionItem, query: String) {
+        if item.id == "ask-assistant" {
+            openChat(initialQuery: query)
+        } else {
+            item.perform(query, onAction)
+            searchBarState.selectResult()
+        }
+    }
+
+    private func actionPairIdentity(
+        for pair: [CommandBarHelpers.ActionItem],
+        query: String,
+        activeActionID: String?
+    ) -> String {
+        pair.map(\.id).joined(separator: "|") + "|" + query + "|" + (activeActionID ?? "")
+    }
 
     private func openChat(initialQuery: String? = nil) {
         chatInitialQuery = initialQuery
@@ -420,6 +403,54 @@ struct InlineSearchResultsView: View {
                 first.perform(trimmedQuery, onAction)
             }
             searchBarState.selectResult()
+        }
+    }
+}
+
+private struct CompactActionPairRow: View {
+    let items: [CommandBarHelpers.ActionItem]
+    let activeActionID: String?
+    let onSelect: (CommandBarHelpers.ActionItem) -> Void
+
+    @State private var rowHeight: CGFloat?
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 6) {
+            ForEach(items) { item in
+                CommandBarHelpers.compactActionButton(
+                    item: item,
+                    isHighlighted: item.id == activeActionID,
+                    targetHeight: rowHeight
+                ) {
+                    onSelect(item)
+                }
+                .background {
+                    GeometryReader { proxy in
+                        Color.clear
+                            .preference(key: CompactActionRowHeightPreferenceKey.self, value: [item.id: proxy.size.height])
+                    }
+                }
+            }
+
+            if items.count == 1 {
+                Spacer()
+                    .frame(maxWidth: .infinity)
+            }
+        }
+        .onPreferenceChange(CompactActionRowHeightPreferenceKey.self) { heights in
+            if let tallest = heights.values.max(), rowHeight == nil || abs(tallest - (rowHeight ?? 0)) > 0.5 {
+                rowHeight = tallest
+            }
+        }
+    }
+}
+
+private struct CompactActionRowHeightPreferenceKey: PreferenceKey {
+    static let defaultValue: [String: CGFloat] = [:]
+
+    static func reduce(value: inout [String: CGFloat], nextValue: () -> [String: CGFloat]) {
+        value.merge(nextValue()) { current, new in
+            max(current, new)
         }
     }
 }

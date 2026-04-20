@@ -1,5 +1,10 @@
 import SwiftUI
 import SwiftData
+#if os(iOS)
+import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
 
 /// The action the user selected from the Command Bar.
 enum CommandBarAction {
@@ -309,15 +314,15 @@ struct CommandBarSearchContent: View {
                 .padding(.horizontal, 16)
 
             let actions = CommandBarHelpers.orderedActions(query: query, isQuestion: isQuestion)
+            let activeActionID = hasResults && !isQuestion ? nil : actions.first?.id
 
             VStack(spacing: 4) {
-                ForEach(Array(actions.enumerated()), id: \.element.id) { index, item in
-                    let isFirst = index == 0 && !hasResults
+                ForEach(actions) { item in
                     CommandBarHelpers.actionButton(
                         title: item.title,
                         icon: item.icon,
                         tint: item.tint,
-                        isHighlighted: isFirst
+                        isHighlighted: item.id == activeActionID
                     ) {
                         // Intercept ask-assistant to open inline chat
                         if item.id == "ask-assistant" {
@@ -580,15 +585,15 @@ struct CommandBarView: View {
                 .padding(.horizontal, 16)
 
             let actions = CommandBarHelpers.orderedActions(query: query, isQuestion: isQuestion)
+            let activeActionID = hasResults && !isQuestion ? nil : actions.first?.id
 
             VStack(spacing: 4) {
-                ForEach(Array(actions.enumerated()), id: \.element.id) { index, item in
-                    let isFirst = index == 0 && !hasResults
+                ForEach(actions) { item in
                     CommandBarHelpers.actionButton(
                         title: item.title,
                         icon: item.icon,
                         tint: item.tint,
-                        isHighlighted: isFirst
+                        isHighlighted: item.id == activeActionID
                     ) {
                         item.perform(query, onAction)
                         dismiss()
@@ -783,25 +788,29 @@ enum CommandBarHelpers {
         .buttonStyle(.plain)
     }
 
-    static func compactActionButton(item: ActionItem, action: @escaping () -> Void) -> some View {
+    static func compactActionButton(item: ActionItem, isHighlighted: Bool = false, targetHeight: CGFloat? = nil, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            ZStack(alignment: .bottomTrailing) {
-                HStack(alignment: .top, spacing: 6) {
-                    Image(systemName: item.icon)
-                        .font(.system(size: 13, weight: .bold))
-                        .foregroundStyle(item.tint)
-                        .padding(.top, 1)
+            HStack(alignment: .top, spacing: 4) {
+                Image(systemName: item.icon)
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(item.tint)
+                    .padding(.top, 1)
 
-                    Text(compactActionButtonTitle(item: item))
-                        .font(.caption)
-                        .foregroundStyle(.primary)
-                        .multilineTextAlignment(.leading)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .layoutPriority(1)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .padding(.trailing, 60)
-
+                Text(compactActionButtonTitle(item: item))
+                    .font(.caption)
+                    .foregroundStyle(.primary)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .layoutPriority(1)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+            .padding(.trailing, isHighlighted ? 72 : 62)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity, minHeight: targetHeight, alignment: .leading)
+            .background(isHighlighted ? item.tint.opacity(0.12) : item.tint.opacity(0.06), in: .rect(cornerRadius: 10))
+            .overlay(alignment: .bottomTrailing) {
                 Image(item.imageName)
                     .resizable()
                     .scaledToFit()
@@ -809,14 +818,100 @@ enum CommandBarHelpers {
                     .offset(item.imageOffset)
                     .allowsHitTesting(false)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(item.tint.opacity(0.06), in: .rect(cornerRadius: 10))
+            .overlay(alignment: .topTrailing) {
+                if isHighlighted {
+                    activeActionBadge(tint: item.tint)
+                }
+            }
+            .overlay {
+                if isHighlighted {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .stroke(item.tint.opacity(0.35), lineWidth: 1)
+                }
+            }
             .clipShape(.rect(cornerRadius: 10))
             .contentShape(.rect)
         }
         .buttonStyle(.plain)
+    }
+
+    static func fullWidthActionButton(
+        title: String,
+        icon: String,
+        tint: Color,
+        imageName: String,
+        imageHeight: CGFloat,
+        imageOffset: CGSize,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(alignment: .center, spacing: 6) {
+                Image(systemName: icon)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(tint)
+
+                Text(title)
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.trailing, 92)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .background(tint.opacity(0.06), in: .rect(cornerRadius: 12))
+            .overlay(alignment: .bottomTrailing) {
+                Image(imageName)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: imageHeight)
+                    .offset(imageOffset)
+                    .allowsHitTesting(false)
+            }
+            .clipShape(.rect(cornerRadius: 12))
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private static func activeActionBadge(tint: Color) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: "return")
+            Text("Enter")
+        }
+        .font(.system(size: 10, weight: .semibold))
+        .foregroundStyle(tint)
+        .padding(.horizontal, 7)
+        .padding(.vertical, 4)
+        .background(activeActionBadgeBackground, in: .capsule)
+        .overlay {
+            Capsule()
+                .stroke(tint.opacity(0.22), lineWidth: 0.75)
+        }
+        .shadow(color: .black.opacity(0.08), radius: 6, y: 2)
+        .padding(6)
+    }
+
+    private static var activeActionBadgeBackground: Color {
+        #if os(iOS)
+        Color(uiColor: UIColor { trait in
+            if trait.userInterfaceStyle == .dark {
+                return UIColor(red: 28 / 255, green: 28 / 255, blue: 30 / 255, alpha: 1)
+            }
+            return UIColor(red: 248 / 255, green: 248 / 255, blue: 250 / 255, alpha: 1)
+        })
+        #elseif os(macOS)
+        Color(nsColor: NSColor(name: nil) { appearance in
+            let isDark = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+            if isDark {
+                return NSColor(srgbRed: 28 / 255, green: 28 / 255, blue: 30 / 255, alpha: 1)
+            }
+            return NSColor(srgbRed: 248 / 255, green: 248 / 255, blue: 250 / 255, alpha: 1)
+        } ?? NSColor.windowBackgroundColor)
+        #else
+        Color(red: 248 / 255, green: 248 / 255, blue: 250 / 255)
+        #endif
     }
 
     private static func compactActionButtonTitle(item: ActionItem) -> AttributedString {
@@ -826,7 +921,7 @@ enum CommandBarHelpers {
 
         switch item.id {
         case "ask-assistant":
-            baseText = "Perguntar à \"\(item.title)\" IA"
+            baseText = "Perguntar \"\(item.title)\" à IA"
             boldRange = "\"\(item.title)\""
             boldTerm = "IA"
         case "add-pantry":
