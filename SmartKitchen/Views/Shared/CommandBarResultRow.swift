@@ -165,7 +165,7 @@ struct CommandBarResultRow: View {
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
             .background(
-                isPreSelected ? Color(.tertiarySystemFill) : Color.clear,
+                isPreSelected ? Color(red: 248 / 255, green: 248 / 255, blue: 250 / 255) : Color.clear,
                 in: .rect(cornerRadius: 12)
             )
             .contentShape(.rect)
