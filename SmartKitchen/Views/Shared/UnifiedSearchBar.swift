@@ -24,7 +24,7 @@ struct UnifiedSearchBar: View {
                 .font(.system(size: 16, weight: .medium))
                 .foregroundStyle(.secondary)
 
-            TextField(state.mode == .aiChat ? "Converse com a IA…" : "Digite aqui…", text: $state.searchText)
+            TextField(state.mode == .aiChat ? "Converse com a IA…" : "Assistente", text: $state.searchText)
                 .foregroundStyle(.primary)
                 #if os(iOS)
                 .textInputAutocapitalization(.never)

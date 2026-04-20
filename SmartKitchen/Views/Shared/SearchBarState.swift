@@ -62,7 +62,9 @@ final class SearchBarState: ObservableObject {
             return
         }
         HapticManager.searchReveal()
-        isVisible = true
+        withAnimation(.spring(response: 0.45, dampingFraction: 0.88)) {
+            isVisible = true
+        }
         focusTrigger += 1
         // Re-trigger focus after view transition completes (tab bar press timing)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
@@ -76,7 +78,7 @@ final class SearchBarState: ObservableObject {
     /// Dismiss the search bar, clear text, and reset mode.
     func dismiss() {
         defocusTrigger += 1
-        withAnimation(.spring(response: 0.32, dampingFraction: 0.82)) {
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.88)) {
             isVisible = false
         }
         // Clear after animation starts so the text doesn't flash

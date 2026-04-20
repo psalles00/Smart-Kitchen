@@ -1,0 +1,225 @@
+import SwiftUI
+
+// MARK: - Fullscreen Assistant View
+
+/// Full-screen page that hosts both the "Assistente" (search) and the
+/// "Modo IA" (chat) experiences on iOS.
+///
+/// Presented as a ZStack overlay in ContentView (not fullScreenCover) so that
+/// `matchedGeometryEffect` can morph the trigger pill into the search bar.
+///
+/// Background: LiquidGlass on iOS 26+, solid white/black on older iOS.
+/// Dismiss: tap empty area, drag down, or close button.
+struct FullscreenAssistantView: View {
+    let namespace: Namespace.ID
+    @ObservedObject var searchBarState: SearchBarState
+    @ObservedObject var searchService: UniversalSearchService
+    @Environment(\.colorScheme) private var colorScheme
+
+    let onAction: (CommandBarAction) -> Void
+
+    @Binding var pendingChatQuery: String?
+    @Binding var pendingOpenChat: Bool
+    @Binding var pendingNewConversation: Bool
+    @Binding var pendingShowHistory: Bool
+
+    // Drag-to-dismiss
+    @State private var dragOffset: CGFloat = 0
+    @State private var contentOpacity: Double = 0
+
+    var body: some View {
+        ZStack {
+            // Tappable background — dismiss on tap
+            pageBackground
+                .ignoresSafeArea()
+                .onTapGesture { searchBarState.dismiss() }
+
+            VStack(spacing: 0) {
+                header
+                    .padding(.horizontal, 20)
+                    .padding(.top, 12)
+                    .padding(.bottom, 6)
+
+                contentArea
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+            .offset(y: max(dragOffset, 0))
+            .opacity(contentOpacity)
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            UnifiedSearchBar(state: searchBarState) { _ in }
+                .padding(.vertical, 6)
+                .matchedGeometryEffect(id: "assistantBar", in: namespace)
+        }
+        .gesture(
+            DragGesture(minimumDistance: 30)
+                .onChanged { value in
+                    dragOffset = value.translation.height
+                }
+                .onEnded { value in
+                    if value.translation.height > 120 || value.predictedEndTranslation.height > 300 {
+                        searchBarState.dismiss()
+                    } else {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                            dragOffset = 0
+                        }
+                    }
+                }
+        )
+        .onAppear {
+            // Fade in content shortly after the bar morph starts
+            withAnimation(.easeOut(duration: 0.25).delay(0.1)) {
+                contentOpacity = 1
+            }
+            // Focus keyboard
+            searchBarState.focusTrigger += 1
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                searchBarState.focusTrigger += 1
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                searchBarState.focusTrigger += 1
+            }
+        }
+    }
+
+    // MARK: - Header
+
+    @ViewBuilder
+    private var header: some View {
+        HStack(alignment: .center) {
+            Text(searchBarState.mode == .aiChat ? "Modo IA" : "Assistente")
+                .font(.pageTitle)
+
+            Spacer()
+
+            if searchBarState.mode == .aiChat {
+                Button {
+                    pendingNewConversation = true
+                } label: {
+                    Image(systemName: "square.and.pencil")
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 32, height: 32)
+                }
+                .buttonStyle(.plain)
+
+                Button {
+                    pendingShowHistory = true
+                } label: {
+                    Image(systemName: "clock.arrow.circlepath")
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 32, height: 32)
+                }
+                .buttonStyle(.plain)
+            }
+
+            Button {
+                searchBarState.dismiss()
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 22))
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    // MARK: - Content
+
+    @ViewBuilder
+    private var contentArea: some View {
+        let hasText = !searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        let showResults = hasText || searchBarState.mode == .aiChat || pendingOpenChat || pendingChatQuery != nil
+
+        if showResults {
+            InlineSearchResultsView(
+                searchBarState: searchBarState,
+                searchService: searchService,
+                onAction: onAction,
+                pendingChatQuery: $pendingChatQuery,
+                pendingOpenChat: $pendingOpenChat,
+                pendingNewConversation: $pendingNewConversation,
+                pendingShowHistory: $pendingShowHistory
+            )
+        } else {
+            idleActionButtons
+        }
+    }
+
+    // MARK: - Idle Action Buttons (nothing typed)
+
+    private var idleActionButtons: some View {
+        ScrollView {
+            VStack(spacing: 12) {
+                Text("Adicione itens, busque na despensa ou pergunte à IA.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 16)
+
+                VStack(alignment: .leading, spacing: 10) {
+                    idleActionRow(icon: "sparkles", iconColor: .purple, text: "Perguntar à IA") {
+                        pendingOpenChat = true
+                    }
+                    idleActionRow(icon: "plus.circle.fill", iconColor: .green, text: "Adicionar item") {
+                        onAction(.addItem(prefill: "", iconFileName: nil, category: nil))
+                        searchBarState.selectResult()
+                    }
+                    idleActionRow(icon: "book.closed", iconColor: .orange, text: "Adicionar receita") {
+                        onAction(.addRecipe(prefill: ""))
+                        searchBarState.selectResult()
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 8)
+            }
+            .padding(.bottom, 20)
+        }
+        .scrollDismissesKeyboard(.interactively)
+    }
+
+    private func idleActionRow(icon: String, iconColor: Color, text: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                Image(systemName: icon)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(iconColor)
+                    .frame(width: 36, height: 36)
+                    .background(iconColor.opacity(0.12), in: .rect(cornerRadius: 10))
+
+                Text(text)
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.primary)
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 12))
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Background
+
+    @ViewBuilder
+    private var pageBackground: some View {
+        if #available(iOS 26, macOS 26, *) {
+            Rectangle()
+                .fill(colorScheme == .dark
+                      ? Color.black.opacity(0.55)
+                      : Color.white.opacity(0.55))
+                .glassEffect(.regular, in: .rect(cornerRadius: 0))
+        } else {
+            Rectangle()
+                .fill(colorScheme == .dark ? Color.black : Color.white)
+        }
+    }
+}

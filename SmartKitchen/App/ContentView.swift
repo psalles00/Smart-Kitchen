@@ -52,6 +52,7 @@ struct ContentView: View {
     @State private var searchDragOffset: CGFloat = 0
     @StateObject private var searchService = UniversalSearchService()
     @StateObject private var searchBarState = SearchBarState()
+    @Namespace private var barNamespace
 
     // Search-triggered edit sheets
     @State private var searchEditItem: UnifiedItem?
@@ -221,65 +222,84 @@ struct ContentView: View {
     }
 
     private var nativeTabView: some View {
-        TabView(selection: tabSelectionBinding) {
-            Tab(value: AppTab.assistant) {
-                NavigationStack {
-                    HomeView(
-                        onSettingsTap: { showSettings = true },
-                        onOpenChat: {
-                            pendingOpenChat = true
-                            searchBarState.reveal()
-                        },
-                        onOpenSearch: {
-                            searchBarState.reveal()
-                        }
-                    )
+        ZStack {
+            TabView(selection: tabSelectionBinding) {
+                Tab(value: AppTab.assistant) {
+                    NavigationStack {
+                        HomeView(
+                            onSettingsTap: { showSettings = true },
+                            onOpenChat: {
+                                pendingOpenChat = true
+                                searchBarState.reveal()
+                            },
+                            onOpenSearch: {
+                                searchBarState.reveal()
+                            }
+                        )
+                    }
+                } label: {
+                    Label("Início", systemImage: AppTab.assistant.icon)
                 }
-                .overlay { searchResultsOverlay }
-                .overlay { searchBarDismissOverlay }
-                .safeAreaInset(edge: .bottom, spacing: 0) { bottomSearchBarArea }
-            } label: {
-                Label("Início", systemImage: AppTab.assistant.icon)
-            }
 
-            Tab(value: AppTab.lists) {
-                NavigationStack {
-                    ListsTabView()
+                Tab(value: AppTab.lists) {
+                    NavigationStack {
+                        ListsTabView()
+                    }
+                } label: {
+                    Label("Listas", systemImage: AppTab.lists.icon)
                 }
-                .overlay { searchResultsOverlay }
-                .overlay { searchBarDismissOverlay }
-                .safeAreaInset(edge: .bottom, spacing: 0) { bottomSearchBarArea }
-            } label: {
-                Label("Listas", systemImage: AppTab.lists.icon)
-            }
 
-            Tab(value: AppTab.recipes) {
-                NavigationStack {
-                    RecipesView()
+                Tab(value: AppTab.recipes) {
+                    NavigationStack {
+                        RecipesView()
+                    }
+                } label: {
+                    Label("Receitas", systemImage: AppTab.recipes.icon)
                 }
-                .overlay { searchResultsOverlay }
-                .overlay { searchBarDismissOverlay }
-                .safeAreaInset(edge: .bottom, spacing: 0) { bottomSearchBarArea }
-            } label: {
-                Label("Receitas", systemImage: AppTab.recipes.icon)
-            }
 
-            Tab(value: AppTab.nutrients) {
-                NavigationStack {
-                    NutrientsPlaceholderView()
+                Tab(value: AppTab.nutrients) {
+                    NavigationStack {
+                        NutrientsPlaceholderView()
+                    }
+                } label: {
+                    Label("Nutrientes", systemImage: AppTab.nutrients.icon)
                 }
-                .overlay { searchResultsOverlay }
-                .overlay { searchBarDismissOverlay }
-                .safeAreaInset(edge: .bottom, spacing: 0) { bottomSearchBarArea }
-            } label: {
-                Label("Nutrientes", systemImage: AppTab.nutrients.icon)
+            }
+            .toolbar(searchBarState.isVisible ? .hidden : .automatic, for: .tabBar)
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                if !searchBarState.isVisible {
+                    UnifiedSearchBar(state: searchBarState) { _ in }
+                        .padding(.vertical, 6)
+                        .padding(.bottom, 50) // Keep slightly above the tab bar without a large gap
+                        .matchedGeometryEffect(id: "assistantBar", in: barNamespace)
+                        .ignoresSafeArea(.keyboard, edges: .bottom)
+                }
+            }
+            .animation(.spring(response: 0.4, dampingFraction: 0.85), value: searchBarState.isVisible)
+            .onChange(of: searchBarState.debouncedSearchText) { _, newValue in
+                guard searchBarState.mode != .aiChat else { return }
+                searchService.search(query: newValue, context: modelContext, showUtensils: settings?.showUtensils == true)
+            }
+            .environment(\.searchOverlay, searchOverlayView)
+
+            if searchBarState.isVisible {
+                FullscreenAssistantView(
+                    namespace: barNamespace,
+                    searchBarState: searchBarState,
+                    searchService: searchService,
+                    onAction: { handleCommandBarAction($0) },
+                    pendingChatQuery: $pendingChatQuery,
+                    pendingOpenChat: $pendingOpenChat,
+                    pendingNewConversation: $pendingNewConversation,
+                    pendingShowHistory: $pendingShowHistory
+                )
+                .environmentObject(searchBarState)
+                .environment(\.modelContext, modelContext)
+                .transition(.opacity.combined(with: .move(edge: .bottom)))
+                .zIndex(1)
             }
         }
-        .onChange(of: searchBarState.debouncedSearchText) { _, newValue in
-            guard searchBarState.mode != .aiChat else { return }
-            searchService.search(query: newValue, context: modelContext, showUtensils: settings?.showUtensils == true)
-        }
-        .environment(\.searchOverlay, searchOverlayView)
+        .animation(.spring(response: 0.4, dampingFraction: 0.85), value: searchBarState.isVisible)
     }
 
     // MARK: - Bottom Search Bar
@@ -293,6 +313,7 @@ struct ContentView: View {
 
     @ViewBuilder
     private var bottomSearchBarArea: some View {
+        // Used by macOS only now; iOS uses AssistantTriggerBar as a floating overlay
         UnifiedSearchBar(state: searchBarState) { _ in }
             .padding(.vertical, 6)
             .ignoresSafeArea(.keyboard, edges: .bottom)
