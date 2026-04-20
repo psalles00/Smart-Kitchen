@@ -158,10 +158,14 @@ struct InlineChatView: View {
 
                             // Bottom spacer — allows user messages to always scroll to the top
                             // of the chat area even when there isn't enough content below
-                            Spacer()
+                            Color.clear
                                 .frame(height: max(chatAreaHeight - 80, 0))
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    onDismiss()
+                                }
                         }
-                        .padding(.top, isAIMode ? (topPinnedInset + 12) : 12)
+                        .padding(.top, isAIMode ? topPinnedInset : 12)
                         .padding(.bottom, 12)
                     }
                     .background(

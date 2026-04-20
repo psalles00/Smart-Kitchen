@@ -194,63 +194,73 @@ struct InlineSearchResultsView: View {
         let isQuestion = looksLikeQuestion(trimmedQuery)
         let isTyping = searchBarState.searchText != searchBarState.debouncedSearchText
 
-        return ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                // Loading indicator while debouncing
-                if (isTyping || searchService.isSearching) && !trimmedQuery.isEmpty {
-                    HStack(spacing: 8) {
-                        ProgressView()
-                            .controlSize(.small)
-                        Text("Buscando resultados…")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+        return GeometryReader { proxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    // Loading indicator while debouncing
+                    if (isTyping || searchService.isSearching) && !trimmedQuery.isEmpty {
+                        HStack(spacing: 8) {
+                            ProgressView()
+                                .controlSize(.small)
+                            Text("Buscando resultados…")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 4)
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 4)
-                }
 
-                // Results
-                if !searchService.results.isEmpty {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Resultados")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.primary.opacity(0.6))
-                            .padding(.horizontal, 16)
+                    // Results
+                    if !searchService.results.isEmpty {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Resultados")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.primary.opacity(0.6))
+                                .padding(.horizontal, 16)
 
-                        ForEach(Array(searchService.results.prefix(10).enumerated()), id: \.element.id) { index, result in
-                            CommandBarResultRow(
-                                result: result,
-                                isPreSelected: index == 0,
-                                action: {
-                                    executeResult(result)
-                                },
-                                onNavigate: navigateActionForResult(result),
-                                onQuickAction: quickActionForResult(result)
-                            )
-                            .id(result.id)
-                            .padding(.horizontal, 4)
+                            ForEach(Array(searchService.results.prefix(10).enumerated()), id: \.element.id) { index, result in
+                                CommandBarResultRow(
+                                    result: result,
+                                    isPreSelected: index == 0,
+                                    action: {
+                                        executeResult(result)
+                                    },
+                                    onNavigate: navigateActionForResult(result),
+                                    onQuickAction: quickActionForResult(result)
+                                )
+                                .id(result.id)
+                                .padding(.horizontal, 4)
+                            }
                         }
                     }
-                }
 
-                // Action buttons
-                actionButtonsSection(query: trimmedQuery, isQuestion: isQuestion)
+                    // Action buttons
+                    actionButtonsSection(query: trimmedQuery, isQuestion: isQuestion)
 
-                // Suggestions from item database
-                if !searchService.suggestions.isEmpty && !isQuestion {
-                    CommandBarSuggestionChips(
-                        suggestions: Array(searchService.suggestions.prefix(12)),
-                        query: trimmedQuery
-                    ) { entry in
-                        onAction(.addItem(prefill: entry.preferredTitle(matching: trimmedQuery), iconFileName: entry.nomeDoArquivo, category: entry.categoria))
-                        searchBarState.selectResult()
+                    // Suggestions from item database
+                    if !searchService.suggestions.isEmpty && !isQuestion {
+                        CommandBarSuggestionChips(
+                            suggestions: Array(searchService.suggestions.prefix(12)),
+                            query: trimmedQuery
+                        ) { entry in
+                            onAction(.addItem(prefill: entry.preferredTitle(matching: trimmedQuery), iconFileName: entry.nomeDoArquivo, category: entry.categoria))
+                            searchBarState.selectResult()
+                        }
                     }
+
+                    Spacer(minLength: 0)
+                        .frame(maxWidth: .infinity)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            searchBarState.dismiss()
+                        }
                 }
+                .frame(maxWidth: .infinity, minHeight: proxy.size.height, alignment: .top)
+                .padding(.top, topPinnedInset)
+                .padding(.bottom, 16)
             }
-            .padding(.top, topPinnedInset + 12)
-            .padding(.bottom, 16)
+            .scrollDismissesKeyboard(.interactively)
         }
-        .scrollDismissesKeyboard(.interactively)
     }
 
     // MARK: - Action Buttons

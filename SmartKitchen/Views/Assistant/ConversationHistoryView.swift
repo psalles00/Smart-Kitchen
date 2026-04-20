@@ -38,7 +38,7 @@ struct ConversationHistoryView: View {
                             conversationRow(conversation)
                         }
                     }
-                    .padding(.top, showsHeader ? 8 : topPinnedInset + 8)
+                    .padding(.top, showsHeader ? 8 : topPinnedInset + 2)
                     .padding(.bottom, 8)
                 }
             }
@@ -81,7 +81,7 @@ struct ConversationHistoryView: View {
             Spacer()
         }
         .frame(maxWidth: .infinity)
-        .padding(.top, showsHeader ? 0 : topPinnedInset)
+        .padding(.top, showsHeader ? 0 : topPinnedInset - 6)
     }
 
     private func conversationRow(_ conversation: ChatConversation) -> some View {

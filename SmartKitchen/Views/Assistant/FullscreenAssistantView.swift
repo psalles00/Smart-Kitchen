@@ -25,7 +25,7 @@ struct FullscreenAssistantView: View {
     // Drag-to-dismiss
     @State private var dragOffset: CGFloat = 0
     @State private var contentOpacity: Double = 0.88
-    private let topPinnedInset: CGFloat = 92
+    private let topPinnedInset: CGFloat = 72
 
     var body: some View {
         ZStack {
@@ -138,57 +138,67 @@ struct FullscreenAssistantView: View {
     // MARK: - Idle Action Buttons (nothing typed)
 
     private var idleActionButtons: some View {
-        ScrollView {
-            VStack(spacing: 12) {
-                Text("Adicione itens, busque na despensa ou pergunte à IA.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 24)
-                    .padding(.top, topPinnedInset + 8)
+        GeometryReader { proxy in
+            ScrollView {
+                VStack(spacing: 12) {
+                    Text("Adicione itens, busque na despensa ou pergunte à IA.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 24)
+                        .padding(.top, topPinnedInset)
 
-                VStack(alignment: .leading, spacing: 10) {
-                    CommandBarHelpers.fullWidthActionButton(
-                        title: "Perguntar à IA",
-                        icon: "sparkles",
-                        tint: .blue,
-                        imageName: "modo ia",
-                        imageHeight: 84,
-                        imageOffset: CGSize(width: 8, height: 23)
-                    ) {
-                        pendingOpenChat = true
-                    }
+                    VStack(alignment: .leading, spacing: 10) {
+                        CommandBarHelpers.fullWidthActionButton(
+                            title: "Perguntar à IA",
+                            icon: "sparkles",
+                            tint: .blue,
+                            imageName: "modo ia",
+                            imageHeight: 84,
+                            imageOffset: CGSize(width: 8, height: 18)
+                        ) {
+                            pendingOpenChat = true
+                        }
 
-                    CommandBarHelpers.fullWidthActionButton(
-                        title: "Adicionar item",
-                        icon: "plus.circle.fill",
-                        tint: .orange,
-                        imageName: "despensa",
-                        imageHeight: 78,
-                        imageOffset: CGSize(width: 6, height: 21)
-                    ) {
-                        onAction(.addItem(prefill: "", iconFileName: nil, category: nil))
-                        searchBarState.selectResult()
-                    }
+                        CommandBarHelpers.fullWidthActionButton(
+                            title: "Adicionar item",
+                            icon: "plus.circle.fill",
+                            tint: .orange,
+                            imageName: "despensa",
+                            imageHeight: 78,
+                            imageOffset: CGSize(width: 6, height: 21)
+                        ) {
+                            onAction(.addItem(prefill: "", iconFileName: nil, category: nil))
+                            searchBarState.selectResult()
+                        }
 
-                    CommandBarHelpers.fullWidthActionButton(
-                        title: "Adicionar receita",
-                        icon: "book.badge.plus",
-                        tint: .red,
-                        imageName: "receitas",
-                        imageHeight: 78,
-                        imageOffset: CGSize(width: 6, height: 21)
-                    ) {
-                        onAction(.addRecipe(prefill: ""))
-                        searchBarState.selectResult()
+                        CommandBarHelpers.fullWidthActionButton(
+                            title: "Adicionar receita",
+                            icon: "book.badge.plus",
+                            tint: .red,
+                            imageName: "receitas",
+                            imageHeight: 78,
+                            imageOffset: CGSize(width: 6, height: 21)
+                        ) {
+                            onAction(.addRecipe(prefill: ""))
+                            searchBarState.selectResult()
+                        }
                     }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 8)
+
+                    Spacer(minLength: 0)
+                        .frame(maxWidth: .infinity)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            searchBarState.dismiss()
+                        }
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 8)
+                .frame(maxWidth: .infinity, minHeight: proxy.size.height, alignment: .top)
+                .padding(.bottom, 20)
             }
-            .padding(.bottom, 20)
+            .scrollDismissesKeyboard(.interactively)
         }
-        .scrollDismissesKeyboard(.interactively)
     }
 
     private var pinnedHeader: some View {
