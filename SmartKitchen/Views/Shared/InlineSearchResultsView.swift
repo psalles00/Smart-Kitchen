@@ -312,13 +312,9 @@ struct InlineSearchResultsView: View {
                 }
                 VStack(spacing: 6) {
                     ForEach(rows, id: \.first!.id) { pair in
-                        HStack(spacing: 6) {
+                        HStack(alignment: .top, spacing: 6) {
                             ForEach(pair, id: \.id) { item in
-                                CommandBarHelpers.compactActionButton(
-                                    title: item.title,
-                                    icon: item.icon,
-                                    tint: item.tint
-                                ) {
+                                CommandBarHelpers.compactActionButton(item: item) {
                                     if item.id == "ask-assistant" {
                                         openChat(initialQuery: query)
                                     } else {

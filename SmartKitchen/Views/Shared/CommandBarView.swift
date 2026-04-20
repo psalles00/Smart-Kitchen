@@ -669,6 +669,9 @@ enum CommandBarHelpers {
         let title: String
         let icon: String
         let tint: Color
+        let imageName: String
+        let imageHeight: CGFloat
+        let imageOffset: CGSize
         let perform: (String, (CommandBarAction) -> Void) -> Void
     }
 
@@ -677,30 +680,42 @@ enum CommandBarHelpers {
     static func orderedActions(query: String, isQuestion: Bool) -> [ActionItem] {
         let askAssistant = ActionItem(
             id: "ask-assistant",
-            title: "Perguntar à IA sobre \"\(query)\"",
+            title: query,
             icon: "sparkles",
-            tint: .blue
+            tint: .blue,
+            imageName: "modo ia",
+            imageHeight: 84,
+            imageOffset: CGSize(width: 16, height: 23)
         ) { q, action in action(.askAssistant(prefill: q)) }
 
         let addPantry = ActionItem(
             id: "add-pantry",
-            title: "Adicionar \"\(query)\" à Despensa",
+            title: query,
             icon: "plus.circle.fill",
-            tint: .orange
+            tint: .orange,
+            imageName: "despensa",
+            imageHeight: 78,
+            imageOffset: CGSize(width: 14, height: 21)
         ) { q, action in action(.addPantryItem(prefill: q)) }
 
         let addGrocery = ActionItem(
             id: "add-grocery",
-            title: "Adicionar \"\(query)\" ao Mercado",
+            title: query,
             icon: "plus.circle.fill",
-            tint: .green
+            tint: .green,
+            imageName: "mercado",
+            imageHeight: 81,
+            imageOffset: CGSize(width: 16, height: 21)
         ) { q, action in action(.addGroceryItem(prefill: q)) }
 
         let createRecipe = ActionItem(
             id: "create-recipe",
-            title: "Criar receita com \"\(query)\"",
+            title: query,
             icon: "book.badge.plus",
-            tint: .red
+            tint: .red,
+            imageName: "receitas",
+            imageHeight: 78,
+            imageOffset: CGSize(width: 14, height: 21)
         ) { q, action in action(.addRecipe(prefill: q)) }
 
         if isQuestion {
@@ -768,25 +783,79 @@ enum CommandBarHelpers {
         .buttonStyle(.plain)
     }
 
-    static func compactActionButton(title: String, icon: String, tint: Color, action: @escaping () -> Void) -> some View {
+    static func compactActionButton(item: ActionItem, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            HStack(spacing: 8) {
-                Image(systemName: icon)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(tint)
+            ZStack(alignment: .bottomTrailing) {
+                HStack(alignment: .top, spacing: 6) {
+                    Image(systemName: item.icon)
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(item.tint)
+                        .padding(.top, 1)
 
-                Text(title)
-                    .font(.caption.weight(.medium))
-                    .foregroundStyle(.primary)
+                    Text(compactActionButtonTitle(item: item))
+                        .font(.caption)
+                        .foregroundStyle(.primary)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .layoutPriority(1)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .padding(.trailing, 60)
 
-                Spacer(minLength: 0)
+                Image(item.imageName)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: item.imageHeight)
+                    .offset(item.imageOffset)
+                    .allowsHitTesting(false)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 12)
-            .padding(.vertical, 10)
-            .background(tint.opacity(0.06), in: .rect(cornerRadius: 10))
+            .padding(.vertical, 8)
+            .background(item.tint.opacity(0.06), in: .rect(cornerRadius: 10))
+            .clipShape(.rect(cornerRadius: 10))
             .contentShape(.rect)
         }
         .buttonStyle(.plain)
+    }
+
+    private static func compactActionButtonTitle(item: ActionItem) -> AttributedString {
+        var baseText = ""
+        var boldRange: String = ""
+        var boldTerm: String = ""
+
+        switch item.id {
+        case "ask-assistant":
+            baseText = "Perguntar à \"\(item.title)\" IA"
+            boldRange = "\"\(item.title)\""
+            boldTerm = "IA"
+        case "add-pantry":
+            baseText = "Adicionar \"\(item.title)\" à Despensa"
+            boldRange = "\"\(item.title)\""
+            boldTerm = "Despensa"
+        case "add-grocery":
+            baseText = "Adicionar \"\(item.title)\" ao Mercado"
+            boldRange = "\"\(item.title)\""
+            boldTerm = "Mercado"
+        case "create-recipe":
+            baseText = "Criar receita com \"\(item.title)\""
+            boldRange = "\"\(item.title)\""
+            boldTerm = "receita"
+        default:
+            return AttributedString(item.title)
+        }
+
+        var attributed = AttributedString(baseText)
+        attributed.font = .caption
+
+        if let range = attributed.range(of: boldRange) {
+            attributed[range].font = .caption.bold()
+        }
+        if let range = attributed.range(of: boldTerm) {
+            attributed[range].font = .caption.bold()
+        }
+
+        return attributed
     }
 
     static func recentIcon(for type: String) -> String {
