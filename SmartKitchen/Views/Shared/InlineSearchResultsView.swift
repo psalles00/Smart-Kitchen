@@ -9,6 +9,7 @@ struct InlineSearchResultsView: View {
     @ObservedObject var searchBarState: SearchBarState
     @ObservedObject var searchService: UniversalSearchService
     let onAction: (CommandBarAction) -> Void
+    let topPinnedInset: CGFloat
 
     // Inline chat state
     @State private var showInlineChat = false
@@ -27,36 +28,9 @@ struct InlineSearchResultsView: View {
     var body: some View {
         Group {
             if showConversationHistory {
-                ConversationHistoryView(
-                    onSelect: { conversationId in
-                        chatExistingConversationId = conversationId
-                        chatInitialQuery = nil
-                        showConversationHistory = false
-                        showInlineChat = true
-                    },
-                    onDismiss: {
-                        showConversationHistory = false
-                    }
-                )
+                conversationHistoryContent
             } else if showInlineChat {
-                InlineChatView(
-                    initialQuery: chatInitialQuery,
-                    existingConversationId: chatExistingConversationId,
-                    onDismiss: {
-                        showInlineChat = false
-                        chatInitialQuery = nil
-                        chatExistingConversationId = nil
-                        searchBarState.dismiss()
-                    },
-                    onShowHistory: {
-                        showConversationHistory = true
-                    },
-                    searchBarState: searchBarState,
-                    pendingExternalMessage: $pendingExternalChatMessage,
-                    onConversationCreated: { id in
-                        chatExistingConversationId = id
-                    }
-                )
+                inlineChatContent
             } else {
                 searchResultsList
             }
@@ -120,7 +94,10 @@ struct InlineSearchResultsView: View {
         .onChange(of: pendingShowHistory) { _, newValue in
             if newValue {
                 pendingShowHistory = false
-                showConversationHistory = true
+                showConversationHistory.toggle()
+                if showConversationHistory {
+                    showInlineChat = false
+                }
             }
         }
         .onAppear {
@@ -151,8 +128,33 @@ struct InlineSearchResultsView: View {
             if pendingShowHistory {
                 pendingShowHistory = false
                 showConversationHistory = true
+                showInlineChat = false
             }
         }
+    }
+
+    private var conversationHistoryContent: some View {
+        ConversationHistoryView(
+            showsHeader: false,
+            topPinnedInset: topPinnedInset,
+            onSelect: handleConversationSelection,
+            onDismiss: { showConversationHistory = false }
+        )
+    }
+
+    private var inlineChatContent: some View {
+        InlineChatView(
+            initialQuery: chatInitialQuery,
+            existingConversationId: chatExistingConversationId,
+            onDismiss: dismissInlineChat,
+            onShowHistory: { showConversationHistory = true },
+            topPinnedInset: topPinnedInset,
+            searchBarState: searchBarState,
+            pendingExternalMessage: $pendingExternalChatMessage,
+            onConversationCreated: { id in
+                chatExistingConversationId = id
+            }
+        )
     }
 
     // MARK: - Search Results List
@@ -248,7 +250,7 @@ struct InlineSearchResultsView: View {
                     }
                 }
             }
-            .padding(.top, 12)
+            .padding(.top, topPinnedInset + 12)
             .padding(.bottom, 16)
         }
         .scrollDismissesKeyboard(.interactively)
@@ -314,6 +316,20 @@ struct InlineSearchResultsView: View {
         showInlineChat = true
         searchBarState.mode = .aiChat
         searchBarState.searchText = ""
+    }
+
+    private func handleConversationSelection(_ conversationId: UUID) {
+        chatExistingConversationId = conversationId
+        chatInitialQuery = nil
+        showConversationHistory = false
+        showInlineChat = true
+    }
+
+    private func dismissInlineChat() {
+        showInlineChat = false
+        chatInitialQuery = nil
+        chatExistingConversationId = nil
+        searchBarState.dismiss()
     }
 
     private func quickActionForResult(_ result: SearchResult) -> (() -> Void)? {

@@ -49,9 +49,9 @@ struct CommandBarResultRow: View {
     private var currentTint: Color {
         switch result.type {
         case .pantryItem:
-            return .green
+            return Color(red: 160/255, green: 58/255, blue: 19/255)
         case .groceryItem:
-            return .orange
+            return Color(red: 37/255, green: 79/255, blue: 34/255)
         default:
             return .secondary
         }
@@ -305,8 +305,8 @@ struct CommandBarResultRow: View {
 
     private func tagTint(for type: SearchResultType) -> Color {
         switch type {
-        case .pantryItem:  return .orange
-        case .groceryItem: return .green
+        case .pantryItem:  return Color(red: 37/255, green: 79/255, blue: 34/255)
+        case .groceryItem: return Color(red: 160/255, green: 58/255, blue: 19/255)
         case .recipe:      return .red
         case .utensil:     return .purple
         case .suggestion:  return .blue

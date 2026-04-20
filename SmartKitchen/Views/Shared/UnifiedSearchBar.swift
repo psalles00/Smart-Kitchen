@@ -1,6 +1,7 @@
 import SwiftUI
 #if os(iOS)
-import Speech
+import PhotosUI
+import UIKit
 #endif
 
 // MARK: - Unified Search Bar
@@ -12,7 +13,13 @@ struct UnifiedSearchBar: View {
     let onSubmit: (String) -> Void
 
     @FocusState private var isFocused: Bool
-    @State private var showDictation = false
+
+    #if os(iOS)
+    @State private var showPhotoLibrary = false
+    @State private var selectedPhotoItem: PhotosPickerItem?
+    @State private var showCameraPicker = false
+    @State private var showCameraUnavailableAlert = false
+    #endif
 
     private var isEmpty: Bool {
         state.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -73,7 +80,9 @@ struct UnifiedSearchBar: View {
 
             // Gallery button
             Button {
-                // Placeholder: photo picker
+                #if os(iOS)
+                showPhotoLibrary = true
+                #endif
             } label: {
                 Image(systemName: "photo.on.rectangle")
                     .font(.system(size: 15, weight: .medium))
@@ -84,7 +93,13 @@ struct UnifiedSearchBar: View {
 
             // Camera button
             Button {
-                // Placeholder: camera capture
+                #if os(iOS)
+                if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                    showCameraPicker = true
+                } else {
+                    showCameraUnavailableAlert = true
+                }
+                #endif
             } label: {
                 Image(systemName: "camera")
                     .font(.system(size: 15, weight: .medium))
@@ -108,6 +123,25 @@ struct UnifiedSearchBar: View {
         .onChange(of: state.defocusTrigger) { _, _ in
             isFocused = false
         }
+        #if os(iOS)
+        .photosPicker(isPresented: $showPhotoLibrary, selection: $selectedPhotoItem, matching: .images)
+        .onChange(of: selectedPhotoItem) { _, newValue in
+            Task {
+                await handleSelectedPhoto(newValue)
+            }
+        }
+        .sheet(isPresented: $showCameraPicker) {
+            CameraMediaPicker(mode: .photoOnly) { _ in
+                appendImageAttachmentHint(source: "camera")
+            }
+            .forceLightStatusBar()
+        }
+        .alert("Câmera indisponível", isPresented: $showCameraUnavailableAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text("Este dispositivo não permite capturar fotos no momento.")
+        }
+        #endif
     }
 
     // MARK: - Background
@@ -128,23 +162,34 @@ struct UnifiedSearchBar: View {
 
     #if os(iOS)
     private func startDictation() {
-        // Trigger the system keyboard dictation by requesting speech authorization
-        // and switching the keyboard to dictation mode via first responder
-        SFSpeechRecognizer.requestAuthorization { status in
-            DispatchQueue.main.async {
-                if status == .authorized {
-                    // Focus the text field — iOS will show microphone on keyboard
-                    isFocused = true
-                    // Use UITextInput to toggle dictation if available
-                    if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                       let window = scene.windows.first,
-                       let responder = window.findFirstResponder() {
-                        // The keyboard dictation button becomes available when focused
-                        // We trigger it by setting input mode
-                        responder.perform(NSSelectorFromString("toggleDictation:"), with: nil)
-                    }
-                }
+        // Keep to native keyboard dictation flow.
+        isFocused = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+               let window = scene.windows.first,
+               let responder = window.findFirstResponder() {
+                responder.perform(NSSelectorFromString("toggleDictation:"), with: nil)
             }
+        }
+    }
+
+    private func handleSelectedPhoto(_ item: PhotosPickerItem?) async {
+        guard let item else { return }
+        _ = try? await item.loadTransferable(type: Data.self)
+        await MainActor.run {
+            appendImageAttachmentHint(source: "gallery")
+            selectedPhotoItem = nil
+        }
+    }
+
+    private func appendImageAttachmentHint(source: String) {
+        let token = source == "camera" ? "[foto]" : "[imagem]"
+        if state.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            state.searchText = "Analise esta \(token)"
+            return
+        }
+        if !state.searchText.contains(token) {
+            state.searchText += " \(token)"
         }
     }
     #endif

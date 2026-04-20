@@ -29,8 +29,8 @@ enum ItemListType: String, CaseIterable, Identifiable {
 
     var color: Color {
         switch self {
-        case .pantry:  Color.orange
-        case .grocery: Color.blue
+        case .pantry:  Color(red: 37/255, green: 79/255, blue: 34/255)
+        case .grocery: Color(red: 160/255, green: 58/255, blue: 19/255)
         case .utensil: Color.purple
         }
     }

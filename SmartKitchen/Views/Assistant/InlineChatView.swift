@@ -29,6 +29,8 @@ struct InlineChatView: View {
     let onDismiss: () -> Void
     /// Called when viewing conversation history.
     let onShowHistory: () -> Void
+    /// Top inset reserved for the parent pinned header+gradient overlay.
+    let topPinnedInset: CGFloat
     /// Shared search bar state — when provided, the unified search bar acts as input.
     var searchBarState: SearchBarState? = nil
     /// External message to send (received from the unified search bar).
@@ -51,6 +53,7 @@ struct InlineChatView: View {
         existingConversationId: UUID? = nil,
         onDismiss: @escaping () -> Void,
         onShowHistory: @escaping () -> Void,
+        topPinnedInset: CGFloat = 0,
         searchBarState: SearchBarState? = nil,
         pendingExternalMessage: Binding<String?> = .constant(nil),
         onConversationCreated: ((UUID) -> Void)? = nil
@@ -59,6 +62,7 @@ struct InlineChatView: View {
         self.existingConversationId = existingConversationId
         self.onDismiss = onDismiss
         self.onShowHistory = onShowHistory
+        self.topPinnedInset = topPinnedInset
         self.searchBarState = searchBarState
         self._pendingExternalMessage = pendingExternalMessage
         self.onConversationCreated = onConversationCreated
@@ -157,7 +161,8 @@ struct InlineChatView: View {
                             Spacer()
                                 .frame(height: max(chatAreaHeight - 80, 0))
                         }
-                        .padding(.vertical, 12)
+                        .padding(.top, isAIMode ? (topPinnedInset + 12) : 12)
+                        .padding(.bottom, 12)
                     }
                     .background(
                         GeometryReader { geo in

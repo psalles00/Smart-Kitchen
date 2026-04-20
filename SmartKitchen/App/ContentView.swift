@@ -453,6 +453,7 @@ struct ContentView: View {
                 searchBarState: searchBarState,
                 searchService: searchService,
                 onAction: { handleCommandBarAction($0) },
+                topPinnedInset: 0,
                 pendingChatQuery: $pendingChatQuery,
                 pendingOpenChat: $pendingOpenChat,
                 pendingNewConversation: $pendingNewConversation,

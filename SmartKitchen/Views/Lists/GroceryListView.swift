@@ -163,7 +163,7 @@ struct GroceryListView: View {
                 } label: {
                     Label("Em Ambos", systemImage: "square.on.square")
                 }
-                .tint(.blue)
+                .tint(Color(red: 37/255, green: 79/255, blue: 34/255))
             }
 
             Button {
@@ -171,7 +171,7 @@ struct GroceryListView: View {
             } label: {
                 Label(item.isPantry ? "Remover" : "Mover", systemImage: item.isPantry ? "refrigerator.fill" : "checkmark")
             }
-            .tint(item.isPantry ? .orange : .green)
+            .tint(item.isPantry ? Color(red: 37/255, green: 79/255, blue: 34/255) : Color(red: 160/255, green: 58/255, blue: 19/255))
         }
         .draggable(ListsDragPayload(itemID: item.id, sourceList: .grocery)) {
             DragLiftPreviewCard(
@@ -412,7 +412,7 @@ struct GroceryItemRow: View {
                         if isAlsoInPantry {
                             Image(systemName: "refrigerator")
                                 .font(.system(size: 9))
-                                .foregroundStyle(.orange.opacity(0.7))
+                                .foregroundStyle(Color(red: 37/255, green: 79/255, blue: 34/255).opacity(0.7))
                         }
                     }
                     subtitleLine

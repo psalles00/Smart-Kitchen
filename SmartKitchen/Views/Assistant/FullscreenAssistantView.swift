@@ -26,6 +26,7 @@ struct FullscreenAssistantView: View {
     // Drag-to-dismiss
     @State private var dragOffset: CGFloat = 0
     @State private var contentOpacity: Double = 0
+    private let topPinnedInset: CGFloat = 92
 
     var body: some View {
         ZStack {
@@ -34,15 +35,11 @@ struct FullscreenAssistantView: View {
                 .ignoresSafeArea()
                 .onTapGesture { searchBarState.dismiss() }
 
-            VStack(spacing: 0) {
-                header
-                    .padding(.horizontal, 20)
-                    .padding(.top, 12)
-                    .padding(.bottom, 6)
-
-                contentArea
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
+            contentArea
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .overlay(alignment: .top) {
+                    pinnedHeader
+                }
             .offset(y: max(dragOffset, 0))
             .opacity(contentOpacity)
         }
@@ -51,21 +48,7 @@ struct FullscreenAssistantView: View {
                 .padding(.vertical, 6)
                 .matchedGeometryEffect(id: "assistantBar", in: namespace)
         }
-        .gesture(
-            DragGesture(minimumDistance: 30)
-                .onChanged { value in
-                    dragOffset = value.translation.height
-                }
-                .onEnded { value in
-                    if value.translation.height > 120 || value.predictedEndTranslation.height > 300 {
-                        searchBarState.dismiss()
-                    } else {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                            dragOffset = 0
-                        }
-                    }
-                }
-        )
+        .simultaneousGesture(dismissDragGesture)
         .onAppear {
             // Fade in content shortly after the bar morph starts
             withAnimation(.easeOut(duration: 0.25).delay(0.1)) {
@@ -82,6 +65,23 @@ struct FullscreenAssistantView: View {
         }
     }
 
+    private var dismissDragGesture: some Gesture {
+        DragGesture(minimumDistance: 24)
+            .onChanged { value in
+                guard value.translation.height > 0 else { return }
+                dragOffset = value.translation.height
+            }
+            .onEnded { value in
+                if value.translation.height > 120 || value.predictedEndTranslation.height > 300 {
+                    searchBarState.dismiss()
+                } else {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                        dragOffset = 0
+                    }
+                }
+            }
+    }
+
     // MARK: - Header
 
     @ViewBuilder
@@ -89,6 +89,7 @@ struct FullscreenAssistantView: View {
         HStack(alignment: .center) {
             Text(searchBarState.mode == .aiChat ? "Modo IA" : "Assistente")
                 .font(.pageTitle)
+                .foregroundStyle(Color.primary)
 
             Spacer()
 
@@ -138,6 +139,7 @@ struct FullscreenAssistantView: View {
                 searchBarState: searchBarState,
                 searchService: searchService,
                 onAction: onAction,
+                topPinnedInset: topPinnedInset,
                 pendingChatQuery: $pendingChatQuery,
                 pendingOpenChat: $pendingOpenChat,
                 pendingNewConversation: $pendingNewConversation,
@@ -158,7 +160,7 @@ struct FullscreenAssistantView: View {
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 24)
-                    .padding(.top, 16)
+                    .padding(.top, topPinnedInset + 8)
 
                 VStack(alignment: .leading, spacing: 10) {
                     idleActionRow(icon: "sparkles", iconColor: .purple, text: "Perguntar à IA") {
@@ -179,6 +181,34 @@ struct FullscreenAssistantView: View {
             .padding(.bottom, 20)
         }
         .scrollDismissesKeyboard(.interactively)
+    }
+
+    private var pinnedHeader: some View {
+        VStack(spacing: 0) {
+            header
+                .padding(.horizontal, 20)
+                .padding(.top, 12)
+                .padding(.bottom, 8)
+                .contentShape(Rectangle())
+                .highPriorityGesture(dismissDragGesture)
+                .background(Color.white, ignoresSafeAreaEdges: .top)
+
+            Rectangle()
+                .fill(.bar)
+                .frame(height: 38)
+                .mask {
+                    LinearGradient(
+                        stops: [
+                            .init(color: .black.opacity(colorScheme == .dark ? 0.92 : 1), location: 0),
+                            .init(color: .black.opacity(colorScheme == .dark ? 0.55 : 0.65), location: 0.45),
+                            .init(color: .clear, location: 1)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                }
+                .allowsHitTesting(false)
+        }
     }
 
     private func idleActionRow(icon: String, iconColor: Color, text: String, action: @escaping () -> Void) -> some View {
@@ -211,15 +241,7 @@ struct FullscreenAssistantView: View {
 
     @ViewBuilder
     private var pageBackground: some View {
-        if #available(iOS 26, macOS 26, *) {
-            Rectangle()
-                .fill(colorScheme == .dark
-                      ? Color.black.opacity(0.55)
-                      : Color.white.opacity(0.55))
-                .glassEffect(.regular, in: .rect(cornerRadius: 0))
-        } else {
-            Rectangle()
-                .fill(colorScheme == .dark ? Color.black : Color.white)
-        }
+        Rectangle()
+            .fill(Color.white)
     }
 }

@@ -6,12 +6,28 @@ struct ConversationHistoryView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \ChatConversation.updatedAt, order: .reverse) private var conversations: [ChatConversation]
 
+    let showsHeader: Bool
+    let topPinnedInset: CGFloat
     let onSelect: (UUID) -> Void
     let onDismiss: () -> Void
 
+    init(
+        showsHeader: Bool = true,
+        topPinnedInset: CGFloat = 0,
+        onSelect: @escaping (UUID) -> Void,
+        onDismiss: @escaping () -> Void
+    ) {
+        self.showsHeader = showsHeader
+        self.topPinnedInset = topPinnedInset
+        self.onSelect = onSelect
+        self.onDismiss = onDismiss
+    }
+
     var body: some View {
         VStack(spacing: 0) {
-            header
+            if showsHeader {
+                header
+            }
 
             if conversations.isEmpty {
                 emptyState
@@ -22,7 +38,8 @@ struct ConversationHistoryView: View {
                             conversationRow(conversation)
                         }
                     }
-                    .padding(.vertical, 8)
+                    .padding(.top, showsHeader ? 8 : topPinnedInset + 8)
+                    .padding(.bottom, 8)
                 }
             }
         }
@@ -64,6 +81,7 @@ struct ConversationHistoryView: View {
             Spacer()
         }
         .frame(maxWidth: .infinity)
+        .padding(.top, showsHeader ? 0 : topPinnedInset)
     }
 
     private func conversationRow(_ conversation: ChatConversation) -> some View {
