@@ -12,6 +12,11 @@ struct ConversationHistoryView: View {
     let onSelect: (UUID) -> Void
     let onDismiss: () -> Void
 
+    private var scrollTopThreshold: CGFloat {
+        let topPadding = showsHeader ? 8 : topPinnedInset + 2
+        return topPadding - 10
+    }
+
     init(
         showsHeader: Bool = true,
         topPinnedInset: CGFloat = 0,
@@ -51,7 +56,7 @@ struct ConversationHistoryView: View {
                 }
                 .coordinateSpace(name: "AssistantHistoryScroll")
                 .onScrollOffsetChange { offset in
-                    isScrollAtTop = offset >= -10
+                    isScrollAtTop = offset >= scrollTopThreshold
                 }
                 .onAppear {
                     isScrollAtTop = true

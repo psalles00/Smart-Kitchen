@@ -26,6 +26,10 @@ struct InlineSearchResultsView: View {
     @Binding var pendingNewConversation: Bool
     @Binding var pendingShowHistory: Bool
 
+    private var scrollTopThreshold: CGFloat {
+        topPinnedInset - 10
+    }
+
     init(
         searchBarState: SearchBarState,
         searchService: UniversalSearchService,
@@ -268,7 +272,7 @@ struct InlineSearchResultsView: View {
             }
             .coordinateSpace(name: "AssistantSearchResultsScroll")
             .onScrollOffsetChange { offset in
-                isScrollAtTop = offset >= -10
+                isScrollAtTop = offset >= scrollTopThreshold
             }
             .onAppear {
                 isScrollAtTop = true

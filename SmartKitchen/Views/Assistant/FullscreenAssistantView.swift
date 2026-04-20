@@ -26,6 +26,9 @@ struct FullscreenAssistantView: View {
     @State private var dragOffset: CGFloat = 0
     @State private var contentOpacity: Double = 0.88
     @State private var isScrollableContentAtTop: Bool = true
+    // Snapshot of scroll-at-top status captured at the moment a drag begins.
+    // nil means the current drag hasn't started yet.
+    @State private var dragStartedAtTop: Bool? = nil
     private let topPinnedInset: CGFloat = 72
 
     var body: some View {
@@ -54,11 +57,19 @@ struct FullscreenAssistantView: View {
     private var dismissDragGesture: some Gesture {
         DragGesture(minimumDistance: 24)
             .onChanged { value in
-                guard value.translation.height > 0, isScrollableContentAtTop else { return }
+                // A drag that starts while content is scrolled must never switch
+                // into dismiss mode mid-gesture just because it later reaches top.
+                if dragStartedAtTop == nil {
+                    dragStartedAtTop = isScrollableContentAtTop
+                }
+                guard value.translation.height > 0, dragStartedAtTop == true else { return }
                 dragOffset = value.translation.height
             }
             .onEnded { value in
-                guard isScrollableContentAtTop else {
+                let startedAtTop = dragStartedAtTop ?? isScrollableContentAtTop
+                dragStartedAtTop = nil
+
+                guard startedAtTop else {
                     withAnimation(.snappy(duration: 0.2, extraBounce: 0.02)) {
                         dragOffset = 0
                     }

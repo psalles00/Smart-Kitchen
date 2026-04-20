@@ -76,6 +76,10 @@ struct InlineChatView: View {
 
     private var settings: AppSettings? { settingsArray.first }
 
+    private var scrollTopThreshold: CGFloat {
+        (isAIMode ? topPinnedInset : 12) - 10
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             // Hide own header when the parent panel provides one
@@ -175,7 +179,7 @@ struct InlineChatView: View {
                     }
                     .coordinateSpace(name: "AssistantInlineChatScroll")
                     .onScrollOffsetChange { offset in
-                        isScrollAtTop = offset >= -10
+                        isScrollAtTop = offset >= scrollTopThreshold
                     }
                     .onAppear {
                         isScrollAtTop = true
