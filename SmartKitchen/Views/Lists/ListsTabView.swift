@@ -139,6 +139,7 @@ struct ListsTabView: View {
                     subtabPicker
                         .padding(.horizontal)
                         .padding(.top, 8)
+                        .padding(.bottom, 8)
 
                     Group {
                         switch selectedSubtab {

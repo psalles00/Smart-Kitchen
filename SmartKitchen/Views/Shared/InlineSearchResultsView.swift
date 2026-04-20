@@ -25,6 +25,36 @@ struct InlineSearchResultsView: View {
     @Binding var pendingNewConversation: Bool
     @Binding var pendingShowHistory: Bool
 
+    init(
+        searchBarState: SearchBarState,
+        searchService: UniversalSearchService,
+        onAction: @escaping (CommandBarAction) -> Void,
+        topPinnedInset: CGFloat,
+        pendingChatQuery: Binding<String?>,
+        pendingOpenChat: Binding<Bool>,
+        pendingNewConversation: Binding<Bool>,
+        pendingShowHistory: Binding<Bool>
+    ) {
+        self.searchBarState = searchBarState
+        self.searchService = searchService
+        self.onAction = onAction
+        self.topPinnedInset = topPinnedInset
+        _pendingChatQuery = pendingChatQuery
+        _pendingOpenChat = pendingOpenChat
+        _pendingNewConversation = pendingNewConversation
+        _pendingShowHistory = pendingShowHistory
+
+        let shouldShowHistory = pendingShowHistory.wrappedValue
+        let shouldOpenChat = searchBarState.mode == .aiChat
+            || pendingOpenChat.wrappedValue
+            || pendingNewConversation.wrappedValue
+            || pendingChatQuery.wrappedValue != nil
+
+        _showConversationHistory = State(initialValue: shouldShowHistory)
+        _showInlineChat = State(initialValue: shouldOpenChat && !shouldShowHistory)
+        _chatInitialQuery = State(initialValue: pendingChatQuery.wrappedValue)
+    }
+
     var body: some View {
         Group {
             if showConversationHistory {

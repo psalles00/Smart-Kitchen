@@ -232,7 +232,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
                     }
                 } else {
                     if dragOffset >= revealThreshold {
-                        searchBarState.reveal()
+                        searchBarState.reveal(mode: .idle)
                     }
                 }
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {

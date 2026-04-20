@@ -25,7 +25,7 @@ struct FullscreenAssistantView: View {
 
     // Drag-to-dismiss
     @State private var dragOffset: CGFloat = 0
-    @State private var contentOpacity: Double = 0
+    @State private var contentOpacity: Double = 0.88
     private let topPinnedInset: CGFloat = 92
 
     var body: some View {
@@ -50,17 +50,8 @@ struct FullscreenAssistantView: View {
         }
         .simultaneousGesture(dismissDragGesture)
         .onAppear {
-            // Fade in content shortly after the bar morph starts
-            withAnimation(.easeOut(duration: 0.25).delay(0.1)) {
+            withAnimation(.smooth(duration: 0.12)) {
                 contentOpacity = 1
-            }
-            // Focus keyboard
-            searchBarState.focusTrigger += 1
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
-                searchBarState.focusTrigger += 1
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                searchBarState.focusTrigger += 1
             }
         }
     }
@@ -75,7 +66,7 @@ struct FullscreenAssistantView: View {
                 if value.translation.height > 120 || value.predictedEndTranslation.height > 300 {
                     searchBarState.dismiss()
                 } else {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                    withAnimation(.snappy(duration: 0.2, extraBounce: 0.02)) {
                         dragOffset = 0
                     }
                 }

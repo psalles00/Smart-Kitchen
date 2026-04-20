@@ -230,10 +230,10 @@ struct ContentView: View {
                             onSettingsTap: { showSettings = true },
                             onOpenChat: {
                                 pendingOpenChat = true
-                                searchBarState.reveal()
+                                searchBarState.reveal(mode: .aiChat)
                             },
                             onOpenSearch: {
-                                searchBarState.reveal()
+                                searchBarState.reveal(mode: .idle)
                             }
                         )
                     }
@@ -275,7 +275,7 @@ struct ContentView: View {
                         .ignoresSafeArea(.keyboard, edges: .bottom)
                 }
             }
-            .animation(.spring(response: 0.4, dampingFraction: 0.85), value: searchBarState.isVisible)
+            .animation(.snappy(duration: 0.22, extraBounce: 0.02), value: searchBarState.isVisible)
             .onChange(of: searchBarState.debouncedSearchText) { _, newValue in
                 guard searchBarState.mode != .aiChat else { return }
                 searchService.search(query: newValue, context: modelContext, showUtensils: settings?.showUtensils == true)
@@ -299,7 +299,7 @@ struct ContentView: View {
                 .zIndex(1)
             }
         }
-        .animation(.spring(response: 0.35, dampingFraction: 0.8), value: searchBarState.isVisible)
+        .animation(.snappy(duration: 0.22, extraBounce: 0.02), value: searchBarState.isVisible)
     }
 
     // MARK: - Bottom Search Bar
@@ -602,7 +602,7 @@ struct ContentView: View {
         }
         .toolbarBackground(.hidden, for: .windowToolbar)
         .toolbarColorScheme(.dark, for: .windowToolbar)
-        .focusedSceneValue(\.openCommandBarAction, { searchBarState.reveal() })
+        .focusedSceneValue(\.openCommandBarAction, { searchBarState.reveal(mode: .idle) })
         .background {
             macAppBackground
                 .ignoresSafeArea()
@@ -824,10 +824,10 @@ struct ContentView: View {
             showAddUtensil = true
         case .askAssistant(let prefill):
             pendingChatQuery = prefill
-            searchBarState.reveal()
+            searchBarState.reveal(mode: .aiChat)
         case .openAssistant:
             pendingOpenChat = true
-            searchBarState.reveal()
+            searchBarState.reveal(mode: .aiChat)
         case .movePantryToGrocery(let id):
             movePantryItemToGrocery(id: id)
             refreshSearchAfterMove()
