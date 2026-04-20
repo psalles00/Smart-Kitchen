@@ -52,7 +52,6 @@ struct ContentView: View {
     @State private var searchDragOffset: CGFloat = 0
     @StateObject private var searchService = UniversalSearchService()
     @StateObject private var searchBarState = SearchBarState()
-    @Namespace private var barNamespace
 
     // Search-triggered edit sheets
     @State private var searchEditItem: UnifiedItem?
@@ -266,15 +265,6 @@ struct ContentView: View {
                 }
             }
             .toolbar(searchBarState.isVisible ? .hidden : .automatic, for: .tabBar)
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                if !searchBarState.isVisible {
-                    UnifiedSearchBar(state: searchBarState) { _ in }
-                        .padding(.vertical, 6)
-                        .padding(.bottom, 50) // Keep slightly above the tab bar without a large gap
-                        .matchedGeometryEffect(id: "assistantBar", in: barNamespace)
-                        .ignoresSafeArea(.keyboard, edges: .bottom)
-                }
-            }
             .animation(.snappy(duration: 0.22, extraBounce: 0.02), value: searchBarState.isVisible)
             .onChange(of: searchBarState.debouncedSearchText) { _, newValue in
                 guard searchBarState.mode != .aiChat else { return }
@@ -284,7 +274,6 @@ struct ContentView: View {
 
             if searchBarState.isVisible {
                 FullscreenAssistantView(
-                    namespace: barNamespace,
                     searchBarState: searchBarState,
                     searchService: searchService,
                     onAction: { handleCommandBarAction($0) },
@@ -299,24 +288,25 @@ struct ContentView: View {
                 .zIndex(1)
             }
         }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            persistentAssistantBar
+        }
         .animation(.snappy(duration: 0.22, extraBounce: 0.02), value: searchBarState.isVisible)
     }
 
-    // MARK: - Bottom Search Bar
+    // MARK: - Persistent Search Bar
+
+    private var persistentAssistantBar: some View {
+        UnifiedSearchBar(state: searchBarState) { _ in }
+            .padding(.vertical, 6)
+            .padding(.bottom, searchBarState.isVisible ? 0 : 50)
+    }
 
     /// Whether the results panel should be shown (first letter typed, chat, etc.)
     private var hasSearchContent: Bool {
         guard searchBarState.isVisible else { return false }
         let hasText = !searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         return hasText || searchBarState.mode == .aiChat || pendingOpenChat || pendingChatQuery != nil
-    }
-
-    @ViewBuilder
-    private var bottomSearchBarArea: some View {
-        // Used by macOS only now; iOS uses AssistantTriggerBar as a floating overlay
-        UnifiedSearchBar(state: searchBarState) { _ in }
-            .padding(.vertical, 6)
-            .ignoresSafeArea(.keyboard, edges: .bottom)
     }
 
     /// Invisible tap catcher: when the search bar is visible but has no content,

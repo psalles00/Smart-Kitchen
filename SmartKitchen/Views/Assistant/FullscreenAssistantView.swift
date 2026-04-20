@@ -5,13 +5,12 @@ import SwiftUI
 /// Full-screen page that hosts both the "Assistente" (search) and the
 /// "Modo IA" (chat) experiences on iOS.
 ///
-/// Presented as a ZStack overlay in ContentView (not fullScreenCover) so that
-/// `matchedGeometryEffect` can morph the trigger pill into the search bar.
+/// Presented as a ZStack overlay in ContentView so the persistent search bar
+/// remains mounted and focused while the assistant expands.
 ///
 /// Background: LiquidGlass on iOS 26+, solid white/black on older iOS.
 /// Dismiss: tap empty area, drag down, or close button.
 struct FullscreenAssistantView: View {
-    let namespace: Namespace.ID
     @ObservedObject var searchBarState: SearchBarState
     @ObservedObject var searchService: UniversalSearchService
     @Environment(\.colorScheme) private var colorScheme
@@ -42,11 +41,6 @@ struct FullscreenAssistantView: View {
                 }
             .offset(y: max(dragOffset, 0))
             .opacity(contentOpacity)
-        }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            UnifiedSearchBar(state: searchBarState) { _ in }
-                .padding(.vertical, 6)
-                .matchedGeometryEffect(id: "assistantBar", in: namespace)
         }
         .simultaneousGesture(dismissDragGesture)
         .onAppear {
