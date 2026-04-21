@@ -17,6 +17,9 @@ struct RecipeImportPreviewView: View {
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var showPhotoPicker = false
     @State private var saveErrorMessage: String?
+    @State private var isImprovingImport = false
+    @State private var improveImportUsed = false
+    @State private var improveImportMessage: String?
 
     init(
         draft: RecipeDraft,
@@ -172,6 +175,28 @@ struct RecipeImportPreviewView: View {
                     .onDelete { offsets in
                         draft.requiredUtensils.remove(atOffsets: offsets)
                     }
+                }
+            }
+
+            Section("Refino automático") {
+                Button {
+                    improveImportUsed = true
+                    improveImport()
+                } label: {
+                    HStack {
+                        if isImprovingImport {
+                            ProgressView()
+                                .controlSize(.small)
+                        }
+                        Text(isImprovingImport ? "Melhorando importação..." : "Melhorar importação")
+                    }
+                }
+                .disabled(isImprovingImport || improveImportUsed)
+
+                if let improveImportMessage {
+                    Text(improveImportMessage)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
             }
         }
@@ -386,6 +411,25 @@ struct RecipeImportPreviewView: View {
     private func save() {
         if let errorMessage = onSave(draft) {
             saveErrorMessage = errorMessage
+        }
+    }
+
+    private func improveImport() {
+        isImprovingImport = true
+        improveImportMessage = nil
+
+        Task { @MainActor in
+            defer { isImprovingImport = false }
+
+            do {
+                let improver = RecipeImportImprover()
+                let improved = try await improver.improve(draft: draft)
+                draft = improved
+                improveImportMessage = "Importação melhorada com transcrição do vídeo e reorganização automática."
+            } catch {
+                improveImportMessage = "Não foi possível melhorar a importação: \(error.localizedDescription)"
+                RecipeImportLogger.error("preview improve import failed error=\(error.localizedDescription)")
+            }
         }
     }
 

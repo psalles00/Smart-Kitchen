@@ -34,6 +34,26 @@ enum ItemListType: String, CaseIterable, Identifiable {
         case .utensil: Color.purple
         }
     }
+
+    var listName: String {
+        switch self {
+        case .pantry:  "Despensa"
+        case .grocery: "Mercado"
+        case .utensil: "Utensílios"
+        }
+    }
+
+    var removalDestinationLabel: String {
+        switch self {
+        case .pantry:  "da Despensa"
+        case .grocery: "do Mercado"
+        case .utensil: "dos Utensílios"
+        }
+    }
+
+    var removalButtonTitle: String {
+        "Remover \(removalDestinationLabel)"
+    }
 }
 
 enum ItemDetailMode {
@@ -58,6 +78,7 @@ struct ItemDetailView: View {
     var initialCategory: String? = nil
     var onCreated: ((UUID, ItemListType) -> Void)? = nil
     var onExistingItemRequested: ((UnifiedItem) -> Void)? = nil
+    var removalContext: ItemListType? = nil
 
     // MARK: - Shared State
 
@@ -83,6 +104,7 @@ struct ItemDetailView: View {
     @State private var showIconPicker = false
     @State private var showPhotoPreview = false
     @State private var showCategorySelection = false
+    @State private var showRemoveConfirmation = false
     @State private var selectedPhoto: PhotosPickerItem?
     @FocusState private var nameFieldFocused: Bool
 
@@ -174,6 +196,10 @@ struct ItemDetailView: View {
                     saveButton
                         .padding(.top, 28)
                         .padding(.bottom, 20)
+                } else if showsRemoveButton {
+                    removeButton
+                        .padding(.top, 28)
+                        .padding(.bottom, 20)
                 }
 
                 Spacer(minLength: 40)
@@ -215,6 +241,14 @@ struct ItemDetailView: View {
                 )
             }
             .presentationDetents([.medium, .large])
+        }
+        .alert(removeConfirmationTitle, isPresented: $showRemoveConfirmation) {
+            Button(removeConfirmationActionTitle, role: .destructive) {
+                removeEditedItem()
+            }
+            Button("Cancelar", role: .cancel) {}
+        } message: {
+            Text(removeConfirmationMessage)
         }
         .onChange(of: selectedPhoto) {
             loadPhoto()
@@ -741,11 +775,69 @@ struct ItemDetailView: View {
         .disabled(!canCreate)
     }
 
+    @ViewBuilder
+    private var removeButton: some View {
+        Button(role: .destructive) {
+            showRemoveConfirmation = true
+        } label: {
+            Text(removeConfirmationActionTitle)
+                .font(.headline)
+                .foregroundStyle(.red)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .background(Color.red.opacity(0.08), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        }
+        .buttonStyle(.plain)
+    }
+
     // MARK: - State Helpers
 
     private var resolvedHasExpiry: Bool {
         if isCreateMode { return hasExpirationDate }
         return editingItem?.expirationDate != nil
+    }
+
+    private var resolvedRemovalContext: ItemListType? {
+        guard let item = editingItem else { return nil }
+
+        if let removalContext, item.activeFlags.contains(removalContext) {
+            return removalContext
+        }
+
+        if item.activeFlags.count == 1 {
+            return item.activeFlags.first
+        }
+
+        return nil
+    }
+
+    private var showsRemoveButton: Bool {
+        !isCreateMode && resolvedRemovalContext != nil
+    }
+
+    private var removeConfirmationTitle: String {
+        guard let context = resolvedRemovalContext else {
+            return "Remover item?"
+        }
+        return "\(context.removalButtonTitle)?"
+    }
+
+    private var removeConfirmationActionTitle: String {
+        resolvedRemovalContext?.removalButtonTitle ?? "Remover item"
+    }
+
+    private var removeConfirmationMessage: String {
+        guard let item = editingItem, let context = resolvedRemovalContext else {
+            return ""
+        }
+
+        let remainingLists = item.activeFlags.filter { $0 != context }
+        if remainingLists.isEmpty {
+            return "Esse item será excluído permanentemente."
+        }
+
+        let remainingLabels = remainingLists.map(\.listName).joined(separator: ", ")
+        return "Esse item será removido \(context.removalDestinationLabel) e continuará em \(remainingLabels)."
     }
 
     // MARK: - Edit Bindings
@@ -1117,6 +1209,35 @@ struct ItemDetailView: View {
 
     private func openExistingItem(_ item: UnifiedItem) {
         onExistingItemRequested?(item)
+        dismiss()
+    }
+
+    private func removeEditedItem() {
+        guard let item = editingItem, let context = resolvedRemovalContext else { return }
+
+        withAnimation {
+            switch context {
+            case .pantry:
+                if item.isGrocery || item.isUtensil {
+                    item.isPantry = false
+                } else {
+                    modelContext.delete(item)
+                }
+            case .grocery:
+                if item.isPantry || item.isUtensil {
+                    item.isGrocery = false
+                } else {
+                    modelContext.delete(item)
+                }
+            case .utensil:
+                if item.isPantry || item.isGrocery {
+                    item.isUtensil = false
+                } else {
+                    modelContext.delete(item)
+                }
+            }
+        }
+
         dismiss()
     }
 }

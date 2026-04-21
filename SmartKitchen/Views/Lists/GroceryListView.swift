@@ -65,11 +65,11 @@ struct GroceryListView: View {
             }
         }
         .sheet(item: $editingItem) { item in
-            ItemDetailView(mode: .edit(item))
+            ItemDetailView(mode: .edit(item), removalContext: .grocery)
                 .forceLightStatusBar()
         }
         .sheet(item: $acquiredItem) { item in
-            ItemDetailView(mode: .edit(item))
+            ItemDetailView(mode: .edit(item), removalContext: .pantry)
                 .forceLightStatusBar()
         }
     }

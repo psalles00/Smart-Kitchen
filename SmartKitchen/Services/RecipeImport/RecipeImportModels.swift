@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 
 // MARK: - Source
 
@@ -40,6 +41,8 @@ struct RecipeDraft: Equatable {
     var externalURLString: String = ""
     var imageData: Data? = nil
     var imageURL: URL? = nil
+    /// Optional direct video URL from the import source (mainly social pages).
+    var videoURL: URL? = nil
     var requiredUtensils: [String] = []
     var ingredients: [IngredientDraft] = []
     var steps: [StepDraft] = []
@@ -182,5 +185,54 @@ enum RecipeImportError: LocalizedError {
         case .cancelled:
             return "Importação cancelada."
         }
+    }
+}
+
+// MARK: - Logging
+
+enum RecipeImportLogContext {
+    @TaskLocal static var sessionID: String = "no-session"
+}
+
+enum RecipeImportLogger {
+    private static let logger = Logger(subsystem: "com.pedrosalles.smartkitchen.sync", category: "RecipeImport")
+
+    static func debug(_ message: String, sessionID: String? = nil) {
+        let sid = sessionID ?? RecipeImportLogContext.sessionID
+        logger.debug("[\(sid, privacy: .public)] \(message, privacy: .public)")
+    }
+
+    static func info(_ message: String, sessionID: String? = nil) {
+        let sid = sessionID ?? RecipeImportLogContext.sessionID
+        logger.info("[\(sid, privacy: .public)] \(message, privacy: .public)")
+    }
+
+    static func error(_ message: String, sessionID: String? = nil) {
+        let sid = sessionID ?? RecipeImportLogContext.sessionID
+        logger.error("[\(sid, privacy: .public)] \(message, privacy: .public)")
+    }
+
+    static func sourceSummary(_ source: RecipeImportSource) -> String {
+        switch source {
+        case .url(let url):
+            return "source=url host=\(url.host ?? "-") value=\(url.absoluteString)"
+        case .text(let text):
+            return "source=text chars=\(text.count) preview=\(preview(text))"
+        case .image(let data):
+            return "source=image bytes=\(data.count)"
+        }
+    }
+
+    static func draftSummary(_ draft: RecipeDraft) -> String {
+        "draft name=\(preview(draft.name, limit: 64)) ingredients=\(draft.ingredients.count) steps=\(draft.steps.count) utensils=\(draft.requiredUtensils.count) hasVideoURL=\(draft.videoURL != nil) sourceLabel=\(preview(draft.sourceLabel, limit: 48))"
+    }
+
+    static func preview(_ text: String, limit: Int = 120) -> String {
+        let compact = text
+            .replacingOccurrences(of: "\n", with: " ")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard compact.count > limit else { return compact }
+        let idx = compact.index(compact.startIndex, offsetBy: limit)
+        return String(compact[..<idx]) + "..."
     }
 }

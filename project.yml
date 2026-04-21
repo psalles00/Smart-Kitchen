@@ -52,7 +52,7 @@ targets:
     capabilities:
       - iCloud:
           cloudKit: true
-          containerIdentifiers: [iCloud.com.pedrosalles.smartkitchen.sync]
+        containerIdentifiers: [iCloud.com.pedrosalles.smartkitchen.sync, iCloud.com.pedrosalles.smartkitchen.syn]
       - pushNotifications: {}
       - backgroundModes:
           modes: [remote-notification]

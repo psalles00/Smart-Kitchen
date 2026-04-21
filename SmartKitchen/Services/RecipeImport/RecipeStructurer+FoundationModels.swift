@@ -14,7 +14,11 @@ extension RecipeStructurer {
     /// Returns `nil` when the model is unavailable so callers can fall back to OpenAI.
     func structureOnDeviceFoundationModels(text: String, hints: Hints) async throws -> RecipeDraft? {
         let model = SystemLanguageModel.default
-        guard case .available = model.availability else { return nil }
+        guard case .available = model.availability else {
+            RecipeImportLogger.debug("FoundationModels unavailable availability=\(String(describing: model.availability))")
+            return nil
+        }
+        RecipeImportLogger.info("FoundationModels available, generating draft")
 
         let instructions = Self.systemPrompt
         let session = LanguageModelSession(instructions: instructions)
@@ -25,9 +29,11 @@ extension RecipeStructurer {
                 to: prompt,
                 generating: GeneratedRecipe.self
             )
+            RecipeImportLogger.info("FoundationModels response received")
             return Self.draft(from: response.content, hints: hints)
         } catch {
             // On-device failure shouldn't abort the whole import. Fall back.
+            RecipeImportLogger.error("FoundationModels failed error=\(error.localizedDescription)")
             return nil
         }
     }

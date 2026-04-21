@@ -15,9 +15,19 @@ struct IngredientNormalizer {
     }
 
     func normalize(_ draft: RecipeDraft) -> RecipeDraft {
+        RecipeImportLogger.info("normalizer start ingredients=\(draft.ingredients.count) utensils=\(draft.requiredUtensils.count)")
         var d = draft
-        d.ingredients = d.ingredients.map { normalize(ingredient: $0) }
-        d.requiredUtensils = d.requiredUtensils.map { normalizeName($0) }
+        d.ingredients = d.ingredients.map {
+            let normalized = normalize(ingredient: $0)
+            RecipeImportLogger.debug("normalizer ingredient \(RecipeImportLogger.preview($0.name, limit: 40)) -> \(RecipeImportLogger.preview(normalized.name, limit: 40))")
+            return normalized
+        }
+        d.requiredUtensils = d.requiredUtensils.map {
+            let normalized = normalizeName($0)
+            RecipeImportLogger.debug("normalizer utensil \(RecipeImportLogger.preview($0, limit: 40)) -> \(RecipeImportLogger.preview(normalized, limit: 40))")
+            return normalized
+        }
+        RecipeImportLogger.info("normalizer completed")
         return d
     }
 
@@ -46,13 +56,16 @@ struct IngredientNormalizer {
             i.name = exact.preferredTitle(matching: cleanedName)
             i.iconName = exact.nomeDoArquivo
             i.confidence = max(i.confidence, .high)
+            RecipeImportLogger.debug("normalizer exact match name=\(cleanedName)")
         } else if let match = bestFuzzyMatch(for: cleanedName) {
             i.name = match.entry.preferredTitle(matching: cleanedName)
             i.iconName = match.entry.nomeDoArquivo
             i.confidence = .medium
+            RecipeImportLogger.debug("normalizer fuzzy match name=\(cleanedName) distance=\(match.distance)")
         } else {
             i.name = cleanedName.isEmpty ? i.name : cleanedName
             if i.confidence == .high { i.confidence = .medium }
+            RecipeImportLogger.debug("normalizer no database match name=\(cleanedName)")
         }
 
         return i
@@ -115,6 +128,9 @@ struct IngredientNormalizer {
                     }
                 }
             }
+        }
+        if let best {
+            RecipeImportLogger.debug("fuzzy best query=\(query) distance=\(best.distance)")
         }
         return best
     }

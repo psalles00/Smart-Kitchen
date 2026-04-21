@@ -31,6 +31,14 @@ enum ListSubtab: String, CaseIterable, Codable {
         case .utensils: "Novo Utensílio"
         }
     }
+
+    var removalContext: ItemListType {
+        switch self {
+        case .pantry: .pantry
+        case .grocery: .grocery
+        case .utensils: .utensil
+        }
+    }
 }
 
 enum PantryListFilterOption: String, CaseIterable, Identifiable {
@@ -247,7 +255,7 @@ struct ListsTabView: View {
                 .forceLightStatusBar()
         }
         .sheet(item: $existingItemFromCreateFlow) { item in
-            ItemDetailView(mode: .edit(item))
+            ItemDetailView(mode: .edit(item), removalContext: selectedSubtab.removalContext)
                 .forceLightStatusBar()
         }
         #if os(macOS)

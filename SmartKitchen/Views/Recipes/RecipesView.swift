@@ -46,6 +46,8 @@ struct RecipesView: View {
     @State private var showAddRecipe = false
     @State private var showImportRecipe = false
     @State private var importInitialSource: RecipeImportSource? = nil
+    @State private var pendingImportedRecipeID: UUID? = nil
+    @State private var showImportedRecipeDetail = false
     @State private var showsInlineTitle = false
     @State private var editingRecipe: Recipe?
     @State private var showCompatibleOnly = false
@@ -179,10 +181,34 @@ struct RecipesView: View {
             RecipeImportHostView(initialSource: importInitialSource) { recipeID in
                 highlightedRecipeID = recipeID
                 selectedRecipeID = recipeID
+                pendingImportedRecipeID = recipeID
             }
             .modelContainer(CloudSyncService.shared.container)
             .forceLightStatusBar()
-            .onDisappear { importInitialSource = nil }
+            .onDisappear {
+                importInitialSource = nil
+                if pendingImportedRecipeID != nil {
+                    showImportedRecipeDetail = true
+                }
+            }
+        }
+        .sheet(isPresented: $showImportedRecipeDetail, onDismiss: {
+            pendingImportedRecipeID = nil
+        }) {
+            if let recipeID = pendingImportedRecipeID,
+               let recipe = allRecipes.first(where: { $0.id == recipeID }) {
+                NavigationStack {
+                    RecipeDetailView(recipe: recipe)
+                }
+                .forceLightStatusBar()
+            } else {
+                ContentUnavailableView(
+                    "Receita salva",
+                    systemImage: "checkmark.circle.fill",
+                    description: Text("A receita foi criada, mas ainda não ficou disponível para visualização.")
+                )
+                .presentationBackground(.white)
+            }
         }
         .sheet(item: $editingRecipe) { recipe in
             NavigationStack {

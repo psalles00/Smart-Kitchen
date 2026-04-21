@@ -23,23 +23,31 @@ struct WebURLPipeline: RecipeImportPipeline {
         onStage: @MainActor (RecipeImportStage) -> Void
     ) async throws -> RecipeDraft {
         guard case let .url(url) = source else {
+            RecipeImportLogger.error("web pipeline received non-url source")
             throw RecipeImportError.unsupportedSource("Esperado URL.")
         }
+        RecipeImportLogger.info("web pipeline started url=\(url.absoluteString)")
 
         onStage(.fetching)
+        RecipeImportLogger.debug("stage=\(RecipeImportStage.fetching.title)")
         let html = try await fetchHTML(url: url)
+        RecipeImportLogger.debug("web html fetched chars=\(html.count)")
 
         onStage(.extractingText)
+        RecipeImportLogger.debug("stage=\(RecipeImportStage.extractingText.title)")
         let result = HTMLRecipeExtractor.extract(html: html, sourceURL: url)
+        RecipeImportLogger.info("extractor result schemaDraft=\(result.draft != nil) cleanedChars=\(result.cleanedText.count) ogTitle=\(RecipeImportLogger.preview(result.ogTitle ?? "", limit: 80))")
 
         var draft: RecipeDraft
         if let schemaDraft = result.draft,
            !schemaDraft.ingredients.isEmpty,
            !schemaDraft.steps.isEmpty {
             draft = schemaDraft
+            RecipeImportLogger.info("using JSON-LD schema draft")
         } else {
             // Fall back to AI structuring using the cleaned HTML body.
             onStage(.organizingIngredients)
+            RecipeImportLogger.debug("stage=\(RecipeImportStage.organizingIngredients.title)")
             let structurer = RecipeStructurer()
             let hints = RecipeStructurer.Hints(
                 title: result.ogTitle,
@@ -49,17 +57,22 @@ struct WebURLPipeline: RecipeImportPipeline {
                 sourceLabel: url.host ?? "Web"
             )
             let truncated = String(result.cleanedText.prefix(16_000))
+            RecipeImportLogger.info("falling back to AI structurer with cleanedChars=\(truncated.count)")
             draft = try await structurer.structure(text: truncated, hints: hints)
         }
 
         // Download cover image if we have a URL but no data yet.
         onStage(.finalizing)
+        RecipeImportLogger.debug("stage=\(RecipeImportStage.finalizing.title)")
         if draft.imageData == nil, let imageURL = draft.imageURL {
+            RecipeImportLogger.debug("downloading cover image url=\(imageURL.absoluteString)")
             draft.imageData = try? await fetchData(url: imageURL)
+            RecipeImportLogger.debug("cover image bytes=\(draft.imageData?.count ?? 0)")
         }
 
         if draft.externalURLString.isEmpty { draft.externalURLString = url.absoluteString }
         if draft.sourceLabel.isEmpty { draft.sourceLabel = url.host ?? "Web" }
+        RecipeImportLogger.info("web pipeline completed \(RecipeImportLogger.draftSummary(draft))")
 
         return draft
     }
@@ -81,6 +94,7 @@ struct WebURLPipeline: RecipeImportPipeline {
             guard let http = response as? HTTPURLResponse else {
                 throw RecipeImportError.fetchFailed("Resposta inválida do servidor.")
             }
+            RecipeImportLogger.debug("fetchHTML status=\(http.statusCode) bytes=\(data.count)")
             guard (200...299).contains(http.statusCode) else {
                 throw RecipeImportError.fetchFailed("Status HTTP \(http.statusCode).")
             }
@@ -88,8 +102,10 @@ struct WebURLPipeline: RecipeImportPipeline {
             if let html = String(data: data, encoding: encoding) { return html }
             return String(decoding: data, as: UTF8.self)
         } catch let error as RecipeImportError {
+            RecipeImportLogger.error("fetchHTML recipeError=\(error.localizedDescription)")
             throw error
         } catch {
+            RecipeImportLogger.error("fetchHTML error=\(error.localizedDescription)")
             throw RecipeImportError.fetchFailed(error.localizedDescription)
         }
     }
@@ -102,6 +118,7 @@ struct WebURLPipeline: RecipeImportPipeline {
         )
         request.timeoutInterval = 25
         let (data, _) = try await URLSession.shared.data(for: request)
+        RecipeImportLogger.debug("fetchData bytes=\(data.count) url=\(url.absoluteString)")
         return data
     }
 

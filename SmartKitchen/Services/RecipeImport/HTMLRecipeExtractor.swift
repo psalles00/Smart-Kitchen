@@ -20,7 +20,9 @@ struct HTMLRecipeExtractor {
     // MARK: - Entry
 
     static func extract(html: String, sourceURL: URL) -> Result {
+        RecipeImportLogger.info("html extractor start url=\(sourceURL.absoluteString) htmlChars=\(html.count)")
         let jsonLDBlocks = findJSONLDBlocks(in: html)
+        RecipeImportLogger.debug("html extractor jsonLdBlocks=\(jsonLDBlocks.count)")
         let ogTitle = findMetaContent(in: html, property: "og:title")
             ?? findMetaContent(in: html, name: "twitter:title")
         let ogDescription = findMetaContent(in: html, property: "og:description")
@@ -32,6 +34,7 @@ struct HTMLRecipeExtractor {
         for block in jsonLDBlocks {
             if let parsed = parseRecipeFromJSONLD(block, sourceURL: sourceURL) {
                 draft = parsed
+                RecipeImportLogger.info("html extractor parsed JSON-LD recipe")
                 break
             }
         }
@@ -45,6 +48,8 @@ struct HTMLRecipeExtractor {
             d.sourceLabel = sourceURL.host ?? "Web"
             draft = d
         }
+
+        RecipeImportLogger.info("html extractor completed hasDraft=\(draft != nil) cleanedChars=\(cleanText(html: html).count)")
 
         return Result(
             draft: draft,
@@ -167,6 +172,8 @@ struct HTMLRecipeExtractor {
         if let rawInstructions = dict["recipeInstructions"] {
             draft.steps = parseInstructions(rawInstructions)
         }
+
+        RecipeImportLogger.debug("html extractor buildDraft name=\(RecipeImportLogger.preview(draft.name, limit: 60)) ingredients=\(draft.ingredients.count) steps=\(draft.steps.count)")
 
         return draft
     }

@@ -65,7 +65,7 @@ struct UtensilsView: View {
             }
         }
         .sheet(item: $editingItem) { item in
-            ItemDetailView(mode: .edit(item))
+            ItemDetailView(mode: .edit(item), removalContext: .utensil)
                 .forceLightStatusBar()
         }
     }

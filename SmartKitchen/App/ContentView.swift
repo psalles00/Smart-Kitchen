@@ -988,6 +988,8 @@ private struct HomeView: View {
     @State private var showAddPantry = false
     @State private var showAddRecipe = false
     @State private var showImportRecipe = false
+    @State private var pendingImportedRecipeID: UUID? = nil
+    @State private var showImportedRecipeDetail = false
     @State private var showRecipeAddOptions = false
     @State private var selectedCompatibleCategory: String? = nil
     @State private var editingExpiringItem: UnifiedItem?
@@ -1051,9 +1053,34 @@ private struct HomeView: View {
             .forceLightStatusBar()
         }
         .sheet(isPresented: $showImportRecipe) {
-            RecipeImportHostView { _ in }
+            RecipeImportHostView { recipeID in
+                pendingImportedRecipeID = recipeID
+            }
                 .modelContainer(CloudSyncService.shared.container)
                 .forceLightStatusBar()
+        }
+        .onChange(of: showImportRecipe) { _, isPresented in
+            if !isPresented, pendingImportedRecipeID != nil {
+                showImportedRecipeDetail = true
+            }
+        }
+        .sheet(isPresented: $showImportedRecipeDetail, onDismiss: {
+            pendingImportedRecipeID = nil
+        }) {
+            if let recipeID = pendingImportedRecipeID,
+               let recipe = recipes.first(where: { $0.id == recipeID }) {
+                NavigationStack {
+                    RecipeDetailView(recipe: recipe)
+                }
+                .forceLightStatusBar()
+            } else {
+                ContentUnavailableView(
+                    "Receita salva",
+                    systemImage: "checkmark.circle.fill",
+                    description: Text("A receita foi criada, mas ainda não ficou disponível para visualização.")
+                )
+                .presentationBackground(.white)
+            }
         }
         .confirmationDialog("Adicionar receita", isPresented: $showRecipeAddOptions, titleVisibility: .visible) {
             Button("Importar receita") {

@@ -1,4 +1,5 @@
 import Foundation
+import AVFoundation
 
 /// Transforms unstructured text (pasted, OCR'd, scraped) into a `RecipeDraft`
 /// using the best available language model.
@@ -27,13 +28,17 @@ struct RecipeStructurer {
     ///   - text: raw text (caption, OCR output, paste, scraped body). Already cleaned of HTML.
     ///   - hints: known metadata to seed the draft (title, source URL, cover image URL…).
     func structure(text: String, hints: Hints = .init()) async throws -> RecipeDraft {
+        RecipeImportLogger.info("structurer start textChars=\(text.count) sourceLabel=\(hints.sourceLabel)")
         // 1. Try on-device Foundation Models (Fase 5 will implement; no-op for now).
         if let draft = try await structureOnDevice(text: text, hints: hints) {
+            RecipeImportLogger.info("structurer used on-device model")
             return merge(draft: draft, hints: hints)
         }
+        RecipeImportLogger.info("structurer fallback to OpenAI")
 
         // 2. OpenAI fallback.
         let draft = try await structureWithOpenAI(text: text, hints: hints)
+        RecipeImportLogger.info("structurer OpenAI produced \(RecipeImportLogger.draftSummary(draft))")
         return merge(draft: draft, hints: hints)
     }
 
@@ -52,9 +57,11 @@ struct RecipeStructurer {
     private func structureOnDevice(text: String, hints: Hints) async throws -> RecipeDraft? {
         #if canImport(FoundationModels)
         if #available(iOS 26.0, macOS 26.0, *) {
+            RecipeImportLogger.debug("structurer trying FoundationModels")
             return try await structureOnDeviceFoundationModels(text: text, hints: hints)
         }
         #endif
+        RecipeImportLogger.debug("structurer FoundationModels unavailable")
         return nil
     }
 
@@ -63,6 +70,7 @@ struct RecipeStructurer {
     private func structureWithOpenAI(text: String, hints: Hints) async throws -> RecipeDraft {
         let systemPrompt = Self.systemPrompt
         let userPrompt = Self.userPrompt(text: text, hints: hints)
+        RecipeImportLogger.debug("openai prompts systemChars=\(systemPrompt.count) userChars=\(userPrompt.count)")
 
         var messages: [[String: Any]] = [
             ["role": "system", "content": systemPrompt],
@@ -86,27 +94,33 @@ struct RecipeStructurer {
         ])
 
         let response = try await aiService.sendChat(messages: messages, tools: tool, apiKey: apiKey)
+        RecipeImportLogger.info("openai response toolCalls=\(response.toolCalls.count) contentChars=\((response.content ?? "").count)")
 
         guard let call = response.toolCalls.first else {
             // Sometimes models return JSON in content instead; try to parse that.
             if let content = response.content, let data = content.data(using: .utf8),
                let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                RecipeImportLogger.debug("openai parsed response from content JSON")
                 return parse(dict: dict)
             }
+            RecipeImportLogger.error("openai returned no tool call and no JSON content")
             throw RecipeImportError.aiFailed("A resposta do modelo não contém dados estruturados.")
         }
 
         guard let data = call.argumentsJSON.data(using: .utf8),
               let dict = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            RecipeImportLogger.error("openai tool arguments invalid JSON")
             throw RecipeImportError.aiFailed("Argumentos da função em formato inválido.")
         }
 
+        RecipeImportLogger.debug("openai tool arguments parsed keys=\(dict.keys.sorted().joined(separator: ","))")
         return parse(dict: dict)
     }
 
     // MARK: - Parsing
 
     private func parse(dict: [String: Any]) -> RecipeDraft {
+        RecipeImportLogger.debug("parse start keys=\(dict.keys.sorted().joined(separator: ","))")
         var d = RecipeDraft()
         if let s = dict["name"] as? String { d.name = s.trimmingCharacters(in: .whitespacesAndNewlines); d.nameConfidence = .high }
         if let s = dict["description"] as? String { d.descriptionText = s.trimmingCharacters(in: .whitespacesAndNewlines); d.descriptionConfidence = s.isEmpty ? .low : .medium }
@@ -158,6 +172,7 @@ struct RecipeStructurer {
                     confidence: conf
                 )
             }
+            RecipeImportLogger.debug("parse ingredients count=\(d.ingredients.count)")
         }
 
         if let steps = dict["steps"] as? [[String: Any]] {
@@ -169,8 +184,10 @@ struct RecipeStructurer {
                 let conf = confidenceString(item["confidence"] as? String) ?? .medium
                 return StepDraft(order: order, instruction: instruction, durationMinutes: duration, confidence: conf)
             }
+            RecipeImportLogger.debug("parse steps count=\(d.steps.count)")
         }
 
+        RecipeImportLogger.info("parse completed \(RecipeImportLogger.draftSummary(d))")
         return d
     }
 
@@ -198,6 +215,7 @@ struct RecipeStructurer {
         if d.imageURL == nil { d.imageURL = hints.imageURL }
         if d.externalURLString.isEmpty, let url = hints.externalURL { d.externalURLString = url.absoluteString }
         if d.sourceLabel.isEmpty { d.sourceLabel = hints.sourceLabel }
+        RecipeImportLogger.debug("merge hints completed \(RecipeImportLogger.draftSummary(d))")
         return d
     }
 
@@ -288,4 +306,379 @@ struct RecipeStructurer {
         ],
         "required": ["name", "ingredients", "steps"]
     ]
+}
+
+@MainActor
+final class RecipeImportImprover {
+    private let aiService: AIService
+    private let apiKey: String
+
+    init(aiService: AIService = AIService(), apiKey: String = APIConfig.openAIAPIKey) {
+        self.aiService = aiService
+        self.apiKey = apiKey
+    }
+
+    func improve(draft: RecipeDraft) async throws -> RecipeDraft {
+        guard !apiKey.isEmpty else {
+            throw RecipeImportError.aiFailed("Chave da OpenAI não configurada para melhorar a importação.")
+        }
+
+        let sourceURL = URL(string: draft.externalURLString)
+        var videoURL: URL? = draft.videoURL ?? directVideoURL(from: draft.externalURLString)
+        if videoURL == nil, let source = sourceURL {
+            videoURL = try? await resolveVideoURL(from: source)
+        }
+
+        guard let resolvedVideoURL = videoURL else {
+            throw RecipeImportError.unsupportedSource("Não foi possível localizar um link direto de vídeo para transcrição.")
+        }
+
+        RecipeImportLogger.info("improver start videoURL=\(resolvedVideoURL.absoluteString)")
+
+        let videoFileURL = try await downloadVideo(from: resolvedVideoURL, referer: sourceURL)
+        defer { try? FileManager.default.removeItem(at: videoFileURL) }
+
+        let audioFileURL = try await extractAudio(from: videoFileURL)
+        defer { try? FileManager.default.removeItem(at: audioFileURL) }
+
+        let transcript = try await transcribeAudio(fileURL: audioFileURL)
+        RecipeImportLogger.info("improver transcript chars=\(transcript.count)")
+
+        let structurer = RecipeStructurer(aiService: aiService, apiKey: apiKey)
+        let combinedInput = makeCombinedInput(draft: draft, transcript: transcript)
+        var improved = try await structurer.structure(
+            text: combinedInput,
+            hints: .init(
+                title: draft.name,
+                description: draft.descriptionText,
+                externalURL: URL(string: draft.externalURLString),
+                imageURL: draft.imageURL,
+                sourceLabel: draft.sourceLabel.isEmpty ? "Importação refinada" : draft.sourceLabel
+            )
+        )
+
+        if improved.imageData == nil {
+            improved.imageData = draft.imageData
+        }
+        if improved.imageURL == nil {
+            improved.imageURL = draft.imageURL
+        }
+        if improved.videoURL == nil {
+            improved.videoURL = draft.videoURL ?? resolvedVideoURL
+        }
+        if improved.externalURLString.isEmpty {
+            improved.externalURLString = draft.externalURLString
+        }
+
+        improved.ingredients = mergeDuplicateIngredients(improved.ingredients)
+        RecipeImportLogger.info("improver completed \(RecipeImportLogger.draftSummary(improved))")
+        return improved
+    }
+
+    private func makeCombinedInput(draft: RecipeDraft, transcript: String) -> String {
+        let description = draft.descriptionText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let ingredientSnapshot = draft.ingredients
+            .map { item in
+                var parts: [String] = []
+                parts.append(item.name)
+                if let q = item.quantity {
+                    parts.append(String(q))
+                }
+                if !item.unit.isEmpty {
+                    parts.append(item.unit)
+                }
+                if !item.preparationState.isEmpty {
+                    parts.append(item.preparationState)
+                }
+                return parts.joined(separator: " ")
+            }
+            .joined(separator: "\n")
+
+        return """
+        DESCRICAO DA RECEITA:
+        \(description)
+
+        INGREDIENTES EXTRAIDOS (podem estar duplicados):
+        \(ingredientSnapshot)
+
+        TRANSCRICAO DO VIDEO:
+        \(transcript)
+        """
+    }
+
+    private func downloadVideo(from url: URL, referer: URL? = nil) async throws -> URL {
+        RecipeImportLogger.debug("improver download video")
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 45
+        request.setValue(
+            "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15",
+            forHTTPHeaderField: "User-Agent"
+        )
+        if let referer {
+            request.setValue(referer.absoluteString, forHTTPHeaderField: "Referer")
+        }
+
+        let (tempURL, response) = try await URLSession.shared.download(for: request)
+        guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+            throw RecipeImportError.fetchFailed("Falha ao baixar vídeo para transcrição.")
+        }
+
+        let finalURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("import-video-\(UUID().uuidString).mp4")
+        try? FileManager.default.removeItem(at: finalURL)
+        try FileManager.default.moveItem(at: tempURL, to: finalURL)
+
+        let fileSize = (try? FileManager.default.attributesOfItem(atPath: finalURL.path)[.size] as? NSNumber)?.intValue ?? 0
+        RecipeImportLogger.debug("improver video downloaded bytes=\(fileSize)")
+        return finalURL
+    }
+
+    private func extractAudio(from videoURL: URL) async throws -> URL {
+        RecipeImportLogger.debug("improver extract audio")
+        let asset = AVURLAsset(url: videoURL)
+        let outputURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("import-audio-\(UUID().uuidString).m4a")
+        try? FileManager.default.removeItem(at: outputURL)
+
+        guard let exporter = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetAppleM4A) else {
+            throw RecipeImportError.fetchFailed("Não foi possível preparar extração de áudio.")
+        }
+
+        exporter.outputURL = outputURL
+        exporter.outputFileType = .m4a
+
+        try await withCheckedThrowingContinuation { continuation in
+            exporter.exportAsynchronously {
+                switch exporter.status {
+                case .completed:
+                    continuation.resume(returning: ())
+                case .failed:
+                    continuation.resume(throwing: exporter.error ?? RecipeImportError.fetchFailed("Falha ao extrair áudio."))
+                case .cancelled:
+                    continuation.resume(throwing: RecipeImportError.cancelled)
+                default:
+                    continuation.resume(throwing: RecipeImportError.fetchFailed("Falha ao extrair áudio."))
+                }
+            }
+        }
+
+        let fileSize = (try? FileManager.default.attributesOfItem(atPath: outputURL.path)[.size] as? NSNumber)?.intValue ?? 0
+        RecipeImportLogger.debug("improver audio extracted bytes=\(fileSize)")
+        return outputURL
+    }
+
+    private func transcribeAudio(fileURL: URL) async throws -> String {
+        RecipeImportLogger.debug("improver transcribe audio with whisper-1")
+
+        let boundary = "Boundary-\(UUID().uuidString)"
+        var request = URLRequest(url: URL(string: "https://api.openai.com/v1/audio/transcriptions")!)
+        request.httpMethod = "POST"
+        request.timeoutInterval = 120
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+
+        let audioData = try Data(contentsOf: fileURL)
+        var body = Data()
+
+        appendFormField(name: "model", value: "whisper-1", to: &body, boundary: boundary)
+        appendFormField(name: "language", value: "pt", to: &body, boundary: boundary)
+        appendFormField(name: "response_format", value: "text", to: &body, boundary: boundary)
+        appendFileField(
+            name: "file",
+            filename: fileURL.lastPathComponent,
+            mimeType: "audio/mp4",
+            fileData: audioData,
+            to: &body,
+            boundary: boundary
+        )
+
+        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+        request.httpBody = body
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse else {
+            throw RecipeImportError.aiFailed("Resposta inválida na transcrição de áudio.")
+        }
+        guard (200...299).contains(http.statusCode) else {
+            let payload = String(data: data, encoding: .utf8) ?? ""
+            throw RecipeImportError.aiFailed("Falha na transcrição (\(http.statusCode)): \(payload)")
+        }
+
+        let transcript = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        guard transcript.count >= 20 else {
+            throw RecipeImportError.insufficientContent(suggestion: "A transcrição do vídeo retornou pouco conteúdo útil.")
+        }
+        return transcript
+    }
+
+    private func appendFormField(name: String, value: String, to body: inout Data, boundary: String) {
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"\(name)\"\r\n\r\n".data(using: .utf8)!)
+        body.append("\(value)\r\n".data(using: .utf8)!)
+    }
+
+    private func appendFileField(
+        name: String,
+        filename: String,
+        mimeType: String,
+        fileData: Data,
+        to body: inout Data,
+        boundary: String
+    ) {
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"\(name)\"; filename=\"\(filename)\"\r\n".data(using: .utf8)!)
+        body.append("Content-Type: \(mimeType)\r\n\r\n".data(using: .utf8)!)
+        body.append(fileData)
+        body.append("\r\n".data(using: .utf8)!)
+    }
+
+    private func directVideoURL(from rawExternalURL: String) -> URL? {
+        let trimmed = rawExternalURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let url = URL(string: trimmed) else { return nil }
+        let ext = url.pathExtension.lowercased()
+        let directExts = ["mp4", "mov", "m4v", "webm", "m3u8"]
+        return directExts.contains(ext) ? url : nil
+    }
+
+    private func resolveVideoURL(from pageURL: URL) async throws -> URL? {
+        RecipeImportLogger.debug("improver resolveVideoURL page=\(pageURL.absoluteString)")
+        let host = pageURL.host?.lowercased() ?? ""
+
+        if host.contains("instagram") {
+            for embedURL in instagramEmbedCandidateURLs(for: pageURL) {
+                RecipeImportLogger.debug("improver resolveVideoURL trying instagram embed=\(embedURL.absoluteString)")
+                let embedHTML = try await fetchHTML(url: embedURL)
+                if let url = extractFirstMatch(in: embedHTML, pattern: #"\\"video_url\\"\s*:\s*\\"([^"]+)\\""#) { return url }
+                if let url = extractFirstMatch(in: embedHTML, pattern: #"\\"contentUrl\\"\s*:\s*\\"([^"]+\.mp4[^"]*)\\""#) { return url }
+                if let url = extractFirstMatch(in: embedHTML, pattern: #"\\"shortcode_media\\".*?\\"video_url\\"\s*:\s*\\"([^"]+)\\""#) { return url }
+                if let url = extractFirstMatch(in: embedHTML, pattern: #""video_url"\s*:\s*"([^"]+)""#) { return url }
+                if let url = extractFirstMatch(in: embedHTML, pattern: #""contentUrl"\s*:\s*"([^"]+\.mp4[^"]*)""#) { return url }
+                if let url = extractFirstMatch(in: embedHTML, pattern: #""shortcode_media".*?"video_url"\s*:\s*"([^"]+)""#) { return url }
+            }
+        }
+
+        let html = try await fetchHTML(url: pageURL)
+
+        if host.contains("tiktok") {
+            if let url = extractFirstMatch(in: html, pattern: #""playAddr"\s*:\s*"([^"]+)""#) { return url }
+            if let url = extractFirstMatch(in: html, pattern: #""downloadAddr"\s*:\s*"([^"]+)""#) { return url }
+        }
+        if host.contains("instagram") {
+            if let url = extractFirstMatch(in: html, pattern: #"\\"video_url\\"\s*:\s*\\"([^"]+)\\""#) { return url }
+            if let url = extractFirstMatch(in: html, pattern: #"\\"contentUrl\\"\s*:\s*\\"([^"]+\.mp4[^"]*)\\""#) { return url }
+            if let url = extractFirstMatch(in: html, pattern: #""video_url"\s*:\s*"([^"]+)""#) { return url }
+            if let url = extractFirstMatch(in: html, pattern: #""contentUrl"\s*:\s*"([^"]+\.mp4[^"]*)""#) { return url }
+        }
+
+        // Generic fallbacks across any page.
+        if let url = extractFirstMatch(in: html, pattern: #"<meta[^>]+property=["']og:video(?::secure_url|:url)?["'][^>]+content=["']([^"']+)["']"#) { return url }
+        if let url = extractFirstMatch(in: html, pattern: #"<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:video(?::secure_url|:url)?["']"#) { return url }
+        if let url = extractFirstMatch(in: html, pattern: #"<video[^>]+src=["']([^"']+\.(?:mp4|m4v|webm|m3u8)[^"']*)["']"#) { return url }
+        if let url = extractFirstMatch(in: html, pattern: #"<source[^>]+src=["']([^"']+\.(?:mp4|m4v|webm|m3u8)[^"']*)["']"#) { return url }
+
+        RecipeImportLogger.debug("improver resolveVideoURL not found")
+        return nil
+    }
+
+    private func instagramEmbedCandidateURLs(for pageURL: URL) -> [URL] {
+        guard var components = URLComponents(url: pageURL, resolvingAgainstBaseURL: false) else {
+            return []
+        }
+
+        let cleanPath = components.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        guard !cleanPath.isEmpty else { return [] }
+
+        components.query = nil
+        components.fragment = nil
+
+        var urls: [URL] = []
+        components.path = "/\(cleanPath)/embed/captioned/"
+        if let url = components.url { urls.append(url) }
+
+        components.path = "/\(cleanPath)/embed/"
+        if let url = components.url { urls.append(url) }
+
+        return urls
+    }
+
+    private func extractFirstMatch(in html: String, pattern: String) -> URL? {
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive, .dotMatchesLineSeparators]) else {
+            return nil
+        }
+        let ns = html as NSString
+        guard let match = regex.firstMatch(in: html, range: NSRange(location: 0, length: ns.length)),
+              match.numberOfRanges >= 2 else { return nil }
+        let raw = ns.substring(with: match.range(at: 1))
+        let decoded = decodeEscapedString(raw)
+        guard let url = URL(string: decoded), url.scheme?.hasPrefix("http") == true else { return nil }
+        RecipeImportLogger.debug("improver resolveVideoURL match=\(url.absoluteString)")
+        return url
+    }
+
+    private func decodeEscapedString(_ input: String) -> String {
+        var decoded = input
+
+        for _ in 0..<4 {
+            let quoted = "\"\(decoded.replacingOccurrences(of: "\"", with: "\\\""))\""
+            guard let data = quoted.data(using: .utf8),
+                  let unescaped = try? JSONDecoder().decode(String.self, from: data),
+                  unescaped != decoded else {
+                break
+            }
+            decoded = unescaped
+        }
+
+        decoded = decoded.replacingOccurrences(of: #"\u0026"#, with: "&")
+        decoded = decoded.replacingOccurrences(of: #"\u002F"#, with: "/")
+        decoded = decoded.replacingOccurrences(of: #"\u003D"#, with: "=")
+        decoded = decoded.replacingOccurrences(of: #"\u0025"#, with: "%")
+        decoded = decoded.replacingOccurrences(of: "\\\\/", with: "\\/")
+        decoded = decoded.replacingOccurrences(of: "\\/", with: "/")
+        decoded = decoded.replacingOccurrences(of: "&amp;", with: "&")
+        return decoded
+    }
+
+    private func fetchHTML(url: URL) async throws -> String {
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 20
+        request.setValue(
+            "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1",
+            forHTTPHeaderField: "User-Agent"
+        )
+        request.setValue("text/html,application/xhtml+xml,*/*;q=0.8", forHTTPHeaderField: "Accept")
+        request.setValue("pt-BR,pt;q=0.9,en;q=0.8", forHTTPHeaderField: "Accept-Language")
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+            throw RecipeImportError.fetchFailed("Não foi possível carregar a página do vídeo.")
+        }
+        return String(data: data, encoding: .utf8) ?? String(decoding: data, as: UTF8.self)
+    }
+
+    private func mergeDuplicateIngredients(_ ingredients: [IngredientDraft]) -> [IngredientDraft] {
+        var merged: [String: IngredientDraft] = [:]
+
+        for ingredient in ingredients {
+            let key = [ingredient.name, ingredient.unit, ingredient.preparationState]
+                .map { RecipeOptionCatalog.normalized($0) }
+                .joined(separator: "|")
+
+            if var existing = merged[key] {
+                if let quantity = ingredient.quantity {
+                    existing.quantity = (existing.quantity ?? 0) + quantity
+                }
+                existing.confidence = max(existing.confidence, ingredient.confidence)
+                if existing.iconName == nil {
+                    existing.iconName = ingredient.iconName
+                }
+                merged[key] = existing
+            } else {
+                merged[key] = ingredient
+            }
+        }
+
+        return merged.values.sorted {
+            $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+        }
+    }
 }

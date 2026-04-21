@@ -22,28 +22,37 @@ struct ImageOCRPipeline: RecipeImportPipeline {
         source: RecipeImportSource,
         onStage: @MainActor (RecipeImportStage) -> Void
     ) async throws -> RecipeDraft {
+        RecipeImportLogger.info("image OCR pipeline started")
         guard case let .image(data) = source else {
+            RecipeImportLogger.error("image OCR pipeline received non-image source")
             throw RecipeImportError.unsupportedSource("Esperado imagem.")
         }
+        RecipeImportLogger.debug("image bytes=\(data.count)")
         guard !data.isEmpty else { throw RecipeImportError.emptyContent }
 
         onStage(.analyzing)
+        RecipeImportLogger.debug("stage=\(RecipeImportStage.analyzing.title)")
         onStage(.extractingText)
+        RecipeImportLogger.debug("stage=\(RecipeImportStage.extractingText.title)")
 
         let text = try await recognizeText(in: data)
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        RecipeImportLogger.info("ocr extracted chars=\(trimmed.count) lines=\(trimmed.split(separator: "\n").count)")
         guard trimmed.count >= 20 else {
+            RecipeImportLogger.error("ocr insufficient text chars=\(trimmed.count)")
             throw RecipeImportError.insufficientContent(
                 suggestion: "Não consegui ler texto suficiente da imagem. Tente uma foto mais nítida ou envie apenas o trecho da receita."
             )
         }
 
         onStage(.organizingIngredients)
+        RecipeImportLogger.debug("stage=\(RecipeImportStage.organizingIngredients.title)")
         let structurer = RecipeStructurer()
         var draft = try await structurer.structure(
             text: trimmed,
             hints: RecipeStructurer.Hints(sourceLabel: "Imagem")
         )
+        RecipeImportLogger.info("ocr structured \(RecipeImportLogger.draftSummary(draft))")
 
         // Preserve original image as cover when no remote image was produced.
         if draft.imageData == nil && draft.imageURL == nil {
@@ -51,7 +60,9 @@ struct ImageOCRPipeline: RecipeImportPipeline {
         }
 
         onStage(.finalizing)
+        RecipeImportLogger.debug("stage=\(RecipeImportStage.finalizing.title)")
         if draft.sourceLabel.isEmpty { draft.sourceLabel = "Imagem" }
+        RecipeImportLogger.info("image OCR pipeline completed sourceLabel=\(draft.sourceLabel)")
         return draft
     }
 
@@ -60,17 +71,20 @@ struct ImageOCRPipeline: RecipeImportPipeline {
     private func recognizeText(in data: Data) async throws -> String {
         #if canImport(Vision) && canImport(UIKit)
         guard let image = UIImage(data: data), let cgImage = image.cgImage else {
+            RecipeImportLogger.error("ocr invalid image payload")
             throw RecipeImportError.invalidImage
         }
 
         return try await withCheckedThrowingContinuation { continuation in
             let request = VNRecognizeTextRequest { request, error in
                 if let error {
+                    RecipeImportLogger.error("ocr Vision request error=\(error.localizedDescription)")
                     continuation.resume(throwing: error)
                     return
                 }
                 let observations = request.results as? [VNRecognizedTextObservation] ?? []
                 let lines = observations.compactMap { $0.topCandidates(1).first?.string }
+                RecipeImportLogger.debug("ocr Vision observations=\(observations.count) lines=\(lines.count)")
                 continuation.resume(returning: lines.joined(separator: "\n"))
             }
             request.recognitionLevel = .accurate
@@ -82,11 +96,13 @@ struct ImageOCRPipeline: RecipeImportPipeline {
                 do {
                     try handler.perform([request])
                 } catch {
+                    RecipeImportLogger.error("ocr handler perform error=\(error.localizedDescription)")
                     continuation.resume(throwing: error)
                 }
             }
         }
         #else
+        RecipeImportLogger.error("ocr unsupported platform")
         throw RecipeImportError.unsupportedSource("OCR não disponível nesta plataforma.")
         #endif
     }

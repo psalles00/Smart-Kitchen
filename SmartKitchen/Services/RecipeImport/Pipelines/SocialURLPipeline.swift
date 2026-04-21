@@ -35,23 +35,30 @@ struct SocialURLPipeline: RecipeImportPipeline {
         onStage: @MainActor (RecipeImportStage) -> Void
     ) async throws -> RecipeDraft {
         guard case let .url(url) = source else {
+            RecipeImportLogger.error("social pipeline received non-url source")
             throw RecipeImportError.unsupportedSource("Esperado URL social.")
         }
+        RecipeImportLogger.info("social pipeline started url=\(url.absoluteString)")
 
         onStage(.fetching)
+        RecipeImportLogger.debug("stage=\(RecipeImportStage.fetching.title)")
         let metadata = try await fetchMetadata(url: url)
+        RecipeImportLogger.info("social metadata platform=\(metadata.platformLabel) title=\(RecipeImportLogger.preview(metadata.title ?? "", limit: 80)) descriptionChars=\((metadata.description ?? "").count) imageURL=\(metadata.imageURL?.absoluteString ?? "-")")
 
         let caption = combineCaption(metadata)
         let hasIngredientSignals = Self.hasIngredientSignals(in: caption)
         let tooShort = caption.count < 60
+        RecipeImportLogger.debug("social caption chars=\(caption.count) hasSignals=\(hasIngredientSignals)")
 
         if tooShort || !hasIngredientSignals {
+            RecipeImportLogger.error("social insufficient content tooShort=\(tooShort) hasIngredientSignals=\(hasIngredientSignals)")
             throw RecipeImportError.insufficientContent(
                 suggestion: "A legenda deste \(metadata.platformLabel) não traz ingredientes suficientes. Tente enviar um screenshot do vídeo ou cole a receita como texto."
             )
         }
 
         onStage(.organizingIngredients)
+        RecipeImportLogger.debug("stage=\(RecipeImportStage.organizingIngredients.title)")
         let structurer = RecipeStructurer()
         let hints = RecipeStructurer.Hints(
             title: metadata.title,
@@ -61,14 +68,24 @@ struct SocialURLPipeline: RecipeImportPipeline {
             sourceLabel: metadata.platformLabel
         )
         var draft = try await structurer.structure(text: caption, hints: hints)
+        RecipeImportLogger.info("social structured \(RecipeImportLogger.draftSummary(draft))")
 
         onStage(.finalizing)
+        RecipeImportLogger.debug("stage=\(RecipeImportStage.finalizing.title)")
         if draft.imageData == nil, let imageURL = draft.imageURL ?? metadata.imageURL {
             draft.imageData = try? await fetchData(url: imageURL)
             if draft.imageURL == nil { draft.imageURL = imageURL }
+            RecipeImportLogger.debug("social cover download bytes=\(draft.imageData?.count ?? 0)")
+        }
+        if draft.videoURL == nil {
+            draft.videoURL = metadata.videoURL
+            if let videoURL = metadata.videoURL {
+                RecipeImportLogger.info("social detected videoURL=\(videoURL.absoluteString)")
+            }
         }
         if draft.externalURLString.isEmpty { draft.externalURLString = url.absoluteString }
         if draft.sourceLabel.isEmpty { draft.sourceLabel = metadata.platformLabel }
+        RecipeImportLogger.info("social pipeline completed \(RecipeImportLogger.draftSummary(draft))")
 
         return draft
     }
@@ -80,6 +97,7 @@ struct SocialURLPipeline: RecipeImportPipeline {
         var description: String?
         var authorName: String?
         var imageURL: URL?
+        var videoURL: URL?
         let platformLabel: String
     }
 
@@ -95,13 +113,19 @@ struct SocialURLPipeline: RecipeImportPipeline {
         let description = (ogResult["og:description"] ?? oembedResult["description"])?.trimmingCharacters(in: .whitespacesAndNewlines)
         let author = (oembedResult["author_name"] ?? ogResult["og:site_name"])?.trimmingCharacters(in: .whitespacesAndNewlines)
         let thumbString = oembedResult["thumbnail_url"] ?? ogResult["og:image"]
+        let videoString = ogResult["og:video:secure_url"]
+            ?? ogResult["og:video:url"]
+            ?? ogResult["og:video"]
+            ?? ogResult["twitter:player:stream"]
         let thumb = thumbString.flatMap { URL(string: $0) }
+        let video = videoString.flatMap { URL(string: $0) }
 
         return SocialMetadata(
             title: title,
             description: description,
             authorName: author,
             imageURL: thumb,
+            videoURL: video,
             platformLabel: platform
         )
     }
@@ -230,6 +254,7 @@ struct SocialURLPipeline: RecipeImportPipeline {
         )
         request.timeoutInterval = 15
         let (data, _) = try await URLSession.shared.data(for: request)
+        RecipeImportLogger.debug("social fetchData bytes=\(data.count) url=\(url.absoluteString)")
         return data
     }
 }

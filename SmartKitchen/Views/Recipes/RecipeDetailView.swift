@@ -18,6 +18,7 @@ struct RecipeDetailView: View {
     @State private var showEditRecipe = false
     @State private var previewSelection: PreparationMediaSelection?
     @State private var editingItem: UnifiedItem?
+    @State private var ingredientEditorSheet: IngredientEditorSheet?
 
     private var sortedIngredients: [RecipeIngredient] {
         (recipe.ingredients ?? []).sorted { $0.sortOrder < $1.sortOrder }
@@ -123,6 +124,38 @@ struct RecipeDetailView: View {
         .sheet(item: $editingItem) { item in
             ItemDetailView(mode: .edit(item))
                 .forceLightStatusBar()
+        }
+        .sheet(item: $ingredientEditorSheet) { sheet in
+            switch sheet {
+            case .replace(let ingredientID):
+                if let ingredient = ingredient(withID: ingredientID) {
+                    IngredientReplacementSheet(
+                        ingredient: ingredient,
+                        pantryItems: pantryListItems,
+                        groceryItems: groceryItems,
+                        onSelect: { candidate in
+                            applyIngredientReplacement(candidate, to: ingredient)
+                        }
+                    )
+                    .forceLightStatusBar()
+                }
+            case .quantity(let ingredientID):
+                if let ingredient = ingredient(withID: ingredientID) {
+                    IngredientQuantitySheet(ingredient: ingredient) { newQuantity in
+                        ingredient.quantity = newQuantity
+                        try? modelContext.save()
+                    }
+                    .forceLightStatusBar()
+                }
+            case .state(let ingredientID):
+                if let ingredient = ingredient(withID: ingredientID) {
+                    IngredientStateSheet(ingredient: ingredient) { newState in
+                        ingredient.preparationState = newState
+                        try? modelContext.save()
+                    }
+                    .forceLightStatusBar()
+                }
+            }
         }
         .sheet(item: $previewSelection) { selection in
             PreparationMediaPreviewView(
@@ -322,6 +355,18 @@ struct RecipeDetailView: View {
                     .disabled(isInGrocery)
                     Button("Adicionar à Despensa", systemImage: "refrigerator") {
                         addIngredientToPantry(ingredient)
+                    }
+                    Button("Trocar ingrediente", systemImage: "arrow.triangle.2.circlepath") {
+                        ingredientEditorSheet = .replace(ingredient.id)
+                    }
+                    Button("Alterar quantidade", systemImage: "sum") {
+                        ingredientEditorSheet = .quantity(ingredient.id)
+                    }
+                    Button("Alterar estado", systemImage: "slider.horizontal.3") {
+                        ingredientEditorSheet = .state(ingredient.id)
+                    }
+                    Button("Remover ingrediente", systemImage: "trash", role: .destructive) {
+                        removeIngredient(ingredient)
                     }
                     if ingredientIsAvailable(ingredient) {
                         Button("Já está disponível", systemImage: "checkmark.circle") { }
@@ -662,6 +707,368 @@ struct RecipeDetailView: View {
         if !ingredient.unit.isEmpty {
             item.unit = ingredient.unit
         }
+    }
+
+    private func ingredient(withID id: UUID) -> RecipeIngredient? {
+        sortedIngredients.first(where: { $0.id == id })
+    }
+
+    private func removeIngredient(_ ingredient: RecipeIngredient) {
+        modelContext.delete(ingredient)
+
+        for (index, remaining) in sortedIngredients.filter({ $0.id != ingredient.id }).enumerated() {
+            remaining.sortOrder = index
+        }
+
+        try? modelContext.save()
+    }
+
+    private func applyIngredientReplacement(_ candidate: IngredientReplacementCandidate, to ingredient: RecipeIngredient) {
+        ingredient.name = candidate.name
+        ingredient.iconName = candidate.iconName
+
+        if ingredient.quantity == nil {
+            ingredient.quantity = candidate.quantity
+        }
+
+        if ingredient.unit.isEmpty, let unit = candidate.unit, !unit.isEmpty {
+            ingredient.unit = unit
+        }
+
+        try? modelContext.save()
+    }
+}
+
+private enum IngredientEditorSheet: Identifiable {
+    case replace(UUID)
+    case quantity(UUID)
+    case state(UUID)
+
+    var id: String {
+        switch self {
+        case .replace(let id):
+            return "replace-\(id.uuidString)"
+        case .quantity(let id):
+            return "quantity-\(id.uuidString)"
+        case .state(let id):
+            return "state-\(id.uuidString)"
+        }
+    }
+}
+
+private struct IngredientReplacementCandidate: Identifiable {
+    let id: String
+    let name: String
+    let category: String
+    let iconName: String?
+    let quantity: Double?
+    let unit: String?
+    let listTypes: [SearchResultType]
+}
+
+private struct IngredientReplacementSheet: View {
+    @Environment(\.dismiss) private var dismiss
+
+    let ingredient: RecipeIngredient
+    let pantryItems: [UnifiedItem]
+    let groceryItems: [UnifiedItem]
+    let onSelect: (IngredientReplacementCandidate) -> Void
+
+    @State private var query = ""
+
+    private var candidates: [IngredientReplacementCandidate] {
+        var grouped: [String: IngredientReplacementCandidate] = [:]
+
+        for item in pantryItems {
+            merge(item: item, as: .pantryItem, into: &grouped)
+        }
+
+        for item in groceryItems {
+            merge(item: item, as: .groceryItem, into: &grouped)
+        }
+
+        let trimmed = query
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
+            .lowercased()
+
+        return grouped.values
+            .filter { candidate in
+                guard !trimmed.isEmpty else { return true }
+                let haystack = [candidate.name, candidate.category]
+                    .joined(separator: " ")
+                    .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
+                    .lowercased()
+                return haystack.contains(trimmed)
+            }
+            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 0) {
+                VStack(alignment: .leading, spacing: 12) {
+                    TextField("Buscar ingrediente da sua lista", text: $query)
+                        .textFieldStyle(.roundedBorder)
+
+                    Text("Substituir \(ingredient.name) por um item já existente na sua Despensa ou Mercado.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(16)
+
+                if candidates.isEmpty {
+                    ContentUnavailableView(
+                        "Nenhum ingrediente encontrado",
+                        systemImage: "magnifyingglass",
+                        description: Text("Tente outro termo de busca.")
+                    )
+                } else {
+                    List(candidates) { candidate in
+                        Button {
+                            onSelect(candidate)
+                            dismiss()
+                        } label: {
+                            HStack(spacing: 12) {
+                                IconImage(name: candidate.name, iconFileName: candidate.iconName, fallbackSymbol: "leaf", showBalloon: true)
+
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(candidate.name)
+                                        .font(.subheadline.weight(.semibold))
+                                        .foregroundStyle(.primary)
+
+                                    if !candidate.category.isEmpty {
+                                        Text(candidate.category)
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                }
+
+                                Spacer()
+
+                                HStack(spacing: 6) {
+                                    ForEach(candidate.listTypes, id: \.rawValue) { type in
+                                        IngredientListTag(type: type)
+                                    }
+                                }
+                            }
+                            .padding(.vertical, 4)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .listStyle(.plain)
+                }
+            }
+            .navigationTitle("Trocar ingrediente")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Cancelar") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+
+    private func merge(item: UnifiedItem, as type: SearchResultType, into grouped: inout [String: IngredientReplacementCandidate]) {
+        let normalized = UnifiedItem.normalizedName(item.name)
+        guard !normalized.isEmpty else { return }
+
+        if var existing = grouped[normalized] {
+            guard !existing.listTypes.contains(type) else { return }
+            existing = IngredientReplacementCandidate(
+                id: existing.id,
+                name: existing.name,
+                category: existing.category,
+                iconName: existing.iconName,
+                quantity: existing.quantity,
+                unit: existing.unit,
+                listTypes: existing.listTypes + [type]
+            )
+            grouped[normalized] = existing
+            return
+        }
+
+        grouped[normalized] = IngredientReplacementCandidate(
+            id: normalized,
+            name: item.name,
+            category: item.category,
+            iconName: item.iconName,
+            quantity: item.quantity,
+            unit: item.unit,
+            listTypes: [type]
+        )
+    }
+}
+
+private struct IngredientQuantitySheet: View {
+    @Environment(\.dismiss) private var dismiss
+
+    let ingredient: RecipeIngredient
+    let onSave: (Double?) -> Void
+
+    @State private var quantityText: String
+
+    init(ingredient: RecipeIngredient, onSave: @escaping (Double?) -> Void) {
+        self.ingredient = ingredient
+        self.onSave = onSave
+        if let quantity = ingredient.quantity {
+            let formatted = quantity.truncatingRemainder(dividingBy: 1) == 0
+                ? String(format: "%.0f", quantity)
+                : String(quantity)
+            _quantityText = State(initialValue: formatted)
+        } else {
+            _quantityText = State(initialValue: "")
+        }
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Quantidade") {
+                    TextField("Ex.: 2.5", text: $quantityText)
+                    #if os(iOS)
+                        .keyboardType(.decimalPad)
+                    #endif
+
+                    if !ingredient.unit.isEmpty {
+                        Text("Unidade atual: \(ingredient.unit)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .navigationTitle("Alterar quantidade")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Cancelar") {
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Salvar") {
+                        let normalized = quantityText
+                            .replacingOccurrences(of: ",", with: ".")
+                            .trimmingCharacters(in: .whitespacesAndNewlines)
+                        let quantity = normalized.isEmpty ? nil : Double(normalized)
+                        onSave(quantity)
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
+private struct IngredientStateSheet: View {
+    @Environment(\.dismiss) private var dismiss
+
+    let ingredient: RecipeIngredient
+    let onSave: (String) -> Void
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Button {
+                    onSave("")
+                    dismiss()
+                } label: {
+                    HStack {
+                        Text("Sem estado")
+                        Spacer()
+                        if ingredient.preparationState.isEmpty {
+                            Image(systemName: "checkmark")
+                                .foregroundStyle(Color.accentColor)
+                        }
+                    }
+                }
+                .buttonStyle(.plain)
+
+                ForEach(RecipeOptionCatalog.stateOptions, id: \.fullName) { option in
+                    Button {
+                        onSave(option.fullName)
+                        dismiss()
+                    } label: {
+                        HStack {
+                            Text(option.menuLabel)
+                            Spacer()
+                            if ingredient.preparationState == option.fullName {
+                                Image(systemName: "checkmark")
+                                    .foregroundStyle(Color.accentColor)
+                            }
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .navigationTitle("Alterar estado")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Cancelar") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
+private struct IngredientListTag: View {
+    let type: SearchResultType
+
+    private var title: String {
+        switch type {
+        case .pantryItem:
+            return "Despensa"
+        case .groceryItem:
+            return "Mercado"
+        default:
+            return "Lista"
+        }
+    }
+
+    private var icon: String {
+        switch type {
+        case .pantryItem:
+            return "refrigerator"
+        case .groceryItem:
+            return "cart"
+        default:
+            return "circle"
+        }
+    }
+
+    private var tint: Color {
+        switch type {
+        case .pantryItem:
+            return Color(red: 160 / 255, green: 58 / 255, blue: 19 / 255)
+        case .groceryItem:
+            return Color(red: 37 / 255, green: 79 / 255, blue: 34 / 255)
+        default:
+            return .secondary
+        }
+    }
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(systemName: icon)
+                .font(.system(size: 10, weight: .bold))
+            Text(title)
+                .font(.caption2.weight(.semibold))
+        }
+        .foregroundStyle(tint)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 5)
+        .background(tint.opacity(0.12), in: .capsule)
     }
 }
 

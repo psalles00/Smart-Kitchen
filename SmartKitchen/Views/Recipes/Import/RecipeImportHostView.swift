@@ -24,7 +24,6 @@ struct RecipeImportHostView: View {
     @State private var pickerInput: PickerInput? = nil
     @State private var selectedImage: PhotosPickerItem?
     @State private var showImagePicker = false
-    @State private var savedRecipe: Recipe?
 
     private var importContainer: ModelContainer {
         CloudSyncService.shared.container
@@ -46,13 +45,24 @@ struct RecipeImportHostView: View {
             switch coordinator.phase {
             case .pickingSource:
                 RecipeImportSourcePicker(
-                    onPickLink: { pickerInput = .link },
-                    onPickImage: { showImagePicker = true },
+                    onPickLink: {
+                        RecipeImportLogger.info("ui pick source=link")
+                        pickerInput = .link
+                    },
+                    onPickImage: {
+                        RecipeImportLogger.info("ui pick source=image")
+                        showImagePicker = true
+                    },
                     onPickVideo: {
                         // Em breve — Fase futura.
+                        RecipeImportLogger.info("ui pick source=video (not implemented)")
                     },
-                    onPickText: { pickerInput = .text },
+                    onPickText: {
+                        RecipeImportLogger.info("ui pick source=text")
+                        pickerInput = .text
+                    },
                     onCreateManual: {
+                        RecipeImportLogger.info("ui action=create manual recipe")
                         dismiss()
                     }
                 )
@@ -67,19 +77,22 @@ struct RecipeImportHostView: View {
                     RecipeImportPreviewView(
                         draft: draft,
                         onSave: { updatedDraft in
+                            RecipeImportLogger.info("ui save tapped in preview")
                             let recipe = coordinator.save(draft: updatedDraft, in: modelContext)
-                            savedRecipe = recipe
                             onSaved(recipe.id)
+                            dismiss()
                             return nil
                         },
                         onDiscard: {
+                            RecipeImportLogger.info("ui discard tapped in preview")
                             coordinator.retry()
                         }
                     )
                 }
 
-            case .savedRecipeID(let recipeID):
-                savedRecipeView(recipeID: recipeID)
+            case .savedRecipeID:
+                Color.clear
+                    .onAppear { dismiss() }
 
             case .failed(let message):
                 failureView(message: message)
@@ -90,11 +103,13 @@ struct RecipeImportHostView: View {
             switch input {
             case .link:
                 RecipeLinkInputSheet { url in
+                    RecipeImportLogger.info("ui link submitted url=\(url.absoluteString)")
                     pickerInput = nil
                     coordinator.start(.url(url))
                 }
             case .text:
                 RecipeTextInputSheet { text in
+                    RecipeImportLogger.info("ui text submitted chars=\(text.count)")
                     pickerInput = nil
                     coordinator.start(.text(text))
                 }
@@ -105,7 +120,9 @@ struct RecipeImportHostView: View {
             loadSelectedImage()
         }
         .onAppear {
+            RecipeImportLogger.info("import host appeared hasInitialSource=\(initialSource != nil)")
             if let source = initialSource, case .pickingSource = coordinator.phase {
+                RecipeImportLogger.info("import host auto-starting initial source \(RecipeImportLogger.sourceSummary(source))")
                 coordinator.start(source)
             }
         }
@@ -113,34 +130,13 @@ struct RecipeImportHostView: View {
 
     private func loadSelectedImage() {
         guard let item = selectedImage else { return }
+        RecipeImportLogger.info("ui image selected from PhotosPicker")
         Task { @MainActor in
             if let data = try? await item.loadTransferable(type: Data.self) {
-                savedRecipe = nil
+                RecipeImportLogger.info("ui image loaded bytes=\(data.count)")
                 coordinator.start(.image(data))
-            }
-        }
-    }
-
-    @ViewBuilder
-    private func savedRecipeView(recipeID: UUID) -> some View {
-        NavigationStack {
-            Group {
-                if let savedRecipe, savedRecipe.id == recipeID {
-                    RecipeDetailView(recipe: savedRecipe)
-                } else {
-                    ContentUnavailableView(
-                        "Receita salva",
-                        systemImage: "checkmark.circle.fill",
-                        description: Text("A receita foi salva. Feche esta tela para voltar ao app.")
-                    )
-                }
-            }
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Fechar") {
-                        dismiss()
-                    }
-                }
+            } else {
+                RecipeImportLogger.error("ui failed to load selected image")
             }
         }
     }
