@@ -1,12 +1,13 @@
 import SwiftUI
-import PhotosUI
 
 /// Bottom sheet letting the user choose HOW they want to import a recipe.
-/// Presents 4 options: paste link, import image, import video (em breve), paste text.
+/// Presents quick entry points for link, gallery, camera, text, and files on macOS.
 struct RecipeImportSourcePicker: View {
 
     let onPickLink: () -> Void
     let onPickImage: () -> Void
+    let onPickCamera: () -> Void
+    let onPickFiles: (() -> Void)?
     let onPickVideo: () -> Void
     let onPickText: () -> Void
     let onCreateManual: () -> Void
@@ -26,17 +27,39 @@ struct RecipeImportSourcePicker: View {
                             subtitle: "De qualquer site, blog ou rede social",
                             accent: .blue
                         ) {
-                            dismiss(); onPickLink()
+                            onPickLink()
                         }
 
                         card(
                             icon: "photo.on.rectangle.angled",
-                            title: "Importar imagem",
+                            title: "Importar da galeria",
                             subtitle: "Foto ou screenshot da receita",
                             accent: .orange
                         ) {
-                            dismiss(); onPickImage()
+                            onPickImage()
                         }
+
+                        card(
+                            icon: "camera.viewfinder",
+                            title: "Ler com câmera",
+                            subtitle: "Fotografe a receita impressa ou na tela",
+                            accent: .green
+                        ) {
+                            onPickCamera()
+                        }
+
+                        #if os(macOS)
+                        if let onPickFiles {
+                            card(
+                                icon: "folder.fill",
+                                title: "Importar dos arquivos",
+                                subtitle: "Abrir uma imagem salva no Mac",
+                                accent: .indigo
+                            ) {
+                                onPickFiles()
+                            }
+                        }
+                        #endif
 
                         card(
                             icon: "video.fill",
@@ -45,7 +68,7 @@ struct RecipeImportSourcePicker: View {
                             accent: .pink,
                             disabled: true
                         ) {
-                            dismiss(); onPickVideo()
+                            onPickVideo()
                         }
 
                         card(
@@ -54,7 +77,7 @@ struct RecipeImportSourcePicker: View {
                             subtitle: "Texto bruto de uma receita",
                             accent: .purple
                         ) {
-                            dismiss(); onPickText()
+                            onPickText()
                         }
                     }
 
@@ -62,7 +85,6 @@ struct RecipeImportSourcePicker: View {
                         .padding(.vertical, 8)
 
                     Button {
-                        dismiss()
                         onCreateManual()
                     } label: {
                         HStack(spacing: 8) {
@@ -103,7 +125,7 @@ struct RecipeImportSourcePicker: View {
         VStack(alignment: .leading, spacing: 4) {
             Text("Como você quer importar?")
                 .font(.headline.weight(.semibold))
-            Text("Cole um link, envie uma foto ou texto — nós estruturamos em uma receita editável.")
+            Text("Cole um link, envie uma foto, use a câmera ou texto — nós estruturamos em uma receita editável.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }

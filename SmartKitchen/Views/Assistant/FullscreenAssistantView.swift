@@ -1,4 +1,11 @@
 import SwiftUI
+import SwiftData
+
+enum AssistantScrollMetrics {
+    static func topThreshold(forTopPadding topPadding: CGFloat) -> CGFloat {
+        topPadding - 10
+    }
+}
 
 // MARK: - Fullscreen Assistant View
 
@@ -14,6 +21,8 @@ struct FullscreenAssistantView: View {
     @ObservedObject var searchBarState: SearchBarState
     @ObservedObject var searchService: UniversalSearchService
     @Environment(\.colorScheme) private var colorScheme
+    @Query(sort: \Recipe.name) private var recipes: [Recipe]
+    @Query private var settingsArray: [AppSettings]
 
     let onAction: (CommandBarAction) -> Void
 
@@ -29,7 +38,17 @@ struct FullscreenAssistantView: View {
     // Snapshot of scroll-at-top status captured at the moment a drag begins.
     // nil means the current drag hasn't started yet.
     @State private var dragStartedAtTop: Bool? = nil
+    @State private var showImportRecipe = false
+    @State private var recipeImportLaunchMode: RecipeImportLaunchMode = .picker
+    @State private var pendingImportedRecipeID: UUID? = nil
+    @State private var showImportedRecipeDetail = false
+    @State private var pendingPlaceholderTitle: String?
     private let topPinnedInset: CGFloat = 72
+
+    private var settings: AppSettings? { settingsArray.first }
+    private var idleScrollTopThreshold: CGFloat {
+        AssistantScrollMetrics.topThreshold(forTopPadding: topPinnedInset)
+    }
 
     var body: some View {
         ZStack {
@@ -160,50 +179,166 @@ struct FullscreenAssistantView: View {
     private var idleActionButtons: some View {
         GeometryReader { proxy in
             ScrollView {
-                VStack(spacing: 12) {
+                VStack(spacing: 14) {
                     ScrollOffsetReader(coordinateSpace: "AssistantIdleScroll")
 
-                    Text("Adicione itens, busque na despensa ou pergunte à IA.")
+                    Text("Adicione itens, crie receitas ou peça sugestões sem sair do Assistente.")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 24)
                         .padding(.top, topPinnedInset)
 
-                    VStack(alignment: .leading, spacing: 10) {
-                        CommandBarHelpers.fullWidthActionButton(
-                            title: "Perguntar à IA",
-                            icon: "sparkles",
-                            tint: .blue,
-                            imageName: "modo ia",
-                            imageHeight: 84,
-                            imageOffset: CGSize(width: 8, height: 18)
-                        ) {
-                            pendingOpenChat = true
+                    VStack(alignment: .leading, spacing: 18) {
+                        assistantActionSection(title: "IA") {
+                            assistantActionButton(
+                                title: "Perguntar à IA",
+                                icon: "sparkles",
+                                tint: .blue,
+                                imageName: "modo ia",
+                                imageHeight: 84,
+                                imageOffset: CGSize(width: 8, height: 18)
+                            ) {
+                                searchBarState.mode = .aiChat
+                                pendingChatQuery = nil
+                                pendingOpenChat = true
+                            }
+
+                            assistantActionButton(
+                                title: "Indicação de receitas",
+                                icon: "fork.knife.circle.fill",
+                                tint: .blue,
+                                imageName: "ideis",
+                                imageHeight: 74,
+                                imageOffset: CGSize(width: 4, height: 16)
+                            ) {
+                                searchBarState.mode = .aiChat
+                                pendingOpenChat = false
+                                pendingChatQuery = "Sugira novas receitas."
+                            }
                         }
 
-                        CommandBarHelpers.fullWidthActionButton(
-                            title: "Adicionar item",
-                            icon: "plus.circle.fill",
-                            tint: .orange,
-                            imageName: "despensa",
-                            imageHeight: 78,
-                            imageOffset: CGSize(width: 6, height: 21)
-                        ) {
-                            onAction(.addItem(prefill: "", iconFileName: nil, category: nil))
-                            searchBarState.selectResult()
+                        assistantActionSection(title: "Listas") {
+                            assistantActionButton(
+                                title: "Despensa",
+                                icon: "shippingbox.fill",
+                                tint: .orange,
+                                imageName: "despensa",
+                                imageHeight: 76,
+                                imageOffset: CGSize(width: 6, height: 21)
+                            ) {
+                                triggerAction(.addPantryItem(prefill: ""))
+                            }
+
+                            assistantActionButton(
+                                title: "Mercado",
+                                icon: "cart.badge.plus",
+                                tint: .green,
+                                imageName: "mercado",
+                                imageHeight: 76,
+                                imageOffset: CGSize(width: 6, height: 20)
+                            ) {
+                                triggerAction(.addGroceryItem(prefill: ""))
+                            }
+
+                            if settings?.showUtensils == true {
+                                assistantActionButton(
+                                    title: "Utensílio",
+                                    icon: "fork.knife",
+                                    tint: .purple,
+                                    trailingSystemImage: "fork.knife"
+                                ) {
+                                    triggerAction(.addUtensil(prefill: ""))
+                                }
+                            }
                         }
 
-                        CommandBarHelpers.fullWidthActionButton(
-                            title: "Adicionar receita",
-                            icon: "book.badge.plus",
-                            tint: .red,
-                            imageName: "receitas",
-                            imageHeight: 78,
-                            imageOffset: CGSize(width: 6, height: 21)
-                        ) {
-                            onAction(.addRecipe(prefill: ""))
-                            searchBarState.selectResult()
+                        assistantActionSection(title: "Receitas") {
+                            assistantActionButton(
+                                title: "Criar Receita",
+                                icon: "book.badge.plus",
+                                tint: .red,
+                                imageName: "receitas",
+                                imageHeight: 78,
+                                imageOffset: CGSize(width: 6, height: 21)
+                            ) {
+                                triggerAction(.addRecipe(prefill: ""))
+                            }
+
+                            assistantActionButton(
+                                title: "Importar da Galeria",
+                                icon: "photo.on.rectangle.angled",
+                                tint: .orange,
+                                imageName: "receitas",
+                                imageHeight: 78,
+                                imageOffset: CGSize(width: 6, height: 21)
+                            ) {
+                                openRecipeImport(.gallery)
+                            }
+
+                            assistantActionButton(
+                                title: "Ler Receita",
+                                icon: "camera.viewfinder",
+                                tint: .indigo,
+                                imageName: "receitas",
+                                imageHeight: 78,
+                                imageOffset: CGSize(width: 6, height: 21)
+                            ) {
+                                openRecipeImport(.camera)
+                            }
+
+                            #if os(macOS)
+                            assistantActionButton(
+                                title: "Importar dos Arquivos",
+                                icon: "folder.fill",
+                                tint: .indigo,
+                                imageName: "receitas",
+                                imageHeight: 78,
+                                imageOffset: CGSize(width: 6, height: 21)
+                            ) {
+                                openRecipeImport(.files)
+                            }
+                            #endif
+                        }
+
+                        assistantActionSection(title: "Nutrientes") {
+                            assistantActionButton(
+                                title: "Registrar Alimento",
+                                icon: "fork.knife.circle.fill",
+                                tint: .teal,
+                                imageName: "nutrientes",
+                                imageHeight: 74,
+                                imageOffset: CGSize(width: 6, height: 20)
+                            ) {
+                                pendingPlaceholderTitle = "Registrar Alimento"
+                            }
+
+                            assistantActionButton(
+                                title: "Registrar com Áudio",
+                                icon: "mic.fill",
+                                tint: .teal,
+                                trailingSystemImage: "waveform"
+                            ) {
+                                pendingPlaceholderTitle = "Registrar com Áudio"
+                            }
+
+                            assistantActionButton(
+                                title: "Registrar com Galeria",
+                                icon: "photo.on.rectangle.angled",
+                                tint: .teal,
+                                trailingSystemImage: "photo.stack.fill"
+                            ) {
+                                pendingPlaceholderTitle = "Registrar com Galeria"
+                            }
+
+                            assistantActionButton(
+                                title: "Registrar com Câmera",
+                                icon: "camera.fill",
+                                tint: .teal,
+                                trailingSystemImage: "camera.aperture"
+                            ) {
+                                pendingPlaceholderTitle = "Registrar com Câmera"
+                            }
                         }
                     }
                     .padding(.horizontal, 20)
@@ -221,13 +356,140 @@ struct FullscreenAssistantView: View {
             }
             .coordinateSpace(name: "AssistantIdleScroll")
             .onScrollOffsetChange { offset in
-                isScrollableContentAtTop = offset >= -10
+                isScrollableContentAtTop = offset >= idleScrollTopThreshold
             }
             .onAppear {
                 isScrollableContentAtTop = true
             }
             .scrollDismissesKeyboard(.interactively)
         }
+        .sheet(isPresented: $showImportRecipe, onDismiss: {
+            recipeImportLaunchMode = .picker
+        }) {
+            RecipeImportHostView(launchMode: recipeImportLaunchMode) { recipeID in
+                pendingImportedRecipeID = recipeID
+            }
+            .modelContainer(CloudSyncService.shared.container)
+            .forceLightStatusBar()
+        }
+        .onChange(of: showImportRecipe) { _, isPresented in
+            if !isPresented, pendingImportedRecipeID != nil {
+                showImportedRecipeDetail = true
+            }
+        }
+        .sheet(isPresented: $showImportedRecipeDetail, onDismiss: {
+            pendingImportedRecipeID = nil
+        }) {
+            if let recipeID = pendingImportedRecipeID,
+               let recipe = recipes.first(where: { $0.id == recipeID }) {
+                NavigationStack {
+                    RecipeDetailView(recipe: recipe)
+                }
+                .forceLightStatusBar()
+            } else {
+                ContentUnavailableView(
+                    "Receita salva",
+                    systemImage: "checkmark.circle.fill",
+                    description: Text("A receita foi criada, mas ainda não ficou disponível para visualização.")
+                )
+                .presentationBackground(.white)
+            }
+        }
+        .alert("Em breve", isPresented: pendingPlaceholderAlertIsPresented) {
+            Button("OK", role: .cancel) {
+                pendingPlaceholderTitle = nil
+            }
+        } message: {
+            Text(pendingPlaceholderTitle.map { "\($0) ainda não está disponível." } ?? "Esse atalho ainda não está disponível.")
+        }
+    }
+
+    private var pendingPlaceholderAlertIsPresented: Binding<Bool> {
+        Binding(
+            get: { pendingPlaceholderTitle != nil },
+            set: { isPresented in
+                if !isPresented {
+                    pendingPlaceholderTitle = nil
+                }
+            }
+        )
+    }
+
+    private func openRecipeImport(_ launchMode: RecipeImportLaunchMode) {
+        recipeImportLaunchMode = launchMode
+        showImportRecipe = true
+    }
+
+    private func triggerAction(_ action: CommandBarAction) {
+        onAction(action)
+        searchBarState.selectResult()
+    }
+
+    private func assistantActionSection<Content: View>(
+        title: String,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+
+            VStack(alignment: .leading, spacing: 10) {
+                content()
+            }
+        }
+    }
+
+    private func assistantActionButton(
+        title: String,
+        icon: String,
+        tint: Color,
+        imageName: String? = nil,
+        imageHeight: CGFloat = 78,
+        imageOffset: CGSize = CGSize(width: 6, height: 21),
+        trailingSystemImage: String? = nil,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(alignment: .center, spacing: 6) {
+                Image(systemName: icon)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(tint)
+
+                Text(title)
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.primary)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.trailing, 92)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .background(tint.opacity(0.06), in: .rect(cornerRadius: 12))
+            .overlay(alignment: .bottomTrailing) {
+                if let imageName {
+                    Image(imageName)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: imageHeight)
+                        .offset(imageOffset)
+                        .allowsHitTesting(false)
+                } else if let trailingSystemImage {
+                    Image(systemName: trailingSystemImage)
+                        .font(.system(size: 30, weight: .semibold))
+                        .foregroundStyle(tint.opacity(0.28))
+                        .symbolRenderingMode(.hierarchical)
+                        .padding(.trailing, 18)
+                        .padding(.bottom, 12)
+                        .allowsHitTesting(false)
+                }
+            }
+            .clipShape(.rect(cornerRadius: 12))
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
     }
 
     private var pinnedHeader: some View {

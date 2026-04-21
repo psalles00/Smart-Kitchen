@@ -82,7 +82,7 @@ struct InlineChatView: View {
     }
 
     private var scrollTopThreshold: CGFloat {
-        (isAIMode ? topPinnedInset : 12) - 10
+        AssistantScrollMetrics.topThreshold(forTopPadding: isAIMode ? topPinnedInset : 12)
     }
 
     private var pinnedMessageRevealInset: CGFloat {

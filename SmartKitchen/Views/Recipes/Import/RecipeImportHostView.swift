@@ -1,12 +1,23 @@
 import SwiftUI
 import SwiftData
 import PhotosUI
+import UniformTypeIdentifiers
+#if canImport(UIKit)
+import UIKit
+#endif
+
+enum RecipeImportLaunchMode: Equatable {
+    case picker
+    case gallery
+    case camera
+    case files
+}
 
 /// Host view that orchestrates the multi-step recipe import flow.
-/// Presented from the Recipes toolbar or the Home action deck.
+/// Presented from recipe entry points such as the Recipes toolbar or assistant shortcuts.
 ///
 /// Flow:
-///   picker → (link input | image picker | text input) → processing → preview → saved
+///   picker/direct entry → (link input | image picker | file picker | camera | text input) → processing → preview → saved
 @MainActor
 struct RecipeImportHostView: View {
 
@@ -15,6 +26,7 @@ struct RecipeImportHostView: View {
 
     /// Optional pre-filled source. When non-nil, skips the picker and starts immediately.
     let initialSource: RecipeImportSource?
+    let launchMode: RecipeImportLaunchMode
     /// Callback invoked when a recipe is saved, with its ID.
     let onSaved: (UUID) -> Void
 
@@ -24,6 +36,10 @@ struct RecipeImportHostView: View {
     @State private var pickerInput: PickerInput? = nil
     @State private var selectedImage: PhotosPickerItem?
     @State private var showImagePicker = false
+    @State private var showCameraPicker = false
+    @State private var showCameraUnavailableAlert = false
+    @State private var showFileImporter = false
+    @State private var hasTriggeredInitialLaunch = false
 
     private var importContainer: ModelContainer {
         CloudSyncService.shared.container
@@ -35,8 +51,13 @@ struct RecipeImportHostView: View {
         var id: String { String(describing: self) }
     }
 
-    init(initialSource: RecipeImportSource? = nil, onSaved: @escaping (UUID) -> Void) {
+    init(
+        initialSource: RecipeImportSource? = nil,
+        launchMode: RecipeImportLaunchMode = .picker,
+        onSaved: @escaping (UUID) -> Void
+    ) {
         self.initialSource = initialSource
+        self.launchMode = launchMode
         self.onSaved = onSaved
     }
 
@@ -51,7 +72,15 @@ struct RecipeImportHostView: View {
                     },
                     onPickImage: {
                         RecipeImportLogger.info("ui pick source=image")
-                        showImagePicker = true
+                        launchGalleryPicker()
+                    },
+                    onPickCamera: {
+                        RecipeImportLogger.info("ui pick source=camera")
+                        launchCameraPicker()
+                    },
+                    onPickFiles: {
+                        RecipeImportLogger.info("ui pick source=file")
+                        launchFileImporter()
                     },
                     onPickVideo: {
                         // Em breve — Fase futura.
@@ -115,7 +144,18 @@ struct RecipeImportHostView: View {
                 }
             }
         }
+        .sheet(isPresented: $showCameraPicker) {
+            cameraImportSheet
+        }
         .photosPicker(isPresented: $showImagePicker, selection: $selectedImage, matching: .images)
+        .fileImporter(isPresented: $showFileImporter, allowedContentTypes: [.image]) { result in
+            loadImportedFile(result)
+        }
+        .alert("Câmera indisponível", isPresented: $showCameraUnavailableAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Não foi possível acessar a câmera neste dispositivo agora.")
+        }
         .onChange(of: selectedImage) {
             loadSelectedImage()
         }
@@ -124,12 +164,16 @@ struct RecipeImportHostView: View {
             if let source = initialSource, case .pickingSource = coordinator.phase {
                 RecipeImportLogger.info("import host auto-starting initial source \(RecipeImportLogger.sourceSummary(source))")
                 coordinator.start(source)
+                return
             }
+
+            triggerInitialLaunchIfNeeded()
         }
     }
 
     private func loadSelectedImage() {
         guard let item = selectedImage else { return }
+        selectedImage = nil
         RecipeImportLogger.info("ui image selected from PhotosPicker")
         Task { @MainActor in
             if let data = try? await item.loadTransferable(type: Data.self) {
@@ -137,8 +181,86 @@ struct RecipeImportHostView: View {
                 coordinator.start(.image(data))
             } else {
                 RecipeImportLogger.error("ui failed to load selected image")
+                coordinator.phase = .failed(message: "Não foi possível abrir a imagem selecionada.")
             }
         }
+    }
+
+    private func triggerInitialLaunchIfNeeded() {
+        guard !hasTriggeredInitialLaunch else { return }
+        hasTriggeredInitialLaunch = true
+
+        switch launchMode {
+        case .picker:
+            break
+        case .gallery:
+            launchGalleryPicker()
+        case .camera:
+            launchCameraPicker()
+        case .files:
+            launchFileImporter()
+        }
+    }
+
+    private func launchGalleryPicker() {
+        selectedImage = nil
+        showImagePicker = true
+    }
+
+    private func launchCameraPicker() {
+        #if os(iOS)
+        guard UIImagePickerController.isSourceTypeAvailable(.camera) else {
+            showCameraUnavailableAlert = true
+            return
+        }
+        #endif
+
+        showCameraPicker = true
+    }
+
+    private func launchFileImporter() {
+        #if os(macOS)
+        showFileImporter = true
+        #endif
+    }
+
+    private func loadImportedFile(_ result: Result<URL, Error>) {
+        switch result {
+        case .success(let url):
+            let scopedAccess = url.startAccessingSecurityScopedResource()
+            defer {
+                if scopedAccess {
+                    url.stopAccessingSecurityScopedResource()
+                }
+            }
+
+            do {
+                let data = try Data(contentsOf: url)
+                RecipeImportLogger.info("ui file loaded bytes=\(data.count)")
+                coordinator.start(.image(data))
+            } catch {
+                RecipeImportLogger.error("ui failed to load file error=\(error.localizedDescription)")
+                coordinator.phase = .failed(message: "Não foi possível abrir o arquivo selecionado.")
+            }
+
+        case .failure(let error):
+            RecipeImportLogger.info("ui file picker closed error=\(error.localizedDescription)")
+        }
+    }
+
+    @ViewBuilder
+    private var cameraImportSheet: some View {
+        #if os(iOS)
+        CameraMediaPicker(mode: .photoOnly) { media in
+            RecipeImportLogger.info("ui camera captured bytes=\(media.data.count)")
+            coordinator.start(.image(media.data))
+        }
+        #else
+        MacCameraMediaPicker(mode: .photoOnly) { media in
+            RecipeImportLogger.info("ui camera captured bytes=\(media.data.count)")
+            coordinator.start(.image(media.data))
+        }
+        #endif
     }
 
     // MARK: - Failure

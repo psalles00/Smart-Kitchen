@@ -19,6 +19,7 @@ struct RecipeDetailView: View {
     @State private var previewSelection: PreparationMediaSelection?
     @State private var editingItem: UnifiedItem?
     @State private var ingredientEditorSheet: IngredientEditorSheet?
+    @State private var pendingIngredientReplacement: PendingIngredientReplacement?
 
     private var sortedIngredients: [RecipeIngredient] {
         (recipe.ingredients ?? []).sorted { $0.sortOrder < $1.sortOrder }
@@ -125,16 +126,19 @@ struct RecipeDetailView: View {
             ItemDetailView(mode: .edit(item))
                 .forceLightStatusBar()
         }
-        .sheet(item: $ingredientEditorSheet) { sheet in
+        .sheet(item: $ingredientEditorSheet, onDismiss: applyPendingIngredientReplacementIfNeeded) { sheet in
             switch sheet {
             case .replace(let ingredientID):
                 if let ingredient = ingredient(withID: ingredientID) {
                     IngredientReplacementSheet(
-                        ingredient: ingredient,
+                        ingredientName: ingredient.name,
                         pantryItems: pantryListItems,
                         groceryItems: groceryItems,
                         onSelect: { candidate in
-                            applyIngredientReplacement(candidate, to: ingredient)
+                            pendingIngredientReplacement = PendingIngredientReplacement(
+                                ingredientID: ingredientID,
+                                candidate: candidate
+                            )
                         }
                     )
                     .forceLightStatusBar()
@@ -723,7 +727,28 @@ struct RecipeDetailView: View {
         try? modelContext.save()
     }
 
-    private func applyIngredientReplacement(_ candidate: IngredientReplacementCandidate, to ingredient: RecipeIngredient) {
+    private func applyPendingIngredientReplacementIfNeeded() {
+        guard let pendingIngredientReplacement else { return }
+        let pending = pendingIngredientReplacement
+        self.pendingIngredientReplacement = nil
+
+        guard let ingredient = ingredient(withID: pending.ingredientID) else {
+            NSLog("Ingredient replacement skipped because ingredient %@ is no longer available.", pending.ingredientID.uuidString)
+            return
+        }
+
+        do {
+            try applyIngredientReplacement(pending.candidate, to: ingredient)
+        } catch {
+            NSLog(
+                "Ingredient replacement failed for ingredient %@: %@",
+                ingredient.id.uuidString,
+                String(describing: error)
+            )
+        }
+    }
+
+    private func applyIngredientReplacement(_ candidate: IngredientReplacementCandidate, to ingredient: RecipeIngredient) throws {
         ingredient.name = candidate.name
         ingredient.iconName = candidate.iconName
 
@@ -735,7 +760,7 @@ struct RecipeDetailView: View {
             ingredient.unit = unit
         }
 
-        try? modelContext.save()
+        try modelContext.save()
     }
 }
 
@@ -766,15 +791,51 @@ private struct IngredientReplacementCandidate: Identifiable {
     let listTypes: [SearchResultType]
 }
 
+private struct PendingIngredientReplacement {
+    let ingredientID: UUID
+    let candidate: IngredientReplacementCandidate
+}
+
+private enum IngredientReplacementSourceFilter: String, CaseIterable, Identifiable {
+    case all
+    case grocery
+    case pantry
+
+    var id: Self { self }
+
+    var title: String {
+        switch self {
+        case .all:
+            return "Ambos"
+        case .grocery:
+            return "Mercado"
+        case .pantry:
+            return "Despensa"
+        }
+    }
+
+    func matches(_ candidate: IngredientReplacementCandidate) -> Bool {
+        switch self {
+        case .all:
+            return true
+        case .grocery:
+            return candidate.listTypes.contains(.groceryItem)
+        case .pantry:
+            return candidate.listTypes.contains(.pantryItem)
+        }
+    }
+}
+
 private struct IngredientReplacementSheet: View {
     @Environment(\.dismiss) private var dismiss
 
-    let ingredient: RecipeIngredient
+    let ingredientName: String
     let pantryItems: [UnifiedItem]
     let groceryItems: [UnifiedItem]
     let onSelect: (IngredientReplacementCandidate) -> Void
 
     @State private var query = ""
+    @State private var sourceFilter: IngredientReplacementSourceFilter = .all
 
     private var candidates: [IngredientReplacementCandidate] {
         var grouped: [String: IngredientReplacementCandidate] = [:]
@@ -794,6 +855,7 @@ private struct IngredientReplacementSheet: View {
 
         return grouped.values
             .filter { candidate in
+                guard sourceFilter.matches(candidate) else { return false }
                 guard !trimmed.isEmpty else { return true }
                 let haystack = [candidate.name, candidate.category]
                     .joined(separator: " ")
@@ -807,15 +869,28 @@ private struct IngredientReplacementSheet: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                VStack(alignment: .leading, spacing: 12) {
-                    TextField("Buscar ingrediente da sua lista", text: $query)
-                        .textFieldStyle(.roundedBorder)
-
-                    Text("Substituir \(ingredient.name) por um item já existente na sua Despensa ou Mercado.")
+                VStack(alignment: .leading, spacing: 14) {
+                    Text("Substituir \(ingredientName) por um item já existente na sua Despensa ou Mercado.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Filtrar origem")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.secondary)
+
+                        Picker("Filtrar origem", selection: $sourceFilter) {
+                            ForEach(IngredientReplacementSourceFilter.allCases) { filter in
+                                Text(filter.title)
+                                    .tag(filter)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                    }
                 }
                 .padding(16)
+
+                Divider()
 
                 if candidates.isEmpty {
                     ContentUnavailableView(
@@ -823,6 +898,7 @@ private struct IngredientReplacementSheet: View {
                         systemImage: "magnifyingglass",
                         description: Text("Tente outro termo de busca.")
                     )
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     List(candidates) { candidate in
                         Button {
@@ -862,6 +938,13 @@ private struct IngredientReplacementSheet: View {
             .navigationTitle("Trocar ingrediente")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            .searchable(
+                text: $query,
+                placement: .navigationBarDrawer(displayMode: .always),
+                prompt: "Buscar ingrediente da sua lista"
+            )
+            #else
+            .searchable(text: $query, prompt: "Buscar ingrediente da sua lista")
             #endif
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {

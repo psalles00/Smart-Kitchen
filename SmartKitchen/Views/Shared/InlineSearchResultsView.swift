@@ -27,7 +27,7 @@ struct InlineSearchResultsView: View {
     @Binding var pendingShowHistory: Bool
 
     private var scrollTopThreshold: CGFloat {
-        topPinnedInset - 10
+        AssistantScrollMetrics.topThreshold(forTopPadding: topPinnedInset)
     }
 
     init(

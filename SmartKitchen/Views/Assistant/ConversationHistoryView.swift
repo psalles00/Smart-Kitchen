@@ -15,7 +15,7 @@ struct ConversationHistoryView: View {
 
     private var scrollTopThreshold: CGFloat {
         let topPadding = showsHeader ? 8 : topPinnedInset + 2
-        return topPadding - 10
+        return AssistantScrollMetrics.topThreshold(forTopPadding: topPadding)
     }
 
     init(
