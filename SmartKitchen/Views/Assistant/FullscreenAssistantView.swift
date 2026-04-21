@@ -187,7 +187,6 @@ struct FullscreenAssistantView: View {
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 24)
-                        .padding(.top, topPinnedInset)
 
                     VStack(alignment: .leading, spacing: 18) {
                         assistantActionSection(title: "IA") {
@@ -352,6 +351,7 @@ struct FullscreenAssistantView: View {
                         }
                 }
                 .frame(maxWidth: .infinity, minHeight: proxy.size.height, alignment: .top)
+                .padding(.top, topPinnedInset)
                 .padding(.bottom, 20)
             }
             .coordinateSpace(name: "AssistantIdleScroll")
