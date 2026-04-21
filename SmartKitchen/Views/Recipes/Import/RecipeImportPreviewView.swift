@@ -7,26 +7,24 @@ import PhotosUI
 /// everything before saving. On save, converts to a SwiftData `Recipe`.
 struct RecipeImportPreviewView: View {
 
-    @Environment(\.modelContext) private var modelContext
-    @Environment(\.dismiss) private var dismiss
-
     @Query(sort: \Category.sortOrder) private var allCategories: [Category]
 
     let initialDraft: RecipeDraft
-    let onSaved: (Recipe) -> Void
+    let onSave: (RecipeDraft) -> String?
     let onDiscard: () -> Void
 
     @State private var draft: RecipeDraft
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var showPhotoPicker = false
+    @State private var saveErrorMessage: String?
 
     init(
         draft: RecipeDraft,
-        onSaved: @escaping (Recipe) -> Void,
+        onSave: @escaping (RecipeDraft) -> String?,
         onDiscard: @escaping () -> Void
     ) {
         self.initialDraft = draft
-        self.onSaved = onSaved
+        self.onSave = onSave
         self.onDiscard = onDiscard
         self._draft = State(initialValue: draft)
     }
@@ -201,6 +199,21 @@ struct RecipeImportPreviewView: View {
         .onChange(of: selectedPhoto) {
             loadNewPhoto()
         }
+        .alert(
+            "Não foi possível salvar",
+            isPresented: Binding(
+                get: { saveErrorMessage != nil },
+                set: { newValue in
+                    if !newValue {
+                        saveErrorMessage = nil
+                    }
+                }
+            )
+        ) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(saveErrorMessage ?? "Tente novamente.")
+        }
         .task {
             await fetchImageIfNeeded()
         }
@@ -371,10 +384,9 @@ struct RecipeImportPreviewView: View {
     }
 
     private func save() {
-        let coordinator = RecipeImportCoordinator()
-        let recipe = coordinator.save(draft: draft, in: modelContext)
-        onSaved(recipe)
-        dismiss()
+        if let errorMessage = onSave(draft) {
+            saveErrorMessage = errorMessage
+        }
     }
 
     private func loadNewPhoto() {

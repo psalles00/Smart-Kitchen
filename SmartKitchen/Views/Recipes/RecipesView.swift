@@ -178,7 +178,9 @@ struct RecipesView: View {
         .sheet(isPresented: $showImportRecipe) {
             RecipeImportHostView(initialSource: importInitialSource) { recipeID in
                 highlightedRecipeID = recipeID
+                selectedRecipeID = recipeID
             }
+            .modelContainer(CloudSyncService.shared.container)
             .forceLightStatusBar()
             .onDisappear { importInitialSource = nil }
         }

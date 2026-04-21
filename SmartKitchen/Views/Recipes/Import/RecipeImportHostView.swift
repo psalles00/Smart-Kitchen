@@ -7,8 +7,10 @@ import PhotosUI
 ///
 /// Flow:
 ///   picker → (link input | image picker | text input) → processing → preview → saved
+@MainActor
 struct RecipeImportHostView: View {
 
+    @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
 
     /// Optional pre-filled source. When non-nil, skips the picker and starts immediately.
@@ -22,6 +24,11 @@ struct RecipeImportHostView: View {
     @State private var pickerInput: PickerInput? = nil
     @State private var selectedImage: PhotosPickerItem?
     @State private var showImagePicker = false
+    @State private var savedRecipe: Recipe?
+
+    private var importContainer: ModelContainer {
+        CloudSyncService.shared.container
+    }
 
     enum PickerInput: Identifiable {
         case link
@@ -46,7 +53,7 @@ struct RecipeImportHostView: View {
                     },
                     onPickText: { pickerInput = .text },
                     onCreateManual: {
-                        coordinator.dismiss()
+                        dismiss()
                     }
                 )
 
@@ -59,9 +66,11 @@ struct RecipeImportHostView: View {
                 NavigationStack {
                     RecipeImportPreviewView(
                         draft: draft,
-                        onSaved: { recipe in
+                        onSave: { updatedDraft in
+                            let recipe = coordinator.save(draft: updatedDraft, in: modelContext)
+                            savedRecipe = recipe
                             onSaved(recipe.id)
-                            coordinator.dismiss()
+                            return nil
                         },
                         onDiscard: {
                             coordinator.retry()
@@ -69,14 +78,14 @@ struct RecipeImportHostView: View {
                     )
                 }
 
-            case .savedRecipeID:
-                Color.clear
-                    .onAppear { coordinator.dismiss() }
+            case .savedRecipeID(let recipeID):
+                savedRecipeView(recipeID: recipeID)
 
             case .failed(let message):
                 failureView(message: message)
             }
         }
+        .modelContainer(importContainer)
         .sheet(item: $pickerInput) { input in
             switch input {
             case .link:
@@ -106,7 +115,32 @@ struct RecipeImportHostView: View {
         guard let item = selectedImage else { return }
         Task { @MainActor in
             if let data = try? await item.loadTransferable(type: Data.self) {
+                savedRecipe = nil
                 coordinator.start(.image(data))
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func savedRecipeView(recipeID: UUID) -> some View {
+        NavigationStack {
+            Group {
+                if let savedRecipe, savedRecipe.id == recipeID {
+                    RecipeDetailView(recipe: savedRecipe)
+                } else {
+                    ContentUnavailableView(
+                        "Receita salva",
+                        systemImage: "checkmark.circle.fill",
+                        description: Text("A receita foi salva. Feche esta tela para voltar ao app.")
+                    )
+                }
+            }
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Fechar") {
+                        dismiss()
+                    }
+                }
             }
         }
     }
@@ -127,7 +161,7 @@ struct RecipeImportHostView: View {
                 .padding(.horizontal, 28)
             HStack(spacing: 12) {
                 Button("Cancelar", role: .cancel) {
-                    coordinator.dismiss()
+                    dismiss()
                 }
                 Button("Tentar outra") {
                     coordinator.retry()

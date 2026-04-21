@@ -1052,6 +1052,7 @@ private struct HomeView: View {
         }
         .sheet(isPresented: $showImportRecipe) {
             RecipeImportHostView { _ in }
+                .modelContainer(CloudSyncService.shared.container)
                 .forceLightStatusBar()
         }
         .confirmationDialog("Adicionar receita", isPresented: $showRecipeAddOptions, titleVisibility: .visible) {

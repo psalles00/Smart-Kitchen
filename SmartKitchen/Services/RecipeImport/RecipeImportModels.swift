@@ -120,7 +120,7 @@ enum RecipeImportStage: Equatable {
         switch self {
         case .analyzing:            return "Analisando conteúdo"
         case .fetching:             return "Buscando a receita"
-        case .extractingText:       return "Extraindo texto"
+        case .extractingText:       return "Extraindo receita"
         case .readingVideo:         return "Lendo vídeo"
         case .organizingIngredients: return "Organizando ingredientes"
         case .finalizing:           return "Finalizando receita"

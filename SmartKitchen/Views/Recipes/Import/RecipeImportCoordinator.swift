@@ -109,7 +109,6 @@ final class RecipeImportCoordinator {
             context.insert(s)
         }
 
-        try? context.save()
         phase = .savedRecipeID(recipe.id)
         HapticManager.impact(style: .medium)
         return recipe

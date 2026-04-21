@@ -19,6 +19,7 @@ struct RecipeImportInboxHost: ViewModifier {
                     RecipeImportHostView(initialSource: source) { _ in
                         inbox.clear()
                     }
+                    .modelContainer(CloudSyncService.shared.container)
                     #if os(iOS)
                     .forceLightStatusBar()
                     #endif
