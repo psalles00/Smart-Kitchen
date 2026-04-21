@@ -20,9 +20,12 @@ final class CloudSyncService: @unchecked Sendable {
     private static let storeRecoveryAttemptedKey = "SmartKitchen.storeRecoveryAttempted"
     private var remoteChangeObserver: Any?
     private var deduplicationWorkItem: DispatchWorkItem?
+    private var shouldActivateCloudOnLaunch = false
+    private var hasAttemptedCloudActivationOnLaunch = false
 
     private(set) var container: ModelContainer
     private(set) var containerID = UUID()
+    private(set) var isUsingCloudKitContainer = false
     static let appSchema = Schema([
         Recipe.self,
         RecipeIngredient.self,
@@ -78,7 +81,7 @@ final class CloudSyncService: @unchecked Sendable {
         #endif
 
         let cloudKitAllowed = Self.canUseCloudKitInCurrentEnvironment()
-        let useCloud = syncPref && !skip && cloudKitAllowed
+        shouldActivateCloudOnLaunch = syncPref && !skip && cloudKitAllowed
 
         // Ensure store directory exists
         try? FileManager.default.createDirectory(at: Self.storeDirectory, withIntermediateDirectories: true)
@@ -87,33 +90,20 @@ final class CloudSyncService: @unchecked Sendable {
         Self.performStoreSplitMigrationIfNeeded()
 
         do {
-            container = try Self.makeContainer(usingCloudKit: useCloud)
+            container = try Self.makeLocalContainerWithRecoveryIfNeeded()
         } catch {
-            NSLog("CloudKit container failed, falling back to local: %@", String(describing: error))
-            do {
-                container = try Self.makeLocalContainerWithRecoveryIfNeeded()
-            } catch {
-                // Last-resort fallback: keep app functional with temporary stores.
-                container = try! Self.makeEphemeralLocalContainer()
-                syncError = "Não foi possível abrir o banco local. O app iniciou em modo temporário; reinicie e tente novamente."
-            }
-            UserDefaults.standard.set(false, forKey: Self.syncEnabledKey)
-            if syncError == nil {
-                syncError = "Não foi possível inicializar a sincronização com iCloud neste dispositivo."
-            }
+            NSLog("Local container failed, falling back to temporary store: %@", String(describing: error))
+            container = try! Self.makeEphemeralLocalContainer()
+            syncError = "Não foi possível abrir o banco local. O app iniciou em modo temporário; reinicie e tente novamente."
         }
 
         if syncPref && !cloudKitAllowed {
             UserDefaults.standard.set(false, forKey: Self.syncEnabledKey)
             syncError = "Sincronização iCloud indisponível nesta build."
+            shouldActivateCloudOnLaunch = false
         }
 
         checkiCloudAvailability()
-
-        if useCloud {
-            registerForRemoteNotifications()
-            setupRemoteChangeObservation()
-        }
     }
 
     func checkiCloudAvailability() {
@@ -121,7 +111,53 @@ final class CloudSyncService: @unchecked Sendable {
     }
 
     func syncNow() {
-        guard !isSyncing, syncEnabled else { return }
+        guard !isSyncing, syncEnabled, isUsingCloudKitContainer else { return }
+        performSyncNow()
+    }
+
+    @MainActor
+    func activateCloudSyncIfNeededOnLaunch() {
+        guard shouldActivateCloudOnLaunch, !hasAttemptedCloudActivationOnLaunch else { return }
+        hasAttemptedCloudActivationOnLaunch = true
+
+        checkiCloudAvailability()
+        guard iCloudAvailable else {
+            shouldActivateCloudOnLaunch = false
+            syncEnabled = false
+            syncError = "iCloud não está disponível neste dispositivo. Verifique se está conectado nas Configurações do sistema."
+            return
+        }
+
+        let newContainer: ModelContainer
+        do {
+            newContainer = try Self.makeContainer(usingCloudKit: true)
+        } catch {
+            NSLog("CloudKit container failed after local launch, staying local: %@", String(describing: error))
+            shouldActivateCloudOnLaunch = false
+            syncEnabled = false
+            syncError = "Não foi possível inicializar a sincronização com iCloud neste dispositivo."
+            return
+        }
+
+        let oldContainer = container
+        container = newContainer
+        containerID = UUID()
+        isUsingCloudKitContainer = true
+        shouldActivateCloudOnLaunch = false
+        lastSyncDate = Date()
+
+        registerForRemoteNotifications()
+        setupRemoteChangeObservation()
+
+        Task { @MainActor in
+            _ = oldContainer
+            try? await Task.sleep(for: .seconds(3))
+        }
+
+        performSyncNow()
+    }
+
+    private func performSyncNow() {
         isSyncing = true
         syncError = nil
         checkiCloudAvailability()
@@ -144,6 +180,9 @@ final class CloudSyncService: @unchecked Sendable {
 
     var statusDescription: String {
         if isSyncing { return "Sincronizando…" }
+        if syncEnabled && !isUsingCloudKitContainer && shouldActivateCloudOnLaunch {
+            return "Preparando iCloud…"
+        }
         return iCloudAvailable ? "Conectado" : "Indisponível"
     }
 
@@ -179,8 +218,11 @@ final class CloudSyncService: @unchecked Sendable {
         // 2. Update state and keep old container alive briefly for pending writes
         let oldContainer = container
         syncEnabled = true
+        shouldActivateCloudOnLaunch = false
+        hasAttemptedCloudActivationOnLaunch = true
         container = newContainer
         containerID = UUID()
+        isUsingCloudKitContainer = true
         lastSyncDate = Date()
 
         registerForRemoteNotifications()
@@ -193,7 +235,7 @@ final class CloudSyncService: @unchecked Sendable {
         }
 
         // 4. Trigger an immediate sync/save to push newly migrated data
-        syncNow()
+        performSyncNow()
     }
 
     @MainActor
@@ -216,8 +258,11 @@ final class CloudSyncService: @unchecked Sendable {
         // 2. Update state
         let oldContainer = container
         syncEnabled = false
+        shouldActivateCloudOnLaunch = false
+        hasAttemptedCloudActivationOnLaunch = false
         container = newContainer
         containerID = UUID()
+        isUsingCloudKitContainer = false
         teardownRemoteChangeObservation()
 
         // Keep old container alive so pending writes finish

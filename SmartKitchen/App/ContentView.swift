@@ -987,6 +987,8 @@ private struct HomeView: View {
     @State private var showAddGrocery = false
     @State private var showAddPantry = false
     @State private var showAddRecipe = false
+    @State private var showImportRecipe = false
+    @State private var showRecipeAddOptions = false
     @State private var selectedCompatibleCategory: String? = nil
     @State private var editingExpiringItem: UnifiedItem?
 
@@ -1047,6 +1049,21 @@ private struct HomeView: View {
                 AddRecipeView()
             }
             .forceLightStatusBar()
+        }
+        .sheet(isPresented: $showImportRecipe) {
+            RecipeImportHostView { _ in }
+                .forceLightStatusBar()
+        }
+        .confirmationDialog("Adicionar receita", isPresented: $showRecipeAddOptions, titleVisibility: .visible) {
+            Button("Importar receita") {
+                showImportRecipe = true
+            }
+            Button("Criar do zero") {
+                showAddRecipe = true
+            }
+            Button("Cancelar", role: .cancel) {}
+        } message: {
+            Text("De onde vem essa receita?")
         }
         .sheet(item: $editingExpiringItem) { item in
             ItemDetailView(mode: .edit(item))
@@ -1228,7 +1245,7 @@ private struct HomeView: View {
 
                     VStack(spacing: 6) {
                         homeShortcutAddTile(imageName: "receitas", imageSize: 65) {
-                            showAddRecipe = true
+                            showRecipeAddOptions = true
                         }
                         .frame(height: smallSide)
                         Text("Receitas")

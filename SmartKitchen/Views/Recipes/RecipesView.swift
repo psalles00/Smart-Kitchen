@@ -44,6 +44,8 @@ struct RecipesView: View {
     @State private var selectedCategory: String? = nil
     @State private var sortOption: RecipeSortOption = .dateAdded
     @State private var showAddRecipe = false
+    @State private var showImportRecipe = false
+    @State private var importInitialSource: RecipeImportSource? = nil
     @State private var showsInlineTitle = false
     @State private var editingRecipe: Recipe?
     @State private var showCompatibleOnly = false
@@ -173,6 +175,13 @@ struct RecipesView: View {
             }
             .forceLightStatusBar()
         }
+        .sheet(isPresented: $showImportRecipe) {
+            RecipeImportHostView(initialSource: importInitialSource) { recipeID in
+                highlightedRecipeID = recipeID
+            }
+            .forceLightStatusBar()
+            .onDisappear { importInitialSource = nil }
+        }
         .sheet(item: $editingRecipe) { recipe in
             NavigationStack {
                 EditRecipeView(recipe: recipe)
@@ -201,8 +210,18 @@ struct RecipesView: View {
         PageHeader(title: "Receitas", isInverted: isInverted) {
             HStack(spacing: 6) {
                 GlassButtonGroup {
-                    GlassGroupButton(systemImage: "plus") {
-                        showAddRecipe = true
+                    GlassGroupMenu(systemImage: "plus") {
+                        Button {
+                            showImportRecipe = true
+                        } label: {
+                            Label("Importar receita", systemImage: "sparkles")
+                        }
+                        Divider()
+                        Button {
+                            showAddRecipe = true
+                        } label: {
+                            Label("Criar do zero", systemImage: "square.and.pencil")
+                        }
                     }
                 }
 

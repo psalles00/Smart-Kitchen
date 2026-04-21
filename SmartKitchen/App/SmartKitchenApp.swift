@@ -93,18 +93,9 @@ struct SmartKitchenApp: App {
 
     @Environment(\.scenePhase) private var scenePhase
     @State private var cloudSync = CloudSyncService.shared
+    @State private var didRunPostLaunchBootstrap = false
 
     init() {
-        // Seed demo data on first launch
-        let context = ModelContext(CloudSyncService.shared.container)
-        DataSeeder.seedIfNeeded(context: context)
-
-        // Migrate to unified item model
-        UnifiedItemMigration.migrateIfNeeded(context: context)
-
-        // Clean any existing duplicates from prior sync issues
-        CloudSyncService.shared.performDeduplication()
-
         // Must be called after all stored properties are initialized
         #if os(iOS)
         _ = StatusBarSwizzle.install
@@ -117,6 +108,13 @@ struct SmartKitchenApp: App {
             ContentView()
                 .modelContainer(cloudSync.container)
                 .id(cloudSync.containerID)
+                .recipeImportInboxHost()
+                .onOpenURL { url in
+                    _ = RecipeImportInbox.shared.ingest(url: url)
+                }
+                .task {
+                    await runPostLaunchBootstrapIfNeeded()
+                }
                 .onChange(of: scenePhase) { oldValue, newValue in
                     if newValue == .active {
                         cloudSync.syncNow()
@@ -143,6 +141,21 @@ struct SmartKitchenApp: App {
             }
         }
         #endif
+    }
+
+    @MainActor
+    private func runPostLaunchBootstrapIfNeeded() async {
+        guard !didRunPostLaunchBootstrap else { return }
+        didRunPostLaunchBootstrap = true
+
+        // Let the first frame render before running store maintenance.
+        try? await Task.sleep(for: .milliseconds(350))
+
+        let context = ModelContext(cloudSync.container)
+        DataSeeder.seedIfNeeded(context: context)
+        UnifiedItemMigration.migrateIfNeeded(context: context)
+
+        cloudSync.activateCloudSyncIfNeededOnLaunch()
     }
 
     // MARK: - Appearance

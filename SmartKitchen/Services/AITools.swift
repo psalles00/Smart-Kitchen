@@ -204,6 +204,14 @@ struct AITools {
                 "use_pantry":  ["type": "boolean", "description": "Whether to prefer ingredients from the pantry"]
             ],
             required: []
+        ),
+        makeTool(
+            name: "import_recipe_from_url",
+            description: "Import a recipe from a web URL (blog, recipe site, social media link). Downloads the page, extracts the recipe (JSON-LD or AI-structured), saves it directly, and returns its name and ID. Use this whenever the user pastes a link and asks to save/import/add the recipe.",
+            parameters: [
+                "url": ["type": "string", "description": "Full URL (https://...) pointing to the recipe."]
+            ],
+            required: ["url"]
         )
     ]
 
@@ -268,6 +276,8 @@ struct AITools {
             return moveCategory(args: call.arguments, context: context)
         case "suggest_recipe":
             return suggestRecipeContext(args: call.arguments, context: context)
+        case "import_recipe_from_url":
+            return await importRecipeFromURL(args: call.arguments, context: context)
         default:
             return "{\"error\": \"Unknown tool: \(call.name)\"}"
         }
@@ -734,6 +744,80 @@ struct AITools {
         guard let data = try? JSONSerialization.data(withJSONObject: value),
               let str = String(data: data, encoding: .utf8) else { return "[]" }
         return str
+    }
+
+    // MARK: - Import recipe from URL
+
+    private static func importRecipeFromURL(args: [String: Any], context: ModelContext) async -> String {
+        let raw = (args["url"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !raw.isEmpty else {
+            return toJSON(["error": "missing url"])
+        }
+        let candidate = raw.contains("://") ? raw : "https://\(raw)"
+        guard let url = URL(string: candidate), url.host != nil else {
+            return toJSON(["error": "invalid url"])
+        }
+
+        let orchestrator = RecipeImportOrchestrator()
+        do {
+            let draft = try await orchestrator.importRecipe(from: .url(url)) { _ in }
+            let recipe = persistImportedDraft(draft, in: context)
+            return toJSON([
+                "success": true,
+                "id": recipe.id.uuidString,
+                "name": recipe.name,
+                "category": recipe.category,
+                "ingredients": recipe.ingredients?.count ?? 0,
+                "steps": recipe.steps?.count ?? 0,
+                "source": draft.sourceLabel
+            ])
+        } catch {
+            return toJSON(["error": error.localizedDescription])
+        }
+    }
+
+    @discardableResult
+    private static func persistImportedDraft(_ draft: RecipeDraft, in context: ModelContext) -> Recipe {
+        let recipe = Recipe(
+            name: draft.name.trimmingCharacters(in: .whitespacesAndNewlines),
+            descriptionText: draft.descriptionText.trimmingCharacters(in: .whitespacesAndNewlines),
+            imageData: draft.imageData,
+            externalURLString: draft.externalURLString.trimmingCharacters(in: .whitespacesAndNewlines),
+            category: draft.category,
+            prepTime: draft.prepTime,
+            cookTime: draft.cookTime,
+            servings: draft.servings,
+            calories: draft.calories,
+            difficulty: draft.difficulty
+        )
+        context.insert(recipe)
+        recipe.requiredUtensils = draft.requiredUtensils.filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+
+        for (index, ing) in draft.ingredients.enumerated() {
+            let trimmedName = ing.name.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmedName.isEmpty else { continue }
+            let ingredient = RecipeIngredient(
+                name: trimmedName,
+                quantity: ing.quantity,
+                unit: ing.unit,
+                preparationState: ing.preparationState,
+                iconName: ing.iconName ?? ItemDatabase.shared.exactMatch(for: trimmedName)?.nomeDoArquivo,
+                sortOrder: index
+            )
+            ingredient.recipe = recipe
+            context.insert(ingredient)
+        }
+
+        for step in draft.steps {
+            let trimmed = step.instruction.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else { continue }
+            let s = RecipeStep(order: step.order, instruction: trimmed, durationMinutes: step.durationMinutes)
+            s.recipe = recipe
+            context.insert(s)
+        }
+
+        try? context.save()
+        return recipe
     }
 
     private static func categoryType(from rawValue: String?) -> CategoryType? {
