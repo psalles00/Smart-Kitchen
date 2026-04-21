@@ -77,6 +77,10 @@ struct InlineChatView: View {
 
     private var settings: AppSettings? { settingsArray.first }
 
+    private var aiToolDefinitions: [[String: Any]] {
+        AITools.definitions(excluding: ["create_recipe"])
+    }
+
     private var scrollTopThreshold: CGFloat {
         (isAIMode ? topPinnedInset : 12) - 10
     }
@@ -736,10 +740,12 @@ struct InlineChatView: View {
                 "role": "system",
                 "content": """
                 O pedido mais recente do usuário é um fluxo de criação/edição/exclusão de receita.
-                Priorize as ferramentas de receita.
+                Para buscar, editar e excluir receitas existentes, priorize as ferramentas de receita.
                 NÃO mencione despensa, mercado, compatibilidade de ingredientes ou receitas existentes, a menos que o usuário tenha pedido isso explicitamente.
-                Se o usuário pedir algo como "adicione uma receita de como fazer arroz", interprete isso como criação de uma nova receita no app para esse prato.
-                Se faltarem detalhes para salvar, faça uma pergunta objetiva ou proponha uma receita-base razoável para confirmação.
+                Se o usuário pedir algo como "adicione uma receita de como fazer arroz", interprete isso como um pedido para montar uma receita nova para revisão, nunca para criá-la imediatamente no app.
+                NÃO chame create_recipe nesse fluxo.
+                Se houver dados suficientes, responda com a receita completa no formato do card para revisão.
+                Se faltarem detalhes, faça uma pergunta objetiva antes de montar o card.
                 """
             ])
         }
@@ -751,7 +757,7 @@ struct InlineChatView: View {
         var apiMessages = messages
         let response = try await aiService.sendChat(
             messages: apiMessages,
-            tools: skipTools ? nil : AITools.definitions,
+            tools: skipTools ? nil : aiToolDefinitions,
             apiKey: apiKey
         )
 
@@ -871,9 +877,10 @@ struct InlineChatView: View {
         ou qualquer variação de sugestão de receitas, NÃO liste os itens da despensa na resposta. \
         Responda com uma introdução curta dizendo que as opções abaixo foram encontradas com base na despensa \
         e nas receitas salvas, e feche perguntando se o usuário quer outras sugestões.
-        4. Ao criar uma receita, use create_recipe com ingredientes detalhados (quantidade + unidade) \
-        e passos claros e numerados.
-        5. Você pode criar, editar, excluir, buscar e detalhar receitas usando as ferramentas de receita.
+        4. Quando o usuário pedir para adicionar, criar ou salvar uma receita nova, NUNCA chame create_recipe durante a conversa. \
+        Primeiro apresente a receita completa no formato de card descrito abaixo.
+        5. O usuário só pode decidir criar/salvar a receita através do botão do card na interface. \
+        Use as ferramentas de receita apenas para buscar, detalhar, editar ou excluir receitas já existentes.
         6. Antes de modificar qualquer informação do app, peça confirmação clara do usuário. \
         Só prossiga com alterações depois que o usuário confirmar explicitamente.
         7. Você também pode ler e editar categorias de despensa, mercado e receitas usando as ferramentas de categoria.
@@ -881,8 +888,9 @@ struct InlineChatView: View {
         9. Se o usuário pedir para adicionar, criar, editar, atualizar, excluir, remover, apagar, cadastrar ou salvar algo, \
         trate isso como um fluxo de alteração, não como sugestão de receitas.
         10. Quando o usuário pedir para adicionar uma receita nova, NÃO baseie a resposta automaticamente na despensa. \
-        Esse fluxo pode ser totalmente independente dos itens atuais do app.
-        11. Se não souber algo, diga que não sabe. Nunca invente informações.
+        Esse fluxo pode ser totalmente independente dos itens atuais do app e deve gerar uma receita-base revisável.
+        11. Nunca diga que criou, salvou ou adicionou uma receita ao app antes de o usuário tocar no botão do card.
+        12. Se não souber algo, diga que não sabe. Nunca invente informações.
 
         ## Sugestão de receitas novas
         Quando o usuário pedir para criar opções de receitas ou sugerir novas receitas que ele não tem salvas:
@@ -899,9 +907,10 @@ struct InlineChatView: View {
         - Apenas prossiga com receitas com ingredientes fora da despensa se o usuário confirmar explicitamente.
 
         ## Receita completa
-        Quando for apresentar uma receita completa (após o usuário escolher uma opção):
+        Sempre que for apresentar uma receita nova completa, seja após o usuário escolher uma opção ou após um pedido direto:
         - NÃO chame a ferramenta create_recipe. Apenas retorne o texto formatado abaixo.
-        - O usuário decidirá se quer salvar a receita através de um botão na interface.
+        - NÃO diga que a receita já foi criada, salva ou adicionada.
+        - O usuário decidirá se quer salvar a receita através de um botão no card da interface.
         - Use EXATAMENTE este formato:
 
         **Nome da Receita**
@@ -1368,7 +1377,7 @@ struct InlineChatView: View {
         )
     }
 
-    /// Adds a recipe from an inline card using the create_recipe tool.
+    /// Adds a recipe from an inline card using the local recipe creation flow.
     private func addRecipeFromCard(_ card: RecipeCardData) {
         let convId = ensureConversation()
 

@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Compact inline recipe card displayed in the chat.
-/// Shows title, subtitle, ingredients, steps, and a discrete "add to recipes" button.
+/// Shows title, subtitle, ingredients, steps, and the button that creates the recipe in the app.
 struct RecipeDetailCard: View {
     let recipe: RecipeCardData
     let onAddToRecipes: () -> Void
@@ -88,7 +88,7 @@ struct RecipeDetailCard: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
 
-            // Add button
+            // Create button
             Divider()
                 .padding(.horizontal, 16)
 
@@ -98,7 +98,7 @@ struct RecipeDetailCard: View {
                 HStack(spacing: 6) {
                     Image(systemName: "plus.circle")
                         .font(.caption.weight(.medium))
-                    Text("Adicionar às minhas receitas")
+                    Text("Criar receita no app")
                         .font(.caption.weight(.medium))
                 }
                 .foregroundStyle(Color.accentColor)

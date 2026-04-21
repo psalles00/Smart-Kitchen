@@ -7,7 +7,7 @@ struct AITools {
 
     // MARK: - Tool Definitions (sent to OpenAI)
 
-    static let definitions: [[String: Any]] = [
+    private static let allDefinitions: [[String: Any]] = [
         makeTool(
             name: "search_recipes",
             description: "Search the user's recipes saved in the app by name, category, ingredient, or keyword.",
@@ -206,6 +206,25 @@ struct AITools {
             required: []
         )
     ]
+
+    static var definitions: [[String: Any]] {
+        allDefinitions
+    }
+
+    static func definitions(excluding excludedToolNames: Set<String>) -> [[String: Any]] {
+        guard !excludedToolNames.isEmpty else {
+            return allDefinitions
+        }
+
+        return allDefinitions.filter { tool in
+            guard let function = tool["function"] as? [String: Any],
+                  let name = function["name"] as? String else {
+                return true
+            }
+
+            return !excludedToolNames.contains(name)
+        }
+    }
 
     // MARK: - Tool Execution
 
