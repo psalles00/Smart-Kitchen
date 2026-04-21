@@ -441,11 +441,37 @@ struct AITools {
     }
 
     private static func addPantryItem(args: [String: Any], context: ModelContext) -> String {
-        let name = args["name"] as? String ?? ""
+        let name = (args["name"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else { return "{\"error\": \"invalid name\"}" }
+
         let category = args["category"] as? String ?? "Outros"
         let quantity = args["quantity"] as? Double
         let unit = args["unit"] as? String
         let expirationDate = parseDate(args["expirationDate"] as? String)
+        let descriptor = FetchDescriptor<UnifiedItem>()
+        let allItems = (try? context.fetch(descriptor)) ?? []
+
+        if let existingItem = UnifiedItem.existingItem(named: name, in: allItems) {
+            if !existingItem.isPantry {
+                existingItem.isPantry = true
+                existingItem.pantrySortOrder = (allItems.filter { $0.isPantry }.map(\.pantrySortOrder).max() ?? -1) + 1
+            }
+            if category != "Outros" {
+                existingItem.category = category
+            }
+            if let quantity {
+                existingItem.quantity = quantity
+            }
+            if let unit, !unit.isEmpty {
+                existingItem.unit = unit
+            }
+            if let expirationDate {
+                existingItem.expirationDate = expirationDate
+            }
+
+            try? context.save()
+            return "{\"success\": true, \"item\": \"\(existingItem.name)\", \"id\": \"\(existingItem.id.uuidString)\", \"existing\": true}"
+        }
 
         let item = UnifiedItem(
             name: name,
@@ -453,11 +479,12 @@ struct AITools {
             quantity: quantity,
             unit: unit,
             isPantry: true,
+            pantrySortOrder: (allItems.filter { $0.isPantry }.map(\.pantrySortOrder).max() ?? -1) + 1,
             expirationDate: expirationDate
         )
         context.insert(item)
         try? context.save()
-        return "{\"success\": true, \"item\": \"\(name)\"}"
+        return "{\"success\": true, \"item\": \"\(name)\", \"id\": \"\(item.id.uuidString)\", \"existing\": false}"
     }
 
     private static func removePantryItem(name: String, context: ModelContext) -> String {
@@ -495,21 +522,45 @@ struct AITools {
     }
 
     private static func addGroceryItem(args: [String: Any], context: ModelContext) -> String {
-        let name = args["name"] as? String ?? ""
+        let name = (args["name"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else { return "{\"error\": \"invalid name\"}" }
+
         let category = args["category"] as? String ?? "Outros"
         let quantity = args["quantity"] as? Double
         let unit = args["unit"] as? String
+        let descriptor = FetchDescriptor<UnifiedItem>()
+        let allItems = (try? context.fetch(descriptor)) ?? []
+
+        if let existingItem = UnifiedItem.existingItem(named: name, in: allItems) {
+            if !existingItem.isGrocery {
+                existingItem.isGrocery = true
+                existingItem.grocerySortOrder = (allItems.filter { $0.isGrocery }.map(\.grocerySortOrder).max() ?? -1) + 1
+            }
+            if category != "Outros" {
+                existingItem.category = category
+            }
+            if let quantity {
+                existingItem.quantity = quantity
+            }
+            if let unit, !unit.isEmpty {
+                existingItem.unit = unit
+            }
+
+            try? context.save()
+            return "{\"success\": true, \"item\": \"\(existingItem.name)\", \"id\": \"\(existingItem.id.uuidString)\", \"existing\": true}"
+        }
 
         let item = UnifiedItem(
             name: name,
             category: category,
             quantity: quantity,
             unit: unit,
-            isGrocery: true
+            isGrocery: true,
+            grocerySortOrder: (allItems.filter { $0.isGrocery }.map(\.grocerySortOrder).max() ?? -1) + 1
         )
         context.insert(item)
         try? context.save()
-        return "{\"success\": true, \"item\": \"\(name)\"}"
+        return "{\"success\": true, \"item\": \"\(name)\", \"id\": \"\(item.id.uuidString)\", \"existing\": false}"
     }
 
     private static func getCategories(type: String?, context: ModelContext) -> String {

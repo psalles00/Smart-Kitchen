@@ -82,6 +82,7 @@ struct ListsTabView: View {
     @State private var showAddPantry = false
     @State private var showAddGrocery = false
     @State private var showAddUtensil = false
+    @State private var existingItemFromCreateFlow: UnifiedItem?
     @EnvironmentObject private var searchBarState: SearchBarState
     @State private var showsInlineTitle = false
     @State private var sortOption: ListsSortOption = .custom
@@ -219,15 +220,34 @@ struct ListsTabView: View {
             }
         }
         .sheet(isPresented: $showAddPantry) {
-            ItemDetailView(mode: .create(destinations: [.pantry]))
+            ItemDetailView(
+                mode: .create(destinations: [.pantry]),
+                onExistingItemRequested: { item in
+                    openExistingItemFromCreateFlow(item)
+                }
+            )
                 .forceLightStatusBar()
         }
         .sheet(isPresented: $showAddGrocery) {
-            ItemDetailView(mode: .create(destinations: [.grocery]))
+            ItemDetailView(
+                mode: .create(destinations: [.grocery]),
+                onExistingItemRequested: { item in
+                    openExistingItemFromCreateFlow(item)
+                }
+            )
                 .forceLightStatusBar()
         }
         .sheet(isPresented: $showAddUtensil) {
-            ItemDetailView(mode: .create(destinations: [.utensil]))
+            ItemDetailView(
+                mode: .create(destinations: [.utensil]),
+                onExistingItemRequested: { item in
+                    openExistingItemFromCreateFlow(item)
+                }
+            )
+                .forceLightStatusBar()
+        }
+        .sheet(item: $existingItemFromCreateFlow) { item in
+            ItemDetailView(mode: .edit(item))
                 .forceLightStatusBar()
         }
         #if os(macOS)
@@ -423,6 +443,16 @@ struct ListsTabView: View {
             showAddGrocery = true
         case .utensils:
             showAddUtensil = true
+        }
+    }
+
+    private func openExistingItemFromCreateFlow(_ item: UnifiedItem) {
+        showAddPantry = false
+        showAddGrocery = false
+        showAddUtensil = false
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            existingItemFromCreateFlow = item
         }
     }
 

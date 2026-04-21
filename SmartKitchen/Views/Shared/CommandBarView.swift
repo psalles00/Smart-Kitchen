@@ -933,7 +933,7 @@ enum CommandBarHelpers {
             boldRange = "\"\(item.title)\""
             boldTerm = "Mercado"
         case "create-recipe":
-            baseText = "Criar receita com \"\(item.title)\""
+            baseText = "Criar receita \"\(item.title)\""
             boldRange = "\"\(item.title)\""
             boldTerm = "receita"
         default:

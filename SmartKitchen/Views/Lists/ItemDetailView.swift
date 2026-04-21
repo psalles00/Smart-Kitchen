@@ -57,6 +57,7 @@ struct ItemDetailView: View {
     var initialIconFileName: String? = nil
     var initialCategory: String? = nil
     var onCreated: ((UUID, ItemListType) -> Void)? = nil
+    var onExistingItemRequested: ((UnifiedItem) -> Void)? = nil
 
     // MARK: - Shared State
 
@@ -110,6 +111,11 @@ struct ItemDetailView: View {
     private var hasPantry: Bool { selectedLists.contains(.pantry) }
     private var hasGrocery: Bool { selectedLists.contains(.grocery) }
     private var isValid: Bool { !name.trimmingCharacters(in: .whitespaces).isEmpty }
+    private var duplicateNameItem: UnifiedItem? {
+        guard isCreateMode else { return nil }
+        return UnifiedItem.existingItem(named: name, in: allUnifiedItems)
+    }
+    private var canCreate: Bool { isValid && duplicateNameItem == nil }
 
     // Edit-mode binding
     private var editingItem: UnifiedItem? {
@@ -136,6 +142,8 @@ struct ItemDetailView: View {
 
                 // Suggestion chips (below category)
                 suggestionsSection
+
+                existingItemNoticeSection
 
                 // List toggle
                 listToggleSection
@@ -301,6 +309,41 @@ struct ItemDetailView: View {
                     .background(neutralSurfaceColor, in: Circle())
             }
             .buttonStyle(.plain)
+        }
+    }
+
+    @ViewBuilder
+    private var existingItemNoticeSection: some View {
+        if let existingItem = duplicateNameItem {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 8) {
+                    Image(systemName: "exclamationmark.circle.fill")
+                        .font(.subheadline)
+                        .foregroundStyle(.orange)
+
+                    Text("Já existe um item com esse nome")
+                        .font(.subheadline.weight(.semibold))
+                }
+
+                Text("Esse item já está em \(existingItemLocationsText(for: existingItem)). Abra o item existente para editar as listas em vez de criar outro.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Button {
+                    openExistingItem(existingItem)
+                } label: {
+                    Text("Abrir item existente")
+                        .font(.subheadline.weight(.semibold))
+                        .underline()
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(PageTheme.lists.accentColor)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(14)
+            .background(Color(.tertiarySystemFill), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .padding(.top, 14)
         }
     }
 
@@ -692,10 +735,10 @@ struct ItemDetailView: View {
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
-                .background(isValid ? Color.black : Color.black.opacity(0.3), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .background(canCreate ? Color.black : Color.black.opacity(0.3), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
         .buttonStyle(.plain)
-        .disabled(!isValid)
+        .disabled(!canCreate)
     }
 
     // MARK: - State Helpers
@@ -1000,6 +1043,7 @@ struct ItemDetailView: View {
 
     private func save() {
         guard isCreateMode else { return }
+        guard duplicateNameItem == nil else { return }
 
         let trimmed = name.trimmingCharacters(in: .whitespaces)
         let trimmedDescription = descriptionText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -1060,6 +1104,19 @@ struct ItemDetailView: View {
         if let id = createdID {
             onCreated?(id, createdType)
         }
+        dismiss()
+    }
+
+    private func existingItemLocationsText(for item: UnifiedItem) -> String {
+        let labels = item.activeFlags.map(\.label)
+        if labels.isEmpty {
+            return "uma das listas"
+        }
+        return labels.joined(separator: ", ")
+    }
+
+    private func openExistingItem(_ item: UnifiedItem) {
+        onExistingItemRequested?(item)
         dismiss()
     }
 }

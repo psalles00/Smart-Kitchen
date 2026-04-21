@@ -155,3 +155,35 @@ final class UnifiedItem {
         return flags
     }
 }
+
+extension UnifiedItem {
+    static func normalizedName(_ name: String) -> String {
+        name
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
+            .lowercased()
+    }
+
+    static func hasExactNameMatch(_ lhs: String, _ rhs: String) -> Bool {
+        let left = normalizedName(lhs)
+        let right = normalizedName(rhs)
+        guard !left.isEmpty, !right.isEmpty else { return false }
+        return left == right
+    }
+
+    static func existingItem(
+        named name: String,
+        in items: [UnifiedItem],
+        excluding excludedID: UUID? = nil
+    ) -> UnifiedItem? {
+        let normalized = normalizedName(name)
+        guard !normalized.isEmpty else { return nil }
+
+        return items.first { item in
+            if let excludedID, item.id == excludedID {
+                return false
+            }
+            return normalizedName(item.name) == normalized
+        }
+    }
+}

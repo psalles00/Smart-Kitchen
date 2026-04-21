@@ -109,6 +109,9 @@ struct ContentView: View {
                 onCreated: { id, _ in
                     scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "pantryItem")
                     selectedTab = .lists
+                },
+                onExistingItemRequested: { item in
+                    openExistingItemFromCreateFlow(item)
                 }
             )
             .forceLightStatusBar()
@@ -121,6 +124,9 @@ struct ContentView: View {
                 onCreated: { id, _ in
                     scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "groceryItem")
                     selectedTab = .lists
+                },
+                onExistingItemRequested: { item in
+                    openExistingItemFromCreateFlow(item)
                 }
             )
             .forceLightStatusBar()
@@ -133,7 +139,12 @@ struct ContentView: View {
             .forceLightStatusBar()
         }
         .sheet(isPresented: $showAddUtensil) {
-            ItemDetailView(mode: .create(destinations: [.utensil]))
+            ItemDetailView(
+                mode: .create(destinations: [.utensil]),
+                onExistingItemRequested: { item in
+                    openExistingItemFromCreateFlow(item)
+                }
+            )
                 .forceLightStatusBar()
         }
         .sheet(isPresented: $showAddItem) {
@@ -154,6 +165,9 @@ struct ContentView: View {
                         scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "utensil")
                         selectedTab = .lists
                     }
+                },
+                onExistingItemRequested: { item in
+                    openExistingItemFromCreateFlow(item)
                 }
             )
             .forceLightStatusBar()
@@ -299,7 +313,7 @@ struct ContentView: View {
     private var persistentAssistantBar: some View {
         UnifiedSearchBar(state: searchBarState) { _ in }
             .padding(.vertical, 6)
-            .padding(.bottom, searchBarState.isVisible ? 0 : 50)
+            .padding(.bottom, searchBarState.isVisible ? 0 : 45)
     }
 
     /// Whether the results panel should be shown (first letter typed, chat, etc.)
@@ -881,6 +895,17 @@ struct ContentView: View {
     private func refreshSearchAfterMove() {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
             searchService.search(query: searchBarState.searchText, context: modelContext, showUtensils: settings?.showUtensils == true)
+        }
+    }
+
+    private func openExistingItemFromCreateFlow(_ item: UnifiedItem) {
+        showAddPantry = false
+        showAddGrocery = false
+        showAddUtensil = false
+        showAddItem = false
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            searchEditItem = item
         }
     }
 
