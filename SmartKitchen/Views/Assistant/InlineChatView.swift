@@ -48,6 +48,7 @@ struct InlineChatView: View {
     @State private var hasSentInitialQuery = false
     @State private var showScrollToBottom: Bool = false
     @State private var chatAreaHeight: CGFloat = 0
+    @State private var pinnedUserMessageID: UUID?
 
     init(
         initialQuery: String? = nil,
@@ -80,6 +81,10 @@ struct InlineChatView: View {
         (isAIMode ? topPinnedInset : 12) - 10
     }
 
+    private var pinnedMessageRevealInset: CGFloat {
+        isAIMode ? topPinnedInset : 0
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             // Hide own header when the parent panel provides one
@@ -110,45 +115,53 @@ struct InlineChatView: View {
                             }
 
                             ForEach(messages) { message in
-                                VStack(spacing: 6) {
-                                    if message.role == .system {
-                                        // Skip system messages
-                                    } else if parseRecipeDetailCard(from: message) != nil {
-                                        if let card = parseRecipeDetailCard(from: message) {
-                                            RecipeDetailCard(recipe: card) {
-                                                addRecipeFromCard(card)
+                                VStack(spacing: 0) {
+                                    if pinnedUserMessageID == message.id {
+                                        Color.clear
+                                            .frame(height: pinnedMessageRevealInset)
+                                            .id(pinnedMessageAnchorID(for: message.id))
+                                    }
+
+                                    VStack(spacing: 6) {
+                                        if message.role == .system {
+                                            // Skip system messages
+                                        } else if parseRecipeDetailCard(from: message) != nil {
+                                            if let card = parseRecipeDetailCard(from: message) {
+                                                RecipeDetailCard(recipe: card) {
+                                                    addRecipeFromCard(card)
+                                                }
                                             }
-                                        }
-                                    } else if !message.attachedRecipeIds.isEmpty {
-                                        ChatBubbleView(
-                                            message: message,
-                                            onQuickAction: { _ in },
-                                            hideQuickActions: true
-                                        )
-                                        RecipeCardMessage(recipeIds: message.attachedRecipeIds)
-                                        if !isAIMode {
-                                            ForEach(message.quickActions) { action in
-                                                createNewRecipesButton(action: action)
+                                        } else if !message.attachedRecipeIds.isEmpty {
+                                            ChatBubbleView(
+                                                message: message,
+                                                onQuickAction: { _ in },
+                                                hideQuickActions: true
+                                            )
+                                            RecipeCardMessage(recipeIds: message.attachedRecipeIds)
+                                            if !isAIMode {
+                                                ForEach(message.quickActions) { action in
+                                                    createNewRecipesButton(action: action)
+                                                }
                                             }
+                                        } else if !isAIMode, let split = splitMessageAroundOptions(message) {
+                                            if !split.before.isEmpty {
+                                                assistantTextBubble(split.before)
+                                            }
+                                            RecipeOptionButtonsView(options: split.options) { selectedOption in
+                                                requestRecipeDetail(for: selectedOption)
+                                            }
+                                            if !split.after.isEmpty {
+                                                assistantTextBubble(split.after)
+                                            }
+                                        } else {
+                                            ChatBubbleView(
+                                                message: message,
+                                                onQuickAction: { action in
+                                                    sendMessage(action.prompt)
+                                                },
+                                                hideQuickActions: isAIMode
+                                            )
                                         }
-                                    } else if !isAIMode, let split = splitMessageAroundOptions(message) {
-                                        if !split.before.isEmpty {
-                                            assistantTextBubble(split.before)
-                                        }
-                                        RecipeOptionButtonsView(options: split.options) { selectedOption in
-                                            requestRecipeDetail(for: selectedOption)
-                                        }
-                                        if !split.after.isEmpty {
-                                            assistantTextBubble(split.after)
-                                        }
-                                    } else {
-                                        ChatBubbleView(
-                                            message: message,
-                                            onQuickAction: { action in
-                                                sendMessage(action.prompt)
-                                            },
-                                            hideQuickActions: isAIMode
-                                        )
                                     }
                                 }
                                 .id(message.id)
@@ -192,9 +205,12 @@ struct InlineChatView: View {
                         }
                     )
                     .onChange(of: messages.count) { oldCount, newCount in
-                        guard newCount > oldCount, let last = messages.last else { return }
-                        if last.role == .user {
-                            withAnimation { proxy.scrollTo(last.id, anchor: .top) }
+                        guard newCount > oldCount,
+                              let pinnedUserMessageID,
+                              messages.contains(where: { $0.id == pinnedUserMessageID }) else { return }
+
+                        withAnimation(.snappy(duration: 0.28)) {
+                            proxy.scrollTo(pinnedMessageAnchorID(for: pinnedUserMessageID), anchor: .top)
                         }
                     }
 
@@ -511,6 +527,7 @@ struct InlineChatView: View {
     private func startNewConversation() {
         conversationId = nil
         messages = []
+        pinnedUserMessageID = nil
         pendingToolExecution = nil
         errorMessage = nil
         cachedInventoryContext = nil
@@ -520,6 +537,7 @@ struct InlineChatView: View {
     private func reloadMessages() {
         guard let conversationId else {
             messages = []
+            pinnedUserMessageID = nil
             return
         }
         var descriptor = FetchDescriptor<ChatMessage>(
@@ -528,6 +546,7 @@ struct InlineChatView: View {
         )
         descriptor.fetchLimit = 200
         messages = (try? modelContext.fetch(descriptor)) ?? []
+        pinnedUserMessageID = nil
     }
 
     private func insertMessage(_ message: ChatMessage) {
@@ -584,6 +603,7 @@ struct InlineChatView: View {
         let convId = ensureConversation()
         let userMessage = ChatMessage(role: .user, content: text, conversationId: convId)
         insertMessage(userMessage)
+        pinnedUserMessageID = userMessage.id
         inputText = ""
         errorMessage = nil
 
@@ -787,7 +807,9 @@ struct InlineChatView: View {
         var apiMessages = pending.messages
         self.pendingToolExecution = nil
         let convId = ensureConversation()
-        insertMessage(ChatMessage(role: .user, content: "Confirmar alteração", conversationId: convId))
+        let confirmationMessage = ChatMessage(role: .user, content: "Confirmar alteração", conversationId: convId)
+        insertMessage(confirmationMessage)
+        pinnedUserMessageID = confirmationMessage.id
 
         do {
             for toolCall in pending.toolCalls {
@@ -816,7 +838,9 @@ struct InlineChatView: View {
     private func cancelPendingToolExecution() {
         pendingToolExecution = nil
         let convId = ensureConversation()
-        insertMessage(ChatMessage(role: .user, content: "Cancelar alteração", conversationId: convId))
+        let cancellationMessage = ChatMessage(role: .user, content: "Cancelar alteração", conversationId: convId)
+        insertMessage(cancellationMessage)
+        pinnedUserMessageID = cancellationMessage.id
         insertMessage(ChatMessage(
             role: .assistant,
             content: "Alteração cancelada. Nenhuma informação foi modificada.",
@@ -1116,6 +1140,10 @@ struct InlineChatView: View {
         text.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current).lowercased()
     }
 
+    private func pinnedMessageAnchorID(for messageID: UUID) -> String {
+        "assistant-pinned-top-\(messageID.uuidString)"
+    }
+
     private func scrollToBottom(proxy: ScrollViewProxy) {
         withAnimation { proxy.scrollTo("bottomAnchor", anchor: .bottom) }
     }
@@ -1244,6 +1272,7 @@ struct InlineChatView: View {
         // Show clean user message (no technical instructions)
         let userMessage = ChatMessage(role: .user, content: action.prompt, conversationId: convId)
         insertMessage(userMessage)
+        pinnedUserMessageID = userMessage.id
         inputText = ""
         errorMessage = nil
 
