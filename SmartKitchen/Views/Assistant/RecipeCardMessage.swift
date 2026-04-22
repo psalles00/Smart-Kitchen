@@ -4,6 +4,7 @@ import SwiftData
 /// Inline recipe card shown in the chat when the assistant references recipes.
 /// Uses the same gradient-overlay aesthetic as the main Recipes tab, with pantry compatibility info.
 struct RecipeCardMessage: View {
+    @Environment(\.openRecipeInRecipesTab) private var openRecipeInRecipesTab
     let recipeIds: [UUID]
     @Query(sort: \Recipe.name) private var allRecipes: [Recipe]
     @Query(filter: #Predicate<UnifiedItem> { $0.isPantry }) private var pantryItems: [UnifiedItem]
@@ -24,7 +25,9 @@ struct RecipeCardMessage: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
                     ForEach(matchedRecipes) { recipe in
-                        NavigationLink(value: recipe.id) {
+                        Button {
+                            openRecipeInRecipesTab(recipe.id)
+                        } label: {
                             recipeCard(recipe)
                         }
                         .buttonStyle(.plain)

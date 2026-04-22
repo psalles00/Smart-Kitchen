@@ -60,6 +60,10 @@ struct RecipeDetailView: View {
 
     private var settings: AppSettings? { settingsArray.first }
 
+    private var detailSurfaceColor: Color {
+        Color(red: 248 / 255, green: 248 / 255, blue: 250 / 255)
+    }
+
     private var externalURL: URL? {
         let trimmed = recipe.externalURLString.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
@@ -98,7 +102,7 @@ struct RecipeDetailView: View {
         #else
         .ignoresSafeArea(edges: .top)
         #endif
-        .navigationTitle(recipe.name)
+        .navigationTitle("")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
@@ -119,8 +123,10 @@ struct RecipeDetailView: View {
                     }
                 } label: {
                     Image(systemName: "ellipsis.circle")
-                        .foregroundStyle(.primary)
+                        .symbolRenderingMode(.monochrome)
+                        .foregroundStyle(.white)
                 }
+                .tint(.white)
             }
         }
         #endif
@@ -222,7 +228,6 @@ struct RecipeDetailView: View {
 
     private var content: some View {
         VStack(alignment: .leading, spacing: 24) {
-            // Title + description
             VStack(alignment: .leading, spacing: 8) {
                 Text(recipe.name)
                     .font(.pageTitle)
@@ -268,9 +273,6 @@ struct RecipeDetailView: View {
                 stepsSection
             }
 
-            if let externalURL {
-                linkSection(url: externalURL)
-            }
         }
         .padding(20)
         .padding(.bottom, 40)
@@ -281,6 +283,14 @@ struct RecipeDetailView: View {
     private var metadataRow: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 12) {
+                if let externalURL {
+                    Button {
+                        UIApplication.shared.open(externalURL)
+                    } label: {
+                        metadataChip(icon: "link", text: "Link da receita")
+                    }
+                    .buttonStyle(.plain)
+                }
                 if recipe.totalTime > 0 {
                     metadataChip(icon: "clock", text: "\(recipe.totalTime) min")
                 }
@@ -305,7 +315,7 @@ struct RecipeDetailView: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .background(.ultraThinMaterial, in: .capsule)
+        .background(detailSurfaceColor, in: .capsule)
     }
 
     // MARK: - Ingredients
@@ -362,7 +372,7 @@ struct RecipeDetailView: View {
                     }
                 }
             }
-            .background(Color(.secondarySystemBackground), in: .rect(cornerRadius: 18))
+            .background(detailSurfaceColor, in: .rect(cornerRadius: 18))
         }
     }
 
@@ -372,7 +382,13 @@ struct RecipeDetailView: View {
         let isInGrocery = ingredientIsInGrocery(ingredient)
 
         HStack(spacing: 12) {
-            IconImage(name: ingredient.name, iconFileName: ingredient.iconName, fallbackSymbol: "leaf", showBalloon: true)
+            IconImage(
+                name: ingredient.name,
+                iconFileName: ingredient.iconName,
+                fallbackSymbol: "leaf",
+                showBalloon: true,
+                balloonColor: .white
+            )
 
             VStack(alignment: .leading, spacing: 4) {
                 Text("\(Text(ingredient.name).fontWeight(.semibold))\(ingredient.formattedState.isEmpty ? Text("") : Text(" \(ingredient.formattedState)"))")
@@ -454,7 +470,13 @@ struct RecipeDetailView: View {
                     ?? ItemDatabase.shared.exactMatch(for: utensil)?.nomeDoArquivo
 
                 HStack(spacing: 12) {
-                    IconImage(name: utensil, iconFileName: iconName, fallbackSymbol: "fork.knife", showBalloon: true)
+                    IconImage(
+                        name: utensil,
+                        iconFileName: iconName,
+                        fallbackSymbol: "fork.knife",
+                        showBalloon: true,
+                        balloonColor: .white
+                    )
 
                     Text(utensil)
                         .font(.subheadline)
@@ -585,30 +607,6 @@ struct RecipeDetailView: View {
         .overlay {
             RoundedRectangle(cornerRadius: 26, style: .continuous)
                 .strokeBorder(Color.white.opacity(0.14), lineWidth: 1)
-        }
-    }
-
-    private func linkSection(url: URL) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Link da Receita")
-                .font(.sectionTitle)
-                .padding(.top, 8)
-
-            Link(destination: url) {
-                HStack(spacing: 12) {
-                    Image(systemName: "link")
-                        .foregroundStyle(Color.accentColor)
-                    Text(url.absoluteString)
-                        .font(.subheadline)
-                        .foregroundStyle(.primary)
-                        .lineLimit(2)
-                    Spacer()
-                    Image(systemName: "arrow.up.right.square")
-                        .foregroundStyle(.secondary)
-                }
-                .padding(14)
-                .background(Color(.secondarySystemBackground), in: .rect(cornerRadius: 16))
-            }
         }
     }
 

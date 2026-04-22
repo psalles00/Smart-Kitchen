@@ -10,6 +10,7 @@ struct IconImage: View {
     var fallbackSymbol: String = "leaf"
     var size: CGFloat = 28
     var showBalloon: Bool = false
+    var balloonColor: Color? = nil
 
     var body: some View {
         let balloonSize = size + size * 0.35
@@ -18,7 +19,7 @@ struct IconImage: View {
                 iconContent
                     .frame(width: size, height: size)
                     .padding(size * 0.175)
-                    .background(balloonBackgroundColor, in: Circle())
+                    .background(resolvedBalloonBackgroundColor, in: Circle())
                     .frame(width: balloonSize, height: balloonSize)
             } else {
                 iconContent
@@ -53,8 +54,12 @@ struct IconImage: View {
         return nil
     }
 
-    private var balloonBackgroundColor: Color {
-        colorScheme == .dark
+    private var resolvedBalloonBackgroundColor: Color {
+        if let balloonColor {
+            return balloonColor
+        }
+
+        return colorScheme == .dark
             ? Color(red: 28 / 255, green: 28 / 255, blue: 31 / 255)
             : neutralSurfaceColor
     }

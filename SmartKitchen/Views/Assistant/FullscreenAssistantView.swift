@@ -20,8 +20,8 @@ enum AssistantScrollMetrics {
 struct FullscreenAssistantView: View {
     @ObservedObject var searchBarState: SearchBarState
     @ObservedObject var searchService: UniversalSearchService
+    @Environment(\.openRecipeInRecipesTab) private var openRecipeInRecipesTab
     @Environment(\.colorScheme) private var colorScheme
-    @Query(sort: \Recipe.name) private var recipes: [Recipe]
     @Query private var settingsArray: [AppSettings]
 
     let onAction: (CommandBarAction) -> Void
@@ -41,7 +41,6 @@ struct FullscreenAssistantView: View {
     @State private var showImportRecipe = false
     @State private var recipeImportLaunchMode: RecipeImportLaunchMode = .picker
     @State private var pendingImportedRecipeID: UUID? = nil
-    @State private var showImportedRecipeDetail = false
     @State private var pendingPlaceholderTitle: String?
     private let topPinnedInset: CGFloat = 72
 
@@ -405,27 +404,10 @@ struct FullscreenAssistantView: View {
             .forceLightStatusBar()
         }
         .onChange(of: showImportRecipe) { _, isPresented in
-            if !isPresented, pendingImportedRecipeID != nil {
-                showImportedRecipeDetail = true
-            }
-        }
-        .sheet(isPresented: $showImportedRecipeDetail, onDismiss: {
+            guard !isPresented, let recipeID = pendingImportedRecipeID else { return }
             pendingImportedRecipeID = nil
-        }) {
-            if let recipeID = pendingImportedRecipeID,
-               let recipe = recipes.first(where: { $0.id == recipeID }) {
-                NavigationStack {
-                    RecipeDetailView(recipe: recipe)
-                }
-                .forceLightStatusBar()
-            } else {
-                ContentUnavailableView(
-                    "Receita salva",
-                    systemImage: "checkmark.circle.fill",
-                    description: Text("A receita foi criada, mas ainda não ficou disponível para visualização.")
-                )
-                .presentationBackground(.white)
-            }
+            searchBarState.dismiss()
+            openRecipeInRecipesTab(recipeID)
         }
         .alert("Em breve", isPresented: pendingPlaceholderAlertIsPresented) {
             Button("OK", role: .cancel) {

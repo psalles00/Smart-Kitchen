@@ -13,6 +13,19 @@ extension EnvironmentValues {
     }
 }
 
+// MARK: - Environment key for opening a recipe in the Recipes tab
+
+private struct OpenRecipeInRecipesTabKey: EnvironmentKey {
+    nonisolated(unsafe) static let defaultValue: (UUID) -> Void = { _ in }
+}
+
+extension EnvironmentValues {
+    var openRecipeInRecipesTab: (UUID) -> Void {
+        get { self[OpenRecipeInRecipesTabKey.self] }
+        set { self[OpenRecipeInRecipesTabKey.self] = newValue }
+    }
+}
+
 // MARK: - Environment key for scroll-to-top trigger
 
 struct ScrollToTopTriggerKey: EnvironmentKey {

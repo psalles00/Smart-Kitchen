@@ -48,6 +48,7 @@ struct ContentView: View {
     @State private var addItemCategory: String?
     @State private var scrollToTopTrigger: Int = 0
     @State private var scrollToItemRequest: ScrollToItemRequest?
+    @State private var recipeNavigationPath = NavigationPath()
     @State private var displayedBgTheme: PageTheme = .home
     @State private var searchDragOffset: CGFloat = 0
     @StateObject private var searchService = UniversalSearchService()
@@ -90,6 +91,9 @@ struct ContentView: View {
             get: { selectedTab },
             set: { newValue in
                 if newValue == selectedTab {
+                    if newValue == .recipes {
+                        recipeNavigationPath = NavigationPath()
+                    }
                     scrollToTopTrigger += 1
                 }
                 selectedTab = newValue
@@ -101,6 +105,7 @@ struct ContentView: View {
         mainTabView
         .environmentObject(searchBarState)
         .environment(\.scrollToItem, scrollToItemRequest)
+        .environment(\.openRecipeInRecipesTab, openRecipeInRecipesTab)
         .environment(\.backgroundTheme, displayedBgTheme)
         .sheet(isPresented: $showAddPantry) {
             ItemDetailView(
@@ -263,7 +268,7 @@ struct ContentView: View {
                 }
 
                 Tab(value: AppTab.recipes) {
-                    NavigationStack {
+                    NavigationStack(path: $recipeNavigationPath) {
                         RecipesView()
                     }
                 } label: {
@@ -796,8 +801,7 @@ struct ContentView: View {
             scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "groceryItem")
             selectedTab = .lists
         case .openRecipe(let id):
-            scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "recipe")
-            selectedTab = .recipes
+            openRecipeInRecipesTab(id)
         case .openUtensil(let id):
             scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "utensil")
             selectedTab = .lists
@@ -852,6 +856,18 @@ struct ContentView: View {
                 scrollToItemRequest = nil
             }
         }
+    }
+
+    private func openRecipeInRecipesTab(_ id: UUID) {
+        scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "recipe")
+
+        #if os(macOS)
+        selectedSidebar = .recipes
+        #else
+        recipeNavigationPath = NavigationPath()
+        selectedTab = .recipes
+        recipeNavigationPath.append(id)
+        #endif
     }
 
     /// Called when the user presses Enter/Search on the keyboard.
@@ -977,6 +993,7 @@ struct ContentView_Previews: PreviewProvider {
 private struct HomeView: View {
     @Environment(\.scrollToTopTrigger) private var scrollToTopTrigger
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.openRecipeInRecipesTab) private var openRecipeInRecipesTab
     // Corrigido ciclo do AttributeGraph separando dependências reativas de SwiftData em @State com atualização manual para evitar travamentos no macOS.
 
     @Query(filter: #Predicate<UnifiedItem> { $0.isPantry }, sort: \UnifiedItem.name) private var pantryItems: [UnifiedItem]
@@ -989,7 +1006,6 @@ private struct HomeView: View {
     @State private var showAddRecipe = false
     @State private var showImportRecipe = false
     @State private var pendingImportedRecipeID: UUID? = nil
-    @State private var showImportedRecipeDetail = false
     @State private var showRecipeAddOptions = false
     @State private var selectedCompatibleCategory: String? = nil
     @State private var editingExpiringItem: UnifiedItem?
@@ -1060,27 +1076,9 @@ private struct HomeView: View {
                 .forceLightStatusBar()
         }
         .onChange(of: showImportRecipe) { _, isPresented in
-            if !isPresented, pendingImportedRecipeID != nil {
-                showImportedRecipeDetail = true
-            }
-        }
-        .sheet(isPresented: $showImportedRecipeDetail, onDismiss: {
+            guard !isPresented, let recipeID = pendingImportedRecipeID else { return }
             pendingImportedRecipeID = nil
-        }) {
-            if let recipeID = pendingImportedRecipeID,
-               let recipe = recipes.first(where: { $0.id == recipeID }) {
-                NavigationStack {
-                    RecipeDetailView(recipe: recipe)
-                }
-                .forceLightStatusBar()
-            } else {
-                ContentUnavailableView(
-                    "Receita salva",
-                    systemImage: "checkmark.circle.fill",
-                    description: Text("A receita foi criada, mas ainda não ficou disponível para visualização.")
-                )
-                .presentationBackground(.white)
-            }
+            openRecipeInRecipesTab(recipeID)
         }
         .confirmationDialog("Adicionar receita", isPresented: $showRecipeAddOptions, titleVisibility: .visible) {
             Button("Importar receita") {
@@ -1335,7 +1333,14 @@ private struct HomeView: View {
                         editingExpiringItem = item
                     } label: {
                         HStack(spacing: 12) {
-                            IconImage(name: item.name, iconFileName: item.iconName, fallbackSymbol: "clock.badge.exclamationmark", size: 28)
+                            IconImage(
+                                name: item.name,
+                                iconFileName: item.iconName,
+                                fallbackSymbol: "clock.badge.exclamationmark",
+                                size: 28,
+                                showBalloon: true,
+                                balloonColor: .white
+                            )
 
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(item.name)
@@ -1418,8 +1423,8 @@ private struct HomeView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 12) {
                         ForEach(compatibleMatchesState.prefix(8)) { match in
-                            NavigationLink {
-                                RecipeDetailView(recipe: match.recipe)
+                            Button {
+                                openRecipeInRecipesTab(match.recipe.id)
                             } label: {
                                 HomeRecipeMatchCard(match: match)
                             }

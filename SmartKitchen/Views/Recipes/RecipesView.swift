@@ -56,6 +56,7 @@ struct RecipesView: View {
     @State private var currentScrollOffset: CGFloat = 0
     @State private var contentResetToken: Int = 0
     @State private var highlightedRecipeID: UUID?
+    @State private var pendingRecipeScrollID: UUID?
     @State private var selectedRecipeID: UUID?
     @State private var categoryBarCenterToken: Int = 0
 
@@ -214,6 +215,11 @@ struct RecipesView: View {
         )
         #if os(iOS)
         .toolbar(.hidden, for: .navigationBar)
+        .navigationDestination(for: UUID.self) { id in
+            if let recipe = allRecipes.first(where: { $0.id == id }) {
+                RecipeDetailView(recipe: recipe)
+            }
+        }
         #endif
         .tint(PageTheme.recipes.accentColor)
         .sheet(isPresented: $showAddRecipe) {
@@ -274,11 +280,17 @@ struct RecipesView: View {
         )
         .background(Color(.windowBackgroundColor).ignoresSafeArea())
         #endif
-        .onAppear { recomputeCompatibilities() }
+        .onAppear {
+            recomputeCompatibilities()
+            handleScrollToItemRequest(scrollToItem)
+        }
         .onChange(of: pantryItems) { _, _ in recomputeCompatibilities() }
         .onChange(of: allRecipes) { _, _ in recomputeCompatibilities() }
         .onChange(of: recipeCategoryNamesSignature) { _, _ in
             normalizeSelectedCategoryIfNeeded()
+        }
+        .onChange(of: scrollToItem) { _, request in
+            handleScrollToItemRequest(request)
         }
         .onChange(of: scrollToTopTrigger) { _, _ in
             handleActiveTabRetap()
@@ -425,26 +437,11 @@ struct RecipesView: View {
                         listView
                     }
                 }
-                .onChange(of: scrollToItem) { _, request in
-                    guard let request, request.type == "recipe" else { return }
-                    isShowingCadernos = false
-                    // Clear category filter so item is visible
-                    selectedCategory = nil
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        withAnimation(.easeInOut(duration: 0.4)) {
-                            proxy.scrollTo(request.itemID, anchor: .center)
-                        }
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            withAnimation(.easeInOut(duration: 0.3)) {
-                                highlightedRecipeID = request.itemID
-                            }
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                                withAnimation(.easeOut(duration: 0.5)) {
-                                    highlightedRecipeID = nil
-                                }
-                            }
-                        }
-                    }
+                .onAppear {
+                    scrollToPendingRecipeIfNeeded(with: proxy)
+                }
+                .onChange(of: pendingRecipeScrollID) { _, _ in
+                    scrollToPendingRecipeIfNeeded(with: proxy)
                 }
             }
         }
@@ -595,13 +592,6 @@ struct RecipesView: View {
                 }
         )
         .onScrollOffsetChange(perform: updateInlineTitle)
-        #if os(iOS)
-        .navigationDestination(for: UUID.self) { id in
-            if let recipe = allRecipes.first(where: { $0.id == id }) {
-                RecipeDetailView(recipe: recipe)
-            }
-        }
-        #endif
     }
 
     // MARK: - List
@@ -622,13 +612,6 @@ struct RecipesView: View {
         .padding(.top, 0)
         .padding(.bottom, 20)
         .onScrollOffsetChange(perform: updateInlineTitle)
-        #if os(iOS)
-        .navigationDestination(for: UUID.self) { id in
-            if let recipe = allRecipes.first(where: { $0.id == id }) {
-                RecipeDetailView(recipe: recipe)
-            }
-        }
-        #endif
     }
 
     // MARK: - Context Menu
@@ -940,6 +923,49 @@ struct RecipesView: View {
         let shouldShow = offset < -24
         if showsInlineTitle != shouldShow {
             showsInlineTitle = shouldShow
+        }
+    }
+
+    private func handleScrollToItemRequest(_ request: ScrollToItemRequest?) {
+        guard let request, request.type == "recipe" else { return }
+
+        withAnimation(.spring(response: 0.32, dampingFraction: 0.9)) {
+            isShowingCadernos = false
+        }
+
+        selectedCategory = nil
+        highlightedRecipeID = request.itemID
+
+        #if os(macOS)
+        selectedRecipeID = request.itemID
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            withAnimation(.easeOut(duration: 0.5)) {
+                highlightedRecipeID = nil
+            }
+        }
+        #else
+        pendingRecipeScrollID = request.itemID
+        #endif
+    }
+
+    private func scrollToPendingRecipeIfNeeded(with proxy: ScrollViewProxy) {
+        guard let recipeID = pendingRecipeScrollID else { return }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            withAnimation(.easeInOut(duration: 0.4)) {
+                proxy.scrollTo(recipeID, anchor: .center)
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    highlightedRecipeID = recipeID
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                    withAnimation(.easeOut(duration: 0.5)) {
+                        highlightedRecipeID = nil
+                    }
+                }
+            }
+            pendingRecipeScrollID = nil
         }
     }
 
