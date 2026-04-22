@@ -16,6 +16,36 @@ create extension if not exists pg_trgm;
 create extension if not exists unaccent;
 create extension if not exists pgcrypto;
 
+-- Keep normalized searchable names in regular columns. Using unaccent() in
+-- GENERATED columns or index expressions fails because unaccent is not IMMUTABLE.
+create or replace function nutrition.normalize_text(input text)
+returns text
+language sql
+stable
+as $$
+  select lower(unaccent(coalesce(input, '')))
+$$;
+
+create or replace function nutrition.set_food_name_normalized()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.name_normalized := nutrition.normalize_text(coalesce(new.name_pt, new.name_en));
+  return new;
+end;
+$$;
+
+create or replace function nutrition.set_food_cache_name_normalized()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.name_normalized := nutrition.normalize_text(new.name);
+  return new;
+end;
+$$;
+
 -- ---------------------------------------------------------------------
 -- Reference tables
 -- ---------------------------------------------------------------------
@@ -68,9 +98,7 @@ create table if not exists nutrition.foods (
   barcode              text,
   serving_size_g       numeric,
   serving_description  text,
-  name_normalized      text generated always as (
-                          lower(unaccent(coalesce(name_pt, name_en, '')))
-                        ) stored,
+  name_normalized      text,
   created_at           timestamptz default now(),
   unique (source_id, source_food_id)
 );
@@ -104,6 +132,7 @@ create table if not exists nutrition.foods_cache (
   external_id   text not null,            -- fdcId or OFF code
   barcode       text,
   name          text,
+  name_normalized text,
   country_code  char(2),
   payload       jsonb not null,
   cached_at     timestamptz default now(),
@@ -113,9 +142,27 @@ create table if not exists nutrition.foods_cache (
 create index if not exists foods_cache_barcode_idx
   on nutrition.foods_cache (barcode) where barcode is not null;
 create index if not exists foods_cache_name_trgm
-  on nutrition.foods_cache using gin (
-    (lower(unaccent(coalesce(name, '')))) gin_trgm_ops
-  );
+  on nutrition.foods_cache using gin (name_normalized gin_trgm_ops);
+
+create or replace trigger trg_set_food_name_normalized
+before insert or update of name_pt, name_en
+on nutrition.foods
+for each row
+execute function nutrition.set_food_name_normalized();
+
+create or replace trigger trg_set_food_cache_name_normalized
+before insert or update of name
+on nutrition.foods_cache
+for each row
+execute function nutrition.set_food_cache_name_normalized();
+
+update nutrition.foods
+set name_normalized = nutrition.normalize_text(coalesce(name_pt, name_en))
+where name_normalized is null;
+
+update nutrition.foods_cache
+set name_normalized = nutrition.normalize_text(name)
+where name_normalized is null;
 
 -- ---------------------------------------------------------------------
 -- Row Level Security
