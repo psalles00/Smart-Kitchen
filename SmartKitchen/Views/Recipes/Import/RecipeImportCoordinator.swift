@@ -97,7 +97,7 @@ final class RecipeImportCoordinator {
             descriptionText: draft.descriptionText.trimmingCharacters(in: .whitespacesAndNewlines),
             imageData: draft.imageData,
             externalURLString: draft.externalURLString.trimmingCharacters(in: .whitespacesAndNewlines),
-            category: draft.category,
+            category: CategoryMutationService.normalizedRecipeCategoryString(from: draft.category, context: context),
             prepTime: draft.prepTime,
             cookTime: draft.cookTime,
             servings: draft.servings,

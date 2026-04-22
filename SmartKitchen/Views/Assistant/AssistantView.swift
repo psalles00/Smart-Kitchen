@@ -510,6 +510,8 @@ struct AssistantView: View {
             }
         }
 
+        inventoryParts.append(CategoryMutationService.recipeCategoryPromptSection(context: modelContext))
+
         let inventoryContext = inventoryParts.joined(separator: "\n\n")
         cachedInventoryContext = inventoryContext
         cachedInventoryDate = Date()

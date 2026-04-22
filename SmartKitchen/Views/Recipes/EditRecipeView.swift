@@ -611,6 +611,10 @@ struct EditRecipeView: View {
     }
 
     private func save() {
+        recipe.category = CategoryMutationService.normalizedRecipeCategoryString(
+            from: recipe.category,
+            context: modelContext
+        )
         recipe.updatedAt = .now
         recipe.requiredUtensils = utensilNames.map { $0.name }.filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
 

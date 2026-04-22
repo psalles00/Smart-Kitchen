@@ -200,6 +200,7 @@ struct AppBackupSnapshot: Codable {
     let exportedAt: Date
     let appSettings: [AppSettingsRecord]
     let categories: [CategoryRecord]
+    let deletedDefaultCategories: [DeletedDefaultCategoryRecord]
     let unifiedItems: [UnifiedItemRecord]
     let recipes: [RecipeRecord]
     let recipeIngredients: [RecipeIngredientRecord]
@@ -209,7 +210,7 @@ struct AppBackupSnapshot: Codable {
 
     // Legacy keys for backward-compat decoding
     private enum CodingKeys: String, CodingKey {
-        case exportedAt, appSettings, categories
+        case exportedAt, appSettings, categories, deletedDefaultCategories
         case unifiedItems
         case pantryItems, groceryItems, utensilItems // legacy
         case recipes, recipeIngredients, recipeSteps, recipePreparationMedia, chatMessages
@@ -219,6 +220,7 @@ struct AppBackupSnapshot: Codable {
         exportedAt = .now
         appSettings = try context.fetch(FetchDescriptor<AppSettings>()).map(AppSettingsRecord.init)
         categories = try context.fetch(FetchDescriptor<Category>()).map(CategoryRecord.init)
+        deletedDefaultCategories = try context.fetch(FetchDescriptor<DeletedDefaultCategory>()).map(DeletedDefaultCategoryRecord.init)
         unifiedItems = try context.fetch(FetchDescriptor<UnifiedItem>()).map(UnifiedItemRecord.init)
 
         let recipeList = try context.fetch(FetchDescriptor<Recipe>())
@@ -241,6 +243,7 @@ struct AppBackupSnapshot: Codable {
         try container.encode(exportedAt, forKey: .exportedAt)
         try container.encode(appSettings, forKey: .appSettings)
         try container.encode(categories, forKey: .categories)
+        try container.encode(deletedDefaultCategories, forKey: .deletedDefaultCategories)
         try container.encode(unifiedItems, forKey: .unifiedItems)
         try container.encode(recipes, forKey: .recipes)
         try container.encode(recipeIngredients, forKey: .recipeIngredients)
@@ -254,6 +257,7 @@ struct AppBackupSnapshot: Codable {
         exportedAt = try container.decode(Date.self, forKey: .exportedAt)
         appSettings = try container.decode([AppSettingsRecord].self, forKey: .appSettings)
         categories = try container.decode([CategoryRecord].self, forKey: .categories)
+        deletedDefaultCategories = try container.decodeIfPresent([DeletedDefaultCategoryRecord].self, forKey: .deletedDefaultCategories) ?? []
 
         // Try new unified format first, fall back to legacy
         if let unified = try? container.decode([UnifiedItemRecord].self, forKey: .unifiedItems) {
@@ -316,6 +320,7 @@ struct AppBackupSnapshot: Codable {
         try context.delete(model: GroceryItem.self)
         try context.delete(model: UtensilItem.self)
         try context.delete(model: Category.self)
+        try context.delete(model: DeletedDefaultCategory.self)
         try context.delete(model: ChatMessage.self)
         try context.delete(model: AppSettings.self)
 
@@ -343,6 +348,12 @@ struct AppBackupSnapshot: Codable {
             )
             category.id = record.id
             context.insert(category)
+        }
+
+        for record in deletedDefaultCategories {
+            let deletedDefault = DeletedDefaultCategory(name: record.name, type: record.type)
+            deletedDefault.id = record.id
+            context.insert(deletedDefault)
         }
 
         for record in unifiedItems {
@@ -502,6 +513,18 @@ struct CategoryRecord: Codable {
         type = category.type
         iconName = category.iconName
         sortOrder = category.sortOrder
+    }
+}
+
+struct DeletedDefaultCategoryRecord: Codable {
+    let id: UUID
+    let name: String
+    let type: CategoryType
+
+    init(_ category: DeletedDefaultCategory) {
+        id = category.id
+        name = category.name
+        type = category.type
     }
 }
 

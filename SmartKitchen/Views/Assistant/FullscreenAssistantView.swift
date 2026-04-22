@@ -49,6 +49,11 @@ struct FullscreenAssistantView: View {
     private var idleScrollTopThreshold: CGFloat {
         AssistantScrollMetrics.topThreshold(forTopPadding: topPinnedInset)
     }
+    private var assistantIAAccent: Color { PageTheme.home.accentColor }
+    private var assistantListsAccent: Color { PageTheme.lists.accentColor }
+    private var assistantRecipesAccent: Color { PageTheme.recipes.accentColor }
+    private var assistantNutrientsAccent: Color { PageTheme.nutrients.accentColor }
+    private var assistantActionButtonBaseHeight: CGFloat { 62 }
 
     var body: some View {
         ZStack {
@@ -196,16 +201,16 @@ struct FullscreenAssistantView: View {
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 24)
 
-                    VStack(alignment: .leading, spacing: 18) {
+                    VStack(alignment: .leading, spacing: 10) {
                         assistantActionSection(title: "IA") {
-                            HStack(alignment: .top, spacing: 10) {
+                            HStack(alignment: .top, spacing: 6) {
                                 assistantActionButton(
                                     title: "Perguntar à IA",
                                     icon: "sparkles",
-                                    tint: .blue,
+                                    tint: assistantIAAccent,
                                     imageName: "modo ia",
-                                    imageHeight: 84,
-                                    imageOffset: CGSize(width: 8, height: 18)
+                                    imageHeight: 82,
+                                    imageOffset: CGSize(width: 8, height: 0)
                                 ) {
                                     searchBarState.mode = .aiChat
                                     pendingChatQuery = nil
@@ -215,10 +220,10 @@ struct FullscreenAssistantView: View {
                                 assistantActionButton(
                                     title: "Indicação de receitas",
                                     icon: "fork.knife.circle.fill",
-                                    tint: .blue,
+                                    tint: assistantIAAccent,
                                     imageName: "ideis",
                                     imageHeight: 74,
-                                    imageOffset: CGSize(width: 4, height: 16)
+                                    imageOffset: CGSize(width: 6, height: 0)
                                 ) {
                                     searchBarState.mode = .aiChat
                                     pendingOpenChat = false
@@ -228,39 +233,39 @@ struct FullscreenAssistantView: View {
                         }
 
                         assistantActionSection(title: "Listas") {
-                            HStack(alignment: .top, spacing: 10) {
+                            HStack(alignment: .top, spacing: 6) {
                                 assistantActionButton(
-                                    title: "Despensa",
+                                    title: "Adicionar à Despensa",
                                     icon: "shippingbox.fill",
-                                    tint: .orange,
+                                    tint: assistantListsAccent,
                                     imageName: "despensa",
-                                    imageHeight: 76,
-                                    imageOffset: CGSize(width: 6, height: 21)
+                                    imageHeight: 72,
+                                    imageOffset: CGSize(width: 6, height: 0)
                                 ) {
                                     triggerAction(.addPantryItem(prefill: ""))
                                 }
 
                                 assistantActionButton(
-                                    title: "Mercado",
+                                    title: "Adicionar ao Mercado",
                                     icon: "cart.badge.plus",
-                                    tint: .green,
+                                    tint: assistantListsAccent,
                                     imageName: "mercado",
                                     imageHeight: 76,
-                                    imageOffset: CGSize(width: 6, height: 20)
+                                    imageOffset: CGSize(width: 6, height: 0)
                                 ) {
                                     triggerAction(.addGroceryItem(prefill: ""))
                                 }
                             }
 
                             if settings?.showUtensils == true {
-                                HStack(alignment: .top, spacing: 10) {
+                                HStack(alignment: .top, spacing: 6) {
                                     assistantActionButton(
-                                        title: "Utensílio",
+                                        title: "Adicionar Utensílio",
                                         icon: "fork.knife",
-                                        tint: .purple,
+                                        tint: assistantListsAccent,
                                         imageName: "listas-utensilio",
                                         imageHeight: 76,
-                                        imageOffset: CGSize(width: 6, height: 21)
+                                        imageOffset: CGSize(width: 6, height: 0)
                                     ) {
                                         triggerAction(.addUtensil(prefill: ""))
                                     }
@@ -271,14 +276,14 @@ struct FullscreenAssistantView: View {
                         }
 
                         assistantActionSection(title: "Receitas") {
-                            HStack(alignment: .top, spacing: 10) {
+                            HStack(alignment: .top, spacing: 6) {
                                 assistantActionButton(
                                     title: "Criar Receita",
                                     icon: "book.badge.plus",
-                                    tint: .red,
+                                    tint: assistantRecipesAccent,
                                     imageName: "receitas",
-                                    imageHeight: 78,
-                                    imageOffset: CGSize(width: 6, height: 21)
+                                    imageHeight: 70,
+                                    imageOffset: CGSize(width: 6, height: 0)
                                 ) {
                                     triggerAction(.addRecipe(prefill: ""))
                                 }
@@ -286,23 +291,23 @@ struct FullscreenAssistantView: View {
                                 assistantActionButton(
                                     title: "Importar da Galeria",
                                     icon: "photo.on.rectangle.angled",
-                                    tint: .orange,
+                                    tint: assistantRecipesAccent,
                                     imageName: "receitas-importar",
                                     imageHeight: 78,
-                                    imageOffset: CGSize(width: 6, height: 21)
+                                    imageOffset: CGSize(width: 6, height: 0)
                                 ) {
                                     openRecipeImport(.gallery)
                                 }
                             }
 
-                            HStack(alignment: .top, spacing: 10) {
+                            HStack(alignment: .top, spacing: 6) {
                                 assistantActionButton(
                                     title: "Ler Receita",
                                     icon: "camera.viewfinder",
-                                    tint: .indigo,
+                                    tint: assistantRecipesAccent,
                                     imageName: "receitas-ler",
                                     imageHeight: 78,
-                                    imageOffset: CGSize(width: 6, height: 21)
+                                    imageOffset: CGSize(width: 6, height: 0)
                                 ) {
                                     openRecipeImport(.camera)
                                 }
@@ -311,10 +316,10 @@ struct FullscreenAssistantView: View {
                                 assistantActionButton(
                                     title: "Importar dos Arquivos",
                                     icon: "folder.fill",
-                                    tint: .indigo,
+                                    tint: assistantRecipesAccent,
                                     imageName: "receitas-importar",
                                     imageHeight: 78,
-                                    imageOffset: CGSize(width: 6, height: 21)
+                                    imageOffset: CGSize(width: 6, height: 0)
                                 ) {
                                     openRecipeImport(.files)
                                 }
@@ -325,14 +330,14 @@ struct FullscreenAssistantView: View {
                         }
 
                         assistantActionSection(title: "Nutrientes") {
-                            HStack(alignment: .top, spacing: 10) {
+                            HStack(alignment: .top, spacing: 6) {
                                 assistantActionButton(
                                     title: "Registrar Alimento",
                                     icon: "fork.knife.circle.fill",
-                                    tint: .teal,
+                                    tint: assistantNutrientsAccent,
                                     imageName: "nutrientes",
                                     imageHeight: 74,
-                                    imageOffset: CGSize(width: 6, height: 20)
+                                    imageOffset: CGSize(width: 6, height: 0)
                                 ) {
                                     pendingPlaceholderTitle = "Registrar Alimento"
                                 }
@@ -340,23 +345,23 @@ struct FullscreenAssistantView: View {
                                 assistantActionButton(
                                     title: "Registrar com Áudio",
                                     icon: "mic.fill",
-                                    tint: .teal,
+                                    tint: assistantNutrientsAccent,
                                     imageName: "nutrientes-audio",
                                     imageHeight: 74,
-                                    imageOffset: CGSize(width: 6, height: 20)
+                                    imageOffset: CGSize(width: 6, height: 0)
                                 ) {
                                     pendingPlaceholderTitle = "Registrar com Áudio"
                                 }
                             }
 
-                            HStack(alignment: .top, spacing: 10) {
+                            HStack(alignment: .top, spacing: 6) {
                                 assistantActionButton(
                                     title: "Registrar com Galeria",
                                     icon: "photo.on.rectangle.angled",
-                                    tint: .teal,
+                                    tint: assistantNutrientsAccent,
                                     imageName: "nutrientes-galeria",
-                                    imageHeight: 74,
-                                    imageOffset: CGSize(width: 6, height: 20)
+                                    imageHeight: 68,
+                                    imageOffset: CGSize(width: 6, height: 0)
                                 ) {
                                     pendingPlaceholderTitle = "Registrar com Galeria"
                                 }
@@ -364,10 +369,10 @@ struct FullscreenAssistantView: View {
                                 assistantActionButton(
                                     title: "Registrar com Câmera",
                                     icon: "camera.fill",
-                                    tint: .teal,
+                                    tint: assistantNutrientsAccent,
                                     imageName: "nutrientes-camera",
-                                    imageHeight: 74,
-                                    imageOffset: CGSize(width: 6, height: 20)
+                                    imageHeight: 72,
+                                    imageOffset: CGSize(width: 6, height: 0)
                                 ) {
                                     pendingPlaceholderTitle = "Registrar com Câmera"
                                 }
@@ -376,15 +381,8 @@ struct FullscreenAssistantView: View {
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 8)
-
-                    Spacer(minLength: 0)
-                        .frame(maxWidth: .infinity)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            searchBarState.dismiss()
-                        }
                 }
-                .frame(maxWidth: .infinity, minHeight: proxy.size.height, alignment: .top)
+                .frame(maxWidth: .infinity, alignment: .top)
                 .padding(.top, topPinnedInset)
                 .padding(.bottom, 20)
             }
@@ -463,12 +461,12 @@ struct FullscreenAssistantView: View {
         title: String,
         @ViewBuilder content: () -> Content
     ) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
 
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 6) {
                 content()
             }
         }
@@ -480,32 +478,32 @@ struct FullscreenAssistantView: View {
         tint: Color,
         imageName: String? = nil,
         imageHeight: CGFloat = 78,
-        imageOffset: CGSize = CGSize(width: 6, height: 21),
+        imageOffset: CGSize = CGSize(width: 6, height: 0),
         trailingSystemImage: String? = nil,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
-            HStack(alignment: .top, spacing: 4) {
+            HStack(alignment: .center, spacing: 4) {
                 Image(systemName: icon)
                     .font(.system(size: 13, weight: .bold))
                     .foregroundStyle(tint)
-                    .padding(.top, 1)
 
                 Text(title)
-                    .font(.caption.weight(.medium))
+                    .font(.caption)
                     .foregroundStyle(.primary)
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
+                    .layoutPriority(1)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding(.trailing, 54)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.trailing, 52)
             .padding(.horizontal, 12)
-            .padding(.top, 5)
-            .padding(.bottom, 4)
-            .frame(maxWidth: .infinity, minHeight: 80, alignment: .topLeading)
-            .background(tint.opacity(0.06), in: .rect(cornerRadius: 10))
-            .overlay(alignment: .bottomTrailing) {
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity, minHeight: assistantActionButtonBaseHeight, alignment: .center)
+            .background(tint.opacity(0.06), in: .rect(cornerRadius: 12))
+            .overlay(alignment: .trailing) {
                 if let imageName {
                     Image(imageName)
                         .resizable()
@@ -515,15 +513,14 @@ struct FullscreenAssistantView: View {
                         .allowsHitTesting(false)
                 } else if let trailingSystemImage {
                     Image(systemName: trailingSystemImage)
-                        .font(.system(size: 30, weight: .semibold))
+                        .font(.system(size: 28, weight: .semibold))
                         .foregroundStyle(tint.opacity(0.28))
                         .symbolRenderingMode(.hierarchical)
-                        .padding(.trailing, 18)
-                        .padding(.bottom, 12)
+                        .padding(.trailing, 14)
                         .allowsHitTesting(false)
                 }
             }
-            .clipShape(.rect(cornerRadius: 10))
+            .clipShape(.rect(cornerRadius: 12))
             .contentShape(.rect)
         }
         .frame(maxWidth: .infinity)
@@ -532,7 +529,7 @@ struct FullscreenAssistantView: View {
 
     private func assistantActionPlaceholder() -> some View {
         Color.clear
-            .frame(maxWidth: .infinity, minHeight: 80)
+            .frame(maxWidth: .infinity, minHeight: assistantActionButtonBaseHeight)
             .allowsHitTesting(false)
     }
 

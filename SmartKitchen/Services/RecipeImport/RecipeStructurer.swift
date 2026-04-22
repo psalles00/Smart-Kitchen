@@ -240,7 +240,7 @@ struct RecipeStructurer {
     - Use apenas estados desta lista (campo state): \(stateLabels.joined(separator: " | ")). Se o texto não mencionar estado, deixe vazio.
     - Separe quantidade + unidade + nome + estado do ingrediente. Exemplo: "2 xícaras de farinha peneirada" → quantity=2, unit="Xícara", name="Farinha", state="Peneirada".
     - Passos devem ser curtos, imperativos e numerados.
-    - Categoria: escolha a melhor entre "Café da manhã", "Almoço", "Jantar", "Lanche", "Sobremesa", "Bebida" ou "Outros".
+    - Categoria: prefira "Café da manhã", "Almoço", "Jantar", "Lanche", "Sobremesa", "Bebida" ou "Outros". Se nenhuma servir claramente, proponha um nome curto e natural em português.
     - Dificuldade: "Fácil", "Médio" ou "Difícil".
     - Não invente ingredientes nem passos. Se o texto for insuficiente, devolva arrays vazios.
     - Preserve o idioma do texto original (provavelmente pt-BR).

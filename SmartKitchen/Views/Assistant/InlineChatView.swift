@@ -915,6 +915,7 @@ struct InlineChatView: View {
 
         **Nome da Receita**
         _Descrição curta_
+        Categoria: Nome do caderno
 
         **Ingredientes**
         - 200g de Ingrediente
@@ -925,6 +926,7 @@ struct InlineChatView: View {
         2. Segundo passo.
 
         - Nomes dos ingredientes SEMPRE começam com letra maiúscula.
+        - Inclua a linha "Categoria:" usando preferencialmente um dos cadernos existentes abaixo.
         - Inclua quantidade e unidade para cada ingrediente.
         - Passos numerados, claros e objetivos.
         - NÃO adicione texto antes ou depois deste formato.
@@ -979,6 +981,8 @@ struct InlineChatView: View {
                 inventoryParts.append("## Receitas salvas (\(recipes.count))\n\(recipeLines.joined(separator: "\n"))")
             }
         }
+
+        inventoryParts.append(CategoryMutationService.recipeCategoryPromptSection(context: modelContext))
 
         let inventoryContext = inventoryParts.joined(separator: "\n\n")
         cachedInventoryContext = inventoryContext
@@ -1323,6 +1327,14 @@ struct InlineChatView: View {
             subtitle = nsContent.substring(with: subMatch.range(at: 1)).trimmingCharacters(in: .whitespaces)
         }
 
+        var category: String?
+        let categoryPattern = #"(?m)^Categoria:\s*(.+)$"#
+        if let categoryRegex = try? NSRegularExpression(pattern: categoryPattern),
+           let categoryMatch = categoryRegex.firstMatch(in: content, range: NSRange(location: 0, length: nsContent.length)),
+           categoryMatch.numberOfRanges >= 2 {
+            category = nsContent.substring(with: categoryMatch.range(at: 1)).trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+
         // Parse ingredients section
         var ingredients: [(name: String, detail: String)] = []
         if let ingredientStart = content.range(of: "**Ingredientes**"),
@@ -1372,6 +1384,7 @@ struct InlineChatView: View {
         return RecipeCardData(
             title: title,
             subtitle: subtitle,
+            category: category,
             ingredients: ingredients,
             steps: steps
         )
@@ -1401,7 +1414,9 @@ struct InlineChatView: View {
         let args: [String: Any] = [
             "name": card.title,
             "description": card.subtitle ?? "",
-            "category": "Outros",
+            "category": card.category?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
+                ? (card.category ?? "")
+                : CategoryMutationService.defaultRecipeCategoryName(context: modelContext),
             "difficulty": "Fácil",
             "ingredients": ingredientArgs,
             "steps": card.steps
@@ -1454,6 +1469,7 @@ struct RecipeOption: Identifiable {
 struct RecipeCardData {
     let title: String
     let subtitle: String?
+    let category: String?
     let ingredients: [(name: String, detail: String)]
     let steps: [String]
 }

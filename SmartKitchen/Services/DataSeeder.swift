@@ -3,41 +3,41 @@ import SwiftData
 
 /// Seeds the database with demo data on first launch.
 struct DataSeeder {
-    private static let pantryCategoryDefinitions: [(name: String, iconName: String?)] = [
-        ("Frutas", "apple.png"),
-        ("Verduras e Legumes", "broccoli.png"),
-        ("Carnes e Aves", "chicken-raw.png"),
-        ("Peixes e Frutos do Mar", "fish.png"),
-        ("Laticínios e Ovos", "milk.png"),
-        ("Padaria", "bread-white.png"),
-        ("Grãos, Massas e Cereais", "rice.png"),
-        ("Bebidas", "water-bottle.png"),
-        ("Temperos e Condimentos", "salt.png"),
-        ("Enlatados e Conservas", "canned-tuna.png"),
-        ("Doces e Sobremesas", "cake.png"),
-        ("Snacks e Petiscos", "chips.png"),
-        ("Pratos Prontos", "lunch-box.png"),
-        ("Limpeza e Higiene", "dish-soap.png"),
-        ("Utensílios de Cozinha", "frying-pan.png"),
-        ("Eletrodomésticos", "blender.png"),
-        ("Saúde e Bem-estar", "healthy-food.png"),
-        ("Outros", nil),
+    static let pantryCategoryDefinitions: [CategorySeedDefinition] = [
+        CategorySeedDefinition(name: "Frutas", iconName: "apple.png"),
+        CategorySeedDefinition(name: "Verduras e Legumes", iconName: "broccoli.png"),
+        CategorySeedDefinition(name: "Carnes e Aves", iconName: "chicken-raw.png"),
+        CategorySeedDefinition(name: "Peixes e Frutos do Mar", iconName: "fish.png"),
+        CategorySeedDefinition(name: "Laticínios e Ovos", iconName: "milk.png"),
+        CategorySeedDefinition(name: "Padaria", iconName: "bread-white.png"),
+        CategorySeedDefinition(name: "Grãos, Massas e Cereais", iconName: "rice.png"),
+        CategorySeedDefinition(name: "Bebidas", iconName: "water-bottle.png"),
+        CategorySeedDefinition(name: "Temperos e Condimentos", iconName: "salt.png"),
+        CategorySeedDefinition(name: "Enlatados e Conservas", iconName: "canned-tuna.png"),
+        CategorySeedDefinition(name: "Doces e Sobremesas", iconName: "cake.png"),
+        CategorySeedDefinition(name: "Snacks e Petiscos", iconName: "chips.png"),
+        CategorySeedDefinition(name: "Pratos Prontos", iconName: "lunch-box.png"),
+        CategorySeedDefinition(name: "Limpeza e Higiene", iconName: "dish-soap.png"),
+        CategorySeedDefinition(name: "Utensílios de Cozinha", iconName: "frying-pan.png"),
+        CategorySeedDefinition(name: "Eletrodomésticos", iconName: "blender.png"),
+        CategorySeedDefinition(name: "Saúde e Bem-estar", iconName: "healthy-food.png"),
+        CategorySeedDefinition(name: "Outros", iconName: nil),
     ]
 
-    private static let recipeCategoryDefinitions: [(name: String, iconName: String?)] = [
-        ("Café da manhã", "pancakes.png"),
-        ("Almoço", "lunch-box.png"),
-        ("Jantar", "dinner.png"),
-        ("Lanche", "sandwich.png"),
-        ("Sobremesa", "cake.png"),
-        ("Bebida", "smoothie.png"),
-        ("Outros", nil),
+    static let recipeCategoryDefinitions: [CategorySeedDefinition] = [
+        CategorySeedDefinition(name: "Café da manhã", iconName: "pancakes.png"),
+        CategorySeedDefinition(name: "Almoço", iconName: "lunch-box.png"),
+        CategorySeedDefinition(name: "Jantar", iconName: "dinner.png"),
+        CategorySeedDefinition(name: "Lanche", iconName: "sandwich.png"),
+        CategorySeedDefinition(name: "Sobremesa", iconName: "cake.png"),
+        CategorySeedDefinition(name: "Bebida", iconName: "smoothie.png"),
+        CategorySeedDefinition(name: "Outros", iconName: nil),
     ]
 
-    private static let utensilCategoryDefinitions: [(name: String, iconName: String?)] = [
-        ("Utensílios de Cozinha", "frying-pan.png"),
-        ("Eletrodomésticos", "blender.png"),
-        ("Outros", nil),
+    static let utensilCategoryDefinitions: [CategorySeedDefinition] = [
+        CategorySeedDefinition(name: "Utensílios de Cozinha", iconName: "frying-pan.png"),
+        CategorySeedDefinition(name: "Eletrodomésticos", iconName: "blender.png"),
+        CategorySeedDefinition(name: "Outros", iconName: nil),
     ]
 
     private static let legacyPantryCategoryMapping: [String: String] = [
@@ -52,6 +52,17 @@ struct DataSeeder {
         "Talheres": "Utensílios de Cozinha",
         "Utensílios de preparo": "Utensílios de Cozinha",
     ]
+
+    static func defaultDefinitions(for type: CategoryType) -> [CategorySeedDefinition] {
+        switch type.canonicalType {
+        case .pantry, .grocery:
+            pantryCategoryDefinitions
+        case .recipe:
+            recipeCategoryDefinitions
+        case .utensil:
+            utensilCategoryDefinitions
+        }
+    }
 
     static func seedIfNeeded(context: ModelContext) {
         // Use a local flag to prevent re-seeding when CloudKit sync
@@ -96,7 +107,7 @@ struct DataSeeder {
     }
 
     private static func insertCategories(
-        _ definitions: [(name: String, iconName: String?)],
+        _ definitions: [CategorySeedDefinition],
         type: CategoryType,
         context: ModelContext
     ) {
@@ -120,27 +131,29 @@ struct DataSeeder {
     }
 
     private static func synchronizeCategoryDefinitions(
-        _ definitions: [(name: String, iconName: String?)],
+        _ definitions: [CategorySeedDefinition],
         type: CategoryType,
         context: ModelContext
     ) {
-        let descriptor = FetchDescriptor<Category>()
-        let existing = ((try? context.fetch(descriptor)) ?? []).filter { $0.type == type }
+        let resolvedType = type.canonicalType
+        let existing = CategoryMutationService.fetchCategories(of: resolvedType, context: context)
+        let deletedDefaultNames = CategoryMutationService.fetchDeletedDefaultNames(of: resolvedType, context: context)
+        var nextSortOrder = (existing.map(\.sortOrder).max() ?? -1) + 1
 
-        for (order, definition) in definitions.enumerated() {
+        for definition in definitions {
             if let category = existing.first(where: { sameCategoryName($0.name, definition.name) }) {
                 category.name = definition.name
                 category.iconName = definition.iconName
-                category.sortOrder = order
-            } else {
+            } else if !deletedDefaultNames.contains(CategoryMutationService.normalizedKey(for: definition.name)) {
                 context.insert(
                     Category(
                         name: definition.name,
-                        type: type,
+                        type: resolvedType,
                         iconName: definition.iconName,
-                        sortOrder: order
+                        sortOrder: nextSortOrder
                     )
                 )
+                nextSortOrder += 1
             }
         }
     }
@@ -191,10 +204,7 @@ struct DataSeeder {
     }
 
     private static func sameCategoryName(_ lhs: String, _ rhs: String) -> Bool {
-        lhs.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
-            .lowercased() ==
-        rhs.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
-            .lowercased()
+        CategoryMutationService.matchesName(lhs, rhs)
     }
 
     // MARK: - Pantry Items

@@ -20,6 +20,13 @@ struct RecipeDetailCard: View {
                         .foregroundStyle(.secondary)
                         .italic()
                 }
+
+                if let category = recipe.category, !category.isEmpty {
+                    Label(category, systemImage: "books.vertical")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Color.accentColor)
+                        .padding(.top, 4)
+                }
             }
             .padding(.horizontal, 16)
             .padding(.top, 16)

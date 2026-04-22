@@ -315,7 +315,10 @@ struct AITools {
     private static func createRecipe(args: [String: Any], context: ModelContext) -> String {
         let name = args["name"] as? String ?? "Nova Receita"
         let desc = args["description"] as? String ?? ""
-        let category = args["category"] as? String ?? "Outros"
+        let category = CategoryMutationService.normalizedRecipeCategoryString(
+            from: args["category"] as? String ?? "",
+            context: context
+        )
         let diffStr = args["difficulty"] as? String ?? "Fácil"
         let difficulty = Difficulty.allCases.first { $0.rawValue == diffStr } ?? .easy
         let prepTime = args["prepTime"] as? Int ?? 0
@@ -383,7 +386,7 @@ struct AITools {
             recipe.descriptionText = description
         }
         if let category = args["category"] as? String, !category.isEmpty {
-            recipe.category = category
+            recipe.category = CategoryMutationService.normalizedRecipeCategoryString(from: category, context: context)
         }
         if let difficultyString = args["difficulty"] as? String,
            let difficulty = Difficulty.allCases.first(where: { $0.rawValue == difficultyString }) {
@@ -619,15 +622,15 @@ struct AITools {
         let name = (args["name"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         guard !name.isEmpty else { return "{\"error\": \"invalid name\"}" }
 
-        let categories = fetchCategories(of: type, context: context)
-        guard !categories.contains(where: { $0.name.localizedCaseInsensitiveCompare(name) == .orderedSame }) else {
+        do {
+            let category = try CategoryMutationService.createCategory(named: name, type: type, context: context)
+            try? context.save()
+            return "{\"success\": true, \"category\": \"\(category.name)\", \"type\": \"\(type.rawValue)\"}"
+        } catch CategoryMutationError.duplicateName {
             return "{\"error\": \"category exists\"}"
+        } catch {
+            return "{\"error\": \"invalid name\"}"
         }
-
-        let category = Category(name: name, type: type, sortOrder: categories.count)
-        context.insert(category)
-        try? context.save()
-        return "{\"success\": true, \"category\": \"\(name)\", \"type\": \"\(type.rawValue)\"}"
     }
 
     private static func renameCategory(args: [String: Any], context: ModelContext) -> String {
@@ -638,15 +641,17 @@ struct AITools {
         let newName = (args["new_name"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         guard !currentName.isEmpty, !newName.isEmpty else { return "{\"error\": \"invalid name\"}" }
 
-        let categories = fetchCategories(of: type, context: context)
-        guard let category = categories.first(where: { $0.name.localizedCaseInsensitiveCompare(currentName) == .orderedSame }) else {
+        do {
+            let category = try CategoryMutationService.renameCategory(named: currentName, to: newName, type: type, context: context)
+            try? context.save()
+            return "{\"success\": true, \"category\": \"\(category.name)\", \"type\": \"\(type.rawValue)\"}"
+        } catch CategoryMutationError.categoryNotFound {
             return "{\"error\": \"category not found\"}"
+        } catch CategoryMutationError.duplicateName {
+            return "{\"error\": \"category exists\"}"
+        } catch {
+            return "{\"error\": \"invalid name\"}"
         }
-
-        category.name = newName
-        reassignCategoryReferences(from: currentName, to: newName, type: type, context: context)
-        try? context.save()
-        return "{\"success\": true, \"category\": \"\(newName)\", \"type\": \"\(type.rawValue)\"}"
     }
 
     private static func deleteCategory(args: [String: Any], context: ModelContext) -> String {
@@ -656,17 +661,21 @@ struct AITools {
         let name = (args["name"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         guard !name.isEmpty else { return "{\"error\": \"invalid name\"}" }
 
-        let categories = fetchCategories(of: type, context: context)
-        guard let category = categories.first(where: { $0.name.localizedCaseInsensitiveCompare(name) == .orderedSame }) else {
+        do {
+            let result = try CategoryMutationService.deleteCategory(
+                named: name,
+                type: type,
+                strategy: .reassign(toCategoryNamed: "Outros"),
+                context: context
+            )
+            try? context.save()
+            if let reassignedName = result.reassignedName {
+                return "{\"success\": true, \"deleted\": \"\(name)\", \"fallback\": \"\(reassignedName)\"}"
+            }
+            return "{\"success\": true, \"deleted\": \"\(name)\"}"
+        } catch {
             return "{\"error\": \"category not found\"}"
         }
-
-        let fallback = ensureFallbackCategory(for: type, excluding: category, context: context)
-        reassignCategoryReferences(from: category.name, to: fallback.name, type: type, context: context)
-        context.delete(category)
-        normalizeCategoryOrder(for: type, context: context)
-        try? context.save()
-        return "{\"success\": true, \"deleted\": \"\(name)\", \"fallback\": \"\(fallback.name)\"}"
     }
 
     private static func moveCategory(args: [String: Any], context: ModelContext) -> String {
@@ -676,21 +685,13 @@ struct AITools {
         let name = (args["name"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         let requestedPosition = args["position"] as? Int ?? 0
 
-        var categories = fetchCategories(of: type, context: context)
-        guard let index = categories.firstIndex(where: { $0.name.localizedCaseInsensitiveCompare(name) == .orderedSame }) else {
+        do {
+            let safePosition = try CategoryMutationService.moveCategory(named: name, type: type, to: requestedPosition, context: context)
+            try? context.save()
+            return "{\"success\": true, \"category\": \"\(name)\", \"position\": \(safePosition)}"
+        } catch {
             return "{\"error\": \"category not found\"}"
         }
-
-        let safePosition = max(0, min(requestedPosition, categories.count - 1))
-        let category = categories.remove(at: index)
-        categories.insert(category, at: safePosition)
-
-        for (sortOrder, item) in categories.enumerated() {
-            item.sortOrder = sortOrder
-        }
-
-        try? context.save()
-        return "{\"success\": true, \"category\": \"\(name)\", \"position\": \(safePosition)}"
     }
 
     private static func suggestRecipeContext(args: [String: Any], context: ModelContext) -> String {
@@ -783,7 +784,7 @@ struct AITools {
             descriptionText: draft.descriptionText.trimmingCharacters(in: .whitespacesAndNewlines),
             imageData: draft.imageData,
             externalURLString: draft.externalURLString.trimmingCharacters(in: .whitespacesAndNewlines),
-            category: draft.category,
+            category: CategoryMutationService.normalizedRecipeCategoryString(from: draft.category, context: context),
             prepTime: draft.prepTime,
             cookTime: draft.cookTime,
             servings: draft.servings,

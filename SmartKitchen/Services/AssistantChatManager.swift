@@ -351,6 +351,8 @@ final class AssistantChatManager: ObservableObject {
             }
         }
 
+        inventoryParts.append(CategoryMutationService.recipeCategoryPromptSection(context: context))
+
         let inventoryContext = inventoryParts.joined(separator: "\n\n")
         cachedInventoryContext = inventoryContext
         cachedInventoryDate = Date()

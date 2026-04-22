@@ -36,6 +36,7 @@ final class CloudSyncService: @unchecked Sendable {
         GroceryItem.self,
         UtensilItem.self,
         Category.self,
+        DeletedDefaultCategory.self,
         ChatMessage.self,
         ChatConversation.self,
         AppSettings.self,
@@ -311,6 +312,9 @@ final class CloudSyncService: @unchecked Sendable {
             for item in try oldContext.fetch(FetchDescriptor<Category>()) {
                 newContext.insert(copyCategory(item))
             }
+            for item in try oldContext.fetch(FetchDescriptor<DeletedDefaultCategory>()) {
+                newContext.insert(copyDeletedDefaultCategory(item))
+            }
             for item in try oldContext.fetch(FetchDescriptor<UnifiedItem>()) {
                 newContext.insert(copyUnifiedItem(item))
             }
@@ -344,7 +348,7 @@ final class CloudSyncService: @unchecked Sendable {
     private static func makeContainer(usingCloudKit: Bool) throws -> ModelContainer {
         let privateSchema = Schema([AppSettings.self, ChatMessage.self, ChatConversation.self])
         let sharedSchema = Schema([
-            UnifiedItem.self, PantryItem.self, GroceryItem.self, UtensilItem.self, Category.self,
+            UnifiedItem.self, PantryItem.self, GroceryItem.self, UtensilItem.self, Category.self, DeletedDefaultCategory.self,
             Recipe.self, RecipeIngredient.self, RecipeStep.self, RecipePreparationMedia.self,
         ])
 
@@ -387,7 +391,7 @@ final class CloudSyncService: @unchecked Sendable {
 
         let privateSchema = Schema([AppSettings.self, ChatMessage.self, ChatConversation.self])
         let sharedSchema = Schema([
-            UnifiedItem.self, PantryItem.self, GroceryItem.self, UtensilItem.self, Category.self,
+            UnifiedItem.self, PantryItem.self, GroceryItem.self, UtensilItem.self, Category.self, DeletedDefaultCategory.self,
             Recipe.self, RecipeIngredient.self, RecipeStep.self, RecipePreparationMedia.self,
         ])
 
@@ -599,6 +603,12 @@ final class CloudSyncService: @unchecked Sendable {
             iconName: source.iconName,
             sortOrder: source.sortOrder
         )
+        copy.id = source.id
+        return copy
+    }
+
+    private static func copyDeletedDefaultCategory(_ source: DeletedDefaultCategory) -> DeletedDefaultCategory {
+        let copy = DeletedDefaultCategory(name: source.name, type: source.type)
         copy.id = source.id
         return copy
     }

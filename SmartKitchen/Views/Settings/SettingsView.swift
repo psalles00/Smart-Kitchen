@@ -177,6 +177,7 @@ struct SettingsView: View {
         try? modelContext.delete(model: GroceryItem.self)
         try? modelContext.delete(model: UtensilItem.self)
         try? modelContext.delete(model: Category.self)
+        try? modelContext.delete(model: DeletedDefaultCategory.self)
         try? modelContext.delete(model: ChatMessage.self)
         try? modelContext.delete(model: AppSettings.self)
         DataSeeder.seedIfNeeded(context: modelContext)

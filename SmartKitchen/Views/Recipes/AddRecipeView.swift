@@ -16,7 +16,7 @@ struct AddRecipeView: View {
     // Basic info
     @State private var name = ""
     @State private var descriptionText = ""
-    @State private var selectedCategories: [String] = ["Outros"]
+    @State private var selectedCategories: [String] = []
     @State private var difficulty: Difficulty = .easy
     @State private var prepTime = 0
     @State private var cookTime = 0
@@ -57,6 +57,10 @@ struct AddRecipeView: View {
         allCategories.filter { $0.type == .recipe }
     }
 
+    private var recipeCategorySignature: String {
+        recipeCategories.map(\.name).joined(separator: "|")
+    }
+
     private var isValid: Bool {
         !name.trimmingCharacters(in: .whitespaces).isEmpty
     }
@@ -90,6 +94,10 @@ struct AddRecipeView: View {
                 DispatchQueue.main.async {
                     isNameFieldFocused = true
                 }
+                normalizeSelectedCategoriesIfNeeded()
+            }
+            .onChange(of: recipeCategorySignature) { _, _ in
+                normalizeSelectedCategoriesIfNeeded()
             }
             .confirmationDialog("Adicionar Foto", isPresented: $showPhotoOptions, titleVisibility: .visible) {
                 coverPhotoDialogContent
@@ -548,7 +556,10 @@ struct AddRecipeView: View {
             descriptionText: descriptionText.trimmingCharacters(in: .whitespaces),
             imageData: imageData,
             externalURLString: externalURLString.trimmingCharacters(in: .whitespacesAndNewlines),
-            category: selectedCategories.joined(separator: ", "),
+            category: CategoryMutationService.normalizedRecipeCategoryString(
+                from: selectedCategories.joined(separator: ", "),
+                context: modelContext
+            ),
             prepTime: prepTime,
             cookTime: cookTime,
             servings: servings,
@@ -594,6 +605,18 @@ struct AddRecipeView: View {
         }
 
         dismiss()
+    }
+
+    private func normalizeSelectedCategoriesIfNeeded() {
+        let resolved = selectedCategories.compactMap {
+            CategoryMutationService.canonicalCategoryName(for: $0, type: .recipe, context: modelContext)
+        }
+
+        if resolved.isEmpty {
+            selectedCategories = [CategoryMutationService.defaultRecipeCategoryName(context: modelContext)]
+        } else if resolved != selectedCategories {
+            selectedCategories = resolved
+        }
     }
 
     private func loadPhoto() {

@@ -7,6 +7,8 @@ import PhotosUI
 /// everything before saving. On save, converts to a SwiftData `Recipe`.
 struct RecipeImportPreviewView: View {
 
+    @Environment(\.modelContext) private var modelContext
+
     @Query(sort: \Category.sortOrder) private var allCategories: [Category]
 
     let initialDraft: RecipeDraft
@@ -34,6 +36,10 @@ struct RecipeImportPreviewView: View {
 
     private var recipeCategoryNames: [String] {
         allCategories.filter { $0.type == .recipe }.map(\.name)
+    }
+
+    private var recipeCategorySignature: String {
+        recipeCategoryNames.joined(separator: "|")
     }
 
     private var isValid: Bool {
@@ -241,6 +247,10 @@ struct RecipeImportPreviewView: View {
         }
         .task {
             await fetchImageIfNeeded()
+            normalizeDraftCategoryIfNeeded()
+        }
+        .onChange(of: recipeCategorySignature) { _, _ in
+            normalizeDraftCategoryIfNeeded()
         }
     }
 
@@ -403,7 +413,9 @@ struct RecipeImportPreviewView: View {
 
     private var allCategoryOptions: [String] {
         var options = Set(recipeCategoryNames)
-        options.insert("Outros")
+        if options.isEmpty {
+            options.insert(draft.category.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Outros" : draft.category)
+        }
         if !draft.category.isEmpty { options.insert(draft.category) }
         return options.sorted()
     }
@@ -411,6 +423,16 @@ struct RecipeImportPreviewView: View {
     private func save() {
         if let errorMessage = onSave(draft) {
             saveErrorMessage = errorMessage
+        }
+    }
+
+    private func normalizeDraftCategoryIfNeeded() {
+        let trimmed = draft.category.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if trimmed.isEmpty {
+            draft.category = CategoryMutationService.defaultRecipeCategoryName(context: modelContext)
+        } else if let canonicalName = CategoryMutationService.canonicalCategoryName(for: trimmed, type: .recipe, context: modelContext) {
+            draft.category = canonicalName
         }
     }
 
