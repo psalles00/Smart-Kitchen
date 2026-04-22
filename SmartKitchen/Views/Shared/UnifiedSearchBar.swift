@@ -171,13 +171,16 @@ struct UnifiedSearchBar: View {
     }
 
     private var closeButton: some View {
-        Button("Fechar", systemImage: "xmark", role: .cancel) {
+        Button(role: .cancel) {
             state.dismiss()
+        } label: {
+            Image(systemName: "xmark")
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(.secondary)
+                .frame(width: chromeHeight, height: chromeHeight)
+                .contentShape(Circle())
         }
-        .labelStyle(.iconOnly)
-        .font(.system(size: 17, weight: .semibold))
-        .foregroundStyle(.secondary)
-        .frame(width: chromeHeight, height: chromeHeight)
+        .accessibilityLabel("Fechar")
         .modifier(NativeGlassCloseButtonModifier())
         .transition(.move(edge: .trailing).combined(with: .opacity))
     }
@@ -238,9 +241,18 @@ private struct NativeGlassCloseButtonModifier: ViewModifier {
     func body(content: Content) -> some View {
         if #available(iOS 26, macOS 26, *) {
             content
-                .buttonStyle(.glass)
+                .buttonStyle(.plain)
+                .contentShape(Circle())
+                .background {
+                    Circle()
+                        .fill(.clear)
+                        .glassEffect(.regular.interactive(), in: Circle())
+                        .allowsHitTesting(false)
+                }
         } else {
             content
+                .buttonStyle(.plain)
+                .contentShape(Circle())
                 .background(.ultraThinMaterial, in: Circle())
         }
     }
