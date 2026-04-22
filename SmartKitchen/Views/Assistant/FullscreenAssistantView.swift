@@ -59,13 +59,16 @@ struct FullscreenAssistantView: View {
 
             contentArea
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .simultaneousGesture(
+                    dismissDragGesture,
+                    including: isScrollableContentAtTop ? .subviews : .none
+                )
                 .overlay(alignment: .top) {
                     pinnedHeader
                 }
             .offset(y: max(dragOffset, 0))
             .opacity(contentOpacity)
         }
-        .simultaneousGesture(dismissDragGesture)
         .onAppear {
             withAnimation(.smooth(duration: 0.12)) {
                 contentOpacity = 1
@@ -76,19 +79,24 @@ struct FullscreenAssistantView: View {
     private var dismissDragGesture: some Gesture {
         DragGesture(minimumDistance: 24)
             .onChanged { value in
-                // A drag that starts while content is scrolled must never switch
-                // into dismiss mode mid-gesture just because it later reaches top.
+                // Snapshot once per gesture: the assistant may only be dismissed if
+                // the drag either started inside the title/header area, or started
+                // while the scroll content was already at the very top. Dragging
+                // inside the content area while it is scrolled must never switch
+                // into dismiss mode mid-gesture, even if the content later reaches
+                // top via rubberband.
                 if dragStartedAtTop == nil {
-                    dragStartedAtTop = isScrollableContentAtTop
+                    let startedInHeader = value.startLocation.y <= topPinnedInset
+                    dragStartedAtTop = startedInHeader || isScrollableContentAtTop
                 }
                 guard value.translation.height > 0, dragStartedAtTop == true else { return }
                 dragOffset = value.translation.height
             }
             .onEnded { value in
-                let startedAtTop = dragStartedAtTop ?? isScrollableContentAtTop
+                let canDismiss = dragStartedAtTop ?? isScrollableContentAtTop
                 dragStartedAtTop = nil
 
-                guard startedAtTop else {
+                guard canDismiss else {
                     withAnimation(.snappy(duration: 0.2, extraBounce: 0.02)) {
                         dragOffset = 0
                     }
