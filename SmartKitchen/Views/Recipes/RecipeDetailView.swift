@@ -25,6 +25,31 @@ struct RecipeDetailView: View {
         (recipe.ingredients ?? []).sorted { $0.sortOrder < $1.sortOrder }
     }
 
+    private var sortedIngredientSections: [RecipeIngredientSection] {
+        (recipe.ingredientSections ?? []).sorted { $0.sortOrder < $1.sortOrder }
+    }
+
+    /// Ordered groups for display: the first group (if any unsectioned
+    /// ingredients exist) has no header; subsequent groups are each section
+    /// followed by their ingredients.
+    private var ingredientGroups: [IngredientDisplayGroup] {
+        let sections = sortedIngredientSections
+        let all = sortedIngredients
+        var groups: [IngredientDisplayGroup] = []
+
+        let unsectioned = all.filter { $0.sectionID == nil }
+        if !unsectioned.isEmpty {
+            groups.append(IngredientDisplayGroup(section: nil, ingredients: unsectioned))
+        }
+        for section in sections {
+            let items = all.filter { $0.sectionID == section.id }
+            // Always show the section header, even when empty, so the user
+            // can see the grouping they defined.
+            groups.append(IngredientDisplayGroup(section: section, ingredients: items))
+        }
+        return groups
+    }
+
     private var sortedSteps: [RecipeStep] {
         (recipe.steps ?? []).sorted { $0.order < $1.order }
     }
@@ -301,85 +326,116 @@ struct RecipeDetailView: View {
             }
             .padding(.top, 8)
 
-            ForEach(sortedIngredients) { ingredient in
-                let isAvailable = ingredientIsAvailable(ingredient)
-                let isInGrocery = ingredientIsInGrocery(ingredient)
+            VStack(spacing: 0) {
+                ForEach(Array(ingredientGroups.enumerated()), id: \.offset) { groupIndex, group in
+                    if let section = group.section {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(section.title.isEmpty ? "Seção" : section.title)
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(.primary)
+                            if !section.subtitle.isEmpty {
+                                Text(section.subtitle)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 14)
+                        .padding(.top, groupIndex == 0 ? 10 : 12)
+                        .padding(.bottom, group.ingredients.isEmpty ? 10 : 8)
 
-                HStack(spacing: 12) {
-                    IconImage(name: ingredient.name, iconFileName: ingredient.iconName, fallbackSymbol: "leaf", showBalloon: true)
-
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("\(Text(ingredient.name).fontWeight(.semibold))\(ingredient.formattedState.isEmpty ? Text("") : Text(" \(ingredient.formattedState)"))")
-                            .font(.subheadline)
-
-                        if isAvailable {
-                            Text("Disponível na despensa")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(.green)
-                        } else if isInGrocery {
-                            Text("Já adicionado ao mercado")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(.secondary)
+                        if !group.ingredients.isEmpty {
+                            ItemListDivider()
+                                .padding(.horizontal, 14)
                         }
                     }
 
-                    Spacer()
+                    ForEach(Array(group.ingredients.enumerated()), id: \.element.id) { index, ingredient in
+                        ingredientRowView(for: ingredient)
 
-                    if !ingredient.formattedQuantity.isEmpty {
-                        Text(ingredient.formattedQuantity)
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                            .multilineTextAlignment(.trailing)
+                        let hasNextIngredientInGroup = index < group.ingredients.count - 1
+                        let hasLaterGroupIngredients = ingredientGroups.dropFirst(groupIndex + 1).contains { !$0.ingredients.isEmpty }
+                        if hasNextIngredientInGroup || hasLaterGroupIngredients {
+                            ItemListDivider()
+                                .padding(.horizontal, 14)
+                        }
                     }
+                }
+            }
+            .background(Color(.secondarySystemBackground), in: .rect(cornerRadius: 18))
+        }
+    }
 
-                    NeutralItemActionButton(systemImage: isInGrocery ? "checkmark" : "cart.badge.plus") {
-                        guard !isInGrocery else { return }
-                        addIngredientToGrocery(ingredient)
-                    }
-                    .opacity(isInGrocery ? 0.7 : 1)
-                }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 10)
-                .background(
-                    isAvailable ? Color.green.opacity(0.08) : Color(.secondarySystemBackground),
-                    in: .rect(cornerRadius: 16)
-                )
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    openIngredientItem(ingredient)
-                }
-                .contextMenu {
-                    Button(
-                        isInGrocery ? "Já adicionado ao Mercado" : "Adicionar ao Mercado",
-                        systemImage: isInGrocery ? "checkmark.circle" : "cart.badge.plus"
-                    ) {
-                        guard !isInGrocery else { return }
-                        addIngredientToGrocery(ingredient)
-                    }
-                    .disabled(isInGrocery)
-                    Button("Adicionar à Despensa", systemImage: "refrigerator") {
-                        addIngredientToPantry(ingredient)
-                    }
-                    Button("Trocar ingrediente", systemImage: "arrow.triangle.2.circlepath") {
-                        ingredientEditorSheet = .replace(ingredient.id)
-                    }
-                    Button("Alterar quantidade", systemImage: "sum") {
-                        ingredientEditorSheet = .quantity(ingredient.id)
-                    }
-                    Button("Alterar estado", systemImage: "slider.horizontal.3") {
-                        ingredientEditorSheet = .state(ingredient.id)
-                    }
-                    Button("Remover ingrediente", systemImage: "trash", role: .destructive) {
-                        removeIngredient(ingredient)
-                    }
-                    if ingredientIsAvailable(ingredient) {
-                        Button("Já está disponível", systemImage: "checkmark.circle") { }
-                    }
-                }
+    @ViewBuilder
+    private func ingredientRowView(for ingredient: RecipeIngredient) -> some View {
+        let isAvailable = ingredientIsAvailable(ingredient)
+        let isInGrocery = ingredientIsInGrocery(ingredient)
 
-                if ingredient.id != sortedIngredients.last?.id {
-                    Divider()
+        HStack(spacing: 12) {
+            IconImage(name: ingredient.name, iconFileName: ingredient.iconName, fallbackSymbol: "leaf", showBalloon: true)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("\(Text(ingredient.name).fontWeight(.semibold))\(ingredient.formattedState.isEmpty ? Text("") : Text(" \(ingredient.formattedState)"))")
+                    .font(.subheadline)
+
+                if isAvailable {
+                    Text("Disponível na despensa")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.green)
+                } else if isInGrocery {
+                    Text("Já adicionado ao mercado")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
                 }
+            }
+
+            Spacer()
+
+            if !ingredient.formattedQuantity.isEmpty {
+                Text(ingredient.formattedQuantity)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.trailing)
+            }
+
+            NeutralItemActionButton(systemImage: isInGrocery ? "checkmark" : "cart.badge.plus") {
+                guard !isInGrocery else { return }
+                addIngredientToGrocery(ingredient)
+            }
+            .opacity(isInGrocery ? 0.7 : 1)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            openIngredientItem(ingredient)
+        }
+        .contextMenu {
+            Button(
+                isInGrocery ? "Já adicionado ao Mercado" : "Adicionar ao Mercado",
+                systemImage: isInGrocery ? "checkmark.circle" : "cart.badge.plus"
+            ) {
+                guard !isInGrocery else { return }
+                addIngredientToGrocery(ingredient)
+            }
+            .disabled(isInGrocery)
+            Button("Adicionar à Despensa", systemImage: "refrigerator") {
+                addIngredientToPantry(ingredient)
+            }
+            Button("Trocar ingrediente", systemImage: "arrow.triangle.2.circlepath") {
+                ingredientEditorSheet = .replace(ingredient.id)
+            }
+            Button("Alterar quantidade", systemImage: "sum") {
+                ingredientEditorSheet = .quantity(ingredient.id)
+            }
+            Button("Alterar estado", systemImage: "slider.horizontal.3") {
+                ingredientEditorSheet = .state(ingredient.id)
+            }
+            Button("Remover ingrediente", systemImage: "trash", role: .destructive) {
+                removeIngredient(ingredient)
+            }
+            if ingredientIsAvailable(ingredient) {
+                Button("Já está disponível", systemImage: "checkmark.circle") { }
             }
         }
     }
@@ -794,6 +850,13 @@ private struct IngredientReplacementCandidate: Identifiable {
 private struct PendingIngredientReplacement {
     let ingredientID: UUID
     let candidate: IngredientReplacementCandidate
+}
+
+/// One displayable group of ingredients in `RecipeDetailView`. A `nil` section
+/// represents the implicit top (unsectioned) group.
+private struct IngredientDisplayGroup {
+    let section: RecipeIngredientSection?
+    let ingredients: [RecipeIngredient]
 }
 
 private enum IngredientReplacementSourceFilter: String, CaseIterable, Identifiable {

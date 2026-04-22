@@ -45,7 +45,12 @@ struct RecipeDraft: Equatable {
     var videoURL: URL? = nil
     var requiredUtensils: [String] = []
     var ingredients: [IngredientDraft] = []
+    var ingredientSections: [SectionDraft] = []
     var steps: [StepDraft] = []
+    /// Original source media that should always accompany the saved recipe
+    /// (downloaded social video, scanned image, hero image). Written into
+    /// `Recipe.preparationMedia` on save with `sourceOriginal = true`.
+    var preparationMedia: [ImportDraftPreparationMedia] = []
     /// Human-readable origin hint (e.g. "AllRecipes.com", "Texto colado", "Imagem").
     var sourceLabel: String = ""
     /// Overall confidence aggregated for the whole draft.
@@ -66,6 +71,9 @@ struct IngredientDraft: Equatable, Identifiable {
     var preparationState: String
     var iconName: String?
     var confidence: FieldConfidence
+    /// Optional pointer to `SectionDraft.id` grouping this ingredient. `nil`
+    /// means the ingredient belongs to the implicit top (unsectioned) group.
+    var sectionID: UUID?
 
     init(
         id: UUID = UUID(),
@@ -74,7 +82,8 @@ struct IngredientDraft: Equatable, Identifiable {
         unit: String = "",
         preparationState: String = "",
         iconName: String? = nil,
-        confidence: FieldConfidence = .medium
+        confidence: FieldConfidence = .medium,
+        sectionID: UUID? = nil
     ) {
         self.id = id
         self.name = name
@@ -83,6 +92,45 @@ struct IngredientDraft: Equatable, Identifiable {
         self.preparationState = preparationState
         self.iconName = iconName
         self.confidence = confidence
+        self.sectionID = sectionID
+    }
+}
+
+struct SectionDraft: Equatable, Identifiable {
+    let id: UUID
+    var title: String
+    var subtitle: String
+    var sortOrder: Int
+
+    init(id: UUID = UUID(), title: String = "", subtitle: String = "", sortOrder: Int = 0) {
+        self.id = id
+        self.title = title
+        self.subtitle = subtitle
+        self.sortOrder = sortOrder
+    }
+}
+
+struct ImportDraftPreparationMedia: Equatable, Identifiable {
+    let id: UUID
+    var type: RecipePreparationMediaType
+    var data: Data
+    var fileExtension: String
+    /// Marks media auto-saved from the original import source. Used to
+    /// avoid adding duplicates on re-import.
+    var sourceOriginal: Bool
+
+    init(
+        id: UUID = UUID(),
+        type: RecipePreparationMediaType,
+        data: Data,
+        fileExtension: String = "",
+        sourceOriginal: Bool = false
+    ) {
+        self.id = id
+        self.type = type
+        self.data = data
+        self.fileExtension = fileExtension
+        self.sourceOriginal = sourceOriginal
     }
 }
 

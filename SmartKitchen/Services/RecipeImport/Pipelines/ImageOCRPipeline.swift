@@ -59,6 +59,19 @@ struct ImageOCRPipeline: RecipeImportPipeline {
             draft.imageData = data
         }
 
+        // Always attach the scanned image as original source media so the user
+        // can find the raw material under "Adicionar Fotos ou Vídeos".
+        if !draft.preparationMedia.contains(where: { $0.sourceOriginal && $0.type == .photo && $0.data == data }) {
+            draft.preparationMedia.append(
+                ImportDraftPreparationMedia(
+                    type: .photo,
+                    data: data,
+                    fileExtension: "jpg",
+                    sourceOriginal: true
+                )
+            )
+        }
+
         onStage(.finalizing)
         RecipeImportLogger.debug("stage=\(RecipeImportStage.finalizing.title)")
         if draft.sourceLabel.isEmpty { draft.sourceLabel = "Imagem" }

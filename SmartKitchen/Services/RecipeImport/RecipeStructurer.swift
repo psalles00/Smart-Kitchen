@@ -169,10 +169,51 @@ struct RecipeStructurer {
                     quantity: qty,
                     unit: unit,
                     preparationState: state,
-                    confidence: conf
+                    confidence: conf,
+                    sectionID: nil
                 )
             }
             RecipeImportLogger.debug("parse ingredients count=\(d.ingredients.count)")
+        }
+
+        if let sectionsArray = dict["ingredient_sections"] as? [[String: Any]] {
+            var order = 0
+            for item in sectionsArray {
+                let rawTitle = (item["title"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                let rawSubtitle = (item["subtitle"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                let rawItems = item["ingredients"] as? [[String: Any]] ?? []
+                // Skip a section that has no title AND no ingredients at all.
+                if rawTitle.isEmpty && rawItems.isEmpty { continue }
+                let sectionID = UUID()
+                d.ingredientSections.append(
+                    SectionDraft(id: sectionID, title: rawTitle, subtitle: rawSubtitle, sortOrder: order)
+                )
+                order += 1
+                for raw in rawItems {
+                    guard let name = (raw["name"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines),
+                          !name.isEmpty else { continue }
+                    let qty: Double? = {
+                        if let n = raw["quantity"] as? Double { return n }
+                        if let n = raw["quantity"] as? Int { return Double(n) }
+                        if let s = raw["quantity"] as? String, let n = Double(s.replacingOccurrences(of: ",", with: ".")) { return n }
+                        return nil
+                    }()
+                    let unit = (raw["unit"] as? String)?.trimmingCharacters(in: .whitespaces) ?? ""
+                    let state = (raw["state"] as? String)?.trimmingCharacters(in: .whitespaces) ?? ""
+                    let conf = confidenceString(raw["confidence"] as? String) ?? .medium
+                    d.ingredients.append(
+                        IngredientDraft(
+                            name: name,
+                            quantity: qty,
+                            unit: unit,
+                            preparationState: state,
+                            confidence: conf,
+                            sectionID: sectionID
+                        )
+                    )
+                }
+            }
+            RecipeImportLogger.debug("parse sections count=\(d.ingredientSections.count) totalIngredients=\(d.ingredients.count)")
         }
 
         if let steps = dict["steps"] as? [[String: Any]] {
@@ -239,6 +280,10 @@ struct RecipeStructurer {
       Você pode escolher a abreviação (ex.: "g", "mL", "c.s.") ou o nome completo. Se a unidade no texto não encaixar, deixe vazio.
     - Use apenas estados desta lista (campo state): \(stateLabels.joined(separator: " | ")). Se o texto não mencionar estado, deixe vazio.
     - Separe quantidade + unidade + nome + estado do ingrediente. Exemplo: "2 xícaras de farinha peneirada" → quantity=2, unit="Xícara", name="Farinha", state="Peneirada".
+    - AGRUPAMENTO DE INGREDIENTES: quando a receita apresentar blocos como "Para a massa", "Para o creme", "Para a calda", "Recheio", "Para a marinada", "Ingredientes secos", etc., crie uma entrada em "ingredient_sections" com title obrigatório (ex.: "Para a massa") e agrupe os ingredientes daquele bloco dentro do array "ingredients" da seção.
+    - NOTAS DE BLOCO: qualquer observação adjacente ao título do bloco (rendimento, temperatura, tempo, dica) deve ir em "subtitle" da seção. Nunca descarte notas do autor.
+    - Ingredientes que aparecem antes de qualquer bloco nomeado ou quando a receita não tem blocos devem ficar no array "ingredients" no nível superior (sem seção).
+    - Quando só houver um bloco implícito, prefira deixar tudo no array de nível superior sem criar seção artificial.
     - Passos devem ser curtos, imperativos e numerados.
     - Categoria: prefira "Café da manhã", "Almoço", "Jantar", "Lanche", "Sobremesa", "Bebida" ou "Outros". Se nenhuma servir claramente, proponha um nome curto e natural em português.
     - Dificuldade: "Fácil", "Médio" ou "Difícil".
@@ -278,6 +323,7 @@ struct RecipeStructurer {
             ],
             "ingredients": [
                 "type": "array",
+                "description": "Ingredientes sem seção (top-level). Use este array quando a receita NÃO tiver blocos rotulados.",
                 "items": [
                     "type": "object",
                     "properties": [
@@ -288,6 +334,32 @@ struct RecipeStructurer {
                         "confidence": ["type": "string", "enum": ["high", "medium", "low"]]
                     ],
                     "required": ["name"]
+                ]
+            ],
+            "ingredient_sections": [
+                "type": "array",
+                "description": "Blocos rotulados de ingredientes (ex.: 'Para a massa', 'Para o creme'). Use subtitle para notas/observações do bloco.",
+                "items": [
+                    "type": "object",
+                    "properties": [
+                        "title":    ["type": "string"],
+                        "subtitle": ["type": "string"],
+                        "ingredients": [
+                            "type": "array",
+                            "items": [
+                                "type": "object",
+                                "properties": [
+                                    "name":       ["type": "string"],
+                                    "quantity":   ["type": ["number", "null"]],
+                                    "unit":       ["type": "string"],
+                                    "state":      ["type": "string"],
+                                    "confidence": ["type": "string", "enum": ["high", "medium", "low"]]
+                                ],
+                                "required": ["name"]
+                            ]
+                        ]
+                    ],
+                    "required": ["title", "ingredients"]
                 ]
             ],
             "steps": [
@@ -304,7 +376,7 @@ struct RecipeStructurer {
                 ]
             ]
         ],
-        "required": ["name", "ingredients", "steps"]
+        "required": ["name", "steps"]
     ]
 }
 

@@ -70,6 +70,20 @@ struct WebURLPipeline: RecipeImportPipeline {
             RecipeImportLogger.debug("cover image bytes=\(draft.imageData?.count ?? 0)")
         }
 
+        // Attach the hero image as original source media so the user can find
+        // the raw material under "Adicionar Fotos ou Vídeos".
+        if !draft.preparationMedia.contains(where: { $0.sourceOriginal }),
+           let imageData = draft.imageData {
+            draft.preparationMedia.append(
+                ImportDraftPreparationMedia(
+                    type: .photo,
+                    data: imageData,
+                    fileExtension: "jpg",
+                    sourceOriginal: true
+                )
+            )
+        }
+
         if draft.externalURLString.isEmpty { draft.externalURLString = url.absoluteString }
         if draft.sourceLabel.isEmpty { draft.sourceLabel = url.host ?? "Web" }
         RecipeImportLogger.info("web pipeline completed \(RecipeImportLogger.draftSummary(draft))")

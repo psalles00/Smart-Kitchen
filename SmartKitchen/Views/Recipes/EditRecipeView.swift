@@ -14,7 +14,7 @@ struct EditRecipeView: View {
     @Query private var settingsArray: [AppSettings]
 
     @State private var selectedPhoto: PhotosPickerItem?
-    @State private var ingredientRows: [EditIngredientRow] = []
+    @State private var ingredientItems: [RecipeIngredientEditorItem] = []
     @State private var stepRows: [EditStepRow] = []
     @State private var initialized = false
     @State private var showPhotoOptions = false
@@ -371,7 +371,7 @@ struct EditRecipeView: View {
             TextField("Descrição (opcional)", text: $recipe.descriptionText, axis: .vertical)
                 .lineLimit(2...5)
 
-            TextField("Link externo (URL)", text: $recipe.externalURLString)
+            TextField("Link da receita", text: $recipe.externalURLString)
                 #if os(iOS)
                 .textInputAutocapitalization(.never)
                 .keyboardType(.URL)
@@ -394,12 +394,21 @@ struct EditRecipeView: View {
                             }
                             recipe.categories = current
                         } label: {
-                            Text(cat.name)
-                                .font(.subheadline)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 6)
-                                .background(isSelected ? Color.accentColor.opacity(0.15) : Color(.tertiarySystemFill), in: .capsule)
-                                .foregroundStyle(isSelected ? Color.accentColor : .primary)
+                            HStack(spacing: 6) {
+                                IconImage(
+                                    name: cat.name,
+                                    iconFileName: cat.iconName,
+                                    fallbackSymbol: "tag",
+                                    size: 18,
+                                    showBalloon: false
+                                )
+                                Text(cat.name)
+                                    .font(.subheadline)
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(isSelected ? Color.accentColor.opacity(0.15) : Color(.tertiarySystemFill), in: .capsule)
+                            .foregroundStyle(isSelected ? Color.accentColor : .primary)
                         }
                         .buttonStyle(.plain)
                     }
@@ -462,71 +471,12 @@ struct EditRecipeView: View {
     // MARK: - Ingredients
 
     private var ingredientsSection: some View {
-        Section {
-            ForEach($ingredientRows) { $row in
-                #if os(macOS)
-                HStack(spacing: 12) {
-                    ItemSearchField(
-                        text: $row.name,
-                        placeholder: "",
-                        iconFileName: row.iconName,
-                        fallbackSymbol: "leaf",
-                        showsLeadingIcon: true,
-                        onIconTapped: { activeIngredientPicker = EditIngredientPickerTarget(id: row.id) }
-                    ) { entry in
-                        row.name = entry.preferredTitle(matching: row.name)
-                        row.iconName = entry.nomeDoArquivo
-                        row.category = entry.categoria
-                    }
-
-                    HStack(spacing: 4) {
-                        Text("Qt:")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.secondary)
-
-                        TextField("0", text: $row.quantity)
-                            .frame(width: 50)
-                    }
-
-                    RecipeOptionMenuField(kind: .unit, selection: $row.unit)
-                        .frame(minWidth: 120)
-
-                    RecipeOptionMenuField(kind: .state, selection: $row.preparationState)
-                        .frame(minWidth: 140)
-
-                    Spacer(minLength: 0)
-                }
-                .padding(.vertical, 2)
-                #else
-                VStack(alignment: .leading, spacing: 8) {
-                    ItemSearchField(
-                        text: $row.name,
-                        placeholder: "Ingrediente",
-                        iconFileName: row.iconName,
-                        fallbackSymbol: "leaf",
-                        showsLeadingIcon: true,
-                        onIconTapped: { activeIngredientPicker = EditIngredientPickerTarget(id: row.id) }
-                    ) { entry in
-                        row.name = entry.preferredTitle(matching: row.name)
-                        row.iconName = entry.nomeDoArquivo
-                        row.category = entry.categoria
-                    }
-
-                    ingredientMetadataRow(for: $row)
-                }
-                .padding(.vertical, 4)
-                #endif
+        RecipeIngredientsSectionView(
+            items: $ingredientItems,
+            onIngredientIconTapped: { itemID in
+                activeIngredientPicker = EditIngredientPickerTarget(id: itemID)
             }
-            .onDelete { offsets in
-                ingredientRows.remove(atOffsets: offsets)
-            }
-
-            Button("Adicionar Ingrediente", systemImage: "plus.circle") {
-                ingredientRows.append(EditIngredientRow())
-            }
-        } header: {
-            Text("Ingredientes")
-        }
+        )
     }
 
     // MARK: - Steps
@@ -566,22 +516,10 @@ struct EditRecipeView: View {
         guard !initialized else { return }
         initialized = true
 
-        ingredientRows = (recipe.ingredients ?? [])
-            .sorted { $0.sortOrder < $1.sortOrder }
-            .map { ing in
-                EditIngredientRow(
-                    existingId: ing.id,
-                    name: ing.name,
-                    quantity: ing.quantity.map {
-                        $0.truncatingRemainder(dividingBy: 1) == 0
-                            ? String(format: "%.0f", $0) : String(format: "%.1f", $0)
-                    } ?? "",
-                    unit: ing.unit,
-                    preparationState: ing.preparationState,
-                    category: ItemDatabase.shared.entry(forFilename: ing.iconName ?? "")?.categoria ?? ItemDatabase.shared.exactMatch(for: ing.name)?.categoria,
-                    iconName: ing.iconName
-                )
-            }
+        ingredientItems = .fromRecipe(
+            sections: recipe.ingredientSections ?? [],
+            ingredients: recipe.ingredients ?? []
+        )
 
         stepRows = (recipe.steps ?? [])
             .sorted { $0.order < $1.order }
@@ -618,27 +556,24 @@ struct EditRecipeView: View {
         recipe.updatedAt = .now
         recipe.requiredUtensils = utensilNames.map { $0.name }.filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
 
-        // Update ingredients — remove old, insert new
+        // Update ingredients + sections — remove old, insert new from editor items.
         for ing in (recipe.ingredients ?? []) {
             modelContext.delete(ing)
         }
-        var newIngredients: [RecipeIngredient] = []
-        for (index, row) in ingredientRows.enumerated() {
-            let trimmed = row.name.trimmingCharacters(in: .whitespaces)
-            guard !trimmed.isEmpty else { continue }
-            let ingredient = RecipeIngredient(
-                name: trimmed,
-                quantity: Double(row.quantity),
-                unit: row.unit.trimmingCharacters(in: .whitespaces),
-                preparationState: row.preparationState.trimmingCharacters(in: .whitespacesAndNewlines),
-                iconName: row.iconName ?? ItemDatabase.shared.exactMatch(for: trimmed)?.nomeDoArquivo,
-                sortOrder: index
-            )
+        for section in (recipe.ingredientSections ?? []) {
+            modelContext.delete(section)
+        }
+        let commit = RecipeIngredientEditorPersistence.commit(items: ingredientItems)
+        for section in commit.sections {
+            section.recipe = recipe
+            modelContext.insert(section)
+        }
+        for ingredient in commit.ingredients {
             ingredient.recipe = recipe
             modelContext.insert(ingredient)
-            newIngredients.append(ingredient)
         }
-        recipe.ingredients = newIngredients
+        recipe.ingredientSections = commit.sections
+        recipe.ingredients = commit.ingredients
 
         // Update steps
         for step in (recipe.steps ?? []) {
@@ -689,48 +624,17 @@ struct EditRecipeView: View {
         }
     }
 
-    private func applyIngredientEntry(_ entry: ItemEntry, to rowID: UUID) {
-        guard let index = ingredientRows.firstIndex(where: { $0.id == rowID }) else { return }
-        ingredientRows[index].name = entry.preferredTitle(matching: ingredientRows[index].name)
-        ingredientRows[index].iconName = entry.nomeDoArquivo
-        ingredientRows[index].category = entry.categoria
-    }
-
     private func applyIngredientIcon(_ entry: ItemEntry, to rowID: UUID) {
-        guard let index = ingredientRows.firstIndex(where: { $0.id == rowID }) else { return }
-        ingredientRows[index].iconName = entry.nomeDoArquivo
-    }
-
-    @ViewBuilder
-    private func ingredientMetadataRow(for row: Binding<EditIngredientRow>) -> some View {
-        HStack(spacing: 12) {
-            HStack(spacing: 8) {
-                TextField("Qtd", text: row.quantity)
-                    #if os(iOS)
-                    .keyboardType(.decimalPad)
-                    #endif
-                    .frame(width: 44)
-
-                RecipeOptionMenuField(kind: .unit, selection: row.unit)
-                    .frame(maxWidth: .infinity)
-            }
-            .frame(maxWidth: .infinity)
-
-            Divider()
-                .frame(height: 34)
-
-            RecipeOptionMenuField(kind: .state, selection: row.preparationState)
-                .frame(maxWidth: .infinity)
-        }
-        .frame(maxWidth: .infinity)
+        guard let index = ingredientItems.firstIndex(where: { $0.id == rowID }) else { return }
+        ingredientItems[index].iconName = entry.nomeDoArquivo
     }
 
     private func ingredientName(for rowID: UUID) -> String {
-        ingredientRows.first(where: { $0.id == rowID })?.name ?? ""
+        ingredientItems.first(where: { $0.id == rowID })?.name ?? ""
     }
 
     private func ingredientIconName(for rowID: UUID) -> String? {
-        ingredientRows.first(where: { $0.id == rowID })?.iconName
+        ingredientItems.first(where: { $0.id == rowID })?.iconName
     }
 
     private func applyUtensilIcon(_ entry: ItemEntry, to utensilID: UUID) {
@@ -820,17 +724,6 @@ struct EditRecipeView: View {
 }
 
 // MARK: - Row Models
-
-private struct EditIngredientRow: Identifiable {
-    let id = UUID()
-    var existingId: UUID?
-    var name = ""
-    var quantity = ""
-    var unit = ""
-    var preparationState = ""
-    var category: String?
-    var iconName: String?
-}
 
 private struct EditStepRow: Identifiable {
     let id = UUID()

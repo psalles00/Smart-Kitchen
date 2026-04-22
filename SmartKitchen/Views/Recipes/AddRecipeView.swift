@@ -41,7 +41,7 @@ struct AddRecipeView: View {
     @State private var showPreparationFileImporter = false
 
     // Dynamic ingredients
-    @State private var ingredientRows: [IngredientRow] = [IngredientRow()]
+    @State private var ingredientItems: [RecipeIngredientEditorItem] = [.ingredient()]
     @State private var activeIngredientPicker: IngredientPickerTarget?
 
     // Dynamic steps
@@ -380,7 +380,7 @@ struct AddRecipeView: View {
             TextField("Descrição (opcional)", text: $descriptionText, axis: .vertical)
                 .lineLimit(2...5)
 
-            TextField("Link externo (URL)", text: $externalURLString)
+            TextField("Link da receita", text: $externalURLString)
                 #if os(iOS)
                 .textInputAutocapitalization(.never)
                 .keyboardType(.URL)
@@ -401,12 +401,21 @@ struct AddRecipeView: View {
                                 selectedCategories.append(cat.name)
                             }
                         } label: {
-                            Text(cat.name)
-                                .font(.subheadline)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 6)
-                                .background(isSelected ? Color.accentColor.opacity(0.15) : Color(.tertiarySystemFill), in: .capsule)
-                                .foregroundStyle(isSelected ? Color.accentColor : .primary)
+                            HStack(spacing: 6) {
+                                IconImage(
+                                    name: cat.name,
+                                    iconFileName: cat.iconName,
+                                    fallbackSymbol: "tag",
+                                    size: 18,
+                                    showBalloon: false
+                                )
+                                Text(cat.name)
+                                    .font(.subheadline)
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(isSelected ? Color.accentColor.opacity(0.15) : Color(.tertiarySystemFill), in: .capsule)
+                            .foregroundStyle(isSelected ? Color.accentColor : .primary)
                         }
                         .buttonStyle(.plain)
                     }
@@ -479,39 +488,12 @@ struct AddRecipeView: View {
     // MARK: - Ingredients
 
     private var ingredientsSection: some View {
-        Section {
-            ForEach($ingredientRows) { $row in
-                VStack(alignment: .leading, spacing: 8) {
-                    ItemSearchField(
-                        text: $row.name,
-                        placeholder: "Ingrediente",
-                        iconFileName: row.iconName,
-                        fallbackSymbol: "leaf",
-                        showsLeadingIcon: true,
-                        onIconTapped: { activeIngredientPicker = IngredientPickerTarget(id: row.id) }
-                    ) { entry in
-                        row.name = entry.preferredTitle(matching: row.name)
-                        row.iconName = entry.nomeDoArquivo
-                        row.category = entry.categoria
-                    }
-
-                    ingredientMetadataRow(for: $row)
-                }
-                .padding(.vertical, 4)
+        RecipeIngredientsSectionView(
+            items: $ingredientItems,
+            onIngredientIconTapped: { itemID in
+                activeIngredientPicker = IngredientPickerTarget(id: itemID)
             }
-            .onDelete { offsets in
-                ingredientRows.remove(atOffsets: offsets)
-                if ingredientRows.isEmpty {
-                    ingredientRows.append(IngredientRow())
-                }
-            }
-
-            Button("Adicionar Ingrediente", systemImage: "plus.circle") {
-                ingredientRows.append(IngredientRow())
-            }
-        } header: {
-            Text("Ingredientes")
-        }
+        )
     }
 
     // MARK: - Steps
@@ -570,17 +552,12 @@ struct AddRecipeView: View {
 
         recipe.requiredUtensils = utensilNames.map(\.name).filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
 
-        for (index, row) in ingredientRows.enumerated() {
-            let trimmedName = row.name.trimmingCharacters(in: .whitespaces)
-            guard !trimmedName.isEmpty else { continue }
-            let ingredient = RecipeIngredient(
-                name: trimmedName,
-                quantity: Double(row.quantity),
-                unit: row.unit.trimmingCharacters(in: .whitespaces),
-                preparationState: row.preparationState.trimmingCharacters(in: .whitespacesAndNewlines),
-                iconName: row.iconName ?? ItemDatabase.shared.exactMatch(for: trimmedName)?.nomeDoArquivo,
-                sortOrder: index
-            )
+        let commit = RecipeIngredientEditorPersistence.commit(items: ingredientItems)
+        for section in commit.sections {
+            section.recipe = recipe
+            modelContext.insert(section)
+        }
+        for ingredient in commit.ingredients {
             ingredient.recipe = recipe
             modelContext.insert(ingredient)
         }
@@ -634,47 +611,23 @@ struct AddRecipeView: View {
     }
 
     private func applyIngredientEntry(_ entry: ItemEntry, to rowID: UUID) {
-        guard let index = ingredientRows.firstIndex(where: { $0.id == rowID }) else { return }
-        ingredientRows[index].name = entry.preferredTitle(matching: ingredientRows[index].name)
-        ingredientRows[index].iconName = entry.nomeDoArquivo
-        ingredientRows[index].category = entry.categoria
+        guard let index = ingredientItems.firstIndex(where: { $0.id == rowID }) else { return }
+        ingredientItems[index].name = entry.preferredTitle(matching: ingredientItems[index].name)
+        ingredientItems[index].iconName = entry.nomeDoArquivo
+        ingredientItems[index].category = entry.categoria
     }
 
     private func applyIngredientIcon(_ entry: ItemEntry, to rowID: UUID) {
-        guard let index = ingredientRows.firstIndex(where: { $0.id == rowID }) else { return }
-        ingredientRows[index].iconName = entry.nomeDoArquivo
-    }
-
-    @ViewBuilder
-    private func ingredientMetadataRow(for row: Binding<IngredientRow>) -> some View {
-        HStack(spacing: 12) {
-            HStack(spacing: 8) {
-                TextField("Qtd", text: row.quantity)
-                    #if os(iOS)
-                    .keyboardType(.decimalPad)
-                    #endif
-                    .frame(width: 44)
-
-                RecipeOptionMenuField(kind: .unit, selection: row.unit)
-                    .frame(maxWidth: .infinity)
-            }
-            .frame(maxWidth: .infinity)
-
-            Divider()
-                .frame(height: 34)
-
-            RecipeOptionMenuField(kind: .state, selection: row.preparationState)
-                .frame(maxWidth: .infinity)
-        }
-        .frame(maxWidth: .infinity)
+        guard let index = ingredientItems.firstIndex(where: { $0.id == rowID }) else { return }
+        ingredientItems[index].iconName = entry.nomeDoArquivo
     }
 
     private func ingredientName(for rowID: UUID) -> String {
-        ingredientRows.first(where: { $0.id == rowID })?.name ?? ""
+        ingredientItems.first(where: { $0.id == rowID })?.name ?? ""
     }
 
     private func ingredientIconName(for rowID: UUID) -> String? {
-        ingredientRows.first(where: { $0.id == rowID })?.iconName
+        ingredientItems.first(where: { $0.id == rowID })?.iconName
     }
 
     private func applyUtensilIcon(_ entry: ItemEntry, to utensilID: UUID) {
@@ -771,16 +724,6 @@ private struct DraftPreparationMedia: Identifiable {
 }
 
 // MARK: - Row Models
-
-private struct IngredientRow: Identifiable {
-    let id = UUID()
-    var name = ""
-    var quantity = ""
-    var unit = ""
-    var preparationState = ""
-    var category: String?
-    var iconName: String?
-}
 
 private struct StepRow: Identifiable {
     let id = UUID()

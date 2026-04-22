@@ -16,6 +16,7 @@ struct RecipeImportPreviewView: View {
     let onDiscard: () -> Void
 
     @State private var draft: RecipeDraft
+    @State private var ingredientEditorItems: [RecipeIngredientEditorItem] = []
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var showPhotoPicker = false
     @State private var saveErrorMessage: String?
@@ -131,23 +132,17 @@ struct RecipeImportPreviewView: View {
             }
 
             Section("Ingredientes (\(draft.ingredients.count))") {
-                if draft.ingredients.isEmpty {
+                if draft.ingredients.isEmpty && draft.ingredientSections.isEmpty {
                     Text("Nenhum ingrediente reconhecido. Adicione manualmente.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
-                ForEach($draft.ingredients) { $ing in
-                    ingredientRow($ing: $ing)
-                }
-                .onDelete { offsets in
-                    draft.ingredients.remove(atOffsets: offsets)
-                }
-                Button {
-                    draft.ingredients.append(IngredientDraft(confidence: .high))
-                } label: {
-                    Label("Adicionar ingrediente", systemImage: "plus.circle")
-                }
             }
+
+            RecipeIngredientsSectionView(
+                items: $ingredientEditorItems,
+                onIngredientIconTapped: { _ in }
+            )
 
             Section("Modo de preparo (\(draft.steps.count))") {
                 if draft.steps.isEmpty {
@@ -248,6 +243,15 @@ struct RecipeImportPreviewView: View {
         .task {
             await fetchImageIfNeeded()
             normalizeDraftCategoryIfNeeded()
+            if ingredientEditorItems.isEmpty {
+                ingredientEditorItems = .fromDrafts(
+                    sections: draft.ingredientSections,
+                    ingredients: draft.ingredients
+                )
+                if ingredientEditorItems.isEmpty {
+                    ingredientEditorItems = [.ingredient()]
+                }
+            }
         }
         .onChange(of: recipeCategorySignature) { _, _ in
             normalizeDraftCategoryIfNeeded()
@@ -421,6 +425,9 @@ struct RecipeImportPreviewView: View {
     }
 
     private func save() {
+        let commit = RecipeIngredientEditorPersistence.commitToDrafts(items: ingredientEditorItems)
+        draft.ingredientSections = commit.sections
+        draft.ingredients = commit.ingredients
         if let errorMessage = onSave(draft) {
             saveErrorMessage = errorMessage
         }
@@ -447,6 +454,13 @@ struct RecipeImportPreviewView: View {
                 let improver = RecipeImportImprover()
                 let improved = try await improver.improve(draft: draft)
                 draft = improved
+                ingredientEditorItems = .fromDrafts(
+                    sections: draft.ingredientSections,
+                    ingredients: draft.ingredients
+                )
+                if ingredientEditorItems.isEmpty {
+                    ingredientEditorItems = [.ingredient()]
+                }
                 improveImportMessage = "Importação melhorada com transcrição do vídeo e reorganização automática."
             } catch {
                 improveImportMessage = "Não foi possível melhorar a importação: \(error.localizedDescription)"

@@ -107,20 +107,42 @@ final class RecipeImportCoordinator {
         context.insert(recipe)
         recipe.requiredUtensils = draft.requiredUtensils.filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
 
+        // Persist ingredient sections (if any) and remap draft section ids to
+        // freshly-created SwiftData section ids.
+        var sectionIDMap: [UUID: UUID] = [:]
+        let sortedSectionDrafts = draft.ingredientSections.sorted { $0.sortOrder < $1.sortOrder }
+        for (idx, sectionDraft) in sortedSectionDrafts.enumerated() {
+            let title = sectionDraft.title.trimmingCharacters(in: .whitespacesAndNewlines)
+            let subtitle = sectionDraft.subtitle.trimmingCharacters(in: .whitespacesAndNewlines)
+            if title.isEmpty && subtitle.isEmpty { continue }
+            let newID = UUID()
+            let section = RecipeIngredientSection(
+                title: title,
+                subtitle: subtitle,
+                sortOrder: idx,
+                id: newID
+            )
+            section.recipe = recipe
+            context.insert(section)
+            sectionIDMap[sectionDraft.id] = newID
+        }
+
         for (index, ing) in draft.ingredients.enumerated() {
             let trimmedName = ing.name.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !trimmedName.isEmpty else { continue }
+            let mappedSectionID: UUID? = ing.sectionID.flatMap { sectionIDMap[$0] }
             let ingredient = RecipeIngredient(
                 name: trimmedName,
                 quantity: ing.quantity,
                 unit: ing.unit,
                 preparationState: ing.preparationState,
                 iconName: ing.iconName ?? ItemDatabase.shared.exactMatch(for: trimmedName)?.nomeDoArquivo,
-                sortOrder: index
+                sortOrder: index,
+                sectionID: mappedSectionID
             )
             ingredient.recipe = recipe
             context.insert(ingredient)
-            RecipeImportLogger.debug("save ingredient index=\(index) name=\(trimmedName)", sessionID: currentSessionID)
+            RecipeImportLogger.debug("save ingredient index=\(index) name=\(trimmedName) section=\(mappedSectionID?.uuidString ?? "-")", sessionID: currentSessionID)
         }
 
         for step in draft.steps {
@@ -130,6 +152,20 @@ final class RecipeImportCoordinator {
             s.recipe = recipe
             context.insert(s)
             RecipeImportLogger.debug("save step order=\(step.order) chars=\(trimmed.count)", sessionID: currentSessionID)
+        }
+
+        for (index, media) in draft.preparationMedia.enumerated() {
+            guard !media.data.isEmpty else { continue }
+            let attachment = RecipePreparationMedia(
+                mediaType: media.type,
+                data: media.data,
+                fileExtension: media.fileExtension,
+                sortOrder: index,
+                sourceOriginal: media.sourceOriginal
+            )
+            attachment.recipe = recipe
+            context.insert(attachment)
+            RecipeImportLogger.debug("save preparation media index=\(index) type=\(media.type.rawValue) bytes=\(media.data.count) original=\(media.sourceOriginal)", sessionID: currentSessionID)
         }
 
         phase = .savedRecipeID(recipe.id)

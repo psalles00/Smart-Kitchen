@@ -83,6 +83,36 @@ struct SocialURLPipeline: RecipeImportPipeline {
                 RecipeImportLogger.info("social detected videoURL=\(videoURL.absoluteString)")
             }
         }
+
+        // Always attach the original source media so the user finds the raw
+        // material under "Adicionar Fotos ou Vídeos". Prefer the video; fall
+        // back to the cover image when the platform only exposes a thumbnail.
+        if !draft.preparationMedia.contains(where: { $0.sourceOriginal }) {
+            if let videoURL = draft.videoURL,
+               let videoData = try? await fetchData(url: videoURL, maxBytes: 80 * 1024 * 1024) {
+                let ext = videoURL.pathExtension.isEmpty ? "mp4" : videoURL.pathExtension.lowercased()
+                draft.preparationMedia.append(
+                    ImportDraftPreparationMedia(
+                        type: .video,
+                        data: videoData,
+                        fileExtension: ext,
+                        sourceOriginal: true
+                    )
+                )
+                RecipeImportLogger.info("social downloaded video bytes=\(videoData.count) ext=\(ext)")
+            } else if let imageData = draft.imageData {
+                draft.preparationMedia.append(
+                    ImportDraftPreparationMedia(
+                        type: .photo,
+                        data: imageData,
+                        fileExtension: "jpg",
+                        sourceOriginal: true
+                    )
+                )
+                RecipeImportLogger.info("social fallback attached cover image as original media bytes=\(imageData.count)")
+            }
+        }
+
         if draft.externalURLString.isEmpty { draft.externalURLString = url.absoluteString }
         if draft.sourceLabel.isEmpty { draft.sourceLabel = metadata.platformLabel }
         RecipeImportLogger.info("social pipeline completed \(RecipeImportLogger.draftSummary(draft))")
@@ -255,6 +285,15 @@ struct SocialURLPipeline: RecipeImportPipeline {
         request.timeoutInterval = 15
         let (data, _) = try await URLSession.shared.data(for: request)
         RecipeImportLogger.debug("social fetchData bytes=\(data.count) url=\(url.absoluteString)")
+        return data
+    }
+
+    private func fetchData(url: URL, maxBytes: Int) async throws -> Data {
+        let data = try await fetchData(url: url)
+        guard data.count <= maxBytes else {
+            RecipeImportLogger.info("social fetchData exceeded maxBytes bytes=\(data.count) max=\(maxBytes) url=\(url.absoluteString)")
+            throw RecipeImportError.fetchFailed("Arquivo grande demais para anexar.")
+        }
         return data
     }
 }
