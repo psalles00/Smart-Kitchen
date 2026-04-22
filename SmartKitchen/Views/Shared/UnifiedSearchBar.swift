@@ -26,6 +26,10 @@ struct UnifiedSearchBar: View {
         state.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
+    private var hasTypedText: Bool {
+        !state.searchText.isEmpty
+    }
+
     private func requestFocus() {
         if state.isVisible {
             state.focusTrigger += 1
@@ -100,7 +104,7 @@ struct UnifiedSearchBar: View {
                         }
                     }
 
-                if !state.searchText.isEmpty {
+                if hasTypedText {
                     Button {
                         state.searchText = ""
                     } label: {
@@ -112,48 +116,7 @@ struct UnifiedSearchBar: View {
                     .transition(.scale.combined(with: .opacity))
                 }
 
-                // Dictation button
-                #if os(iOS)
-                Button {
-                    startDictation()
-                } label: {
-                    Image(systemName: "mic.fill")
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundStyle(.secondary)
-                        .frame(width: 30, height: 30)
-                }
-                .buttonStyle(.plain)
-                #endif
-
-                // Gallery button
-                Button {
-                    #if os(iOS)
-                    showPhotoLibrary = true
-                    #endif
-                } label: {
-                    Image(systemName: "photo.on.rectangle")
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundStyle(.secondary)
-                        .frame(width: 30, height: 30)
-                }
-                .buttonStyle(.plain)
-
-                // Camera button
-                Button {
-                    #if os(iOS)
-                    if UIImagePickerController.isSourceTypeAvailable(.camera) {
-                        showCameraPicker = true
-                    } else {
-                        showCameraUnavailableAlert = true
-                    }
-                    #endif
-                } label: {
-                    Image(systemName: "camera")
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundStyle(.secondary)
-                        .frame(width: 30, height: 30)
-                }
-                .buttonStyle(.plain)
+                accessoryActions
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
@@ -168,6 +131,75 @@ struct UnifiedSearchBar: View {
                 closeButton
             }
         }
+    }
+
+    @ViewBuilder
+    private var accessoryActions: some View {
+        if hasTypedText {
+            collapsedAccessoryMenu
+        } else {
+            expandedAccessoryActions
+        }
+    }
+
+    private var collapsedAccessoryMenu: some View {
+        Menu {
+            #if os(iOS)
+            Button("Registrar com Voz", systemImage: "mic.fill") {
+                startDictation()
+            }
+            #endif
+
+            Button("Registrar com Galeria", systemImage: "photo.on.rectangle") {
+                openPhotoLibrary()
+            }
+
+            Button("Registrar com Câmera", systemImage: "camera") {
+                openCamera()
+            }
+        } label: {
+            Image(systemName: "plus")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(.secondary)
+                .frame(width: 30, height: 30)
+                .contentShape(Rectangle())
+        }
+        .menuStyle(.button)
+    }
+
+    @ViewBuilder
+    private var expandedAccessoryActions: some View {
+        #if os(iOS)
+        Button {
+            startDictation()
+        } label: {
+            Image(systemName: "mic.fill")
+                .font(.system(size: 15, weight: .medium))
+                .foregroundStyle(.secondary)
+                .frame(width: 30, height: 30)
+        }
+        .buttonStyle(.plain)
+        #endif
+
+        Button {
+            openPhotoLibrary()
+        } label: {
+            Image(systemName: "photo.on.rectangle")
+                .font(.system(size: 15, weight: .medium))
+                .foregroundStyle(.secondary)
+                .frame(width: 30, height: 30)
+        }
+        .buttonStyle(.plain)
+
+        Button {
+            openCamera()
+        } label: {
+            Image(systemName: "camera")
+                .font(.system(size: 15, weight: .medium))
+                .foregroundStyle(.secondary)
+                .frame(width: 30, height: 30)
+        }
+        .buttonStyle(.plain)
     }
 
     private var closeButton: some View {
@@ -202,6 +234,18 @@ struct UnifiedSearchBar: View {
     // MARK: - Dictation
 
     #if os(iOS)
+    private func openPhotoLibrary() {
+        showPhotoLibrary = true
+    }
+
+    private func openCamera() {
+        if UIImagePickerController.isSourceTypeAvailable(.camera) {
+            showCameraPicker = true
+        } else {
+            showCameraUnavailableAlert = true
+        }
+    }
+
     private func startDictation() {
         // Keep to native keyboard dictation flow.
         isFocused = true
@@ -233,6 +277,10 @@ struct UnifiedSearchBar: View {
             state.searchText += " \(token)"
         }
     }
+    #else
+    private func openPhotoLibrary() { }
+
+    private func openCamera() { }
     #endif
 }
 
