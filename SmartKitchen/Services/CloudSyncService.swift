@@ -275,40 +275,66 @@ final class CloudSyncService: @unchecked Sendable {
 
     // MARK: - Multi-store migration
 
-    /// One-time migration from the legacy single default.store to the new multi-store layout.
-    private static func performStoreSplitMigrationIfNeeded() {
-        guard !UserDefaults.standard.bool(forKey: storeSplitKey) else { return }
-        defer { UserDefaults.standard.set(true, forKey: storeSplitKey) }
+    /// Legacy single-store default location (as used before the multi-store split).
+    private static var legacyDefaultStoreURL: URL {
+        FileManager.default
+            .urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+            .appendingPathComponent("default.store")
+    }
 
-        // If new stores already exist, skip (fresh install or already migrated)
-        if FileManager.default.fileExists(atPath: privateStoreURL.path)
-            || FileManager.default.fileExists(atPath: sharedStoreURL.path) {
+    /// Self-healing migration from the legacy single `default.store` to the new multi-store
+    /// layout. Safe to re-run: if a previous run marked the flag but left the new stores empty,
+    /// this will detect the legacy store and re-migrate user data.
+    private static func performStoreSplitMigrationIfNeeded() {
+        let fm = FileManager.default
+        let legacyURL = legacyDefaultStoreURL
+
+        // Fast-path: nothing to migrate from.
+        guard fm.fileExists(atPath: legacyURL.path) else {
+            if !UserDefaults.standard.bool(forKey: storeSplitKey) {
+                UserDefaults.standard.set(true, forKey: storeSplitKey)
+            }
             return
         }
 
-        // Try to open the old single-store container at the default location
+        // Open the legacy single-store container at the default location.
         let oldConfig = ModelConfiguration(schema: appSchema, cloudKitDatabase: .none)
-        guard let oldContainer = try? ModelContainer(for: appSchema, configurations: oldConfig) else { return }
-
+        guard let oldContainer = try? ModelContainer(for: appSchema, configurations: oldConfig) else {
+            // Can't open legacy; don't flip the flag so we can try again later.
+            return
+        }
         let oldContext = ModelContext(oldContainer)
 
-        // Quick check if old store has data
-        var fdSettings = FetchDescriptor<AppSettings>()
-        fdSettings.fetchLimit = 1
-        let hasData = (try? !oldContext.fetch(fdSettings).isEmpty) ?? false
+        // Determine if legacy store carries anything worth migrating.
+        let legacyHasUserData = storeHasUserData(context: oldContext)
+        let legacyHasSettings: Bool = {
+            var fd = FetchDescriptor<AppSettings>()
+            fd.fetchLimit = 1
+            return (try? !oldContext.fetch(fd).isEmpty) ?? false
+        }()
 
-        var fdRecipe = FetchDescriptor<Recipe>()
-        fdRecipe.fetchLimit = 1
-        let hasRecipes = (try? !oldContext.fetch(fdRecipe).isEmpty) ?? false
+        guard legacyHasUserData || legacyHasSettings else {
+            // Legacy store exists but is empty — archive it and mark complete.
+            archiveLegacyStore(at: legacyURL)
+            UserDefaults.standard.set(true, forKey: storeSplitKey)
+            return
+        }
 
-        guard hasData || hasRecipes else { return }
-
-        // Create new multi-store container for migration (local only)
+        // Open (or create) the new multi-store container for migration (local only).
         guard let newContainer = try? makeContainer(usingCloudKit: false) else { return }
         let newContext = ModelContext(newContainer)
 
+        // If new stores already carry real user data (recipes, items), don't overwrite.
+        // Seeded-only defaults (categories / one blank AppSettings) do NOT count.
+        if storeHasUserData(context: newContext) {
+            NSLog("[CloudSync] New stores already contain user data; archiving legacy store without copying.")
+            archiveLegacyStore(at: legacyURL)
+            UserDefaults.standard.set(true, forKey: storeSplitKey)
+            return
+        }
+
         do {
-            // Copy all data — SwiftData routes each model to its correct store by schema
+            // Copy all data — SwiftData routes each model to its correct store by schema.
             for item in try oldContext.fetch(FetchDescriptor<Category>()) {
                 newContext.insert(copyCategory(item))
             }
@@ -337,10 +363,138 @@ final class CloudSyncService: @unchecked Sendable {
                 newContext.insert(copyAppSettings(settings))
             }
             try newContext.save()
+
+            // Deduplicate immediately so seeded defaults don't collide with migrated copies.
+            deduplicateAfterMigration(context: newContext)
+
+            // Archive the legacy store so the migration cannot fire again accidentally.
+            archiveLegacyStore(at: legacyURL)
+            UserDefaults.standard.set(true, forKey: storeSplitKey)
             NSLog("[CloudSync] Store split migration completed successfully")
         } catch {
+            // Do NOT mark the flag — allow the next launch to retry.
             NSLog("[CloudSync] Store split migration failed: %@", String(describing: error))
         }
+    }
+
+    /// Returns true when the store contains user-generated content that must not be overwritten.
+    /// Seeded default categories and an empty AppSettings instance do NOT count as user data.
+    private static func storeHasUserData(context: ModelContext) -> Bool {
+        func nonEmpty<T: PersistentModel>(_ type: T.Type) -> Bool {
+            var fd = FetchDescriptor<T>()
+            fd.fetchLimit = 1
+            return (try? !context.fetch(fd).isEmpty) ?? false
+        }
+        if nonEmpty(UnifiedItem.self) { return true }
+        if nonEmpty(Recipe.self) { return true }
+        if nonEmpty(PantryItem.self) { return true }
+        if nonEmpty(GroceryItem.self) { return true }
+        if nonEmpty(UtensilItem.self) { return true }
+        if nonEmpty(ChatMessage.self) { return true }
+        if nonEmpty(ChatConversation.self) { return true }
+        // An AppSettings row that has finished onboarding also qualifies as user data.
+        if let settings = try? context.fetch(FetchDescriptor<AppSettings>()),
+           settings.contains(where: { $0.hasCompletedOnboarding }) {
+            return true
+        }
+        return false
+    }
+
+    /// Move the legacy default.store files aside so the migration does not re-evaluate them.
+    private static func archiveLegacyStore(at legacyURL: URL) {
+        let fm = FileManager.default
+        let timestamp = Int(Date().timeIntervalSince1970)
+        let archiveDir = storeDirectory
+            .appendingPathComponent("Recovery", isDirectory: true)
+            .appendingPathComponent("legacy-default-\(timestamp)", isDirectory: true)
+
+        do {
+            try fm.createDirectory(at: archiveDir, withIntermediateDirectories: true)
+        } catch {
+            NSLog("[CloudSync] Could not create legacy archive dir: %@", String(describing: error))
+            return
+        }
+
+        let candidates = [
+            legacyURL,
+            URL(fileURLWithPath: legacyURL.path + "-wal"),
+            URL(fileURLWithPath: legacyURL.path + "-shm"),
+        ]
+
+        for url in candidates where fm.fileExists(atPath: url.path) {
+            let destination = archiveDir.appendingPathComponent(url.lastPathComponent)
+            do {
+                try fm.moveItem(at: url, to: destination)
+            } catch {
+                try? fm.removeItem(at: destination)
+                try? fm.moveItem(at: url, to: destination)
+            }
+        }
+    }
+
+    /// Dedup pass run immediately after a migration copy, using the migration's own context.
+    /// Mirrors the logic in `performDeduplication`, but against the freshly-populated new store
+    /// so seeded defaults don't persist as duplicates of migrated rows.
+    private static func deduplicateAfterMigration(context: ModelContext) {
+        func dedupByUUID<T: PersistentModel>(_ type: T.Type, keyPath: KeyPath<T, UUID>) {
+            guard let all = try? context.fetch(FetchDescriptor<T>()) else { return }
+            var seen = Set<UUID>()
+            for item in all {
+                let id = item[keyPath: keyPath]
+                if seen.contains(id) {
+                    context.delete(item)
+                } else {
+                    seen.insert(id)
+                }
+            }
+        }
+
+        dedupByUUID(UnifiedItem.self, keyPath: \.id)
+        dedupByUUID(PantryItem.self, keyPath: \.id)
+        dedupByUUID(GroceryItem.self, keyPath: \.id)
+        dedupByUUID(UtensilItem.self, keyPath: \.id)
+        dedupByUUID(Recipe.self, keyPath: \.id)
+        dedupByUUID(ChatMessage.self, keyPath: \.id)
+        dedupByUUID(ChatConversation.self, keyPath: \.id)
+
+        // Categories: dedup by UUID, then by (type, normalized name), keeping lowest sortOrder.
+        if let categories = try? context.fetch(FetchDescriptor<Category>()) {
+            var seenIDs = Set<UUID>()
+            var surviving = [Category]()
+            for cat in categories {
+                if seenIDs.contains(cat.id) {
+                    context.delete(cat)
+                } else {
+                    seenIDs.insert(cat.id)
+                    surviving.append(cat)
+                }
+            }
+            surviving.sort { $0.sortOrder < $1.sortOrder }
+            var seenKeys = Set<String>()
+            for cat in surviving {
+                let normalized = cat.name
+                    .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
+                    .lowercased()
+                let key = "\(cat.type.rawValue)|\(normalized)"
+                if seenKeys.contains(key) {
+                    context.delete(cat)
+                } else {
+                    seenKeys.insert(key)
+                }
+            }
+        }
+
+        // AppSettings: keep only one — prefer the one with completed onboarding.
+        if let all = try? context.fetch(FetchDescriptor<AppSettings>()), all.count > 1 {
+            let sorted = all.sorted {
+                ($0.hasCompletedOnboarding ? 1 : 0) > ($1.hasCompletedOnboarding ? 1 : 0)
+            }
+            for item in sorted.dropFirst() {
+                context.delete(item)
+            }
+        }
+
+        try? context.save()
     }
 
     // MARK: - Container factory
