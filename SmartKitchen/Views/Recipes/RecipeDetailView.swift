@@ -935,7 +935,7 @@ private struct IngredientReplacementSheet: View {
                     .listStyle(.plain)
                 }
             }
-            .navigationTitle("Trocar ingrediente")
+            .modalNavigationTitle("Trocar ingrediente")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             .searchable(
@@ -1024,7 +1024,7 @@ private struct IngredientQuantitySheet: View {
                     }
                 }
             }
-            .navigationTitle("Alterar quantidade")
+            .modalNavigationTitle("Alterar quantidade")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -1090,7 +1090,7 @@ private struct IngredientStateSheet: View {
                     .buttonStyle(.plain)
                 }
             }
-            .navigationTitle("Alterar estado")
+            .modalNavigationTitle("Alterar estado")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif

@@ -10,7 +10,7 @@ struct SettingsView: View {
 
     var body: some View {
         settingsForm
-            .navigationTitle("Configurações")
+            .modalNavigationTitle("Configurações")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif

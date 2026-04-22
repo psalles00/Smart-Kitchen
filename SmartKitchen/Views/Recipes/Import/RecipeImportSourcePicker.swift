@@ -103,7 +103,7 @@ struct RecipeImportSourcePicker: View {
                 .padding(.top, 6)
                 .padding(.bottom, 24)
             }
-            .navigationTitle("Adicionar receita")
+            .modalNavigationTitle("Adicionar receita")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {

@@ -74,7 +74,7 @@ struct BackupSettingsView: View {
             }
         }
         .macSettingsContainer()
-        .navigationTitle("Backup")
+        .modalNavigationTitle("Backup")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif

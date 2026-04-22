@@ -129,7 +129,7 @@ struct iCloudSettingsView: View {
             }
         }
         .macSettingsContainer()
-        .navigationTitle("iCloud")
+        .modalNavigationTitle("iCloud")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif

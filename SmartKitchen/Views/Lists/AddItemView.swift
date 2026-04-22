@@ -152,7 +152,7 @@ struct AddItemView: View {
         .padding(.bottom, 20)
         .frame(minWidth: 500, minHeight: 500)
         #endif
-        .navigationTitle("Novo Item")
+        .modalNavigationTitle("Novo Item")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif

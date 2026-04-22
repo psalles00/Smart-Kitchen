@@ -79,7 +79,7 @@ struct CategorySelectionView: View {
         #else
         .listStyle(.inset)
         #endif
-        .navigationTitle(title)
+        .modalNavigationTitle(title)
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif

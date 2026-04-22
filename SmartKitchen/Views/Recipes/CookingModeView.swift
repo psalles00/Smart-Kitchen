@@ -35,7 +35,7 @@ struct CookingModeView: View {
                     .padding(.horizontal, 24)
                     .padding(.bottom, 24)
             }
-            .navigationTitle(recipe.name)
+            .modalNavigationTitle(recipe.name)
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif

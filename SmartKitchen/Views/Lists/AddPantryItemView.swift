@@ -61,7 +61,7 @@ struct AddPantryItemView: View {
         .padding(.bottom, 20)
         .frame(minWidth: 500, minHeight: 600)
         #endif
-        .navigationTitle("Novo Item")
+        .modalNavigationTitle("Novo Item")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
@@ -378,7 +378,7 @@ struct EditPantryItemView: View {
         .padding(.bottom, 20)
         .frame(minWidth: 500, minHeight: 600)
         #endif
-        .navigationTitle("Editar Item")
+        .modalNavigationTitle("Editar Item")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif

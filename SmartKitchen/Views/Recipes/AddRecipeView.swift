@@ -78,7 +78,7 @@ struct AddRecipeView: View {
 
     private var editorScaffold: some View {
         recipeForm
-            .navigationTitle("Nova Receita")
+            .modalNavigationTitle("Nova Receita")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif

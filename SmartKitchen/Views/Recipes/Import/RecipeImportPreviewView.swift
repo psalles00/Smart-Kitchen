@@ -207,7 +207,7 @@ struct RecipeImportPreviewView: View {
             }
         }
         .formStyle(.grouped)
-        .navigationTitle("Revisar receita")
+        .modalNavigationTitle("Revisar receita")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
