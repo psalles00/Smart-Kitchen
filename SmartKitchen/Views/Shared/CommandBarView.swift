@@ -789,7 +789,10 @@ enum CommandBarHelpers {
     }
 
     static func compactActionButton(item: ActionItem, isHighlighted: Bool = false, targetHeight: CGFloat? = nil, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
+        let baseHeight: CGFloat = 80
+        let resolvedHeight = max(targetHeight ?? 0, baseHeight)
+
+        return Button(action: action) {
             HStack(alignment: .top, spacing: 4) {
                 Image(systemName: item.icon)
                     .font(.system(size: 13, weight: .bold))
@@ -804,11 +807,9 @@ enum CommandBarHelpers {
                     .layoutPriority(1)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-            .padding(.trailing, isHighlighted ? 72 : 62)
+            .padding(.trailing, isHighlighted ? 64 : 54)
             .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .frame(maxWidth: .infinity, minHeight: targetHeight, alignment: .leading)
+            .frame(maxWidth: .infinity, minHeight: resolvedHeight, alignment: .center)
             .background(isHighlighted ? item.tint.opacity(0.12) : item.tint.opacity(0.06), in: .rect(cornerRadius: 10))
             .overlay(alignment: .bottomTrailing) {
                 Image(item.imageName)

@@ -104,18 +104,6 @@ struct UnifiedSearchBar: View {
                         }
                     }
 
-                if hasTypedText {
-                    Button {
-                        state.searchText = ""
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 16))
-                            .foregroundStyle(.secondary)
-                    }
-                    .buttonStyle(.plain)
-                    .transition(.scale.combined(with: .opacity))
-                }
-
                 accessoryActions
             }
             .padding(.horizontal, 14)
@@ -158,13 +146,16 @@ struct UnifiedSearchBar: View {
                 openCamera()
             }
         } label: {
-            Image(systemName: "plus")
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(.secondary)
+            Image(systemName: "plus.circle.fill")
+                .font(.system(size: 16, weight: .medium))
+                .symbolRenderingMode(.monochrome)
+                .foregroundStyle(Color.secondary)
                 .frame(width: 30, height: 30)
                 .contentShape(Rectangle())
         }
-        .menuStyle(.button)
+        .tint(Color.secondary)
+        .buttonStyle(.plain)
+        .menuIndicator(.hidden)
     }
 
     @ViewBuilder
