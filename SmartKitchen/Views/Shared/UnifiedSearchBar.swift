@@ -11,6 +11,7 @@ import UIKit
 struct UnifiedSearchBar: View {
     @ObservedObject var state: SearchBarState
     let onSubmit: (String) -> Void
+    private let chromeHeight: CGFloat = 46
 
     @FocusState private var isFocused: Bool
 
@@ -34,97 +35,10 @@ struct UnifiedSearchBar: View {
     }
 
     var body: some View {
-        HStack(spacing: 10) {
-            Image(systemName: state.mode == .aiChat ? "paperplane.fill" : "sparkle.magnifyingglass")
-                .font(.system(size: 16, weight: .medium))
-                .foregroundStyle(.secondary)
-
-            TextField(state.mode == .aiChat ? "Converse com a IA…" : "Assistente", text: $state.searchText)
-                .foregroundStyle(.primary)
-                #if os(iOS)
-                .textInputAutocapitalization(.never)
-                #endif
-                .disableAutocorrection(true)
-                .focused($isFocused)
-                .submitLabel(isFocused && isEmpty && state.mode != .aiChat ? .done : (state.mode == .aiChat ? .send : .search))
-                .onSubmit {
-                    let trimmed = state.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-                    if trimmed.isEmpty {
-                        state.dismiss()
-                        return
-                    }
-                    if state.mode == .aiChat {
-                        state.pendingChatMessage = trimmed
-                        state.searchText = ""
-                    } else {
-                        state.submitTrigger += 1
-                    }
-                }
-
-            if !state.searchText.isEmpty {
-                Button {
-                    state.searchText = ""
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 16))
-                        .foregroundStyle(.secondary)
-                }
-                .buttonStyle(.plain)
-                .transition(.scale.combined(with: .opacity))
-            }
-
-            // Dictation button
-            #if os(iOS)
-            Button {
-                startDictation()
-            } label: {
-                Image(systemName: "mic.fill")
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(.secondary)
-                    .frame(width: 30, height: 30)
-            }
-            .buttonStyle(.plain)
-            #endif
-
-            // Gallery button
-            Button {
-                #if os(iOS)
-                showPhotoLibrary = true
-                #endif
-            } label: {
-                Image(systemName: "photo.on.rectangle")
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(.secondary)
-                    .frame(width: 30, height: 30)
-            }
-            .buttonStyle(.plain)
-
-            // Camera button
-            Button {
-                #if os(iOS)
-                if UIImagePickerController.isSourceTypeAvailable(.camera) {
-                    showCameraPicker = true
-                } else {
-                    showCameraUnavailableAlert = true
-                }
-                #endif
-            } label: {
-                Image(systemName: "camera")
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(.secondary)
-                    .frame(width: 30, height: 30)
-            }
-            .buttonStyle(.plain)
-        }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 8)
-        .background(searchBarBackground)
+        controlsRow
         .padding(.vertical, 4)
-        .contentShape(Rectangle())
-        .onTapGesture {
-            requestFocus()
-        }
         .padding(.horizontal, 20)
+        .animation(.snappy(duration: 0.18, extraBounce: 0), value: state.isVisible)
         .onChange(of: isFocused) { _, newValue in
             if newValue && !state.isVisible {
                 state.isVisible = true
@@ -155,6 +69,117 @@ struct UnifiedSearchBar: View {
             Text("Este dispositivo não permite capturar fotos no momento.")
         }
         #endif
+    }
+
+    private var controlsRow: some View {
+        HStack(spacing: 10) {
+            HStack(spacing: 10) {
+                Image(systemName: state.mode == .aiChat ? "paperplane.fill" : "sparkle.magnifyingglass")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundStyle(.secondary)
+
+                TextField(state.mode == .aiChat ? "Converse com a IA…" : "Assistente", text: $state.searchText)
+                    .foregroundStyle(.primary)
+                    #if os(iOS)
+                    .textInputAutocapitalization(.never)
+                    #endif
+                    .disableAutocorrection(true)
+                    .focused($isFocused)
+                    .submitLabel(isFocused && isEmpty && state.mode != .aiChat ? .done : (state.mode == .aiChat ? .send : .search))
+                    .onSubmit {
+                        let trimmed = state.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+                        if trimmed.isEmpty {
+                            state.dismiss()
+                            return
+                        }
+                        if state.mode == .aiChat {
+                            state.pendingChatMessage = trimmed
+                            state.searchText = ""
+                        } else {
+                            state.submitTrigger += 1
+                        }
+                    }
+
+                if !state.searchText.isEmpty {
+                    Button {
+                        state.searchText = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 16))
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .transition(.scale.combined(with: .opacity))
+                }
+
+                // Dictation button
+                #if os(iOS)
+                Button {
+                    startDictation()
+                } label: {
+                    Image(systemName: "mic.fill")
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 30, height: 30)
+                }
+                .buttonStyle(.plain)
+                #endif
+
+                // Gallery button
+                Button {
+                    #if os(iOS)
+                    showPhotoLibrary = true
+                    #endif
+                } label: {
+                    Image(systemName: "photo.on.rectangle")
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 30, height: 30)
+                }
+                .buttonStyle(.plain)
+
+                // Camera button
+                Button {
+                    #if os(iOS)
+                    if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                        showCameraPicker = true
+                    } else {
+                        showCameraUnavailableAlert = true
+                    }
+                    #endif
+                } label: {
+                    Image(systemName: "camera")
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 30, height: 30)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .frame(height: chromeHeight)
+            .background(searchBarBackground)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                requestFocus()
+            }
+
+            if state.isVisible {
+                closeButton
+            }
+        }
+    }
+
+    private var closeButton: some View {
+        Button("Fechar", systemImage: "xmark", role: .cancel) {
+            state.dismiss()
+        }
+        .labelStyle(.iconOnly)
+        .font(.system(size: 17, weight: .semibold))
+        .foregroundStyle(.secondary)
+        .frame(width: chromeHeight, height: chromeHeight)
+        .modifier(NativeGlassCloseButtonModifier())
+        .transition(.move(edge: .trailing).combined(with: .opacity))
     }
 
     // MARK: - Background
@@ -206,6 +231,19 @@ struct UnifiedSearchBar: View {
         }
     }
     #endif
+}
+
+private struct NativeGlassCloseButtonModifier: ViewModifier {
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if #available(iOS 26, macOS 26, *) {
+            content
+                .buttonStyle(.glass)
+        } else {
+            content
+                .background(.ultraThinMaterial, in: Circle())
+        }
+    }
 }
 
 // MARK: - First Responder Helper
