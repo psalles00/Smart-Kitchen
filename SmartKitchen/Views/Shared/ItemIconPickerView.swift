@@ -95,10 +95,7 @@ struct ItemIconPickerView: View {
             #if os(macOS)
             .frame(minWidth: 450, minHeight: 400)
             #endif
-            .navigationTitle(title)
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
+            .modalNavigationTitle(title)
             .searchable(text: $searchText, prompt: "Buscar item ou utensílio")
             .onChange(of: searchText) { _, newValue in
                 // Debounce: schedule update after 250ms

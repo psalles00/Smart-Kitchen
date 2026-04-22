@@ -13,6 +13,8 @@ let neutralSurfaceColor = Color(red: 248 / 255, green: 248 / 255, blue: 250 / 25
 extension Font {
     /// Bricolage Grotesque — page titles (H1)
     static let pageTitle: Font = .custom("Bricolage Grotesque", size: 34, relativeTo: .largeTitle).bold()
+    /// Bricolage Grotesque — sheet and modal navigation titles
+    static let modalTitle: Font = .custom("Bricolage Grotesque", size: 18, relativeTo: .headline)
     /// Bricolage Grotesque — section titles (H2)
     static let sectionTitle: Font = .custom("Bricolage Grotesque", size: 24, relativeTo: .title).bold()
     /// Bricolage Grotesque — card & inline titles (H3)
@@ -101,6 +103,31 @@ extension View {
     /// Applies a glass-like material background with rounded corners.
     func glassCard(cornerRadius: CGFloat = 16) -> some View {
         background(.ultraThinMaterial, in: .rect(cornerRadius: cornerRadius))
+    }
+
+    /// Applies the shared branded title style used in modal navigation bars.
+    func modalNavigationTitle(_ title: String) -> some View {
+        modifier(ModalNavigationTitleModifier(title: title))
+    }
+}
+
+private struct ModalNavigationTitleModifier: ViewModifier {
+    let title: String
+
+    func body(content: Content) -> some View {
+        content
+            .navigationTitle(title)
+#if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text(title)
+                        .font(.modalTitle)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                }
+            }
+#endif
     }
 }
 

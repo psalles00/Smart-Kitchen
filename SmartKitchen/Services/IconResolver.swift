@@ -216,6 +216,12 @@ enum IconResolver {
         "agua": "water.png",
         "cerveja": "beer.png",
         "vinho": "wine.png",
+        "bebida": "orange-juice.png",
+
+        // Refeições / Cadernos
+        "almoço": "sichuan-dry-pot.png",
+        "almoco": "sichuan-dry-pot.png",
+        "jantar": "kimchi-bokkeumbap.png",
 
         // Doces e sobremesas
         "chocolate": "chocolate.png",

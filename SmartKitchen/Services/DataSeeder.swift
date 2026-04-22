@@ -31,7 +31,7 @@ struct DataSeeder {
         CategorySeedDefinition(name: "Lanche", iconName: "sandwich.png"),
         CategorySeedDefinition(name: "Sobremesa", iconName: "cake.png"),
         CategorySeedDefinition(name: "Bebida", iconName: "smoothie.png"),
-        CategorySeedDefinition(name: "Outros", iconName: nil),
+        CategorySeedDefinition(name: "Outros", iconName: "recipe-card.png"),
     ]
 
     static let utensilCategoryDefinitions: [CategorySeedDefinition] = [

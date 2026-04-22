@@ -57,6 +57,7 @@ struct RecipesView: View {
     @State private var contentResetToken: Int = 0
     @State private var highlightedRecipeID: UUID?
     @State private var selectedRecipeID: UUID?
+    @State private var categoryBarCenterToken: Int = 0
 
     // Cached expensive computations
     @State private var cachedPantryNames: [String] = []
@@ -137,7 +138,17 @@ struct RecipesView: View {
 
         return recipeCategories.compactMap { category in
             let matchingRecipes = recipesForNotebook(named: category.name)
-            let summary = RecipeNotebookSummary(category: category, recipes: matchingRecipes)
+            
+            // Collect all compatibilities for the matching recipes
+            let matchedCompatibilities = matchingRecipes.compactMap { recipe in 
+                compatibilities[recipe.id] 
+            }
+
+            let summary = RecipeNotebookSummary(
+                category: category,
+                recipes: matchingRecipes,
+                compatibilities: matchedCompatibilities
+            )
 
             guard !searchText.isEmpty else { return summary }
 
@@ -161,6 +172,10 @@ struct RecipesView: View {
         #else
         Array(repeating: GridItem(.flexible(), spacing: 1), count: settings?.recipeGalleryColumns ?? 3)
         #endif
+    }
+
+    private var notebookColumns: [GridItem] {
+        [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
     }
 
     var body: some View {
@@ -292,15 +307,23 @@ struct RecipesView: View {
                     }
                 }
 
-                GlassButtonGroup {
-                    GlassGroupButton(systemImage: isShowingCadernos ? "book.closed" : "books.vertical") {
-                        toggleNotebookPage()
+                if isShowingCadernos {
+                    GlassButtonGroup {
+                        GlassGroupButton(systemImage: "slider.horizontal.3") {
+                            showNotebookManager = true
+                        }
                     }
                 }
 
                 if !isShowingCadernos {
                     GlassButtonGroup {
                         optionsMenu
+                    }
+                }
+
+                GlassButtonGroup {
+                    GlassGroupButton(systemImage: isShowingCadernos ? "book.closed" : "books.vertical") {
+                        toggleNotebookPage()
                     }
                 }
 
@@ -430,58 +453,74 @@ struct RecipesView: View {
     // MARK: - Category Filter
 
     private var categoryFilter: some View {
-        #if os(macOS)
-        HStack(spacing: 0) {
-            filterChip(label: "Todos", systemImage: "square.grid.2x2", isSelected: selectedCategory == nil) {
-                selectedCategory = nil
-            }
-            ForEach(recipeCategories) { cat in
-                filterChip(label: cat.name, systemImage: categorySymbol(for: cat.name), isSelected: selectedCategory == cat.name) {
-                    selectedCategory = cat.name
-                }
-            }
-        }
-        .padding(4)
-        .background(Color(red: 248 / 255, green: 248 / 255, blue: 250 / 255), in: .rect(cornerRadius: 12))
-        .padding(.horizontal, 16)
-        .padding(.top, 8)
-        .padding(.bottom, 8)
-        #else
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 0) {
-                filterChip(label: "Todos", systemImage: "square.grid.2x2", isSelected: selectedCategory == nil) {
-                    selectedCategory = nil
-                }
-                ForEach(recipeCategories) { cat in
-                    filterChip(label: cat.name, systemImage: categorySymbol(for: cat.name), isSelected: selectedCategory == cat.name) {
-                        selectedCategory = cat.name
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 0) {
+                    filterChip(
+                        label: "Todos",
+                        iconFileName: "recipe.png",
+                        fallbackSymbol: "square.grid.2x2",
+                        isSelected: selectedCategory == nil
+                    ) {
+                        selectedCategory = nil
+                        categoryBarCenterToken += 1
+                    }
+                    .id(categoryFilterChipID(for: nil))
+
+                    ForEach(recipeCategories) { category in
+                        filterChip(
+                            label: category.name,
+                            iconFileName: category.iconName,
+                            fallbackSymbol: recipeCategorySymbol(for: category.name),
+                            isSelected: selectedCategory == category.name
+                        ) {
+                            selectedCategory = category.name
+                            categoryBarCenterToken += 1
+                        }
+                        .id(categoryFilterChipID(for: category.name))
                     }
                 }
+                .padding(4)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding(4)
             .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color(red: 248 / 255, green: 248 / 255, blue: 250 / 255), in: .rect(cornerRadius: 12))
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .padding(.horizontal, 16)
+            .padding(.top, 8)
+            .padding(.bottom, 8)
+            .onAppear {
+                centerSelectedCategoryIfNeeded(using: proxy, animated: false)
+            }
+            .onChange(of: selectedCategory) { _, _ in
+                centerSelectedCategoryIfNeeded(using: proxy)
+            }
+            .onChange(of: categoryBarCenterToken) { _, _ in
+                centerSelectedCategoryIfNeeded(using: proxy)
+            }
+            .onChange(of: recipeCategoryNamesSignature) { _, _ in
+                centerSelectedCategoryIfNeeded(using: proxy, animated: false)
+            }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(red: 248 / 255, green: 248 / 255, blue: 250 / 255), in: .rect(cornerRadius: 12))
-        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .padding(.horizontal, 16)
-        .padding(.top, 8)
-        .padding(.bottom, 8)
-        #endif
     }
 
-    private func categorySymbol(for name: String) -> String {
-        recipeCategorySymbol(for: name)
-    }
-
-    private func filterChip(label: String, systemImage: String? = nil, isSelected: Bool, action: @escaping () -> Void) -> some View {
+    private func filterChip(
+        label: String,
+        iconFileName: String? = nil,
+        fallbackSymbol: String = "square.grid.2x2",
+        isSelected: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
         Button(action: action) {
-            HStack(spacing: 4) {
-                if let systemImage {
-                    Image(systemName: systemImage)
-                        .font(.system(size: 11))
-                        .symbolRenderingMode(.monochrome)
-                }
+            HStack(spacing: 6) {
+                IconImage(
+                    name: label,
+                    iconFileName: iconFileName,
+                    fallbackSymbol: fallbackSymbol,
+                    size: 18
+                )
+                .frame(width: 18, height: 18)
+
                 Text(label)
                     .font(.footnote.weight(.medium))
             }
@@ -494,6 +533,28 @@ struct RecipesView: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+    }
+
+    private func categoryFilterChipID(for categoryName: String?) -> String {
+        "recipe-filter-" + (categoryName.map { CategoryMutationService.normalizedKey(for: $0) } ?? "all")
+    }
+
+    private func centerSelectedCategoryIfNeeded(using proxy: ScrollViewProxy, animated: Bool = true) {
+        guard let selectedCategory,
+              recipeCategories.contains(where: { CategoryMutationService.matchesName($0.name, selectedCategory) }) else {
+            return
+        }
+
+        let targetID = categoryFilterChipID(for: selectedCategory)
+        DispatchQueue.main.async {
+            if animated {
+                withAnimation(.spring(response: 0.32, dampingFraction: 0.9)) {
+                    proxy.scrollTo(targetID, anchor: .center)
+                }
+            } else {
+                proxy.scrollTo(targetID, anchor: .center)
+            }
+        }
     }
 
     // MARK: - Gallery
@@ -766,66 +827,54 @@ struct RecipesView: View {
     private var cadernosContent: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 18) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Abra um caderno para voltar à lista principal já filtrada naquela categoria.")
-                        .font(.serifBody)
-                        .foregroundStyle(.secondary)
-
-                    Text("Os previews usam as receitas mais recentes de cada caderno.")
-                        .font(.footnote)
-                        .foregroundStyle(.tertiary)
-                }
-                .padding(.horizontal, 16)
-                .padding(.top, 8)
-
-                if notebookSummaries.isEmpty {
-                    if searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                        ContentUnavailableView {
-                            Label("Sem Cadernos", systemImage: "books.vertical")
-                        } description: {
-                            Text("Crie seu primeiro caderno para organizar receitas por tema, refeição ou ocasião.")
-                        }
-                        .padding(.top, 36)
-                    } else {
-                        ContentUnavailableView.search(text: searchBarState.searchText)
+                Group {
+                    if notebookSummaries.isEmpty {
+                        if searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                            ContentUnavailableView {
+                                Label("Sem Cadernos", systemImage: "books.vertical")
+                            } description: {
+                                Text("Crie seu primeiro caderno para organizar receitas por tema, refeição ou ocasião.")
+                            }
                             .padding(.top, 36)
-                    }
-                } else {
-                    ForEach(notebookSummaries) { summary in
-                        RecipeNotebookCard(summary: summary) {
-                            openNotebook(named: summary.category.name)
+                        } else {
+                            ContentUnavailableView.search(text: searchBarState.searchText)
+                                .padding(.top, 36)
                         }
+                    } else {
+                        LazyVGrid(columns: notebookColumns, spacing: 12) {
+                            ForEach(notebookSummaries) { summary in
+                                RecipeNotebookCard(summary: summary) {
+                                    openNotebook(named: summary.category.name)
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 16)
                     }
-                    .padding(.horizontal, 16)
                 }
+                .padding(.top, 8)
 
                 Button {
                     showNotebookManager = true
                 } label: {
                     HStack(spacing: 10) {
                         Image(systemName: "slider.horizontal.3")
-                            .font(.headline.weight(.semibold))
+                            .font(.footnote.weight(.semibold))
                         Text("Gerenciar cadernos")
-                            .font(.body.weight(.semibold))
+                            .font(.footnote.weight(.semibold))
                         Spacer()
                         Image(systemName: "chevron.right")
-                            .font(.caption.weight(.bold))
+                            .font(.caption2.weight(.bold))
                     }
-                    .foregroundStyle(.primary)
-                    .padding(.horizontal, 18)
-                    .padding(.vertical, 16)
+                    .foregroundStyle(Color.white.opacity(0.94))
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 13)
                     .background(
                         RoundedRectangle(cornerRadius: 20, style: .continuous)
-                            .fill(Color.white.opacity(0.82))
+                            .fill(Color(red: 44 / 255, green: 44 / 255, blue: 46 / 255))
                     )
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 20, style: .continuous)
-                            .strokeBorder(PageTheme.recipes.accentColor.opacity(0.14), lineWidth: 1)
-                    }
                 }
                 .buttonStyle(.plain)
                 .padding(.horizontal, 16)
-                .padding(.top, 6)
                 .padding(.bottom, 28)
             }
         }
@@ -941,6 +990,7 @@ struct RecipesView: View {
     private func openNotebook(named categoryName: String) {
         withAnimation(.spring(response: 0.32, dampingFraction: 0.9)) {
             selectedCategory = categoryName
+            categoryBarCenterToken += 1
             isShowingCadernos = false
             selectedRecipeID = nil
             contentResetToken += 1
@@ -961,188 +1011,202 @@ struct RecipesView: View {
 private struct RecipeNotebookSummary: Identifiable {
     let category: Category
     let recipes: [Recipe]
+    let compatibilities: [RecipeCompatibility]
 
     var id: UUID { category.id }
     var previewRecipes: [Recipe] { Array(recipes.prefix(3)) }
-    var countLabel: String { recipes.count == 1 ? "1 receita" : "\(recipes.count) receitas" }
-
-    var supportingText: String {
-        if let firstRecipe = recipes.first {
-            return firstRecipe.name
-        }
-
-        return "Sem receitas neste caderno ainda."
+    var recipeCountAbbreviation: String { "\(recipes.count) rec." }
+    var compatibilityAbbreviation: String {
+        let compatibleCount = compatibilities.filter { $0.matchedIngredients > 0 }.count
+        return "\(compatibleCount) comp."
     }
 }
 
+private let notebookSuggestedCardBackgroundColor = Color(red: 248 / 255, green: 248 / 255, blue: 250 / 255)
+
 private struct RecipeNotebookCard: View {
+    @Environment(\.modelContext) private var modelContext
+
+    @State private var showIconPicker = false
+
     let summary: RecipeNotebookSummary
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 16) {
-                RecipeNotebookPreviewFan(summary: summary)
-                    .frame(width: 126, height: 108)
+            VStack(alignment: .leading, spacing: 10) {
+                RecipeNotebookPreviewStrip(summary: summary)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 118)
 
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack(alignment: .firstTextBaseline, spacing: 10) {
-                        Image(systemName: recipeCategorySymbol(for: summary.category.name))
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(PageTheme.recipes.accentColor)
-                            .frame(width: 34, height: 34)
-                            .background(PageTheme.recipes.accentColor.opacity(0.12), in: .circle)
-
-                        Text(summary.category.name)
-                            .font(.cardTitle)
-                            .foregroundStyle(.primary)
-                            .lineLimit(2)
-
-                        Spacer(minLength: 8)
-
-                        Image(systemName: "chevron.right")
-                            .font(.caption.weight(.bold))
-                            .foregroundStyle(.tertiary)
-                    }
-
-                    HStack(spacing: 8) {
-                        Label(summary.countLabel, systemImage: "book.pages")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.secondary)
-
-                        if summary.recipes.contains(where: { $0.isFavorite }) {
-                            Label("Favoritos", systemImage: "heart.fill")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(.pink.opacity(0.88))
-                        }
-                    }
-
-                    Text(summary.supportingText)
-                        .font(.subheadline)
-                        .foregroundStyle(summary.recipes.isEmpty ? .secondary : .primary)
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(summary.category.name)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.primary)
                         .lineLimit(2)
 
-                    if !summary.recipes.isEmpty {
-                        Text("Toque para abrir em Receitas")
-                            .font(.caption)
-                            .foregroundStyle(.tertiary)
+                    HStack(spacing: 12) {
+                        Label {
+                            Text(summary.recipeCountAbbreviation)
+                        } icon: {
+                            Image(systemName: "book.closed")
+                                .font(.caption2)
+                        }
+
+                        Label {
+                            Text(summary.compatibilityAbbreviation)
+                        } icon: {
+                            Image(systemName: "slider.horizontal.3")
+                                .font(.caption2)
+                        }
                     }
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
                 }
-            }
-            .padding(16)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                Color.white.opacity(0.96),
-                                Color(red: 250 / 255, green: 244 / 255, blue: 235 / 255)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-            )
-            .overlay {
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .strokeBorder(PageTheme.recipes.accentColor.opacity(0.12), lineWidth: 1)
             }
         }
         .buttonStyle(.plain)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(notebookSuggestedCardBackgroundColor, in: .rect(cornerRadius: 18))
+        .overlay(alignment: .topLeading) {
+            Button {
+                showIconPicker = true
+            } label: {
+                HStack {
+                    IconImage(
+                        name: summary.category.name,
+                        iconFileName: summary.category.iconName,
+                        fallbackSymbol: recipeCategorySymbol(for: summary.category.name),
+                        size: 18
+                    )
+                }
+                .padding(.horizontal, 11)
+                .padding(.vertical, 6)
+                .background(Color.black.opacity(0.72), in: .capsule)
+            }
+            .buttonStyle(.plain)
+            .padding(22)
+        }
+        .sheet(isPresented: $showIconPicker) {
+            ItemIconPickerView(
+                title: "Ícone do caderno",
+                initialQuery: summary.category.name,
+                currentIconFileName: summary.category.iconName,
+                fallbackSymbol: recipeCategorySymbol(for: summary.category.name)
+            ) { entry in
+                summary.category.iconName = entry.nomeDoArquivo
+                try? modelContext.save()
+            }
+            .forceLightStatusBar()
+        }
     }
 }
 
-private struct RecipeNotebookPreviewFan: View {
+private struct RecipeNotebookPreviewStrip: View {
     let summary: RecipeNotebookSummary
 
-    private let offsets: [(x: CGFloat, y: CGFloat, angle: Double)] = [
-        (-20, 8, -11),
-        (0, -6, 0),
-        (22, 10, 11)
-    ]
+    var body: some View {
+        GeometryReader { geometry in
+            if summary.previewRecipes.isEmpty {
+                RecipeNotebookEmptyPreviewPlaceholder(category: summary.category)
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+            } else {
+                HStack(spacing: 1) {
+                    ForEach(Array(summary.previewRecipes.enumerated()), id: \.element.id) { index, recipe in
+                        RecipeNotebookPreviewTile(
+                            recipe: recipe,
+                            cornerRadii: previewCornerRadii(index: index, total: summary.previewRecipes.count)
+                        )
+                    }
+                }
+                .frame(width: geometry.size.width, height: geometry.size.height, alignment: .leading)
+            }
+        }
+        .clipped()
+    }
+
+    private func previewCornerRadii(index: Int, total: Int) -> RectangleCornerRadii {
+        let radius: CGFloat = 16
+
+        if total == 1 {
+            return .init(topLeading: radius, bottomLeading: radius, bottomTrailing: radius, topTrailing: radius)
+        }
+
+        let isFirst = index == 0
+        let isLast = index == total - 1
+
+        return .init(
+            topLeading: isFirst ? radius : 0,
+            bottomLeading: isFirst ? radius : 0,
+            bottomTrailing: isLast ? radius : 0,
+            topTrailing: isLast ? radius : 0
+        )
+    }
+}
+
+private struct RecipeNotebookEmptyPreviewPlaceholder: View {
+    let category: Category
 
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            PageTheme.recipes.accentColor.opacity(0.16),
-                            Color.white.opacity(0.9)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
+            LinearGradient(
+                colors: [
+                    Color(red: 244 / 255, green: 244 / 255, blue: 247 / 255),
+                    Color(red: 236 / 255, green: 236 / 255, blue: 240 / 255)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
 
-            if summary.previewRecipes.isEmpty {
-                VStack(spacing: 10) {
-                    Image(systemName: recipeCategorySymbol(for: summary.category.name))
-                        .font(.title2.weight(.semibold))
-                        .foregroundStyle(PageTheme.recipes.accentColor)
+            VStack(spacing: 10) {
+                Image(systemName: recipeCategorySymbol(for: category.name))
+                    .font(.system(size: 24, weight: .medium))
+                    .foregroundStyle(.secondary)
 
-                    Text("Novo caderno")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                }
-            } else {
-                ForEach(Array(summary.previewRecipes.enumerated()), id: \.element.id) { index, recipe in
-                    RecipeNotebookPreviewTile(recipe: recipe)
-                        .frame(width: 72, height: 92)
-                        .rotationEffect(.degrees(offsets[index].angle))
-                        .offset(x: offsets[index].x, y: offsets[index].y)
-                        .shadow(color: .black.opacity(0.08), radius: 10, y: 6)
-                }
-
-                if summary.recipes.count > 3 {
-                    Text("+\(summary.recipes.count - 3)")
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(PageTheme.recipes.accentColor, in: .capsule)
-                        .offset(x: 26, y: 34)
-                }
+                Text("Sem receitas ainda.")
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .padding(.horizontal, 16)
             }
         }
-        .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .clipShape(.rect(cornerRadius: 16))
     }
 }
 
 private struct RecipeNotebookPreviewTile: View {
     let recipe: Recipe
+    let cornerRadii: RectangleCornerRadii
 
     var body: some View {
-        ZStack(alignment: .bottomLeading) {
-            previewImage
-
-            LinearGradient(
-                colors: [.clear, .black.opacity(0.72)],
-                startPoint: .center,
-                endPoint: .bottom
-            )
-
-            Text(recipe.name)
-                .font(.caption2.weight(.semibold))
-                .foregroundStyle(.white)
-                .lineLimit(2)
-                .padding(8)
+        GeometryReader { geometry in
+            previewImage(in: geometry.size)
+                .background(Color(.secondarySystemBackground))
+                .clipShape(.rect(cornerRadii: cornerRadii))
+                .clipped()
         }
-        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     @ViewBuilder
-    private var previewImage: some View {
+    private func previewImage(in size: CGSize) -> some View {
         if let data = recipe.imageData, let image = PlatformImage(data: data) {
             Image(platformImage: image)
                 .resizable()
                 .scaledToFill()
+                .frame(width: size.width, height: size.height)
+                .clipped()
         } else {
             RecipeImagePlaceholderCompact(
                 ingredients: (recipe.ingredients ?? []).sorted { $0.sortOrder < $1.sortOrder },
-                darkenOverlay: true
+                darkenOverlay: false
             )
+            .frame(width: size.width, height: size.height)
+            .clipped()
         }
     }
 }
@@ -1154,6 +1218,7 @@ private struct RecipeNotebookManagerSheet: View {
     @Query(sort: \Recipe.updatedAt, order: .reverse) private var allRecipes: [Recipe]
 
     @State private var newNotebookName = ""
+    @State private var iconEditingNotebook: Category?
     @State private var renamingNotebook: Category?
     @State private var renameDraft = ""
     @State private var notebookPendingDeletion: Category?
@@ -1186,11 +1251,28 @@ private struct RecipeNotebookManagerSheet: View {
             Section("Cadernos") {
                 ForEach(recipeCategories) { category in
                     HStack(spacing: 12) {
-                        Image(systemName: recipeCategorySymbol(for: category.name))
-                            .font(.headline.weight(.semibold))
-                            .foregroundStyle(PageTheme.recipes.accentColor)
-                            .frame(width: 34, height: 34)
-                            .background(PageTheme.recipes.accentColor.opacity(0.12), in: .circle)
+                        Button {
+                            iconEditingNotebook = category
+                        } label: {
+                            ZStack(alignment: .bottomTrailing) {
+                                IconImage(
+                                    name: category.name,
+                                    iconFileName: category.iconName,
+                                    fallbackSymbol: recipeCategorySymbol(for: category.name),
+                                    size: 22
+                                )
+                                .frame(width: 34, height: 34)
+                                .background(PageTheme.recipes.accentColor.opacity(0.12), in: .circle)
+
+                                Image(systemName: "pencil.circle.fill")
+                                    .font(.caption.weight(.bold))
+                                    .foregroundStyle(PageTheme.recipes.accentColor)
+                                    .background(Color(.systemBackground), in: .circle)
+                                    .offset(x: 3, y: 3)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Alterar ícone de \(category.name)")
 
                         VStack(alignment: .leading, spacing: 3) {
                             Text(category.name)
@@ -1232,10 +1314,7 @@ private struct RecipeNotebookManagerSheet: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .navigationTitle("Gerenciar cadernos")
-        #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-        #endif
+        .modalNavigationTitle("Gerenciar cadernos")
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 EditButton()
@@ -1331,8 +1410,13 @@ private struct RecipeNotebookManagerSheet: View {
                                 deleteNotebook(strategy: .reassign(toCategoryNamed: category.name))
                             } label: {
                                 HStack(spacing: 12) {
-                                    Image(systemName: recipeCategorySymbol(for: category.name))
-                                        .foregroundStyle(PageTheme.recipes.accentColor)
+                                    IconImage(
+                                        name: category.name,
+                                        iconFileName: category.iconName,
+                                        fallbackSymbol: recipeCategorySymbol(for: category.name),
+                                        size: 18
+                                    )
+                                    .frame(width: 22, height: 22)
                                     Text(category.name)
                                     Spacer()
                                 }
@@ -1341,10 +1425,7 @@ private struct RecipeNotebookManagerSheet: View {
                         }
                     }
                 }
-                .navigationTitle("Mover receitas")
-                #if os(iOS)
-                .navigationBarTitleDisplayMode(.inline)
-                #endif
+                .modalNavigationTitle("Mover receitas")
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button("Cancelar") {
@@ -1352,6 +1433,18 @@ private struct RecipeNotebookManagerSheet: View {
                         }
                     }
                 }
+            }
+            .forceLightStatusBar()
+        }
+        .sheet(item: $iconEditingNotebook) { category in
+            ItemIconPickerView(
+                title: "Ícone do caderno",
+                initialQuery: category.name,
+                currentIconFileName: category.iconName,
+                fallbackSymbol: recipeCategorySymbol(for: category.name)
+            ) { entry in
+                category.iconName = entry.nomeDoArquivo
+                try? modelContext.save()
             }
             .forceLightStatusBar()
         }
@@ -1440,13 +1533,17 @@ private struct RecipeNotebookManagerSheet: View {
 }
 
 private func recipeCategorySymbol(for name: String) -> String {
-    switch name {
-    case "Café da manhã": return "sunrise"
-    case "Almoço": return "fork.knife"
+    let normalizedName = name
+        .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
+        .trimmingCharacters(in: .whitespacesAndNewlines)
+
+    switch normalizedName {
+    case "Cafe da manha": return "sunrise"
+    case "Almoco": return "fork.knife"
     case "Jantar": return "moon.stars"
     case "Lanche": return "takeoutbag.and.cup.and.straw"
-    case "Sobremesa": return "birthday.cake"
-    case "Bebida": return "cup.and.saucer"
+    case "Sobremesa", "Doces e Sobremesas": return "birthday.cake"
+    case "Bebida", "Bebidas": return "cup.and.saucer"
     default: return "square.grid.2x2"
     }
 }

@@ -692,6 +692,11 @@
 					};
 					9304226077C6C2B4667662DD = {
 						ProvisioningStyle = Automatic;
+						SystemCapabilities = {
+							com.apple.iCloud = {
+								enabled = 1;
+							};
+						};
 					};
 				};
 			};
