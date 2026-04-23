@@ -1,6 +1,9 @@
 import SwiftUI
 import SwiftData
 import AVKit
+#if os(iOS)
+import UIKit
+#endif
 #if os(macOS)
 import AppKit
 #endif
@@ -8,7 +11,6 @@ import AppKit
 struct RecipeDetailView: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.modelContext) private var modelContext
-    @Environment(\.openURL) private var openURL
     @Query(filter: #Predicate<UnifiedItem> { $0.isPantry }, sort: \UnifiedItem.name) private var pantryItems: [UnifiedItem]
     @Query(filter: #Predicate<UnifiedItem> { $0.isGrocery }, sort: \UnifiedItem.grocerySortOrder) private var groceryItems: [UnifiedItem]
     @Query(filter: #Predicate<UnifiedItem> { $0.isPantry }, sort: \UnifiedItem.pantrySortOrder) private var pantryListItems: [UnifiedItem]
@@ -80,6 +82,7 @@ struct RecipeDetailView: View {
     }
 
     private var contentTopPadding: CGFloat { 34 }
+    private var contentBottomPadding: CGFloat { 132 }
 
     private var heroTitleFontSize: CGFloat {
         let characterCount = recipe.name.trimmingCharacters(in: .whitespacesAndNewlines).count
@@ -181,10 +184,19 @@ struct RecipeDetailView: View {
                 } label: {
                     Image(systemName: "ellipsis")
                         .font(.body.weight(.semibold))
+                        .foregroundStyle(.white)
                 }
                 .buttonStyle(.plain)
-                .tint(.white)
                 .accessibilityLabel("Mais opções")
+                .popover(
+                    isPresented: $showMoreActions,
+                    attachmentAnchor: .rect(.bounds),
+                    arrowEdge: .bottom
+                ) {
+                    moreActionsPopover
+                        .presentationCompactAdaptation(.popover)
+                        .presentationBackground(.clear)
+                }
             }
         }
         #endif
@@ -257,28 +269,71 @@ struct RecipeDetailView: View {
             )
             .forceLightStatusBar()
         }
-        .confirmationDialog(
-            Text("Mais opções"),
-            isPresented: $showMoreActions,
-            titleVisibility: .hidden
-        ) {
-            Button("Editar", systemImage: "pencil") {
+    }
+
+    #if os(iOS)
+    private var moreActionsPopover: some View {
+        VStack(spacing: 10) {
+            moreActionsPopoverButton(title: "Editar", systemImage: "pencil") {
                 showEditRecipe = true
             }
-            Button(
-                recipe.isFavorite ? "Desfavoritar" : "Favoritar",
+
+            moreActionsPopoverButton(
+                title: recipe.isFavorite ? "Desfavoritar" : "Favoritar",
                 systemImage: recipe.isFavorite ? "heart.slash" : "heart"
             ) {
                 recipe.isFavorite.toggle()
             }
+
             if let externalURL {
-                Button("Abrir no navegador", systemImage: "globe") {
-                    openURL(externalURL)
+                moreActionsPopoverButton(title: "Abrir no navegador", systemImage: "globe") {
+                    openExternalURL(externalURL)
                 }
             }
-            Button("Cancelar", role: .cancel) { }
+        }
+        .padding(12)
+        .frame(width: 248)
+        .background {
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .fill(.ultraThinMaterial)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 28, style: .continuous)
+                        .strokeBorder(Color.white.opacity(colorScheme == .dark ? 0.16 : 0.55), lineWidth: 1)
+                }
         }
     }
+
+    private func moreActionsPopoverButton(
+        title: String,
+        systemImage: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button {
+            showMoreActions = false
+            action()
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: systemImage)
+                    .font(.subheadline.weight(.semibold))
+                    .frame(width: 18)
+
+                Text(title)
+                    .font(.subheadline.weight(.semibold))
+
+                Spacer(minLength: 0)
+            }
+            .foregroundStyle(colorScheme == .dark ? .white : .primary)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 15)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background {
+                Capsule(style: .continuous)
+                    .fill(Color.primary.opacity(colorScheme == .dark ? 0.12 : 0.08))
+            }
+        }
+        .buttonStyle(.plain)
+    }
+    #endif
 
     // MARK: - Hero Image
 
@@ -383,6 +438,14 @@ struct RecipeDetailView: View {
         .clipped()
     }
 
+    private func openExternalURL(_ url: URL) {
+        #if os(macOS)
+        NSWorkspace.shared.open(url)
+        #else
+        UIApplication.shared.open(url)
+        #endif
+    }
+
     private var heroMetadataRow: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 14) {
@@ -431,7 +494,7 @@ struct RecipeDetailView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 20)
         .padding(.top, contentTopPadding)
-        .padding(.bottom, 40)
+        .padding(.bottom, contentBottomPadding)
         .background {
             UnevenRoundedRectangle(
                 cornerRadii: .init(topLeading: 30, bottomLeading: 0, bottomTrailing: 0, topTrailing: 30),
@@ -443,7 +506,7 @@ struct RecipeDetailView: View {
         .overlay(alignment: .topTrailing) {
             if let externalURL {
                 Button {
-                    openURL(externalURL)
+                    openExternalURL(externalURL)
                 } label: {
                     Image(systemName: "globe")
                         .font(.system(size: 30, weight: .semibold))
