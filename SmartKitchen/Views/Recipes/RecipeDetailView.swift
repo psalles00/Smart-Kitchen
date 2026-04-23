@@ -1943,20 +1943,6 @@ private struct FullscreenRecipeVideoView: View {
     }
 
     private func configurePlayerIfNeeded() {
-            .onChange(of: isActive) { _, _ in
-                updatePlaybackState()
-            }
-            .onDisappear {
-                player.pause()
-                player.seek(to: .zero)
-                player.replaceCurrentItem(with: nil)
-                #if os(iOS)
-                try? AVAudioSession.sharedInstance().setActive(false, options: [.notifyOthersOnDeactivation])
-                #endif
-            }
-    }
-
-    private func configurePlayerIfNeeded() {
         if (player.currentItem?.asset as? AVURLAsset)?.url != url {
             player.replaceCurrentItem(with: AVPlayerItem(url: url))
             player.actionAtItemEnd = .pause
