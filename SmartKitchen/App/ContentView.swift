@@ -364,7 +364,9 @@ struct ContentView: View {
                     Label("Nutrientes", systemImage: AppTab.nutrients.icon)
                 }
             }
+            #if os(iOS)
             .toolbar(searchBarState.isVisible ? .hidden : .automatic, for: .tabBar)
+            #endif
             .animation(.snappy(duration: 0.22, extraBounce: 0.02), value: searchBarState.isVisible)
             .onChange(of: searchBarState.debouncedSearchText) { _, newValue in
                 guard searchBarState.mode != .aiChat else { return }

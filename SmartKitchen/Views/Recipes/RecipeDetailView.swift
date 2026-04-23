@@ -1775,7 +1775,9 @@ private struct PreparationMediaPreviewView: View {
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
                 }
+                #if os(iOS)
                 .tabViewStyle(.page(indexDisplayMode: .never))
+                #endif
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .offset(y: max(dragOffset, 0))
                 .scaleEffect(1 - (dismissProgress * 0.08))
