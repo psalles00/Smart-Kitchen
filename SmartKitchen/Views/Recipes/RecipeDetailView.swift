@@ -28,7 +28,7 @@ struct RecipeDetailView: View {
     @State private var showMoreActions = false
 
     private let heroHeight: CGFloat = 580
-    private let contentOverlap: CGFloat = 34
+    private let baseContentOverlap: CGFloat = 34
     private let floatingHeroActionSize: CGFloat = 62
 
     private var sortedIngredients: [RecipeIngredient] {
@@ -68,6 +68,41 @@ struct RecipeDetailView: View {
         (recipe.preparationMedia ?? []).sorted { $0.sortOrder < $1.sortOrder }
     }
 
+    private var hasPreparationMedia: Bool {
+        !sortedPreparationMedia.isEmpty
+    }
+
+    private var containsVideoMedia: Bool {
+        sortedPreparationMedia.contains { $0.mediaType == .video }
+    }
+
+    private var mediaHeroActionIcon: String {
+        containsVideoMedia ? "video" : "photo.stack"
+    }
+
+    private var mediaHeroActionAccessibilityLabel: String {
+        containsVideoMedia ? "Abrir vídeos da receita" : "Abrir mídias da receita"
+    }
+
+    private var heroActionCount: Int {
+        var count = 1 // favorite
+        if externalURL != nil { count += 1 }
+        if hasPreparationMedia { count += 1 }
+        return count
+    }
+
+    private var heroActionVerticalInset: CGFloat {
+        heroActionCount >= 3 ? 8 : 0
+    }
+
+    private var contentOverlap: CGFloat {
+        baseContentOverlap - (heroActionCount >= 3 ? 6 : 0)
+    }
+
+    private var preferredPreviewMedia: RecipePreparationMedia? {
+        sortedPreparationMedia.first(where: { $0.mediaType == .video }) ?? sortedPreparationMedia.first
+    }
+
     private var preparationMediaCountLabel: String {
         let count = sortedPreparationMedia.count
         return count == 1 ? "1 mídia" : "\(count) mídias"
@@ -87,7 +122,7 @@ struct RecipeDetailView: View {
             : Color(red: 248 / 255, green: 248 / 255, blue: 250 / 255)
     }
 
-    private var contentTopPadding: CGFloat { 34 }
+    private var contentTopPadding: CGFloat { 34 + heroActionVerticalInset }
     private var contentBottomPadding: CGFloat { 132 }
 
     private var heroTitleFontSize: CGFloat {
@@ -491,10 +526,6 @@ struct RecipeDetailView: View {
 
     private var content: some View {
         VStack(alignment: .leading, spacing: 36) {
-            if !sortedPreparationMedia.isEmpty {
-                preparationMediaSection
-            }
-
             // Ingredients
             if !sortedIngredients.isEmpty {
                 ingredientsSection
@@ -508,6 +539,10 @@ struct RecipeDetailView: View {
             // Steps
             if !sortedSteps.isEmpty {
                 stepsSection
+            }
+
+            if hasPreparationMedia {
+                preparationMediaSection
             }
 
         }
@@ -525,6 +560,30 @@ struct RecipeDetailView: View {
         }
         .overlay(alignment: .topTrailing) {
             HStack(spacing: 10) {
+                if hasPreparationMedia, let previewMedia = preferredPreviewMedia {
+                    Button {
+                        previewSelection = PreparationMediaSelection(id: previewMedia.id)
+                    } label: {
+                        Image(systemName: mediaHeroActionIcon)
+                            .font(.system(size: 24, weight: .semibold))
+                            .foregroundStyle(.primary)
+                            .frame(width: floatingHeroActionSize, height: floatingHeroActionSize)
+                    }
+                    .buttonStyle(.plain)
+                    .background {
+                        if #available(iOS 26, macOS 26, *) {
+                            Circle()
+                                .fill(.clear)
+                                .glassEffect(.regular.interactive(), in: Circle())
+                        } else {
+                            Circle()
+                                .fill(Color.clear)
+                                .background(.ultraThinMaterial, in: Circle())
+                        }
+                    }
+                    .accessibilityLabel(mediaHeroActionAccessibilityLabel)
+                }
+
                 if let externalURL {
                     Button {
                         openExternalURL(externalURL)
