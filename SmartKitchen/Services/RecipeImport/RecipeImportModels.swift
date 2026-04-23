@@ -202,6 +202,149 @@ enum RecipeImportStage: Equatable {
     }
 }
 
+enum RecipeImportImprovementStage: CaseIterable, Equatable, Hashable {
+    case locatingVideo
+    case downloadingVideo
+    case extractingAudio
+    case transcribingAudio
+    case restructuringDraft
+    case finalizing
+
+    var title: String {
+        switch self {
+        case .locatingVideo:     return "Localizando o vídeo"
+        case .downloadingVideo:  return "Baixando o vídeo"
+        case .extractingAudio:   return "Extraindo o áudio"
+        case .transcribingAudio: return "Transcrevendo o vídeo"
+        case .restructuringDraft: return "Reorganizando a receita"
+        case .finalizing:        return "Finalizando o refino"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .locatingVideo:     return "link"
+        case .downloadingVideo:  return "arrow.down.circle"
+        case .extractingAudio:   return "waveform"
+        case .transcribingAudio: return "text.quote"
+        case .restructuringDraft: return "list.bullet.rectangle"
+        case .finalizing:        return "checkmark.circle"
+        }
+    }
+
+    /// Progress reflects completed stages only. The active stage is shown
+    /// separately in the UI, and completion is set to 1.0 by the caller.
+    var progress: Double {
+        let stages = Self.allCases
+        guard let index = stages.firstIndex(of: self), !stages.isEmpty else { return 0 }
+        return Double(index) / Double(stages.count)
+    }
+}
+
+struct RecipeDraftMediaSaveSummary: Equatable {
+    let totalCount: Int
+    let photoCount: Int
+    let videoCount: Int
+    let includesSourceOriginalMedia: Bool
+    let usesCoverFallback: Bool
+
+    var title: String {
+        if totalCount == 0 {
+            return "Nenhuma mídia adicional será salva"
+        }
+        if usesCoverFallback && videoCount == 0 && photoCount == 1 {
+            return "A capa será salva com a receita"
+        }
+        return "A revisão vai salvar mídia"
+    }
+
+    var detail: String {
+        if totalCount == 0 {
+            return "Este rascunho não tem fotos ou vídeos extras para persistir."
+        }
+
+        var sentences: [String] = []
+        if !breakdown.isEmpty {
+            sentences.append("Serão salvos \(breakdown).")
+        }
+        if includesSourceOriginalMedia {
+            sentences.append("Inclui mídia original da importação.")
+        } else if usesCoverFallback {
+            sentences.append("A capa será preservada como mídia de apoio.")
+        }
+        return sentences.joined(separator: " ")
+    }
+
+    var systemImage: String {
+        if totalCount == 0 {
+            return "photo"
+        }
+        if videoCount > 0 {
+            return "play.rectangle.fill"
+        }
+        if photoCount > 1 {
+            return "photo.on.rectangle.angled"
+        }
+        return "photo.fill"
+    }
+
+    private var breakdown: String {
+        var parts: [String] = []
+        if videoCount > 0 {
+            parts.append(countLabel(videoCount, singular: "vídeo", plural: "vídeos"))
+        }
+        if photoCount > 0 {
+            parts.append(countLabel(photoCount, singular: "foto", plural: "fotos"))
+        }
+        return parts.joined(separator: ", ")
+    }
+
+    private func countLabel(_ count: Int, singular: String, plural: String) -> String {
+        count == 1 ? "1 \(singular)" : "\(count) \(plural)"
+    }
+}
+
+extension RecipeDraft {
+    var preparationMediaPreparedForSave: [ImportDraftPreparationMedia] {
+        var mediaToPersist = preparationMedia.filter { !$0.data.isEmpty }
+        let hasVideoMedia = mediaToPersist.contains { $0.type == .video }
+
+        if hasVideoMedia, let cover = imageData, !cover.isEmpty {
+            mediaToPersist.removeAll {
+                $0.sourceOriginal && $0.type == .photo && $0.data == cover
+            }
+        }
+
+        if mediaToPersist.isEmpty, let imageData, !imageData.isEmpty {
+            return [
+                ImportDraftPreparationMedia(
+                    type: .photo,
+                    data: imageData,
+                    fileExtension: "jpg",
+                    sourceOriginal: true
+                )
+            ]
+        }
+
+        return mediaToPersist
+    }
+
+    var mediaSaveSummary: RecipeDraftMediaSaveSummary {
+        let preparedMedia = preparationMediaPreparedForSave
+        let originalMediaCount = preparationMedia.filter { !$0.data.isEmpty }.count
+        let photoCount = preparedMedia.filter { $0.type == .photo }.count
+        let videoCount = preparedMedia.filter { $0.type == .video }.count
+
+        return RecipeDraftMediaSaveSummary(
+            totalCount: preparedMedia.count,
+            photoCount: photoCount,
+            videoCount: videoCount,
+            includesSourceOriginalMedia: preparedMedia.contains { $0.sourceOriginal },
+            usesCoverFallback: originalMediaCount == 0 && imageData != nil && preparedMedia.count == 1 && photoCount == 1
+        )
+    }
+}
+
 // MARK: - Errors
 
 enum RecipeImportError: LocalizedError {

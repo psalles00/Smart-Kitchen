@@ -24,7 +24,7 @@ struct RecipeImportPreviewView: View {
     @State private var improveImportUsed = false
     @State private var improveImportMessage: String?
     @State private var improveImportProgress: Double = 0
-    @State private var improveProgressTask: Task<Void, Never>?
+    @State private var improveImportStage: RecipeImportImprovementStage?
 
     init(
         draft: RecipeDraft,
@@ -47,6 +47,14 @@ struct RecipeImportPreviewView: View {
 
     private var isValid: Bool {
         !draft.name.trimmingCharacters(in: .whitespaces).isEmpty
+    }
+
+    private var improveStages: [RecipeImportImprovementStage] {
+        RecipeImportImprovementStage.allCases
+    }
+
+    private var mediaSaveSummary: RecipeDraftMediaSaveSummary {
+        draft.mediaSaveSummary
     }
 
     var body: some View {
@@ -193,15 +201,22 @@ struct RecipeImportPreviewView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .font(.body.weight(.semibold))
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(.orange)
+                .buttonStyle(.bordered)
+                .buttonBorderShape(.roundedRectangle(radius: 14))
+                .controlSize(.large)
+                .tint(PageTheme.recipes.accentColor)
+                .shadow(color: PageTheme.recipes.accentColor.opacity(0.10), radius: 8, y: 2)
                 .disabled(isImprovingImport || improveImportUsed)
 
+                Text("Transcreve o vídeo e reorganiza ingredientes e etapas antes de salvar.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
                 if isImprovingImport {
-                    ProgressView(value: improveImportProgress, total: 1)
-                        .progressViewStyle(.linear)
-                        .tint(.orange)
+                    improveImportProgressView
                 }
+
+                mediaSaveStatusCard
 
                 if let improveImportMessage {
                     Text(improveImportMessage)
@@ -430,6 +445,73 @@ struct RecipeImportPreviewView: View {
         }
     }
 
+    private var improveImportProgressView: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                Image(systemName: improveImportStage?.systemImage ?? "sparkles")
+                    .foregroundStyle(PageTheme.recipes.accentColor)
+                Text(improveImportStage?.title ?? "Preparando refino")
+                    .font(.subheadline.weight(.semibold))
+            }
+
+            ProgressView(value: improveImportProgress, total: 1)
+                .progressViewStyle(.linear)
+                .tint(PageTheme.recipes.accentColor)
+
+            VStack(alignment: .leading, spacing: 6) {
+                ForEach(improveStages, id: \.self) { stage in
+                    HStack(spacing: 8) {
+                        Image(systemName: improvementStageIcon(for: stage))
+                            .foregroundStyle(improvementStageColor(for: stage))
+                            .font(.caption.weight(.semibold))
+                        Text(stage.title)
+                            .font(.caption.weight(improvementStageCurrent(stage) ? .semibold : .regular))
+                            .foregroundStyle(improvementStageCompleted(stage) || improvementStageCurrent(stage) ? .primary : .secondary)
+                    }
+                }
+            }
+        }
+        .padding(.top, 4)
+    }
+
+    private var mediaSaveStatusCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 10) {
+                Image(systemName: mediaSaveSummary.systemImage)
+                    .font(.callout.weight(.semibold))
+                    .foregroundStyle(mediaSaveSummary.totalCount > 0 ? PageTheme.recipes.accentColor : .secondary)
+                    .frame(width: 30, height: 30)
+                    .background(
+                        (mediaSaveSummary.totalCount > 0 ? PageTheme.recipes.accentColor.opacity(0.12) : Color.secondary.opacity(0.12)),
+                        in: Circle()
+                    )
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(mediaSaveSummary.title)
+                        .font(.subheadline.weight(.semibold))
+                    Text(mediaSaveSummary.detail)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            let badges = mediaSaveBadges(for: mediaSaveSummary)
+            if !badges.isEmpty {
+                HStack(spacing: 8) {
+                    ForEach(badges, id: \.self) { badge in
+                        Text(badge)
+                            .font(.caption.weight(.medium))
+                            .foregroundStyle(PageTheme.recipes.accentColor)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(PageTheme.recipes.accentColor.opacity(0.12), in: .capsule)
+                    }
+                }
+            }
+        }
+        .padding(.vertical, 4)
+    }
+
     // MARK: - Actions
 
     private func renumberSteps() {
@@ -469,27 +551,21 @@ struct RecipeImportPreviewView: View {
     private func improveImport() {
         isImprovingImport = true
         improveImportMessage = nil
-        improveImportProgress = 0.08
-        improveProgressTask?.cancel()
-        improveProgressTask = Task {
-            while !Task.isCancelled {
-                await MainActor.run {
-                    improveImportProgress = min(improveImportProgress + 0.03, 0.9)
-                }
-                try? await Task.sleep(for: .milliseconds(120))
-            }
-        }
+        improveImportStage = .locatingVideo
+        improveImportProgress = RecipeImportImprovementStage.locatingVideo.progress
 
         Task { @MainActor in
             defer {
                 isImprovingImport = false
-                improveProgressTask?.cancel()
-                improveProgressTask = nil
             }
 
             do {
                 let improver = RecipeImportImprover()
-                let improved = try await improver.improve(draft: draft)
+                let improved = try await improver.improve(draft: draft) { stage in
+                    improveImportStage = stage
+                    improveImportProgress = stage.progress
+                }
+                improveImportStage = .finalizing
                 improveImportProgress = 1
                 draft = improved
                 ingredientEditorItems = .fromDrafts(
@@ -505,6 +581,54 @@ struct RecipeImportPreviewView: View {
                 RecipeImportLogger.error("preview improve import failed error=\(error.localizedDescription)")
             }
         }
+    }
+
+    private func improvementStageCompleted(_ stage: RecipeImportImprovementStage) -> Bool {
+        guard let currentStage = improveImportStage else { return false }
+        return improvementStageIndex(stage) < improvementStageIndex(currentStage)
+    }
+
+    private func improvementStageCurrent(_ stage: RecipeImportImprovementStage) -> Bool {
+        improveImportStage == stage
+    }
+
+    private func improvementStageIndex(_ stage: RecipeImportImprovementStage) -> Int {
+        improveStages.firstIndex(of: stage) ?? 0
+    }
+
+    private func improvementStageIcon(for stage: RecipeImportImprovementStage) -> String {
+        if improvementStageCompleted(stage) {
+            return "checkmark.circle.fill"
+        }
+        if improvementStageCurrent(stage) {
+            return stage.systemImage
+        }
+        return "circle"
+    }
+
+    private func improvementStageColor(for stage: RecipeImportImprovementStage) -> Color {
+        if improvementStageCompleted(stage) || improvementStageCurrent(stage) {
+            return PageTheme.recipes.accentColor
+        }
+        return .secondary
+    }
+
+    private func mediaSaveBadges(for summary: RecipeDraftMediaSaveSummary) -> [String] {
+        var badges: [String] = []
+
+        if summary.videoCount > 0 {
+            badges.append(summary.videoCount == 1 ? "1 vídeo" : "\(summary.videoCount) vídeos")
+        }
+        if summary.photoCount > 0 {
+            badges.append(summary.photoCount == 1 ? "1 foto" : "\(summary.photoCount) fotos")
+        }
+        if summary.includesSourceOriginalMedia {
+            badges.append("Origem preservada")
+        } else if summary.usesCoverFallback {
+            badges.append("Capa preservada")
+        }
+
+        return badges
     }
 
     private func loadNewPhoto() {

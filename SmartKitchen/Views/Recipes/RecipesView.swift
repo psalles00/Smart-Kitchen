@@ -33,6 +33,7 @@ enum RecipeSortOption: String, CaseIterable {
 struct RecipesView: View {
     @Environment(\.scrollToTopTrigger) private var scrollToTopTrigger
     @Environment(\.scrollToItem) private var scrollToItem
+    @Environment(\.openRecipeInRecipesTab) private var openRecipeInRecipesTab
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Recipe.createdAt, order: .reverse) private var allRecipes: [Recipe]
     @Query(filter: #Predicate<UnifiedItem> { $0.isPantry }, sort: \UnifiedItem.name) private var pantryItems: [UnifiedItem]
@@ -47,7 +48,6 @@ struct RecipesView: View {
     @State private var showImportRecipe = false
     @State private var importInitialSource: RecipeImportSource? = nil
     @State private var pendingImportedRecipeID: UUID? = nil
-    @State private var showImportedRecipeDetail = false
     @State private var showsInlineTitle = false
     @State private var editingRecipe: Recipe?
     @State private var showCompatibleOnly = false
@@ -236,30 +236,18 @@ struct RecipesView: View {
             }
             .modelContainer(CloudSyncService.shared.container)
             .forceLightStatusBar()
-            .onDisappear {
-                importInitialSource = nil
-                if pendingImportedRecipeID != nil {
-                    showImportedRecipeDetail = true
-                }
-            }
         }
-        .sheet(isPresented: $showImportedRecipeDetail, onDismiss: {
-            pendingImportedRecipeID = nil
-        }) {
-            if let recipeID = pendingImportedRecipeID,
-               let recipe = allRecipes.first(where: { $0.id == recipeID }) {
-                NavigationStack {
-                    RecipeDetailView(recipe: recipe)
+        .onChange(of: showImportRecipe) { _, isPresented in
+            guard !isPresented, let recipeID = pendingImportedRecipeID else {
+                if !isPresented {
+                    importInitialSource = nil
                 }
-                .forceLightStatusBar()
-            } else {
-                ContentUnavailableView(
-                    "Receita salva",
-                    systemImage: "checkmark.circle.fill",
-                    description: Text("A receita foi criada, mas ainda não ficou disponível para visualização.")
-                )
-                .presentationBackground(.white)
+                return
             }
+
+            importInitialSource = nil
+            pendingImportedRecipeID = nil
+            openRecipeInRecipesTab(recipeID)
         }
         .sheet(item: $editingRecipe) { recipe in
             NavigationStack {

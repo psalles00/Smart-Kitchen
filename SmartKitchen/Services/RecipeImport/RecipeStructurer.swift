@@ -391,9 +391,23 @@ final class RecipeImportImprover {
     }
 
     func improve(draft: RecipeDraft) async throws -> RecipeDraft {
+        try await improve(draft: draft, onStage: { _ in })
+    }
+
+    func improve(
+        draft: RecipeDraft,
+        onStage: @escaping @MainActor (RecipeImportImprovementStage) -> Void
+    ) async throws -> RecipeDraft {
         guard !apiKey.isEmpty else {
             throw RecipeImportError.aiFailed("Chave da OpenAI não configurada para melhorar a importação.")
         }
+
+        func reportStage(_ stage: RecipeImportImprovementStage) {
+            onStage(stage)
+            RecipeImportLogger.debug("improver stage=\(stage.title)")
+        }
+
+        reportStage(.locatingVideo)
 
         let sourceURL = URL(string: draft.externalURLString)
         var videoURL: URL? = draft.videoURL ?? directVideoURL(from: draft.externalURLString)
@@ -407,6 +421,7 @@ final class RecipeImportImprover {
 
         RecipeImportLogger.info("improver start videoURL=\(resolvedVideoURL.absoluteString)")
 
+    reportStage(.downloadingVideo)
         let videoFileURL = try await downloadVideo(from: resolvedVideoURL, referer: sourceURL)
         defer { try? FileManager.default.removeItem(at: videoFileURL) }
 
@@ -434,12 +449,15 @@ final class RecipeImportImprover {
             )
         }()
 
+        reportStage(.extractingAudio)
         let audioFileURL = try await extractAudio(from: videoFileURL)
         defer { try? FileManager.default.removeItem(at: audioFileURL) }
 
+        reportStage(.transcribingAudio)
         let transcript = try await transcribeAudio(fileURL: audioFileURL)
         RecipeImportLogger.info("improver transcript chars=\(transcript.count)")
 
+        reportStage(.restructuringDraft)
         let structurer = RecipeStructurer(aiService: aiService, apiKey: apiKey)
         let combinedInput = makeCombinedInput(draft: draft, transcript: transcript)
         var improved = try await structurer.structure(
@@ -453,6 +471,7 @@ final class RecipeImportImprover {
             )
         )
 
+        reportStage(.finalizing)
         if improved.imageData == nil {
             improved.imageData = draft.imageData
         }

@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import AVKit
+import AVFoundation
 #if os(iOS)
 import UIKit
 #endif
@@ -65,6 +66,11 @@ struct RecipeDetailView: View {
 
     private var sortedPreparationMedia: [RecipePreparationMedia] {
         (recipe.preparationMedia ?? []).sorted { $0.sortOrder < $1.sortOrder }
+    }
+
+    private var preparationMediaCountLabel: String {
+        let count = sortedPreparationMedia.count
+        return count == 1 ? "1 mídia" : "\(count) mídias"
     }
 
     private var settings: AppSettings? { settingsArray.first }
@@ -262,13 +268,25 @@ struct RecipeDetailView: View {
                 }
             }
         }
-        .sheet(item: $previewSelection) { selection in
+        #if os(iOS)
+        .fullScreenCover(item: $previewSelection) { selection in
             PreparationMediaPreviewView(
                 mediaItems: sortedPreparationMedia,
-                selectedMediaID: selection.id
+                selectedMediaID: selection.id,
+                onClose: { previewSelection = nil }
             )
             .forceLightStatusBar()
         }
+        #else
+        .sheet(item: $previewSelection) { selection in
+            PreparationMediaPreviewView(
+                mediaItems: sortedPreparationMedia,
+                selectedMediaID: selection.id,
+                onClose: { previewSelection = nil }
+            )
+            .forceLightStatusBar()
+        }
+        #endif
     }
 
     #if os(iOS)
@@ -410,7 +428,7 @@ struct RecipeDetailView: View {
                 }
                 .frame(maxWidth: 520, alignment: .leading)
                 .padding(.horizontal, 20)
-                .padding(.bottom, 92)
+                .padding(.bottom, 72)
             }
             .frame(width: proxy.size.width, height: heroHeight + stretch)
             .offset(y: stretch > 0 ? -stretch : 0)
@@ -790,15 +808,26 @@ struct RecipeDetailView: View {
 
     private var preparationMediaSection: some View {
         VStack(alignment: .leading, spacing: 18) {
-            Text("Mídias da Receita")
-                .font(.sectionTitle)
-                .padding(.top, 8)
+            HStack(alignment: .center, spacing: 12) {
+                Text("Mídias da Receita")
+                    .font(.sectionTitle)
+
+                Text(preparationMediaCountLabel)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(Color(.tertiarySystemFill), in: .capsule)
+
+                Spacer(minLength: 0)
+            }
+            .padding(.top, 8)
 
             if sortedPreparationMedia.count == 1, let media = sortedPreparationMedia.first {
                 Button {
                     previewSelection = PreparationMediaSelection(id: media.id)
                 } label: {
-                    preparationMediaCard(for: media, width: nil, height: 220)
+                    preparationMediaCard(for: media, width: nil, height: 188)
                 }
                 .buttonStyle(.plain)
             } else {
@@ -817,21 +846,22 @@ struct RecipeDetailView: View {
             RoundedRectangle(cornerRadius: 26, style: .continuous)
                 .fill(Color(.secondarySystemBackground))
 
-            if media.mediaType == .photo, let image = PlatformImage(data: media.data) {
-                Image(platformImage: image)
-                    .resizable()
-                    .scaledToFill()
-            } else {
-                LinearGradient(
-                    colors: [Color.black.opacity(0.86), Color.black.opacity(0.35)],
-                    startPoint: .bottomLeading,
-                    endPoint: .topTrailing
-                )
+            RecipeMediaCardArtworkView(media: media)
 
-                Image(systemName: "play.circle.fill")
-                    .font(.system(size: 56, weight: .semibold))
-                    .foregroundStyle(.white)
+            if media.mediaType == .video {
+                RecipeMediaPlayButton(size: 94)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             }
+
+            // Media Count Overlay
+            Text(preparationMediaCountLabel)
+                .font(.caption2.weight(.bold))
+                .foregroundStyle(.white)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(.ultraThinMaterial, in: .capsule)
+                .padding(14)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
 
             LinearGradient(
                 colors: [Color.black.opacity(0.48), .clear],
@@ -1544,7 +1574,7 @@ private struct PreparationMediaDeckView: View {
                 .tag(index)
             }
         }
-        .frame(height: 250)
+        .frame(height: 214)
         #if os(iOS)
         .tabViewStyle(.page(indexDisplayMode: .automatic))
         #endif
@@ -1601,26 +1631,32 @@ private struct RecipeMediaDeckCard: View {
     let media: RecipePreparationMedia
     let depth: Int
 
+    private var mediaCountLabel: String {
+        let count = (media.recipe?.preparationMedia ?? []).count
+        return count == 1 ? "1 mídia" : "\(count) mídias"
+    }
+
     var body: some View {
         ZStack(alignment: .bottomLeading) {
             RoundedRectangle(cornerRadius: 28, style: .continuous)
                 .fill(Color(.secondarySystemBackground))
 
-            if media.mediaType == .photo, let image = PlatformImage(data: media.data) {
-                Image(platformImage: image)
-                    .resizable()
-                    .scaledToFill()
-            } else {
-                LinearGradient(
-                    colors: [Color.black.opacity(0.88), Color.black.opacity(0.42)],
-                    startPoint: .bottomLeading,
-                    endPoint: .topTrailing
-                )
+            RecipeMediaCardArtworkView(media: media)
 
-                Image(systemName: "play.circle.fill")
-                    .font(.system(size: 62, weight: .semibold))
-                    .foregroundStyle(.white)
+            if media.mediaType == .video {
+                RecipeMediaPlayButton(size: 98)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             }
+
+            // Media Count Overlay
+            Text(mediaCountLabel)
+                .font(.caption2.weight(.bold))
+                .foregroundStyle(.white)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(.ultraThinMaterial, in: .capsule)
+                .padding(14)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
 
             LinearGradient(
                 colors: [Color.black.opacity(0.42), .clear],
@@ -1641,7 +1677,7 @@ private struct RecipeMediaDeckCard: View {
             .padding(18)
         }
         .frame(maxWidth: .infinity)
-        .frame(height: 220)
+        .frame(height: 184)
         .clipShape(.rect(cornerRadius: 28))
         .overlay {
             RoundedRectangle(cornerRadius: 28, style: .continuous)
@@ -1655,45 +1691,64 @@ private struct RecipeMediaDeckCard: View {
 }
 
 private struct PreparationMediaPreviewView: View {
-    @Environment(\.dismiss) private var dismiss
     let mediaItems: [RecipePreparationMedia]
     let selectedMediaID: UUID
+    let onClose: () -> Void
 
     @State private var selectedIndex = 0
+    @State private var dragOffset: CGFloat = 0
+
+    private var dismissProgress: CGFloat {
+        min(max(dragOffset / 240, 0), 1)
+    }
 
     var body: some View {
-        NavigationStack {
+        GeometryReader { proxy in
             ZStack {
-                Color.black.ignoresSafeArea()
+                Color.black
+                    .opacity(1 - Double(dismissProgress * 0.45))
+                    .ignoresSafeArea()
 
                 TabView(selection: $selectedIndex) {
                     ForEach(Array(mediaItems.enumerated()), id: \.element.id) { index, media in
-                        previewPage(for: media)
+                        previewPage(for: media, isActive: selectedIndex == index)
                             .tag(index)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
                 }
-                #if os(iOS)
-                .tabViewStyle(.page(indexDisplayMode: .always))
-                #endif
-            }
-            .toolbar {
-                ToolbarItem(placement: .adaptiveLeading) {
-                    Button("Fechar") {
-                        dismiss()
+                .tabViewStyle(.page(indexDisplayMode: .never))
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .offset(y: max(dragOffset, 0))
+                .scaleEffect(1 - (dismissProgress * 0.08))
+                .simultaneousGesture(dismissDragGesture)
+
+                if mediaItems.count > 1 {
+                    VStack {
+                        Spacer()
+
+                        mediaDots
+                            .padding(.bottom, max(proxy.safeAreaInsets.bottom, 18) + 8)
                     }
-                    .foregroundStyle(.white)
                 }
 
-                ToolbarItem(placement: .principal) {
-                    Text("\(selectedIndex + 1) de \(mediaItems.count)")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.white)
+                Button {
+                    onClose()
+                } label: {
+                    ZStack {
+                        Circle()
+                            .fill(.black.opacity(0.42))
+
+                        Image(systemName: "xmark")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundStyle(.white)
+                    }
+                    .frame(width: 36, height: 36)
                 }
+                .buttonStyle(.plain)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                .padding(.top, proxy.safeAreaInsets.top)
+                .padding(.trailing, 16)
             }
-            #if os(iOS)
-            .toolbarBackground(.hidden, for: .navigationBar)
-            .toolbarColorScheme(.dark, for: .navigationBar)
-            #endif
             .onAppear {
                 if let index = mediaItems.firstIndex(where: { $0.id == selectedMediaID }) {
                     selectedIndex = index
@@ -1703,18 +1758,19 @@ private struct PreparationMediaPreviewView: View {
     }
 
     @ViewBuilder
-    private func previewPage(for media: RecipePreparationMedia) -> some View {
+    private func previewPage(for media: RecipePreparationMedia, isActive: Bool) -> some View {
         switch media.mediaType {
         case .photo:
             if let image = PlatformImage(data: media.data) {
                 ZoomablePhotoView(image: image)
+                    .background(Color.black)
             } else {
                 ContentUnavailableView("Foto indisponível", systemImage: "photo")
                     .foregroundStyle(.white)
             }
         case .video:
             if let url = temporaryFileURL(for: media) {
-                AutoPlayMutedVideoView(url: url)
+                FullscreenRecipeVideoView(url: url, isActive: isActive)
             } else {
                 ContentUnavailableView("Vídeo indisponível", systemImage: "play.slash")
                     .foregroundStyle(.white)
@@ -1722,36 +1778,355 @@ private struct PreparationMediaPreviewView: View {
         }
     }
 
-    private func temporaryFileURL(for media: RecipePreparationMedia) -> URL? {
-        let ext = media.fileExtension.isEmpty ? "mov" : media.fileExtension
-        let url = FileManager.default.temporaryDirectory
-            .appendingPathComponent(media.id.uuidString)
-            .appendingPathExtension(ext)
+    private var dismissDragGesture: some Gesture {
+        DragGesture(minimumDistance: 18)
+            .onChanged { value in
+                guard value.translation.height > 0,
+                      abs(value.translation.height) > abs(value.translation.width) else { return }
+                dragOffset = value.translation.height
+            }
+            .onEnded { value in
+                let isVerticalDismiss = value.translation.height > 0
+                    && abs(value.translation.height) > abs(value.translation.width)
 
-        do {
-            try media.data.write(to: url, options: .atomic)
-            return url
-        } catch {
-            return nil
+                guard isVerticalDismiss else {
+                    withAnimation(.snappy(duration: 0.22, extraBounce: 0.02)) {
+                        dragOffset = 0
+                    }
+                    return
+                }
+
+                if value.translation.height > 120 || value.predictedEndTranslation.height > 260 {
+                    onClose()
+                } else {
+                    withAnimation(.snappy(duration: 0.22, extraBounce: 0.02)) {
+                        dragOffset = 0
+                    }
+                }
+            }
+    }
+
+    private func temporaryFileURL(for media: RecipePreparationMedia) -> URL? {
+        RecipeMediaLocalAssetStore.fileURL(for: media)
+    }
+
+    private var mediaDots: some View {
+        HStack(spacing: 8) {
+            ForEach(Array(mediaItems.enumerated()), id: \.element.id) { index, _ in
+                Circle()
+                    .fill(index == selectedIndex ? Color.white : Color.white.opacity(0.34))
+                    .frame(width: index == selectedIndex ? 8 : 7, height: index == selectedIndex ? 8 : 7)
+                    .scaleEffect(index == selectedIndex ? 1 : 0.92)
+                    .animation(.smooth(duration: 0.18), value: selectedIndex)
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(.ultraThinMaterial.opacity(0.72), in: .capsule)
+    }
+}
+
+private struct RecipeMediaCardArtworkView: View {
+    let media: RecipePreparationMedia
+
+    @State private var videoThumbnail: PlatformImage?
+
+    private var assetSnapshot: RecipeMediaAssetSnapshot {
+        RecipeMediaAssetSnapshot(
+            id: media.id,
+            data: media.data,
+            fileExtension: media.fileExtension,
+            isVideo: media.mediaType == .video
+        )
+    }
+
+    var body: some View {
+        ZStack {
+            if media.mediaType == .photo, let image = PlatformImage(data: media.data) {
+                Image(platformImage: image)
+                    .resizable()
+                    .scaledToFill()
+            } else if let videoThumbnail {
+                Image(platformImage: videoThumbnail)
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                LinearGradient(
+                    colors: [Color.black.opacity(0.88), Color.black.opacity(0.42)],
+                    startPoint: .bottomLeading,
+                    endPoint: .topTrailing
+                )
+            }
+        }
+        .clipped()
+        .task(id: media.id) {
+            guard assetSnapshot.isVideo else {
+                videoThumbnail = nil
+                return
+            }
+
+            if let thumbnailData = await RecipeMediaThumbnailStore.shared.thumbnailData(for: assetSnapshot),
+               !Task.isCancelled,
+               let thumbnail = PlatformImage(data: thumbnailData) {
+                videoThumbnail = thumbnail
+            }
         }
     }
 }
 
-private struct AutoPlayMutedVideoView: View {
+private struct RecipeMediaPlayButton: View {
+    let size: CGFloat
+
+    var body: some View {
+        RecipeMediaGlassCircle(size: size) {
+            Image(systemName: "play.fill")
+                .font(.system(size: size * 0.34, weight: .bold))
+                .foregroundStyle(.white)
+                .offset(x: size * 0.035)
+        }
+        .shadow(color: .black.opacity(0.22), radius: 24, y: 10)
+    }
+}
+
+private struct RecipeMediaGlassCircle<Content: View>: View {
+    let size: CGFloat
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        ZStack {
+            if #available(iOS 26, macOS 26, *) {
+                Circle()
+                    .fill(.clear)
+                    .glassEffect(.regular.interactive(), in: Circle())
+            } else {
+                Circle()
+                    .fill(.ultraThinMaterial)
+            }
+
+            content()
+        }
+        .frame(width: size, height: size)
+        .overlay {
+            Circle()
+                .strokeBorder(Color.white.opacity(0.22), lineWidth: 1)
+        }
+    }
+}
+
+import AVKit
+import SwiftUI
+
+// Use AVKit directly for fullscreen to get native controls and better UX
+private struct FullscreenRecipeVideoView: View {
     let url: URL
+    let isActive: Bool
     @State private var player = AVPlayer()
 
     var body: some View {
         VideoPlayer(player: player)
             .background(Color.black)
             .onAppear {
-                player.replaceCurrentItem(with: AVPlayerItem(url: url))
-                player.isMuted = true
-                player.play()
+                configurePlayerIfNeeded()
+                updatePlaybackState()
+            }
+            .onChange(of: isActive) { _, _ in
+                updatePlaybackState()
             }
             .onDisappear {
                 player.pause()
+                player.seek(to: .zero)
                 player.replaceCurrentItem(with: nil)
+                #if os(iOS)
+                try? AVAudioSession.sharedInstance().setActive(false, options: [.notifyOthersOnDeactivation])
+                #endif
             }
     }
+
+    private func configurePlayerIfNeeded() {
+            .onChange(of: isActive) { _, _ in
+                updatePlaybackState()
+            }
+            .onDisappear {
+                player.pause()
+                player.seek(to: .zero)
+                player.replaceCurrentItem(with: nil)
+                #if os(iOS)
+                try? AVAudioSession.sharedInstance().setActive(false, options: [.notifyOthersOnDeactivation])
+                #endif
+            }
+    }
+
+    private func configurePlayerIfNeeded() {
+        if (player.currentItem?.asset as? AVURLAsset)?.url != url {
+            player.replaceCurrentItem(with: AVPlayerItem(url: url))
+            player.actionAtItemEnd = .pause
+        }
+
+        player.isMuted = false
+        player.volume = 1
+
+        #if os(iOS)
+        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback)
+        try? AVAudioSession.sharedInstance().setActive(true)
+        #endif
+    }
+
+    private func updatePlaybackState() {
+        guard player.currentItem != nil else { return }
+        if isActive {
+            player.play()
+        } else {
+            player.pause()
+            player.seek(to: .zero)
+        }
+    }
 }
+
+private struct RecipeMediaAssetSnapshot: Sendable {
+    let id: UUID
+    let data: Data
+    let fileExtension: String
+    let isVideo: Bool
+}
+
+private actor RecipeMediaThumbnailStore {
+    static let shared = RecipeMediaThumbnailStore()
+
+    private var cachedThumbnailData: [UUID: Data] = [:]
+    private var pendingTasks: [UUID: Task<Data?, Never>] = [:]
+
+    func thumbnailData(for asset: RecipeMediaAssetSnapshot) async -> Data? {
+        guard asset.isVideo else { return nil }
+
+        if let cached = cachedThumbnailData[asset.id] {
+            return cached
+        }
+
+        if let pending = pendingTasks[asset.id] {
+            return await pending.value
+        }
+
+        let task = Task.detached(priority: .userInitiated) {
+            RecipeMediaThumbnailStore.generateThumbnailData(for: asset)
+        }
+        pendingTasks[asset.id] = task
+
+        let result = await task.value
+        pendingTasks[asset.id] = nil
+
+        if let result {
+            cachedThumbnailData[asset.id] = result
+        }
+
+        return result
+    }
+
+    private static func generateThumbnailData(for asset: RecipeMediaAssetSnapshot) -> Data? {
+        guard let url = RecipeMediaLocalAssetStore.fileURL(for: asset) else { return nil }
+
+        let videoAsset = AVURLAsset(url: url)
+        let generator = AVAssetImageGenerator(asset: videoAsset)
+        generator.appliesPreferredTrackTransform = true
+        generator.maximumSize = CGSize(width: 960, height: 960)
+
+        do {
+            let cgImage = try generator.copyCGImage(at: .zero, actualTime: nil)
+            #if os(iOS)
+            return UIImage(cgImage: cgImage).jpegData(compressionQuality: 0.82)
+            #else
+            let representation = NSBitmapImageRep(cgImage: cgImage)
+            return representation.representation(using: .jpeg, properties: [.compressionFactor: 0.82])
+            #endif
+        } catch {
+            return nil
+        }
+    }
+}
+
+private enum RecipeMediaLocalAssetStore {
+    private static var cacheDirectory: URL {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("RecipeMediaCache", isDirectory: true)
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        return directory
+    }
+
+    static func fileURL(for media: RecipePreparationMedia) -> URL? {
+        fileURL(
+            for: RecipeMediaAssetSnapshot(
+                id: media.id,
+                data: media.data,
+                fileExtension: media.fileExtension,
+                isVideo: media.mediaType == .video
+            )
+        )
+    }
+
+    static func fileURL(for asset: RecipeMediaAssetSnapshot) -> URL? {
+        let ext = asset.fileExtension.isEmpty ? defaultExtension(for: asset) : asset.fileExtension
+        let url = cacheDirectory
+            .appendingPathComponent(asset.id.uuidString)
+            .appendingPathExtension(ext)
+
+        if !FileManager.default.fileExists(atPath: url.path) {
+            do {
+                try asset.data.write(to: url, options: .atomic)
+            } catch {
+                return nil
+            }
+        }
+
+        return url
+    }
+
+    private static func defaultExtension(for asset: RecipeMediaAssetSnapshot) -> String {
+        asset.isVideo ? "mov" : "jpg"
+    }
+}
+
+#if os(iOS)
+private struct RecipeVideoPlayerSurface: UIViewRepresentable {
+    let player: AVPlayer
+
+    func makeUIView(context: Context) -> PlayerView {
+        let view = PlayerView()
+        view.playerLayer.videoGravity = .resizeAspectFill
+        view.playerLayer.player = player
+        return view
+    }
+
+    func updateUIView(_ uiView: PlayerView, context: Context) {
+        uiView.playerLayer.player = player
+        uiView.playerLayer.videoGravity = .resizeAspectFill
+    }
+
+    final class PlayerView: UIView {
+        override class var layerClass: AnyClass { AVPlayerLayer.self }
+
+        var playerLayer: AVPlayerLayer {
+            guard let layer = layer as? AVPlayerLayer else {
+                fatalError("Expected AVPlayerLayer backing layer")
+            }
+            return layer
+        }
+    }
+}
+#elseif os(macOS)
+private struct RecipeVideoPlayerSurface: NSViewRepresentable {
+    let player: AVPlayer
+
+    func makeNSView(context: Context) -> AVPlayerView {
+        let view = AVPlayerView()
+        view.controlsStyle = .none
+        view.videoGravity = .resizeAspectFill
+        view.player = player
+        return view
+    }
+
+    func updateNSView(_ nsView: AVPlayerView, context: Context) {
+        nsView.player = player
+        nsView.controlsStyle = .none
+        nsView.videoGravity = .resizeAspectFill
+    }
+}
+#endif

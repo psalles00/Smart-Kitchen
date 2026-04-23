@@ -154,23 +154,7 @@ final class RecipeImportCoordinator {
             RecipeImportLogger.debug("save step order=\(step.order) chars=\(trimmed.count)", sessionID: currentSessionID)
         }
 
-        var mediaToPersist = draft.preparationMedia
-        let hasVideoMedia = mediaToPersist.contains { $0.type == .video }
-        if hasVideoMedia, let cover = draft.imageData, !cover.isEmpty {
-            mediaToPersist.removeAll {
-                $0.sourceOriginal && $0.type == .photo && $0.data == cover
-            }
-        }
-        if mediaToPersist.isEmpty, let imageData = draft.imageData, !imageData.isEmpty {
-            mediaToPersist = [
-                ImportDraftPreparationMedia(
-                    type: .photo,
-                    data: imageData,
-                    fileExtension: "jpg",
-                    sourceOriginal: true
-                )
-            ]
-        }
+        let mediaToPersist = draft.preparationMediaPreparedForSave
 
         for (index, media) in mediaToPersist.enumerated() {
             guard !media.data.isEmpty else { continue }
