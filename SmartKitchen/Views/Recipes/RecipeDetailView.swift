@@ -21,7 +21,7 @@ struct RecipeDetailView: View {
     @State private var ingredientEditorSheet: IngredientEditorSheet?
     @State private var pendingIngredientReplacement: PendingIngredientReplacement?
 
-    private let heroHeight: CGFloat = 525
+    private let heroHeight: CGFloat = 580
     private let contentOverlap: CGFloat = 34
 
     private var sortedIngredients: [RecipeIngredient] {
@@ -65,6 +65,23 @@ struct RecipeDetailView: View {
 
     private var detailSurfaceColor: Color {
         Color(red: 248 / 255, green: 248 / 255, blue: 250 / 255)
+    }
+
+    private var heroTitleFontSize: CGFloat {
+        let characterCount = recipe.name.trimmingCharacters(in: .whitespacesAndNewlines).count
+
+        switch characterCount {
+        case 0...18:
+            return 39
+        case 19...28:
+            return 36
+        case 29...42:
+            return 33
+        case 43...56:
+            return 30
+        default:
+            return 27
+        }
     }
 
     private var heroMetadataSegments: [String] {
@@ -142,6 +159,7 @@ struct RecipeDetailView: View {
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
+        .toolbarColorScheme(.dark, for: .navigationBar)
         #endif
         .background(detailSurfaceColor.ignoresSafeArea())
         .tint(PageTheme.recipes.accentColor)
@@ -159,11 +177,10 @@ struct RecipeDetailView: View {
                         recipe.isFavorite.toggle()
                     }
                 } label: {
-                    Image(systemName: "ellipsis.circle")
-                        .symbolRenderingMode(.monochrome)
-                        .foregroundStyle(.white)
+                    Image(systemName: "ellipsis")
+                        .font(.body.weight(.semibold))
                 }
-                .tint(.white)
+                .buttonStyle(.plain)
             }
         }
         #endif
@@ -270,9 +287,10 @@ struct RecipeDetailView: View {
 
             VStack(alignment: .leading, spacing: 14) {
                 Text(recipe.name)
-                    .font(.custom("Bricolage Grotesque", size: 28, relativeTo: .title2).bold())
+                    .font(.custom("Bricolage Grotesque", size: heroTitleFontSize, relativeTo: .largeTitle).bold())
                     .foregroundStyle(.white)
                     .lineLimit(3)
+                    .minimumScaleFactor(0.76)
 
                 Capsule(style: .continuous)
                     .fill(Color.white.opacity(0.9))
@@ -315,7 +333,7 @@ struct RecipeDetailView: View {
             }
             .frame(maxWidth: 520, alignment: .leading)
             .padding(.horizontal, 20)
-            .padding(.bottom, 42)
+            .padding(.bottom, 74)
         }
         .frame(maxWidth: .infinity)
         .frame(height: heroHeight)
@@ -325,7 +343,7 @@ struct RecipeDetailView: View {
     // MARK: - Content
 
     private var content: some View {
-        VStack(alignment: .leading, spacing: 24) {
+        VStack(alignment: .leading, spacing: 36) {
             if !sortedPreparationMedia.isEmpty {
                 preparationMediaSection
             }
@@ -374,8 +392,13 @@ struct RecipeDetailView: View {
 
                 Spacer()
 
-                Button(hasMissingIngredientsInGrocery ? "Adicionar todos ao mercado" : "Todos já adicionados") {
+                Button {
                     addAllIngredientsToGrocery()
+                } label: {
+                    Label(
+                        hasMissingIngredientsInGrocery ? "Adicionar todos" : "Todos já adicionados",
+                        systemImage: hasMissingIngredientsInGrocery ? "cart.badge.plus" : "checkmark.circle"
+                    )
                 }
                 .buttonStyle(.plain)
                 .font(.caption.weight(.medium))
@@ -510,7 +533,7 @@ struct RecipeDetailView: View {
     // MARK: - Utensils
 
     private var utensilsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 14) {
             Text("Utensílios")
                 .font(.sectionTitle)
                 .padding(.top, 8)
@@ -560,7 +583,7 @@ struct RecipeDetailView: View {
     // MARK: - Steps
 
     private var stepsSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 20) {
             Text("Modo de Preparo")
                 .font(.sectionTitle)
                 .padding(.top, 8)
@@ -590,7 +613,7 @@ struct RecipeDetailView: View {
     }
 
     private var preparationMediaSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 18) {
             Text("Mídias da Receita")
                 .font(.sectionTitle)
                 .padding(.top, 8)
@@ -662,7 +685,7 @@ struct RecipeDetailView: View {
     }
 
     private func linkSection(url: URL) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 14) {
             Text("Link da Receita")
                 .font(.sectionTitle)
                 .padding(.top, 8)
