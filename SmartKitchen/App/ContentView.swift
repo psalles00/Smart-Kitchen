@@ -91,10 +91,15 @@ struct ContentView: View {
             get: { selectedTab },
             set: { newValue in
                 if newValue == selectedTab {
+                    let isResettingRecipeDetail = newValue == .recipes && !recipeNavigationPath.isEmpty
+
                     if newValue == .recipes {
                         recipeNavigationPath = NavigationPath()
                     }
-                    scrollToTopTrigger += 1
+
+                    if !isResettingRecipeDetail {
+                        scrollToTopTrigger += 1
+                    }
                 }
                 selectedTab = newValue
             }
