@@ -10,6 +10,16 @@ struct UnifiedItemMigration {
     private static let migrationKey = "SmartKitchen.unifiedItemMigrationCompleted"
 
     static func migrateIfNeeded(context: ModelContext) {
+        // Always run a reconciliation pass: even when the "migration completed" flag is set,
+        // legacy PantryItem/GroceryItem/UtensilItem rows can still exist (e.g. after a store
+        // split migration that copied them forward). The reconciliation pass inserts any
+        // missing UnifiedItem and only deletes legacy rows that were successfully reconciled.
+        do {
+            try reconcileLegacyItemsIntoUnified(context: context)
+        } catch {
+            NSLog("[Migration] Unified item reconciliation failed: %@", error.localizedDescription)
+        }
+
         guard !UserDefaults.standard.bool(forKey: migrationKey) else { return }
 
         do {
@@ -19,6 +29,153 @@ struct UnifiedItemMigration {
         } catch {
             NSLog("[Migration] Unified item migration failed: %@", error.localizedDescription)
             // Don't set the flag so it retries next launch
+        }
+    }
+
+    /// Idempotent reconciliation for installs where legacy records survived alongside
+    /// a UnifiedItem store (typical after a store-split or device restore).
+    ///
+    /// - Preserves every UnifiedItem already present (never touches them).
+    /// - For each legacy row missing a UnifiedItem counterpart, creates one with
+    ///   the same id/name/metadata and the appropriate isPantry/isGrocery/isUtensil flag.
+    /// - Legacy rows that have a surviving UnifiedItem counterpart (by id OR normalized
+    ///   name+role) are deleted to prevent future duplicate reconciliation loops.
+    private static func reconcileLegacyItemsIntoUnified(context: ModelContext) throws {
+        let pantryItems = (try? context.fetch(FetchDescriptor<PantryItem>())) ?? []
+        let groceryItems = (try? context.fetch(FetchDescriptor<GroceryItem>())) ?? []
+        let utensilItems = (try? context.fetch(FetchDescriptor<UtensilItem>())) ?? []
+
+        if pantryItems.isEmpty && groceryItems.isEmpty && utensilItems.isEmpty { return }
+
+        let existing = (try? context.fetch(FetchDescriptor<UnifiedItem>())) ?? []
+        let existingByID = Dictionary(uniqueKeysWithValues: existing.map { ($0.id, $0) })
+
+        func normalized(_ s: String) -> String {
+            s.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current).lowercased()
+        }
+
+        let pantryByName = Dictionary(
+            existing.filter { $0.isPantry }.map { (normalized($0.name), $0) },
+            uniquingKeysWith: { first, _ in first }
+        )
+        let groceryByName = Dictionary(
+            existing.filter { $0.isGrocery }.map { (normalized($0.name), $0) },
+            uniquingKeysWith: { first, _ in first }
+        )
+        let utensilByName = Dictionary(
+            existing.filter { $0.isUtensil }.map { (normalized($0.name), $0) },
+            uniquingKeysWith: { first, _ in first }
+        )
+
+        var inserted = 0
+        var deletedLegacy = 0
+
+        // --- Pantry ---
+        for legacy in pantryItems {
+            let key = normalized(legacy.name)
+            if existingByID[legacy.id] != nil || pantryByName[key] != nil {
+                context.delete(legacy); deletedLegacy += 1
+                continue
+            }
+            let unified = UnifiedItem(
+                name: legacy.name,
+                descriptionText: legacy.descriptionText,
+                imageData: legacy.imageData,
+                category: legacy.category,
+                quantity: legacy.quantity,
+                unit: legacy.unit,
+                iconName: legacy.iconName,
+                isPantry: true,
+                isGrocery: false,
+                isUtensil: false,
+                pantrySortOrder: legacy.sortOrder,
+                grocerySortOrder: 0,
+                isLinkedToGrocery: legacy.isLinkedToGrocery,
+                expirationDate: legacy.expirationDate,
+                defaultExpiryDays: legacy.defaultExpiryDays,
+                isChecked: false,
+                isFixed: false,
+                linkedPantryItemId: nil
+            )
+            unified.id = legacy.id
+            unified.addedAt = legacy.addedAt
+            context.insert(unified)
+            context.delete(legacy)
+            inserted += 1
+            deletedLegacy += 1
+        }
+
+        // --- Grocery ---
+        for legacy in groceryItems {
+            let key = normalized(legacy.name)
+            // If a UnifiedItem with the same name already represents a pantry row, add grocery role.
+            if let matchPantry = pantryByName[key] {
+                if !matchPantry.isGrocery {
+                    matchPantry.isGrocery = true
+                    matchPantry.grocerySortOrder = legacy.sortOrder
+                    matchPantry.isChecked = legacy.isChecked
+                    matchPantry.isFixed = legacy.isFixed
+                }
+                context.delete(legacy); deletedLegacy += 1
+                continue
+            }
+            if existingByID[legacy.id] != nil || groceryByName[key] != nil {
+                context.delete(legacy); deletedLegacy += 1
+                continue
+            }
+            let unified = UnifiedItem(
+                name: legacy.name,
+                descriptionText: legacy.descriptionText,
+                imageData: legacy.imageData,
+                category: legacy.category,
+                quantity: legacy.quantity,
+                unit: legacy.unit,
+                iconName: legacy.iconName,
+                isPantry: false,
+                isGrocery: true,
+                isUtensil: false,
+                grocerySortOrder: legacy.sortOrder,
+                defaultExpiryDays: legacy.defaultExpiryDays,
+                isChecked: legacy.isChecked,
+                isFixed: legacy.isFixed,
+                linkedPantryItemId: legacy.linkedPantryItemId
+            )
+            unified.id = legacy.id
+            unified.addedAt = legacy.addedAt
+            context.insert(unified)
+            context.delete(legacy)
+            inserted += 1
+            deletedLegacy += 1
+        }
+
+        // --- Utensil ---
+        for legacy in utensilItems {
+            let key = normalized(legacy.name)
+            if existingByID[legacy.id] != nil || utensilByName[key] != nil {
+                context.delete(legacy); deletedLegacy += 1
+                continue
+            }
+            let unified = UnifiedItem(
+                name: legacy.name,
+                descriptionText: legacy.descriptionText,
+                imageData: legacy.imageData,
+                category: legacy.category,
+                iconName: legacy.iconName,
+                isUtensil: true,
+                utensilSortOrder: legacy.sortOrder
+            )
+            unified.id = legacy.id
+            unified.addedAt = legacy.addedAt
+            context.insert(unified)
+            context.delete(legacy)
+            inserted += 1
+            deletedLegacy += 1
+        }
+
+        if inserted > 0 || deletedLegacy > 0 {
+            try context.save()
+            NSLog("[Migration] Reconciled legacy items -> unified (inserted: %d, legacy removed: %d)",
+                  inserted, deletedLegacy)
         }
     }
 

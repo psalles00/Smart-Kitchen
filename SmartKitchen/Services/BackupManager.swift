@@ -9,6 +9,7 @@ final class BackupManager {
 
     private static let maxBackups = 7
     private static let lastBackupDateKey = "BackupManager.lastBackupDate"
+    private static let autoRestoredBackupNameKey = "BackupManager.autoRestoredBackupName"
 
     private(set) var backups: [BackupEntry] = []
     private(set) var isWorking = false
@@ -89,9 +90,51 @@ final class BackupManager {
         }
     }
 
+    /// One-time emergency recovery path used after catastrophic store issues.
+    ///
+    /// Restores the latest internal backup only when the current store has no
+    /// visible list/recipe data and the backup clearly contains user content.
+    /// Once a specific backup file has been auto-restored, it will not be
+    /// auto-restored again on future launches.
+    @discardableResult
+    func restoreLatestBackupIfCurrentStoreNeedsRecovery(context: ModelContext) -> Bool {
+        loadBackupList()
+        guard let latest = backups.first else { return false }
+        guard UserDefaults.standard.string(forKey: Self.autoRestoredBackupNameKey) != latest.url.lastPathComponent else {
+            return false
+        }
+
+        do {
+            let snapshot = try decodeSnapshot(at: latest.url)
+            guard shouldAutoRestore(snapshot: snapshot, into: context) else { return false }
+
+            try snapshot.restore(into: context)
+            UserDefaults.standard.set(latest.url.lastPathComponent, forKey: Self.autoRestoredBackupNameKey)
+            NSLog("[BackupManager] Auto-restored backup %@", latest.url.lastPathComponent)
+            return true
+        } catch {
+            NSLog("[BackupManager] Auto-restore failed: %@", String(describing: error))
+            return false
+        }
+    }
+
     /// Delete a specific backup.
     func delete(_ entry: BackupEntry) {
         try? FileManager.default.removeItem(at: entry.url)
+        loadBackupList()
+    }
+
+    /// Delete all internal backups and reset recovery markers.
+    func deleteAllBackups() {
+        let fm = FileManager.default
+        let files = (try? fm.contentsOfDirectory(at: backupsDirectory, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)) ?? []
+
+        for url in files {
+            try? fm.removeItem(at: url)
+        }
+
+        UserDefaults.standard.removeObject(forKey: Self.lastBackupDateKey)
+        UserDefaults.standard.removeObject(forKey: Self.autoRestoredBackupNameKey)
         loadBackupList()
     }
 
@@ -137,6 +180,33 @@ final class BackupManager {
                 return BackupEntry(url: url, date: date, sizeBytes: size)
             }
             .sorted { $0.date > $1.date }
+    }
+
+    private func decodeSnapshot(at url: URL) throws -> AppBackupSnapshot {
+        let data = try Data(contentsOf: url)
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return try decoder.decode(AppBackupSnapshot.self, from: data)
+    }
+
+    private func shouldAutoRestore(snapshot: AppBackupSnapshot, into context: ModelContext) -> Bool {
+        let currentVisibleCount =
+            count(FetchDescriptor<UnifiedItem>(), in: context) +
+            count(FetchDescriptor<Recipe>(), in: context) +
+            count(FetchDescriptor<PantryItem>(), in: context) +
+            count(FetchDescriptor<GroceryItem>(), in: context) +
+            count(FetchDescriptor<UtensilItem>(), in: context)
+
+        guard currentVisibleCount == 0 else { return false }
+
+        let backupVisibleCount = snapshot.unifiedItems.count + snapshot.recipes.count
+        guard backupVisibleCount > 0 else { return false }
+
+        return true
+    }
+
+    private func count<T: PersistentModel>(_ descriptor: FetchDescriptor<T>, in context: ModelContext) -> Int {
+        (try? context.fetch(descriptor).count) ?? 0
     }
 
     // MARK: - Private
@@ -203,6 +273,7 @@ struct AppBackupSnapshot: Codable {
     let deletedDefaultCategories: [DeletedDefaultCategoryRecord]
     let unifiedItems: [UnifiedItemRecord]
     let recipes: [RecipeRecord]
+    let recipeIngredientSections: [RecipeIngredientSectionRecord]
     let recipeIngredients: [RecipeIngredientRecord]
     let recipeSteps: [RecipeStepRecord]
     let recipePreparationMedia: [RecipePreparationMediaRecord]
@@ -213,7 +284,7 @@ struct AppBackupSnapshot: Codable {
         case exportedAt, appSettings, categories, deletedDefaultCategories
         case unifiedItems
         case pantryItems, groceryItems, utensilItems // legacy
-        case recipes, recipeIngredients, recipeSteps, recipePreparationMedia, chatMessages
+        case recipes, recipeIngredientSections, recipeIngredients, recipeSteps, recipePreparationMedia, chatMessages
     }
 
     init(context: ModelContext) throws {
@@ -225,6 +296,9 @@ struct AppBackupSnapshot: Codable {
 
         let recipeList = try context.fetch(FetchDescriptor<Recipe>())
         recipes = recipeList.map(RecipeRecord.init)
+        recipeIngredientSections = recipeList
+            .flatMap { $0.ingredientSections ?? [] }
+            .map(RecipeIngredientSectionRecord.init)
         recipeIngredients = recipeList
             .flatMap { $0.ingredients ?? [] }
             .map(RecipeIngredientRecord.init)
@@ -246,6 +320,7 @@ struct AppBackupSnapshot: Codable {
         try container.encode(deletedDefaultCategories, forKey: .deletedDefaultCategories)
         try container.encode(unifiedItems, forKey: .unifiedItems)
         try container.encode(recipes, forKey: .recipes)
+        try container.encode(recipeIngredientSections, forKey: .recipeIngredientSections)
         try container.encode(recipeIngredients, forKey: .recipeIngredients)
         try container.encode(recipeSteps, forKey: .recipeSteps)
         try container.encode(recipePreparationMedia, forKey: .recipePreparationMedia)
@@ -306,6 +381,7 @@ struct AppBackupSnapshot: Codable {
         }
 
         recipes = try container.decode([RecipeRecord].self, forKey: .recipes)
+        recipeIngredientSections = try container.decodeIfPresent([RecipeIngredientSectionRecord].self, forKey: .recipeIngredientSections) ?? []
         recipeIngredients = try container.decode([RecipeIngredientRecord].self, forKey: .recipeIngredients)
         recipeSteps = try container.decode([RecipeStepRecord].self, forKey: .recipeSteps)
         recipePreparationMedia = try container.decodeIfPresent([RecipePreparationMediaRecord].self, forKey: .recipePreparationMedia) ?? []
@@ -313,8 +389,9 @@ struct AppBackupSnapshot: Codable {
     }
 
     func restore(into context: ModelContext) throws {
-        try context.delete(model: Recipe.self)
-        try context.delete(model: RecipePreparationMedia.self)
+        for recipe in try context.fetch(FetchDescriptor<Recipe>()) {
+            context.delete(recipe)
+        }
         try context.delete(model: UnifiedItem.self)
         try context.delete(model: PantryItem.self)
         try context.delete(model: GroceryItem.self)
@@ -406,6 +483,18 @@ struct AppBackupSnapshot: Codable {
             recipesByID[record.id] = recipe
         }
 
+        for record in recipeIngredientSections {
+            guard let recipe = recipesByID[record.recipeID] else { continue }
+            let section = RecipeIngredientSection(
+                title: record.title,
+                subtitle: record.subtitle,
+                sortOrder: record.sortOrder,
+                id: record.id
+            )
+            section.recipe = recipe
+            context.insert(section)
+        }
+
         for record in recipeIngredients {
             guard let recipe = recipesByID[record.recipeID] else { continue }
             let ingredient = RecipeIngredient(
@@ -414,7 +503,8 @@ struct AppBackupSnapshot: Codable {
                 unit: record.unit,
                 preparationState: record.preparationState,
                 iconName: record.iconName,
-                sortOrder: record.sortOrder
+                sortOrder: record.sortOrder,
+                sectionID: record.sectionID
             )
             ingredient.id = record.id
             ingredient.recipe = recipe
@@ -750,6 +840,31 @@ struct RecipePreparationMediaRecord: Codable {
     }
 }
 
+struct RecipeIngredientSectionRecord: Codable {
+    let id: UUID
+    let recipeID: UUID
+    let title: String
+    let subtitle: String
+    let sortOrder: Int
+
+    init(_ section: RecipeIngredientSection) {
+        id = section.id
+        recipeID = section.recipe?.id ?? UUID()
+        title = section.title
+        subtitle = section.subtitle
+        sortOrder = section.sortOrder
+    }
+
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        recipeID = try container.decode(UUID.self, forKey: .recipeID)
+        title = try container.decodeIfPresent(String.self, forKey: .title) ?? ""
+        subtitle = try container.decodeIfPresent(String.self, forKey: .subtitle) ?? ""
+        sortOrder = try container.decodeIfPresent(Int.self, forKey: .sortOrder) ?? 0
+    }
+}
+
 struct RecipeIngredientRecord: Codable {
     let id: UUID
     let recipeID: UUID
@@ -759,6 +874,7 @@ struct RecipeIngredientRecord: Codable {
     let preparationState: String
     let iconName: String?
     let sortOrder: Int
+    let sectionID: UUID?
 
     init(_ ingredient: RecipeIngredient) {
         id = ingredient.id
@@ -769,6 +885,7 @@ struct RecipeIngredientRecord: Codable {
         preparationState = ingredient.preparationState
         iconName = ingredient.iconName
         sortOrder = ingredient.sortOrder
+        sectionID = ingredient.sectionID
     }
 
     init(from decoder: any Decoder) throws {
@@ -781,6 +898,7 @@ struct RecipeIngredientRecord: Codable {
         preparationState = try container.decodeIfPresent(String.self, forKey: .preparationState) ?? ""
         iconName = try container.decodeIfPresent(String.self, forKey: .iconName)
         sortOrder = try container.decode(Int.self, forKey: .sortOrder)
+        sectionID = try container.decodeIfPresent(UUID.self, forKey: .sectionID)
     }
 }
 

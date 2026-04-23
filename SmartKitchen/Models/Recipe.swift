@@ -141,7 +141,7 @@ final class Recipe {
     var descriptionText: String = ""
     @Relationship(deleteRule: .cascade, inverse: \RecipeIngredient.recipe)
     var ingredients: [RecipeIngredient]? = []
-    @Relationship(deleteRule: .cascade, inverse: \RecipeIngredientSection.recipe)
+    @Relationship(deleteRule: .cascade)
     var ingredientSections: [RecipeIngredientSection]? = []
     @Relationship(deleteRule: .cascade, inverse: \RecipeStep.recipe)
     var steps: [RecipeStep]? = []

@@ -1,15 +1,11 @@
-# NÃO altere capabilities automaticamente.
-Nunca, JAMAIS, remova a capability "iCloud" do xCode.
+# Importante
+- REGRA INEGOCIÁVEL: NUNCA realize mudanças que possam quebrar, sobrescrever, resetar ou tornar inacessíveis os dados do usuário. Proteção de dados > qualquer outro objetivo.
+- SwiftData/CloudKit: JAMAIS remova a capability iCloud ou altere o layout de ModelContainer/ModelConfiguration (nome, URL ou divisão de stores) sem migração validada e backup real. Trocar configurações de store com CloudKit ativo torna dados antigos inacessíveis.
+- Risco: Alterações em persistência, schemas, migrations e flags de sync exigem: 1) Identificação exata de stores/URLs; 2) Plano de backup/rollback; 3) Validação em device real (simulador não garante migração CloudKit).
+- Recuperação: Se o app abrir "vazio" ou houver falha de persistência, PARE. Priorize a recuperação dos dados.
 
-# Após finalizar
-Após finalizar uma tarefa que foi dada:
-1. leia novamente o código alterado e se certifique que cada detalhe e cada linha estão bem escritos, estruturados, e livres de erro.
-2. Caso identifique algum problema, corrija-o imediatamente.
-3. Identifique se a capability "iCloud" está presente no projeto. Se não estiver, adicione-a imediatamente nos containers iOS, macoS, com os servicies ativados: iCloud Documents, e CloudKit ativado; e com os containers ativados: Containers "iCloud.com.pedrosalles.smartkitchen.syn".
-
-# Build
-Sempre que fizer qualquer modificação no código, dê build usando o simulador em iPhone 17 Pro.
-O app deve abrir automaticamente usando o app compilado no simulador.
-
-# Fluxo de Testes
-Sempre após implementar funções novas, finalize provendo ao usuário, um fluxo (lista) de ideias/etapas pra que ele teste manualmente cada uma das etapas implementadas.
+# Procedimento e Build
+- Antes de editar: Leia containers, schemas e fluxos de bootstrap.
+- Após finalizar: Valide a integridade dos dados e garanta a capability iCloud (Documents, CloudKit e container iCloud.com.pedrosalles.smartkitchen.sync).
+- Build: Use o simulador iPhone 17 Pro. O app deve abrir automaticamente.
+- Testes: Forneça uma lista de etapas para teste manual após implementar funções.

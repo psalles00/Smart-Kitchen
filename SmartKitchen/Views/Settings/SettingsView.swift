@@ -5,6 +5,11 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Query private var settingsArray: [AppSettings]
+    @State private var cloudSync = CloudSyncService.shared
+    @State private var isResettingAllData = false
+    @State private var showFullResetConfirmation = false
+    @State private var showResetError = false
+    @State private var resetErrorMessage = ""
 
     private var settings: AppSettings? { settingsArray.first }
 
@@ -22,6 +27,19 @@ struct SettingsView: View {
             }
             #endif
             .macSettingsContainer()
+            .alert("Apagar todos os dados?", isPresented: $showFullResetConfirmation) {
+                Button("Cancelar", role: .cancel) {}
+                Button("Apagar tudo", role: .destructive) {
+                    eraseAllData()
+                }
+            } message: {
+                Text("Isso apagará receitas, listas, categorias, histórico da IA, backups internos e os dados sincronizados no iCloud deste app. A ação é irreversível.")
+            }
+            .alert("Erro", isPresented: $showResetError) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(resetErrorMessage)
+            }
     }
 
     private var settingsForm: some View {
@@ -151,8 +169,23 @@ struct SettingsView: View {
             // MARK: - Dados
             Section("Dados") {
                 Button("Restaurar dados de demonstração", role: .destructive) {
-                    resetData()
+                    restoreDemoData()
                 }
+                .disabled(isResettingAllData)
+
+                Button(role: .destructive) {
+                    showFullResetConfirmation = true
+                } label: {
+                    HStack {
+                        Text("Apagar todos os dados locais e do iCloud")
+                        Spacer()
+                        if isResettingAllData {
+                            ProgressView()
+                                .controlSize(.small)
+                        }
+                    }
+                }
+                .disabled(isResettingAllData)
             }
 
             // MARK: - Sobre
@@ -170,8 +203,12 @@ struct SettingsView: View {
         .formStyle(.grouped)
     }
 
-    private func resetData() {
-        try? modelContext.delete(model: Recipe.self)
+    private func restoreDemoData() {
+        if let recipes = try? modelContext.fetch(FetchDescriptor<Recipe>()) {
+            for recipe in recipes {
+                modelContext.delete(recipe)
+            }
+        }
         try? modelContext.delete(model: UnifiedItem.self)
         try? modelContext.delete(model: PantryItem.self)
         try? modelContext.delete(model: GroceryItem.self)
@@ -182,6 +219,23 @@ struct SettingsView: View {
         try? modelContext.delete(model: AppSettings.self)
         DataSeeder.seedIfNeeded(context: modelContext)
         try? modelContext.save()
+    }
+
+    private func eraseAllData() {
+        guard !isResettingAllData else { return }
+
+        isResettingAllData = true
+        Task { @MainActor in
+            do {
+                try await cloudSync.resetAllDataLocallyAndInICloud()
+                dismiss()
+            } catch {
+                resetErrorMessage = error.localizedDescription
+                showResetError = true
+            }
+
+            isResettingAllData = false
+        }
     }
 }
 

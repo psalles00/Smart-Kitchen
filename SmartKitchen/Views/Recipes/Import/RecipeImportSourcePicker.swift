@@ -104,8 +104,11 @@ struct RecipeImportSourcePicker: View {
                 .padding(.bottom, 24)
             }
             .modalNavigationTitle("Adicionar receita")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
+                #if os(iOS)
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         dismiss()
@@ -115,10 +118,19 @@ struct RecipeImportSourcePicker: View {
                     }
                     .tint(.secondary)
                 }
+                #else
+                ToolbarItem {
+                    Button("Fechar") {
+                        dismiss()
+                    }
+                }
+                #endif
             }
         }
+        #if os(iOS)
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
+        #endif
     }
 
     private var header: some View {

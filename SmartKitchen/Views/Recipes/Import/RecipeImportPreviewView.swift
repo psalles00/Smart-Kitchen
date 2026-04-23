@@ -207,6 +207,7 @@ struct RecipeImportPreviewView: View {
         .navigationBarTitleDisplayMode(.inline)
         #endif
         .toolbar {
+            #if os(iOS)
             ToolbarItem(placement: .topBarLeading) {
                 Button("Descartar", role: .destructive) {
                     onDiscard()
@@ -220,6 +221,19 @@ struct RecipeImportPreviewView: View {
                 .font(.body.weight(.semibold))
                 .disabled(!isValid)
             }
+            #else
+            ToolbarItem {
+                Button("Descartar", role: .destructive) {
+                    onDiscard()
+                }
+            }
+            ToolbarItem {
+                Button("Salvar") {
+                    save()
+                }
+                .disabled(!isValid)
+            }
+            #endif
         }
         .photosPicker(isPresented: $showPhotoPicker, selection: $selectedPhoto, matching: .images)
         .onChange(of: selectedPhoto) {

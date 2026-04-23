@@ -1,6 +1,7 @@
 import Foundation
 import SwiftData
 import CoreData
+import CloudKit
 import Observation
 #if canImport(UIKit)
 import UIKit
@@ -29,6 +30,7 @@ final class CloudSyncService: @unchecked Sendable {
     static let appSchema = Schema([
         Recipe.self,
         RecipeIngredient.self,
+        RecipeIngredientSection.self,
         RecipeStep.self,
         RecipePreparationMedia.self,
         UnifiedItem.self,
@@ -140,6 +142,12 @@ final class CloudSyncService: @unchecked Sendable {
             return
         }
 
+        do {
+            try Self.migrateLocalDataIfNeeded(from: container, to: newContainer)
+        } catch {
+            NSLog("[CloudSync] Local-to-cloud launch migration failed: %@", String(describing: error))
+        }
+
         let oldContainer = container
         container = newContainer
         containerID = UUID()
@@ -216,6 +224,12 @@ final class CloudSyncService: @unchecked Sendable {
             throw error
         }
 
+        do {
+            try Self.migrateLocalDataIfNeeded(from: container, to: newContainer)
+        } catch {
+            NSLog("[CloudSync] Local-to-cloud enable migration failed: %@", String(describing: error))
+        }
+
         // 2. Update state and keep old container alive briefly for pending writes
         let oldContainer = container
         syncEnabled = true
@@ -270,6 +284,57 @@ final class CloudSyncService: @unchecked Sendable {
         Task { @MainActor in
             _ = oldContainer
             try? await Task.sleep(for: .seconds(3))
+        }
+    }
+
+    @MainActor
+    func resetAllDataLocallyAndInICloud() async throws {
+        let shouldAttemptCloudReset = syncEnabled || isUsingCloudKitContainer || lastSyncDate != nil || SharingService.shared.isSharing
+
+        if shouldAttemptCloudReset {
+            guard Self.canUseCloudKitInCurrentEnvironment() else {
+                throw NSError(
+                    domain: "CloudSync",
+                    code: 3,
+                    userInfo: [NSLocalizedDescriptionKey: "Apagar os dados do iCloud só está disponível em um device físico com suporte a CloudKit."]
+                )
+            }
+
+            checkiCloudAvailability()
+            guard iCloudAvailable else {
+                throw NSError(
+                    domain: "CloudSync",
+                    code: 4,
+                    userInfo: [NSLocalizedDescriptionKey: "Entre no iCloud neste dispositivo para apagar também os dados sincronizados do app."]
+                )
+            }
+        }
+
+        isSyncing = true
+        syncError = nil
+        defer { isSyncing = false }
+
+        teardownRemoteChangeObservation()
+
+        if shouldAttemptCloudReset {
+            try await Self.deleteAllCloudData()
+        }
+
+        let context = ModelContext(container)
+        context.autosaveEnabled = false
+        try Self.deleteAllLocalData(in: context)
+        DataSeeder.seedIfNeeded(context: context)
+        try context.save()
+
+        NotificationService.shared.removeAllNotifications()
+        BackupManager.shared.deleteAllBackups()
+        SharingService.shared.resetLocalState()
+
+        UserDefaults.standard.removeObject(forKey: Self.lastSyncDateKey)
+        syncError = nil
+
+        if isUsingCloudKitContainer {
+            setupRemoteChangeObservation()
         }
     }
 
@@ -359,6 +424,9 @@ final class CloudSyncService: @unchecked Sendable {
             for message in try oldContext.fetch(FetchDescriptor<ChatMessage>()) {
                 newContext.insert(copyChatMessage(message))
             }
+            for conversation in try oldContext.fetch(FetchDescriptor<ChatConversation>()) {
+                newContext.insert(copyChatConversation(conversation))
+            }
             for settings in try oldContext.fetch(FetchDescriptor<AppSettings>()) {
                 newContext.insert(copyAppSettings(settings))
             }
@@ -397,6 +465,25 @@ final class CloudSyncService: @unchecked Sendable {
            settings.contains(where: { $0.hasCompletedOnboarding }) {
             return true
         }
+        return false
+    }
+
+    /// Returns true when the store has list/recipe content visible in the app.
+    /// Private-only metadata such as chat/settings does not count here because
+    /// a CloudKit destination with only private rows still needs the shared/list
+    /// data copied across.
+    private static func storeHasPrimaryUserContent(context: ModelContext) -> Bool {
+        func nonEmpty<T: PersistentModel>(_ type: T.Type) -> Bool {
+            var fd = FetchDescriptor<T>()
+            fd.fetchLimit = 1
+            return (try? !context.fetch(fd).isEmpty) ?? false
+        }
+
+        if nonEmpty(UnifiedItem.self) { return true }
+        if nonEmpty(Recipe.self) { return true }
+        if nonEmpty(PantryItem.self) { return true }
+        if nonEmpty(GroceryItem.self) { return true }
+        if nonEmpty(UtensilItem.self) { return true }
         return false
     }
 
@@ -503,7 +590,7 @@ final class CloudSyncService: @unchecked Sendable {
         let privateSchema = Schema([AppSettings.self, ChatMessage.self, ChatConversation.self])
         let sharedSchema = Schema([
             UnifiedItem.self, PantryItem.self, GroceryItem.self, UtensilItem.self, Category.self, DeletedDefaultCategory.self,
-            Recipe.self, RecipeIngredient.self, RecipeStep.self, RecipePreparationMedia.self,
+            Recipe.self, RecipeIngredient.self, RecipeIngredientSection.self, RecipeStep.self, RecipePreparationMedia.self,
         ])
 
         let privateConfig = ModelConfiguration(
@@ -546,7 +633,7 @@ final class CloudSyncService: @unchecked Sendable {
         let privateSchema = Schema([AppSettings.self, ChatMessage.self, ChatConversation.self])
         let sharedSchema = Schema([
             UnifiedItem.self, PantryItem.self, GroceryItem.self, UtensilItem.self, Category.self, DeletedDefaultCategory.self,
-            Recipe.self, RecipeIngredient.self, RecipeStep.self, RecipePreparationMedia.self,
+            Recipe.self, RecipeIngredient.self, RecipeIngredientSection.self, RecipeStep.self, RecipePreparationMedia.self,
         ])
 
         let privateConfig = ModelConfiguration(
@@ -563,6 +650,50 @@ final class CloudSyncService: @unchecked Sendable {
         )
 
         return try ModelContainer(for: appSchema, configurations: privateConfig, sharedConfig)
+    }
+
+    @MainActor
+    private static func migrateLocalDataIfNeeded(from sourceContainer: ModelContainer, to destinationContainer: ModelContainer) throws {
+        let sourceContext = ModelContext(sourceContainer)
+        let destinationContext = ModelContext(destinationContainer)
+
+        guard storeHasPrimaryUserContent(context: sourceContext) else { return }
+        guard !storeHasPrimaryUserContent(context: destinationContext) else { return }
+
+        for item in try sourceContext.fetch(FetchDescriptor<Category>()) {
+            destinationContext.insert(copyCategory(item))
+        }
+        for item in try sourceContext.fetch(FetchDescriptor<DeletedDefaultCategory>()) {
+            destinationContext.insert(copyDeletedDefaultCategory(item))
+        }
+        for item in try sourceContext.fetch(FetchDescriptor<UnifiedItem>()) {
+            destinationContext.insert(copyUnifiedItem(item))
+        }
+        for item in try sourceContext.fetch(FetchDescriptor<PantryItem>()) {
+            destinationContext.insert(copyPantryItem(item))
+        }
+        for item in try sourceContext.fetch(FetchDescriptor<GroceryItem>()) {
+            destinationContext.insert(copyGroceryItem(item))
+        }
+        for item in try sourceContext.fetch(FetchDescriptor<UtensilItem>()) {
+            destinationContext.insert(copyUtensilItem(item))
+        }
+        for recipe in try sourceContext.fetch(FetchDescriptor<Recipe>()) {
+            destinationContext.insert(copyRecipe(recipe))
+        }
+        for message in try sourceContext.fetch(FetchDescriptor<ChatMessage>()) {
+            destinationContext.insert(copyChatMessage(message))
+        }
+        for conversation in try sourceContext.fetch(FetchDescriptor<ChatConversation>()) {
+            destinationContext.insert(copyChatConversation(conversation))
+        }
+        for settings in try sourceContext.fetch(FetchDescriptor<AppSettings>()) {
+            destinationContext.insert(copyAppSettings(settings))
+        }
+
+        try destinationContext.save()
+        deduplicateAfterMigration(context: destinationContext)
+        NSLog("[CloudSync] Migrated local data into CloudKit-backed stores before container swap")
     }
 
     private static func backupBrokenStoresForRecovery() {
@@ -590,6 +721,32 @@ final class CloudSyncService: @unchecked Sendable {
                 }
             }
         }
+    }
+
+    private static func deleteAllCloudData() async throws {
+        let database = CKContainer(identifier: cloudKitContainerID).privateCloudDatabase
+        let zoneIDs = try await database.allRecordZones()
+            .map(\.zoneID)
+            .filter { $0 != CKRecordZone.default().zoneID }
+
+        guard !zoneIDs.isEmpty else { return }
+        _ = try await database.modifyRecordZones(saving: [], deleting: zoneIDs)
+    }
+
+    @MainActor
+    private static func deleteAllLocalData(in context: ModelContext) throws {
+        for recipe in try context.fetch(FetchDescriptor<Recipe>()) {
+            context.delete(recipe)
+        }
+        try context.delete(model: UnifiedItem.self)
+        try context.delete(model: PantryItem.self)
+        try context.delete(model: GroceryItem.self)
+        try context.delete(model: UtensilItem.self)
+        try context.delete(model: DeletedDefaultCategory.self)
+        try context.delete(model: Category.self)
+        try context.delete(model: ChatMessage.self)
+        try context.delete(model: ChatConversation.self)
+        try context.delete(model: AppSettings.self)
     }
 
     private static func canUseCloudKitInCurrentEnvironment() -> Bool {
@@ -874,9 +1031,20 @@ final class CloudSyncService: @unchecked Sendable {
                 unit: ing.unit,
                 preparationState: ing.preparationState,
                 iconName: ing.iconName,
-                sortOrder: ing.sortOrder
+                sortOrder: ing.sortOrder,
+                sectionID: ing.sectionID
             )
             c.id = ing.id
+            return c
+        }
+
+        copy.ingredientSections = (source.ingredientSections ?? []).map { section in
+            let c = RecipeIngredientSection(
+                title: section.title,
+                subtitle: section.subtitle,
+                sortOrder: section.sortOrder,
+                id: section.id
+            )
             return c
         }
 
@@ -915,6 +1083,14 @@ final class CloudSyncService: @unchecked Sendable {
         )
         copy.id = source.id
         copy.timestamp = source.timestamp
+        return copy
+    }
+
+    private static func copyChatConversation(_ source: ChatConversation) -> ChatConversation {
+        let copy = ChatConversation(title: source.title)
+        copy.id = source.id
+        copy.createdAt = source.createdAt
+        copy.updatedAt = source.updatedAt
         return copy
     }
 

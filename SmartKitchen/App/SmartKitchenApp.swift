@@ -154,6 +154,7 @@ struct SmartKitchenApp: App {
         let context = ModelContext(cloudSync.container)
         DataSeeder.seedIfNeeded(context: context)
         UnifiedItemMigration.migrateIfNeeded(context: context)
+        _ = BackupManager.shared.restoreLatestBackupIfCurrentStoreNeedsRecovery(context: context)
 
         cloudSync.activateCloudSyncIfNeededOnLaunch()
     }

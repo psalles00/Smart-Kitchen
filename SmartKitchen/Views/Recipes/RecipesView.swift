@@ -1342,15 +1342,22 @@ private struct RecipeNotebookManagerSheet: View {
         }
         .modalNavigationTitle("Gerenciar cadernos")
         .toolbar {
+            #if os(iOS)
             ToolbarItem(placement: .topBarLeading) {
                 EditButton()
             }
-
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Fechar") {
                     dismiss()
                 }
             }
+            #else
+            ToolbarItem {
+                Button("Fechar") {
+                    dismiss()
+                }
+            }
+            #endif
         }
         .alert(
             "Renomear caderno",
@@ -1453,11 +1460,19 @@ private struct RecipeNotebookManagerSheet: View {
                 }
                 .modalNavigationTitle("Mover receitas")
                 .toolbar {
+                    #if os(iOS)
                     ToolbarItem(placement: .topBarTrailing) {
                         Button("Cancelar") {
                             showMoveDestinationSheet = false
                         }
                     }
+                    #else
+                    ToolbarItem {
+                        Button("Cancelar") {
+                            showMoveDestinationSheet = false
+                        }
+                    }
+                    #endif
                 }
             }
             .forceLightStatusBar()
@@ -1573,3 +1588,4 @@ private func recipeCategorySymbol(for name: String) -> String {
     default: return "square.grid.2x2"
     }
 }
+

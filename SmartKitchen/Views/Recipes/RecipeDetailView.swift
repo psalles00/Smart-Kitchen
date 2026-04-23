@@ -21,6 +21,9 @@ struct RecipeDetailView: View {
     @State private var ingredientEditorSheet: IngredientEditorSheet?
     @State private var pendingIngredientReplacement: PendingIngredientReplacement?
 
+    private let heroHeight: CGFloat = 525
+    private let contentOverlap: CGFloat = 34
+
     private var sortedIngredients: [RecipeIngredient] {
         (recipe.ingredients ?? []).sorted { $0.sortOrder < $1.sortOrder }
     }
@@ -64,6 +67,37 @@ struct RecipeDetailView: View {
         Color(red: 248 / 255, green: 248 / 255, blue: 250 / 255)
     }
 
+    private var heroMetadataSegments: [String] {
+        var segments: [String] = []
+
+        if recipe.totalTime > 0 {
+            segments.append("\(recipe.totalTime) min")
+        }
+
+        segments.append(recipe.difficulty.rawValue)
+
+        if recipe.servings > 0 {
+            segments.append("\(recipe.servings) porções")
+        }
+
+        if let calories = recipe.calories {
+            segments.append("\(calories) kcal")
+        }
+
+        let categories = recipe.categories.filter {
+            !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+        if !categories.isEmpty {
+            segments.append(categories.joined(separator: ", "))
+        }
+
+        return segments
+    }
+
+    private var heroMetadataText: String {
+        heroMetadataSegments.joined(separator: " | ")
+    }
+
     private var externalURL: URL? {
         let trimmed = recipe.externalURLString.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
@@ -95,6 +129,8 @@ struct RecipeDetailView: View {
             VStack(alignment: .leading, spacing: 0) {
                 heroImage
                 content
+                    .padding(.top, -contentOverlap)
+                    .zIndex(1)
             }
         }
         #if os(macOS)
@@ -107,6 +143,7 @@ struct RecipeDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
         #endif
+        .background(detailSurfaceColor.ignoresSafeArea())
         .tint(PageTheme.recipes.accentColor)
         #if os(iOS)
         .toolbar {
@@ -199,61 +236,96 @@ struct RecipeDetailView: View {
             )
             .forceLightStatusBar()
         }
-        #if os(macOS)
-        .background(Color(.windowBackgroundColor).ignoresSafeArea())
-        #endif
     }
 
     // MARK: - Hero Image
 
     @ViewBuilder
     private var heroImage: some View {
-        if let data = recipe.imageData, let image = PlatformImage(data: data) {
-            Color.clear
-                .frame(height: 420)
-                .overlay {
-                    Image(platformImage: image)
-                        .resizable()
-                        .scaledToFill()
+        ZStack(alignment: .bottomLeading) {
+            GeometryReader { proxy in
+                Group {
+                    if let data = recipe.imageData, let image = PlatformImage(data: data) {
+                        Image(platformImage: image)
+                            .resizable()
+                            .scaledToFill()
+                    } else {
+                        RecipeImagePlaceholder(ingredients: sortedIngredients)
+                    }
                 }
+                .frame(width: proxy.size.width, height: proxy.size.height)
                 .clipped()
-        } else {
-            RecipeImagePlaceholder(ingredients: sortedIngredients)
-                .frame(height: 420)
-                .clipped()
+            }
+
+            LinearGradient(
+                colors: [
+                    .clear,
+                    Color.black.opacity(0.08),
+                    Color.black.opacity(0.22),
+                    Color.black.opacity(0.82)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+
+            VStack(alignment: .leading, spacing: 14) {
+                Text(recipe.name)
+                    .font(.custom("Bricolage Grotesque", size: 28, relativeTo: .title2).bold())
+                    .foregroundStyle(.white)
+                    .lineLimit(3)
+
+                Capsule(style: .continuous)
+                    .fill(Color.white.opacity(0.9))
+                    .frame(width: 92, height: 3)
+
+                if !recipe.descriptionText.isEmpty {
+                    Text(recipe.descriptionText)
+                        .font(.footnote.weight(.bold))
+                        .foregroundStyle(.white.opacity(0.96))
+                        .lineLimit(3)
+                }
+
+                if !heroMetadataText.isEmpty {
+                    Text(heroMetadataText)
+                        .font(.footnote)
+                        .foregroundStyle(.white.opacity(0.86))
+                        .lineLimit(2)
+                }
+
+                Button {
+                    showCookingMode = true
+                } label: {
+                    Label("Começar a cozinhar", systemImage: "play.fill")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                }
+                .buttonStyle(.plain)
+                .background {
+                    if #available(iOS 26, macOS 26, *) {
+                        Capsule()
+                            .fill(.clear)
+                            .glassEffect(.regular.interactive(), in: .capsule)
+                    } else {
+                        Capsule()
+                            .fill(.ultraThinMaterial)
+                    }
+                }
+            }
+            .frame(maxWidth: 520, alignment: .leading)
+            .padding(.horizontal, 20)
+            .padding(.bottom, 42)
         }
+        .frame(maxWidth: .infinity)
+        .frame(height: heroHeight)
+        .clipped()
     }
 
     // MARK: - Content
 
     private var content: some View {
         VStack(alignment: .leading, spacing: 24) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text(recipe.name)
-                    .font(.pageTitle)
-
-                if !recipe.descriptionText.isEmpty {
-                    Text(recipe.descriptionText)
-                        .font(.body)
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            // Metadata chips
-            metadataRow
-
-            // Start cooking button
-            Button {
-                showCookingMode = true
-            } label: {
-                Label("Começar a Cozinhar", systemImage: "play.fill")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-            }
-            .buttonStyle(.borderedProminent)
-            .tint(.accentColor)
-
             if !sortedPreparationMedia.isEmpty {
                 preparationMediaSection
             }
@@ -273,49 +345,23 @@ struct RecipeDetailView: View {
                 stepsSection
             }
 
-        }
-        .padding(20)
-        .padding(.bottom, 40)
-    }
-
-    // MARK: - Metadata
-
-    private var metadataRow: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 12) {
-                if let externalURL {
-                    Button {
-                        UIApplication.shared.open(externalURL)
-                    } label: {
-                        metadataChip(icon: "link", text: "Link da receita")
-                    }
-                    .buttonStyle(.plain)
-                }
-                if recipe.totalTime > 0 {
-                    metadataChip(icon: "clock", text: "\(recipe.totalTime) min")
-                }
-                metadataChip(icon: recipe.difficulty.icon, text: recipe.difficulty.rawValue)
-                if recipe.servings > 0 {
-                    metadataChip(icon: "person.2", text: "\(recipe.servings) porções")
-                }
-                if let cal = recipe.calories {
-                    metadataChip(icon: "flame", text: "\(cal) kcal")
-                }
-                metadataChip(icon: "tag", text: recipe.categories.joined(separator: ", "))
+            if let externalURL {
+                linkSection(url: externalURL)
             }
-        }
-    }
 
-    private func metadataChip(icon: String, text: String) -> some View {
-        HStack(spacing: 6) {
-            Image(systemName: icon)
-                .font(.caption)
-            Text(text)
-                .font(.caption.weight(.medium))
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(detailSurfaceColor, in: .capsule)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 20)
+        .padding(.top, 34)
+        .padding(.bottom, 40)
+        .background {
+            UnevenRoundedRectangle(
+                cornerRadii: .init(topLeading: 30, bottomLeading: 0, bottomTrailing: 0, topTrailing: 30),
+                style: .continuous
+            )
+            .fill(detailSurfaceColor)
+            .shadow(color: Color.black.opacity(0.12), radius: 26, x: 0, y: -8)
+        }
     }
 
     // MARK: - Ingredients
@@ -331,7 +377,12 @@ struct RecipeDetailView: View {
                 Button(hasMissingIngredientsInGrocery ? "Adicionar todos ao mercado" : "Todos já adicionados") {
                     addAllIngredientsToGrocery()
                 }
-                .font(.caption.weight(.semibold))
+                .buttonStyle(.plain)
+                .font(.caption.weight(.medium))
+                .foregroundStyle(hasMissingIngredientsInGrocery ? .secondary : .tertiary)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(Color(.tertiarySystemFill).opacity(hasMissingIngredientsInGrocery ? 0.85 : 0.55), in: .capsule)
                 .disabled(!hasMissingIngredientsInGrocery)
             }
             .padding(.top, 8)
@@ -607,6 +658,34 @@ struct RecipeDetailView: View {
         .overlay {
             RoundedRectangle(cornerRadius: 26, style: .continuous)
                 .strokeBorder(Color.white.opacity(0.14), lineWidth: 1)
+        }
+    }
+
+    private func linkSection(url: URL) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Link da Receita")
+                .font(.sectionTitle)
+                .padding(.top, 8)
+
+            Link(destination: url) {
+                HStack(spacing: 12) {
+                    Image(systemName: "link")
+                        .foregroundStyle(PageTheme.recipes.accentColor)
+
+                    Text(url.absoluteString)
+                        .font(.subheadline)
+                        .foregroundStyle(.primary)
+                        .lineLimit(2)
+
+                    Spacer()
+
+                    Image(systemName: "arrow.up.right.square")
+                        .foregroundStyle(.secondary)
+                }
+                .padding(14)
+                .background(Color(.secondarySystemBackground), in: .rect(cornerRadius: 16))
+            }
+            .buttonStyle(.plain)
         }
     }
 
@@ -1008,11 +1087,19 @@ private struct IngredientReplacementSheet: View {
             .searchable(text: $query, prompt: "Buscar ingrediente da sua lista")
             #endif
             .toolbar {
+                #if os(iOS)
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Cancelar") {
                         dismiss()
                     }
                 }
+                #else
+                ToolbarItem {
+                    Button("Cancelar") {
+                        dismiss()
+                    }
+                }
+                #endif
             }
         }
     }
@@ -1090,6 +1177,7 @@ private struct IngredientQuantitySheet: View {
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
+                #if os(iOS)
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Cancelar") {
                         dismiss()
@@ -1105,6 +1193,23 @@ private struct IngredientQuantitySheet: View {
                         dismiss()
                     }
                 }
+                #else
+                ToolbarItem {
+                    Button("Cancelar") {
+                        dismiss()
+                    }
+                }
+                ToolbarItem {
+                    Button("Salvar") {
+                        let normalized = quantityText
+                            .replacingOccurrences(of: ",", with: ".")
+                            .trimmingCharacters(in: .whitespacesAndNewlines)
+                        let quantity = normalized.isEmpty ? nil : Double(normalized)
+                        onSave(quantity)
+                        dismiss()
+                    }
+                }
+                #endif
             }
         }
     }
@@ -1156,11 +1261,19 @@ private struct IngredientStateSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
+                #if os(iOS)
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Cancelar") {
                         dismiss()
                     }
                 }
+                #else
+                ToolbarItem {
+                    Button("Cancelar") {
+                        dismiss()
+                    }
+                }
+                #endif
             }
         }
     }

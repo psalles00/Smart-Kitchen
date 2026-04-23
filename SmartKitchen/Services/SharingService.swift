@@ -223,6 +223,16 @@ final class SharingService: @unchecked Sendable {
         try await ckContainer.accept(metadata)
     }
 
+    @MainActor
+    func resetLocalState() {
+        activeShare = nil
+        participants = []
+        isLoading = false
+        error = nil
+        isSharing = false
+        shareScope = .everything
+    }
+
     // MARK: - Helpers
 
     /// The CKContainer instance for use with UICloudSharingController.

@@ -339,6 +339,7 @@ private struct RecipeLinkInputSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
+                #if os(iOS)
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Cancelar") { dismiss() }
                 }
@@ -347,6 +348,15 @@ private struct RecipeLinkInputSheet: View {
                         .font(.body.weight(.semibold))
                         .disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
+                #else
+                ToolbarItem {
+                    Button("Cancelar") { dismiss() }
+                }
+                ToolbarItem {
+                    Button("Importar") { submit() }
+                        .disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+                #endif
             }
             .onAppear {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
@@ -416,6 +426,7 @@ private struct RecipeTextInputSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
+                #if os(iOS)
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Cancelar") { dismiss() }
                 }
@@ -426,6 +437,17 @@ private struct RecipeTextInputSheet: View {
                     .font(.body.weight(.semibold))
                     .disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
+                #else
+                ToolbarItem {
+                    Button("Cancelar") { dismiss() }
+                }
+                ToolbarItem {
+                    Button("Importar") {
+                        onSubmit(text)
+                    }
+                    .disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+                #endif
             }
             .onAppear {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
