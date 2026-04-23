@@ -8,6 +8,13 @@ enum RecipeImportSource: Equatable {
     case url(URL)
     case text(String)
     case image(Data)
+    case videoFile(URL)
+}
+
+enum RecipeImportVideoPolicy {
+    static let maxSharedVideoDurationMinutes = 20
+    static let maxSharedVideoDurationSeconds = Double(maxSharedVideoDurationMinutes * 60)
+    static let maxSharedVideoDurationMessage = "Vídeos enviados devem ter no máximo 20 minutos."
 }
 
 // MARK: - Confidence
@@ -364,7 +371,7 @@ enum RecipeImportError: LocalizedError {
         case .invalidImage:
             return "Imagem inválida ou ilegível."
         case .emptyContent:
-            return "Conteúdo vazio. Cole um link, texto ou envie uma imagem."
+            return "Conteúdo vazio. Cole um link, texto ou envie uma imagem ou vídeo."
         case .fetchFailed(let msg):
             return "Não foi possível buscar o conteúdo: \(msg)"
         case .unsupportedSource(let msg):
@@ -411,6 +418,8 @@ enum RecipeImportLogger {
             return "source=text chars=\(text.count) preview=\(preview(text))"
         case .image(let data):
             return "source=image bytes=\(data.count)"
+        case .videoFile(let url):
+            return "source=video file=\(url.lastPathComponent)"
         }
     }
 

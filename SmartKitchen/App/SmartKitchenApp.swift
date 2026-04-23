@@ -110,6 +110,9 @@ struct SmartKitchenApp: App {
                 .id(cloudSync.containerID)
                 .recipeImportInboxHost()
                 .onOpenURL { url in
+                    if SharedImportInbox.shared.ingest(url: url) {
+                        return
+                    }
                     _ = RecipeImportInbox.shared.ingest(url: url)
                 }
                 .task {

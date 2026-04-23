@@ -2,6 +2,7 @@ import SwiftUI
 
 struct NutrientsPlaceholderView: View {
     @Environment(\.scrollToTopTrigger) private var scrollToTopTrigger
+    @State private var sharedFoodCaptureInbox = SharedFoodCaptureInbox.shared
     @State private var contentResetToken: Int = 0
 
     var body: some View {
@@ -16,6 +17,11 @@ struct NutrientsPlaceholderView: View {
                 ScrollView {
                 VStack(spacing: 24) {
                     Spacer().frame(height: 40)
+
+                    if let capture = sharedFoodCaptureInbox.pendingCapture {
+                        sharedCaptureCard(capture)
+                            .padding(.horizontal, 24)
+                    }
 
                     Image(systemName: "chart.bar.doc.horizontal")
                         .font(.system(size: 64))
@@ -59,6 +65,44 @@ struct NutrientsPlaceholderView: View {
         }
     }
 
+    private func sharedCaptureCard(_ capture: SharedFoodCaptureItem) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Imagem recebida para registro")
+                .font(.headline.weight(.semibold))
+
+            if let image = previewImage(from: capture.imageData) {
+                Group {
+                    #if os(iOS)
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
+                    #else
+                    Image(nsImage: image)
+                        .resizable()
+                        .scaledToFill()
+                    #endif
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 180)
+                .clipped()
+                .clipShape(.rect(cornerRadius: 16))
+            }
+
+            Text(capture.filename ?? "Use esta captura como referência quando o registro nutricional estiver disponível.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+
+            Button("Limpar imagem") {
+                sharedFoodCaptureInbox.clear()
+            }
+            .buttonStyle(.bordered)
+            .tint(PageTheme.nutrients.accentColor)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.thinMaterial, in: .rect(cornerRadius: 20))
+    }
+
     private func featureRow(icon: String, title: String, description: String) -> some View {
         HStack(spacing: 14) {
             Image(systemName: icon)
@@ -75,5 +119,13 @@ struct NutrientsPlaceholderView: View {
                     .foregroundStyle(.secondary)
             }
         }
+    }
+
+    private func previewImage(from data: Data) -> PlatformImage? {
+        #if os(iOS)
+        return UIImage(data: data)
+        #else
+        return NSImage(data: data)
+        #endif
     }
 }

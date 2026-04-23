@@ -21,5 +21,9 @@
 		<string>iCloud.com.pedrosalles.smartkitchen.syn</string>
 		<string>iCloud.com.pedrosalles.smartkitchen.sync</string>
 	</array>
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.com.pedrosalles.smartkitchen.sync</string>
+	</array>
 </dict>
 </plist>

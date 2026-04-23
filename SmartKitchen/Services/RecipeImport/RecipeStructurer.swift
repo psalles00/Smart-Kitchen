@@ -571,6 +571,20 @@ final class RecipeImportImprover {
 
     private func downloadVideo(from url: URL, referer: URL? = nil) async throws -> URL {
         RecipeImportLogger.debug("improver download video")
+
+        if url.isFileURL {
+            let rawExtension = url.pathExtension.lowercased()
+            let fileExtension = rawExtension.isEmpty ? "mp4" : rawExtension
+            let finalURL = FileManager.default.temporaryDirectory
+                .appendingPathComponent("import-video-\(UUID().uuidString).\(fileExtension)")
+            try? FileManager.default.removeItem(at: finalURL)
+            try FileManager.default.copyItem(at: url, to: finalURL)
+
+            let fileSize = (try? FileManager.default.attributesOfItem(atPath: finalURL.path)[.size] as? NSNumber)?.intValue ?? 0
+            RecipeImportLogger.debug("improver using local video bytes=\(fileSize)")
+            return finalURL
+        }
+
         var request = URLRequest(url: url)
         request.timeoutInterval = 45
         request.setValue(

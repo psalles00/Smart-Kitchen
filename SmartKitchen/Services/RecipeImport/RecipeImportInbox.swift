@@ -91,3 +91,272 @@ final class RecipeImportInbox {
         return detector?.firstMatch(in: text, range: range)?.url
     }
 }
+
+enum SharedImportKind: String, Codable {
+    case url
+    case text
+    case image
+    case video
+}
+
+struct SharedImportItem: Identifiable, Equatable {
+    let id: String
+    let kind: SharedImportKind
+    let url: URL?
+    let text: String?
+    let imageData: Data?
+    let mediaFileURL: URL?
+    let filename: String?
+
+    static func == (lhs: SharedImportItem, rhs: SharedImportItem) -> Bool {
+        lhs.id == rhs.id
+    }
+
+    var recipeImportSource: RecipeImportSource? {
+        switch kind {
+        case .url:
+            return url.map(RecipeImportSource.url)
+        case .text:
+            guard let text else { return nil }
+            return .text(text)
+        case .image:
+            guard let imageData else { return nil }
+            return .image(imageData)
+        case .video:
+            return mediaFileURL.map(RecipeImportSource.videoFile)
+        }
+    }
+
+    var displayTitle: String {
+        switch kind {
+        case .url:
+            return url?.host ?? "Link compartilhado"
+        case .text:
+            return "Texto compartilhado"
+        case .image:
+            return filename ?? "Imagem compartilhada"
+        case .video:
+            return filename ?? mediaFileURL?.lastPathComponent ?? "Vídeo compartilhado"
+        }
+    }
+
+    var detailText: String {
+        switch kind {
+        case .url:
+            return url?.absoluteString ?? ""
+        case .text:
+            return RecipeImportLogger.preview(text ?? "", limit: 140)
+        case .image:
+            return "Escolha se essa imagem deve virar uma receita ou ficar reservada para o módulo de nutrientes."
+        case .video:
+            return "Podemos transcrever o áudio do vídeo e montar uma receita editável antes de salvar. O limite é de \(RecipeImportVideoPolicy.maxSharedVideoDurationMinutes) minutos."
+        }
+    }
+
+    var assistantPrefill: String? {
+        switch kind {
+        case .url:
+            guard let url else { return nil }
+            return "Analise este link compartilhado e me diga a melhor ação no Smart Kitchen: \(url.absoluteString)"
+        case .text:
+            guard let text, !text.isEmpty else { return nil }
+            return "Analise este conteúdo compartilhado e me diga como devo usá-lo no Smart Kitchen:\n\n\(text)"
+        case .image, .video:
+            return nil
+        }
+    }
+
+    var foodCapture: SharedFoodCaptureItem? {
+        guard kind == .image, let imageData else { return nil }
+        return SharedFoodCaptureItem(imageData: imageData, filename: filename)
+    }
+}
+
+struct SharedFoodCaptureItem: Identifiable, Equatable {
+    let id: UUID
+    let imageData: Data
+    let filename: String?
+
+    init(id: UUID = UUID(), imageData: Data, filename: String?) {
+        self.id = id
+        self.imageData = imageData
+        self.filename = filename
+    }
+}
+
+@MainActor
+@Observable
+final class SharedFoodCaptureInbox {
+
+    static let shared = SharedFoodCaptureInbox()
+
+    var pendingCapture: SharedFoodCaptureItem?
+
+    private init() {}
+
+    func capture(_ item: SharedFoodCaptureItem) {
+        pendingCapture = item
+    }
+
+    func clear() {
+        pendingCapture = nil
+    }
+}
+
+@MainActor
+@Observable
+final class SharedImportInbox {
+
+    static let shared = SharedImportInbox()
+
+    var pendingItem: SharedImportItem?
+
+    private var pendingFolderURL: URL?
+
+    private init() {}
+
+    func ingest(url: URL) -> Bool {
+        guard url.scheme?.lowercased() == "smartkitchen",
+              let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+              components.host?.lowercased() == "shared-import" || components.path.contains("shared-import") else {
+            return false
+        }
+
+        guard let token = components.queryItems?.first(where: { $0.name == "token" })?.value,
+              !token.isEmpty else {
+            RecipeImportLogger.error("shared inbox missing token")
+            return false
+        }
+
+        do {
+            clear()
+            let loaded = try SharedImportStorage.loadItem(token: token)
+            pendingItem = loaded.item
+            pendingFolderURL = loaded.folderURL
+            RecipeImportLogger.info("shared inbox queued kind=\(loaded.item.kind.rawValue) token=\(token)")
+            return true
+        } catch {
+            RecipeImportLogger.error("shared inbox failed token=\(token) error=\(error.localizedDescription)")
+            return false
+        }
+    }
+
+    func clear() {
+        pendingItem = nil
+        if let pendingFolderURL {
+            try? FileManager.default.removeItem(at: pendingFolderURL)
+        }
+        pendingFolderURL = nil
+    }
+}
+
+private enum SharedImportStorage {
+    static let appGroupIdentifier = "group.com.pedrosalles.smartkitchen.sync"
+    static let inboxDirectoryName = "SharedImportInbox"
+
+    struct LoadedItem {
+        let item: SharedImportItem
+        let folderURL: URL
+    }
+
+    struct Manifest: Codable {
+        let kind: SharedImportKind
+        let urlString: String?
+        let text: String?
+        let filename: String?
+        let mediaFilename: String?
+    }
+
+    static func loadItem(token: String) throws -> LoadedItem {
+        let folderURL = try folderURL(for: token)
+        let manifestURL = folderURL.appendingPathComponent("manifest.json")
+        let manifestData = try Data(contentsOf: manifestURL)
+        let manifest = try JSONDecoder().decode(Manifest.self, from: manifestData)
+
+        let item = try makeItem(token: token, manifest: manifest, folderURL: folderURL)
+        return LoadedItem(item: item, folderURL: folderURL)
+    }
+
+    private static func makeItem(token: String, manifest: Manifest, folderURL: URL) throws -> SharedImportItem {
+        switch manifest.kind {
+        case .url:
+            guard let urlString = manifest.urlString, let url = URL(string: urlString) else {
+                throw SharedImportStorageError.invalidManifest
+            }
+            return SharedImportItem(
+                id: token,
+                kind: .url,
+                url: url,
+                text: nil,
+                imageData: nil,
+                mediaFileURL: nil,
+                filename: nil
+            )
+
+        case .text:
+            return SharedImportItem(
+                id: token,
+                kind: .text,
+                url: nil,
+                text: manifest.text,
+                imageData: nil,
+                mediaFileURL: nil,
+                filename: nil
+            )
+
+        case .image:
+            guard let mediaFilename = manifest.mediaFilename else {
+                throw SharedImportStorageError.invalidManifest
+            }
+            let imageURL = folderURL.appendingPathComponent(mediaFilename)
+            let imageData = try Data(contentsOf: imageURL)
+            return SharedImportItem(
+                id: token,
+                kind: .image,
+                url: nil,
+                text: nil,
+                imageData: imageData,
+                mediaFileURL: imageURL,
+                filename: manifest.filename
+            )
+
+        case .video:
+            guard let mediaFilename = manifest.mediaFilename else {
+                throw SharedImportStorageError.invalidManifest
+            }
+            let videoURL = folderURL.appendingPathComponent(mediaFilename)
+            return SharedImportItem(
+                id: token,
+                kind: .video,
+                url: nil,
+                text: nil,
+                imageData: nil,
+                mediaFileURL: videoURL,
+                filename: manifest.filename
+            )
+        }
+    }
+
+    private static func folderURL(for token: String) throws -> URL {
+        guard let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupIdentifier) else {
+            throw SharedImportStorageError.containerUnavailable
+        }
+        return containerURL
+            .appendingPathComponent(inboxDirectoryName, isDirectory: true)
+            .appendingPathComponent(token, isDirectory: true)
+    }
+}
+
+private enum SharedImportStorageError: LocalizedError {
+    case containerUnavailable
+    case invalidManifest
+
+    var errorDescription: String? {
+        switch self {
+        case .containerUnavailable:
+            return "O container compartilhado do app não está disponível."
+        case .invalidManifest:
+            return "O conteúdo compartilhado está inválido ou incompleto."
+        }
+    }
+}

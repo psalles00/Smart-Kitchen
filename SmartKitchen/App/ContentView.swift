@@ -63,6 +63,11 @@ struct ContentView: View {
     @State private var pendingOpenChat = false
     @State private var pendingNewConversation = false
     @State private var pendingShowHistory = false
+    @State private var sharedImportInbox = SharedImportInbox.shared
+    @State private var showSharedImportActions = false
+    @State private var showSharedRecipeImport = false
+    @State private var sharedRecipeImportSource: RecipeImportSource?
+    @State private var pendingSharedImportedRecipeID: UUID? = nil
 
 
     #if os(macOS)
@@ -197,6 +202,50 @@ struct ContentView: View {
             }
             .forceLightStatusBar()
         }
+        .sheet(isPresented: $showSharedImportActions) {
+            if let item = sharedImportInbox.pendingItem {
+                SharedImportActionView(
+                    item: item,
+                    onReviewRecipe: {
+                        guard let source = item.recipeImportSource else {
+                            sharedImportInbox.clear()
+                            showSharedImportActions = false
+                            return
+                        }
+                        sharedRecipeImportSource = source
+                        showSharedImportActions = false
+                    },
+                    onRegisterFood: item.foodCapture == nil ? nil : {
+                        if let capture = item.foodCapture {
+                            SharedFoodCaptureInbox.shared.capture(capture)
+                        }
+                        routeSharedImportToNutrients()
+                        sharedImportInbox.clear()
+                        showSharedImportActions = false
+                    },
+                    onAskAssistant: item.assistantPrefill == nil ? nil : {
+                        if let prefill = item.assistantPrefill {
+                            openAssistantFromSharedImport(prefill: prefill)
+                        }
+                        sharedImportInbox.clear()
+                        showSharedImportActions = false
+                    },
+                    onDismiss: {
+                        sharedImportInbox.clear()
+                        showSharedImportActions = false
+                    }
+                )
+            }
+        }
+        .sheet(isPresented: $showSharedRecipeImport) {
+            if let source = sharedRecipeImportSource {
+                RecipeImportHostView(initialSource: source) { recipeID in
+                    pendingSharedImportedRecipeID = recipeID
+                }
+                .modelContainer(CloudSyncService.shared.container)
+                .forceLightStatusBar()
+            }
+        }
         .environment(\.openSettings, {
             #if os(macOS)
             selectedSidebar = .settings
@@ -231,6 +280,33 @@ struct ContentView: View {
         #if os(iOS)
         .forceLightStatusBar()
         #endif
+        .onChange(of: sharedImportInbox.pendingItem?.id) { _, newValue in
+            guard newValue != nil else { return }
+            sharedRecipeImportSource = nil
+            pendingSharedImportedRecipeID = nil
+            showSharedImportActions = true
+        }
+        .onChange(of: showSharedImportActions) { _, isPresented in
+            guard !isPresented else { return }
+
+            if sharedRecipeImportSource != nil {
+                showSharedRecipeImport = true
+            } else if sharedImportInbox.pendingItem != nil {
+                sharedImportInbox.clear()
+            }
+        }
+        .onChange(of: showSharedRecipeImport) { _, isPresented in
+            guard !isPresented else { return }
+
+            let importedRecipeID = pendingSharedImportedRecipeID
+            pendingSharedImportedRecipeID = nil
+            sharedRecipeImportSource = nil
+            sharedImportInbox.clear()
+
+            if let importedRecipeID {
+                openRecipeInRecipesTab(importedRecipeID)
+            }
+        }
         .onChange(of: selectedTab) { _, newValue in
             handleTabSelectionChange(newValue)
         }
@@ -872,6 +948,20 @@ struct ContentView: View {
         recipeNavigationPath = NavigationPath()
         selectedTab = .recipes
         recipeNavigationPath.append(id)
+        #endif
+    }
+
+    private func openAssistantFromSharedImport(prefill: String) {
+        pendingOpenChat = false
+        pendingChatQuery = prefill
+        searchBarState.reveal(mode: .aiChat)
+    }
+
+    private func routeSharedImportToNutrients() {
+        #if os(macOS)
+        selectedSidebar = .nutrients
+        #else
+        selectedTab = .nutrients
         #endif
     }
 
