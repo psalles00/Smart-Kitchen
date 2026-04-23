@@ -14,4 +14,4 @@
 - Nunca alterar a ordem de `com.apple.developer.icloud-container-identifiers` no entitlements.
 - Sempre verificar `git diff` após rodar `xcodegen generate`.
 - Restaurar entitlements imediatamente se houver mudanças não intencionais.
-- Confirmar manualmente o container correto antes de instalar builds.
+- Confirmar manualmente o container correto antes de instalar builds..

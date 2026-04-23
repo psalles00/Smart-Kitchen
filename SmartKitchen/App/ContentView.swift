@@ -1293,7 +1293,113 @@ private struct HomeView: View {
             }
     }
 
+    @ViewBuilder
     private var actionDeck: some View {
+        #if os(macOS)
+        macActionDeck
+        #else
+        iosActionDeck
+        #endif
+    }
+
+    #if os(macOS)
+    private var macActionDeck: some View {
+        GeometryReader { geo in
+            let spacing: CGFloat = 12
+            let width = geo.size.width
+            let trailingColumnWidth = min(max(width * 0.36, 250), 330)
+            let featuredHeight: CGFloat = 232
+            let stackedHeight: CGFloat = (featuredHeight - spacing) / 2
+            let quickTileHeight: CGFloat = 108
+
+            VStack(alignment: .leading, spacing: spacing) {
+                HStack(alignment: .top, spacing: spacing) {
+                    homeShortcutButton(
+                        title: "Assistente",
+                        subtitle: "Adicione, busque ou pergunte...",
+                        imageName: "assistente",
+                        style: .featured,
+                        imageSize: 112,
+                        imageOffset: CGSize(width: 18, height: 18)
+                    ) {
+                        onOpenSearch()
+                    }
+                    .frame(maxWidth: .infinity, minHeight: featuredHeight, maxHeight: featuredHeight)
+
+                    VStack(spacing: spacing) {
+                        homeShortcutButton(
+                            title: "Modo IA",
+                            subtitle: "",
+                            imageName: "modo ia",
+                            style: .wide,
+                            imageSize: 86,
+                            imageOffset: CGSize(width: 54, height: 20)
+                        ) {
+                            onOpenChat()
+                        }
+                        .frame(height: stackedHeight)
+
+                        homeShortcutButton(
+                            title: "Ideias",
+                            subtitle: "",
+                            imageName: "ideis",
+                            style: .wide,
+                            imageSize: 70,
+                            imageOffset: CGSize(width: 60, height: 14)
+                        ) {
+                            onOpenChat()
+                        }
+                        .frame(height: stackedHeight)
+                    }
+                    .frame(width: trailingColumnWidth)
+                }
+
+                HStack(alignment: .top, spacing: spacing) {
+                    macShortcutAddTile(title: "Mercado", imageName: "mercado", imageSize: 58) {
+                        showAddGrocery = true
+                    }
+
+                    macShortcutAddTile(title: "Despensa", imageName: "despensa", imageSize: 50) {
+                        showAddPantry = true
+                    }
+
+                    macShortcutAddTile(title: "Receitas", imageName: "receitas", imageSize: 56) {
+                        showRecipeAddOptions = true
+                    }
+
+                    macShortcutAddTile(title: "Nutrientes", imageName: "nutrientes", imageSize: 50) {
+                    }
+                }
+                .frame(height: quickTileHeight + 26)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: 370)
+        .padding(.bottom, 12)
+    }
+
+    private func macShortcutAddTile(
+        title: String,
+        imageName: String,
+        imageSize: CGFloat? = nil,
+        action: @escaping () -> Void
+    ) -> some View {
+        VStack(spacing: 8) {
+            homeShortcutAddTile(imageName: imageName, imageSize: imageSize, action: action)
+                .frame(maxWidth: .infinity)
+                .frame(height: 108)
+
+            Text(title)
+                .font(.caption.weight(.bold))
+                .foregroundStyle(.primary)
+                .lineLimit(1)
+                .frame(maxWidth: .infinity)
+        }
+        .frame(maxWidth: .infinity, alignment: .top)
+    }
+    #else
+    private var iosActionDeck: some View {
         VStack(alignment: .leading, spacing: 14) {
 
         GeometryReader { geo in
@@ -1402,6 +1508,7 @@ private struct HomeView: View {
         .padding(.bottom, 40)
         } // end outer VStack
     }
+    #endif
 
     private var expiringSection: some View {
         VStack(alignment: .leading, spacing: 12) {

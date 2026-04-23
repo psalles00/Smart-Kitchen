@@ -400,6 +400,10 @@ struct RecipeDetailView: View {
 
             ZStack(alignment: .bottomLeading) {
                 heroBackgroundImage(in: proxy, minY: minY)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        openPreferredPreparationMedia()
+                    }
                     .overlay {
                         if recipe.imageData == nil {
                             Color.black.opacity(0.32)
@@ -419,26 +423,7 @@ struct RecipeDetailView: View {
                 )
 
                 VStack(alignment: .leading, spacing: 14) {
-                    Text(recipe.name)
-                        .font(.custom("Bricolage Grotesque", size: heroTitleFontSize, relativeTo: .largeTitle).bold())
-                        .foregroundStyle(.white)
-                        .lineLimit(3)
-                        .minimumScaleFactor(0.76)
-
-                    Capsule(style: .continuous)
-                        .fill(Color.white.opacity(0.9))
-                        .frame(width: 92, height: 3)
-
-                    if !recipe.descriptionText.isEmpty {
-                        Text(recipe.descriptionText)
-                            .font(.footnote.weight(.bold))
-                            .foregroundStyle(.white.opacity(0.96))
-                            .lineLimit(3)
-                    }
-
-                    if !heroMetadataItems.isEmpty {
-                        heroMetadataRow
-                    }
+                    heroSummaryContent
 
                     Button {
                         showCookingMode = true
@@ -472,6 +457,35 @@ struct RecipeDetailView: View {
         .frame(height: heroHeight)
     }
 
+    private var heroSummaryContent: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text(recipe.name)
+                .font(.custom("Bricolage Grotesque", size: heroTitleFontSize, relativeTo: .largeTitle).bold())
+                .foregroundStyle(.white)
+                .lineLimit(3)
+                .minimumScaleFactor(0.76)
+
+            Capsule(style: .continuous)
+                .fill(Color.white.opacity(0.9))
+                .frame(width: 92, height: 3)
+
+            if !recipe.descriptionText.isEmpty {
+                Text(recipe.descriptionText)
+                    .font(.footnote.weight(.bold))
+                    .foregroundStyle(.white.opacity(0.96))
+                    .lineLimit(3)
+            }
+
+            if !heroMetadataItems.isEmpty {
+                heroMetadataRow
+            }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            openPreferredPreparationMedia()
+        }
+    }
+
     @ViewBuilder
     private func heroBackgroundImage(in proxy: GeometryProxy, minY: CGFloat) -> some View {
         let stretch = max(minY, 0)
@@ -491,6 +505,15 @@ struct RecipeDetailView: View {
         .frame(width: proxy.size.width, height: parallaxHeight)
         .offset(y: parallaxOffset)
         .clipped()
+    }
+
+    private func openPreparationMedia(_ media: RecipePreparationMedia) {
+        previewSelection = PreparationMediaSelection(id: media.id)
+    }
+
+    private func openPreferredPreparationMedia() {
+        guard let previewMedia = preferredPreviewMedia else { return }
+        openPreparationMedia(previewMedia)
     }
 
     private func openExternalURL(_ url: URL) {
@@ -562,7 +585,7 @@ struct RecipeDetailView: View {
             HStack(spacing: 10) {
                 if hasPreparationMedia, let previewMedia = preferredPreviewMedia {
                     Button {
-                        previewSelection = PreparationMediaSelection(id: previewMedia.id)
+                        openPreparationMedia(previewMedia)
                     } label: {
                         Image(systemName: mediaHeroActionIcon)
                             .font(.system(size: 24, weight: .semibold))
@@ -884,7 +907,7 @@ struct RecipeDetailView: View {
 
             if sortedPreparationMedia.count == 1, let media = sortedPreparationMedia.first {
                 Button {
-                    previewSelection = PreparationMediaSelection(id: media.id)
+                    openPreparationMedia(media)
                 } label: {
                     preparationMediaCard(for: media, width: nil, height: 188)
                 }
@@ -893,7 +916,7 @@ struct RecipeDetailView: View {
                 PreparationMediaDeckView(
                     mediaItems: sortedPreparationMedia,
                     onSelect: { media in
-                        previewSelection = PreparationMediaSelection(id: media.id)
+                        openPreparationMedia(media)
                     }
                 )
             }

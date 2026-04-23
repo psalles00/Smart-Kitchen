@@ -7,6 +7,10 @@ struct RecipeCardView: View {
     var columns: Int = 2
     var cornerRadii: RectangleCornerRadii = .init(topLeading: 16, bottomLeading: 16, bottomTrailing: 16, topTrailing: 16)
 
+    private var shouldDarkenRealImageForThreeColumnGrid: Bool {
+        columns == 3
+    }
+
     var body: some View {
         ZStack(alignment: .bottomLeading) {
             // Image / placeholder
@@ -95,6 +99,11 @@ struct RecipeCardView: View {
                     .scaledToFill()
                     .frame(width: geo.size.width, height: geo.size.height)
                     .clipped()
+                    .overlay {
+                        if shouldDarkenRealImageForThreeColumnGrid {
+                            Color.black.opacity(0.2)
+                        }
+                    }
             }
         } else {
             RecipeImagePlaceholderCompact(
