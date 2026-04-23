@@ -84,32 +84,56 @@ struct SocialURLPipeline: RecipeImportPipeline {
             }
         }
 
-        // Always attach the original source media so the user finds the raw
-        // material under "Adicionar Fotos ou Vídeos". Prefer the video; fall
-        // back to the cover image when the platform only exposes a thumbnail.
-        if !draft.preparationMedia.contains(where: { $0.sourceOriginal }) {
-            if let videoURL = draft.videoURL,
-               let videoData = try? await fetchData(url: videoURL, maxBytes: 80 * 1024 * 1024) {
-                let ext = videoURL.pathExtension.isEmpty ? "mp4" : videoURL.pathExtension.lowercased()
-                draft.preparationMedia.append(
-                    ImportDraftPreparationMedia(
-                        type: .video,
-                        data: videoData,
-                        fileExtension: ext,
-                        sourceOriginal: true
+        // Always ensure the original source video is attached under recipe
+        // media. Do not skip this step just because a source thumbnail exists.
+        var hasOriginalVideo = draft.preparationMedia.contains {
+            $0.sourceOriginal && $0.type == .video
+        }
+        if !hasOriginalVideo {
+            // Try the OG-declared video URL first (rare on TikTok/Instagram).
+            var videoData: Data?
+            var videoExt = "mp4"
+            if let videoURL = draft.videoURL {
+                if let data = try? await fetchData(url: videoURL, maxBytes: RecipeImportMediaFetcher.maxAttachableVideoBytes) {
+                    videoData = data
+                    videoExt = videoURL.pathExtension.isEmpty ? "mp4" : videoURL.pathExtension.lowercased()
+                    RecipeImportLogger.info("social downloaded og:video bytes=\(data.count) ext=\(videoExt)")
+                }
+            }
+            // Fallback: scrape TikTok playAddr / Instagram embed / generic
+            // <video>/<source> tags and download with Referer header.
+            if videoData == nil,
+               let resolved = await RecipeImportMediaFetcher.resolveVideoURL(from: url),
+               let data = await RecipeImportMediaFetcher.downloadVideoData(from: resolved, referer: url) {
+                videoData = data
+                videoExt = resolved.pathExtension.isEmpty ? "mp4" : resolved.pathExtension.lowercased()
+                if draft.videoURL == nil { draft.videoURL = resolved }
+                RecipeImportLogger.info("social downloaded scraped video bytes=\(data.count) ext=\(videoExt)")
+            }
+
+            if let videoData {
+                let duplicateVideo = draft.preparationMedia.contains {
+                    $0.type == .video && $0.data == videoData
+                }
+                if !duplicateVideo {
+                    draft.preparationMedia.append(
+                        ImportDraftPreparationMedia(
+                            type: .video,
+                            data: videoData,
+                            fileExtension: videoExt,
+                            sourceOriginal: true
+                        )
                     )
-                )
-                RecipeImportLogger.info("social downloaded video bytes=\(videoData.count) ext=\(ext)")
-            } else if let imageData = draft.imageData {
-                draft.preparationMedia.append(
-                    ImportDraftPreparationMedia(
-                        type: .photo,
-                        data: imageData,
-                        fileExtension: "jpg",
-                        sourceOriginal: true
-                    )
-                )
-                RecipeImportLogger.info("social fallback attached cover image as original media bytes=\(imageData.count)")
+                }
+                hasOriginalVideo = true
+            }
+        }
+
+        // Keep social cover as recipe image only when a source video is
+        // available, avoiding thumbnail duplication in media gallery.
+        if hasOriginalVideo, let cover = draft.imageData {
+            draft.preparationMedia.removeAll {
+                $0.sourceOriginal && $0.type == .photo && $0.data == cover
             }
         }
 

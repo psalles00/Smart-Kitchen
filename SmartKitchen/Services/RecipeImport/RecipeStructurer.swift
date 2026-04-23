@@ -410,6 +410,30 @@ final class RecipeImportImprover {
         let videoFileURL = try await downloadVideo(from: resolvedVideoURL, referer: sourceURL)
         defer { try? FileManager.default.removeItem(at: videoFileURL) }
 
+        // Capture the downloaded video as Data so it can be attached to the
+        // recipe's media library. Guard with a size cap (100 MB) to avoid
+        // bloating the SwiftData/CloudKit store with huge blobs.
+        let videoMediaAttachment: ImportDraftPreparationMedia? = {
+            let maxBytes = 100 * 1024 * 1024
+            guard
+                let data = try? Data(contentsOf: videoFileURL),
+                !data.isEmpty,
+                data.count <= maxBytes
+            else {
+                RecipeImportLogger.info("improver skip persisting video (unavailable or exceeds \(maxBytes) bytes)")
+                return nil
+            }
+            let rawExt = resolvedVideoURL.pathExtension.lowercased()
+            let ext = rawExt.isEmpty ? "mp4" : rawExt
+            RecipeImportLogger.info("improver captured video for persistence bytes=\(data.count) ext=\(ext)")
+            return ImportDraftPreparationMedia(
+                type: .video,
+                data: data,
+                fileExtension: ext,
+                sourceOriginal: true
+            )
+        }()
+
         let audioFileURL = try await extractAudio(from: videoFileURL)
         defer { try? FileManager.default.removeItem(at: audioFileURL) }
 
@@ -442,9 +466,57 @@ final class RecipeImportImprover {
             improved.externalURLString = draft.externalURLString
         }
 
+        // Keep original import media (TikTok/Instagram/video/photo) even after
+        // restructuring, so save always persists the source attachments.
+        var fallbackMedia = draft.preparationMedia
+        if let videoMediaAttachment {
+            // Ensure the freshly downloaded video is preserved even if the
+            // original draft already had a thumbnail attached. Dedupe by data.
+            let alreadyPresent = improved.preparationMedia.contains {
+                $0.type == .video && $0.data == videoMediaAttachment.data
+            } || fallbackMedia.contains {
+                $0.type == .video && $0.data == videoMediaAttachment.data
+            }
+            if !alreadyPresent {
+                fallbackMedia.append(videoMediaAttachment)
+            }
+        }
+        improved.preparationMedia = mergePreparationMedia(
+            preferred: improved.preparationMedia,
+            fallback: fallbackMedia
+        )
+        if improved.preparationMedia.isEmpty, let imageData = improved.imageData ?? draft.imageData {
+            improved.preparationMedia = [
+                ImportDraftPreparationMedia(
+                    type: .photo,
+                    data: imageData,
+                    fileExtension: "jpg",
+                    sourceOriginal: true
+                )
+            ]
+        }
+
         improved.ingredients = mergeDuplicateIngredients(improved.ingredients)
         RecipeImportLogger.info("improver completed \(RecipeImportLogger.draftSummary(improved))")
         return improved
+    }
+
+    private func mergePreparationMedia(
+        preferred: [ImportDraftPreparationMedia],
+        fallback: [ImportDraftPreparationMedia]
+    ) -> [ImportDraftPreparationMedia] {
+        var merged = preferred
+        for candidate in fallback where !candidate.data.isEmpty {
+            let alreadyExists = merged.contains {
+                $0.type == candidate.type &&
+                $0.fileExtension.caseInsensitiveCompare(candidate.fileExtension) == .orderedSame &&
+                $0.data == candidate.data
+            }
+            if !alreadyExists {
+                merged.append(candidate)
+            }
+        }
+        return merged
     }
 
     private func makeCombinedInput(draft: RecipeDraft, transcript: String) -> String {

@@ -23,6 +23,8 @@ struct RecipeImportPreviewView: View {
     @State private var isImprovingImport = false
     @State private var improveImportUsed = false
     @State private var improveImportMessage: String?
+    @State private var improveImportProgress: Double = 0
+    @State private var improveProgressTask: Task<Void, Never>?
 
     init(
         draft: RecipeDraft,
@@ -185,14 +187,21 @@ struct RecipeImportPreviewView: View {
                     improveImport()
                 } label: {
                     HStack {
-                        if isImprovingImport {
-                            ProgressView()
-                                .controlSize(.small)
-                        }
+                        Image(systemName: isImprovingImport ? "wand.and.stars.inverse" : "wand.and.stars")
                         Text(isImprovingImport ? "Melhorando importação..." : "Melhorar importação")
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .font(.body.weight(.semibold))
                 }
+                .buttonStyle(.borderedProminent)
+                .tint(.orange)
                 .disabled(isImprovingImport || improveImportUsed)
+
+                if isImprovingImport {
+                    ProgressView(value: improveImportProgress, total: 1)
+                        .progressViewStyle(.linear)
+                        .tint(.orange)
+                }
 
                 if let improveImportMessage {
                     Text(improveImportMessage)
@@ -460,13 +469,28 @@ struct RecipeImportPreviewView: View {
     private func improveImport() {
         isImprovingImport = true
         improveImportMessage = nil
+        improveImportProgress = 0.08
+        improveProgressTask?.cancel()
+        improveProgressTask = Task {
+            while !Task.isCancelled {
+                await MainActor.run {
+                    improveImportProgress = min(improveImportProgress + 0.03, 0.9)
+                }
+                try? await Task.sleep(for: .milliseconds(120))
+            }
+        }
 
         Task { @MainActor in
-            defer { isImprovingImport = false }
+            defer {
+                isImprovingImport = false
+                improveProgressTask?.cancel()
+                improveProgressTask = nil
+            }
 
             do {
                 let improver = RecipeImportImprover()
                 let improved = try await improver.improve(draft: draft)
+                improveImportProgress = 1
                 draft = improved
                 ingredientEditorItems = .fromDrafts(
                     sections: draft.ingredientSections,

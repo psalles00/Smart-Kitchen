@@ -310,7 +310,9 @@ struct RecipeDetailView: View {
     ) -> some View {
         Button {
             showMoreActions = false
-            action()
+            DispatchQueue.main.async {
+                action()
+            }
         } label: {
             HStack(spacing: 10) {
                 Image(systemName: systemImage)
@@ -504,13 +506,37 @@ struct RecipeDetailView: View {
             .shadow(color: Color.black.opacity(0.12), radius: 26, x: 0, y: -8)
         }
         .overlay(alignment: .topTrailing) {
-            if let externalURL {
+            HStack(spacing: 10) {
+                if let externalURL {
+                    Button {
+                        openExternalURL(externalURL)
+                    } label: {
+                        Image(systemName: "globe")
+                            .font(.system(size: 24, weight: .semibold))
+                            .foregroundStyle(.primary)
+                            .frame(width: floatingHeroActionSize, height: floatingHeroActionSize)
+                    }
+                    .buttonStyle(.plain)
+                    .background {
+                        if #available(iOS 26, macOS 26, *) {
+                            Circle()
+                                .fill(.clear)
+                                .glassEffect(.regular.interactive(), in: Circle())
+                        } else {
+                            Circle()
+                                .fill(Color.clear)
+                                .background(.ultraThinMaterial, in: Circle())
+                        }
+                    }
+                    .accessibilityLabel("Abrir receita na web")
+                }
+
                 Button {
-                    openExternalURL(externalURL)
+                    recipe.isFavorite.toggle()
                 } label: {
-                    Image(systemName: "globe")
-                        .font(.system(size: 30, weight: .semibold))
-                        .foregroundStyle(colorScheme == .dark ? .white : .black.opacity(0.7))
+                    Image(systemName: recipe.isFavorite ? "heart.fill" : "heart")
+                        .font(.system(size: 24, weight: .semibold))
+                        .foregroundStyle(recipe.isFavorite ? .red : .primary)
                         .frame(width: floatingHeroActionSize, height: floatingHeroActionSize)
                 }
                 .buttonStyle(.plain)
@@ -519,20 +545,16 @@ struct RecipeDetailView: View {
                         Circle()
                             .fill(.clear)
                             .glassEffect(.regular.interactive(), in: Circle())
-                            .background {
-                                Circle()
-                                    .fill(Color.black.opacity(colorScheme == .dark ? 0.24 : 0.18))
-                            }
                     } else {
                         Circle()
-                            .fill(Color.black.opacity(colorScheme == .dark ? 0.42 : 0.28))
+                            .fill(Color.clear)
                             .background(.ultraThinMaterial, in: Circle())
                     }
                 }
-                .padding(.trailing, 56)
-                .offset(y: -(floatingHeroActionSize / 2))
-                .accessibilityLabel("Abrir receita na web")
+                .accessibilityLabel(recipe.isFavorite ? "Desfavoritar receita" : "Favoritar receita")
             }
+            .padding(.trailing, 18)
+            .offset(y: -(floatingHeroActionSize / 2))
         }
     }
 

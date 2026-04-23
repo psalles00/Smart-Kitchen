@@ -837,7 +837,19 @@ struct AITools {
             context.insert(s)
         }
 
-        for (index, media) in draft.preparationMedia.enumerated() {
+        var mediaToPersist = draft.preparationMedia
+        if mediaToPersist.isEmpty, let imageData = draft.imageData, !imageData.isEmpty {
+            mediaToPersist = [
+                ImportDraftPreparationMedia(
+                    type: .photo,
+                    data: imageData,
+                    fileExtension: "jpg",
+                    sourceOriginal: true
+                )
+            ]
+        }
+
+        for (index, media) in mediaToPersist.enumerated() {
             guard !media.data.isEmpty else { continue }
             let attachment = RecipePreparationMedia(
                 mediaType: media.type,

@@ -142,6 +142,7 @@
 		ECCBA054AD8740CDE1C98F0B /* Telma-Light.otf in Resources */ = {isa = PBXBuildFile; fileRef = A4524078F523E665278B2F59 /* Telma-Light.otf */; };
 		EF44D74612ACCCACAEED34D7 /* RecipeCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7E7518D46EAB3E5E9CC9537 /* RecipeCardView.swift */; };
 		F1775ABB009A6F3A4BB4E233 /* AddGroceryItemView 2.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8745E6D949D25CCD17EA5D2 /* AddGroceryItemView 2.swift */; };
+		F31885833E260F055FDAB7A1 /* RecipeImportMediaFetcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01EAEAF1627F23BD48B3E688 /* RecipeImportMediaFetcher.swift */; };
 		F320B02091180BFF919446C2 /* CategoryIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AB1288F335CB9E41C4BCD44 /* CategoryIconView.swift */; };
 		F9B5F8BE086B893D8E6CE905 /* ListsInfoContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E44E925C852E9239F7790A /* ListsInfoContent.swift */; };
 		FAED9B8194E5F89C957CAAAA /* RecipeImportInbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D982D0E8D23D0F71B7049BF /* RecipeImportInbox.swift */; };
@@ -174,6 +175,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		01EAEAF1627F23BD48B3E688 /* RecipeImportMediaFetcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeImportMediaFetcher.swift; sourceTree = "<group>"; };
 		021D59E8DBF140C2A6411386 /* PantryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PantryView.swift; sourceTree = "<group>"; };
 		025B8D2CE9B972E1D778416B /* RecipeIngredientsEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeIngredientsEditor.swift; sourceTree = "<group>"; };
 		05D613E901D79A196998A3C7 /* PlayfairDisplay.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = PlayfairDisplay.ttf; sourceTree = "<group>"; };
@@ -421,6 +423,7 @@
 				D589E4E539EC17B2EAC8C106 /* HTMLRecipeExtractor.swift */,
 				3975EB9E1F06E9235BC26A63 /* IngredientNormalizer.swift */,
 				4D982D0E8D23D0F71B7049BF /* RecipeImportInbox.swift */,
+				01EAEAF1627F23BD48B3E688 /* RecipeImportMediaFetcher.swift */,
 				342C68A1E133DA815A5B3DA4 /* RecipeImportModels.swift */,
 				45890FB81F05FADA6EF03881 /* RecipeImportOrchestrator.swift */,
 				59F52D839172CCDA297D5A78 /* RecipeStructurer.swift */,
@@ -844,6 +847,7 @@
 				1A6742CC6FB5809FAB11EF42 /* RecipeImportHostView.swift in Sources */,
 				FAED9B8194E5F89C957CAAAA /* RecipeImportInbox.swift in Sources */,
 				3C7780FE5DCC36FE5EA16949 /* RecipeImportInboxHost.swift in Sources */,
+				F31885833E260F055FDAB7A1 /* RecipeImportMediaFetcher.swift in Sources */,
 				2B8644069CB720A334C758B6 /* RecipeImportModels.swift in Sources */,
 				B80EB4E73DC359D8B6BE5C15 /* RecipeImportOrchestrator.swift in Sources */,
 				FDEDDB86E93B6370A725D9EA /* RecipeImportPipeline.swift in Sources */,

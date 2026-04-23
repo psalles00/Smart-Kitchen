@@ -9,3 +9,9 @@
 - Após finalizar: Valide a integridade dos dados e garanta a capability iCloud (Documents, CloudKit e container iCloud.com.pedrosalles.smartkitchen.sync).
 - Build: Use o simulador iPhone 17 Pro. O app deve abrir automaticamente.
 - Testes: Forneça uma lista de etapas para teste manual após implementar funções.
+
+# Proteção de Dados iCloud/CloudKit
+- Nunca alterar a ordem de `com.apple.developer.icloud-container-identifiers` no entitlements.
+- Sempre verificar `git diff` após rodar `xcodegen generate`.
+- Restaurar entitlements imediatamente se houver mudanças não intencionais.
+- Confirmar manualmente o container correto antes de instalar builds.
