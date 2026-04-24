@@ -35,8 +35,10 @@ targets:
           - BricolageGrotesque-Variable.ttf
         ATSApplicationFontsPath: "."
         UILaunchScreen: {}
-        NSCameraUsageDescription: O Smart Kitchen usa a câmera para tirar fotos das suas receitas.
+        NSCameraUsageDescription: O Smart Kitchen usa a câmera para tirar fotos das suas receitas e refeições.
         NSPhotoLibraryUsageDescription: O Smart Kitchen acessa a galeria para anexar fotos às suas receitas.
+        NSMicrophoneUsageDescription: O Smart Kitchen usa o microfone para registrar refeições por voz.
+        NSSpeechRecognitionUsageDescription: O Smart Kitchen usa reconhecimento de voz para transcrever o que você falou sobre sua refeição.
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
         ITSAppUsesNonExemptEncryption: false

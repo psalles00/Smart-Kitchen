@@ -212,6 +212,42 @@ struct AITools {
                 "url": ["type": "string", "description": "Full URL (https://...) pointing to the recipe."]
             ],
             required: ["url"]
+        ),
+        makeTool(
+            name: "log_food_manual",
+            description: "Register a food entry for the user in the Nutrição tab. Use this when the user describes a meal or food (e.g. 'comi dois ovos mexidos e uma banana'). Estimate calories and macros yourself before calling. Weight must be in grams when provided.",
+            parameters: [
+                "name":             ["type": "string", "description": "Concise food name in Brazilian Portuguese (e.g. 'Ovos mexidos com banana')."],
+                "calories":         ["type": "integer", "description": "Total calories for the meal."],
+                "proteinG":         ["type": "number",  "description": "Total protein in grams."],
+                "carbsG":           ["type": "number",  "description": "Total carbs in grams."],
+                "fatG":             ["type": "number",  "description": "Total fat in grams."],
+                "servingSizeGrams": ["type": "number",  "description": "Portion weight in grams (optional)."],
+                "mealType":         ["type": "string", "description": "Meal type: breakfast, lunch, dinner, snack, or other."],
+                "date":             ["type": "string", "description": "ISO date (YYYY-MM-DD) to log the entry. Defaults to today."],
+                "emoji":            ["type": "string", "description": "Single emoji representing the food (optional)."]
+            ],
+            required: ["name", "calories", "proteinG", "carbsG", "fatG"]
+        ),
+        makeTool(
+            name: "get_nutrition_today",
+            description: "Get what the user has eaten today and how it compares to their daily targets (calories, protein, carbs, fat).",
+            parameters: [:],
+            required: []
+        ),
+        makeTool(
+            name: "get_nutrition_profile",
+            description: "Get the user's nutrition profile: body metrics, goals, and computed daily targets. Returns onboarding status when incomplete.",
+            parameters: [:],
+            required: []
+        ),
+        makeTool(
+            name: "delete_food_entry",
+            description: "Delete a food entry registered today (or most recent if the user asks to undo the last log). Matches by name substring.",
+            parameters: [
+                "name": ["type": "string", "description": "Food name or substring to match. Use empty string to delete the most recent entry."]
+            ],
+            required: ["name"]
         )
     ]
 
@@ -278,6 +314,14 @@ struct AITools {
             return suggestRecipeContext(args: call.arguments, context: context)
         case "import_recipe_from_url":
             return await importRecipeFromURL(args: call.arguments, context: context)
+        case "log_food_manual":
+            return logFoodManual(args: call.arguments, context: context)
+        case "get_nutrition_today":
+            return getNutritionToday(context: context)
+        case "get_nutrition_profile":
+            return getNutritionProfile(context: context)
+        case "delete_food_entry":
+            return deleteFoodEntry(name: call.arguments["name"] as? String ?? "", context: context)
         default:
             return "{\"error\": \"Unknown tool: \(call.name)\"}"
         }
@@ -717,6 +761,180 @@ struct AITools {
         }
 
         return contextParts.joined(separator: "\n")
+    }
+
+    // MARK: - Nutrition tools
+
+    private static let yyyyMMddFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = "yyyy-MM-dd"
+        return f
+    }()
+
+    private static func logFoodManual(args: [String: Any], context: ModelContext) -> String {
+        let name = (args["name"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else { return "{\"error\": \"invalid name\"}" }
+
+        let calories = args["calories"] as? Int ?? 0
+        let proteinG = (args["proteinG"] as? Double) ?? Double(args["proteinG"] as? Int ?? 0)
+        let carbsG = (args["carbsG"] as? Double) ?? Double(args["carbsG"] as? Int ?? 0)
+        let fatG = (args["fatG"] as? Double) ?? Double(args["fatG"] as? Int ?? 0)
+        let servingSize = (args["servingSizeGrams"] as? Double) ?? (args["servingSizeGrams"] as? Int).map(Double.init)
+        let emoji = (args["emoji"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        let mealType = MealType(rawValue: (args["mealType"] as? String ?? "").lowercased()) ?? .other
+
+        // Log at the requested date (midday) if provided, otherwise now.
+        let logDate: Date = {
+            if let iso = args["date"] as? String, let parsed = parseDate(iso) {
+                let now = Date()
+                let calendar = Calendar.current
+                var comps = calendar.dateComponents([.year, .month, .day], from: parsed)
+                let timeComps = calendar.dateComponents([.hour, .minute], from: now)
+                comps.hour = timeComps.hour
+                comps.minute = timeComps.minute
+                return calendar.date(from: comps) ?? now
+            }
+            return Date()
+        }()
+
+        let entry = FoodEntry(
+            name: name,
+            calories: calories,
+            proteinG: proteinG,
+            carbsG: carbsG,
+            fatG: fatG,
+            mealType: mealType,
+            source: .assistant,
+            timestamp: logDate,
+            emoji: emoji?.isEmpty == true ? nil : emoji,
+            servingSizeGrams: servingSize
+        )
+        context.insert(entry)
+        try? context.save()
+
+        return toJSON([
+            "success": true,
+            "id": entry.id.uuidString,
+            "name": entry.name,
+            "calories": entry.calories,
+            "proteinG": entry.proteinG,
+            "carbsG": entry.carbsG,
+            "fatG": entry.fatG
+        ])
+    }
+
+    private static func getNutritionToday(context: ModelContext) -> String {
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: Date())
+        guard let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) else {
+            return "{\"error\": \"date error\"}"
+        }
+
+        let descriptor = FetchDescriptor<FoodEntry>(
+            predicate: #Predicate { $0.timestamp >= startOfDay && $0.timestamp < endOfDay },
+            sortBy: [SortDescriptor(\.timestamp)]
+        )
+        let entries = (try? context.fetch(descriptor)) ?? []
+
+        let totalCal = entries.reduce(0) { $0 + $1.calories }
+        let totalP = entries.reduce(0.0) { $0 + $1.proteinG }
+        let totalC = entries.reduce(0.0) { $0 + $1.carbsG }
+        let totalF = entries.reduce(0.0) { $0 + $1.fatG }
+
+        let profile = NutritionProfileStore.fetch(in: context)
+        let targetCal = profile?.effectiveCalories ?? 0
+        let targetP = profile?.effectiveProteinG ?? 0
+        let targetC = profile?.effectiveCarbsG ?? 0
+        let targetF = profile?.effectiveFatG ?? 0
+
+        let entryList = entries.map { entry -> [String: Any] in
+            [
+                "name": entry.name,
+                "meal": entry.mealType.rawValue,
+                "calories": entry.calories,
+                "proteinG": entry.proteinG,
+                "carbsG": entry.carbsG,
+                "fatG": entry.fatG,
+                "time": ISO8601DateFormatter().string(from: entry.timestamp)
+            ]
+        }
+
+        return toJSON([
+            "date": AITools.yyyyMMddFormatter.string(from: startOfDay),
+            "totals": [
+                "calories": totalCal,
+                "proteinG": round(totalP),
+                "carbsG": round(totalC),
+                "fatG": round(totalF)
+            ],
+            "targets": [
+                "calories": targetCal,
+                "proteinG": targetP,
+                "carbsG": targetC,
+                "fatG": targetF
+            ],
+            "remaining": [
+                "calories": max(0, targetCal - totalCal),
+                "proteinG": max(0, Double(targetP) - totalP),
+                "carbsG": max(0, Double(targetC) - totalC),
+                "fatG": max(0, Double(targetF) - totalF)
+            ],
+            "entries": entryList,
+            "entryCount": entries.count
+        ])
+    }
+
+    private static func getNutritionProfile(context: ModelContext) -> String {
+        guard let profile = NutritionProfileStore.fetch(in: context),
+              profile.hasCompletedOnboarding else {
+            return "{\"onboarding_complete\": false, \"message\": \"O usuário ainda não concluiu o onboarding de nutrição.\"}"
+        }
+
+        return toJSON([
+            "onboarding_complete": true,
+            "sex": profile.sex.rawValue,
+            "ageYears": profile.ageYears,
+            "heightCm": profile.heightCm,
+            "weightKg": profile.weightKg,
+            "activityLevel": profile.activityLevel.rawValue,
+            "weightGoal": profile.weightGoal.rawValue,
+            "weeklyChangeKg": profile.weeklyChangeKg,
+            "targets": [
+                "calories": profile.effectiveCalories,
+                "proteinG": profile.effectiveProteinG,
+                "carbsG": profile.effectiveCarbsG,
+                "fatG": profile.effectiveFatG
+            ],
+            "useMetric": profile.useMetric
+        ])
+    }
+
+    private static func deleteFoodEntry(name: String, context: ModelContext) -> String {
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: Date())
+        let descriptor = FetchDescriptor<FoodEntry>(
+            predicate: #Predicate { $0.timestamp >= startOfDay },
+            sortBy: [SortDescriptor(\.timestamp, order: .reverse)]
+        )
+        guard let entries = try? context.fetch(descriptor), !entries.isEmpty else {
+            return "{\"error\": \"Nenhuma refeição registrada hoje.\"}"
+        }
+
+        let q = name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let target = q.isEmpty ? entries.first : entries.first(where: { $0.name.lowercased().contains(q) })
+        guard let entry = target else {
+            return "{\"error\": \"Refeição não encontrada: \(name)\"}"
+        }
+
+        let removedName = entry.name
+        if let filename = entry.imageFilename {
+            FoodImageStore.shared.delete(filename: filename)
+        }
+        context.delete(entry)
+        try? context.save()
+        return "{\"success\": true, \"deleted\": \"\(removedName)\"}"
     }
 
     // MARK: - Helpers

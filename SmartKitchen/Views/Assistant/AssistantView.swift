@@ -511,6 +511,7 @@ struct AssistantView: View {
         }
 
         inventoryParts.append(CategoryMutationService.recipeCategoryPromptSection(context: modelContext))
+        inventoryParts.append(AssistantChatManager.nutritionPromptSection(context: modelContext))
 
         let inventoryContext = inventoryParts.joined(separator: "\n\n")
         cachedInventoryContext = inventoryContext
@@ -697,7 +698,9 @@ struct AssistantView: View {
             "create_category",
             "rename_category",
             "delete_category",
-            "move_category"
+            "move_category",
+            "log_food_manual",
+            "delete_food_entry"
         ]).contains(toolCall.name)
     }
 

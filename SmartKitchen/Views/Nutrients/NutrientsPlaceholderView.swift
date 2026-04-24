@@ -9,7 +9,7 @@ struct NutrientsPlaceholderView: View {
         ExpandedPageLayout(
             pageTheme: .nutrients,
             header: { isInverted in
-                PageHeader(title: "Nutrientes", isInverted: isInverted) {
+                PageHeader(title: "Nutrição", isInverted: isInverted) {
                     SettingsButton()
                 }
             },

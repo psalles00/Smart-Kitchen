@@ -15,7 +15,7 @@ enum SidebarItem: String, CaseIterable, Identifiable {
         case .home: return "Início"
         case .lists: return "Listas"
         case .recipes: return "Receitas"
-        case .nutrients: return "Nutrientes"
+        case .nutrients: return "Nutrição"
         case .settings: return "Configurações"
         }
     }
@@ -25,7 +25,7 @@ enum SidebarItem: String, CaseIterable, Identifiable {
         case .home: return "house"
         case .lists: return "list.bullet.clipboard"
         case .recipes: return "book"
-        case .nutrients: return "leaf"
+        case .nutrients: return "fork.knife"
         case .settings: return "gearshape"
         }
     }
@@ -117,6 +117,9 @@ struct ContentView: View {
         .environment(\.scrollToItem, scrollToItemRequest)
         .environment(\.openRecipeInRecipesTab, openRecipeInRecipesTab)
         .environment(\.backgroundTheme, displayedBgTheme)
+        .sheet(item: $searchBarState.pendingNutritionSheet) { sheet in
+            nutritionEntrySheetContent(for: sheet)
+        }
         .sheet(isPresented: $showAddPantry) {
             ItemDetailView(
                 mode: .create(destinations: [.pantry]),
@@ -358,10 +361,10 @@ struct ContentView: View {
 
                 Tab(value: AppTab.nutrients) {
                     NavigationStack {
-                        NutrientsPlaceholderView()
+                        NutrientsView()
                     }
                 } label: {
-                    Label("Nutrientes", systemImage: AppTab.nutrients.icon)
+                    Label("Nutrição", systemImage: AppTab.nutrients.icon)
                 }
             }
             #if os(iOS)
@@ -402,6 +405,29 @@ struct ContentView: View {
         UnifiedSearchBar(state: searchBarState) { _ in }
             .padding(.vertical, 6)
             .padding(.bottom, searchBarState.isVisible ? 0 : 45)
+    }
+
+    // MARK: - Nutrition entry sheet (disparado pelo menu "+" da barra global)
+
+    @ViewBuilder
+    private func nutritionEntrySheetContent(for sheet: NutritionEntrySheet) -> some View {
+        let logDate = Date()
+        switch sheet {
+        case .manual:
+            FoodEntryFormView(mode: .create(onDate: logDate))
+        case .recents:
+            RecentsView(logDate: logDate)
+        case .capturePhoto:
+            FoodCaptureHostView(mode: .photo, logDate: logDate)
+        case .captureLabel:
+            FoodCaptureHostView(mode: .nutritionLabel, logDate: logDate)
+        case .captureText:
+            FoodCaptureHostView(mode: .text, logDate: logDate)
+        case .captureVoice:
+            FoodCaptureHostView(mode: .voice, logDate: logDate)
+        case .comingSoon:
+            EmptyView()
+        }
     }
 
     /// Whether the results panel should be shown (first letter typed, chat, etc.)
@@ -669,7 +695,7 @@ struct ContentView: View {
                     .opacity(selectedSidebar == .recipes ? 1 : 0)
                     .allowsHitTesting(selectedSidebar == .recipes)
 
-                NavigationStack { NutrientsPlaceholderView() }
+                NavigationStack { NutrientsView() }
                     .background(Color.clear)
                     .environment(\.colorScheme, .light)
                     .opacity(selectedSidebar == .nutrients ? 1 : 0)
@@ -1367,7 +1393,7 @@ private struct HomeView: View {
                         showRecipeAddOptions = true
                     }
 
-                    macShortcutAddTile(title: "Nutrientes", imageName: "nutrientes", imageSize: 50) {
+                    macShortcutAddTile(title: "Nutrição", imageName: "nutrientes", imageSize: 50) {
                     }
                 }
                 .frame(height: quickTileHeight + 26)
@@ -1486,7 +1512,7 @@ private struct HomeView: View {
                         homeShortcutAddTile(imageName: "nutrientes", imageSize: 58) {
                         }
                         .frame(height: smallSide)
-                        Text("Nutrientes")
+                        Text("Nutrição")
                             .font(.caption.weight(.bold))
                             .foregroundStyle(.primary)
                     }
@@ -1618,7 +1644,7 @@ private struct HomeView: View {
             if compatibleMatchesState.isEmpty {
                 ContentUnavailableView(
                     "Sem receitas sugeridas",
-                    systemImage: "fork.knife",
+                    systemImage: "book.closed",
                     description: Text("Ajuste o nível de compatibilidade nas configurações ou adicione mais itens à despensa.")
                 )
                 .frame(maxWidth: .infinity)

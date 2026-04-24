@@ -13,7 +13,7 @@ enum AppTab: String, Hashable {
         case .assistant:  "house"
         case .lists:      "list.bullet.clipboard"
         case .recipes:    "book.closed"
-        case .nutrients:  "chart.bar.doc.horizontal"
+        case .nutrients:  "fork.knife"
         case .commandBar: "sparkle.magnifyingglass"
         }
     }

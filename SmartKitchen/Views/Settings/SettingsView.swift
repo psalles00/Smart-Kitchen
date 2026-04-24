@@ -89,6 +89,17 @@ struct SettingsView: View {
                             .foregroundStyle(.green)
                     }
                 }
+
+                NavigationLink {
+                    NutritionSettingsView()
+                } label: {
+                    Label {
+                        Text("Nutrição")
+                    } icon: {
+                        Image(systemName: "leaf.fill")
+                            .foregroundStyle(PageTheme.nutrients.accentColor)
+                    }
+                }
             }
 
             // MARK: - IA

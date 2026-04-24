@@ -352,6 +352,7 @@ final class AssistantChatManager: ObservableObject {
         }
 
         inventoryParts.append(CategoryMutationService.recipeCategoryPromptSection(context: context))
+        inventoryParts.append(Self.nutritionPromptSection(context: context))
 
         let inventoryContext = inventoryParts.joined(separator: "\n\n")
         cachedInventoryContext = inventoryContext
@@ -474,7 +475,8 @@ final class AssistantChatManager: ObservableObject {
         Set([
             "create_recipe", "update_recipe", "delete_recipe",
             "add_pantry_item", "remove_pantry_item", "add_grocery_item",
-            "create_category", "rename_category", "delete_category", "move_category"
+            "create_category", "rename_category", "delete_category", "move_category",
+            "log_food_manual", "delete_food_entry"
         ]).contains(toolCall.name)
     }
 
@@ -507,12 +509,45 @@ final class AssistantChatManager: ObservableObject {
             case "rename_category": "renomear categoria"
             case "delete_category": "excluir categoria"
             case "move_category": "reordenar categoria"
+            case "log_food_manual": "registrar refeição"
+            case "delete_food_entry": "remover refeição registrada"
             default: "alterar informações"
             }
         }
         .joined(separator: ", ")
 
         return "Confirma esta alteração no app?\n\nAção pendente: \(summary)."
+    }
+
+    // MARK: - Nutrition prompt section
+
+    static func nutritionPromptSection(context: ModelContext) -> String {
+        guard let profile = NutritionProfileStore.fetch(in: context),
+              profile.hasCompletedOnboarding else {
+            return "## Nutrição\nO usuário ainda não concluiu o onboarding de nutrição."
+        }
+
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: Date())
+        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? Date()
+        let descriptor = FetchDescriptor<FoodEntry>(
+            predicate: #Predicate { $0.timestamp >= startOfDay && $0.timestamp < endOfDay }
+        )
+        let entries = (try? context.fetch(descriptor)) ?? []
+        let totalCal = entries.reduce(0) { $0 + $1.calories }
+        let totalP = entries.reduce(0.0) { $0 + $1.proteinG }
+        let totalC = entries.reduce(0.0) { $0 + $1.carbsG }
+        let totalF = entries.reduce(0.0) { $0 + $1.fatG }
+
+        var lines = ["## Nutrição (hoje)"]
+        lines.append("- Metas diárias: \(profile.effectiveCalories) kcal · P \(profile.effectiveProteinG)g · C \(profile.effectiveCarbsG)g · G \(profile.effectiveFatG)g")
+        if entries.isEmpty {
+            lines.append("- Consumo de hoje: nenhum registro ainda.")
+        } else {
+            lines.append("- Consumo de hoje (\(entries.count) registros): \(totalCal) kcal · P \(Int(totalP.rounded()))g · C \(Int(totalC.rounded()))g · G \(Int(totalF.rounded()))g")
+        }
+        lines.append("- Para registrar refeições, use a ferramenta `log_food_manual` estimando calorias/macros a partir da descrição do usuário.")
+        return lines.joined(separator: "\n")
     }
 }
 

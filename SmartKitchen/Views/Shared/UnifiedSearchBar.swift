@@ -145,6 +145,27 @@ struct UnifiedSearchBar: View {
             Button("Registrar com Câmera", systemImage: "camera") {
                 openCamera()
             }
+
+            Section("Nutrição") {
+                Button("Foto da refeição", systemImage: "camera.fill") {
+                    presentNutritionSheet(.capturePhoto)
+                }
+                Button("Rótulo nutricional", systemImage: "doc.text.viewfinder") {
+                    presentNutritionSheet(.captureLabel)
+                }
+                Button("Registrar por voz", systemImage: "waveform") {
+                    presentNutritionSheet(.captureVoice)
+                }
+                Button("Descrever por texto", systemImage: "text.alignleft") {
+                    presentNutritionSheet(.captureText)
+                }
+                Button("Entrada manual", systemImage: "square.and.pencil") {
+                    presentNutritionSheet(.manual)
+                }
+                Button("Recentes / frequentes", systemImage: "clock.arrow.circlepath") {
+                    presentNutritionSheet(.recents)
+                }
+            }
         } label: {
             Image(systemName: "plus.circle.fill")
                 .font(.system(size: 16, weight: .medium))
@@ -160,6 +181,36 @@ struct UnifiedSearchBar: View {
 
     @ViewBuilder
     private var expandedAccessoryActions: some View {
+        Menu {
+            Button("Foto da refeição", systemImage: "camera.fill") {
+                presentNutritionSheet(.capturePhoto)
+            }
+            Button("Rótulo nutricional", systemImage: "doc.text.viewfinder") {
+                presentNutritionSheet(.captureLabel)
+            }
+            Button("Registrar por voz", systemImage: "waveform") {
+                presentNutritionSheet(.captureVoice)
+            }
+            Button("Descrever por texto", systemImage: "text.alignleft") {
+                presentNutritionSheet(.captureText)
+            }
+            Button("Entrada manual", systemImage: "square.and.pencil") {
+                presentNutritionSheet(.manual)
+            }
+            Button("Recentes / frequentes", systemImage: "clock.arrow.circlepath") {
+                presentNutritionSheet(.recents)
+            }
+        } label: {
+            Image(systemName: "fork.knife.circle")
+                .font(.system(size: 16, weight: .medium))
+                .foregroundStyle(.secondary)
+                .frame(width: 30, height: 30)
+                .contentShape(Rectangle())
+        }
+        .tint(Color.secondary)
+        .buttonStyle(.plain)
+        .menuIndicator(.hidden)
+
         #if os(iOS)
         Button {
             startDictation()
@@ -238,15 +289,10 @@ struct UnifiedSearchBar: View {
     }
 
     private func startDictation() {
-        // Keep to native keyboard dictation flow.
+        // Keep to native keyboard dictation flow by focusing the field only.
+        // Triggering dictation via private selectors is brittle and can cause
+        // runtime issues/warnings across iOS versions and simulator runtimes.
         isFocused = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-            if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-               let window = scene.windows.first,
-               let responder = window.findFirstResponder() {
-                responder.perform(NSSelectorFromString("toggleDictation:"), with: nil)
-            }
-        }
     }
 
     private func handleSelectedPhoto(_ item: PhotosPickerItem?) async {
@@ -273,6 +319,13 @@ struct UnifiedSearchBar: View {
 
     private func openCamera() { }
     #endif
+
+    private func presentNutritionSheet(_ sheet: NutritionEntrySheet) {
+        state.dismiss()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            state.pendingNutritionSheet = sheet
+        }
+    }
 }
 
 private struct NativeGlassCloseButtonModifier: ViewModifier {

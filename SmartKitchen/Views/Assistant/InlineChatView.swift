@@ -6,6 +6,7 @@ import SwiftData
 struct InlineChatView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var settingsArray: [AppSettings]
+    @Query private var nutritionProfiles: [NutritionProfile]
     @Query(sort: \Recipe.name) private var allRecipes: [Recipe]
 
     @StateObject private var aiService = AIService()
@@ -76,6 +77,42 @@ struct InlineChatView: View {
     private var isAIMode: Bool { searchBarState != nil }
 
     private var settings: AppSettings? { settingsArray.first }
+
+    private var coachStarterPrompts: [String] {
+        guard nutritionProfiles.first?.hasCompletedOnboarding == true,
+              let goal = nutritionProfiles.first?.weightGoal else {
+            return [
+                "Qual é meu peso esperado em 30 dias?",
+                "O que devo comer no jantar?",
+                "Como bato minha meta?",
+                "Como está minha tendência?"
+            ]
+        }
+
+        switch goal {
+        case .lose:
+            return [
+                "Qual é meu peso esperado em 30 dias?",
+                "Como posso emagrecer mais rápido com segurança?",
+                "Estou comendo demais?",
+                "O que devo comer no jantar?"
+            ]
+        case .gain:
+            return [
+                "Qual é meu peso esperado em 30 dias?",
+                "Como posso ganhar peso de forma saudável?",
+                "Estou comendo o suficiente?",
+                "Quais alimentos ricos em proteína posso adicionar?"
+            ]
+        case .maintain:
+            return [
+                "Estou mantendo meu peso?",
+                "Qual é meu consumo médio?",
+                "Sugestões de macros?",
+                "Como está minha tendência?"
+            ]
+        }
+    }
 
     private var aiToolDefinitions: [[String: Any]] {
         AITools.definitions(excluding: ["create_recipe"])
@@ -371,7 +408,7 @@ struct InlineChatView: View {
                 Text("Modo IA")
                     .font(.title3.weight(.bold))
 
-                Text("Converse com a inteligência artificial para gerenciar sua cozinha de forma natural.")
+                Text("Seu coach pode ver seu histórico de peso, consumo diário e metas. Pergunte sobre peso esperado, o que comer ou como atingir seu objetivo.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -379,10 +416,9 @@ struct InlineChatView: View {
             }
 
             VStack(alignment: .leading, spacing: 10) {
-                aiSuggestionRow(emoji: "🍳", text: "O que posso cozinhar com o que tenho?")
-                aiSuggestionRow(emoji: "📝", text: "Crie uma receita de bolo de chocolate")
-                aiSuggestionRow(emoji: "🛒", text: "Adicione leite e ovos ao mercado")
-                aiSuggestionRow(emoji: "🧊", text: "O que está vencendo na despensa?")
+                ForEach(Array(coachStarterPrompts.enumerated()), id: \.offset) { index, prompt in
+                    aiSuggestionRow(emoji: aiSuggestionEmoji(for: index), text: prompt)
+                }
             }
             .padding(.horizontal, 32)
             .padding(.top, 4)
@@ -409,6 +445,15 @@ struct InlineChatView: View {
             .background(neutralSurfaceColor, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
         .buttonStyle(.plain)
+    }
+
+    private func aiSuggestionEmoji(for index: Int) -> String {
+        switch index {
+        case 0: return "📈"
+        case 1: return "🎯"
+        case 2: return "🍽️"
+        default: return "🥗"
+        }
     }
 
     private func skillCard(icon: String, title: String, description: String, prompt: String) -> some View {
@@ -983,6 +1028,7 @@ struct InlineChatView: View {
         }
 
         inventoryParts.append(CategoryMutationService.recipeCategoryPromptSection(context: modelContext))
+        inventoryParts.append(AssistantChatManager.nutritionPromptSection(context: modelContext))
 
         let inventoryContext = inventoryParts.joined(separator: "\n\n")
         cachedInventoryContext = inventoryContext
@@ -1165,7 +1211,8 @@ struct InlineChatView: View {
         Set([
             "create_recipe", "update_recipe", "delete_recipe",
             "add_pantry_item", "remove_pantry_item", "add_grocery_item",
-            "create_category", "rename_category", "delete_category", "move_category"
+            "create_category", "rename_category", "delete_category", "move_category",
+            "log_food_manual", "delete_food_entry"
         ]).contains(toolCall.name)
     }
 

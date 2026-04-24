@@ -328,7 +328,7 @@ struct FullscreenAssistantView: View {
                             }
                         }
 
-                        assistantActionSection(title: "Nutrientes") {
+                        assistantActionSection(title: "Nutrição") {
                             HStack(alignment: .top, spacing: 6) {
                                 assistantActionButton(
                                     title: "Registrar Alimento",

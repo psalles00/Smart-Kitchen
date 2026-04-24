@@ -44,6 +44,9 @@ final class SearchBarState: ObservableObject {
     /// Message to send to the AI chat (populated by the search bar in AI mode).
     @Published var pendingChatMessage: String? = nil
 
+    /// Quando não-nil, a raiz do app apresenta a sheet de registro de refeição correspondente.
+    @Published var pendingNutritionSheet: NutritionEntrySheet? = nil
+
     private var debounceCancellable: AnyCancellable?
 
     init() {

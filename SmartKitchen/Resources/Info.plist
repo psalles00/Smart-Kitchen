@@ -36,9 +36,13 @@
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>NSCameraUsageDescription</key>
-	<string>O Smart Kitchen usa a câmera para tirar fotos das suas receitas.</string>
+	<string>O Smart Kitchen usa a câmera para tirar fotos das suas receitas e refeições.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>O Smart Kitchen usa o microfone para registrar refeições por voz.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>O Smart Kitchen acessa a galeria para anexar fotos às suas receitas.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>O Smart Kitchen usa reconhecimento de voz para transcrever o que você falou sobre sua refeição.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>PlayfairDisplay.ttf</string>

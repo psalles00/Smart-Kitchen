@@ -3,6 +3,7 @@
 - SwiftData/CloudKit: JAMAIS remova a capability iCloud ou altere o layout de ModelContainer/ModelConfiguration (nome, URL ou divisão de stores) sem migração validada e backup real. Trocar configurações de store com CloudKit ativo torna dados antigos inacessíveis.
 - Risco: Alterações em persistência, schemas, migrations e flags de sync exigem: 1) Identificação exata de stores/URLs; 2) Plano de backup/rollback; 3) Validação em device real (simulador não garante migração CloudKit).
 - Recuperação: Se o app abrir "vazio" ou houver falha de persistência, PARE. Priorize a recuperação dos dados.
+- Sempre busque a documentação oficial da SwiftUI e do Xcode pra entender o que fazer.
 
 # Procedimento e Build
 - Antes de editar: Leia containers, schemas e fluxos de bootstrap.
