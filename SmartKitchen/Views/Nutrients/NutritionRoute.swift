@@ -10,7 +10,8 @@ enum NutritionRoute: Hashable {
 enum NutritionEntrySheet: Identifiable {
     case manual
     case recents
-    case capturePhoto
+    case capturePhotoCamera
+    case capturePhotoGallery
     case captureLabel
     case captureText
     case captureVoice
@@ -20,7 +21,8 @@ enum NutritionEntrySheet: Identifiable {
         switch self {
         case .manual:            "manual"
         case .recents:           "recents"
-        case .capturePhoto:      "capture-photo"
+        case .capturePhotoCamera:"capture-photo-camera"
+        case .capturePhotoGallery:"capture-photo-gallery"
         case .captureLabel:      "capture-label"
         case .captureText:       "capture-text"
         case .captureVoice:      "capture-voice"

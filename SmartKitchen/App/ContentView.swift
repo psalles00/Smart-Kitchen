@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import PhotosUI
 
 enum SidebarItem: String, CaseIterable, Identifiable {
     case home
@@ -68,6 +69,23 @@ struct ContentView: View {
     @State private var showSharedRecipeImport = false
     @State private var sharedRecipeImportSource: RecipeImportSource?
     @State private var pendingSharedImportedRecipeID: UUID? = nil
+    @State private var showQuickRecipeImport = false
+    @State private var quickRecipeImportLaunchMode: RecipeImportLaunchMode = .picker
+    @State private var pendingQuickImportedRecipeID: UUID? = nil
+
+    // MARK: - Direct assistant-bar shortcuts (no intermediate host sheet)
+    // Food capture direct (nutrição)
+    @State private var directFoodCameraActive = false
+    @State private var directFoodGalleryActive = false
+    @State private var directFoodGalleryItem: PhotosPickerItem?
+    @State private var directFoodAnalysisImage: PlatformImage? = nil
+    @State private var directFoodAnalysisLogDate: Date = Date()
+    // Recipe import direct (receitas)
+    @State private var directRecipeLinkActive = false
+    @State private var directRecipeTextActive = false
+    @State private var directRecipeGalleryActive = false
+    @State private var directRecipeGalleryItem: PhotosPickerItem?
+    @State private var directRecipeCameraActive = false
 
 
     #if os(macOS)
@@ -120,6 +138,35 @@ struct ContentView: View {
         .sheet(item: $searchBarState.pendingNutritionSheet) { sheet in
             nutritionEntrySheetContent(for: sheet)
         }
+        .sheet(isPresented: $showQuickRecipeImport, onDismiss: {
+            quickRecipeImportLaunchMode = .picker
+        }) {
+            RecipeImportHostView(launchMode: quickRecipeImportLaunchMode) { recipeID in
+                pendingQuickImportedRecipeID = recipeID
+            }
+            .modelContainer(CloudSyncService.shared.container)
+            .forceLightStatusBar()
+        }
+        .modifier(DirectAssistantShortcutsModifier(
+            directFoodCameraActive: $directFoodCameraActive,
+            directFoodGalleryActive: $directFoodGalleryActive,
+            directFoodGalleryItem: $directFoodGalleryItem,
+            directFoodAnalysisImage: $directFoodAnalysisImage,
+            directFoodAnalysisLogDate: $directFoodAnalysisLogDate,
+            directRecipeLinkActive: $directRecipeLinkActive,
+            directRecipeTextActive: $directRecipeTextActive,
+            directRecipeGalleryActive: $directRecipeGalleryActive,
+            directRecipeGalleryItem: $directRecipeGalleryItem,
+            directRecipeCameraActive: $directRecipeCameraActive,
+            onRecipeImportedFromDirect: { recipeID in
+                pendingQuickImportedRecipeID = recipeID
+            },
+            onRecipeSourceReady: { source in
+                // Use the shared import flow to preview/save the imported recipe.
+                sharedRecipeImportSource = source
+                showSharedRecipeImport = true
+            }
+        ))
         .sheet(isPresented: $showAddPantry) {
             ItemDetailView(
                 mode: .create(destinations: [.pantry]),
@@ -310,6 +357,12 @@ struct ContentView: View {
                 openRecipeInRecipesTab(importedRecipeID)
             }
         }
+        .onChange(of: showQuickRecipeImport) { _, isPresented in
+            guard !isPresented, let importedRecipeID = pendingQuickImportedRecipeID else { return }
+            pendingQuickImportedRecipeID = nil
+            searchBarState.dismiss()
+            openRecipeInRecipesTab(importedRecipeID)
+        }
         .onChange(of: selectedTab) { _, newValue in
             handleTabSelectionChange(newValue)
         }
@@ -402,9 +455,43 @@ struct ContentView: View {
     // MARK: - Persistent Search Bar
 
     private var persistentAssistantBar: some View {
-        UnifiedSearchBar(state: searchBarState) { _ in }
+        UnifiedSearchBar(
+            state: searchBarState,
+            onAction: handleCommandBarAction,
+            onOpenRecipeImport: openQuickRecipeImport,
+            onOpenFoodCameraDirect: openDirectFoodCamera,
+            onOpenFoodGalleryDirect: openDirectFoodGallery
+        )
             .padding(.vertical, 6)
             .padding(.bottom, searchBarState.isVisible ? 0 : 45)
+    }
+
+    private func openQuickRecipeImport(_ launchMode: RecipeImportLaunchMode) {
+        switch launchMode {
+        case .link:
+            directRecipeLinkActive = true
+        case .text:
+            directRecipeTextActive = true
+        case .gallery:
+            directRecipeGalleryItem = nil
+            directRecipeGalleryActive = true
+        case .camera:
+            directRecipeCameraActive = true
+        case .picker, .files:
+            quickRecipeImportLaunchMode = launchMode
+            showQuickRecipeImport = true
+        }
+    }
+
+    private func openDirectFoodCamera() {
+        directFoodAnalysisLogDate = Date()
+        directFoodCameraActive = true
+    }
+
+    private func openDirectFoodGallery() {
+        directFoodAnalysisLogDate = Date()
+        directFoodGalleryItem = nil
+        directFoodGalleryActive = true
     }
 
     // MARK: - Nutrition entry sheet (disparado pelo menu "+" da barra global)
@@ -417,7 +504,11 @@ struct ContentView: View {
             FoodEntryFormView(mode: .create(onDate: logDate))
         case .recents:
             RecentsView(logDate: logDate)
-        case .capturePhoto:
+        case .capturePhotoCamera:
+            // Direct shortcut is handled at the root via DirectAssistantShortcutsModifier.
+            // If routed through this sheet for any reason, fall back to the host chooser.
+            FoodCaptureHostView(mode: .photo, logDate: logDate)
+        case .capturePhotoGallery:
             FoodCaptureHostView(mode: .photo, logDate: logDate)
         case .captureLabel:
             FoodCaptureHostView(mode: .nutritionLabel, logDate: logDate)
@@ -2040,3 +2131,104 @@ extension View {
     }
 }
 #endif
+
+// MARK: - Direct assistant-bar shortcuts modifier
+// Presents camera / photos picker / link / text sheets directly at the root,
+// so no intermediate host sheet ever appears between the tap and the action.
+
+private struct DirectAssistantShortcutsModifier: ViewModifier {
+    @Binding var directFoodCameraActive: Bool
+    @Binding var directFoodGalleryActive: Bool
+    @Binding var directFoodGalleryItem: PhotosPickerItem?
+    @Binding var directFoodAnalysisImage: PlatformImage?
+    @Binding var directFoodAnalysisLogDate: Date
+
+    @Binding var directRecipeLinkActive: Bool
+    @Binding var directRecipeTextActive: Bool
+    @Binding var directRecipeGalleryActive: Bool
+    @Binding var directRecipeGalleryItem: PhotosPickerItem?
+    @Binding var directRecipeCameraActive: Bool
+
+    let onRecipeImportedFromDirect: (UUID) -> Void
+    let onRecipeSourceReady: (RecipeImportSource) -> Void
+
+    func body(content: Content) -> some View {
+        content
+            // --- Food: camera (direct) ---
+            #if os(iOS)
+            .fullScreenCover(isPresented: $directFoodCameraActive) {
+                FoodCameraPicker { image in
+                    directFoodAnalysisImage = image
+                }
+                .ignoresSafeArea()
+            }
+            #endif
+            // --- Food: gallery (direct) ---
+            .photosPicker(isPresented: $directFoodGalleryActive,
+                          selection: $directFoodGalleryItem,
+                          matching: .images)
+            .onChange(of: directFoodGalleryItem) { _, newItem in
+                guard let newItem else { return }
+                Task { @MainActor in
+                    if let data = try? await newItem.loadTransferable(type: Data.self),
+                       let img = PlatformImage(data: data) {
+                        directFoodAnalysisImage = img
+                    }
+                    directFoodGalleryItem = nil
+                }
+            }
+            // --- Food: analysis sheet (shows only after we have an image) ---
+            .sheet(isPresented: Binding(
+                get: { directFoodAnalysisImage != nil },
+                set: { if !$0 { directFoodAnalysisImage = nil } }
+            )) {
+                if let image = directFoodAnalysisImage {
+                    FoodCaptureHostView(mode: .photo,
+                                        logDate: directFoodAnalysisLogDate,
+                                        preloadedImage: image)
+                        .forceLightStatusBar()
+                }
+            }
+            // --- Recipe import: link (direct) ---
+            .sheet(isPresented: $directRecipeLinkActive) {
+                RecipeLinkInputSheet { url in
+                    directRecipeLinkActive = false
+                    onRecipeSourceReady(.url(url))
+                }
+                .forceLightStatusBar()
+            }
+            // --- Recipe import: text (direct) ---
+            .sheet(isPresented: $directRecipeTextActive) {
+                RecipeTextInputSheet { text in
+                    directRecipeTextActive = false
+                    onRecipeSourceReady(.text(text))
+                }
+                .forceLightStatusBar()
+            }
+            // --- Recipe import: gallery (direct) ---
+            .photosPicker(isPresented: $directRecipeGalleryActive,
+                          selection: $directRecipeGalleryItem,
+                          matching: .images)
+            .onChange(of: directRecipeGalleryItem) { _, newItem in
+                guard let newItem else { return }
+                Task { @MainActor in
+                    if let data = try? await newItem.loadTransferable(type: Data.self) {
+                        onRecipeSourceReady(.image(data))
+                    }
+                    directRecipeGalleryItem = nil
+                }
+            }
+            // --- Recipe import: camera (direct) ---
+            #if os(iOS)
+            .fullScreenCover(isPresented: $directRecipeCameraActive) {
+                FoodCameraPicker { image in
+                    if let data = image.jpegData(compressionQuality: 0.85) {
+                        onRecipeSourceReady(.image(data))
+                    }
+                }
+                .ignoresSafeArea()
+            }
+            #endif
+    }
+}
+

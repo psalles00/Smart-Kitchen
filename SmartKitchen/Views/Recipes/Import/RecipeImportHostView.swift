@@ -8,6 +8,8 @@ import UIKit
 
 enum RecipeImportLaunchMode: Equatable {
     case picker
+    case link
+    case text
     case gallery
     case camera
     case files
@@ -61,40 +63,48 @@ struct RecipeImportHostView: View {
         self.onSaved = onSaved
     }
 
+    private var isDirectLaunchShortcut: Bool {
+        initialSource == nil && launchMode != .picker
+    }
+
     var body: some View {
         Group {
             switch coordinator.phase {
             case .pickingSource:
-                RecipeImportSourcePicker(
-                    onPickLink: {
-                        RecipeImportLogger.info("ui pick source=link")
-                        pickerInput = .link
-                    },
-                    onPickImage: {
-                        RecipeImportLogger.info("ui pick source=image")
-                        launchGalleryPicker()
-                    },
-                    onPickCamera: {
-                        RecipeImportLogger.info("ui pick source=camera")
-                        launchCameraPicker()
-                    },
-                    onPickFiles: {
-                        RecipeImportLogger.info("ui pick source=file")
-                        launchFileImporter()
-                    },
-                    onPickVideo: {
-                        // Em breve — Fase futura.
-                        RecipeImportLogger.info("ui pick source=video (not implemented)")
-                    },
-                    onPickText: {
-                        RecipeImportLogger.info("ui pick source=text")
-                        pickerInput = .text
-                    },
-                    onCreateManual: {
-                        RecipeImportLogger.info("ui action=create manual recipe")
-                        dismiss()
-                    }
-                )
+                if isDirectLaunchShortcut {
+                    directLaunchPlaceholder
+                } else {
+                    RecipeImportSourcePicker(
+                        onPickLink: {
+                            RecipeImportLogger.info("ui pick source=link")
+                            pickerInput = .link
+                        },
+                        onPickImage: {
+                            RecipeImportLogger.info("ui pick source=image")
+                            launchGalleryPicker()
+                        },
+                        onPickCamera: {
+                            RecipeImportLogger.info("ui pick source=camera")
+                            launchCameraPicker()
+                        },
+                        onPickFiles: {
+                            RecipeImportLogger.info("ui pick source=file")
+                            launchFileImporter()
+                        },
+                        onPickVideo: {
+                            // Em breve — Fase futura.
+                            RecipeImportLogger.info("ui pick source=video (not implemented)")
+                        },
+                        onPickText: {
+                            RecipeImportLogger.info("ui pick source=text")
+                            pickerInput = .text
+                        },
+                        onCreateManual: {
+                            RecipeImportLogger.info("ui action=create manual recipe")
+                            dismiss()
+                        }
+                    )
+                }
 
             case .processing(let stage):
                 RecipeImportProcessingView(stage: stage) {
@@ -128,7 +138,7 @@ struct RecipeImportHostView: View {
             }
         }
         .modelContainer(importContainer)
-        .sheet(item: $pickerInput) { input in
+        .sheet(item: $pickerInput, onDismiss: handleDirectShortcutDismiss) { input in
             switch input {
             case .link:
                 RecipeLinkInputSheet { url in
@@ -156,6 +166,24 @@ struct RecipeImportHostView: View {
         } message: {
             Text("Não foi possível acessar a câmera neste dispositivo agora.")
         }
+        .onChange(of: showImagePicker) { _, isPresented in
+            guard !isPresented else { return }
+            DispatchQueue.main.async {
+                handleDirectShortcutDismiss()
+            }
+        }
+        .onChange(of: showCameraPicker) { _, isPresented in
+            guard !isPresented else { return }
+            DispatchQueue.main.async {
+                handleDirectShortcutDismiss()
+            }
+        }
+        .onChange(of: showFileImporter) { _, isPresented in
+            guard !isPresented else { return }
+            DispatchQueue.main.async {
+                handleDirectShortcutDismiss()
+            }
+        }
         .onChange(of: selectedImage) {
             loadSelectedImage()
         }
@@ -169,6 +197,30 @@ struct RecipeImportHostView: View {
 
             triggerInitialLaunchIfNeeded()
         }
+    }
+
+    private var directLaunchPlaceholder: some View {
+        VStack(spacing: 16) {
+            Spacer()
+            ProgressView()
+                .controlSize(.large)
+            Text("Abrindo…")
+                .font(.headline)
+                .foregroundStyle(.secondary)
+            Spacer()
+        }
+    }
+
+    private func handleDirectShortcutDismiss() {
+        guard isDirectLaunchShortcut else { return }
+        guard case .pickingSource = coordinator.phase else { return }
+        guard pickerInput == nil,
+              !showImagePicker,
+              !showCameraPicker,
+              !showFileImporter
+        else { return }
+
+        dismiss()
     }
 
     private func loadSelectedImage() {
@@ -193,6 +245,10 @@ struct RecipeImportHostView: View {
         switch launchMode {
         case .picker:
             break
+        case .link:
+            pickerInput = .link
+        case .text:
+            pickerInput = .text
         case .gallery:
             launchGalleryPicker()
         case .camera:
@@ -296,7 +352,7 @@ struct RecipeImportHostView: View {
 
 // MARK: - Input sheets
 
-private struct RecipeLinkInputSheet: View {
+struct RecipeLinkInputSheet: View {
     let onSubmit: (URL) -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var text: String = ""
@@ -394,7 +450,7 @@ private struct RecipeLinkInputSheet: View {
     }
 }
 
-private struct RecipeTextInputSheet: View {
+struct RecipeTextInputSheet: View {
     let onSubmit: (String) -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var text: String = ""

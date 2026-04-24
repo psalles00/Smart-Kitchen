@@ -33,36 +33,48 @@ struct NutrientsView: View {
                         }
                         GlassButtonGroup {
                             GlassGroupMenu(systemImage: "plus") {
-                                Button {
-                                    activeEntrySheet = .capturePhoto
-                                } label: {
-                                    Label("Foto da refeição", systemImage: "camera")
+                                Section("Foto da refeição") {
+                                    #if os(iOS)
+                                    Button {
+                                        activeEntrySheet = .capturePhotoCamera
+                                    } label: {
+                                        Label("Usar câmera", systemImage: "camera")
+                                    }
+                                    #endif
+                                    Button {
+                                        activeEntrySheet = .capturePhotoGallery
+                                    } label: {
+                                        Label("Escolher da galeria", systemImage: "photo")
+                                    }
                                 }
-                                Button {
-                                    activeEntrySheet = .captureLabel
-                                } label: {
-                                    Label("Rótulo nutricional", systemImage: "barcode.viewfinder")
+                                Section("Análise") {
+                                    Button {
+                                        activeEntrySheet = .captureLabel
+                                    } label: {
+                                        Label("Rótulo nutricional", systemImage: "barcode.viewfinder")
+                                    }
+                                    Button {
+                                        activeEntrySheet = .captureVoice
+                                    } label: {
+                                        Label("Por voz", systemImage: "mic")
+                                    }
+                                    Button {
+                                        activeEntrySheet = .captureText
+                                    } label: {
+                                        Label("Por texto", systemImage: "text.cursor")
+                                    }
                                 }
-                                Button {
-                                    activeEntrySheet = .captureVoice
-                                } label: {
-                                    Label("Por voz", systemImage: "mic")
-                                }
-                                Button {
-                                    activeEntrySheet = .captureText
-                                } label: {
-                                    Label("Por texto", systemImage: "text.cursor")
-                                }
-                                Divider()
-                                Button {
-                                    activeEntrySheet = .manual
-                                } label: {
-                                    Label("Entrada manual", systemImage: "square.and.pencil")
-                                }
-                                Button {
-                                    activeEntrySheet = .recents
-                                } label: {
-                                    Label("Recentes", systemImage: "clock.arrow.circlepath")
+                                Section("Registro de Refeições") {
+                                    Button {
+                                        activeEntrySheet = .manual
+                                    } label: {
+                                        Label("Registrar alimento", systemImage: "fork.knife")
+                                    }
+                                    Button {
+                                        activeEntrySheet = .recents
+                                    } label: {
+                                        Label("Recentes", systemImage: "clock.arrow.circlepath")
+                                    }
                                 }
                             }
                         }
@@ -164,8 +176,10 @@ struct NutrientsView: View {
             FoodEntryFormView(mode: .create(onDate: selectedDate))
         case .recents:
             RecentsView(logDate: selectedDate)
-        case .capturePhoto:
-            FoodCaptureHostView(mode: .photo, logDate: selectedDate)
+        case .capturePhotoCamera:
+            FoodCaptureHostView(mode: .photo, logDate: selectedDate, initialInput: .camera)
+        case .capturePhotoGallery:
+            FoodCaptureHostView(mode: .photo, logDate: selectedDate, initialInput: .gallery)
         case .captureLabel:
             FoodCaptureHostView(mode: .nutritionLabel, logDate: selectedDate)
         case .captureText:

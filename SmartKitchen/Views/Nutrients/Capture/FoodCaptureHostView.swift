@@ -4,6 +4,12 @@ import PhotosUI
 /// Host único para os 4 modos de captura automática: foto, rótulo, voz e texto.
 /// Gerencia ciclo gathering → analyzing → result → (erro).
 struct FoodCaptureHostView: View {
+    enum InitialInput {
+        case chooser
+        case camera
+        case gallery
+    }
+
     enum Mode {
         case photo
         case nutritionLabel
@@ -22,19 +28,45 @@ struct FoodCaptureHostView: View {
 
     let mode: Mode
     let logDate: Date
+    let initialInput: InitialInput
+    let preloadedImage: PlatformImage?
 
-    @State private var stage: Stage = .gathering
+    @State private var stage: Stage
     @State private var capturedImage: PlatformImage?
     @State private var typedText: String = ""
     @State private var showCamera: Bool = false
     @State private var showPhotoPicker: Bool = false
     @State private var selectedPhotoItem: PhotosPickerItem?
+    @State private var hasTriggeredInitialInput = false
+    @State private var hasTriggeredPreloadedAnalysis = false
 
     #if os(iOS)
     @State private var speech = NutritionSpeechRecognizer()
     #endif
 
     private let ai = NutritionAIService()
+
+    init(mode: Mode,
+         logDate: Date,
+         initialInput: InitialInput = .chooser,
+         preloadedImage: PlatformImage? = nil) {
+        self.mode = mode
+        self.logDate = logDate
+        self.initialInput = initialInput
+        self.preloadedImage = preloadedImage
+        // Start directly in analyzing stage when a preloaded image is provided,
+        // so no gathering UI is ever rendered.
+        if preloadedImage != nil {
+            _stage = State(initialValue: .analyzing)
+            _capturedImage = State(initialValue: preloadedImage)
+        } else {
+            _stage = State(initialValue: .gathering)
+        }
+    }
+
+    private var isDirectPhotoShortcut: Bool {
+        mode == .photo && initialInput != .chooser
+    }
 
     var body: some View {
         NavigationStack {
@@ -67,6 +99,24 @@ struct FoodCaptureHostView: View {
             guard let new else { return }
             Task { await loadPhoto(new) }
         }
+        .onChange(of: showCamera) { _, isPresented in
+            guard !isPresented, isDirectPhotoShortcut else { return }
+            DispatchQueue.main.async {
+                guard capturedImage == nil, case .gathering = stage else { return }
+                dismiss()
+            }
+        }
+        .onChange(of: showPhotoPicker) { _, isPresented in
+            guard !isPresented, isDirectPhotoShortcut else { return }
+            DispatchQueue.main.async {
+                guard selectedPhotoItem == nil, capturedImage == nil, case .gathering = stage else { return }
+                dismiss()
+            }
+        }
+        .onAppear {
+            triggerInitialInputIfNeeded()
+            triggerPreloadedAnalysisIfNeeded()
+        }
     }
 
     // MARK: - Gathering UI by mode
@@ -74,12 +124,35 @@ struct FoodCaptureHostView: View {
     @ViewBuilder
     private var gatheringView: some View {
         switch mode {
-        case .photo, .nutritionLabel:
+        case .photo:
+            if initialInput == .chooser {
+                photoGathering
+            } else {
+                directLaunchPlaceholder
+            }
+        case .nutritionLabel:
             photoGathering
         case .text:
             textGathering
         case .voice:
             voiceGathering
+        }
+    }
+
+    private var directLaunchPlaceholder: some View {
+        VStack(spacing: 16) {
+            Spacer()
+            ProgressView()
+                .controlSize(.large)
+            Text("Abrindo…")
+                .font(.headline)
+                .foregroundStyle(.secondary)
+            Spacer()
+        }
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancelar") { dismiss() }
+            }
         }
     }
 
@@ -130,6 +203,32 @@ struct FoodCaptureHostView: View {
                 Button("Cancelar") { dismiss() }
             }
         }
+    }
+
+    private func triggerInitialInputIfNeeded() {
+        guard !hasTriggeredInitialInput else { return }
+        guard case .gathering = stage else { return }
+        guard mode == .photo else { return }
+
+        hasTriggeredInitialInput = true
+
+        switch initialInput {
+        case .chooser:
+            break
+        case .camera:
+            #if os(iOS)
+            showCamera = true
+            #endif
+        case .gallery:
+            showPhotoPicker = true
+        }
+    }
+
+    private func triggerPreloadedAnalysisIfNeeded() {
+        guard !hasTriggeredPreloadedAnalysis else { return }
+        guard preloadedImage != nil else { return }
+        hasTriggeredPreloadedAnalysis = true
+        startImageAnalysis()
     }
 
     private var textGathering: some View {

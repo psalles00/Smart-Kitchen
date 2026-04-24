@@ -75,7 +75,7 @@ struct FoodEntryFormView: View {
                 }
             }
             .scrollDismissesKeyboard(.interactively)
-            .modalNavigationTitle(isEdit ? "Editar registro" : "Nova entrada")
+            .modalNavigationTitle(isEdit ? "Editar registro" : "Registrar Alimento")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancelar") { dismiss() }
