@@ -24,6 +24,7 @@
 		13D3339D5C01016C338DF5F8 /* AddGroceryItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD63B6313209711B5CC7C9BC /* AddGroceryItemView.swift */; };
 		1463A33CEB85EA5B7C145162 /* PlatformImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0BA783D43E37794EE28298C /* PlatformImage.swift */; };
 		14DC3885135887EBCCC40C13 /* NutritionProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF29CEC56278E908BBB0F567 /* NutritionProgressView.swift */; };
+		15035005720DAC5CD793A74B /* SmartKitchenWidgetsBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCD12EACFC870C201D926269 /* SmartKitchenWidgetsBundle.swift */; };
 		151342A4D6ADA823BBB6A786 /* CloudSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11B3CB2DD186ABB8A9CA1D36 /* CloudSyncService.swift */; };
 		152D24BB4004BC24C08DCEB2 /* UniversalSearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D91DCD9189D0778478997A07 /* UniversalSearchService.swift */; };
 		15C992B4D0C985D4AFFF225E /* WavesShaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 382D66BD301AABE81FA0E3A3 /* WavesShaderView.swift */; };
@@ -67,6 +68,7 @@
 		5B159D7F29B8A025F734BEB3 /* Boska-ExtralightItalic.otf in Resources */ = {isa = PBXBuildFile; fileRef = D2D194C91AB19D58E1F0BEB6 /* Boska-ExtralightItalic.otf */; };
 		5BB768416FD55EBFE8C38AB3 /* NutritionOnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ECDADFEB6EE40C450C80E7B /* NutritionOnboardingView.swift */; };
 		5CB1DC3167BF6B3686A75305 /* IngredientNormalizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3975EB9E1F06E9235BC26A63 /* IngredientNormalizer.swift */; };
+		5D2205566544B0E0E3120C08 /* AssistantWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54BACCB0F0C76EA946F2CE95 /* AssistantWidget.swift */; };
 		5EEC1B0DA5DA071C0FF43DED /* ItemEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A2B9A25959E9E24FA72DBF7 /* ItemEntry.swift */; };
 		5F2A19DDE4598020BC3256E3 /* BackgroundManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F314FDF85CDEEA7ECC9062D /* BackgroundManager.swift */; };
 		6039479CF7B8E9B97514EBD8 /* MeshGradientShaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5BBB1362316E6604D935041 /* MeshGradientShaderView.swift */; };
@@ -108,6 +110,7 @@
 		8FFCEF035198CE9DD4729BE8 /* ItemDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6B02BCCEF9DC3980BC03691 /* ItemDetailView.swift */; };
 		90605337AFE0B9C0CF7EE56C /* CommandBarResultRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEBFB0D07FF508C9D65AF2A4 /* CommandBarResultRow.swift */; };
 		90A040866250128A00CB6B74 /* Boska-Italic.otf in Resources */ = {isa = PBXBuildFile; fileRef = 51B3504E5B6AEC4327A2CE73 /* Boska-Italic.otf */; };
+		94058E2EEFEE3B9D2D7AD778 /* AIChatWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E74389E6DBB6C57ABD1D15D /* AIChatWidget.swift */; };
 		98DB1D45E86EA5E9FC85523F /* WeightEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D63859282A31776469BAD94 /* WeightEntry.swift */; };
 		996993D427978994C66C8264 /* FoodEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3A2113D1124A32B7191F8B /* FoodEntry.swift */; };
 		9FE052399B3FDCFDF4CE043A /* FamilySharingSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B75E7DE0C964B5588FF6B7B8 /* FamilySharingSettingsView.swift */; };
@@ -177,6 +180,7 @@
 		FAED9B8194E5F89C957CAAAA /* RecipeImportInbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D982D0E8D23D0F71B7049BF /* RecipeImportInbox.swift */; };
 		FCEB9B00F3374B9493AD80F6 /* ExpandedPageLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71EA39E201D01426855B0453 /* ExpandedPageLayout.swift */; };
 		FDEDDB86E93B6370A725D9EA /* RecipeImportPipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E175993AEAD75137D32BABC /* RecipeImportPipeline.swift */; };
+		FFC9CBB52C1090A651F4854F /* SmartKitchenWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D14D81F509AB7C84E6F367BE /* SmartKitchenWidgets.appex */; platformFilter = ios; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -186,6 +190,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 9148A3EC99E8B7F9A68E1A47;
 			remoteInfo = SmartKitchenShareExtension;
+		};
+		900A4F7AFD4E04E8D1A48773 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7F4597E1AF3377B5F4ED7E7B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = EFAE869C76E23275B865F646;
+			remoteInfo = SmartKitchenWidgets;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -197,6 +208,7 @@
 			dstSubfolderSpec = 13;
 			files = (
 				4BA79D926C97A172FA6DE4A2 /* SmartKitchenShareExtension.appex in Embed Foundation Extensions */,
+				FFC9CBB52C1090A651F4854F /* SmartKitchenWidgets.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -221,6 +233,7 @@
 		16C3C8D46F59AFD47DE7AEEC /* NutritionEnums.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionEnums.swift; sourceTree = "<group>"; };
 		1792100BD21DE048AA48B9B3 /* RecipeUtensilsEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeUtensilsEditor.swift; sourceTree = "<group>"; };
 		18F997273D99B1D6AD5B30BE /* EditRecipeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditRecipeView.swift; sourceTree = "<group>"; };
+		1A19BC15CBA0BBF327324E13 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		223EEEC2E6E5C6F3572B0A85 /* TexturedGradientView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TexturedGradientView.swift; sourceTree = "<group>"; };
 		23BD6AC4B303BC43FF6948FB /* ConversationHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationHistoryView.swift; sourceTree = "<group>"; };
 		26313B4322C7C58158CCDB2F /* RecipeImportPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeImportPreviewView.swift; sourceTree = "<group>"; };
@@ -230,6 +243,7 @@
 		2C063670EE4F7988218002A6 /* CloudSharingControllerRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSharingControllerRepresentable.swift; sourceTree = "<group>"; };
 		2D11C9DAD56B01DB249CFF1F /* Category.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Category.swift; sourceTree = "<group>"; };
 		2D32C979B90C97DC43C93680 /* ImageOCRPipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageOCRPipeline.swift; sourceTree = "<group>"; };
+		2E74389E6DBB6C57ABD1D15D /* AIChatWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIChatWidget.swift; sourceTree = "<group>"; };
 		342C68A1E133DA815A5B3DA4 /* RecipeImportModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeImportModels.swift; sourceTree = "<group>"; };
 		353C1175CD2B3C3C3D1C0DCD /* InlineSearchResultsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineSearchResultsView.swift; sourceTree = "<group>"; };
 		382D66BD301AABE81FA0E3A3 /* WavesShaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WavesShaderView.swift; sourceTree = "<group>"; };
@@ -247,7 +261,7 @@
 		431593D600C41201D213FA71 /* FoodCameraPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodCameraPicker.swift; sourceTree = "<group>"; };
 		45656677AD3714E163ED9011 /* Telma-Bold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Telma-Bold.otf"; sourceTree = "<group>"; };
 		45890FB81F05FADA6EF03881 /* RecipeImportOrchestrator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeImportOrchestrator.swift; sourceTree = "<group>"; };
-		4A74F8064D84D0D03083E2B8 /* SmartKitchenShareExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = SmartKitchenShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		4A74F8064D84D0D03083E2B8 /* SmartKitchenShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SmartKitchenShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		4BBA1CA5A04B774EAAD63D2E /* BackupSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupSettingsView.swift; sourceTree = "<group>"; };
 		4C5880CFC6DCD2F43D3FA289 /* Boska-BlackItalic.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Boska-BlackItalic.otf"; sourceTree = "<group>"; };
 		4D982D0E8D23D0F71B7049BF /* RecipeImportInbox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeImportInbox.swift; sourceTree = "<group>"; };
@@ -256,6 +270,7 @@
 		4FFE418BF404A910C30CECCD /* Telma-Black.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Telma-Black.otf"; sourceTree = "<group>"; };
 		514FEC6B2DA6354468637B0A /* FullscreenAssistantView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullscreenAssistantView.swift; sourceTree = "<group>"; };
 		51B3504E5B6AEC4327A2CE73 /* Boska-Italic.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Boska-Italic.otf"; sourceTree = "<group>"; };
+		54BACCB0F0C76EA946F2CE95 /* AssistantWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssistantWidget.swift; sourceTree = "<group>"; };
 		54E9C41052AFBFDE995CAA53 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		57785079D17F41CE565A524B /* AppTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTab.swift; sourceTree = "<group>"; };
 		586AFBED0658AAF1260AA738 /* FoodCaptureHostView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodCaptureHostView.swift; sourceTree = "<group>"; };
@@ -323,7 +338,7 @@
 		B8745E6D949D25CCD17EA5D2 /* AddGroceryItemView 2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AddGroceryItemView 2.swift"; sourceTree = "<group>"; };
 		B8E44E925C852E9239F7790A /* ListsInfoContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListsInfoContent.swift; sourceTree = "<group>"; };
 		B970691AA2D626F97231E533 /* PageHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageHeader.swift; sourceTree = "<group>"; };
-		B9A8A000ACD1E665B07A06D4 /* SmartKitchen.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = SmartKitchen.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B9A8A000ACD1E665B07A06D4 /* SmartKitchen.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SmartKitchen.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BD63B6313209711B5CC7C9BC /* AddGroceryItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddGroceryItemView.swift; sourceTree = "<group>"; };
 		BD8EFA8D0DF90B9B35DF27A4 /* items_database.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = items_database.json; sourceTree = "<group>"; };
 		BEBFB0D07FF508C9D65AF2A4 /* CommandBarResultRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandBarResultRow.swift; sourceTree = "<group>"; };
@@ -334,9 +349,11 @@
 		C758332A037C07A7DF37C53C /* FoodImageStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodImageStore.swift; sourceTree = "<group>"; };
 		C901446BD6E1A569FBFCE82E /* RecipeRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeRowView.swift; sourceTree = "<group>"; };
 		C97DDE84F26B0242CD107962 /* IconImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconImage.swift; sourceTree = "<group>"; };
+		CCD12EACFC870C201D926269 /* SmartKitchenWidgetsBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartKitchenWidgetsBundle.swift; sourceTree = "<group>"; };
 		CDA8A128BD3A686C1B8CB0B7 /* UnifiedItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnifiedItem.swift; sourceTree = "<group>"; };
 		CE18FC2D6D66792CEDE3E8EA /* RecipeImportCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeImportCoordinator.swift; sourceTree = "<group>"; };
 		CE3D1EB5B18D19836B0A5C38 /* MacCameraMediaPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacCameraMediaPicker.swift; sourceTree = "<group>"; };
+		D14D81F509AB7C84E6F367BE /* SmartKitchenWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SmartKitchenWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		D1A3DA22AFF6E8F87CDA9CB5 /* SmartKitchen.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SmartKitchen.entitlements; sourceTree = "<group>"; };
 		D1EE932494B1EDF61333EA76 /* Boska-Light.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Boska-Light.otf"; sourceTree = "<group>"; };
 		D2D194C91AB19D58E1F0BEB6 /* Boska-ExtralightItalic.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Boska-ExtralightItalic.otf"; sourceTree = "<group>"; };
@@ -459,6 +476,7 @@
 			children = (
 				B9A8A000ACD1E665B07A06D4 /* SmartKitchen.app */,
 				4A74F8064D84D0D03083E2B8 /* SmartKitchenShareExtension.appex */,
+				D14D81F509AB7C84E6F367BE /* SmartKitchenWidgets.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -469,6 +487,7 @@
 				8AD88711AAD42A4B136021BF /* icons */,
 				898FB69B3F0DD005A41CAEA3 /* SmartKitchen */,
 				4FEC836DAA0C9EEAC2A6704A /* SmartKitchenShareExtension */,
+				81B43E446FD911369C5DECAB /* SmartKitchenWidgets */,
 				4B5DBB59F7CCA002D12FE978 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -564,6 +583,17 @@
 				A0E510B072AA05179DF44BD5 /* SmartKitchenApp.swift */,
 			);
 			path = App;
+			sourceTree = "<group>";
+		};
+		81B43E446FD911369C5DECAB /* SmartKitchenWidgets */ = {
+			isa = PBXGroup;
+			children = (
+				2E74389E6DBB6C57ABD1D15D /* AIChatWidget.swift */,
+				54BACCB0F0C76EA946F2CE95 /* AssistantWidget.swift */,
+				1A19BC15CBA0BBF327324E13 /* Info.plist */,
+				CCD12EACFC870C201D926269 /* SmartKitchenWidgetsBundle.swift */,
+			);
+			path = SmartKitchenWidgets;
 			sourceTree = "<group>";
 		};
 		8603027B3F55259C41BCFBDF /* Capture */ = {
@@ -819,6 +849,7 @@
 			);
 			dependencies = (
 				1AB9BE1BE8B084816CAA050B /* PBXTargetDependency */,
+				042DA96F2DA0FA95EC0DC430 /* PBXTargetDependency */,
 			);
 			name = SmartKitchen;
 			packageProductDependencies = (
@@ -826,6 +857,23 @@
 			productName = SmartKitchen;
 			productReference = B9A8A000ACD1E665B07A06D4 /* SmartKitchen.app */;
 			productType = "com.apple.product-type.application";
+		};
+		EFAE869C76E23275B865F646 /* SmartKitchenWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DC0844F4928EB2FA9BC1E155 /* Build configuration list for PBXNativeTarget "SmartKitchenWidgets" */;
+			buildPhases = (
+				A4E32EF59642D29B235F95B2 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SmartKitchenWidgets;
+			packageProductDependencies = (
+			);
+			productName = SmartKitchenWidgets;
+			productReference = D14D81F509AB7C84E6F367BE /* SmartKitchenWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -837,11 +885,12 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					9148A3EC99E8B7F9A68E1A47 = {
-						DevelopmentTeam = 5KSM738734;
 						ProvisioningStyle = Automatic;
 					};
 					9304226077C6C2B4667662DD = {
-						DevelopmentTeam = 5KSM738734;
+						ProvisioningStyle = Automatic;
+					};
+					EFAE869C76E23275B865F646 = {
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -862,6 +911,7 @@
 			targets = (
 				9304226077C6C2B4667662DD /* SmartKitchen */,
 				9148A3EC99E8B7F9A68E1A47 /* SmartKitchenShareExtension */,
+				EFAE869C76E23275B865F646 /* SmartKitchenWidgets */,
 			);
 		};
 /* End PBXProject section */
@@ -1060,9 +1110,25 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A4E32EF59642D29B235F95B2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				94058E2EEFEE3B9D2D7AD778 /* AIChatWidget.swift in Sources */,
+				5D2205566544B0E0E3120C08 /* AssistantWidget.swift in Sources */,
+				15035005720DAC5CD793A74B /* SmartKitchenWidgetsBundle.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		042DA96F2DA0FA95EC0DC430 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			platformFilter = ios;
+			target = EFAE869C76E23275B865F646 /* SmartKitchenWidgets */;
+			targetProxy = 900A4F7AFD4E04E8D1A48773 /* PBXContainerItemProxy */;
+		};
 		1AB9BE1BE8B084816CAA050B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			platformFilter = ios;
@@ -1143,7 +1209,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 5KSM738734;
+				DEVELOPMENT_TEAM = 44K57HQAP9;
 				INFOPLIST_FILE = SmartKitchen/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1216,13 +1282,36 @@
 			};
 			name = Release;
 		};
+		537321B89E59D3F8D7FA1E1C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 44K57HQAP9;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = SmartKitchenWidgets/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.pedrosalles.smartkitchen.sync.Widgets;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		8B57376D3FCC1119EACFCE66 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = SmartKitchenShareExtension/SmartKitchenShareExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 5KSM738734;
+				DEVELOPMENT_TEAM = 44K57HQAP9;
 				INFOPLIST_FILE = SmartKitchenShareExtension/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1244,7 +1333,7 @@
 				CODE_SIGN_ENTITLEMENTS = SmartKitchenShareExtension/SmartKitchenShareExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 5KSM738734;
+				DEVELOPMENT_TEAM = 44K57HQAP9;
 				INFOPLIST_FILE = SmartKitchenShareExtension/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1268,7 +1357,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 5KSM738734;
+				DEVELOPMENT_TEAM = 44K57HQAP9;
 				INFOPLIST_FILE = SmartKitchen/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1281,6 +1370,29 @@
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		DB30DDB73576030DDC37ABBE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 44K57HQAP9;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = SmartKitchenWidgets/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.pedrosalles.smartkitchen.sync.Widgets;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -1311,6 +1423,15 @@
 			buildConfigurations = (
 				8B57376D3FCC1119EACFCE66 /* Debug */,
 				941A13CAEE0876224508CEF3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		DC0844F4928EB2FA9BC1E155 /* Build configuration list for PBXNativeTarget "SmartKitchenWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DB30DDB73576030DDC37ABBE /* Debug */,
+				537321B89E59D3F8D7FA1E1C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

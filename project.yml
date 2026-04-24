@@ -63,6 +63,10 @@ targets:
         embed: true
         codeSign: true
         platformFilter: iOS
+      - target: SmartKitchenWidgets
+        embed: true
+        codeSign: true
+        platformFilter: iOS
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.pedrosalles.smartkitchen.sync
@@ -108,3 +112,27 @@ targets:
         CODE_SIGN_STYLE: Automatic
         TARGETED_DEVICE_FAMILY: "1,2"
         SKIP_INSTALL: YES
+
+  SmartKitchenWidgets:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: SmartKitchenWidgets
+    info:
+      path: SmartKitchenWidgets/Info.plist
+      properties:
+        CFBundleDisplayName: Smart Kitchen
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.pedrosalles.smartkitchen.sync.Widgets
+        DEVELOPMENT_TEAM: 5KSM738734
+        MARKETING_VERSION: "1.0.0"
+        CURRENT_PROJECT_VERSION: "1"
+        CODE_SIGN_STYLE: Automatic
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SKIP_INSTALL: YES
+        GENERATE_INFOPLIST_FILE: NO
+        SWIFT_EMIT_LOC_STRINGS: YES

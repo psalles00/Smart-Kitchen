@@ -25,6 +25,20 @@ final class RecipeImportCoordinator {
     /// Pre-filled source (when the caller already has content — e.g. from share extension).
     var prefilledSource: RecipeImportSource?
 
+    /// Last source passed to `start(_:)`. Used by `runDeepAttempt()` to retry
+    /// failed imports with the heavier improver pipeline (video download +
+    /// transcription + AI restructuring).
+    private(set) var lastSource: RecipeImportSource?
+
+    /// True once the deep attempt has been used for the current session.
+    /// Prevents the user from triggering the deep attempt multiple times and
+    /// drives the UI to fall back to the generic "Tentar outra" action.
+    private(set) var deepAttemptUsed: Bool = false
+
+    /// True while the deep attempt task is running. Used to disable the
+    /// button and avoid duplicate triggers.
+    private(set) var isDeepAttempting: Bool = false
+
     private let orchestrator: RecipeImportOrchestrator
     private var currentTask: Task<Void, Never>?
     private var currentSessionID: String = "no-session"
@@ -34,6 +48,18 @@ final class RecipeImportCoordinator {
         RecipeImportLogger.info("coordinator initialized")
     }
 
+    /// Whether the last source supports a deeper retry using the improver.
+    /// Only URL-based and videoFile sources can currently benefit from
+    /// downloading/transcribing media for a second attempt.
+    var supportsDeepAttempt: Bool {
+        switch lastSource {
+        case .url, .videoFile:
+            return true
+        case .text, .image, .none:
+            return false
+        }
+    }
+
     // MARK: - Actions
 
     func start(_ source: RecipeImportSource) {
@@ -41,6 +67,9 @@ final class RecipeImportCoordinator {
         currentSessionID = sessionID
         RecipeImportLogger.info("start import \(RecipeImportLogger.sourceSummary(source))", sessionID: sessionID)
         currentTask?.cancel()
+        lastSource = source
+        deepAttemptUsed = false
+        isDeepAttempting = false
         phase = .processing(stage: .analyzing)
         currentTask = Task { [weak self] in
             guard let self else { return }
@@ -72,17 +101,95 @@ final class RecipeImportCoordinator {
     func cancel() {
         RecipeImportLogger.info("cancel requested", sessionID: currentSessionID)
         currentTask?.cancel()
+        isDeepAttempting = false
         phase = .pickingSource
     }
 
     func retry() {
         RecipeImportLogger.info("retry requested", sessionID: currentSessionID)
+        lastSource = nil
+        deepAttemptUsed = false
+        isDeepAttempting = false
         phase = .pickingSource
+    }
+
+    /// Runs the deep import attempt using `RecipeImportImprover` on top of a
+    /// minimal draft built from `lastSource`. Re-enters `.processing` while
+    /// running and transitions to `.preview` on success or `.failed` on error.
+    func runDeepAttempt() {
+        guard !isDeepAttempting, !deepAttemptUsed else {
+            RecipeImportLogger.info("deep attempt ignored (isDeepAttempting=\(isDeepAttempting) used=\(deepAttemptUsed))", sessionID: currentSessionID)
+            return
+        }
+        guard let source = lastSource else {
+            RecipeImportLogger.error("deep attempt requested but lastSource is nil", sessionID: currentSessionID)
+            return
+        }
+
+        var seedDraft = RecipeDraft()
+        switch source {
+        case .url(let url):
+            seedDraft.externalURLString = url.absoluteString
+            seedDraft.sourceLabel = "Importação refinada"
+        case .videoFile(let url):
+            seedDraft.videoURL = url
+            seedDraft.sourceLabel = "Vídeo compartilhado"
+        case .text, .image:
+            RecipeImportLogger.error("deep attempt not supported for source kind", sessionID: currentSessionID)
+            return
+        }
+
+        let sessionID = UUID().uuidString
+        currentSessionID = sessionID
+        RecipeImportLogger.info("deep attempt start \(RecipeImportLogger.sourceSummary(source))", sessionID: sessionID)
+
+        isDeepAttempting = true
+        deepAttemptUsed = true
+        currentTask?.cancel()
+        phase = .processing(stage: .readingVideo)
+
+        currentTask = Task { [weak self] in
+            guard let self else { return }
+            await RecipeImportLogContext.$sessionID.withValue(sessionID) {
+                defer {
+                    self.isDeepAttempting = false
+                }
+                do {
+                    let improver = RecipeImportImprover()
+                    let improved = try await improver.improve(draft: seedDraft) { [weak self] stage in
+                        guard let self else { return }
+                        RecipeImportLogger.debug("deep stage callback=\(stage.title)", sessionID: sessionID)
+                        switch stage {
+                        case .locatingVideo, .downloadingVideo, .extractingAudio, .transcribingAudio:
+                            self.phase = .processing(stage: .readingVideo)
+                        case .restructuringDraft:
+                            self.phase = .processing(stage: .organizingIngredients)
+                        case .finalizing:
+                            self.phase = .processing(stage: .finalizing)
+                        }
+                    }
+                    if Task.isCancelled {
+                        RecipeImportLogger.info("deep attempt cancelled before preview", sessionID: sessionID)
+                        return
+                    }
+                    self.phase = .preview(draft: improved)
+                    RecipeImportLogger.info("deep attempt preview ready \(RecipeImportLogger.draftSummary(improved))", sessionID: sessionID)
+                    HapticManager.impact(style: .medium)
+                } catch is CancellationError {
+                    RecipeImportLogger.info("deep attempt cancelled by CancellationError", sessionID: sessionID)
+                } catch {
+                    self.phase = .failed(message: error.localizedDescription)
+                    RecipeImportLogger.error("deep attempt failed error=\(error.localizedDescription)", sessionID: sessionID)
+                    HapticManager.impact(style: .heavy)
+                }
+            }
+        }
     }
 
     func dismiss() {
         RecipeImportLogger.info("dismiss requested", sessionID: currentSessionID)
         currentTask?.cancel()
+        isDeepAttempting = false
         isPresented = false
     }
 

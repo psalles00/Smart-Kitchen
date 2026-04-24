@@ -398,16 +398,25 @@ enum RecipeImportLogger {
     static func debug(_ message: String, sessionID: String? = nil) {
         let sid = sessionID ?? RecipeImportLogContext.sessionID
         logger.debug("[\(sid, privacy: .public)] \(message, privacy: .public)")
+        #if DEBUG
+        print("[RecipeImport][debug][\(sid)] \(message)")
+        #endif
     }
 
     static func info(_ message: String, sessionID: String? = nil) {
         let sid = sessionID ?? RecipeImportLogContext.sessionID
         logger.info("[\(sid, privacy: .public)] \(message, privacy: .public)")
+        #if DEBUG
+        print("[RecipeImport][info][\(sid)] \(message)")
+        #endif
     }
 
     static func error(_ message: String, sessionID: String? = nil) {
         let sid = sessionID ?? RecipeImportLogContext.sessionID
         logger.error("[\(sid, privacy: .public)] \(message, privacy: .public)")
+        #if DEBUG
+        print("[RecipeImport][error][\(sid)] \(message)")
+        #endif
     }
 
     static func sourceSummary(_ source: RecipeImportSource) -> String {

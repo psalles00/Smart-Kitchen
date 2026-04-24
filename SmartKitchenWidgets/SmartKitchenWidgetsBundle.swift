@@ -1,0 +1,15 @@
+import WidgetKit
+import SwiftUI
+
+/// Entry point for all Smart Kitchen widgets (Lock Screen + Home Screen).
+///
+/// The primary widget is ``AssistantWidget`` — it opens the app directly on the
+/// assistant screen with the keyboard focused (via the
+/// `smartkitchen://assistant` deep link).
+@main
+struct SmartKitchenWidgetsBundle: WidgetBundle {
+    var body: some Widget {
+        AssistantWidget()
+        AIChatWidget()
+    }
+}

@@ -10,6 +10,13 @@ import AppKit
 
 extension Notification.Name {
     static let openSettings = Notification.Name("com.smartkitchen.openSettings")
+    /// Posted when the user taps the Assistant widget (Lock Screen / Home Screen).
+    /// The root view responds by revealing the fullscreen assistant in AI chat mode,
+    /// which in turn auto-focuses the text field (keyboard opens automatically).
+    static let openAssistantFromWidget = Notification.Name("com.smartkitchen.openAssistantFromWidget")
+    /// Posted when the user taps the AI Chat widget. Reveals the fullscreen assistant
+    /// in AI chat mode (conversation interface, keyboard open).
+    static let openAIChatFromWidget = Notification.Name("com.smartkitchen.openAIChatFromWidget")
 }
 
 // MARK: - App Delegate for CloudKit Share Acceptance
@@ -110,6 +117,15 @@ struct SmartKitchenApp: App {
                 .id(cloudSync.containerID)
                 .recipeImportInboxHost()
                 .onOpenURL { url in
+                    // Widget deep links
+                    if url.scheme == "smartkitchen", url.host == "assistant" {
+                        NotificationCenter.default.post(name: .openAssistantFromWidget, object: nil)
+                        return
+                    }
+                    if url.scheme == "smartkitchen", url.host == "aichat" {
+                        NotificationCenter.default.post(name: .openAIChatFromWidget, object: nil)
+                        return
+                    }
                     if SharedImportInbox.shared.ingest(url: url) {
                         return
                     }

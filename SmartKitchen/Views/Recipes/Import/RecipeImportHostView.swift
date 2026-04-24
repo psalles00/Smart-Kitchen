@@ -61,6 +61,7 @@ struct RecipeImportHostView: View {
         self.initialSource = initialSource
         self.launchMode = launchMode
         self.onSaved = onSaved
+        RecipeImportLogger.info("import host init hasInitialSource=\(initialSource != nil) launchMode=\(launchMode)")
     }
 
     private var isDirectLaunchShortcut: Bool {
@@ -131,7 +132,10 @@ struct RecipeImportHostView: View {
 
             case .savedRecipeID:
                 Color.clear
-                    .onAppear { dismiss() }
+                    .onAppear {
+                        RecipeImportLogger.info("import host phase=savedRecipeID auto-dismiss")
+                        dismiss()
+                    }
 
             case .failed(let message):
                 failureView(message: message)
@@ -188,7 +192,7 @@ struct RecipeImportHostView: View {
             loadSelectedImage()
         }
         .onAppear {
-            RecipeImportLogger.info("import host appeared hasInitialSource=\(initialSource != nil)")
+            RecipeImportLogger.info("import host appeared hasInitialSource=\(initialSource != nil) phase=\(phaseDescription(coordinator.phase))")
             if let source = initialSource, case .pickingSource = coordinator.phase {
                 RecipeImportLogger.info("import host auto-starting initial source \(RecipeImportLogger.sourceSummary(source))")
                 coordinator.start(source)
@@ -196,6 +200,19 @@ struct RecipeImportHostView: View {
             }
 
             triggerInitialLaunchIfNeeded()
+        }
+        .onDisappear {
+            RecipeImportLogger.info("import host disappeared phase=\(phaseDescription(coordinator.phase))")
+        }
+    }
+
+    private func phaseDescription(_ phase: RecipeImportCoordinator.Phase) -> String {
+        switch phase {
+        case .pickingSource: return "pickingSource"
+        case .processing(let stage): return "processing(\(stage.title))"
+        case .preview: return "preview"
+        case .savedRecipeID: return "savedRecipeID"
+        case .failed(let msg): return "failed(\(msg))"
         }
     }
 
@@ -322,7 +339,8 @@ struct RecipeImportHostView: View {
     // MARK: - Failure
 
     private func failureView(message: String) -> some View {
-        VStack(spacing: 18) {
+        let canDeepRetry = coordinator.supportsDeepAttempt && !coordinator.deepAttemptUsed
+        return VStack(spacing: 18) {
             Image(systemName: "exclamationmark.bubble.fill")
                 .font(.system(size: 44))
                 .foregroundStyle(.orange)
@@ -333,16 +351,44 @@ struct RecipeImportHostView: View {
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 28)
-            HStack(spacing: 12) {
-                Button("Cancelar", role: .cancel) {
-                    dismiss()
+
+            VStack(spacing: 12) {
+                if canDeepRetry {
+                    Button {
+                        RecipeImportLogger.info("ui deep retry tapped from failure view")
+                        coordinator.runDeepAttempt()
+                    } label: {
+                        HStack {
+                            Image(systemName: coordinator.isDeepAttempting ? "wand.and.stars.inverse" : "wand.and.stars")
+                            Text(coordinator.isDeepAttempting ? "Tentando mais profundamente..." : "Tentar mais profundamente")
+                        }
+                        .frame(maxWidth: .infinity)
+                        .font(.body.weight(.semibold))
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    .tint(PageTheme.recipes.accentColor)
+                    .disabled(coordinator.isDeepAttempting || coordinator.deepAttemptUsed)
                 }
-                Button("Tentar outra") {
-                    coordinator.retry()
+
+                HStack(spacing: 12) {
+                    Button("Cancelar", role: .cancel) {
+                        dismiss()
+                    }
+                    .disabled(coordinator.isDeepAttempting)
+
+                    if !canDeepRetry {
+                        Button("Tentar outra") {
+                            RecipeImportLogger.info("ui retry tapped from failure view")
+                            coordinator.retry()
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(PageTheme.recipes.accentColor)
+                        .disabled(coordinator.isDeepAttempting)
+                    }
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(PageTheme.recipes.accentColor)
             }
+            .padding(.horizontal, 28)
             .padding(.top, 8)
         }
         .padding()

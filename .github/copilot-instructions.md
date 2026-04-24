@@ -4,6 +4,8 @@
 - Risco: Alterações em persistência, schemas, migrations e flags de sync exigem: 1) Identificação exata de stores/URLs; 2) Plano de backup/rollback; 3) Validação em device real (simulador não garante migração CloudKit).
 - Recuperação: Se o app abrir "vazio" ou houver falha de persistência, PARE. Priorize a recuperação dos dados.
 - Sempre busque a documentação oficial da SwiftUI e do Xcode pra entender o que fazer.
+- NUNCA remova ou altere o "Team" em Signing & Capabilities dos Targets.
+- Se for necessário passar por cima de alguma das regras deste documento, o agente deve perguntar ao usuário e obter confirmação explícita ANTES de executar a ação. Isso é inegociável.
 
 # Procedimento e Build
 - Antes de editar: Leia containers, schemas e fluxos de bootstrap.
