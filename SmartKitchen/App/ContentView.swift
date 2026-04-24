@@ -137,11 +137,10 @@ struct ContentView: View {
         .sheet(item: $searchBarState.pendingNutritionSheet) { sheet in
             nutritionEntrySheetContent(for: sheet)
         }
-        .sheet(isPresented: $showQuickRecipeImport, onDismiss: {
-            quickRecipeImportLaunchMode = .picker
-        }) {
+        .sheet(isPresented: $showQuickRecipeImport, onDismiss: handleQuickRecipeImportDismissed) {
             RecipeImportHostView(launchMode: quickRecipeImportLaunchMode) { recipeID in
                 pendingQuickImportedRecipeID = recipeID
+                showQuickRecipeImport = false
             }
             .modelContainer(CloudSyncService.shared.container)
             .forceLightStatusBar()
@@ -336,23 +335,6 @@ struct ContentView: View {
         .onChange(of: showSharedImportActions) { _, isPresented in
             RecipeImportLogger.info("share flow showSharedImportActions=\(isPresented) sharedRecipeImportSource=\(sharedRecipeImportSource != nil) pendingItem=\(sharedImportInbox.pendingItem != nil)")
             print("[SmartKitchen][share] showSharedImportActions=\(isPresented) sourceReady=\(sharedRecipeImportSource != nil)")
-            guard !isPresented else { return }
-
-            // Sheet encerrado — se havia um recipe salvo, abrir na aba.
-            let importedRecipeID = pendingSharedImportedRecipeID
-            pendingSharedImportedRecipeID = nil
-            sharedRecipeImportSource = nil
-            sharedImportInbox.clear()
-
-            if let importedRecipeID {
-                openRecipeInRecipesTab(importedRecipeID)
-            }
-        }
-        .onChange(of: showQuickRecipeImport) { _, isPresented in
-            guard !isPresented, let importedRecipeID = pendingQuickImportedRecipeID else { return }
-            pendingQuickImportedRecipeID = nil
-            searchBarState.dismiss()
-            openRecipeInRecipesTab(importedRecipeID)
         }
         .onChange(of: selectedTab) { _, newValue in
             handleTabSelectionChange(newValue)
@@ -1050,14 +1032,24 @@ struct ContentView: View {
     }
 
     private func openRecipeInRecipesTab(_ id: UUID) {
-        scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "recipe")
-
         #if os(macOS)
+        scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "recipe")
         selectedSidebar = .recipes
         #else
-        recipeNavigationPath = NavigationPath()
-        selectedTab = .recipes
-        recipeNavigationPath.append(id)
+        let navigateToRecipe = {
+            var path = NavigationPath()
+            path.append(id)
+            recipeNavigationPath = path
+        }
+
+        if selectedTab == .recipes {
+            navigateToRecipe()
+        } else {
+            selectedTab = .recipes
+            DispatchQueue.main.async {
+                navigateToRecipe()
+            }
+        }
         #endif
     }
 
@@ -1067,20 +1059,41 @@ struct ContentView: View {
         searchBarState.reveal(mode: .aiChat)
     }
 
+    private func handleQuickRecipeImportDismissed() {
+        quickRecipeImportLaunchMode = .picker
+
+        guard let importedRecipeID = pendingQuickImportedRecipeID else { return }
+
+        pendingQuickImportedRecipeID = nil
+        searchBarState.dismiss()
+        openRecipeInRecipesTab(importedRecipeID)
+    }
+
     /// Fires AFTER the `SharedImportActionView` sheet has fully dismissed.
     /// Using `onDismiss:` (instead of `onChange` + delay) is the supported way to
     /// chain a follow-up sheet (`RecipeImportHostView`) without presentation races.
     private func handleSharedImportActionsDismissed() {
         RecipeImportLogger.info("share flow actions sheet fully dismissed; sharedRecipeImportSource=\(sharedRecipeImportSource != nil) pendingItem=\(sharedImportInbox.pendingItem != nil)")
         print("[SmartKitchen][share] actions sheet fully dismissed sourceReady=\(sharedRecipeImportSource != nil)")
-        // Caso não tenha seleção, limpa o inbox.
-        if sharedRecipeImportSource == nil, sharedImportInbox.pendingItem != nil {
+
+        let importedRecipeID = pendingSharedImportedRecipeID
+        let shouldClearInbox = sharedImportInbox.pendingItem != nil
+
+        if importedRecipeID == nil, shouldClearInbox {
             RecipeImportLogger.info("share flow actions dismissed without selection, clearing inbox")
             print("[SmartKitchen][share] actions dismissed without selection, clearing inbox")
+        }
+
+        pendingSharedImportedRecipeID = nil
+        sharedRecipeImportSource = nil
+
+        if shouldClearInbox {
             sharedImportInbox.clear()
         }
-        // Quando há source, a própria sheet já troca o conteúdo para o host (sem dismiss/represent).
-        // Logo não precisamos apresentar nada aqui.
+
+        if let importedRecipeID {
+            openRecipeInRecipesTab(importedRecipeID)
+        }
     }
 
     /// Conteúdo do sheet unificado para o fluxo de importação via share.

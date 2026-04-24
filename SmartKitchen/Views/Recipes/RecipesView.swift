@@ -228,26 +228,15 @@ struct RecipesView: View {
             }
             .forceLightStatusBar()
         }
-        .sheet(isPresented: $showImportRecipe) {
+        .sheet(isPresented: $showImportRecipe, onDismiss: handleImportRecipeDismissed) {
             RecipeImportHostView(initialSource: importInitialSource) { recipeID in
                 highlightedRecipeID = recipeID
                 selectedRecipeID = recipeID
                 pendingImportedRecipeID = recipeID
+                showImportRecipe = false
             }
             .modelContainer(CloudSyncService.shared.container)
             .forceLightStatusBar()
-        }
-        .onChange(of: showImportRecipe) { _, isPresented in
-            guard !isPresented, let recipeID = pendingImportedRecipeID else {
-                if !isPresented {
-                    importInitialSource = nil
-                }
-                return
-            }
-
-            importInitialSource = nil
-            pendingImportedRecipeID = nil
-            openRecipeInRecipesTab(recipeID)
         }
         .sheet(item: $editingRecipe) { recipe in
             NavigationStack {
@@ -329,6 +318,17 @@ struct RecipesView: View {
 
                 SettingsButton()
             }
+        }
+    }
+
+    private func handleImportRecipeDismissed() {
+        let recipeID = pendingImportedRecipeID
+
+        importInitialSource = nil
+        pendingImportedRecipeID = nil
+
+        if let recipeID {
+            openRecipeInRecipesTab(recipeID)
         }
     }
 

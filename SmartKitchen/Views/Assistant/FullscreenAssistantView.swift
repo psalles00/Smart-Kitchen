@@ -394,20 +394,13 @@ struct FullscreenAssistantView: View {
             }
             .scrollDismissesKeyboard(.interactively)
         }
-        .sheet(isPresented: $showImportRecipe, onDismiss: {
-            recipeImportLaunchMode = .picker
-        }) {
+        .sheet(isPresented: $showImportRecipe, onDismiss: handleImportRecipeDismissed) {
             RecipeImportHostView(launchMode: recipeImportLaunchMode) { recipeID in
                 pendingImportedRecipeID = recipeID
+                showImportRecipe = false
             }
             .modelContainer(CloudSyncService.shared.container)
             .forceLightStatusBar()
-        }
-        .onChange(of: showImportRecipe) { _, isPresented in
-            guard !isPresented, let recipeID = pendingImportedRecipeID else { return }
-            pendingImportedRecipeID = nil
-            searchBarState.dismiss()
-            openRecipeInRecipesTab(recipeID)
         }
         .alert("Em breve", isPresented: pendingPlaceholderAlertIsPresented) {
             Button("OK", role: .cancel) {
@@ -432,6 +425,16 @@ struct FullscreenAssistantView: View {
     private func openRecipeImport(_ launchMode: RecipeImportLaunchMode) {
         recipeImportLaunchMode = launchMode
         showImportRecipe = true
+    }
+
+    private func handleImportRecipeDismissed() {
+        recipeImportLaunchMode = .picker
+
+        guard let recipeID = pendingImportedRecipeID else { return }
+
+        pendingImportedRecipeID = nil
+        searchBarState.dismiss()
+        openRecipeInRecipesTab(recipeID)
     }
 
     private func triggerAction(_ action: CommandBarAction) {

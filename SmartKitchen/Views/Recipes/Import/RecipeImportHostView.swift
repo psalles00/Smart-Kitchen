@@ -120,7 +120,6 @@ struct RecipeImportHostView: View {
                             RecipeImportLogger.info("ui save tapped in preview")
                             let recipe = coordinator.save(draft: updatedDraft, in: modelContext)
                             onSaved(recipe.id)
-                            dismiss()
                             return nil
                         },
                         onDiscard: {
@@ -132,10 +131,6 @@ struct RecipeImportHostView: View {
 
             case .savedRecipeID:
                 Color.clear
-                    .onAppear {
-                        RecipeImportLogger.info("import host phase=savedRecipeID auto-dismiss")
-                        dismiss()
-                    }
 
             case .failed(let message):
                 failureView(message: message)
