@@ -56,11 +56,8 @@ struct RecipeRowView: View {
 
     @ViewBuilder
     private var recipeThumb: some View {
-        if let data = recipe.imageData, let image = PlatformImage(data: data) {
-            Image(platformImage: image)
-                .resizable()
-                .scaledToFill()
-        } else {
+        // 60pt thumbnail on @3x screens ≈ 180px; bump to 240 for crispness.
+        RecipeThumbnail(recipe: recipe, maxPixel: 240) {
             RecipeImagePlaceholderCompact(ingredients: (recipe.ingredients ?? []).sorted { $0.sortOrder < $1.sortOrder })
         }
     }

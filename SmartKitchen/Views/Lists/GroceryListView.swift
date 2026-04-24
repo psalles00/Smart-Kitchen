@@ -8,8 +8,8 @@ struct GroceryListView: View {
     @Query(sort: \Category.sortOrder) private var allCategories: [Category]
     @Query private var settingsArray: [AppSettings]
 
-    @State private var editingItem: UnifiedItem?
-    @State private var acquiredItem: UnifiedItem?
+    @State private var editingItem: UnifiedItemSelection?
+    @State private var acquiredItem: UnifiedItemSelection?
     @State private var targetedItemID: UUID?
     @State private var targetedCategoryName: String?
     @State private var highlightedItemID: UUID?
@@ -64,12 +64,12 @@ struct GroceryListView: View {
                 itemList
             }
         }
-        .sheet(item: $editingItem) { item in
-            ItemDetailView(mode: .edit(item), removalContext: .grocery)
+        .sheet(item: $editingItem, onDismiss: { editingItem = nil }) { selection in
+            ItemDetailContainerView(itemID: selection.id, removalContext: .grocery)
                 .forceLightStatusBar()
         }
-        .sheet(item: $acquiredItem) { item in
-            ItemDetailView(mode: .edit(item), removalContext: .pantry)
+        .sheet(item: $acquiredItem, onDismiss: { acquiredItem = nil }) { selection in
+            ItemDetailContainerView(itemID: selection.id, removalContext: .pantry)
                 .forceLightStatusBar()
         }
     }
@@ -128,7 +128,7 @@ struct GroceryListView: View {
     @ViewBuilder
     private func groceryRow(categoryIndex: Int, itemIndex: Int, category: String, item: UnifiedItem) -> some View {
         Button {
-            editingItem = item
+            editingItem = UnifiedItemSelection(id: item.id)
         } label: {
             let categoryIconName = allCategories.first(where: { $0.name == category && $0.type == .grocery })?.iconName
             GroceryItemRow(item: item, categoryIconName: categoryIconName, isAlsoInPantry: item.isPantry, showsDivider: itemIndex > 0) {
@@ -238,7 +238,7 @@ struct GroceryListView: View {
     private func contextMenuContent(for item: UnifiedItem) -> some View {
         Group {
             Button("Editar", systemImage: "pencil") {
-                editingItem = item
+                editingItem = UnifiedItemSelection(id: item.id)
             }
             Button("Mover à Despensa", systemImage: "checkmark.circle") {
                 acquireItem(item)
@@ -282,7 +282,7 @@ struct GroceryListView: View {
             }
         }
         if shouldEdit {
-            acquiredItem = item
+            acquiredItem = UnifiedItemSelection(id: item.id)
         }
         onAcquired?()
     }

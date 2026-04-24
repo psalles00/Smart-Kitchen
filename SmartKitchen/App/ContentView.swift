@@ -56,8 +56,8 @@ struct ContentView: View {
     @StateObject private var searchBarState = SearchBarState()
 
     // Search-triggered edit sheets
-    @State private var searchEditItem: UnifiedItem?
-    @State private var searchEditRecipe: Recipe?
+    @State private var searchEditItem: UnifiedItemSelection?
+    @State private var searchEditRecipe: RecipeSelection?
 
     /// When non-nil, the CommandBar tab will open inline chat with this query on next activation.
     @State private var pendingChatQuery: String? = nil
@@ -243,13 +243,13 @@ struct ContentView: View {
                 addItemCategory = nil
             }
         }
-        .sheet(item: $searchEditItem) { item in
-            ItemDetailView(mode: .edit(item))
+        .sheet(item: $searchEditItem, onDismiss: { searchEditItem = nil }) { selection in
+            ItemDetailContainerView(itemID: selection.id)
                 .forceLightStatusBar()
         }
-        .sheet(item: $searchEditRecipe) { (recipe: Recipe) in
+        .sheet(item: $searchEditRecipe, onDismiss: { searchEditRecipe = nil }) { selection in
             NavigationStack {
-                EditRecipeView(recipe: recipe)
+                EditRecipeContainerView(recipeID: selection.id)
             }
             .forceLightStatusBar()
         }
@@ -979,15 +979,9 @@ struct ContentView: View {
             scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "utensil")
             selectedTab = .lists
         case .editPantryItem(let id), .editGroceryItem(let id), .editUtensil(let id):
-            let descriptor = FetchDescriptor<UnifiedItem>(predicate: #Predicate { $0.id == id })
-            if let item = try? modelContext.fetch(descriptor).first {
-                searchEditItem = item
-            }
+            searchEditItem = UnifiedItemSelection(id: id)
         case .editRecipe(let id):
-            let descriptor = FetchDescriptor<Recipe>(predicate: #Predicate { $0.id == id })
-            if let item = try? modelContext.fetch(descriptor).first {
-                searchEditRecipe = item
-            }
+            searchEditRecipe = RecipeSelection(id: id)
         case .addPantryItem(let prefill):
             addItemPrefill = prefill
             showAddPantry = true
@@ -1036,19 +1030,23 @@ struct ContentView: View {
         scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "recipe")
         selectedSidebar = .recipes
         #else
+        // Always defer navigation mutations to the next main-actor turn so
+        // they don't collide with an in-flight sheet dismissal transaction.
+        // Mutating `recipeNavigationPath` synchronously from an `onDismiss`
+        // handler produces the "NavigationRequestObserver tried to update
+        // multiple times per frame" warning and can land the detail view in
+        // the same tick as SwiftData autosave — which has been trapping.
         let navigateToRecipe = {
             var path = NavigationPath()
             path.append(id)
             recipeNavigationPath = path
         }
 
-        if selectedTab == .recipes {
-            navigateToRecipe()
-        } else {
+        if selectedTab != .recipes {
             selectedTab = .recipes
-            DispatchQueue.main.async {
-                navigateToRecipe()
-            }
+        }
+        Task { @MainActor in
+            navigateToRecipe()
         }
         #endif
     }
@@ -1066,7 +1064,11 @@ struct ContentView: View {
 
         pendingQuickImportedRecipeID = nil
         searchBarState.dismiss()
-        openRecipeInRecipesTab(importedRecipeID)
+        // Defer navigation: let the sheet-dismiss transaction fully commit
+        // before mutating nav path, avoiding same-frame update warning / trap.
+        Task { @MainActor in
+            openRecipeInRecipesTab(importedRecipeID)
+        }
     }
 
     /// Fires AFTER the `SharedImportActionView` sheet has fully dismissed.
@@ -1092,7 +1094,11 @@ struct ContentView: View {
         }
 
         if let importedRecipeID {
-            openRecipeInRecipesTab(importedRecipeID)
+            // Defer navigation to next main-actor turn so it happens after the
+            // sheet-dismiss + inbox-clear observable updates have fully committed.
+            Task { @MainActor in
+                openRecipeInRecipesTab(importedRecipeID)
+            }
         }
     }
 
@@ -1225,7 +1231,7 @@ struct ContentView: View {
         showAddItem = false
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            searchEditItem = item
+            searchEditItem = UnifiedItemSelection(id: item.id)
         }
     }
 
@@ -1312,7 +1318,7 @@ private struct HomeView: View {
     @State private var pendingImportedRecipeID: UUID? = nil
     @State private var showRecipeAddOptions = false
     @State private var selectedCompatibleCategory: String? = nil
-    @State private var editingExpiringItem: UnifiedItem?
+    @State private var editingExpiringItem: UnifiedItemSelection?
 
     @State private var recipeCategoriesState: [Category] = []
     @State private var compatibleMatchesState: [HomeRecipeMatch] = []
@@ -1372,17 +1378,19 @@ private struct HomeView: View {
             }
             .forceLightStatusBar()
         }
-        .sheet(isPresented: $showImportRecipe) {
+        .sheet(isPresented: $showImportRecipe, onDismiss: {
+            guard let recipeID = pendingImportedRecipeID else { return }
+            pendingImportedRecipeID = nil
+            Task { @MainActor in
+                openRecipeInRecipesTab(recipeID)
+            }
+        }) {
             RecipeImportHostView { recipeID in
                 pendingImportedRecipeID = recipeID
+                showImportRecipe = false
             }
                 .modelContainer(CloudSyncService.shared.container)
                 .forceLightStatusBar()
-        }
-        .onChange(of: showImportRecipe) { _, isPresented in
-            guard !isPresented, let recipeID = pendingImportedRecipeID else { return }
-            pendingImportedRecipeID = nil
-            openRecipeInRecipesTab(recipeID)
         }
         .confirmationDialog("Adicionar receita", isPresented: $showRecipeAddOptions, titleVisibility: .visible) {
             Button("Importar receita") {
@@ -1395,8 +1403,8 @@ private struct HomeView: View {
         } message: {
             Text("De onde vem essa receita?")
         }
-        .sheet(item: $editingExpiringItem) { item in
-            ItemDetailView(mode: .edit(item))
+        .sheet(item: $editingExpiringItem, onDismiss: { editingExpiringItem = nil }) { selection in
+            ItemDetailContainerView(itemID: selection.id)
                 .forceLightStatusBar()
         }
         .onAppear {
@@ -1741,7 +1749,7 @@ private struct HomeView: View {
             VStack(spacing: 0) {
                 ForEach(Array(expiringItemsState.prefix(5).enumerated()), id: \.element.id) { index, item in
                     Button {
-                        editingExpiringItem = item
+                        editingExpiringItem = UnifiedItemSelection(id: item.id)
                     } label: {
                         HStack(spacing: 12) {
                             IconImage(
@@ -1777,7 +1785,7 @@ private struct HomeView: View {
                     .buttonStyle(.plain)
                     .contextMenu {
                         Button("Editar", systemImage: "pencil") {
-                            editingExpiringItem = item
+                            editingExpiringItem = UnifiedItemSelection(id: item.id)
                         }
                         Divider()
                         Button("Excluir", systemImage: "trash", role: .destructive) {

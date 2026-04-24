@@ -6,6 +6,10 @@ import UniformTypeIdentifiers
 import UIKit
 #endif
 
+struct RecipeSelection: Identifiable, Hashable {
+    let id: UUID
+}
+
 struct EditRecipeView: View {
     @Bindable var recipe: Recipe
     @Environment(\.modelContext) private var modelContext
@@ -759,4 +763,35 @@ private struct EditIngredientPickerTarget: Identifiable {
 
 private struct EditUtensilPickerTarget: Identifiable {
     let id: UUID
+}
+
+struct EditRecipeContainerView: View {
+    let recipeID: UUID
+
+    @Environment(\.dismiss) private var dismiss
+    @Query private var matches: [Recipe]
+    @State private var didResolveOnce = false
+
+    init(recipeID: UUID) {
+        self.recipeID = recipeID
+        _matches = Query(filter: #Predicate<Recipe> { $0.id == recipeID })
+    }
+
+    var body: some View {
+        Group {
+            if let recipe = matches.first {
+                EditRecipeView(recipe: recipe)
+                    .onAppear { didResolveOnce = true }
+            } else if didResolveOnce {
+                Color.clear
+                    .onAppear {
+                        Task { @MainActor in
+                            dismiss()
+                        }
+                    }
+            } else {
+                Color.clear
+            }
+        }
+    }
 }

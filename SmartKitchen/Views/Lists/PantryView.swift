@@ -8,7 +8,7 @@ struct PantryView: View {
     @Query(sort: \Category.sortOrder) private var allCategories: [Category]
     @Query private var settingsArray: [AppSettings]
 
-    @State private var editingItem: UnifiedItem?
+    @State private var editingItem: UnifiedItemSelection?
     @State private var targetedItemID: UUID?
     @State private var targetedCategoryName: String?
     @State private var highlightedItemID: UUID?
@@ -123,8 +123,8 @@ struct PantryView: View {
                 itemList
             }
         }
-        .sheet(item: $editingItem) { item in
-            ItemDetailView(mode: .edit(item), removalContext: .pantry)
+        .sheet(item: $editingItem, onDismiss: { editingItem = nil }) { selection in
+            ItemDetailContainerView(itemID: selection.id, removalContext: .pantry)
                 .forceLightStatusBar()
         }
     }
@@ -184,7 +184,7 @@ struct PantryView: View {
     @ViewBuilder
     private func pantryRow(categoryIndex: Int, itemIndex: Int, category: String, item: UnifiedItem) -> some View {
         Button {
-            editingItem = item
+            editingItem = UnifiedItemSelection(id: item.id)
         } label: {
             let categoryIconName = allCategories.first(where: { $0.name == category && $0.type == .pantry })?.iconName
             PantryItemRow(
@@ -208,7 +208,7 @@ struct PantryView: View {
         .buttonStyle(.plain)
         .contextMenu {
             Button("Editar", systemImage: "pencil") {
-                editingItem = item
+                editingItem = UnifiedItemSelection(id: item.id)
             }
             Button("Mover ao Mercado", systemImage: "cart.badge.plus") {
                 sendToGrocery(item)

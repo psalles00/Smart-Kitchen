@@ -6,7 +6,7 @@ struct UtensilsView: View {
     @Environment(\.scrollToItem) private var scrollToItem
     @Query(filter: #Predicate<UnifiedItem> { $0.isUtensil }, sort: \UnifiedItem.utensilSortOrder) private var allItems: [UnifiedItem]
     @Query(sort: \Category.sortOrder) private var allCategories: [Category]
-    @State private var editingItem: UnifiedItem?
+    @State private var editingItem: UnifiedItemSelection?
     @State private var highlightedItemID: UUID?
 
     let searchText: String
@@ -64,8 +64,8 @@ struct UtensilsView: View {
                 itemList
             }
         }
-        .sheet(item: $editingItem) { item in
-            ItemDetailView(mode: .edit(item), removalContext: .utensil)
+        .sheet(item: $editingItem, onDismiss: { editingItem = nil }) { selection in
+            ItemDetailContainerView(itemID: selection.id, removalContext: .utensil)
                 .forceLightStatusBar()
         }
     }
@@ -111,7 +111,7 @@ struct UtensilsView: View {
         Section {
             ForEach(Array(items.enumerated()), id: \.1.id) { itemIndex, item in
                 Button {
-                    editingItem = item
+                    editingItem = UnifiedItemSelection(id: item.id)
                 } label: {
                     UtensilItemRow(item: item, showsDivider: itemIndex > 0)
                         .contentShape(Rectangle())
@@ -131,7 +131,7 @@ struct UtensilsView: View {
                 }
                 .contextMenu {
                     Button("Editar", systemImage: "pencil") {
-                        editingItem = item
+                        editingItem = UnifiedItemSelection(id: item.id)
                     }
                     Button(role: .destructive) {
                         deleteItem(item)

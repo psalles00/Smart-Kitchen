@@ -92,24 +92,33 @@ struct RecipeCardView: View {
 
     @ViewBuilder
     private var recipeImage: some View {
-        if let data = recipe.imageData, let image = PlatformImage(data: data) {
-            GeometryReader { geo in
-                Image(platformImage: image)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: geo.size.width, height: geo.size.height)
-                    .clipped()
-                    .overlay {
-                        if shouldDarkenRealImageForThreeColumnGrid {
-                            Color.black.opacity(0.2)
-                        }
-                    }
+        // Largest card variant fills ~half screen width (~420pt on large phones).
+        // Use 900px to stay crisp on @3x without holding full-res in memory.
+        // Narrower grid variants still benefit because the downsample is shared
+        // across cells via the cache.
+        let maxPixel: CGFloat = {
+            switch columns {
+            case 1: return 1200
+            case 2: return 900
+            case 3: return 600
+            default: return 500
             }
-        } else {
-            RecipeImagePlaceholderCompact(
-                ingredients: (recipe.ingredients ?? []).sorted { $0.sortOrder < $1.sortOrder },
-                darkenOverlay: true
-            )
+        }()
+
+        GeometryReader { geo in
+            RecipeThumbnail(recipe: recipe, maxPixel: maxPixel) {
+                RecipeImagePlaceholderCompact(
+                    ingredients: (recipe.ingredients ?? []).sorted { $0.sortOrder < $1.sortOrder },
+                    darkenOverlay: true
+                )
+            }
+            .frame(width: geo.size.width, height: geo.size.height)
+            .clipped()
+            .overlay {
+                if shouldDarkenRealImageForThreeColumnGrid, recipe.imageData != nil {
+                    Color.black.opacity(0.2)
+                }
+            }
         }
     }
 

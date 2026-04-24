@@ -102,6 +102,13 @@ final class CloudSyncService: @unchecked Sendable {
             container = try! Self.makeEphemeralLocalContainer()
             syncError = "Não foi possível abrir o banco local. O app iniciou em modo temporário; reinicie e tente novamente."
         }
+        // Disable main-context autosave. With CloudKit-backed SwiftData, the
+        // autosave timer races with remote-change notifications and triggers
+        // `_SwiftData_SwiftUI` precondition traps (brk #0x1) when the UI layer
+        // holds refs to records mutated by the CloudKit mirror. The app
+        // already performs explicit `try? context.save()` at every mutation
+        // site; we save again on scenePhase transitions as a safety net.
+        Self.disableAutosave(on: container)
 
         if syncPref && !cloudKitAllowed {
             UserDefaults.standard.set(false, forKey: Self.syncEnabledKey)
@@ -153,6 +160,7 @@ final class CloudSyncService: @unchecked Sendable {
 
         let oldContainer = container
         container = newContainer
+        Self.disableAutosave(on: container)
         containerID = UUID()
         isUsingCloudKitContainer = true
         shouldActivateCloudOnLaunch = false
@@ -239,6 +247,7 @@ final class CloudSyncService: @unchecked Sendable {
         shouldActivateCloudOnLaunch = false
         hasAttemptedCloudActivationOnLaunch = true
         container = newContainer
+        Self.disableAutosave(on: container)
         containerID = UUID()
         isUsingCloudKitContainer = true
         lastSyncDate = Date()
@@ -279,6 +288,7 @@ final class CloudSyncService: @unchecked Sendable {
         shouldActivateCloudOnLaunch = false
         hasAttemptedCloudActivationOnLaunch = false
         container = newContainer
+        Self.disableAutosave(on: container)
         containerID = UUID()
         isUsingCloudKitContainer = false
         teardownRemoteChangeObservation()
@@ -629,6 +639,19 @@ final class CloudSyncService: @unchecked Sendable {
         }
     }
 
+    /// Turns off the automatic save timer on the container's main context.
+    /// Must be called for every container we swap into `self.container`.
+    /// See `init()` for the rationale (autosave races with CloudKit remote
+    /// changes and triggers `_SwiftData_SwiftUI` preconditions).
+    private static func disableAutosave(on container: ModelContainer) {
+        // `mainContext` and `autosaveEnabled` are `@MainActor`-isolated.
+        // Hop to the main actor; the timer won't start before this runs
+        // because SwiftUI binds to the container on the main actor as well.
+        Task { @MainActor in
+            container.mainContext.autosaveEnabled = false
+        }
+    }
+
     private static func makeEphemeralLocalContainer() throws -> ModelContainer {
         let fallbackDir = storeDirectory.appendingPathComponent("Fallback", isDirectory: true)
         try? FileManager.default.createDirectory(at: fallbackDir, withIntermediateDirectories: true)
@@ -785,10 +808,12 @@ final class CloudSyncService: @unchecked Sendable {
 
     private func setupRemoteChangeObservation() {
         teardownRemoteChangeObservation()
+        // Observe on the main queue so the handler never runs while the SwiftData
+        // main context (used by @Query / UI) is mid-flight on the main thread.
         remoteChangeObserver = NotificationCenter.default.addObserver(
             forName: .NSPersistentStoreRemoteChange,
             object: nil,
-            queue: nil
+            queue: .main
         ) { [weak self] _ in
             self?.scheduleDeduplication()
         }
@@ -804,7 +829,13 @@ final class CloudSyncService: @unchecked Sendable {
     private func scheduleDeduplication() {
         deduplicationWorkItem?.cancel()
         let work = DispatchWorkItem { [weak self] in
-            self?.performDeduplication()
+            guard let self else { return }
+            // `performDeduplication` is @MainActor; hop explicitly since a
+            // DispatchWorkItem executed on the main queue does NOT provide the
+            // MainActor isolation the compiler requires.
+            Task { @MainActor in
+                self.performDeduplication()
+            }
         }
         deduplicationWorkItem = work
         // Debounce: CloudKit can fire many notifications in rapid succession
@@ -812,10 +843,13 @@ final class CloudSyncService: @unchecked Sendable {
     }
 
     /// Removes duplicate records across all entity types.
-    /// Safe to call from any thread; creates its own context.
+    /// Must run on the main actor: it uses `container.mainContext` so deletions
+    /// propagate through the exact same context that `@Query` / UI bindings rely
+    /// on, preventing UI from retaining zombie `PersistentModel` refs that the
+    /// main-context autosave timer would later trap on (brk #0x1).
+    @MainActor
     func performDeduplication() {
-        let context = ModelContext(container)
-        context.autosaveEnabled = false
+        let context = container.mainContext
 
         var totalDeleted = 0
         totalDeleted += deduplicateByID(UnifiedItem.self, keyPath: \.id, context: context)

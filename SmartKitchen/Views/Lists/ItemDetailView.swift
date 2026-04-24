@@ -61,6 +61,10 @@ enum ItemDetailMode {
     case edit(UnifiedItem)
 }
 
+struct UnifiedItemSelection: Identifiable, Hashable {
+    let id: UUID
+}
+
 // MARK: - View
 
 struct ItemDetailView: View {
@@ -1239,5 +1243,38 @@ struct ItemDetailView: View {
         }
 
         dismiss()
+    }
+}
+
+struct ItemDetailContainerView: View {
+    let itemID: UUID
+    var removalContext: ItemListType? = nil
+
+    @Environment(\.dismiss) private var dismiss
+    @Query private var matches: [UnifiedItem]
+    @State private var didResolveOnce = false
+
+    init(itemID: UUID, removalContext: ItemListType? = nil) {
+        self.itemID = itemID
+        self.removalContext = removalContext
+        _matches = Query(filter: #Predicate<UnifiedItem> { $0.id == itemID })
+    }
+
+    var body: some View {
+        Group {
+            if let item = matches.first {
+                ItemDetailView(mode: .edit(item), removalContext: removalContext)
+                    .onAppear { didResolveOnce = true }
+            } else if didResolveOnce {
+                Color.clear
+                    .onAppear {
+                        Task { @MainActor in
+                            dismiss()
+                        }
+                    }
+            } else {
+                Color.clear
+            }
+        }
     }
 }

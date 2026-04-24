@@ -277,6 +277,19 @@ final class RecipeImportCoordinator {
             RecipeImportLogger.debug("save preparation media index=\(index) type=\(media.type.rawValue) bytes=\(media.data.count) original=\(media.sourceOriginal)", sessionID: currentSessionID)
         }
 
+        // Persist the newly-inserted graph BEFORE publishing the saved phase.
+        // Rationale: SwiftData's autosave timer may fire while the graph is
+        // still partially inserted (Recipe + sections + ingredients + steps +
+        // potentially MBs of preparationMedia blobs). An explicit save flushes
+        // the graph synchronously, avoiding a main-thread SwiftData trap from
+        // the autosave/observation timer reconciling an in-flight object.
+        do {
+            try context.save()
+            RecipeImportLogger.info("save persisted recipeID=\(recipe.id.uuidString)", sessionID: currentSessionID)
+        } catch {
+            RecipeImportLogger.error("save context.save failed error=\(error.localizedDescription)", sessionID: currentSessionID)
+        }
+
         phase = .savedRecipeID(recipe.id)
         RecipeImportLogger.info("save completed recipeID=\(recipe.id.uuidString)", sessionID: currentSessionID)
         HapticManager.impact(style: .medium)

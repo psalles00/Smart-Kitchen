@@ -22,7 +22,7 @@ struct RecipeDetailView: View {
     @State private var showCookingMode = false
     @State private var showEditRecipe = false
     @State private var previewSelection: PreparationMediaSelection?
-    @State private var editingItem: UnifiedItem?
+    @State private var editingItem: UnifiedItemSelection?
     @State private var ingredientEditorSheet: IngredientEditorSheet?
     @State private var pendingIngredientReplacement: PendingIngredientReplacement?
     @State private var showMoreActions = false
@@ -260,12 +260,12 @@ struct RecipeDetailView: View {
         #endif
         .sheet(isPresented: $showEditRecipe) {
             NavigationStack {
-                EditRecipeView(recipe: recipe)
+                EditRecipeContainerView(recipeID: recipe.id)
             }
             .forceLightStatusBar()
         }
-        .sheet(item: $editingItem) { item in
-            ItemDetailView(mode: .edit(item))
+        .sheet(item: $editingItem, onDismiss: { editingItem = nil }) { selection in
+            ItemDetailContainerView(itemID: selection.id)
                 .forceLightStatusBar()
         }
         .sheet(item: $ingredientEditorSheet, onDismiss: applyPendingIngredientReplacementIfNeeded) { sheet in
@@ -494,11 +494,7 @@ struct RecipeDetailView: View {
         let parallaxHeight = heroHeight + stretch + (upwardScroll * 0.22)
 
         Group {
-            if let data = recipe.imageData, let image = PlatformImage(data: data) {
-                Image(platformImage: image)
-                    .resizable()
-                    .scaledToFill()
-            } else {
+            RecipeThumbnail(recipe: recipe, maxPixel: 1600) {
                 RecipeImagePlaceholder(ingredients: sortedIngredients)
             }
         }
@@ -1098,17 +1094,19 @@ struct RecipeDetailView: View {
 
     private func openIngredientItem(_ ingredient: RecipeIngredient) {
         if let pantryItem = pantryListItems.first(where: { sameName($0.name, ingredient.name) }) {
-            editingItem = pantryItem
+            editingItem = UnifiedItemSelection(id: pantryItem.id)
             return
         }
 
         if let groceryItem = groceryItems.first(where: { sameName($0.name, ingredient.name) }) {
-            editingItem = groceryItem
+            editingItem = UnifiedItemSelection(id: groceryItem.id)
         }
     }
 
     private func openUtensilItem(_ utensilName: String) {
-        editingItem = utensilItems.first(where: { sameName($0.name, utensilName) })
+        if let item = utensilItems.first(where: { sameName($0.name, utensilName) }) {
+            editingItem = UnifiedItemSelection(id: item.id)
+        }
     }
 
     private func sameName(_ lhs: String, _ rhs: String) -> Bool {
@@ -2200,3 +2198,49 @@ private struct RecipeVideoPlayerSurface: NSViewRepresentable {
     }
 }
 #endif
+
+// MARK: - Defensive wrapper: resolve Recipe by UUID and auto-dismiss on delete
+
+/// Container that resolves a `Recipe` by UUID through `@Query` and renders
+/// `RecipeDetailView` only while the underlying record exists. When the
+/// recipe gets deleted (via AI tool, bulk-delete, dedup, or CloudKit remote
+/// change), this wrapper pops itself instead of leaving a view bound to a
+/// tombstoned `PersistentModel` — which is what was making SwiftData's
+/// autosave/observation timer trap with `brk #0x1` on the main thread.
+struct RecipeDetailContainer: View {
+    let recipeID: UUID
+
+    @Environment(\.dismiss) private var dismiss
+    @Query private var matches: [Recipe]
+    /// Tracks whether we ever saw the recipe. Only pop after we've seen it,
+    /// otherwise a freshly-imported recipe that hasn't propagated to `@Query`
+    /// yet would flash-dismiss before the detail can render.
+    @State private var didResolveOnce = false
+
+    init(recipeID: UUID) {
+        self.recipeID = recipeID
+        _matches = Query(filter: #Predicate<Recipe> { $0.id == recipeID })
+    }
+
+    var body: some View {
+        Group {
+            if let recipe = matches.first {
+                RecipeDetailView(recipe: recipe)
+                    .onAppear { didResolveOnce = true }
+            } else if didResolveOnce {
+                // Recipe was deleted while we were on screen: pop cleanly.
+                Color.clear
+                    .onAppear {
+                        Task { @MainActor in
+                            dismiss()
+                        }
+                    }
+            } else {
+                // Not-yet-resolved (e.g. just inserted, @Query not refreshed).
+                // Show a tiny placeholder; will re-render as `@Query` updates.
+                Color.clear
+            }
+        }
+    }
+}
+

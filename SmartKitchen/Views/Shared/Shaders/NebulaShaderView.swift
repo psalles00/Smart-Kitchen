@@ -473,6 +473,12 @@ extension CPPNSceneView {
         let scnView = SCNView()
         scnView.antialiasingMode = .none
         scnView.preferredFramesPerSecond = 20
+        #if os(iOS)
+        // Purely decorative background — opt out of the UIKit focus system so
+        // SCNView does not spam "focusItemsInRect: caching for linear focus
+        // movement is limited…" every layout pass.
+        scnView.isUserInteractionEnabled = false
+        #endif
         context.coordinator.setup(in: scnView)
         let scale = scnView.displayScale
         context.coordinator.updateParams(

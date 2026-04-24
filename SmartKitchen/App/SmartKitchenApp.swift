@@ -144,6 +144,15 @@ struct SmartKitchenApp: App {
                             NotificationService.shared.rescheduleExpiryNotifications(context: ctx, settings: settings)
                         }
                     }
+                    // Autosave is disabled on the main context to avoid races
+                    // with CloudKit remote-change notifications. Persist any
+                    // pending edits whenever the scene leaves the foreground.
+                    if newValue == .inactive || newValue == .background {
+                        let ctx = cloudSync.container.mainContext
+                        if ctx.hasChanges {
+                            try? ctx.save()
+                        }
+                    }
                 }
         }
         #if os(macOS)

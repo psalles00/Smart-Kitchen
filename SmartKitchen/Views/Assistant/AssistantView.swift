@@ -105,9 +105,7 @@ struct AssistantView: View {
             }
         }
         .navigationDestination(for: UUID.self) { id in
-            if let recipe = allRecipes.first(where: { $0.id == id }) {
-                RecipeDetailView(recipe: recipe)
-            }
+            RecipeDetailContainer(recipeID: id)
         }
     }
 

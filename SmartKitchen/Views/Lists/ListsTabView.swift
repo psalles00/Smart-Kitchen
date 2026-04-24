@@ -90,7 +90,7 @@ struct ListsTabView: View {
     @State private var showAddPantry = false
     @State private var showAddGrocery = false
     @State private var showAddUtensil = false
-    @State private var existingItemFromCreateFlow: UnifiedItem?
+    @State private var existingItemFromCreateFlow: UnifiedItemSelection?
     @EnvironmentObject private var searchBarState: SearchBarState
     @State private var showsInlineTitle = false
     @State private var sortOption: ListsSortOption = .custom
@@ -254,8 +254,8 @@ struct ListsTabView: View {
             )
                 .forceLightStatusBar()
         }
-        .sheet(item: $existingItemFromCreateFlow) { item in
-            ItemDetailView(mode: .edit(item), removalContext: selectedSubtab.removalContext)
+        .sheet(item: $existingItemFromCreateFlow, onDismiss: { existingItemFromCreateFlow = nil }) { selection in
+            ItemDetailContainerView(itemID: selection.id, removalContext: selectedSubtab.removalContext)
                 .forceLightStatusBar()
         }
         #if os(macOS)
@@ -460,7 +460,7 @@ struct ListsTabView: View {
         showAddUtensil = false
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            existingItemFromCreateFlow = item
+            existingItemFromCreateFlow = UnifiedItemSelection(id: item.id)
         }
     }
 

@@ -49,7 +49,7 @@ struct RecipesView: View {
     @State private var importInitialSource: RecipeImportSource? = nil
     @State private var pendingImportedRecipeID: UUID? = nil
     @State private var showsInlineTitle = false
-    @State private var editingRecipe: Recipe?
+    @State private var editingRecipe: RecipeSelection?
     @State private var showCompatibleOnly = false
     @State private var isShowingCadernos = false
     @State private var showNotebookManager = false
@@ -216,9 +216,7 @@ struct RecipesView: View {
         #if os(iOS)
         .toolbar(.hidden, for: .navigationBar)
         .navigationDestination(for: UUID.self) { id in
-            if let recipe = allRecipes.first(where: { $0.id == id }) {
-                RecipeDetailView(recipe: recipe)
-            }
+            RecipeDetailContainer(recipeID: id)
         }
         #endif
         .tint(PageTheme.recipes.accentColor)
@@ -238,9 +236,9 @@ struct RecipesView: View {
             .modelContainer(CloudSyncService.shared.container)
             .forceLightStatusBar()
         }
-        .sheet(item: $editingRecipe) { recipe in
+        .sheet(item: $editingRecipe, onDismiss: { editingRecipe = nil }) { selection in
             NavigationStack {
-                EditRecipeView(recipe: recipe)
+                EditRecipeContainerView(recipeID: selection.id)
             }
             .forceLightStatusBar()
         }
@@ -356,7 +354,7 @@ struct RecipesView: View {
                 GlassButtonGroup {
                     GlassGroupMenu(systemImage: "ellipsis.circle") {
                         Button("Editar", systemImage: "pencil") {
-                            editingRecipe = recipe
+                            editingRecipe = RecipeSelection(id: recipe.id)
                         }
                         Button(
                             recipe.isFavorite ? "Desfavoritar" : "Favoritar",
@@ -700,7 +698,7 @@ struct RecipesView: View {
     @ViewBuilder
     private func recipeContextMenu(for recipe: Recipe) -> some View {
         Button("Editar", systemImage: "pencil") {
-            editingRecipe = recipe
+            editingRecipe = RecipeSelection(id: recipe.id)
         }
         Button(
             recipe.isFavorite ? "Desfavoritar" : "Favoritar",
@@ -1208,13 +1206,7 @@ private struct RecipeNotebookPreviewTile: View {
 
     @ViewBuilder
     private func previewImage(in size: CGSize) -> some View {
-        if let data = recipe.imageData, let image = PlatformImage(data: data) {
-            Image(platformImage: image)
-                .resizable()
-                .scaledToFill()
-                .frame(width: size.width, height: size.height)
-                .clipped()
-        } else {
+        RecipeThumbnail(recipe: recipe, maxPixel: 700) {
             RecipeImagePlaceholderCompact(
                 ingredients: (recipe.ingredients ?? []).sorted { $0.sortOrder < $1.sortOrder },
                 darkenOverlay: false
@@ -1222,6 +1214,8 @@ private struct RecipeNotebookPreviewTile: View {
             .frame(width: size.width, height: size.height)
             .clipped()
         }
+        .frame(width: size.width, height: size.height)
+        .clipped()
     }
 }
 
