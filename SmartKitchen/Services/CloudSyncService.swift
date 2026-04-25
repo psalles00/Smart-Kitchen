@@ -87,7 +87,7 @@ final class CloudSyncService: @unchecked Sendable {
         #endif
 
         let cloudKitAllowed = Self.canUseCloudKitInCurrentEnvironment()
-        shouldActivateCloudOnLaunch = syncPref && !skip && cloudKitAllowed
+        var localShouldActivate = syncPref && !skip && cloudKitAllowed
 
         // Ensure store directory exists
         try? FileManager.default.createDirectory(at: Self.storeDirectory, withIntermediateDirectories: true)
@@ -95,13 +95,61 @@ final class CloudSyncService: @unchecked Sendable {
         // Migrate from legacy single store to multi-store layout (one-time)
         Self.performStoreSplitMigrationIfNeeded()
 
-        do {
-            container = try Self.makeLocalContainerWithRecoveryIfNeeded()
-        } catch {
-            NSLog("Local container failed, falling back to temporary store: %@", String(describing: error))
-            container = try! Self.makeEphemeralLocalContainer()
-            syncError = "Não foi possível abrir o banco local. O app iniciou em modo temporário; reinicie e tente novamente."
+        // PERF/UX FIX: when iCloud sync is enabled, build the CloudKit-backed
+        // ModelContainer EAGERLY at boot instead of opening a local container
+        // first and swapping ~350 ms later. The previous two-step approach
+        // changed `containerID` after launch, which forced the WindowGroup
+        // `.id(cloudSync.containerID)` to destroy and recreate ContentView,
+        // wiping all `@State` (selected tab, navigation path, sheets, etc.)
+        // and competing for the main thread exactly when the user was
+        // attempting their first interaction.
+        //
+        // SAFETY: this does NOT change store URLs, schema, or the CloudKit
+        // container identifier — only when the same `makeContainer(usingCloudKit:)`
+        // call happens. Same persistence layout that's been used for months;
+        // no migration is triggered (destination URLs == current URLs).
+        var openedCloudKitEagerly = false
+        var initialContainer: ModelContainer
+        var initialError: String? = nil
+
+        if localShouldActivate {
+            do {
+                initialContainer = try Self.makeContainer(usingCloudKit: true)
+                openedCloudKitEagerly = true
+            } catch {
+                NSLog("[CloudSync] Eager CloudKit container failed; falling back to local: %@", String(describing: error))
+                do {
+                    initialContainer = try Self.makeLocalContainerWithRecoveryIfNeeded()
+                } catch {
+                    NSLog("Local container failed, falling back to temporary store: %@", String(describing: error))
+                    initialContainer = try! Self.makeEphemeralLocalContainer()
+                    initialError = "Não foi possível abrir o banco local. O app iniciou em modo temporário; reinicie e tente novamente."
+                }
+            }
+        } else {
+            do {
+                initialContainer = try Self.makeLocalContainerWithRecoveryIfNeeded()
+            } catch {
+                NSLog("Local container failed, falling back to temporary store: %@", String(describing: error))
+                initialContainer = try! Self.makeEphemeralLocalContainer()
+                initialError = "Não foi possível abrir o banco local. O app iniciou em modo temporário; reinicie e tente novamente."
+            }
         }
+
+        if openedCloudKitEagerly {
+            isUsingCloudKitContainer = true
+            hasAttemptedCloudActivationOnLaunch = true
+            localShouldActivate = false
+        }
+
+        shouldActivateCloudOnLaunch = localShouldActivate
+        container = initialContainer
+        if let initialError { syncError = initialError }
+
+        if openedCloudKitEagerly {
+            lastSyncDate = Date()
+        }
+
         // Disable main-context autosave. With CloudKit-backed SwiftData, the
         // autosave timer races with remote-change notifications and triggers
         // `_SwiftData_SwiftUI` precondition traps (brk #0x1) when the UI layer
@@ -117,6 +165,14 @@ final class CloudSyncService: @unchecked Sendable {
         }
 
         checkiCloudAvailability()
+
+        // Wire CloudKit observers immediately when we opened the cloud
+        // container eagerly. (When deferred, `activateCloudSyncIfNeededOnLaunch`
+        // does this after the swap.)
+        if openedCloudKitEagerly {
+            registerForRemoteNotifications()
+            setupRemoteChangeObservation()
+        }
     }
 
     func checkiCloudAvailability() {
