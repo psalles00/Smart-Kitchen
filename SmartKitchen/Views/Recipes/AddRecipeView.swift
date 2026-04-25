@@ -627,7 +627,7 @@ struct AddRecipeView: View {
     }
 
     private func ingredientIconName(for rowID: UUID) -> String? {
-        ingredientItems.first(where: { $0.id == rowID })?.iconName
+        ingredientItems.first(where: { $0.id == rowID })?.resolvedIconName
     }
 
     private func applyUtensilIcon(_ entry: ItemEntry, to utensilID: UUID) {

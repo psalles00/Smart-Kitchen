@@ -53,6 +53,16 @@ struct RecipeIngredientEditorItem: Identifiable {
         self.iconName = iconName
     }
 
+    var resolvedIconName: String? {
+        if let iconName, !iconName.isEmpty {
+            return iconName
+        }
+
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty else { return nil }
+        return ItemDatabase.shared.preferredMatch(for: trimmedName)?.nomeDoArquivo
+    }
+
     static func ingredient(
         existingID: UUID? = nil,
         name: String = "",
@@ -177,7 +187,7 @@ struct RecipeIngredientsSectionView: View {
             ItemSearchField(
                 text: item.name,
                 placeholder: "",
-                iconFileName: item.wrappedValue.iconName,
+                iconFileName: item.wrappedValue.resolvedIconName,
                 fallbackSymbol: "leaf",
                 showsLeadingIcon: true,
                 onIconTapped: { onIngredientIconTapped(item.wrappedValue.id) }
@@ -209,7 +219,7 @@ struct RecipeIngredientsSectionView: View {
             ItemSearchField(
                 text: item.name,
                 placeholder: "Ingrediente",
-                iconFileName: item.wrappedValue.iconName,
+                iconFileName: item.wrappedValue.resolvedIconName,
                 fallbackSymbol: "leaf",
                 showsLeadingIcon: true,
                 onIconTapped: { onIngredientIconTapped(item.wrappedValue.id) }

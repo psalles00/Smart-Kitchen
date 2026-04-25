@@ -730,7 +730,7 @@ struct RecipeDetailView: View {
         HStack(spacing: 12) {
             IconImage(
                 name: ingredient.name,
-                iconFileName: ingredient.iconName,
+                iconFileName: resolvedIngredientIconName(for: ingredient),
                 fallbackSymbol: "leaf",
                 showBalloon: true,
                 balloonColor: .white
@@ -1081,6 +1081,16 @@ struct RecipeDetailView: View {
         return allCategories.contains(where: { $0.type == .pantry && sameName($0.name, recipe.category) })
             ? recipe.category
             : defaultListCategory
+    }
+
+    private func resolvedIngredientIconName(for ingredient: RecipeIngredient) -> String? {
+        if let iconName = ingredient.iconName, !iconName.isEmpty {
+            return iconName
+        }
+
+        let trimmedName = ingredient.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty else { return nil }
+        return ItemDatabase.shared.preferredMatch(for: trimmedName)?.nomeDoArquivo
     }
 
     private func resolvedUtensilCategory(for utensilName: String) -> String {
