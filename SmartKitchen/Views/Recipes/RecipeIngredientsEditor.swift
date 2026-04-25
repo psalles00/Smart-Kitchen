@@ -273,7 +273,7 @@ extension Array where Element == RecipeIngredientEditorItem {
                     unit: ing.unit,
                     preparationState: ing.preparationState,
                     category: ItemDatabase.shared.entry(forFilename: ing.iconName ?? "")?.categoria
-                        ?? ItemDatabase.shared.exactMatch(for: ing.name)?.categoria,
+                        ?? ItemDatabase.shared.preferredMatch(for: ing.name)?.categoria,
                     iconName: ing.iconName
                 )
             )
@@ -301,7 +301,7 @@ extension Array where Element == RecipeIngredientEditorItem {
                         unit: ing.unit,
                         preparationState: ing.preparationState,
                         category: ItemDatabase.shared.entry(forFilename: ing.iconName ?? "")?.categoria
-                            ?? ItemDatabase.shared.exactMatch(for: ing.name)?.categoria,
+                            ?? ItemDatabase.shared.preferredMatch(for: ing.name)?.categoria,
                         iconName: ing.iconName
                     )
                 )
@@ -425,7 +425,7 @@ enum RecipeIngredientEditorPersistence {
                     quantity: Double(item.quantity.replacingOccurrences(of: ",", with: ".")),
                     unit: item.unit.trimmingCharacters(in: .whitespaces),
                     preparationState: item.preparationState.trimmingCharacters(in: .whitespacesAndNewlines),
-                    iconName: item.iconName ?? ItemDatabase.shared.exactMatch(for: trimmed)?.nomeDoArquivo,
+                    iconName: item.iconName ?? ItemDatabase.shared.preferredMatch(for: trimmed)?.nomeDoArquivo,
                     sortOrder: ingredientIndex,
                     sectionID: currentSectionID
                 )

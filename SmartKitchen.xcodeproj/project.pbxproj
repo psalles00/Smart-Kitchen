@@ -264,7 +264,7 @@
 		431593D600C41201D213FA71 /* FoodCameraPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodCameraPicker.swift; sourceTree = "<group>"; };
 		45656677AD3714E163ED9011 /* Telma-Bold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Telma-Bold.otf"; sourceTree = "<group>"; };
 		45890FB81F05FADA6EF03881 /* RecipeImportOrchestrator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeImportOrchestrator.swift; sourceTree = "<group>"; };
-		4A74F8064D84D0D03083E2B8 /* SmartKitchenShareExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = SmartKitchenShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		4A74F8064D84D0D03083E2B8 /* SmartKitchenShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SmartKitchenShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		4BBA1CA5A04B774EAAD63D2E /* BackupSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupSettingsView.swift; sourceTree = "<group>"; };
 		4C5880CFC6DCD2F43D3FA289 /* Boska-BlackItalic.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Boska-BlackItalic.otf"; sourceTree = "<group>"; };
 		4D982D0E8D23D0F71B7049BF /* RecipeImportInbox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeImportInbox.swift; sourceTree = "<group>"; };
@@ -341,7 +341,7 @@
 		B8745E6D949D25CCD17EA5D2 /* AddGroceryItemView 2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AddGroceryItemView 2.swift"; sourceTree = "<group>"; };
 		B8E44E925C852E9239F7790A /* ListsInfoContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListsInfoContent.swift; sourceTree = "<group>"; };
 		B970691AA2D626F97231E533 /* PageHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageHeader.swift; sourceTree = "<group>"; };
-		B9A8A000ACD1E665B07A06D4 /* SmartKitchen.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = SmartKitchen.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B9A8A000ACD1E665B07A06D4 /* SmartKitchen.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SmartKitchen.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BD63B6313209711B5CC7C9BC /* AddGroceryItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddGroceryItemView.swift; sourceTree = "<group>"; };
 		BD8EFA8D0DF90B9B35DF27A4 /* items_database.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = items_database.json; sourceTree = "<group>"; };
 		BEBFB0D07FF508C9D65AF2A4 /* CommandBarResultRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandBarResultRow.swift; sourceTree = "<group>"; };
@@ -357,7 +357,7 @@
 		CDA8A128BD3A686C1B8CB0B7 /* UnifiedItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnifiedItem.swift; sourceTree = "<group>"; };
 		CE18FC2D6D66792CEDE3E8EA /* RecipeImportCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeImportCoordinator.swift; sourceTree = "<group>"; };
 		CE3D1EB5B18D19836B0A5C38 /* MacCameraMediaPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacCameraMediaPicker.swift; sourceTree = "<group>"; };
-		D14D81F509AB7C84E6F367BE /* SmartKitchenWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = SmartKitchenWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		D14D81F509AB7C84E6F367BE /* SmartKitchenWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SmartKitchenWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		D1A3DA22AFF6E8F87CDA9CB5 /* SmartKitchen.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SmartKitchen.entitlements; sourceTree = "<group>"; };
 		D1EE932494B1EDF61333EA76 /* Boska-Light.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Boska-Light.otf"; sourceTree = "<group>"; };
 		D2D194C91AB19D58E1F0BEB6 /* Boska-ExtralightItalic.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Boska-ExtralightItalic.otf"; sourceTree = "<group>"; };
@@ -891,15 +891,12 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					9148A3EC99E8B7F9A68E1A47 = {
-						DevelopmentTeam = 5KSM738734;
 						ProvisioningStyle = Automatic;
 					};
 					9304226077C6C2B4667662DD = {
-						DevelopmentTeam = 5KSM738734;
 						ProvisioningStyle = Automatic;
 					};
 					EFAE869C76E23275B865F646 = {
-						DevelopmentTeam = 5KSM738734;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -1220,7 +1217,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 5KSM738734;
+				DEVELOPMENT_TEAM = 44K57HQAP9;
 				INFOPLIST_FILE = SmartKitchen/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1298,7 +1295,7 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 5KSM738734;
+				DEVELOPMENT_TEAM = 44K57HQAP9;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = SmartKitchenWidgets/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
@@ -1322,7 +1319,7 @@
 				CODE_SIGN_ENTITLEMENTS = SmartKitchenShareExtension/SmartKitchenShareExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 5KSM738734;
+				DEVELOPMENT_TEAM = 44K57HQAP9;
 				INFOPLIST_FILE = SmartKitchenShareExtension/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1344,7 +1341,7 @@
 				CODE_SIGN_ENTITLEMENTS = SmartKitchenShareExtension/SmartKitchenShareExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 5KSM738734;
+				DEVELOPMENT_TEAM = 44K57HQAP9;
 				INFOPLIST_FILE = SmartKitchenShareExtension/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1368,7 +1365,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 5KSM738734;
+				DEVELOPMENT_TEAM = 44K57HQAP9;
 				INFOPLIST_FILE = SmartKitchen/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1390,7 +1387,7 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 5KSM738734;
+				DEVELOPMENT_TEAM = 44K57HQAP9;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = SmartKitchenWidgets/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;

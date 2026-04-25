@@ -183,7 +183,7 @@ struct AddGroceryItemView: View {
         .onAppear {
             if !initialName.isEmpty {
                 name = initialName
-                if let match = ItemDatabase.shared.exactMatch(for: initialName) {
+                if let match = ItemDatabase.shared.preferredMatch(for: initialName) {
                     iconName = match.nomeDoArquivo
                     if categories.contains(where: { $0.name == match.categoria }) {
                         selectedCategory = match.categoria
@@ -212,7 +212,7 @@ struct AddGroceryItemView: View {
         var finalCategory = selectedCategory
 
         // Auto-match: if user typed a name but didn't pick from autocomplete
-        if finalIcon == nil, let match = ItemDatabase.shared.exactMatch(for: trimmed) {
+        if finalIcon == nil, let match = ItemDatabase.shared.preferredMatch(for: trimmed) {
             finalIcon = match.nomeDoArquivo
             if !userChangedCategory,
                categories.contains(where: { $0.name == match.categoria }) {

@@ -96,7 +96,7 @@ struct AddPantryItemView: View {
         .onAppear {
             if !initialName.isEmpty {
                 name = initialName
-                if let match = ItemDatabase.shared.exactMatch(for: initialName) {
+                if let match = ItemDatabase.shared.preferredMatch(for: initialName) {
                     iconName = match.nomeDoArquivo
                     if categories.contains(where: { $0.name == match.categoria }) {
                         selectedCategory = match.categoria
@@ -267,7 +267,7 @@ struct AddPantryItemView: View {
         var finalIcon = iconName
         var finalCategory = selectedCategory
 
-        if finalIcon == nil, let match = ItemDatabase.shared.exactMatch(for: trimmed) {
+        if finalIcon == nil, let match = ItemDatabase.shared.preferredMatch(for: trimmed) {
             finalIcon = match.nomeDoArquivo
             if !userChangedCategory,
                categories.contains(where: { $0.name == match.categoria }) {

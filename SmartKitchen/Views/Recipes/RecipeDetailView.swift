@@ -1006,7 +1006,7 @@ struct RecipeDetailView: View {
                 category: category,
                 quantity: ingredient.quantity,
                 unit: ingredient.unit.isEmpty ? nil : ingredient.unit,
-                iconName: ItemDatabase.shared.exactMatch(for: ingredient.name)?.nomeDoArquivo,
+                iconName: ItemDatabase.shared.preferredMatch(for: ingredient.name)?.nomeDoArquivo,
                 isPantry: false,
                 isGrocery: true,
                 isUtensil: false,
@@ -1056,7 +1056,7 @@ struct RecipeDetailView: View {
                 category: category,
                 quantity: ingredient.quantity,
                 unit: ingredient.unit.isEmpty ? nil : ingredient.unit,
-                iconName: ItemDatabase.shared.exactMatch(for: ingredient.name)?.nomeDoArquivo,
+                iconName: ItemDatabase.shared.preferredMatch(for: ingredient.name)?.nomeDoArquivo,
                 isPantry: true,
                 isGrocery: false,
                 isUtensil: false,
@@ -1073,6 +1073,10 @@ struct RecipeDetailView: View {
         }
         if let groceryMatch = groceryItems.first(where: { sameName($0.name, ingredientName) }) {
             return groceryMatch.category
+        }
+        if let databaseCategory = ItemDatabase.shared.preferredMatch(for: ingredientName)?.categoria,
+           allCategories.contains(where: { $0.type == .pantry && sameName($0.name, databaseCategory) }) {
+            return databaseCategory
         }
         return allCategories.contains(where: { $0.type == .pantry && sameName($0.name, recipe.category) })
             ? recipe.category

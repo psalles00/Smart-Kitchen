@@ -924,7 +924,7 @@ struct ItemDetailView: View {
                 userChangedCategory = true
             }
             if iconName == nil || selectedCategory == "Outros" {
-                if let match = ItemDatabase.shared.exactMatch(for: name) {
+                if let match = ItemDatabase.shared.preferredMatch(for: name) {
                     if iconName == nil { iconName = match.nomeDoArquivo }
                     if !userChangedCategory, CategoryDatabase.shared.entry(for: match.categoria) != nil {
                         selectedCategory = match.categoria
@@ -1146,7 +1146,7 @@ struct ItemDetailView: View {
         var finalIcon = iconName
         var finalCategory = selectedCategory
 
-        if finalIcon == nil, let match = ItemDatabase.shared.exactMatch(for: trimmed) {
+        if finalIcon == nil, let match = ItemDatabase.shared.preferredMatch(for: trimmed) {
             finalIcon = match.nomeDoArquivo
             if !userChangedCategory, CategoryDatabase.shared.entry(for: match.categoria) != nil {
                 finalCategory = match.categoria

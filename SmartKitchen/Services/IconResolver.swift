@@ -56,7 +56,13 @@ enum IconResolver {
                 return file
             }
 
-            // 3. Slug-based guess: "name" → "name.png"
+            // 3. Database-backed fallback for compound names like
+            // "pure de abobora" -> "abobora".
+            if let file = ItemDatabase.shared.preferredMatch(for: lower)?.nomeDoArquivo {
+                return file
+            }
+
+            // 4. Slug-based guess: "name" -> "name.png"
             let slug = lower
                 .replacingOccurrences(of: " ", with: "-")
                 .replacingOccurrences(of: "á", with: "a")

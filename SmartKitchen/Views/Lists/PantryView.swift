@@ -456,7 +456,13 @@ struct PantryItemRow: View {
             }
 
             HStack(alignment: .center, spacing: 12) {
-                IconImage(name: item.name, iconFileName: item.iconName ?? categoryIconName, fallbackSymbol: "leaf", size: 24, showBalloon: true)
+                IconImage(
+                    name: item.name,
+                    iconFileName: item.iconName ?? ItemDatabase.shared.preferredMatch(for: item.name)?.nomeDoArquivo ?? categoryIconName,
+                    fallbackSymbol: "leaf",
+                    size: 24,
+                    showBalloon: true
+                )
 
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 4) {

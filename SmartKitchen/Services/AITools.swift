@@ -1039,7 +1039,7 @@ struct AITools {
                 quantity: ing.quantity,
                 unit: ing.unit,
                 preparationState: ing.preparationState,
-                iconName: ing.iconName ?? ItemDatabase.shared.exactMatch(for: trimmedName)?.nomeDoArquivo,
+                iconName: ing.iconName ?? ItemDatabase.shared.preferredMatch(for: trimmedName)?.nomeDoArquivo,
                 sortOrder: index,
                 sectionID: mappedSectionID
             )

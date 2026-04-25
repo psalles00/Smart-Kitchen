@@ -6,6 +6,24 @@ final class ItemDatabase: Sendable {
 
     static let shared = ItemDatabase()
 
+    private struct InheritedMatchScore: Comparable {
+        let wordCount: Int
+        let characterCount: Int
+
+        static func < (lhs: InheritedMatchScore, rhs: InheritedMatchScore) -> Bool {
+            if lhs.wordCount != rhs.wordCount {
+                return lhs.wordCount < rhs.wordCount
+            }
+            return lhs.characterCount < rhs.characterCount
+        }
+    }
+
+    private static let ignoredInheritanceWords: Set<String> = [
+        "a", "as", "com", "da", "das", "de", "do", "dos", "e", "em",
+        "na", "nas", "no", "nos", "o", "os", "para", "por", "sem",
+        "um", "uma", "uns", "umas"
+    ]
+
     /// Flattened index: each title maps to its parent entry.
     private let index: [(normalized: String, entry: ItemEntry)]
 
@@ -101,6 +119,46 @@ final class ItemDatabase: Sendable {
         return nil
     }
 
+    /// Returns the exact match for the full name, or the most specific
+    /// database title contained as whole words in the name.
+    func preferredMatch(for name: String) -> ItemEntry? {
+        if let exact = exactMatch(for: name) {
+            return exact
+        }
+
+        let normalizedQuery = Self.normalizeForInheritedMatching(name)
+        guard !normalizedQuery.isEmpty else { return nil }
+
+        var bestEntry: ItemEntry?
+        var bestScore: InheritedMatchScore?
+
+        for (normalized, entry) in index {
+            let normalizedTitle = Self.normalizeForInheritedMatching(normalized)
+            guard normalizedTitle != normalizedQuery,
+                  Self.isEligibleInheritedTitle(normalizedTitle),
+                  Self.containsWholePhrase(normalizedTitle, in: normalizedQuery) else {
+                continue
+            }
+
+            let score = InheritedMatchScore(
+                wordCount: normalizedTitle.split(separator: " ").count,
+                characterCount: normalizedTitle.count
+            )
+
+            if let currentBestScore = bestScore {
+                if currentBestScore < score {
+                    bestEntry = entry
+                    bestScore = score
+                }
+            } else {
+                bestEntry = entry
+                bestScore = score
+            }
+        }
+
+        return bestEntry
+    }
+
     /// Look up an entry by its icon filename.
     func entry(forFilename filename: String) -> ItemEntry? {
         byFilename[filename]
@@ -130,6 +188,27 @@ final class ItemDatabase: Sendable {
         text.lowercased()
             .folding(options: [.diacriticInsensitive, .widthInsensitive], locale: .current)
             .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private static func normalizeForInheritedMatching(_ text: String) -> String {
+        normalize(text)
+            .split { !$0.isLetter && !$0.isNumber }
+            .map(String.init)
+            .joined(separator: " ")
+    }
+
+    private static func isEligibleInheritedTitle(_ title: String) -> Bool {
+        title.split(separator: " ").contains { token in
+            let word = String(token)
+            return word.count >= 3 && !ignoredInheritanceWords.contains(word)
+        }
+    }
+
+    private static func containsWholePhrase(_ phrase: String, in query: String) -> Bool {
+        query == phrase
+            || query.hasPrefix(phrase + " ")
+            || query.hasSuffix(" " + phrase)
+            || query.contains(" " + phrase + " ")
     }
 
     private static func loadEntries() -> [ItemEntry] {
