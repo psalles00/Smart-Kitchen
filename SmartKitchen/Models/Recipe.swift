@@ -346,7 +346,7 @@ final class RecipePreparationMedia {
     }
 }
 
-struct RecipeCompatibility {
+struct RecipeCompatibility: Equatable {
     let matchedIngredients: Int
     let totalIngredients: Int
 

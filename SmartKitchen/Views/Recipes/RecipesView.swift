@@ -53,7 +53,6 @@ struct RecipesView: View {
     @State private var showCompatibleOnly = false
     @State private var isShowingCadernos = false
     @State private var showNotebookManager = false
-    @State private var currentScrollOffset: CGFloat = 0
     @State private var contentResetToken: Int = 0
     @State private var highlightedRecipeID: UUID?
     @State private var pendingRecipeScrollID: UUID?
@@ -63,6 +62,17 @@ struct RecipesView: View {
     // Cached expensive computations
     @State private var cachedPantryNames: [String] = []
     @State private var cachedCompatibilities: [UUID: RecipeCompatibility] = [:]
+    @State private var cachedFilteredRecipes: [Recipe] = []
+    @State private var cachedGroupedRecipes: [RecipeCategoryGroup] = []
+    @State private var cachedNotebookSummaries: [RecipeNotebookSummary] = []
+
+    // Tracks when inputs to `recomputeCompatibilities` actually changed so
+    // the heavy recompute does not re-run on every SwiftData @Query refresh
+    // (CloudKit remote changes, scroll-induced re-evaluations, etc.).
+    @State private var lastCompatibilityInputsKey: String = ""
+    @State private var pendingCompatibilityRecomputeWork: DispatchWorkItem?
+    @State private var lastRecipeProjectionInputsKey: Int = 0
+    @State private var lastNotebookSummaryInputsKey: Int = 0
 
     private var settings: AppSettings? { settingsArray.first }
     private var viewMode: RecipeViewMode { settings?.recipeViewMode ?? .gallery }
@@ -76,95 +86,81 @@ struct RecipesView: View {
 
     private var compatibilities: [UUID: RecipeCompatibility] { cachedCompatibilities }
 
-    /// Filtered & sorted recipes.
-    private var recipes: [Recipe] {
-        var result = allRecipes
+    private var recipes: [Recipe] { cachedFilteredRecipes }
 
-        // Filter by search
-        if !searchBarState.searchText.isEmpty {
-            let searchText = searchBarState.searchText
-            result = result.filter {
-                $0.name.localizedCaseInsensitiveContains(searchText) ||
-                $0.tags.contains(where: { $0.localizedCaseInsensitiveContains(searchText) }) ||
-                $0.category.localizedCaseInsensitiveContains(searchText)
-            }
-        }
+    private var groupedRecipes: [RecipeCategoryGroup] { cachedGroupedRecipes }
 
-        // Filter by category
-        if let cat = selectedCategory {
-            result = result.filter { recipe in
-                recipe.categories.contains(where: { CategoryMutationService.matchesName($0, cat) })
-            }
-        }
-
-        if showCompatibleOnly {
-            result = result.filter { (compatibilities[$0.id]?.matchedIngredients ?? 0) > 0 }
-        }
-
-        return sortRecipes(result)
-    }
-
-    private var groupedRecipes: [(category: String, recipes: [Recipe])] {
-        // Group recipes supporting multi-category (comma-separated)
-        var grouped: [String: [Recipe]] = [:]
-        for recipe in recipes {
-            let cats = recipe.categories
-            if cats.isEmpty {
-                grouped["", default: []].append(recipe)
-            } else {
-                for cat in cats {
-                    grouped[cat, default: []].append(recipe)
-                }
-            }
-        }
-
-        let categoryNames: [String]
-        if let selectedCategory {
-            categoryNames = [selectedCategory]
-        } else {
-            let configured = recipeCategories.map(\.name)
-            let remaining = grouped.keys.filter { !configured.contains($0) }.sorted()
-            categoryNames = configured + remaining
-        }
-
-        return categoryNames.compactMap { categoryName in
-            let categoryRecipes = grouped[categoryName, default: []]
-            guard !categoryRecipes.isEmpty else { return nil }
-            return (categoryName, categoryRecipes)
-        }
-    }
-
-    private var notebookSummaries: [RecipeNotebookSummary] {
-        let searchText = searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        return recipeCategories.compactMap { category in
-            let matchingRecipes = recipesForNotebook(named: category.name)
-            
-            // Collect all compatibilities for the matching recipes
-            let matchedCompatibilities = matchingRecipes.compactMap { recipe in 
-                compatibilities[recipe.id] 
-            }
-
-            let summary = RecipeNotebookSummary(
-                category: category,
-                recipes: matchingRecipes,
-                compatibilities: matchedCompatibilities
-            )
-
-            guard !searchText.isEmpty else { return summary }
-
-            let categoryMatches = category.name.localizedCaseInsensitiveContains(searchText)
-            let recipeMatches = matchingRecipes.contains { recipe in
-                recipe.name.localizedCaseInsensitiveContains(searchText) ||
-                recipe.tags.contains(where: { $0.localizedCaseInsensitiveContains(searchText) })
-            }
-
-            return (categoryMatches || recipeMatches) ? summary : nil
-        }
-    }
+    private var notebookSummaries: [RecipeNotebookSummary] { cachedNotebookSummaries }
 
     private var recipeCategoryNamesSignature: String {
         recipeCategories.map(\.name).joined(separator: "|")
+    }
+
+    private var recipeCategoriesDisplaySignature: Int {
+        var hasher = Hasher()
+        hasher.combine(recipeCategories.count)
+        for category in recipeCategories {
+            hasher.combine(category.id)
+            hasher.combine(category.name)
+            hasher.combine(category.iconName ?? "")
+            hasher.combine(category.sortOrder)
+        }
+        return hasher.finalize()
+    }
+
+    private var recipeProjectionInputsKey: Int {
+        var hasher = Hasher()
+        hasher.combine(allRecipes.count)
+        for recipe in allRecipes {
+            hasher.combine(recipe.id)
+            hasher.combine(recipe.name)
+            hasher.combine(recipe.category)
+            hasher.combine(recipe.createdAt)
+            hasher.combine(recipe.prepTime)
+            hasher.combine(recipe.cookTime)
+            hasher.combine(recipe.difficulty.rawValue)
+            hasher.combine(recipe.tags.count)
+            for tag in recipe.tags {
+                hasher.combine(tag)
+            }
+        }
+        hasher.combine(searchBarState.searchText)
+        hasher.combine(selectedCategory ?? "")
+        hasher.combine(showCompatibleOnly)
+        hasher.combine(sortOption.rawValue)
+        hasher.combine(lastCompatibilityInputsKey)
+        hasher.combine(recipeCategoriesDisplaySignature)
+        return hasher.finalize()
+    }
+
+    private var notebookSummaryInputsKey: Int {
+        var hasher = Hasher()
+        hasher.combine(allRecipes.count)
+        for recipe in allRecipes {
+            hasher.combine(recipe.id)
+            hasher.combine(recipe.name)
+            hasher.combine(recipe.category)
+            hasher.combine(recipe.isFavorite)
+            hasher.combine(recipe.updatedAt)
+            hasher.combine(recipe.tags.count)
+            for tag in recipe.tags {
+                hasher.combine(tag)
+            }
+        }
+        hasher.combine(searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines))
+        hasher.combine(lastCompatibilityInputsKey)
+        hasher.combine(recipeCategoriesDisplaySignature)
+        return hasher.finalize()
+    }
+
+    private var notebookModeTransition: Animation {
+        // Instant swap. We previously used a 0.14s opacity crossfade, but
+        // both branches are non-trivial (LazyVGrid of notebook cards with
+        // image-loading tiles vs. the recipe gallery). Keeping both alive
+        // for the duration of the animation made the transition look like
+        // it was running at very low fps on real devices. Cutting the
+        // animation makes the toggle feel native — like switching tabs.
+        .linear(duration: 0)
     }
 
     private var galleryColumns: [GridItem] {
@@ -257,12 +253,54 @@ struct RecipesView: View {
         #endif
         .onAppear {
             recomputeCompatibilities()
+            refreshRecipeProjectionsIfNeeded(force: true)
+            refreshNotebookSummariesIfNeeded(force: true)
             handleScrollToItemRequest(scrollToItem)
         }
-        .onChange(of: pantryItems) { _, _ in recomputeCompatibilities() }
-        .onChange(of: allRecipes) { _, _ in recomputeCompatibilities() }
+        // PERF: previously these used `.onChange(of: pantryItems)` /
+        // `.onChange(of: allRecipes)` which fire on EVERY SwiftData @Query
+        // refresh — including no-op CloudKit remote changes and any save
+        // that doesn't affect ingredients. Each call walks every recipe and
+        // does string folding for every ingredient, which caused visible
+        // jank during scroll on real devices. Switch to stable signatures
+        // (item identities + names) so we only recompute when the inputs
+        // that actually matter for compatibility have changed, and debounce
+        // bursts that would otherwise trigger many recomputes back-to-back.
+        .onChange(of: pantryCompatibilitySignature) { _, _ in
+            scheduleCompatibilityRecompute()
+        }
+        .onChange(of: recipeCompatibilitySignature) { _, _ in
+            scheduleCompatibilityRecompute()
+        }
         .onChange(of: recipeCategoryNamesSignature) { _, _ in
             normalizeSelectedCategoryIfNeeded()
+            refreshRecipeProjectionsIfNeeded(force: true)
+            refreshNotebookSummariesIfNeeded(force: true)
+        }
+        .onChange(of: recipeCategoriesDisplaySignature) { _, _ in
+            refreshRecipeProjectionsIfNeeded(force: true)
+            refreshNotebookSummariesIfNeeded(force: true)
+        }
+        .onChange(of: allRecipes) { _, _ in
+            refreshRecipeProjectionsIfNeeded()
+            refreshNotebookSummariesIfNeeded()
+        }
+        .onChange(of: searchBarState.searchText) { _, _ in
+            refreshRecipeProjectionsIfNeeded()
+            refreshNotebookSummariesIfNeeded()
+        }
+        .onChange(of: selectedCategory) { _, _ in
+            refreshRecipeProjectionsIfNeeded()
+        }
+        .onChange(of: showCompatibleOnly) { _, _ in
+            refreshRecipeProjectionsIfNeeded()
+        }
+        .onChange(of: sortOption) { _, _ in
+            refreshRecipeProjectionsIfNeeded()
+        }
+        .onChange(of: lastCompatibilityInputsKey) { _, _ in
+            refreshRecipeProjectionsIfNeeded(force: true)
+            refreshNotebookSummariesIfNeeded(force: true)
         }
         .onChange(of: scrollToItem) { _, request in
             handleScrollToItemRequest(request)
@@ -376,23 +414,55 @@ struct RecipesView: View {
 
     @ViewBuilder
     private var recipesListContent: some View {
-        if isShowingCadernos {
-            cadernosContent
-        } else {
-            Group {
-                if allRecipes.isEmpty {
-                    emptyState
-                } else if recipes.isEmpty {
-                    searchEmptyState
-                } else {
-                    recipeContent
-                }
+        // Instant content swap. We do NOT animate this transition: the
+        // alternative branches are both heavy (recipe gallery vs. notebook
+        // grid) and any cross-fade ends up rendering both subtrees for the
+        // duration of the animation, which makes the toggle feel like it
+        // is running at a very low frame rate.
+        Group {
+            if isShowingCadernos {
+                cadernosModeContent
+            } else {
+                recipesModeContent
             }
-            .id(contentResetToken)
         }
     }
 
+    @ViewBuilder
+    private var recipesModeContent: some View {
+        Group {
+            if allRecipes.isEmpty {
+                emptyState
+            } else if recipes.isEmpty {
+                searchEmptyState
+            } else {
+                recipeContent
+            }
+        }
+        .id(contentResetToken)
+        .transaction { transaction in
+            transaction.animation = nil
+        }
+    }
+
+    private var cadernosModeContent: some View {
+        cadernosContent
+            .transaction { transaction in
+                transaction.animation = nil
+            }
+    }
+
     private func recomputeCompatibilities() {
+        // Cancel any pending debounced recompute — we are doing it now.
+        pendingCompatibilityRecomputeWork?.cancel()
+        pendingCompatibilityRecomputeWork = nil
+
+        let inputsKey = "\(pantryCompatibilitySignature)##\(recipeCompatibilitySignature)"
+        // Skip if nothing relevant changed since last successful recompute.
+        if inputsKey == lastCompatibilityInputsKey, !cachedCompatibilities.isEmpty {
+            return
+        }
+
         let names = pantryItems.map {
             $0.name
                 .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
@@ -405,6 +475,151 @@ struct RecipesView: View {
                 return (recipe.id, compatibility)
             }
         )
+        lastCompatibilityInputsKey = inputsKey
+    }
+
+    private func refreshRecipeProjectionsIfNeeded(force: Bool = false) {
+        let inputsKey = recipeProjectionInputsKey
+        guard force || inputsKey != lastRecipeProjectionInputsKey else { return }
+
+        var result = allRecipes
+
+        if !searchBarState.searchText.isEmpty {
+            let searchText = searchBarState.searchText
+            result = result.filter {
+                $0.name.localizedCaseInsensitiveContains(searchText) ||
+                $0.tags.contains(where: { $0.localizedCaseInsensitiveContains(searchText) }) ||
+                $0.category.localizedCaseInsensitiveContains(searchText)
+            }
+        }
+
+        if let cat = selectedCategory {
+            result = result.filter { recipe in
+                recipe.categories.contains(where: { CategoryMutationService.matchesName($0, cat) })
+            }
+        }
+
+        if showCompatibleOnly {
+            result = result.filter { (compatibilities[$0.id]?.matchedIngredients ?? 0) > 0 }
+        }
+
+        let sortedRecipes = sortRecipes(result)
+        cachedFilteredRecipes = sortedRecipes
+
+        var grouped: [String: [Recipe]] = [:]
+        for recipe in sortedRecipes {
+            let categories = recipe.categories
+            if categories.isEmpty {
+                grouped["", default: []].append(recipe)
+            } else {
+                for category in categories {
+                    grouped[category, default: []].append(recipe)
+                }
+            }
+        }
+
+        let categoryNames: [String]
+        if let selectedCategory {
+            categoryNames = [selectedCategory]
+        } else {
+            let configured = recipeCategories.map(\.name)
+            let remaining = grouped.keys.filter { !configured.contains($0) }.sorted()
+            categoryNames = configured + remaining
+        }
+
+        cachedGroupedRecipes = categoryNames.compactMap { categoryName in
+            let recipes = grouped[categoryName, default: []]
+            guard !recipes.isEmpty else { return nil }
+            return RecipeCategoryGroup(category: categoryName, recipes: recipes)
+        }
+
+        lastRecipeProjectionInputsKey = inputsKey
+    }
+
+    private func refreshNotebookSummariesIfNeeded(force: Bool = false) {
+        let inputsKey = notebookSummaryInputsKey
+        guard force || inputsKey != lastNotebookSummaryInputsKey else { return }
+
+        let searchText = searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        var recipesByCategory: [String: [Recipe]] = [:]
+
+        for recipe in allRecipes {
+            for category in recipe.categories {
+                recipesByCategory[category, default: []].append(recipe)
+            }
+        }
+
+        cachedNotebookSummaries = recipeCategories.compactMap { category in
+            let matchingRecipes = (recipesByCategory[category.name] ?? []).sorted { lhs, rhs in
+                if lhs.isFavorite != rhs.isFavorite {
+                    return lhs.isFavorite && !rhs.isFavorite
+                }
+                if lhs.updatedAt != rhs.updatedAt {
+                    return lhs.updatedAt > rhs.updatedAt
+                }
+                return lhs.name.localizedCaseInsensitiveCompare(rhs.name) == .orderedAscending
+            }
+
+            let matchedCompatibilities = matchingRecipes.compactMap { compatibilities[$0.id] }
+            let summary = RecipeNotebookSummary(
+                category: category,
+                recipes: matchingRecipes,
+                compatibilities: matchedCompatibilities
+            )
+
+            guard !searchText.isEmpty else { return summary }
+
+            let categoryMatches = category.name.localizedCaseInsensitiveContains(searchText)
+            let recipeMatches = matchingRecipes.contains { recipe in
+                recipe.name.localizedCaseInsensitiveContains(searchText) ||
+                recipe.tags.contains(where: { $0.localizedCaseInsensitiveContains(searchText) })
+            }
+
+            return (categoryMatches || recipeMatches) ? summary : nil
+        }
+
+        lastNotebookSummaryInputsKey = inputsKey
+    }
+
+    /// Debounces `recomputeCompatibilities()` so a burst of SwiftData /
+    /// CloudKit notifications does not run the full O(recipes × ingredients)
+    /// pipeline multiple times in the same frame.
+    private func scheduleCompatibilityRecompute() {
+        pendingCompatibilityRecomputeWork?.cancel()
+        let work = DispatchWorkItem { [weak modelContext] in
+            _ = modelContext // keep view alive context-side; actual work uses captured @State
+            recomputeCompatibilities()
+        }
+        pendingCompatibilityRecomputeWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25, execute: work)
+    }
+
+    /// Stable signature of pantry ingredients that affect compatibility.
+    /// Reads only stored attributes (id, name) so it does not trigger any
+    /// SwiftData relationship fault. Cheap enough to evaluate on every
+    /// body pass, which is what `.onChange(of:)` requires.
+    private var pantryCompatibilitySignature: Int {
+        var hasher = Hasher()
+        hasher.combine(pantryItems.count)
+        for item in pantryItems {
+            hasher.combine(item.id)
+            hasher.combine(item.name)
+        }
+        return hasher.finalize()
+    }
+
+    /// Stable signature of recipes that affect compatibility. Uses
+    /// `updatedAt` (a stored attribute) as a proxy for "ingredients
+    /// possibly changed" instead of walking the `ingredients`
+    /// relationship — that would fault every recipe on every body pass.
+    private var recipeCompatibilitySignature: Int {
+        var hasher = Hasher()
+        hasher.combine(allRecipes.count)
+        for recipe in allRecipes {
+            hasher.combine(recipe.id)
+            hasher.combine(recipe.updatedAt)
+        }
+        return hasher.finalize()
     }
 
     // MARK: - Content
@@ -610,6 +825,7 @@ struct RecipesView: View {
             columns: settings?.recipeGalleryColumns ?? 3,
             cornerRadii: cornerRadii
         )
+        .equatable()
         .overlay {
             if highlightedRecipeID == recipe.id {
                 UnevenRoundedRectangle(cornerRadii: cornerRadii, style: .continuous)
@@ -650,6 +866,7 @@ struct RecipesView: View {
                     recipe: recipe,
                     compatibility: compatibilities[recipe.id]
                 )
+                .equatable()
                 .overlay {
                     if highlightedRecipeID == recipe.id {
                         RoundedRectangle(cornerRadius: 12, style: .continuous)
@@ -905,7 +1122,12 @@ struct RecipesView: View {
     }
 
     private func updateInlineTitle(_ offset: CGFloat) {
-        currentScrollOffset = offset
+        // PERF: do NOT store `offset` in @State — the scroll callback fires on
+        // every frame during scrolling. Mutating any @State here would force
+        // RecipesView's body to re-evaluate per frame, which dominates scroll
+        // cost. We only flip `showsInlineTitle` when the threshold is crossed,
+        // so the body invalidation is bounded to at most twice per scroll
+        // gesture instead of once per frame.
         let shouldShow = offset < -24
         if showsInlineTitle != shouldShow {
             showsInlineTitle = shouldShow
@@ -915,11 +1137,11 @@ struct RecipesView: View {
     private func handleScrollToItemRequest(_ request: ScrollToItemRequest?) {
         guard let request, request.type == "recipe" else { return }
 
-        withAnimation(.spring(response: 0.32, dampingFraction: 0.9)) {
-            isShowingCadernos = false
-        }
-
         selectedCategory = nil
+        refreshRecipeProjectionsIfNeeded(force: true)
+
+        // Instant — no animation; see `notebookModeTransition` for context.
+        isShowingCadernos = false
         highlightedRecipeID = request.itemID
 
         #if os(macOS)
@@ -957,56 +1179,72 @@ struct RecipesView: View {
 
     private func handleActiveTabRetap() {
         if isShowingCadernos {
-            withAnimation(.spring(response: 0.32, dampingFraction: 0.9)) {
-                isShowingCadernos = false
-            }
+            isShowingCadernos = false
         } else if isNearTop {
-            withAnimation(.spring(response: 0.32, dampingFraction: 0.9)) {
-                isShowingCadernos = true
-                selectedRecipeID = nil
-            }
+            refreshNotebookSummariesIfNeeded()
+            prefetchNotebookPreviewThumbnails()
+            isShowingCadernos = true
+            selectedRecipeID = nil
         } else {
             contentResetToken += 1
         }
     }
 
     private var isNearTop: Bool {
-        currentScrollOffset >= -24
-    }
-
-    private func recipesForNotebook(named categoryName: String) -> [Recipe] {
-        allRecipes
-            .filter { recipe in
-                recipe.categories.contains(where: { CategoryMutationService.matchesName($0, categoryName) })
-            }
-            .sorted { lhs, rhs in
-                if lhs.isFavorite != rhs.isFavorite {
-                    return lhs.isFavorite && !rhs.isFavorite
-                }
-                if lhs.updatedAt != rhs.updatedAt {
-                    return lhs.updatedAt > rhs.updatedAt
-                }
-                return lhs.name.localizedCaseInsensitiveCompare(rhs.name) == .orderedAscending
-            }
+        // Derived from `showsInlineTitle` (which flips at the same threshold)
+        // so we don't have to track the live scroll offset in @State.
+        !showsInlineTitle
     }
 
     private func toggleNotebookPage() {
-        withAnimation(.spring(response: 0.32, dampingFraction: 0.9)) {
-            isShowingCadernos.toggle()
-            if isShowingCadernos {
-                selectedRecipeID = nil
+        if !isShowingCadernos {
+            refreshNotebookSummariesIfNeeded()
+            // PERF: warm the thumbnail cache for the first batch of notebook
+            // tiles BEFORE the swap. This avoids a visible empty-placeholder
+            // → image flash on the first toggle.
+            prefetchNotebookPreviewThumbnails()
+        }
+        // Instant swap — no animation. Both branches are heavy; cross-fading
+        // them visibly drops frames.
+        isShowingCadernos.toggle()
+        if isShowingCadernos {
+            selectedRecipeID = nil
+        }
+    }
+
+    private func prefetchNotebookPreviewThumbnails() {
+        // Limit to the first ~12 cards × 3 previews to avoid kicking off
+        // hundreds of decodes when the user has many notebooks.
+        let previews = cachedNotebookSummaries
+            .prefix(12)
+            .flatMap { $0.previewRecipes }
+        guard !previews.isEmpty else { return }
+        let maxPixel: CGFloat = 700
+        for recipe in previews {
+            guard let data = recipe.imageData, !data.isEmpty else { continue }
+            let key = RecipeImageCache.key(
+                recipeID: recipe.id,
+                dataCount: data.count,
+                maxPixel: maxPixel
+            )
+            if RecipeImageCache.shared.cachedThumbnail(key: key) != nil { continue }
+            // Fire-and-forget: the cache will populate before SwiftUI's
+            // `.task(id:)` in `RecipeThumbnail` even runs.
+            Task.detached(priority: .userInitiated) {
+                _ = await RecipeImageCache.shared.thumbnail(
+                    key: key, data: data, maxPixel: maxPixel
+                )
             }
         }
     }
 
     private func openNotebook(named categoryName: String) {
-        withAnimation(.spring(response: 0.32, dampingFraction: 0.9)) {
-            selectedCategory = categoryName
-            categoryBarCenterToken += 1
-            isShowingCadernos = false
-            selectedRecipeID = nil
-            contentResetToken += 1
-        }
+        selectedCategory = categoryName
+        refreshRecipeProjectionsIfNeeded(force: true)
+        categoryBarCenterToken += 1
+        isShowingCadernos = false
+        selectedRecipeID = nil
+        contentResetToken += 1
     }
 
     private func normalizeSelectedCategoryIfNeeded() {
@@ -1018,6 +1256,13 @@ struct RecipesView: View {
             self.selectedCategory = nil
         }
     }
+}
+
+private struct RecipeCategoryGroup: Identifiable {
+    let category: String
+    let recipes: [Recipe]
+
+    var id: String { category }
 }
 
 private struct RecipeNotebookSummary: Identifiable {
@@ -1120,10 +1365,14 @@ private struct RecipeNotebookPreviewStrip: View {
     let summary: RecipeNotebookSummary
 
     var body: some View {
-        GeometryReader { geometry in
+        // The strip renders side-by-side preview tiles inside a fixed-height
+        // container set by the parent. Each tile gets an equal flexible
+        // width via the HStack so the visual layout matches the previous
+        // GeometryReader-based version, without paying for an extra
+        // geometry pass per notebook card.
+        Group {
             if summary.previewRecipes.isEmpty {
                 RecipeNotebookEmptyPreviewPlaceholder(category: summary.category)
-                    .frame(width: geometry.size.width, height: geometry.size.height)
             } else {
                 HStack(spacing: 1) {
                     ForEach(Array(summary.previewRecipes.enumerated()), id: \.element.id) { index, recipe in
@@ -1131,11 +1380,12 @@ private struct RecipeNotebookPreviewStrip: View {
                             recipe: recipe,
                             cornerRadii: previewCornerRadii(index: index, total: summary.previewRecipes.count)
                         )
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
                 }
-                .frame(width: geometry.size.width, height: geometry.size.height, alignment: .leading)
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .clipped()
     }
 

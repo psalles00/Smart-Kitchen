@@ -123,6 +123,33 @@ extension SCNView {
     }
 }
 
+// MARK: - Non-focusable SCNView
+//
+// SCNView (the class) implements `focusItemsInRect:`, which makes UIKit's focus
+// engine repeatedly query it on every layout pass and emit the warning:
+//   "SCNView implements focusItemsInRect: - caching for linear focus movement
+//    is limited as long as this view is on screen."
+//
+// This warning is logged hot during scrolls/transitions and the focus query
+// itself adds a small but real per-frame cost. All our SCNView usages are
+// purely decorative shader backgrounds — they should never participate in
+// focus. This subclass opts the instance out of the focus engine so UIKit
+// can keep its focus-item cache valid.
+
+#if os(iOS)
+final class NonFocusableSCNView: SCNView {
+    override var canBecomeFocused: Bool { false }
+
+    // Modern Swift API for UIFocusItemContainer. Returning an empty array tells
+    // UIKit's focus engine that there are no focus items to consider in this
+    // subtree, which keeps the linear-focus cache valid while this view is on
+    // screen.
+    override func focusItems(in rect: CGRect) -> [any UIFocusItem] { [] }
+}
+#else
+typealias NonFocusableSCNView = SCNView
+#endif
+
 // MARK: - Clipboard Image Paste
 
 /// Reads an image from the system clipboard and returns its data via completion.

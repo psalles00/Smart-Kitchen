@@ -1,11 +1,33 @@
 import SwiftUI
 
 /// Gallery card for a recipe — shows image with title overlay.
-struct RecipeCardView: View {
+struct RecipeCardView: View, Equatable {
     let recipe: Recipe
     var compatibility: RecipeCompatibility? = nil
     var columns: Int = 2
     var cornerRadii: RectangleCornerRadii = .init(topLeading: 16, bottomLeading: 16, bottomTrailing: 16, topTrailing: 16)
+
+    // PERF: Skip re-rendering visible cards that didn't visibly change.
+    // The Recipe model is a SwiftData reference type, so we compare by
+    // the fields that actually drive `body`.
+    nonisolated static func == (lhs: RecipeCardView, rhs: RecipeCardView) -> Bool {
+        lhs.recipe.id == rhs.recipe.id
+            && lhs.recipe.name == rhs.recipe.name
+            && lhs.recipe.totalTime == rhs.recipe.totalTime
+            && lhs.recipe.difficulty == rhs.recipe.difficulty
+            && lhs.recipe.isFavorite == rhs.recipe.isFavorite
+            && (lhs.recipe.imageData?.count ?? 0) == (rhs.recipe.imageData?.count ?? 0)
+            && lhs.compatibility == rhs.compatibility
+            && lhs.columns == rhs.columns
+            && cornerRadiiEqual(lhs.cornerRadii, rhs.cornerRadii)
+    }
+
+    nonisolated private static func cornerRadiiEqual(_ a: RectangleCornerRadii, _ b: RectangleCornerRadii) -> Bool {
+        a.topLeading == b.topLeading
+            && a.topTrailing == b.topTrailing
+            && a.bottomLeading == b.bottomLeading
+            && a.bottomTrailing == b.bottomTrailing
+    }
 
     private var shouldDarkenRealImageForThreeColumnGrid: Bool {
         columns == 3
@@ -105,6 +127,11 @@ struct RecipeCardView: View {
             }
         }()
 
+        // Square cells: parent applies `.aspectRatio(1)`, but the inner
+        // `Image.resizable().scaledToFill()` has no intrinsic size, so we
+        // need a concrete frame for the thumbnail+placeholder to compute
+        // the correct fill size. A single GeometryReader at the card level
+        // is cheap (one per visible cell, not per scroll frame).
         GeometryReader { geo in
             RecipeThumbnail(recipe: recipe, maxPixel: maxPixel) {
                 RecipeImagePlaceholderCompact(

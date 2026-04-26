@@ -470,7 +470,7 @@ struct CPPNSceneView: NSViewRepresentable {
 
 extension CPPNSceneView {
     func createView(context: Context) -> SCNView {
-        let scnView = SCNView()
+        let scnView = NonFocusableSCNView()
         scnView.antialiasingMode = .none
         scnView.preferredFramesPerSecond = 20
         #if os(iOS)

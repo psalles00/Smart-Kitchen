@@ -101,6 +101,13 @@ struct SmartKitchenApp: App {
     @Environment(\.scenePhase) private var scenePhase
     @State private var cloudSync = CloudSyncService.shared
     @State private var didRunPostLaunchBootstrap = false
+    /// Last time we ran the on-foreground maintenance work
+    /// (`syncNow` + reschedule expiry notifications). Used to throttle that
+    /// work so brief background hops don't repeatedly hit the model
+    /// context and the notification center on the main thread, which on
+    /// real devices shows up as a stutter the first time the user
+    /// interacts after returning to the app.
+    @State private var lastForegroundMaintenance: Date = .distantPast
 
     init() {
         // Must be called after all stored properties are initialized
@@ -136,12 +143,24 @@ struct SmartKitchenApp: App {
                 }
                 .onChange(of: scenePhase) { oldValue, newValue in
                     if newValue == .active {
-                        cloudSync.syncNow()
-                        // Reschedule expiry notifications
-                        let ctx = cloudSync.container.mainContext
-                        let descriptor = FetchDescriptor<AppSettings>()
-                        if let settings = try? ctx.fetch(descriptor).first {
-                            NotificationService.shared.rescheduleExpiryNotifications(context: ctx, settings: settings)
+                        // Throttle: avoid running sync + notification reschedule
+                        // every time the user briefly leaves and returns. The
+                        // previous unconditional behaviour caused noticeable
+                        // jank on the first interaction after foregrounding.
+                        let now = Date()
+                        if now.timeIntervalSince(lastForegroundMaintenance) >= 60 {
+                            lastForegroundMaintenance = now
+                            cloudSync.syncNow()
+                            // Defer the notification reschedule one runloop tick
+                            // so it never competes with the first frame the user
+                            // sees after returning.
+                            Task { @MainActor in
+                                let ctx = cloudSync.container.mainContext
+                                let descriptor = FetchDescriptor<AppSettings>()
+                                if let settings = try? ctx.fetch(descriptor).first {
+                                    NotificationService.shared.rescheduleExpiryNotifications(context: ctx, settings: settings)
+                                }
+                            }
                         }
                     }
                     // Autosave is disabled on the main context to avoid races

@@ -1,9 +1,24 @@
 import SwiftUI
 
 /// Row view for recipe list mode.
-struct RecipeRowView: View {
+struct RecipeRowView: View, Equatable {
     let recipe: Recipe
     var compatibility: RecipeCompatibility? = nil
+
+    // PERF: SwiftData @Model classes are reference types — they don't get
+    // synthesized Equatable. We compare by the concrete fields actually
+    // rendered in `body`, so SwiftUI can skip re-rendering rows that didn't
+    // visibly change (used together with `.equatable()` in the parent).
+    nonisolated static func == (lhs: RecipeRowView, rhs: RecipeRowView) -> Bool {
+        lhs.recipe.id == rhs.recipe.id
+            && lhs.recipe.name == rhs.recipe.name
+            && lhs.recipe.totalTime == rhs.recipe.totalTime
+            && lhs.recipe.difficulty == rhs.recipe.difficulty
+            && lhs.recipe.servings == rhs.recipe.servings
+            && lhs.recipe.isFavorite == rhs.recipe.isFavorite
+            && (lhs.recipe.imageData?.count ?? 0) == (rhs.recipe.imageData?.count ?? 0)
+            && lhs.compatibility == rhs.compatibility
+    }
 
     var body: some View {
         HStack(spacing: 12) {

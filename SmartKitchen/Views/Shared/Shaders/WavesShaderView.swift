@@ -216,7 +216,7 @@ struct WavesSceneView: NSViewRepresentable {
 
 extension WavesSceneView {
     func createView(context: Context) -> SCNView {
-        let scnView = SCNView()
+        let scnView = NonFocusableSCNView()
         scnView.antialiasingMode = .none
         scnView.preferredFramesPerSecond = 20
         context.coordinator.setup(in: scnView)
