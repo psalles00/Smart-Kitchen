@@ -234,7 +234,7 @@ struct UnifiedSearchBar: View {
                 presentNutritionSheet(.captureVoice)
             }
             Button("Texto", systemImage: "character.cursor.ibeam") {
-                presentNutritionSheet(.captureText)
+                presentNutritionSheet(.captureText(prefillText: nil, autoAnalyze: false))
             }
         }
     }
@@ -265,7 +265,7 @@ struct UnifiedSearchBar: View {
                 presentNutritionSheet(.captureVoice)
             }
             Button("Texto", systemImage: "character.cursor.ibeam") {
-                presentNutritionSheet(.captureText)
+                presentNutritionSheet(.captureText(prefillText: nil, autoAnalyze: false))
             }
         }
     }

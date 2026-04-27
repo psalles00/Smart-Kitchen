@@ -109,6 +109,34 @@ struct ContentView: View {
     private var settings: AppSettings? { settingsArray.first }
     private var activePageTheme: PageTheme { selectedTab.pageTheme ?? lastContentTab.pageTheme ?? .home }
 
+    private var fullscreenNutritionEntrySheetBinding: Binding<NutritionEntrySheet?> {
+        Binding(
+            get: {
+                guard let sheet = searchBarState.pendingNutritionSheet,
+                      sheet.prefersFullScreenPresentation else {
+                    return nil
+                }
+
+                return sheet
+            },
+            set: { searchBarState.pendingNutritionSheet = $0 }
+        )
+    }
+
+    private var sheetNutritionEntrySheetBinding: Binding<NutritionEntrySheet?> {
+        Binding(
+            get: {
+                guard let sheet = searchBarState.pendingNutritionSheet,
+                      !sheet.prefersFullScreenPresentation else {
+                    return nil
+                }
+
+                return sheet
+            },
+            set: { searchBarState.pendingNutritionSheet = $0 }
+        )
+    }
+
     private var tabSelectionBinding: Binding<AppTab> {
         Binding(
             get: { selectedTab },
@@ -135,9 +163,18 @@ struct ContentView: View {
         .environment(\.scrollToItem, scrollToItemRequest)
         .environment(\.openRecipeInRecipesTab, openRecipeInRecipesTab)
         .environment(\.backgroundTheme, displayedBgTheme)
+        #if os(iOS)
+        .fullScreenCover(item: fullscreenNutritionEntrySheetBinding) { sheet in
+            nutritionEntrySheetContent(for: sheet)
+        }
+        .sheet(item: sheetNutritionEntrySheetBinding) { sheet in
+            nutritionEntrySheetContent(for: sheet)
+        }
+        #else
         .sheet(item: $searchBarState.pendingNutritionSheet) { sheet in
             nutritionEntrySheetContent(for: sheet)
         }
+        #endif
         .sheet(isPresented: $showQuickRecipeImport, onDismiss: handleQuickRecipeImportDismissed) {
             RecipeImportHostView(launchMode: quickRecipeImportLaunchMode) { recipeID in
                 pendingQuickImportedRecipeID = recipeID
@@ -369,7 +406,10 @@ struct ContentView: View {
                             },
                             onOpenSearch: {
                                 searchBarState.reveal(mode: .idle)
-                            }
+                            },
+                            onOpenRecipeImport: openQuickRecipeImport,
+                            onOpenFoodCameraDirect: openDirectFoodCamera,
+                            onOpenFoodGalleryDirect: openDirectFoodGallery
                         )
                     }
                 } label: {
@@ -415,6 +455,8 @@ struct ContentView: View {
                     searchBarState: searchBarState,
                     searchService: searchService,
                     onAction: { handleCommandBarAction($0) },
+                    onOpenFoodCameraDirect: openDirectFoodCamera,
+                    onOpenFoodGalleryDirect: openDirectFoodGallery,
                     pendingChatQuery: $pendingChatQuery,
                     pendingOpenChat: $pendingOpenChat,
                     pendingNewConversation: $pendingNewConversation,
@@ -496,8 +538,13 @@ struct ContentView: View {
             FoodCaptureHostView(mode: .photo, logDate: logDate)
         case .captureLabel:
             FoodCaptureHostView(mode: .nutritionLabel, logDate: logDate)
-        case .captureText:
-            FoodCaptureHostView(mode: .text, logDate: logDate)
+        case .captureText(let prefillText, let autoAnalyze):
+            FoodCaptureHostView(
+                mode: .text,
+                logDate: logDate,
+                initialText: prefillText ?? "",
+                shouldAutoAnalyzeTextOnAppear: autoAnalyze
+            )
         case .captureVoice:
             FoodCaptureHostView(mode: .voice, logDate: logDate)
         case .comingSoon:
@@ -750,7 +797,10 @@ struct ContentView: View {
                         },
                         onOpenSearch: {
                             macSearchFieldFocused = true
-                        }
+                        },
+                        onOpenRecipeImport: openQuickRecipeImport,
+                        onOpenFoodCameraDirect: openDirectFoodCamera,
+                        onOpenFoodGalleryDirect: openDirectFoodGallery
                     )
                 }
                 .background(Color.clear)
@@ -986,7 +1036,7 @@ struct ContentView: View {
         case .addUtensil:
             showAddUtensil = true
         case .registerFood(let prefill):
-            searchBarState.pendingNutritionSheet = .manual(prefillName: prefill)
+            searchBarState.pendingNutritionSheet = .captureText(prefillText: prefill, autoAnalyze: true)
         case .openWeightTracker:
             showWeightTracker = true
         case .askAssistant(let prefill):
@@ -1296,6 +1346,7 @@ private struct HomeView: View {
     @Environment(\.scrollToTopTrigger) private var scrollToTopTrigger
     @Environment(\.modelContext) private var modelContext
     @Environment(\.openRecipeInRecipesTab) private var openRecipeInRecipesTab
+    @EnvironmentObject private var searchBarState: SearchBarState
     // Corrigido ciclo do AttributeGraph separando dependências reativas de SwiftData em @State com atualização manual para evitar travamentos no macOS.
 
     @Query(filter: #Predicate<UnifiedItem> { $0.isPantry }, sort: \UnifiedItem.name) private var pantryItems: [UnifiedItem]
@@ -1323,6 +1374,9 @@ private struct HomeView: View {
     let onSettingsTap: () -> Void
     let onOpenChat: () -> Void
     let onOpenSearch: () -> Void
+    let onOpenRecipeImport: (RecipeImportLaunchMode) -> Void
+    let onOpenFoodCameraDirect: () -> Void
+    let onOpenFoodGalleryDirect: () -> Void
 
     var body: some View {
         ExpandedPageLayout(
@@ -1570,11 +1624,12 @@ private struct HomeView: View {
                         showAddPantry = true
                     }
 
-                    macShortcutAddTile(title: "Receitas", imageName: "receitas", imageSize: 56) {
-                        showRecipeAddOptions = true
+                    macShortcutAddTileMenu(title: "Receitas", imageName: "receitas", imageSize: 56) {
+                        recipeShortcutMenuContent
                     }
 
-                    macShortcutAddTile(title: "Nutrição", imageName: "nutrientes", imageSize: 50) {
+                    macShortcutAddTileMenu(title: "Alimento", imageName: "nutrientes", imageSize: 50) {
+                        foodShortcutMenuContent
                     }
                 }
                 .frame(height: quickTileHeight + 26)
@@ -1594,6 +1649,26 @@ private struct HomeView: View {
     ) -> some View {
         VStack(spacing: 8) {
             homeShortcutAddTile(imageName: imageName, imageSize: imageSize, action: action)
+                .frame(maxWidth: .infinity)
+                .frame(height: 108)
+
+            Text(title)
+                .font(.caption.weight(.bold))
+                .foregroundStyle(.primary)
+                .lineLimit(1)
+                .frame(maxWidth: .infinity)
+        }
+        .frame(maxWidth: .infinity, alignment: .top)
+    }
+
+    private func macShortcutAddTileMenu<Content: View>(
+        title: String,
+        imageName: String,
+        imageSize: CGFloat? = nil,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(spacing: 8) {
+            homeShortcutAddTileMenu(imageName: imageName, imageSize: imageSize, content: content)
                 .frame(maxWidth: .infinity)
                 .frame(height: 108)
 
@@ -1680,8 +1755,8 @@ private struct HomeView: View {
                     }
 
                     VStack(spacing: 6) {
-                        homeShortcutAddTile(imageName: "receitas", imageSize: 65) {
-                            showRecipeAddOptions = true
+                        homeShortcutAddTileMenu(imageName: "receitas", imageSize: 65) {
+                            recipeShortcutMenuContent
                         }
                         .frame(height: smallSide)
                         Text("Receitas")
@@ -1690,10 +1765,11 @@ private struct HomeView: View {
                     }
 
                     VStack(spacing: 6) {
-                        homeShortcutAddTile(imageName: "nutrientes", imageSize: 58) {
+                        homeShortcutAddTileMenu(imageName: "nutrientes", imageSize: 58) {
+                            foodShortcutMenuContent
                         }
                         .frame(height: smallSide)
-                        Text("Nutrição")
+                        Text("Alimento")
                             .font(.caption.weight(.bold))
                             .foregroundStyle(.primary)
                     }
@@ -1824,9 +1900,12 @@ private struct HomeView: View {
 
             if compatibleMatchesState.isEmpty {
                 ContentUnavailableView(
-                    "Sem receitas sugeridas",
-                    systemImage: "book.closed",
-                    description: Text("Ajuste o nível de compatibilidade nas configurações ou adicione mais itens à despensa.")
+                    label: {
+                        Text("Sem receitas sugeridas")
+                    },
+                    description: {
+                        Text("Ajuste o nível de compatibilidade nas configurações ou adicione mais itens à despensa.")
+                    }
                 )
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
@@ -2050,32 +2129,119 @@ private struct HomeView: View {
             HapticManager.impact(style: .light)
             action()
         } label: {
-            ZStack {
-                homeShortcutBackgroundColor
-
-                Image(imageName)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: imageSize ?? 76)
-                    .allowsHitTesting(false)
-
-                // "+" badge
-                VStack {
-                    HStack {
-                        Spacer()
-                        Image(systemName: "plus")
-                            .font(.system(size: 10, weight: .bold))
-                            .foregroundStyle(.secondary)
-                            .frame(width: 22, height: 22)
-                            .background(.ultraThinMaterial, in: Circle())
-                            .padding(6)
-                    }
-                    Spacer()
-                }
-            }
-            .clipShape(.rect(cornerRadius: 16))
+            homeShortcutTileLabel(imageName: imageName, imageSize: imageSize)
         }
         .buttonStyle(HomeShortcutButtonStyle())
+    }
+
+    private func homeShortcutAddTileMenu<Content: View>(
+        imageName: String,
+        imageSize: CGFloat? = nil,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        Menu {
+            content()
+        } label: {
+            homeShortcutTileLabel(imageName: imageName, imageSize: imageSize)
+        }
+        .menuOrder(.fixed)
+        .buttonStyle(HomeShortcutButtonStyle())
+    }
+
+    @ViewBuilder
+    private func homeShortcutTileLabel(imageName: String, imageSize: CGFloat?) -> some View {
+        ZStack {
+            homeShortcutBackgroundColor
+
+            Image(imageName)
+                .resizable()
+                .scaledToFit()
+                .frame(width: imageSize ?? 76)
+                .allowsHitTesting(false)
+
+            // "+" badge
+            VStack {
+                HStack {
+                    Spacer()
+                    Image(systemName: "plus")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 22, height: 22)
+                        .background(.ultraThinMaterial, in: Circle())
+                        .padding(6)
+                }
+                Spacer()
+            }
+        }
+        .clipShape(.rect(cornerRadius: 16))
+    }
+
+    @ViewBuilder
+    private var recipeShortcutMenuContent: some View {
+        Section("Receitas") {
+            Button("Procurar receitas", systemImage: "magnifyingglass") {
+                searchBarState.pageContext = .recipes
+                searchBarState.reveal(mode: .idle)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                    searchBarState.mode = .searching
+                }
+            }
+            Button("Criar receita", systemImage: "square.and.pencil") {
+                showAddRecipe = true
+            }
+            Menu {
+                Button("Colar link", systemImage: "link") {
+                    onOpenRecipeImport(.link)
+                }
+                Button("Importar da galeria", systemImage: "photo.on.rectangle.angled") {
+                    onOpenRecipeImport(.gallery)
+                }
+                Button("Ler com câmera", systemImage: "camera.viewfinder") {
+                    onOpenRecipeImport(.camera)
+                }
+                Button("Colar texto", systemImage: "text.alignleft") {
+                    onOpenRecipeImport(.text)
+                }
+                #if os(macOS)
+                Button("Importar dos arquivos", systemImage: "folder.fill") {
+                    onOpenRecipeImport(.files)
+                }
+                #endif
+            } label: {
+                Label("Importar receita", systemImage: "square.and.arrow.down")
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var foodShortcutMenuContent: some View {
+        Section("Registros Salvos") {
+            Button("Salvar alimento", systemImage: "fork.knife") {
+                searchBarState.pendingNutritionSheet = .manual()
+            }
+            Button("Alimentos salvos", systemImage: "clock.arrow.circlepath") {
+                searchBarState.pendingNutritionSheet = .recents
+            }
+        }
+        Section("Registrar por…") {
+            Button("Rótulo", systemImage: "doc.text.viewfinder") {
+                searchBarState.pendingNutritionSheet = .captureLabel
+            }
+            Button("Galeria", systemImage: "photo") {
+                onOpenFoodGalleryDirect()
+            }
+            #if os(iOS)
+            Button("Câmera", systemImage: "camera") {
+                onOpenFoodCameraDirect()
+            }
+            #endif
+            Button("Voz", systemImage: "waveform") {
+                searchBarState.pendingNutritionSheet = .captureVoice
+            }
+            Button("Texto", systemImage: "character.cursor.ibeam") {
+                searchBarState.pendingNutritionSheet = .captureText(prefillText: nil, autoAnalyze: false)
+            }
+        }
     }
 
     private func normalized(_ text: String) -> String {

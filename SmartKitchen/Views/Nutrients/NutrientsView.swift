@@ -21,6 +21,34 @@ struct NutrientsView: View {
 
     private var profile: NutritionProfile? { profiles.first }
 
+    private var fullscreenEntrySheetBinding: Binding<NutritionEntrySheet?> {
+        Binding(
+            get: {
+                guard let sheet = activeEntrySheet,
+                      sheet.prefersFullScreenPresentation else {
+                    return nil
+                }
+
+                return sheet
+            },
+            set: { activeEntrySheet = $0 }
+        )
+    }
+
+    private var sheetEntrySheetBinding: Binding<NutritionEntrySheet?> {
+        Binding(
+            get: {
+                guard let sheet = activeEntrySheet,
+                      !sheet.prefersFullScreenPresentation else {
+                    return nil
+                }
+
+                return sheet
+            },
+            set: { activeEntrySheet = $0 }
+        )
+    }
+
     var body: some View {
         ExpandedPageLayout(
             pageTheme: .nutrients,
@@ -75,7 +103,7 @@ struct NutrientsView: View {
                                         Label("Voz", systemImage: "waveform")
                                     }
                                     Button {
-                                        activeEntrySheet = .captureText
+                                        activeEntrySheet = .captureText(prefillText: nil, autoAnalyze: false)
                                     } label: {
                                         Label("Texto", systemImage: "character.cursor.ibeam")
                                     }
@@ -124,9 +152,18 @@ struct NutrientsView: View {
             NutritionOnboardingView()
                 .interactiveDismissDisabled()
         }
+        #if os(iOS)
+        .fullScreenCover(item: fullscreenEntrySheetBinding) { sheet in
+            sheetContent(for: sheet)
+        }
+        .sheet(item: sheetEntrySheetBinding) { sheet in
+            sheetContent(for: sheet)
+        }
+        #else
         .sheet(item: $activeEntrySheet) { sheet in
             sheetContent(for: sheet)
         }
+        #endif
         .sheet(item: $editingEntry) { entry in
             FoodEntryFormView(mode: .edit(entry: entry))
         }
@@ -196,8 +233,13 @@ struct NutrientsView: View {
             FoodCaptureHostView(mode: .photo, logDate: selectedDate, initialInput: .gallery)
         case .captureLabel:
             FoodCaptureHostView(mode: .nutritionLabel, logDate: selectedDate)
-        case .captureText:
-            FoodCaptureHostView(mode: .text, logDate: selectedDate)
+        case .captureText(let prefillText, let autoAnalyze):
+            FoodCaptureHostView(
+                mode: .text,
+                logDate: selectedDate,
+                initialText: prefillText ?? "",
+                shouldAutoAnalyzeTextOnAppear: autoAnalyze
+            )
         case .captureVoice:
             FoodCaptureHostView(mode: .voice, logDate: selectedDate)
         case .comingSoon(let title):

@@ -13,9 +13,17 @@ enum NutritionEntrySheet: Identifiable {
     case capturePhotoCamera
     case capturePhotoGallery
     case captureLabel
-    case captureText
+    case captureText(prefillText: String?, autoAnalyze: Bool)
     case captureVoice
     case comingSoon(title: String)
+
+    var prefersFullScreenPresentation: Bool {
+        if case .manual = self {
+            return true
+        }
+
+        return false
+    }
 
     var id: String {
         switch self {

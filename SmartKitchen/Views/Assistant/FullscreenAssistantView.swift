@@ -25,6 +25,8 @@ struct FullscreenAssistantView: View {
     @Query private var settingsArray: [AppSettings]
 
     let onAction: (CommandBarAction) -> Void
+    let onOpenFoodCameraDirect: () -> Void
+    let onOpenFoodGalleryDirect: () -> Void
 
     @Binding var pendingChatQuery: String?
     @Binding var pendingOpenChat: Bool
@@ -41,7 +43,6 @@ struct FullscreenAssistantView: View {
     @State private var showImportRecipe = false
     @State private var recipeImportLaunchMode: RecipeImportLaunchMode = .picker
     @State private var pendingImportedRecipeID: UUID? = nil
-    @State private var pendingPlaceholderTitle: String?
     private let topPinnedInset: CGFloat = 72
 
     private var settings: AppSettings? { settingsArray.first }
@@ -315,14 +316,14 @@ struct FullscreenAssistantView: View {
                         #endif
 
                         assistantActionButton(
-                            title: "Salvar Alimento",
+                            title: "Registrar Alimento",
                             icon: "fork.knife.circle.fill",
                             tint: assistantNutrientsAccent,
                             imageName: "nutrientes",
                             imageHeight: 74,
                             imageOffset: CGSize(width: 6, height: 0)
                         ) {
-                            pendingPlaceholderTitle = "Salvar Alimento"
+                            presentNutritionSheet(.captureText(prefillText: nil, autoAnalyze: false))
                         }
 
                         assistantActionButton(
@@ -333,7 +334,7 @@ struct FullscreenAssistantView: View {
                             imageHeight: 74,
                             imageOffset: CGSize(width: 6, height: 0)
                         ) {
-                            pendingPlaceholderTitle = "Registrar com Áudio"
+                            presentNutritionSheet(.captureVoice)
                         }
 
                         assistantActionButton(
@@ -344,7 +345,7 @@ struct FullscreenAssistantView: View {
                             imageHeight: 68,
                             imageOffset: CGSize(width: 6, height: 0)
                         ) {
-                            pendingPlaceholderTitle = "Registrar com Galeria"
+                            presentFoodGalleryDirect()
                         }
 
                         assistantActionButton(
@@ -355,7 +356,7 @@ struct FullscreenAssistantView: View {
                             imageHeight: 72,
                             imageOffset: CGSize(width: 6, height: 0)
                         ) {
-                            pendingPlaceholderTitle = "Registrar com Câmera"
+                            presentFoodCameraDirect()
                         }
 
                         assistantActionButton(
@@ -393,29 +394,32 @@ struct FullscreenAssistantView: View {
             .modelContainer(CloudSyncService.shared.container)
             .forceLightStatusBar()
         }
-        .alert("Em breve", isPresented: pendingPlaceholderAlertIsPresented) {
-            Button("OK", role: .cancel) {
-                pendingPlaceholderTitle = nil
-            }
-        } message: {
-            Text(pendingPlaceholderTitle.map { "\($0) ainda não está disponível." } ?? "Esse atalho ainda não está disponível.")
-        }
-    }
-
-    private var pendingPlaceholderAlertIsPresented: Binding<Bool> {
-        Binding(
-            get: { pendingPlaceholderTitle != nil },
-            set: { isPresented in
-                if !isPresented {
-                    pendingPlaceholderTitle = nil
-                }
-            }
-        )
     }
 
     private func openRecipeImport(_ launchMode: RecipeImportLaunchMode) {
         recipeImportLaunchMode = launchMode
         showImportRecipe = true
+    }
+
+    private func presentNutritionSheet(_ sheet: NutritionEntrySheet) {
+        searchBarState.dismiss()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            searchBarState.pendingNutritionSheet = sheet
+        }
+    }
+
+    private func presentFoodCameraDirect() {
+        searchBarState.dismiss()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            onOpenFoodCameraDirect()
+        }
+    }
+
+    private func presentFoodGalleryDirect() {
+        searchBarState.dismiss()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            onOpenFoodGalleryDirect()
+        }
     }
 
     private func handleImportRecipeDismissed() {

@@ -191,7 +191,7 @@ struct NutritionDashboardView: View {
                         Label("Voz", systemImage: "waveform")
                     }
                     Button {
-                        onPickEntry(.captureText)
+                        onPickEntry(.captureText(prefillText: nil, autoAnalyze: false))
                     } label: {
                         Label("Texto", systemImage: "character.cursor.ibeam")
                     }

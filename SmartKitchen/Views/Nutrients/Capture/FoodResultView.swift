@@ -15,6 +15,14 @@ struct FoodResultView: View {
     @State private var servingText: String = ""
     @State private var mealTypeRaw: String = MealType.snack.rawValue
     @State private var showMore: Bool = false
+    @State private var servingUnit: ServingUnit = .grams
+
+    private enum ServingUnit: String, CaseIterable, Identifiable {
+        case grams = "g"
+        case milliliters = "ml"
+
+        var id: String { rawValue }
+    }
 
     private var parsedServing: Double {
         Double(servingText.replacingOccurrences(of: ",", with: ".")) ?? analysis.servingSizeGrams
@@ -54,7 +62,14 @@ struct FoodResultView: View {
                             #endif
                             .multilineTextAlignment(.trailing)
                             .frame(maxWidth: 100)
-                        Text("g").foregroundStyle(.secondary).font(.footnote)
+                        Picker("", selection: $servingUnit) {
+                            ForEach(ServingUnit.allCases) { unit in
+                                Text(unit.rawValue).tag(unit)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .frame(width: 88)
+                        .labelsHidden()
                     }
                 }
 
