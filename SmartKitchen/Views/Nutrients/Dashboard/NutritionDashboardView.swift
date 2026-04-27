@@ -96,16 +96,18 @@ struct NutritionDashboardView: View {
                     }
                     .padding(.horizontal, 16)
 
-                    dayActionsBar
-                        .padding(.horizontal, 16)
-
                     mealSections
                         .padding(.horizontal, 16)
 
-                    Color.clear.frame(height: 40)
+                    Color.clear.frame(height: 88)
                 }
                 .padding(.top, 6)
             }
+        }
+        .overlay(alignment: .bottomLeading) {
+            floatingDayActionButton
+                .padding(.leading, 16)
+                .padding(.bottom, 8)
         }
     }
 
@@ -324,6 +326,62 @@ struct NutritionDashboardView: View {
             actionPill("Concluir dia", style: .primary, icon: "checkmark.circle.fill") { completeSelectedDay() }
         case .future, .todayEmpty, .pastEmpty:
             EmptyView()
+        }
+    }
+
+    /// Botão flutuante de ação do dia, ancorado acima da barra do assistente.
+    /// Usa Liquid Glass (iOS 26) com tint discreto coerente com a ação:
+    /// verde para "Concluir dia" e laranja para "Reabrir dia".
+    @ViewBuilder
+    private var floatingDayActionButton: some View {
+        switch selectedDayState {
+        case .completed, .canceled:
+            floatingActionButton(
+                title: "Reabrir dia",
+                icon: "arrow.uturn.backward",
+                tint: Color.orange,
+                action: reopenSelectedDay
+            )
+        case .todayInProgress, .pastInProgress:
+            floatingActionButton(
+                title: "Concluir dia",
+                icon: "checkmark.circle.fill",
+                tint: Color(red: 0.15, green: 0.45, blue: 0.25),
+                action: completeSelectedDay
+            )
+        case .future, .todayEmpty, .pastEmpty:
+            EmptyView()
+        }
+    }
+
+    @ViewBuilder
+    private func floatingActionButton(title: String, icon: String, tint: Color, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Label(title, systemImage: icon)
+                .labelStyle(.titleAndIcon)
+                .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                .foregroundStyle(tint)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .contentShape(.capsule)
+                .background(floatingActionBackground(tint: tint))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(title)
+    }
+
+    @ViewBuilder
+    private func floatingActionBackground(tint: Color) -> some View {
+        if #available(iOS 26, macOS 26, *) {
+            Capsule()
+                .fill(.clear)
+                .glassEffect(.regular.tint(tint.opacity(0.18)).interactive(), in: .capsule)
+        } else {
+            Capsule()
+                .fill(.ultraThinMaterial)
+                .overlay(
+                    Capsule().fill(tint.opacity(0.14))
+                )
         }
     }
 
