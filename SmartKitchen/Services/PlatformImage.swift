@@ -145,6 +145,81 @@ final class NonFocusableSCNView: SCNView {
     // subtree, which keeps the linear-focus cache valid while this view is on
     // screen.
     override func focusItems(in rect: CGRect) -> [any UIFocusItem] { [] }
+
+    // MARK: - Lifecycle-aware rendering
+    //
+    // SCNView's renderer keeps submitting Metal command buffers as long as the
+    // view exists, even when the app is backgrounded. iOS denies GPU work from
+    // background processes, which results in an endless loop of:
+    //   IOGPUMetalError: Insufficient Permission (to submit GPU work from background)
+    //   ... kIOGPUCommandBufferCallbackErrorBackgroundExecutionNotPermitted
+    // The same continuous rendering also wastes GPU/battery while the app is
+    // active. Pausing on resignActive / when detached from a window stops the
+    // render loop cleanly and resumes it when the app returns to foreground.
+
+    nonisolated(unsafe) private var lifecycleObservers: [NSObjectProtocol] = []
+    private var wasPlayingBeforeBackground = true
+
+    convenience init() {
+        self.init(frame: .zero, options: nil)
+    }
+
+    override init(frame: CGRect, options: [String: Any]? = nil) {
+        super.init(frame: frame, options: options)
+        registerLifecycleObservers()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        registerLifecycleObservers()
+    }
+
+    deinit {
+        for token in lifecycleObservers {
+            NotificationCenter.default.removeObserver(token)
+        }
+    }
+
+    private func registerLifecycleObservers() {
+        let center = NotificationCenter.default
+        let resign = center.addObserver(
+            forName: UIApplication.willResignActiveNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            guard let self else { return }
+            self.wasPlayingBeforeBackground = self.isPlaying
+            self.isPlaying = false
+        }
+        let active = center.addObserver(
+            forName: UIApplication.didBecomeActiveNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            guard let self else { return }
+            // Only resume if attached to a window — otherwise let
+            // didMoveToWindow handle it.
+            if self.window != nil, self.wasPlayingBeforeBackground {
+                self.isPlaying = true
+            }
+        }
+        lifecycleObservers = [resign, active]
+    }
+
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        if window == nil {
+            // Detached: stop submitting GPU work.
+            isPlaying = false
+        } else {
+            // Attached: resume only if app is active.
+            if UIApplication.shared.applicationState == .active {
+                isPlaying = true
+            } else {
+                isPlaying = false
+            }
+        }
+    }
 }
 #else
 typealias NonFocusableSCNView = SCNView

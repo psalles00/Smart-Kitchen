@@ -100,6 +100,17 @@ struct SettingsView: View {
                             .foregroundStyle(PageTheme.nutrients.accentColor)
                     }
                 }
+
+                NavigationLink {
+                    PerformanceSettingsView()
+                } label: {
+                    Label {
+                        Text("Performance")
+                    } icon: {
+                        Image(systemName: "speedometer")
+                            .foregroundStyle(.orange)
+                    }
+                }
             }
 
             // MARK: - IA

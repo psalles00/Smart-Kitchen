@@ -140,8 +140,10 @@
 		BB0AB2A687D128964E17015B /* LogWeightSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A66C51D9090B538CD4E3A5C0 /* LogWeightSheet.swift */; };
 		BC4409C445EA7804612AF71F /* Boska-Medium.otf in Resources */ = {isa = PBXBuildFile; fileRef = AB394495821B8AC8F358A0D8 /* Boska-Medium.otf */; };
 		BCE0FE3A1390E8016772474C /* NebulaShaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FE61854469F70D6D206BD52 /* NebulaShaderView.swift */; };
+		BDDE2530F441ADC2031593C2 /* PerformancePreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF1EEC2FCBBC5D58437FEA8D /* PerformancePreferences.swift */; };
 		BE07F0A752501BBF17C7C0A4 /* Boska-BlackItalic.otf in Resources */ = {isa = PBXBuildFile; fileRef = 4C5880CFC6DCD2F43D3FA289 /* Boska-BlackItalic.otf */; };
 		BEF5B4F838AA9143A3FA804E /* NutritionDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99C6135DB82BD993DD2123C5 /* NutritionDashboardView.swift */; };
+		BFBF3C602EBF6A875A76D0B0 /* PerformanceSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 923EAB77C262A6BF8D3267C6 /* PerformanceSettingsView.swift */; };
 		C01287CA32AFE11D096E6BEC /* NutrientsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BEAE9BACAE6697BF1CFFDD1 /* NutrientsView.swift */; };
 		C356AA741BD6EBE5EFC20FB7 /* FoodCaptureHostView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 586AFBED0658AAF1260AA738 /* FoodCaptureHostView.swift */; };
 		C3C8F0C9E0419A0A535A0739 /* RecipeOptionButtonsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A1DA8CE366B34B2600E51DD /* RecipeOptionButtonsView.swift */; };
@@ -152,6 +154,7 @@
 		CCA37FA8F2EE60AEAA223369 /* NutritionProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1E7E6ED9196F15869058F46 /* NutritionProfile.swift */; };
 		CDD337112645EBFBA9460E84 /* NutrientsPlaceholderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8862D137CF029754BA12880F /* NutrientsPlaceholderView.swift */; };
 		CDFBBC3641BD11F559489BF9 /* HomeInfoContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 120985F96B2DA713EDC2E4F5 /* HomeInfoContent.swift */; };
+		CFBFA521F1E7BBDB06306A61 /* ThemedBackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76914732873AAE3D425B8975 /* ThemedBackgroundView.swift */; };
 		D2AFC57894D10E6FF3CAB468 /* RecipeImportProcessingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D625B8D59C3D7A090C50D3DE /* RecipeImportProcessingView.swift */; };
 		D491FC1396340EEE950526AE /* RecipeDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8B6E051BE66B1366C2A927F /* RecipeDetailView.swift */; };
 		D646AE79B2A1AA2FCDDD830F /* RecipeImportCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE18FC2D6D66792CEDE3E8EA /* RecipeImportCoordinator.swift */; };
@@ -299,6 +302,7 @@
 		75728DA118DDAF7AFE520AFD /* NutrientsInfoContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutrientsInfoContent.swift; sourceTree = "<group>"; };
 		75B2AAF14060085FA1C4A5F5 /* WeekEnergyStrip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeekEnergyStrip.swift; sourceTree = "<group>"; };
 		7628AFEACD6EC1D4981E6D86 /* InlineChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineChatView.swift; sourceTree = "<group>"; };
+		76914732873AAE3D425B8975 /* ThemedBackgroundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemedBackgroundView.swift; sourceTree = "<group>"; };
 		772BF40F89C4381662F3C806 /* Boska-Black.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Boska-Black.otf"; sourceTree = "<group>"; };
 		7B18CA8A7141908734CA7123 /* ItemIconPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemIconPickerView.swift; sourceTree = "<group>"; };
 		7BEAE9BACAE6697BF1CFFDD1 /* NutrientsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutrientsView.swift; sourceTree = "<group>"; };
@@ -311,6 +315,7 @@
 		8862D137CF029754BA12880F /* NutrientsPlaceholderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutrientsPlaceholderView.swift; sourceTree = "<group>"; };
 		8A614ED31B6BC753A6994689 /* RecipeCardMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeCardMessage.swift; sourceTree = "<group>"; };
 		8C144A56063311B85CEF7DBB /* PlayfairDisplay-Italic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "PlayfairDisplay-Italic.ttf"; sourceTree = "<group>"; };
+		923EAB77C262A6BF8D3267C6 /* PerformanceSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceSettingsView.swift; sourceTree = "<group>"; };
 		95C0A549E03D17B6CB5D79C2 /* SearchBarState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchBarState.swift; sourceTree = "<group>"; };
 		980285F2E9866A086F1FC846 /* APIConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIConfig.swift; sourceTree = "<group>"; };
 		99C6135DB82BD993DD2123C5 /* NutritionDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionDashboardView.swift; sourceTree = "<group>"; };
@@ -371,6 +376,7 @@
 		D91DCD9189D0778478997A07 /* UniversalSearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UniversalSearchService.swift; sourceTree = "<group>"; };
 		DB768039F88F9878E87FABA4 /* ItemSearchField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemSearchField.swift; sourceTree = "<group>"; };
 		DE0267B15A323F9C43F70E31 /* CategoryManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryManagementView.swift; sourceTree = "<group>"; };
+		DF1EEC2FCBBC5D58437FEA8D /* PerformancePreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformancePreferences.swift; sourceTree = "<group>"; };
 		DFCF4C0BB7E296E1A603660E /* UtensilsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UtensilsView.swift; sourceTree = "<group>"; };
 		E0DB3612494917CB802BC7CC /* GroceryItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroceryItem.swift; sourceTree = "<group>"; };
 		E1F2713BE8CC19ABA93F41A1 /* RecipeImportInboxHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeImportInboxHost.swift; sourceTree = "<group>"; };
@@ -470,6 +476,7 @@
 				EE34761A8547DB1BC47F0FF5 /* iCloudSettingsView.swift */,
 				80D12790A5FFD5D1F1730C5C /* NotificationSettingsView.swift */,
 				E6C724155391F0BC83FFBDE9 /* NutritionSettingsView.swift */,
+				923EAB77C262A6BF8D3267C6 /* PerformanceSettingsView.swift */,
 				6CD351710E6E853F0407AB7E /* SettingsView.swift */,
 			);
 			path = Settings;
@@ -736,6 +743,7 @@
 				AFCEEBA0F45A1486F9EE603B /* SettingsButton.swift */,
 				0AFAA134B36C06334F7B143B /* StatusBarStyleView.swift */,
 				600EDD530C0ABD3D8C83E88F /* Theme.swift */,
+				76914732873AAE3D425B8975 /* ThemedBackgroundView.swift */,
 				FFD9669D9EEC7E8ED456843E /* UnifiedSearchBar.swift */,
 			);
 			path = Shared;
@@ -814,6 +822,7 @@
 				075F230C33AAE3A5989E9EBE /* IconResolver.swift */,
 				9D23D5730AFF637BAC6DCE1E /* ItemDatabase.swift */,
 				54E9C41052AFBFDE995CAA53 /* NotificationService.swift */,
+				DF1EEC2FCBBC5D58437FEA8D /* PerformancePreferences.swift */,
 				B0BA783D43E37794EE28298C /* PlatformImage.swift */,
 				80D2CBBBCC49CA560D36DA31 /* RecentActionsStore.swift */,
 				1F826826CB169B1547D1082C /* RecipeImageCache.swift */,
@@ -1061,6 +1070,8 @@
 				85A628EC6800B959FFDFE4D5 /* PageTheme.swift in Sources */,
 				29529DB27EA073E686E14C07 /* PantryItem.swift in Sources */,
 				A91BB979A0DB9D2E8595B207 /* PantryView.swift in Sources */,
+				BDDE2530F441ADC2031593C2 /* PerformancePreferences.swift in Sources */,
+				BFBF3C602EBF6A875A76D0B0 /* PerformanceSettingsView.swift in Sources */,
 				1463A33CEB85EA5B7C145162 /* PlatformImage.swift in Sources */,
 				2AAE39271190C16B25239D39 /* RecentActionsStore.swift in Sources */,
 				EC86853630BC854A04E9B257 /* RecentsView.swift in Sources */,
@@ -1103,6 +1114,7 @@
 				DC2CFDC25C9F7F6942C43936 /* TextPipeline.swift in Sources */,
 				AB3B06A6A7827DA0150A8FB4 /* TexturedGradientView.swift in Sources */,
 				46817A4977D35BB88599CF30 /* Theme.swift in Sources */,
+				CFBFA521F1E7BBDB06306A61 /* ThemedBackgroundView.swift in Sources */,
 				6E2C0F3642F904416D6AC732 /* TimeRange.swift in Sources */,
 				618F6C097155EB8EC51D6833 /* UnifiedItem.swift in Sources */,
 				6CCBD9630BF8366D16CE786F /* UnifiedItemMigration.swift in Sources */,

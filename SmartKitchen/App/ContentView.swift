@@ -905,34 +905,11 @@ struct ContentView: View {
 
     @ViewBuilder
     private func macThemedBackground(for theme: PageTheme) -> some View {
-        let selection = BackgroundManager.shared.background(for: theme)
-
-        switch selection.type {
-        case .texturedGradient:
-            if let preset = selection.texturedPreset {
-                TexturedGradientView(preset: preset, progress: 1.0)
-            } else {
-                macOriginalBackground(for: theme)
-            }
-        case .original:
-            macOriginalBackground(for: theme)
-        case .waves:
-            WavesShaderView(progress: 1.0)
-        }
-    }
-
-    @ViewBuilder
-    private func macOriginalBackground(for theme: PageTheme) -> some View {
-        switch theme {
-        case .home:
-            NebulaShaderView(theme: .home, progress: 1.0)
-        case .lists:
-            NebulaShaderView(theme: .lists, progress: 1.0)
-        case .recipes:
-            NebulaShaderView(theme: .recipes, progress: 1.0)
-        case .nutrients:
-            NebulaShaderView(theme: .nutrients, progress: 1.0)
-        }
+        ThemedBackgroundView(
+            theme: theme,
+            selection: BackgroundManager.shared.background(for: theme),
+            progress: 1.0
+        )
     }
 
     #endif

@@ -274,45 +274,10 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
 
     @ViewBuilder
     private func themedBackground(for theme: PageTheme) -> some View {
-        let selection = backgroundManager.background(for: theme)
-
-        switch selection.type {
-        case .texturedGradient:
-            if let preset = selection.texturedPreset {
-                TexturedGradientView(preset: preset, progress: 1.0)
-            } else {
-                originalBackground(for: theme)
-            }
-        case .original:
-            originalBackground(for: theme)
-        case .waves:
-            WavesShaderView(progress: 1.0)
-        }
-    }
-
-    @ViewBuilder
-    private func originalBackground(for theme: PageTheme) -> some View {
-        switch theme {
-        case .home:
-            NebulaShaderView(
-                theme: .home,
-                progress: 1.0
-            )
-        case .lists:
-            NebulaShaderView(
-                theme: .lists,
-                progress: 1.0
-            )
-        case .recipes:
-            NebulaShaderView(
-                theme: .recipes,
-                progress: 1.0
-            )
-        case .nutrients:
-            NebulaShaderView(
-                theme: .nutrients,
-                progress: 1.0
-            )
-        }
+        ThemedBackgroundView(
+            theme: theme,
+            selection: backgroundManager.background(for: theme),
+            progress: 1.0
+        )
     }
 }
