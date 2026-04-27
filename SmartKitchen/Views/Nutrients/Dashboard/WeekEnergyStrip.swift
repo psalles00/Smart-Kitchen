@@ -1,12 +1,18 @@
 import SwiftUI
 
 /// Tira horizontal de 7 dias que permite selecionar a data ativa do dashboard.
-/// Rolável de forma paginada para ver semanas passadas.
+/// Pode ser expandida para um calendário mensal através do binding `isMonthExpanded`.
+///
+/// Cores e estado por dia vêm do `NutritionDayTile` — hoje vazio é cinza
+/// (não mais verde), concluído é verde, em andamento é amarelo e pendentes
+/// passados são vermelhos discretos.
 struct WeekEnergyStrip: View {
     @Binding var selectedDate: Date
     let caloriesForDate: (Date) -> Int
     let calorieGoal: Int
     let weekStartsOnMonday: Bool
+    let stateForDate: (Date) -> NutritionDayState
+    @Binding var isMonthExpanded: Bool
 
     private static let totalWeeks = 53
     private static let currentWeekIndex = totalWeeks - 1
@@ -20,6 +26,100 @@ struct WeekEnergyStrip: View {
     }
 
     var body: some View {
+        if isMonthExpanded {
+            VStack(spacing: 6) {
+                HStack(alignment: .top, spacing: 8) {
+                    calendarToggleButton
+                    Spacer()
+                    backToTodayButton
+                }
+                .padding(.horizontal, 4)
+
+                MonthCalendarStrip(
+                    selectedDate: $selectedDate,
+                    stateForDate: stateForDate,
+                    progressForDate: progressForDate,
+                    weekStartsOnMonday: weekStartsOnMonday
+                )
+            }
+        } else {
+            HStack(alignment: .center, spacing: 0) {
+                calendarToggleButton
+                weekScrollView
+            }
+        }
+    }
+
+    // MARK: - Toggle button
+
+    /// Botão de calendário com a mesma altura/largura/posicionamento dos
+    /// `NutritionDayTile`. Reserva o mesmo espaço do label do dia da semana
+    /// para alinhar verticalmente com os tiles vizinhos.
+    private var calendarToggleButton: some View {
+        Button {
+            #if canImport(UIKit)
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            #endif
+            withAnimation(.snappy(duration: 0.28)) {
+                isMonthExpanded.toggle()
+            }
+        } label: {
+            VStack(spacing: 4) {
+                // Reservar a mesma altura do label de dia ("S", "T", etc.) para
+                // que o círculo fique alinhado com os tiles ao lado.
+                Text(" ")
+                    .font(.system(.caption2, design: .rounded, weight: .medium))
+
+                ZStack {
+                    Circle()
+                        .fill(PageTheme.nutrients.accentColor.opacity(0.10))
+                    Circle()
+                        .stroke(PageTheme.nutrients.accentColor.opacity(0.25), lineWidth: 1)
+                    Image(systemName: isMonthExpanded ? "calendar.badge.minus" : "calendar")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(PageTheme.nutrients.accentColor)
+                }
+                .frame(width: 36, height: 36)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(width: 44)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(isMonthExpanded ? "Recolher calendário" : "Expandir calendário")
+    }
+
+    /// Pill discreto exibido quando o calendário está aberto, para retornar
+    /// rapidamente para o dia de hoje.
+    private var backToTodayButton: some View {
+        Button {
+            #if canImport(UIKit)
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            #endif
+            withAnimation(.snappy(duration: 0.25)) {
+                selectedDate = Calendar.current.startOfDay(for: .now)
+            }
+        } label: {
+            VStack(spacing: 4) {
+                Text(" ")
+                    .font(.system(.caption2, design: .rounded, weight: .medium))
+
+                Label("Hoje", systemImage: "target")
+                    .font(.system(.caption, design: .rounded, weight: .semibold))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(
+                        Capsule().fill(PageTheme.nutrients.accentColor.opacity(0.14))
+                    )
+                    .foregroundStyle(PageTheme.nutrients.accentColor)
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Voltar para hoje")
+    }
+
+    // MARK: - Week scroll view
+
+    private var weekScrollView: some View {
         ScrollViewReader { proxy in
             ScrollView(.horizontal, showsIndicators: false) {
                 LazyHStack(spacing: 0) {
@@ -49,59 +149,20 @@ struct WeekEnergyStrip: View {
         let dates = weekDates(for: weekIndex)
         HStack(spacing: 0) {
             ForEach(dates, id: \.self) { date in
-                dayTile(for: date)
-            }
-        }
-    }
-
-    private func dayTile(for date: Date) -> some View {
-        let isSelected = calendar.isDate(date, inSameDayAs: selectedDate)
-        let isToday = calendar.isDateInToday(date)
-        let isFuture = date > .now
-        let progress = progressForDate(date)
-
-        return Button {
-            guard !isFuture else { return }
-            #if canImport(UIKit)
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            #endif
-            withAnimation(.snappy(duration: 0.25)) {
-                selectedDate = calendar.startOfDay(for: date)
-            }
-        } label: {
-            VStack(spacing: 4) {
-                Text(date.formatted(.dateTime.weekday(.narrow)))
-                    .font(.system(.caption2, design: .rounded, weight: .medium))
-                    .foregroundStyle(isSelected ? PageTheme.nutrients.accentColor : .secondary)
-
-                ZStack {
-                    Circle()
-                        .stroke(isSelected ? PageTheme.nutrients.accentColor.opacity(0.2) : .secondary.opacity(0.12), lineWidth: 2)
-                    Circle()
-                        .trim(from: 0, to: progress)
-                        .stroke(
-                            PageTheme.nutrients.accentColor,
-                            style: StrokeStyle(lineWidth: 2, lineCap: .round)
-                        )
-                        .rotationEffect(.degrees(-90))
-
-                    Text(date.formatted(.dateTime.day()))
-                        .font(.system(.callout, design: .rounded, weight: .semibold))
-                        .foregroundStyle(isToday ? PageTheme.nutrients.accentColor : .primary)
-                }
-                .frame(width: 36, height: 36)
-                .background {
-                    if isSelected {
-                        Circle()
-                            .fill(PageTheme.nutrients.accentColor.opacity(0.12))
+                NutritionDayTile(
+                    date: date,
+                    state: stateForDate(date),
+                    progress: progressForDate(date),
+                    isSelected: calendar.isDate(date, inSameDayAs: selectedDate),
+                    showWeekday: true,
+                    onTap: {
+                        withAnimation(.snappy(duration: 0.25)) {
+                            selectedDate = calendar.startOfDay(for: date)
+                        }
                     }
-                }
+                )
             }
-            .opacity(isFuture ? 0.35 : 1)
-            .frame(maxWidth: .infinity)
         }
-        .buttonStyle(.plain)
-        .disabled(isFuture)
     }
 
     // MARK: - Date math

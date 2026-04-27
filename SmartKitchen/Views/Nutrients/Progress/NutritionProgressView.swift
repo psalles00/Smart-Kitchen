@@ -10,8 +10,9 @@ struct NutritionProgressView: View {
     @Query(sort: \NutritionProfile.createdAt) private var profiles: [NutritionProfile]
     @Query(sort: \WeightEntry.date, order: .reverse) private var allWeightEntries: [WeightEntry]
     @Query(sort: \FoodEntry.timestamp, order: .reverse) private var allFoodEntries: [FoodEntry]
+    @Query(sort: \NutritionDayLog.dayStart, order: .reverse) private var allDayLogs: [NutritionDayLog]
 
-    @State private var range: NutritionTimeRange = .week
+    @State private var range: NutritionTimeRange = .month
     @State private var showLogWeight = false
 
     private var profile: NutritionProfile? { profiles.first }
@@ -23,10 +24,15 @@ struct NutritionProgressView: View {
                 rangePicker
                     .padding(.horizontal, 16)
 
+                scoreHeaderSection
+
+                estimateHeader
+
                 weightSection
                 calorieSection
                 macroAveragesSection
                 statsSection
+                statusInsightSection
 
                 Color.clear.frame(height: 40)
             }
@@ -157,20 +163,40 @@ struct NutritionProgressView: View {
         bucketFoodByDay(\.calories)
     }
 
-    private var calorieAvg: Int {
-        let totalDays = dailyCalories.filter { $0.calories > 0 }.count
-        guard totalDays > 0 else { return 0 }
-        return dailyCalories.reduce(0) { $0 + $1.calories } / totalDays
+    /// Macros agregados por dia, considerando apenas dias concluídos no range.
+    private var completedMacrosInRange: [Date: DayMacros] {
+        NutritionAveragesService.completedDayMacros(
+            entries: allFoodEntries,
+            logs: allDayLogs,
+            startDate: range.startDate
+        )
     }
+
+    /// Resultado da média baseado no dia da semana de hoje, com fallback automático.
+    private var calorieAverageResult: NutritionAverageResult {
+        NutritionAveragesService.average(
+            for: Date(),
+            dayMacros: completedMacrosInRange
+        )
+    }
+
+    private var calorieAvg: Int { calorieAverageResult.macros.calories }
 
     private var calorieSection: some View {
         progressCard(title: "Calorias") {
             HStack {
                 Spacer()
                 if !dailyCalories.isEmpty {
-                    Text("Média: \(calorieAvg) kcal")
-                        .font(.system(.subheadline, design: .rounded, weight: .medium))
-                        .foregroundStyle(.secondary)
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Text("Média: \(calorieAvg) kcal")
+                            .font(.system(.subheadline, design: .rounded, weight: .medium))
+                            .foregroundStyle(.secondary)
+                        if calorieAverageResult.basis != .none {
+                            Text(calorieAverageResult.basis.shortDescription)
+                                .font(.system(.caption2, design: .rounded))
+                                .foregroundStyle(.tertiary)
+                        }
+                    }
                 }
             }
 
@@ -214,23 +240,33 @@ struct NutritionProgressView: View {
 
     // MARK: - Macro averages
 
+    private var macroAverageResult: NutritionAverageResult {
+        NutritionAveragesService.average(
+            for: Date(),
+            dayMacros: completedMacrosInRange
+        )
+    }
+
     private var macroAverages: (protein: Int, carbs: Int, fat: Int) {
-        let totals = bucketFoodByDayMacros()
-        let daysWithFood = totals.filter { $0.calories > 0 }.count
-        guard daysWithFood > 0 else { return (0, 0, 0) }
-        let totalP = totals.reduce(0.0) { $0 + $1.protein }
-        let totalC = totals.reduce(0.0) { $0 + $1.carbs }
-        let totalF = totals.reduce(0.0) { $0 + $1.fat }
+        let m = macroAverageResult.macros
         return (
-            protein: Int((totalP / Double(daysWithFood)).rounded()),
-            carbs: Int((totalC / Double(daysWithFood)).rounded()),
-            fat: Int((totalF / Double(daysWithFood)).rounded())
+            protein: Int(m.protein.rounded()),
+            carbs: Int(m.carbs.rounded()),
+            fat: Int(m.fat.rounded())
         )
     }
 
     private var macroAveragesSection: some View {
         progressCard(title: "Média de macros") {
             let avg = macroAverages
+            HStack {
+                Spacer()
+                if macroAverageResult.basis != .none {
+                    Text(macroAverageResult.basis.shortDescription)
+                        .font(.system(.caption2, design: .rounded))
+                        .foregroundStyle(.tertiary)
+                }
+            }
             macroRow(
                 label: "Proteína",
                 current: avg.protein,
@@ -281,32 +317,45 @@ struct NutritionProgressView: View {
         let entriesInRange = allFoodEntries.filter { $0.timestamp >= range.startDate }
         let totalEntries = entriesInRange.count
 
-        let byDay = Dictionary(grouping: entriesInRange, by: {
-            Calendar.current.startOfDay(for: $0.timestamp)
-        })
+        // Sequências e dias-na-meta agora consideram apenas dias **concluídos**.
+        let calendar = Calendar.current
+        let completedDays = Set(
+            allDayLogs
+                .filter { $0.isCompleted }
+                .map { calendar.startOfDay(for: $0.dayStart) }
+        )
+
+        // Dias na meta (±10% de calorias) restritos a dias concluídos no range.
         let goal = profile?.effectiveCalories ?? 0
         let daysOnTarget: Int = {
             guard goal > 0 else { return 0 }
-            return byDay.values.count(where: { dayEntries in
-                let cals = dayEntries.reduce(0) { $0 + $1.calories }
-                let diff = abs(cals - goal)
-                return diff <= max(100, goal / 10)
-            })
+            let entriesByDay = Dictionary(grouping: entriesInRange, by: { calendar.startOfDay(for: $0.timestamp) })
+            return completedDays
+                .filter { $0 >= range.startDate }
+                .count(where: { day in
+                    let cals = (entriesByDay[day] ?? []).reduce(0) { $0 + $1.calories }
+                    let diff = abs(cals - goal)
+                    return diff <= max(100, goal / 10)
+                })
         }()
 
-        // Sequência a partir de hoje contando dias consecutivos com pelo menos 1 registro.
-        let calendar = Calendar.current
-        let loggedDays = Set(allFoodEntries.map { calendar.startOfDay(for: $0.timestamp) })
+        // Sequência atual: dias concluídos consecutivos terminando em hoje (ou ontem se hoje ainda não foi concluído).
         var streak = 0
         var cursor = calendar.startOfDay(for: Date())
-        while loggedDays.contains(cursor) {
+        if !completedDays.contains(cursor) {
+            // permite contar até ontem
+            if let prev = calendar.date(byAdding: .day, value: -1, to: cursor) {
+                cursor = prev
+            }
+        }
+        while completedDays.contains(cursor) {
             streak += 1
             guard let prev = calendar.date(byAdding: .day, value: -1, to: cursor) else { break }
             cursor = prev
         }
 
-        // Melhor sequência: varre todos os dias registrados.
-        let sortedDays = loggedDays.sorted()
+        // Melhor sequência: varre todos os dias concluídos.
+        let sortedDays = completedDays.sorted()
         var best = 0
         var run = 0
         var previous: Date?
@@ -383,6 +432,162 @@ struct NutritionProgressView: View {
             .multilineTextAlignment(.center)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 28)
+    }
+
+    // MARK: - Estimate header & insight
+
+    /// Card destacado no topo da página: traz o ícone qualitativo
+    /// (`NutritionScore`) referente à média do período + título e mensagem
+    /// detalhada sobre o estado do usuário.
+    @ViewBuilder
+    private var scoreHeaderSection: some View {
+        if let profile, profile.effectiveCalories > 0 {
+            let goal = profile.effectiveCalories
+            let distances = completedMacrosInRange.values.map { day in
+                NutritionScore.dayDistanceValue(consumed: day.calories, goal: goal)
+            }
+            let sample = distances.count
+            let score = NutritionScore.forPeriod(distances: distances)
+
+            HStack(alignment: .center, spacing: 10) {
+                Image(systemName: score.systemImage)
+                    .font(.system(size: 22, weight: .semibold))
+                    .foregroundStyle(score.tint)
+                    .symbolRenderingMode(.hierarchical)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(score.title)
+                        .font(.system(.title3, design: .rounded, weight: .bold))
+                    Text(scoreDetail(score: score, sample: sample, goal: goal))
+                        .font(.system(.footnote, design: .rounded))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(14)
+            .background(
+                RoundedRectangle(cornerRadius: 18)
+                    .fill(score.tint.opacity(0.08))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 18)
+                    .stroke(score.tint.opacity(0.20), lineWidth: 1)
+            )
+            .padding(.horizontal, 16)
+        }
+    }
+
+    private func scoreDetail(score: NutritionScore, sample: Int, goal: Int) -> String {
+        guard sample > 0 else {
+            return "Conclua pelo menos um dia para eu calcular uma média e te mostrar uma leitura mais fiel do seu progresso."
+        }
+        let avg = calorieAvg
+        let diff = avg - goal
+        let absDiff = abs(diff)
+        let basis = "a média dos seus \(sample) dia\(sample == 1 ? "" : "s") concluído\(sample == 1 ? "" : "s") no período"
+        switch score {
+        case .noData:
+            return "Conclua pelo menos um dia para eu calcular uma média e te mostrar uma leitura mais fiel do seu progresso."
+        case .excellent:
+            return "Sua média (\(avg) kcal) está bem próxima da meta de \(goal). Aqui estou olhando para \(basis)."
+        case .good:
+            if diff == 0 { return "Sua média (\(avg) kcal) está alinhada à meta. Aqui estou olhando para \(basis)." }
+            let dir = diff > 0 ? "acima" : "abaixo"
+            return "Sua média (\(avg) kcal) está \(absDiff) kcal \(dir) da meta. Continue assim. Aqui estou olhando para \(basis)."
+        case .average:
+            let dir = diff > 0 ? "acima" : "abaixo"
+            return "Sua média (\(avg) kcal) está \(absDiff) kcal \(dir) da meta. Pequenos ajustes ajudam a aproximar. Aqui estou olhando para \(basis)."
+        case .needsImprovement:
+            let dir = diff > 0 ? "acima" : "abaixo"
+            return "Sua média (\(avg) kcal) está \(absDiff) kcal \(dir) da meta — vale revisar porções e horários. Aqui estou olhando para \(basis)."
+        }
+    }
+
+    /// Cabeçalho que reforça que o número apresentado é uma **estimativa** baseada
+    @ViewBuilder
+    private var estimateHeader: some View {
+        let sample = macroAverageResult.basis.sampleSize
+        let copy: String = {
+            if sample == 0 {
+                return "Ainda não tenho uma média para te mostrar por aqui. Assim que você concluir um dia de registro, eu passo a calcular essa estimativa com base nos dias fechados por você."
+            }
+            return "Os valores desta página são uma média tirada dos seus \(sample) dia\(sample == 1 ? "" : "s") concluído\(sample == 1 ? "" : "s"). Em outras palavras: só entram na conta os dias que você fechou, para a estimativa ficar mais fiel ao seu ritmo."
+        }()
+
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "info.circle")
+                .foregroundStyle(.tertiary)
+                .font(.system(size: 14))
+            Text(copy)
+                .font(.system(.footnote, design: .rounded))
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 16)
+    }
+
+    /// Card final com mensagem condicional sobre como o usuário está em relação à meta.
+    /// Aparece após o card de hábitos e usa o accent de Nutrição.
+    @ViewBuilder
+    private var statusInsightSection: some View {
+        if let profile, profile.effectiveCalories > 0, macroAverageResult.basis != .none {
+            let goal = profile.effectiveCalories
+            let avg = calorieAvg
+            let diff = avg - goal
+            let pct = Double(abs(diff)) / Double(goal)
+            let sample = calorieAverageResult.basis.sampleSize
+
+            let (icon, tint, title, message): (String, Color, String, String) = {
+                if sample < 3 {
+                    return (
+                        "lightbulb.fill",
+                        Color.yellow,
+                        "Ainda poucos dados",
+                        "Conclua mais dias para eu montar uma média mais estável e confiável."
+                    )
+                }
+                if pct <= 0.10 {
+                    return (
+                        "checkmark.seal.fill",
+                        PageTheme.nutrients.accentColor,
+                        "Você está dentro da meta",
+                        "Sua média está próxima do alvo (\(goal) kcal). Continue assim — consistência é o que importa."
+                    )
+                }
+                if diff > 0 {
+                    return (
+                        "arrow.up.right.circle.fill",
+                        Color.orange,
+                        "Acima da meta em média",
+                        "Considerando a média dos seus dias concluídos, você está consumindo cerca de \(diff) kcal acima da meta. Pequenos ajustes nas porções podem aproximar do objetivo."
+                    )
+                }
+                return (
+                    "arrow.down.right.circle.fill",
+                    Color.blue,
+                    "Abaixo da meta em média",
+                    "Considerando a média dos seus dias concluídos, você está cerca de \(-diff) kcal abaixo da meta. Atenção a sinais de baixa energia."
+                )
+            }()
+
+            progressCard(title: "Como você está") {
+                HStack(alignment: .top, spacing: 12) {
+                    Image(systemName: icon)
+                        .font(.system(size: 20, weight: .medium))
+                        .foregroundStyle(tint)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(title)
+                            .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        Text(message)
+                            .font(.system(.footnote, design: .rounded))
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer(minLength: 0)
+                }
+            }
+        }
     }
 
     // MARK: - Bucketing helpers

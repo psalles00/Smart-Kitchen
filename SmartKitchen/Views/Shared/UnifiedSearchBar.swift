@@ -218,6 +218,11 @@ struct UnifiedSearchBar: View {
                 presentNutritionSheet(.recents)
             }
         }
+        Section("Registros Manuais") {
+            Button("Registrar manualmente", systemImage: "square.and.pencil") {
+                presentNutritionSheet(.manual())
+            }
+        }
         Section("Registrar por…") {
             Button("Rótulo", systemImage: "doc.text.viewfinder") {
                 presentNutritionSheet(.captureLabel)
@@ -247,6 +252,11 @@ struct UnifiedSearchBar: View {
             }
             Button("Alimentos salvos", systemImage: "clock.arrow.circlepath") {
                 presentNutritionSheet(.recents)
+            }
+        }
+        Section("Registros Manuais") {
+            Button("Registrar manualmente", systemImage: "square.and.pencil") {
+                presentNutritionSheet(.manual())
             }
         }
         Section("Registrar por…") {

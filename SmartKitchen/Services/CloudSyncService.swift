@@ -45,6 +45,7 @@ final class CloudSyncService: @unchecked Sendable {
         NutritionProfile.self,
         FoodEntry.self,
         WeightEntry.self,
+        NutritionDayLog.self,
     ])
 
     static let cloudKitContainerID = "iCloud.com.pedrosalles.smartkitchen.sync"
@@ -658,7 +659,7 @@ final class CloudSyncService: @unchecked Sendable {
     private static func makeContainer(usingCloudKit: Bool) throws -> ModelContainer {
         let privateSchema = Schema([
             AppSettings.self, ChatMessage.self, ChatConversation.self,
-            NutritionProfile.self, FoodEntry.self, WeightEntry.self,
+            NutritionProfile.self, FoodEntry.self, WeightEntry.self, NutritionDayLog.self,
         ])
         let sharedSchema = Schema([
             UnifiedItem.self, PantryItem.self, GroceryItem.self, UtensilItem.self, Category.self, DeletedDefaultCategory.self,
@@ -717,7 +718,7 @@ final class CloudSyncService: @unchecked Sendable {
 
         let privateSchema = Schema([
             AppSettings.self, ChatMessage.self, ChatConversation.self,
-            NutritionProfile.self, FoodEntry.self, WeightEntry.self,
+            NutritionProfile.self, FoodEntry.self, WeightEntry.self, NutritionDayLog.self,
         ])
         let sharedSchema = Schema([
             UnifiedItem.self, PantryItem.self, GroceryItem.self, UtensilItem.self, Category.self, DeletedDefaultCategory.self,

@@ -349,6 +349,11 @@ struct ContentView: View {
             pendingOpenChat = true
             searchBarState.reveal(mode: .aiChat)
         }
+        .onReceive(NotificationCenter.default.publisher(for: .openNutritionAtDate)) { _ in
+            // The date itself is consumed by `NutrientsView`; here we only need
+            // to switch the active tab so that view comes into focus.
+            if selectedTab != .nutrients { selectedTab = .nutrients }
+        }
         #if os(iOS)
         .forceLightStatusBar()
         #endif
@@ -987,6 +992,15 @@ struct ContentView: View {
         if let newTheme = newValue.pageTheme, newTheme != displayedBgTheme {
             displayedBgTheme = newTheme
         }
+
+        // Ao entrar na aba Nutrição, sempre voltar para o dia de hoje.
+        if newValue == .nutrients {
+            NotificationCenter.default.post(
+                name: .openNutritionAtDate,
+                object: nil,
+                userInfo: ["date": Calendar.current.startOfDay(for: .now)]
+            )
+        }
     }
 
     private func handleCommandBarAction(_ action: CommandBarAction) {
@@ -1390,6 +1404,7 @@ private struct HomeView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 32) {
                         actionDeck
+                        PendingNutritionDaysCard()
                         if !expiringItemsState.isEmpty {
                             expiringSection
                         }
@@ -2221,6 +2236,11 @@ private struct HomeView: View {
             }
             Button("Alimentos salvos", systemImage: "clock.arrow.circlepath") {
                 searchBarState.pendingNutritionSheet = .recents
+            }
+        }
+        Section("Registros Manuais") {
+            Button("Registrar manualmente", systemImage: "square.and.pencil") {
+                searchBarState.pendingNutritionSheet = .manual()
             }
         }
         Section("Registrar por…") {

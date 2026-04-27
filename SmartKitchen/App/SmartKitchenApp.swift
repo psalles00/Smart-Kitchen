@@ -18,6 +18,9 @@ extension Notification.Name {
     /// Posted when the user taps the AI Chat widget. Reveals the fullscreen assistant
     /// in AI chat mode (conversation interface, keyboard open).
     static let openAIChatFromWidget = Notification.Name("com.smartkitchen.openAIChatFromWidget")
+    /// Posted when the user taps a pending day on the Home page.
+    /// `userInfo["date"]` carries the `Date` (startOfDay) to focus on Nutrição.
+    static let openNutritionAtDate = Notification.Name("com.smartkitchen.openNutritionAtDate")
 }
 
 // MARK: - App Delegate for CloudKit Share Acceptance

@@ -490,5 +490,5 @@ struct NutritionOnboardingView: View {
 
 #Preview {
     NutritionOnboardingView()
-        .modelContainer(for: [NutritionProfile.self, WeightEntry.self, FoodEntry.self], inMemory: true)
+        .modelContainer(for: [NutritionProfile.self, WeightEntry.self, FoodEntry.self, NutritionDayLog.self], inMemory: true)
 }

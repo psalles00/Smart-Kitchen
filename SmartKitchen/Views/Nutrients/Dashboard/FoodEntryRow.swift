@@ -40,7 +40,7 @@ struct FoodEntryRow: View {
         }
         .padding(.vertical, 6)
         .padding(.horizontal, 10)
-        .background(.thickMaterial, in: .rect(cornerRadius: 12))
+        .contentShape(.rect(cornerRadius: 12))
     }
 
     @ViewBuilder

@@ -11,6 +11,7 @@ struct NutrientsView: View {
 
     @Query(sort: \NutritionProfile.createdAt, order: .forward) private var profiles: [NutritionProfile]
     @Query(sort: \FoodEntry.timestamp, order: .reverse) private var allEntries: [FoodEntry]
+    @Query(sort: \NutritionDayLog.dayStart, order: .reverse) private var allDayLogs: [NutritionDayLog]
 
     @State private var selectedDate: Date = Calendar.current.startOfDay(for: .now)
     @State private var showOnboarding = false
@@ -79,6 +80,13 @@ struct NutrientsView: View {
                                         Label("Alimentos salvos", systemImage: "clock.arrow.circlepath")
                                     }
                                 }
+                                Section("Registros Manuais") {
+                                    Button {
+                                        activeEntrySheet = .manual()
+                                    } label: {
+                                        Label("Registrar manualmente", systemImage: "square.and.pencil")
+                                    }
+                                }
                                 Section("Registrar por…") {
                                     Button {
                                         activeEntrySheet = .captureLabel
@@ -119,6 +127,7 @@ struct NutrientsView: View {
                     NutritionDashboardView(
                         profile: profile,
                         allEntries: allEntries,
+                        allDayLogs: allDayLogs,
                         selectedDate: $selectedDate,
                         onTapEntry: { entry in
                             editingEntry = entry
@@ -135,7 +144,10 @@ struct NutrientsView: View {
             infoContent: {
                 NutrientsInfoContent(
                     profile: profile,
-                    caloriesToday: caloriesToday
+                    selectedDate: selectedDate,
+                    selectedDayState: selectedDayState,
+                    caloriesConsumed: caloriesForSelectedDate,
+                    onTapScore: { pushProgress = true }
                 )
             }
         )
@@ -147,6 +159,11 @@ struct NutrientsView: View {
         .onChange(of: profiles.count) { _, _ in presentOnboardingIfNeeded() }
         .onChange(of: scrollToTopTrigger) { _, _ in
             selectedDate = Calendar.current.startOfDay(for: .now)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .openNutritionAtDate)) { note in
+            if let date = note.userInfo?["date"] as? Date {
+                selectedDate = Calendar.current.startOfDay(for: date)
+            }
         }
         .sheet(isPresented: $showOnboarding) {
             NutritionOnboardingView()
@@ -182,6 +199,21 @@ struct NutrientsView: View {
         return allEntries
             .filter { Calendar.current.isDate($0.timestamp, inSameDayAs: today) }
             .reduce(0) { $0 + $1.calories }
+    }
+
+    private var caloriesForSelectedDate: Int {
+        allEntries
+            .filter { Calendar.current.isDate($0.timestamp, inSameDayAs: selectedDate) }
+            .reduce(0) { $0 + $1.calories }
+    }
+
+    private var selectedDayState: NutritionDayState {
+        NutritionDayLogStore.state(
+            for: selectedDate,
+            entries: allEntries,
+            logs: allDayLogs,
+            calendar: .current
+        )
     }
 
     // MARK: - Empty state
