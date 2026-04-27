@@ -30,6 +30,9 @@ targets:
       properties:
         OpenAIAPIKey: $(OPENAI_API_KEY)
         OpenRouterAPIKey: $(OPENROUTER_API_KEY)
+        ExaAPIKey: $(EXA_API_KEY)
+        SupabaseURL: $(SUPABASE_URL)
+        SupabaseAnonKey: $(SUPABASE_ANON_KEY)
         UIAppFonts:
           - PlayfairDisplay.ttf
           - PlayfairDisplay-Italic.ttf

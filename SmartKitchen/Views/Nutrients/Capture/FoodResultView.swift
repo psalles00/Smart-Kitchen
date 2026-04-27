@@ -86,6 +86,12 @@ struct FoodResultView: View {
                         }
                     }
                 }
+
+                if let ids = analysis.cachedFoodIDs, !ids.isEmpty {
+                    Section {
+                        FoodCacheVoteView(foodIDs: ids)
+                    }
+                }
             }
             .scrollDismissesKeyboard(.interactively)
             .modalNavigationTitle("Revisar refeição")

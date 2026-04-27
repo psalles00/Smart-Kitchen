@@ -21,6 +21,11 @@ struct FoodAnalysis: Sendable {
     var cholesterolMg: Double?
     var sodiumMg: Double?
     var potassiumMg: Double?
+
+    /// IDs das entradas no `FoodCache` (Supabase) que compuseram esta análise.
+    /// Usado pelo botão de thumbs up/down para registrar votos. `nil` para
+    /// análises legacy (foto, rótulo, ou quando o cache está desabilitado).
+    var cachedFoodIDs: [UUID]? = nil
 }
 
 /// Rótulo nutricional lido por imagem — valores por 100 g/ml.

@@ -28,23 +28,42 @@ final class NutritionAIService {
 
     private let ai = AIService()
     private let openRouter = OpenRouterClient()
+    private let exa = ExaNutritionLookup()
+    private let parser = NutritionItemParser()
+    private let cache = FoodCache.shared
     private let visionModel = "gpt-4o-mini"
     private let textModel = "gpt-4.1-mini"
 
     // MARK: - Public API
 
+    /// Text-based nutrition analysis. Pipeline:
+    /// 1. Parse `description` into discrete items (`{name, qty, unit}`).
+    /// 2. For each item: Supabase cache → Exa `/answer` → LLM fallback.
+    /// 3. Cache hits/misses are written back to Supabase (write-through).
+    /// 4. `NutritionCalculator` does the final scaling+sum in pure Swift.
     func analyzeText(description: String) async throws -> FoodAnalysis {
-        let prompt = """
-        Estimate the nutritional content for: \(description)
-        Parse any quantities, brands, and multiple items from the text. If a brand is mentioned, use that brand's known nutritional data. If multiple items are described, sum up the total nutrition.
-        Respond ONLY with JSON:
-        {"name":"...","calories":0,"protein":0,"carbs":0,"fat":0,"serving_size_grams":0.0,"emoji":"🍽️","sugar":0.0,"added_sugar":0.0,"fiber":0.0,"saturated_fat":0.0,"monounsaturated_fat":0.0,"polyunsaturated_fat":0.0,"cholesterol":0.0,"sodium":0.0,"potassium":0.0}
-        Calories/protein/carbs/fat are integers. serving_size_grams is the estimated total weight in grams. Micronutrients are numbers (sugar/fiber/sat fat/mono fat/poly fat in grams, cholesterol/sodium/potassium in milligrams).
-        Include a single food emoji that best represents the food. Use null for any nutrient you cannot estimate.
-        Respond in Brazilian Portuguese for the "name" field when possible.
-        """
-        let raw = try await callText(prompt: prompt)
-        return try Self.parseFoodAnalysis(from: raw)
+        let trimmed = description.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { throw NutritionAIError.emptyResponse }
+
+        // 1. Parse into items.
+        let parsed: [NutritionItemParser.ParsedItem]
+        do {
+            parsed = try await parser.parse(trimmed)
+        } catch {
+            // If even parsing fails, fall back to the legacy single-shot LLM
+            // estimate so the user still gets *something*.
+            LLMLog.error("Nutrition parse failed, using legacy LLM: \(error.localizedDescription)")
+            return try await legacyLLMEstimate(description: trimmed)
+        }
+        guard !parsed.isEmpty else { return try await legacyLLMEstimate(description: trimmed) }
+
+        // 2. Resolve per-100g for each item.
+        let (resolved, ids) = await resolvePer100g(for: parsed)
+
+        // 3. Combine via pure Swift.
+        var combined = NutritionCalculator.combine(items: resolved, originalDescription: trimmed)
+        combined.cachedFoodIDs = ids.isEmpty ? nil : ids
+        return combined
     }
 
     func analyzeFoodImage(imageData: Data, description: String? = nil) async throws -> FoodAnalysis {
@@ -83,6 +102,161 @@ final class NutritionAIService {
     }
 
     // MARK: - Networking primitives
+
+    /// Resolves per-100g data for each parsed item, going cache → Exa → LLM.
+    /// Successful Exa or LLM lookups are written back to Supabase and the
+    /// returned IDs are surfaced so the UI can attach votes.
+    private func resolvePer100g(
+        for items: [NutritionItemParser.ParsedItem]
+    ) async -> (resolved: [NutritionCalculator.Resolved], ids: [UUID]) {
+        var slots: [Per100gNutrition?] = Array(repeating: nil, count: items.count)
+        var pendingExa: [(index: Int, name: String)] = []
+
+        // 1. Cache lookup (sequential — Supabase REST is fast enough for small N).
+        for (i, item) in items.enumerated() {
+            let canonical = FoodCache.canonicalize(item.name)
+            if let hit = await cache.lookup(canonicalName: canonical) {
+                slots[i] = hit
+            } else {
+                pendingExa.append((i, item.name))
+            }
+        }
+
+        // 2. Exa batch for the misses.
+        if !pendingExa.isEmpty {
+            let names = pendingExa.map { $0.name }
+            do {
+                let exaResults = try await exa.fetchPer100g(for: names)
+                for (offset, exaItem) in exaResults.enumerated() {
+                    let slot = pendingExa[offset].index
+                    if exaItem.hasMacros {
+                        var copy = exaItem
+                        if cache.isEnabled {
+                            do {
+                                let id = try await cache.upsert(exaItem)
+                                copy.id = id
+                            } catch {
+                                LLMLog.error("FoodCache upsert (exa) failed: \(error.localizedDescription)")
+                            }
+                        }
+                        slots[slot] = copy
+                    }
+                }
+            } catch {
+                LLMLog.error("Exa batch failed: \(error.localizedDescription)")
+            }
+        }
+
+        // 3. LLM fallback for any remaining empty/incomplete slots.
+        for (i, item) in items.enumerated() where slots[i]?.hasMacros != true {
+            if let llmEntry = await llmPer100gEstimate(for: item) {
+                var copy = llmEntry
+                if cache.isEnabled {
+                    do {
+                        let id = try await cache.upsert(llmEntry)
+                        copy.id = id
+                    } catch {
+                        LLMLog.error("FoodCache upsert (llm) failed: \(error.localizedDescription)")
+                    }
+                }
+                slots[i] = copy
+            }
+        }
+
+        // Build Resolved list, dropping items we couldn't resolve at all.
+        var resolved: [NutritionCalculator.Resolved] = []
+        var ids: [UUID] = []
+        for (i, item) in items.enumerated() {
+            if let p = slots[i], p.hasMacros {
+                resolved.append(NutritionCalculator.Resolved(item: item, per100g: p))
+                if let id = p.id { ids.append(id) }
+            }
+        }
+        return (resolved, ids)
+    }
+
+    /// Single-item per-100g estimate via LLM (Gemini 3 Flash via OpenRouter or
+    /// OpenAI, depending on `AIService` routing). Used when cache and Exa miss.
+    private func llmPer100gEstimate(
+        for item: NutritionItemParser.ParsedItem
+    ) async -> Per100gNutrition? {
+        let prompt = """
+        Estime os valores nutricionais por 100g para o alimento abaixo. Considere \
+        valores típicos brasileiros se aplicável. Responda APENAS com JSON:
+        {"display_name":"...","kcal_per_100g":0,"protein_per_100g":0,"carbs_per_100g":0,"fat_per_100g":0,"sugar_per_100g":null,"added_sugar_per_100g":null,"fiber_per_100g":null,"saturated_fat_per_100g":null,"monounsaturated_fat_per_100g":null,"polyunsaturated_fat_per_100g":null,"cholesterol_per_100g":null,"sodium_per_100g":null,"potassium_per_100g":null,"emoji":"🍽️"}
+        macros em g, micros em g (sat/mono/poly/sugar/fiber) ou mg (cholesterol/sodium/potassium).
+        Use null para o que não souber estimar com confiança.
+
+        Alimento: \(item.name)
+        """
+        let messages: [[String: Any]] = [["role": "user", "content": prompt]]
+        do {
+            let response = try await ai.sendChat(messages: messages, apiKey: APIConfig.openAIAPIKey)
+            guard let content = response.content, !content.isEmpty else { return nil }
+            return Self.parsePer100g(rawJSON: content, name: item.name)
+        } catch {
+            LLMLog.error("LLM per-100g failed for \(item.name): \(error.localizedDescription)")
+            return nil
+        }
+    }
+
+    /// Parses the per-100g JSON object emitted by the LLM fallback prompt.
+    private static func parsePer100g(rawJSON: String, name: String) -> Per100gNutrition? {
+        let cleaned = extractJSON(from: rawJSON)
+        guard let data = cleaned.data(using: .utf8),
+              let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return nil
+        }
+        func d(_ key: String) -> Double? {
+            if let v = obj[key] as? Double { return v }
+            if let v = obj[key] as? Int { return Double(v) }
+            return nil
+        }
+        guard let kcal = d("kcal_per_100g"),
+              let protein = d("protein_per_100g"),
+              let carbs = d("carbs_per_100g"),
+              let fat = d("fat_per_100g") else {
+            return nil
+        }
+        return Per100gNutrition(
+            canonicalName: FoodCache.canonicalize(name),
+            locale: "pt-BR",
+            displayName: (obj["display_name"] as? String) ?? name,
+            kcal: kcal, protein: protein, carbs: carbs, fat: fat,
+            sugar: d("sugar_per_100g"),
+            addedSugar: d("added_sugar_per_100g"),
+            fiber: d("fiber_per_100g"),
+            saturatedFat: d("saturated_fat_per_100g"),
+            monounsaturatedFat: d("monounsaturated_fat_per_100g"),
+            polyunsaturatedFat: d("polyunsaturated_fat_per_100g"),
+            cholesterol: d("cholesterol_per_100g"),
+            sodium: d("sodium_per_100g"),
+            potassium: d("potassium_per_100g"),
+            emoji: obj["emoji"] as? String,
+            source: "llm",
+            citationURL: nil,
+            id: nil,
+            upvotes: 0,
+            downvotes: 0
+        )
+    }
+
+    /// Last-ditch fallback when even item parsing fails: fire the original
+    /// single-shot prompt and return its `FoodAnalysis` directly. Preserves
+    /// pre-Exa behavior for pathological inputs.
+    private func legacyLLMEstimate(description: String) async throws -> FoodAnalysis {
+        let prompt = """
+        Estimate the nutritional content for: \(description)
+        Parse any quantities, brands, and multiple items from the text. If a brand is mentioned, use that brand's known nutritional data. If multiple items are described, sum up the total nutrition.
+        Respond ONLY with JSON:
+        {"name":"...","calories":0,"protein":0,"carbs":0,"fat":0,"serving_size_grams":0.0,"emoji":"🍽️","sugar":0.0,"added_sugar":0.0,"fiber":0.0,"saturated_fat":0.0,"monounsaturated_fat":0.0,"polyunsaturated_fat":0.0,"cholesterol":0.0,"sodium":0.0,"potassium":0.0}
+        Calories/protein/carbs/fat are integers. serving_size_grams is the estimated total weight in grams. Micronutrients are numbers (sugar/fiber/sat fat/mono fat/poly fat in grams, cholesterol/sodium/potassium in milligrams).
+        Include a single food emoji that best represents the food. Use null for any nutrient you cannot estimate.
+        Respond in Brazilian Portuguese for the "name" field when possible.
+        """
+        let raw = try await callText(prompt: prompt)
+        return try Self.parseFoodAnalysis(from: raw)
+    }
 
     private func callText(prompt: String) async throws -> String {
         // AIService already routes OpenAI → OpenRouter on failure; just delegate.
