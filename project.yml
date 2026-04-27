@@ -15,6 +15,9 @@ targets:
   SmartKitchen:
     type: application
     supportedDestinations: [iOS, macOS]
+    configFiles:
+      Debug: Config/Secrets.xcconfig
+      Release: Config/Secrets.xcconfig
     sources:
       - path: SmartKitchen
         excludes:
@@ -25,6 +28,8 @@ targets:
     info:
       path: SmartKitchen/Resources/Info.plist
       properties:
+        OpenAIAPIKey: $(OPENAI_API_KEY)
+        OpenRouterAPIKey: $(OPENROUTER_API_KEY)
         UIAppFonts:
           - PlayfairDisplay.ttf
           - PlayfairDisplay-Italic.ttf

@@ -2,24 +2,64 @@ import Foundation
 import SwiftData
 
 /// Lightweight OpenAI Chat-Completions client with streaming & function-calling support.
+///
+/// Falls back automatically to OpenRouter (`google/gemini-3-flash` by default) when
+/// OpenAI fails for any reason — missing key, network error, 4xx/5xx, rate limit.
+/// Apple Intelligence is NOT used here because the chat path requires tool/function
+/// calling, which `FoundationModels` does not expose.
 @MainActor
 final class AIService: ObservableObject {
     @Published var isLoading = false
 
     private let endpoint = URL(string: "https://api.openai.com/v1/chat/completions")!
     private let model = "gpt-4.1-mini"
+    private let openRouter = OpenRouterClient()
 
     // MARK: - Public
 
     /// Send messages (with optional tools) and receive a streamed or non-streamed reply.
     /// Returns the assistant's content and any tool-call requests.
+    ///
+    /// - Note: `apiKey` is treated as the OpenAI key. If empty or if OpenAI fails for
+    /// any reason, this method transparently falls back to OpenRouter using the key
+    /// configured in `APIConfig.openRouterAPIKey`.
     func sendChat(
         messages: [[String: Any]],
         tools: [[String: Any]]? = nil,
         apiKey: String
     ) async throws -> ChatCompletionResponse {
-        guard !apiKey.isEmpty else { throw AIError.missingAPIKey }
+        isLoading = true
+        defer { isLoading = false }
 
+        // 1. Try OpenAI (if a key is configured).
+        if !apiKey.isEmpty {
+            do {
+                return try await sendChatOpenAI(messages: messages, tools: tools, apiKey: apiKey)
+            } catch {
+                LLMLog.error("OpenAI chat failed, falling back to OpenRouter: \(error.localizedDescription)")
+                // fall through to OpenRouter
+            }
+        } else {
+            LLMLog.info("OpenAI key empty; trying OpenRouter directly")
+        }
+
+        // 2. Try OpenRouter.
+        let orKey = APIConfig.openRouterAPIKey
+        guard !orKey.isEmpty else {
+            // No fallback key configured — surface the original error semantics.
+            throw AIError.missingAPIKey
+        }
+        LLMLog.info("Routing chat to OpenRouter (\(OpenRouterModel.default))")
+        return try await openRouter.sendChat(messages: messages, tools: tools, apiKey: orKey)
+    }
+
+    // MARK: - OpenAI implementation
+
+    private func sendChatOpenAI(
+        messages: [[String: Any]],
+        tools: [[String: Any]]?,
+        apiKey: String
+    ) async throws -> ChatCompletionResponse {
         var body: [String: Any] = [
             "model": model,
             "messages": messages
@@ -37,9 +77,6 @@ final class AIService: ObservableObject {
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.httpBody = data
         request.timeoutInterval = 60
-
-        isLoading = true
-        defer { isLoading = false }
 
         let (responseData, httpResponse) = try await URLSession.shared.data(for: request)
 

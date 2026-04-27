@@ -43,6 +43,10 @@
 	<string>O Smart Kitchen acessa a galeria para anexar fotos às suas receitas.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>O Smart Kitchen usa reconhecimento de voz para transcrever o que você falou sobre sua refeição.</string>
+	<key>OpenAIAPIKey</key>
+	<string>$(OPENAI_API_KEY)</string>
+	<key>OpenRouterAPIKey</key>
+	<string>$(OPENROUTER_API_KEY)</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>PlayfairDisplay.ttf</string>

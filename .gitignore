@@ -1,6 +1,9 @@
 # Xcode
 build/
 DerivedData/
+
+# Secrets (API keys injected via xcconfig → Info.plist)
+Config/Secrets.xcconfig
 *.xcodeproj/xcuserdata/
 *.xcworkspace/xcuserdata/
 xcuserdata/

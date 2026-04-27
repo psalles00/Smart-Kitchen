@@ -94,10 +94,11 @@ final class AssistantChatManager: ObservableObject {
         allRecipes: [Recipe]
     ) async {
         let apiKey = APIConfig.openAIAPIKey
-        guard !apiKey.isEmpty else {
+        // OK if OpenAI key is empty, as long as we have an OpenRouter fallback.
+        if apiKey.isEmpty && APIConfig.openRouterAPIKey.isEmpty {
             let errorMsg = ChatMessage(
                 role: .assistant,
-                content: "⚠️ Chave de API não configurada. Vá em Ajustes para adicionar sua chave OpenAI."
+                content: "⚠️ Nenhuma chave de IA configurada. Configure OpenAI ou OpenRouter em Config/Secrets.xcconfig."
             )
             context.insert(errorMsg)
             return

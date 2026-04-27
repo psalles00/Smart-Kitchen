@@ -27,6 +27,7 @@ final class NutritionAIService {
     }
 
     private let ai = AIService()
+    private let openRouter = OpenRouterClient()
     private let visionModel = "gpt-4o-mini"
     private let textModel = "gpt-4.1-mini"
 
@@ -84,10 +85,8 @@ final class NutritionAIService {
     // MARK: - Networking primitives
 
     private func callText(prompt: String) async throws -> String {
+        // AIService already routes OpenAI → OpenRouter on failure; just delegate.
         let apiKey = APIConfig.openAIAPIKey
-        guard !apiKey.isEmpty else { throw NutritionAIError.missingAPIKey }
-
-        // Usa o AIService padrão; o modelo do AIService é gpt-4.1-mini (nosso default de texto).
         let messages: [[String: Any]] = [
             ["role": "user", "content": prompt]
         ]
@@ -100,14 +99,31 @@ final class NutritionAIService {
     }
 
     private func callVision(prompt: String, imageData: Data) async throws -> String {
-        let apiKey = APIConfig.openAIAPIKey
-        guard !apiKey.isEmpty else { throw NutritionAIError.missingAPIKey }
+        let openAIKey = APIConfig.openAIAPIKey
 
+        // 1. Try OpenAI vision (gpt-4o-mini).
+        if !openAIKey.isEmpty {
+            do {
+                return try await callVisionOpenAI(prompt: prompt, imageData: imageData, apiKey: openAIKey)
+            } catch {
+                LLMLog.error("OpenAI vision failed, falling back to OpenRouter: \(error.localizedDescription)")
+            }
+        } else {
+            LLMLog.info("OpenAI key empty; trying OpenRouter for vision directly")
+        }
+
+        // 2. Fallback: OpenRouter (multimodal model).
+        let orKey = APIConfig.openRouterAPIKey
+        guard !orKey.isEmpty else { throw NutritionAIError.missingAPIKey }
+        LLMLog.info("Routing vision to OpenRouter (\(OpenRouterModel.default))")
+        return try await openRouter.analyzeImage(prompt: prompt, imageData: imageData, apiKey: orKey)
+    }
+
+    private func callVisionOpenAI(prompt: String, imageData: Data, apiKey: String) async throws -> String {
         let b64 = imageData.base64EncodedString()
         let dataURL = "data:image/jpeg;base64,\(b64)"
 
-        // Chamada HTTP direta (AIService usa modelo fixo; aqui precisamos gpt-4o-mini).
-        var body: [String: Any] = [
+        let body: [String: Any] = [
             "model": visionModel,
             "messages": [[
                 "role": "user",
@@ -118,7 +134,6 @@ final class NutritionAIService {
             ]],
             "max_tokens": 1024
         ]
-        _ = body
 
         let url = URL(string: "https://api.openai.com/v1/chat/completions")!
         var request = URLRequest(url: url)
