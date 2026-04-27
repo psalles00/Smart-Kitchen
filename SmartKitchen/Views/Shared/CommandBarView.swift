@@ -21,6 +21,7 @@ enum CommandBarAction {
     case addItem(prefill: String, iconFileName: String?, category: String?)
     case addRecipe(prefill: String)
     case addUtensil(prefill: String)
+    case registerFood(prefill: String)
     case askAssistant(prefill: String)
     case openAssistant
     case movePantryToGrocery(UUID)
@@ -285,6 +286,11 @@ struct CommandBarSearchContent: View {
             // Action buttons
             actionButtonsSection(query: trimmedQuery, isQuestion: isQuestion)
 
+            // Quick "Salvar alimento" shortcut
+            if !trimmedQuery.isEmpty && !isQuestion {
+                registerFoodRow(query: trimmedQuery)
+            }
+
             // Suggestions from item database
             if !searchService.suggestions.isEmpty && !isQuestion {
                 CommandBarSuggestionChips(
@@ -333,6 +339,39 @@ struct CommandBarSearchContent: View {
                     }
                 }
             }
+        }
+    }
+
+    @ViewBuilder
+    private func registerFoodRow(query: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Nutrição")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 16)
+
+            Button {
+                onAction(.registerFood(prefill: query))
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "fork.knife")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(PageTheme.nutrients.accentColor)
+                        .frame(width: 30, height: 30)
+                        .background(PageTheme.nutrients.accentColor.opacity(0.12), in: .rect(cornerRadius: 8))
+
+                    (Text("Salvar alimento ").foregroundStyle(.secondary)
+                     + Text("\u{201C}\(query)\u{201D}").foregroundStyle(.primary))
+                        .font(.subheadline)
+                        .lineLimit(1)
+
+                    Spacer()
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
         }
     }
 
@@ -556,6 +595,10 @@ struct CommandBarView: View {
 
             actionButtonsSection(query: trimmedQuery, isQuestion: isQuestion)
 
+            if !trimmedQuery.isEmpty && !isQuestion {
+                registerFoodRow(query: trimmedQuery)
+            }
+
             if !searchService.suggestions.isEmpty && !isQuestion {
                 CommandBarSuggestionChips(
                     suggestions: Array(searchService.suggestions.prefix(12)),
@@ -600,6 +643,40 @@ struct CommandBarView: View {
                     }
                 }
             }
+        }
+    }
+
+    @ViewBuilder
+    private func registerFoodRow(query: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Nutrição")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 16)
+
+            Button {
+                onAction(.registerFood(prefill: query))
+                dismiss()
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "fork.knife")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(PageTheme.nutrients.accentColor)
+                        .frame(width: 30, height: 30)
+                        .background(PageTheme.nutrients.accentColor.opacity(0.12), in: .rect(cornerRadius: 8))
+
+                    (Text("Salvar alimento ").foregroundStyle(.secondary)
+                     + Text("\u{201C}\(query)\u{201D}").foregroundStyle(.primary))
+                        .font(.subheadline)
+                        .lineLimit(1)
+
+                    Spacer()
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
         }
     }
 

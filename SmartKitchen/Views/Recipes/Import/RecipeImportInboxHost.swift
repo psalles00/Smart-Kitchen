@@ -62,7 +62,7 @@ struct SharedImportActionView: View {
                         if let onRegisterFood {
                             actionCard(
                                 icon: "fork.knife.circle.fill",
-                                title: "Registrar alimento",
+                                title: "Salvar alimento",
                                 subtitle: "Guarde esta imagem como referência para o módulo de Nutrientes.",
                                 accent: PageTheme.nutrients.accentColor,
                                 action: onRegisterFood

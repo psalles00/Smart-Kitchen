@@ -17,7 +17,13 @@ struct RecentsView: View {
         case favorites = "Favoritos"
         case recents = "Recentes"
         case frequent = "Frequentes"
+        case registered = "Registrados"
         var id: String { rawValue }
+    }
+
+    /// Histórico cronológico completo (sem dedupe). Limitado para performance.
+    private var registeredAll: [FoodEntry] {
+        Array(allEntries.prefix(300))
     }
 
     // MARK: - Data shaping
@@ -114,7 +120,7 @@ struct RecentsView: View {
 
                 contentList
             }
-            .modalNavigationTitle("Recentes")
+            .modalNavigationTitle("Alimentos salvos")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Fechar") { dismiss() }
@@ -163,7 +169,27 @@ struct RecentsView: View {
                 .listStyle(.insetGrouped)
                 .scrollContentBackground(.hidden)
             }
+        case .registered:
+            if registeredAll.isEmpty {
+                emptyState(icon: "list.bullet.rectangle", message: "Nenhum alimento registrado ainda.")
+            } else {
+                List {
+                    ForEach(registeredAll) { entry in
+                        favoriteRow(entry, subtitle: Self.dateSubtitle(entry.timestamp))
+                    }
+                }
+                .listStyle(.insetGrouped)
+                .scrollContentBackground(.hidden)
+            }
         }
+    }
+
+    private static func dateSubtitle(_ date: Date) -> String {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "pt_BR")
+        f.dateStyle = .short
+        f.timeStyle = .short
+        return f.string(from: date)
     }
 
     @ViewBuilder

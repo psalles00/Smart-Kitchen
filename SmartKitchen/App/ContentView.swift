@@ -473,8 +473,12 @@ struct ContentView: View {
     private func nutritionEntrySheetContent(for sheet: NutritionEntrySheet) -> some View {
         let logDate = Date()
         switch sheet {
-        case .manual:
-            FoodEntryFormView(mode: .create(onDate: logDate))
+        case .manual(let prefillName, let prefillMealType):
+            FoodEntryFormView(
+                mode: .create(onDate: logDate),
+                prefillName: prefillName,
+                prefillMealType: prefillMealType
+            )
         case .recents:
             RecentsView(logDate: logDate)
         case .capturePhotoCamera:
@@ -974,6 +978,8 @@ struct ContentView: View {
             showAddRecipe = true
         case .addUtensil:
             showAddUtensil = true
+        case .registerFood(let prefill):
+            searchBarState.pendingNutritionSheet = .manual(prefillName: prefill)
         case .askAssistant(let prefill):
             pendingChatQuery = prefill
             searchBarState.reveal(mode: .aiChat)

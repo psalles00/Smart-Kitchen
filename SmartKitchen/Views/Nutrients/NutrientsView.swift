@@ -33,47 +33,45 @@ struct NutrientsView: View {
                         }
                         GlassButtonGroup {
                             GlassGroupMenu(systemImage: "plus") {
-                                Section("Foto da refeição") {
+                                Section("Registrar por…") {
+                                    Button {
+                                        activeEntrySheet = .captureLabel
+                                    } label: {
+                                        Label("Rótulo", systemImage: "doc.text.viewfinder")
+                                    }
+                                    Button {
+                                        activeEntrySheet = .capturePhotoGallery
+                                    } label: {
+                                        Label("Galeria", systemImage: "photo")
+                                    }
                                     #if os(iOS)
                                     Button {
                                         activeEntrySheet = .capturePhotoCamera
                                     } label: {
-                                        Label("Usar câmera", systemImage: "camera")
+                                        Label("Câmera", systemImage: "camera")
                                     }
                                     #endif
                                     Button {
-                                        activeEntrySheet = .capturePhotoGallery
-                                    } label: {
-                                        Label("Escolher da galeria", systemImage: "photo")
-                                    }
-                                }
-                                Section("Análise") {
-                                    Button {
-                                        activeEntrySheet = .captureLabel
-                                    } label: {
-                                        Label("Rótulo nutricional", systemImage: "barcode.viewfinder")
-                                    }
-                                    Button {
                                         activeEntrySheet = .captureVoice
                                     } label: {
-                                        Label("Por voz", systemImage: "mic")
+                                        Label("Voz", systemImage: "waveform")
                                     }
                                     Button {
                                         activeEntrySheet = .captureText
                                     } label: {
-                                        Label("Por texto", systemImage: "text.cursor")
+                                        Label("Texto", systemImage: "character.cursor.ibeam")
                                     }
                                 }
-                                Section("Registro de Refeições") {
+                                Section("Registros Salvos") {
                                     Button {
-                                        activeEntrySheet = .manual
+                                        activeEntrySheet = .manual()
                                     } label: {
-                                        Label("Registrar alimento", systemImage: "fork.knife")
+                                        Label("Salvar alimento", systemImage: "fork.knife")
                                     }
                                     Button {
                                         activeEntrySheet = .recents
                                     } label: {
-                                        Label("Recentes", systemImage: "clock.arrow.circlepath")
+                                        Label("Alimentos salvos", systemImage: "clock.arrow.circlepath")
                                     }
                                 }
                             }
@@ -91,7 +89,10 @@ struct NutrientsView: View {
                         onTapEntry: { entry in
                             editingEntry = entry
                         },
-                        onDeleteEntry: delete
+                        onDeleteEntry: delete,
+                        onPickEntry: { sheet in
+                            activeEntrySheet = sheet
+                        }
                     )
                 } else {
                     emptyState
@@ -172,8 +173,12 @@ struct NutrientsView: View {
     @ViewBuilder
     private func sheetContent(for sheet: NutritionEntrySheet) -> some View {
         switch sheet {
-        case .manual:
-            FoodEntryFormView(mode: .create(onDate: selectedDate))
+        case .manual(let prefillName, let prefillMealType):
+            FoodEntryFormView(
+                mode: .create(onDate: selectedDate),
+                prefillName: prefillName,
+                prefillMealType: prefillMealType
+            )
         case .recents:
             RecentsView(logDate: selectedDate)
         case .capturePhotoCamera:

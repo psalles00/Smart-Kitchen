@@ -14,6 +14,8 @@ struct FoodEntryFormView: View {
     @Environment(\.dismiss) private var dismiss
 
     let mode: Mode
+    var prefillName: String? = nil
+    var prefillMealType: MealType? = nil
 
     @State private var name: String = ""
     @State private var emoji: String = ""
@@ -25,9 +27,19 @@ struct FoodEntryFormView: View {
     @State private var mealTypeRaw: String = MealType.snack.rawValue
     @State private var timestamp: Date = .now
 
+    // MARK: AI prompt state
+    @State private var aiPrompt: String = ""
+    @State private var aiAnalysis: FoodAnalysis? = nil
+    @State private var isAnalyzing: Bool = false
+    @State private var aiError: String? = nil
+    @State private var usedVoice: Bool = false
+    @State private var voiceTranscriptBaseline: String = ""
+    @State private var aiService = NutritionAIService()
+    @State private var speech = NutritionSpeechRecognizer()
+
     @FocusState private var focused: Field?
 
-    private enum Field { case name, emoji, calories, protein, carbs, fat, serving }
+    private enum Field { case name, emoji, calories, protein, carbs, fat, serving, ai }
 
     private var isEdit: Bool {
         if case .edit = mode { return true } else { return false }
@@ -57,6 +69,10 @@ struct FoodEntryFormView: View {
                     }
                 }
 
+                if !isEdit {
+                    aiSection
+                }
+
                 Section("Macros") {
                     numberRow(label: "Calorias", unit: "kcal", text: $calories, focus: .calories)
                     numberRow(label: "Proteína", unit: "g", text: $protein, focus: .protein)
@@ -75,7 +91,7 @@ struct FoodEntryFormView: View {
                 }
             }
             .scrollDismissesKeyboard(.interactively)
-            .modalNavigationTitle(isEdit ? "Editar registro" : "Registrar Alimento")
+            .modalNavigationTitle(isEdit ? "Editar registro" : "Salvar Alimento")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancelar") { dismiss() }
@@ -88,7 +104,135 @@ struct FoodEntryFormView: View {
             }
             .tint(PageTheme.nutrients.accentColor)
             .onAppear(perform: loadInitial)
+            .onDisappear { speech.stop() }
+            .onChange(of: speech.transcript) { _, newValue in
+                guard speech.state == .recording else { return }
+                // Append the live transcript to whatever the user already typed
+                // before pressing the mic button.
+                let combined = (voiceTranscriptBaseline + " " + newValue)
+                    .trimmingCharacters(in: .whitespaces)
+                aiPrompt = combined
+            }
         }
+    }
+
+    // MARK: - AI section
+
+    @ViewBuilder
+    private var aiSection: some View {
+        Section {
+            VStack(alignment: .leading, spacing: 10) {
+                ZStack(alignment: .topLeading) {
+                    if aiPrompt.isEmpty {
+                        Text("Ex.: 2 ovos com 50g de pão francês e 1 copo de leite")
+                            .foregroundStyle(.secondary)
+                            .padding(.top, 8)
+                            .padding(.horizontal, 4)
+                            .allowsHitTesting(false)
+                    }
+                    TextEditor(text: $aiPrompt)
+                        .focused($focused, equals: .ai)
+                        .frame(minHeight: 72, maxHeight: 140)
+                        .scrollContentBackground(.hidden)
+                }
+
+                HStack(spacing: 12) {
+                    Button {
+                        toggleVoice()
+                    } label: {
+                        Label(
+                            speech.state == .recording ? "Parar" : "Ditar",
+                            systemImage: speech.state == .recording ? "stop.circle.fill" : "mic.fill"
+                        )
+                        .labelStyle(.titleAndIcon)
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(speech.state == .recording ? .red : PageTheme.nutrients.accentColor)
+                    .disabled(isAnalyzing)
+
+                    Spacer()
+
+                    Button {
+                        Task { await runAI() }
+                    } label: {
+                        HStack(spacing: 6) {
+                            if isAnalyzing {
+                                ProgressView().controlSize(.small)
+                            } else {
+                                Image(systemName: "sparkles")
+                            }
+                            Text(isAnalyzing ? "Analisando…" : "Preencher com IA")
+                                .fontWeight(.semibold)
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(PageTheme.nutrients.accentColor)
+                    .disabled(aiPrompt.trimmingCharacters(in: .whitespaces).isEmpty || isAnalyzing)
+                }
+
+                if case .error(let msg) = speech.state {
+                    Text(msg)
+                        .font(.footnote)
+                        .foregroundStyle(.red)
+                }
+                if let aiError {
+                    Text(aiError)
+                        .font(.footnote)
+                        .foregroundStyle(.red)
+                }
+                if aiAnalysis != nil && aiError == nil && !isAnalyzing {
+                    Label("Campos preenchidos. Revise e salve.", systemImage: "checkmark.circle.fill")
+                        .font(.footnote)
+                        .foregroundStyle(.green)
+                }
+            }
+        } header: {
+            Label("Pergunte à IA", systemImage: "sparkles")
+        } footer: {
+            Text("Descreva um alimento ou uma refeição completa. A IA preenche o formulário automaticamente.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private func toggleVoice() {
+        if speech.state == .recording {
+            speech.stop()
+        } else {
+            voiceTranscriptBaseline = aiPrompt
+            usedVoice = true
+            speech.start()
+        }
+    }
+
+    private func runAI() async {
+        let trimmed = aiPrompt.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        if speech.state == .recording { speech.stop() }
+        isAnalyzing = true
+        aiError = nil
+        defer { isAnalyzing = false }
+        do {
+            let analysis = try await aiService.analyzeText(description: trimmed)
+            apply(analysis)
+        } catch {
+            aiError = error.localizedDescription
+        }
+    }
+
+    private func apply(_ analysis: FoodAnalysis) {
+        aiAnalysis = analysis
+        name = analysis.name
+        emoji = analysis.emoji ?? ""
+        calories = String(analysis.calories)
+        protein = formatMacro(Double(analysis.protein))
+        carbs = formatMacro(Double(analysis.carbs))
+        fat = formatMacro(Double(analysis.fat))
+        if analysis.servingSizeGrams > 0 {
+            servingSize = formatMacro(analysis.servingSizeGrams)
+        }
+        mealTypeRaw = MealType.suggestion(for: timestamp).rawValue
+        focused = nil
     }
 
     // MARK: - Rows
@@ -117,8 +261,14 @@ struct FoodEntryFormView: View {
         switch mode {
         case .create(let date):
             timestamp = Self.composedTimestamp(day: date, hour: Date.now)
-            mealTypeRaw = MealType.suggestion(for: timestamp).rawValue
-            if focused == nil { focused = .name }
+            mealTypeRaw = (prefillMealType ?? MealType.suggestion(for: timestamp)).rawValue
+            if let prefillName, !prefillName.isEmpty {
+                name = prefillName
+                aiPrompt = prefillName
+                if focused == nil { focused = .ai }
+            } else if focused == nil {
+                focused = .name
+            }
         case .edit(let entry):
             name = entry.name
             emoji = entry.emoji ?? ""
@@ -162,11 +312,24 @@ struct FoodEntryFormView: View {
                 carbsG: parsedCarbs,
                 fatG: parsedFat,
                 mealType: MealType(rawValue: mealTypeRaw) ?? .snack,
-                source: .manual,
+                source: aiAnalysis == nil ? .manual : (usedVoice ? .voiceInput : .textInput),
                 timestamp: timestamp,
                 emoji: normalizedEmoji,
                 servingSizeGrams: parsedServing
             )
+            // Carry micros from AI analysis when available (form doesn't expose
+            // them directly, but we don't want to discard them).
+            if let a = aiAnalysis {
+                entry.sugarG = a.sugarG
+                entry.addedSugarG = a.addedSugarG
+                entry.fiberG = a.fiberG
+                entry.saturatedFatG = a.saturatedFatG
+                entry.monounsaturatedFatG = a.monounsaturatedFatG
+                entry.polyunsaturatedFatG = a.polyunsaturatedFatG
+                entry.cholesterolMg = a.cholesterolMg
+                entry.sodiumMg = a.sodiumMg
+                entry.potassiumMg = a.potassiumMg
+            }
             modelContext.insert(entry)
         case .edit(let entry):
             entry.name = trimmedName

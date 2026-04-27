@@ -331,14 +331,14 @@ struct FullscreenAssistantView: View {
                         assistantActionSection(title: "Nutrição") {
                             HStack(alignment: .top, spacing: 6) {
                                 assistantActionButton(
-                                    title: "Registrar Alimento",
+                                    title: "Salvar Alimento",
                                     icon: "fork.knife.circle.fill",
                                     tint: assistantNutrientsAccent,
                                     imageName: "nutrientes",
                                     imageHeight: 74,
                                     imageOffset: CGSize(width: 6, height: 0)
                                 ) {
-                                    pendingPlaceholderTitle = "Registrar Alimento"
+                                    pendingPlaceholderTitle = "Salvar Alimento"
                                 }
 
                                 assistantActionButton(

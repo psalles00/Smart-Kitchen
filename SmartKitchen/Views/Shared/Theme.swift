@@ -67,6 +67,7 @@ struct GlassGroupMenu<Content: View>: View {
                 .frame(width: 34, height: 36)
                 .contentShape(Rectangle())
         }
+        .menuOrder(.fixed)
         .buttonStyle(.plain)
     }
 }

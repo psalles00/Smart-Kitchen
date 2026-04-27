@@ -8,6 +8,7 @@ struct NutritionDashboardView: View {
     @Binding var selectedDate: Date
     var onTapEntry: (FoodEntry) -> Void = { _ in }
     var onDeleteEntry: (FoodEntry) -> Void = { _ in }
+    var onPickEntry: (NutritionEntrySheet) -> Void = { _ in }
 
     private var calendar: Calendar { .current }
 
@@ -141,6 +142,80 @@ struct NutritionDashboardView: View {
                     }
                 }
             }
+
+            categoryAddButton(for: meal)
+        }
+    }
+
+    /// Discreet capsule button placed at the foot of each meal category, mirroring the
+    /// "Adicionar todos em Mercado" affordance on the recipe detail page. Opens the same
+    /// nutrition menu as the assistant bar, dispatching the chosen sheet up to `NutrientsView`.
+    @ViewBuilder
+    private func categoryAddButton(for meal: MealType) -> some View {
+        HStack {
+            Spacer()
+            Menu {
+                Section("Registrar por…") {
+                    Button {
+                        onPickEntry(.captureLabel)
+                    } label: {
+                        Label("Rótulo", systemImage: "doc.text.viewfinder")
+                    }
+                    Button {
+                        onPickEntry(.capturePhotoGallery)
+                    } label: {
+                        Label("Galeria", systemImage: "photo")
+                    }
+                    #if os(iOS)
+                    Button {
+                        onPickEntry(.capturePhotoCamera)
+                    } label: {
+                        Label("Câmera", systemImage: "camera")
+                    }
+                    #endif
+                    Button {
+                        onPickEntry(.captureVoice)
+                    } label: {
+                        Label("Voz", systemImage: "waveform")
+                    }
+                    Button {
+                        onPickEntry(.captureText)
+                    } label: {
+                        Label("Texto", systemImage: "character.cursor.ibeam")
+                    }
+                }
+                Section("Registros Salvos") {
+                    Button {
+                        onPickEntry(.manual(prefillName: nil, prefillMealType: meal))
+                    } label: {
+                        Label("Salvar alimento", systemImage: "fork.knife")
+                    }
+                    Button {
+                        onPickEntry(.recents)
+                    } label: {
+                        Label("Alimentos salvos", systemImage: "clock.arrow.circlepath")
+                    }
+                }
+            } label: {
+                Label("Adicionar em \(localizedDisplayName(meal))", systemImage: "plus")
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(Color(.tertiarySystemFill).opacity(0.85), in: .capsule)
+            }
+            .menuOrder(.fixed)
+            .buttonStyle(.plain)
+        }
+    }
+
+    private func localizedDisplayName(_ meal: MealType) -> String {
+        switch meal {
+        case .breakfast: "Café da manhã"
+        case .lunch:     "Almoço"
+        case .dinner:    "Jantar"
+        case .snack:     "Lanche"
+        case .other:     "Outras"
         }
     }
 }

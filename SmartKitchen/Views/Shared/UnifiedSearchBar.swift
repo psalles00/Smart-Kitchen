@@ -117,9 +117,10 @@ struct UnifiedSearchBar: View {
                 .font(.system(size: 16, weight: .medium))
                 .symbolRenderingMode(.monochrome)
                 .foregroundStyle(Color.secondary)
-                .frame(width: 30, height: 30)
+                .frame(width: 40, height: 40)
                 .contentShape(Rectangle())
         }
+        .menuOrder(.fixed)
         .tint(Color.secondary)
         .buttonStyle(.plain)
         .menuIndicator(.hidden)
@@ -127,16 +128,18 @@ struct UnifiedSearchBar: View {
 
     @ViewBuilder
     private var expandedAccessoryActions: some View {
-        quickMenuButton(icon: "list.bullet.clipboard") {
-            listsQuickSection
-        }
-
-        quickMenuButton(icon: "book.closed") {
-            recipesQuickSection
-        }
-
-        quickMenuButton(icon: "fork.knife") {
-            nutritionQuickSection
+        // Spacing 0 so the 40×40 hit areas sit flush — visually, the inner 16pt
+        // icons keep ~24pt of breathing room from the surrounding chrome.
+        HStack(spacing: 0) {
+            quickMenuButton(icon: "list.bullet.clipboard") {
+                listsQuickSection
+            }
+            quickMenuButton(icon: "book.closed") {
+                recipesQuickSection
+            }
+            quickMenuButton(icon: "fork.knife") {
+                nutritionQuickSection
+            }
         }
     }
 
@@ -151,9 +154,10 @@ struct UnifiedSearchBar: View {
                 .font(.system(size: 16, weight: .medium))
                 .symbolRenderingMode(.monochrome)
                 .foregroundStyle(.secondary)
-                .frame(width: 30, height: 30)
+                .frame(width: 40, height: 40)
                 .contentShape(Rectangle())
         }
+        .menuOrder(.fixed)
         .tint(Color.secondary)
         .buttonStyle(.plain)
         .menuIndicator(.hidden)
@@ -206,28 +210,30 @@ struct UnifiedSearchBar: View {
 
     @ViewBuilder
     private var nutritionCollapsedQuickSection: some View {
-        Section("Nutrição") {
+        Section("Registrar por…") {
+            Button("Rótulo", systemImage: "doc.text.viewfinder") {
+                presentNutritionSheet(.captureLabel)
+            }
+            Button("Galeria", systemImage: "photo") {
+                presentFoodGalleryDirect()
+            }
             #if os(iOS)
-            Button("Usar câmera", systemImage: "camera") {
+            Button("Câmera", systemImage: "camera") {
                 presentFoodCameraDirect()
             }
             #endif
-            Button("Escolher da galeria", systemImage: "photo") {
-                presentFoodGalleryDirect()
-            }
-            Button("Rótulo nutricional", systemImage: "doc.text.viewfinder") {
-                presentNutritionSheet(.captureLabel)
-            }
-            Button("Registrar por voz", systemImage: "waveform") {
+            Button("Voz", systemImage: "waveform") {
                 presentNutritionSheet(.captureVoice)
             }
-            Button("Descrever por texto", systemImage: "text.alignleft") {
+            Button("Texto", systemImage: "character.cursor.ibeam") {
                 presentNutritionSheet(.captureText)
             }
-            Button("Registrar alimento", systemImage: "fork.knife") {
-                presentNutritionSheet(.manual)
+        }
+        Section("Registros Salvos") {
+            Button("Salvar alimento", systemImage: "fork.knife") {
+                presentNutritionSheet(.manual())
             }
-            Button("Recentes / frequentes", systemImage: "clock.arrow.circlepath") {
+            Button("Alimentos salvos", systemImage: "clock.arrow.circlepath") {
                 presentNutritionSheet(.recents)
             }
         }
@@ -235,32 +241,30 @@ struct UnifiedSearchBar: View {
 
     @ViewBuilder
     private var nutritionQuickSection: some View {
-        Section("Foto da refeição") {
+        Section("Registrar por…") {
+            Button("Rótulo", systemImage: "doc.text.viewfinder") {
+                presentNutritionSheet(.captureLabel)
+            }
+            Button("Galeria", systemImage: "photo") {
+                presentFoodGalleryDirect()
+            }
             #if os(iOS)
-            Button("Usar câmera", systemImage: "camera") {
+            Button("Câmera", systemImage: "camera") {
                 presentFoodCameraDirect()
             }
             #endif
-            Button("Escolher da galeria", systemImage: "photo") {
-                presentFoodGalleryDirect()
-            }
-        }
-        Section("Análise") {
-            Button("Rótulo nutricional", systemImage: "doc.text.viewfinder") {
-                presentNutritionSheet(.captureLabel)
-            }
-            Button("Registrar por voz", systemImage: "waveform") {
+            Button("Voz", systemImage: "waveform") {
                 presentNutritionSheet(.captureVoice)
             }
-            Button("Descrever por texto", systemImage: "text.alignleft") {
+            Button("Texto", systemImage: "character.cursor.ibeam") {
                 presentNutritionSheet(.captureText)
             }
         }
-        Section("Registro de Refeições") {
-            Button("Registrar alimento", systemImage: "fork.knife") {
-                presentNutritionSheet(.manual)
+        Section("Registros Salvos") {
+            Button("Salvar alimento", systemImage: "fork.knife") {
+                presentNutritionSheet(.manual())
             }
-            Button("Recentes / frequentes", systemImage: "clock.arrow.circlepath") {
+            Button("Alimentos salvos", systemImage: "clock.arrow.circlepath") {
                 presentNutritionSheet(.recents)
             }
         }

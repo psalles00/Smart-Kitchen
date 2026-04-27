@@ -8,7 +8,7 @@ enum NutritionRoute: Hashable {
 
 /// Tipos de sheet disparados pelo menu "+" do header.
 enum NutritionEntrySheet: Identifiable {
-    case manual
+    case manual(prefillName: String? = nil, prefillMealType: MealType? = nil)
     case recents
     case capturePhotoCamera
     case capturePhotoGallery
