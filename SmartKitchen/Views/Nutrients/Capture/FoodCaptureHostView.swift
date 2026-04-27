@@ -41,6 +41,7 @@ struct FoodCaptureHostView: View {
     @State private var hasTriggeredPreloadedAnalysis = false
 
     #if os(iOS)
+    @State private var preferredDetent: PresentationDetent
     @State private var speech = NutritionSpeechRecognizer()
     #endif
 
@@ -62,6 +63,9 @@ struct FoodCaptureHostView: View {
         } else {
             _stage = State(initialValue: .gathering)
         }
+        #if os(iOS)
+        _preferredDetent = State(initialValue: preloadedImage != nil ? .large : .medium)
+        #endif
     }
 
     private var isDirectPhotoShortcut: Bool {
@@ -85,6 +89,8 @@ struct FoodCaptureHostView: View {
             .tint(PageTheme.nutrients.accentColor)
         }
         #if os(iOS)
+        .presentationDetents([.medium, .large], selection: $preferredDetent)
+        .presentationDragIndicator(.visible)
         .fullScreenCover(isPresented: $showCamera) {
             FoodCameraPicker { image in
                 capturedImage = image
@@ -148,6 +154,7 @@ struct FoodCaptureHostView: View {
                 .foregroundStyle(.secondary)
             Spacer()
         }
+        .modalNavigationTitle(captureModalTitle)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancelar") { dismiss() }
@@ -156,47 +163,66 @@ struct FoodCaptureHostView: View {
     }
 
     private var photoGathering: some View {
-        VStack(spacing: 20) {
-            Spacer()
-            Image(systemName: mode == .photo ? "camera.fill" : "barcode.viewfinder")
-                .font(.system(size: 56))
-                .foregroundStyle(PageTheme.nutrients.gradient)
-            Text(mode == .photo ? "Foto da refeição" : "Rótulo nutricional")
-                .font(.sectionTitle)
-            Text(mode == .photo
-                 ? "Tire uma foto do prato para a IA identificar e estimar os macros automaticamente."
-                 : "Fotografe o rótulo nutricional de uma embalagem para extrair os valores por 100 g.")
-                .font(.serifBody)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+        ScrollView {
+            VStack(spacing: 18) {
+                capturePanel {
+                    HStack(spacing: 14) {
+                        ZStack {
+                            Circle()
+                                .fill(PageTheme.nutrients.accentColor.opacity(0.12))
+                                .frame(width: 56, height: 56)
 
-            #if os(iOS)
-            Button {
-                showCamera = true
-            } label: {
-                Label("Usar câmera", systemImage: "camera")
-                    .frame(maxWidth: .infinity)
+                            Image(systemName: mode == .photo ? "camera.macro" : "doc.text.viewfinder")
+                                .font(.system(size: 24, weight: .semibold))
+                                .foregroundStyle(PageTheme.nutrients.gradient)
+                        }
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(mode == .photo ? "Registrar por foto" : "Registrar por rótulo")
+                                .font(.title3.weight(.semibold))
+                            Text(mode == .photo ? "IA visual" : "Leitura assistida")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(PageTheme.nutrients.accentColor)
+                        }
+
+                        Spacer()
+                    }
+
+                    Text(mode == .photo
+                         ? "Tire uma foto do prato ou escolha uma imagem já salva para estimar calorias e macros automaticamente."
+                         : "Fotografe o rótulo nutricional ou use uma imagem da galeria para extrair os valores da embalagem.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+
+                capturePanel {
+                    #if os(iOS)
+                    Button {
+                        showCamera = true
+                    } label: {
+                        Label(mode == .photo ? "Abrir câmera" : "Fotografar agora", systemImage: "camera")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(PageTheme.nutrients.accentColor)
+                    .controlSize(.large)
+                    #endif
+
+                    Button {
+                        showPhotoPicker = true
+                    } label: {
+                        Label("Escolher da galeria", systemImage: "photo")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(PageTheme.nutrients.accentColor)
+                    .controlSize(.large)
+                }
             }
-            .buttonStyle(.borderedProminent)
-            .tint(PageTheme.nutrients.accentColor)
-            .controlSize(.large)
-            .padding(.horizontal, 32)
-            #endif
-
-            Button {
-                showPhotoPicker = true
-            } label: {
-                Label("Escolher da galeria", systemImage: "photo")
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.bordered)
-            .tint(PageTheme.nutrients.accentColor)
-            .controlSize(.large)
-            .padding(.horizontal, 32)
-
-            Spacer()
+            .padding(20)
         }
+        .scrollIndicators(.hidden)
+        .modalNavigationTitle(captureModalTitle)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancelar") { dismiss() }
@@ -231,45 +257,66 @@ struct FoodCaptureHostView: View {
     }
 
     private var textGathering: some View {
-        VStack(spacing: 16) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Descreva a refeição")
-                    .font(.headline)
-                Text("Ex.: \"2 ovos mexidos, uma fatia de pão integral e meia banana\".")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
+        ScrollView {
+            VStack(spacing: 14) {
+                compactCapturePanel {
+                    HStack(alignment: .top, spacing: 12) {
+                        captureBadge(systemImage: "square.and.pencil")
 
-            TextEditor(text: $typedText)
-                .frame(minHeight: 160)
-                .padding(10)
-                .background(.quaternary.opacity(0.4), in: .rect(cornerRadius: 12))
-                .overlay(alignment: .topLeading) {
-                    if typedText.isEmpty {
-                        Text("Descrição…")
-                            .foregroundStyle(.tertiary)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 18)
-                            .allowsHitTesting(false)
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("Texto livre")
+                                .font(.headline)
+                            Text("Ingredientes, quantidades e preparo em uma frase curta.")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+
+                        Spacer(minLength: 0)
+
+                        captureCounterBadge(typedText.count)
                     }
+
+                    ZStack(alignment: .topLeading) {
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(Color.primary.opacity(0.05))
+
+                        TextEditor(text: $typedText)
+                            .frame(minHeight: 112, maxHeight: 112)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 8)
+                            #if os(iOS)
+                            .scrollContentBackground(.hidden)
+                            #endif
+
+                        if typedText.isEmpty {
+                            Text("Ex.: 2 ovos mexidos, pão integral e meia banana.")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                                .padding(.horizontal, 24)
+                                .padding(.vertical, 20)
+                                .allowsHitTesting(false)
+                        }
+                    }
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .stroke(Color.primary.opacity(0.06), lineWidth: 1)
+                    )
                 }
-
-            Button {
-                startTextAnalysis()
-            } label: {
-                Label("Analisar", systemImage: "sparkles")
-                    .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
-            .tint(PageTheme.nutrients.accentColor)
-            .controlSize(.large)
-            .disabled(typedText.trimmingCharacters(in: .whitespaces).isEmpty)
-
-            Spacer()
+            .padding(.horizontal, 20)
+            .padding(.top, 16)
+            .padding(.bottom, 12)
         }
-        .padding(20)
-        .modalNavigationTitle("Descrição por texto")
+        .scrollIndicators(.hidden)
+        .scrollDismissesKeyboard(.interactively)
+        .safeAreaInset(edge: .bottom) {
+            stickyAnalyzeBar(
+                isDisabled: typedText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                action: startTextAnalysis
+            )
+        }
+        .modalNavigationTitle("Registrar por texto")
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancelar") { dismiss() }
@@ -280,62 +327,90 @@ struct FoodCaptureHostView: View {
     @ViewBuilder
     private var voiceGathering: some View {
         #if os(iOS)
-        VStack(spacing: 20) {
-            Spacer()
+        ScrollView {
+            VStack(spacing: 14) {
+                compactCapturePanel {
+                    HStack(alignment: .top, spacing: 12) {
+                        captureBadge(
+                            systemImage: speech.state == .recording ? "waveform.circle.fill" : "waveform",
+                            tint: speech.state == .recording ? .red : PageTheme.nutrients.accentColor
+                        )
 
-            Image(systemName: "mic.fill")
-                .font(.system(size: 48))
-                .foregroundStyle(speech.state == .recording ? .red : PageTheme.nutrients.accentColor)
-                .padding(24)
-                .background(
-                    Circle().fill(
-                        (speech.state == .recording ? Color.red : PageTheme.nutrients.accentColor)
-                            .opacity(0.12)
-                    )
-                )
-                .scaleEffect(speech.state == .recording ? 1.1 : 1.0)
-                .animation(.easeInOut(duration: 0.4), value: speech.state)
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(speech.state == .recording ? "Ouvindo agora" : "Ditado")
+                                .font(.headline)
+                            Text(speech.state == .recording ? "Fale normalmente. A transcrição aparece em tempo real." : "Revise a transcrição antes de analisar.")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
 
-            Text(speech.transcript.isEmpty ? "Fale o que você comeu…" : speech.transcript)
-                .font(.body)
-                .foregroundStyle(speech.transcript.isEmpty ? .secondary : .primary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 24)
-                .frame(minHeight: 80)
+                        Spacer(minLength: 0)
 
-            if case .error(let message) = speech.state {
-                Text(message)
-                    .font(.footnote)
-                    .foregroundStyle(.red)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 24)
-            }
-
-            HStack(spacing: 12) {
-                Button {
-                    // Para a gravação (se ainda estiver ativa) e dispara a
-                    // análise com a transcrição capturada até o momento.
-                    if speech.state == .recording {
-                        speech.stop()
+                        captureCounterBadge(speech.transcript.count)
                     }
-                    let text = speech.transcript.trimmingCharacters(in: .whitespaces)
-                    guard !text.isEmpty else { return }
-                    typedText = text
-                    startTextAnalysis()
-                } label: {
-                    Label("Analisar", systemImage: "sparkles")
-                        .frame(maxWidth: .infinity)
+
+                    HStack(spacing: 10) {
+                        Button {
+                            toggleVoiceCapture()
+                        } label: {
+                            Label(
+                                speech.state == .recording ? "Parar" : (speech.transcript.isEmpty ? "Ditar" : "Gravar de novo"),
+                                systemImage: speech.state == .recording ? "stop.circle.fill" : "mic.fill"
+                            )
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(speech.state == .recording ? .red : PageTheme.nutrients.accentColor)
+
+                        if !speech.transcript.isEmpty {
+                            Button {
+                                speech.reset()
+                                typedText = ""
+                            } label: {
+                                Label("Limpar", systemImage: "arrow.counterclockwise")
+                            }
+                            .buttonStyle(.bordered)
+                            .tint(.secondary)
+                        }
+
+                        Spacer(minLength: 0)
+                    }
+
+                    Text(speech.transcript.isEmpty ? "Fale o que você comeu. Ex.: arroz, feijão e frango grelhado." : speech.transcript)
+                        .font(.body)
+                        .foregroundStyle(speech.transcript.isEmpty ? .secondary : .primary)
+                        .frame(maxWidth: .infinity, minHeight: 108, alignment: .topLeading)
+                        .padding(14)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .fill(Color.primary.opacity(0.05))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .stroke(Color.primary.opacity(0.06), lineWidth: 1)
+                        )
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(PageTheme.nutrients.accentColor)
-                .controlSize(.large)
-                .disabled(speech.transcript.trimmingCharacters(in: .whitespaces).isEmpty)
+
+                if case .error(let message) = speech.state {
+                    Text(message)
+                        .font(.footnote)
+                        .foregroundStyle(.red)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 6)
+                }
             }
             .padding(.horizontal, 20)
-
-            Spacer()
+            .padding(.top, 16)
+            .padding(.bottom, 12)
         }
-        .modalNavigationTitle("Por voz")
+        .scrollIndicators(.hidden)
+        .safeAreaInset(edge: .bottom) {
+            stickyAnalyzeBar(
+                isDisabled: speech.transcript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                action: analyzeVoiceTranscript
+            )
+        }
+        .modalNavigationTitle("Registrar por voz")
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancelar") { speech.stop(); dismiss() }
@@ -363,7 +438,7 @@ struct FoodCaptureHostView: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
             HStack(spacing: 10) {
-                Button("Voltar") { stage = .gathering }
+                Button("Voltar") { setStage(.gathering) }
                     .buttonStyle(.bordered)
                 Button("Fechar") { dismiss() }
                     .buttonStyle(.borderedProminent)
@@ -383,7 +458,109 @@ struct FoodCaptureHostView: View {
         }
     }
 
+    private var captureModalTitle: String {
+        switch mode {
+        case .photo:          "Registrar por foto"
+        case .nutritionLabel: "Registrar por rótulo"
+        case .text:           "Registrar por texto"
+        case .voice:          "Registrar por voz"
+        }
+    }
+
+    @ViewBuilder
+    private func capturePanel<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
+            content()
+        }
+        .padding(18)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .stroke(PageTheme.nutrients.accentColor.opacity(0.12), lineWidth: 1)
+        )
+    }
+
+    @ViewBuilder
+    private func compactCapturePanel<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
+            content()
+        }
+        .padding(16)
+        .background(Color.primary.opacity(0.03), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(Color.primary.opacity(0.06), lineWidth: 1)
+        )
+    }
+
+    private func captureBadge(systemImage: String, tint: Color = PageTheme.nutrients.accentColor) -> some View {
+        RoundedRectangle(cornerRadius: 14, style: .continuous)
+            .fill(tint.opacity(0.12))
+            .frame(width: 44, height: 44)
+            .overlay {
+                Image(systemName: systemImage)
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(tint)
+            }
+    }
+
+    private func captureCounterBadge(_ count: Int) -> some View {
+        Text("\(count)")
+            .font(.caption2.weight(.semibold))
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 5)
+            .background(Color.primary.opacity(0.06), in: Capsule())
+    }
+
+    private func stickyAnalyzeBar(isDisabled: Bool, action: @escaping () -> Void) -> some View {
+        VStack(spacing: 0) {
+            Divider()
+            Button(action: action) {
+                Label("Analisar", systemImage: "sparkles")
+                    .font(.headline.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 15)
+                    .background(
+                        isDisabled
+                            ? PageTheme.nutrients.accentColor.opacity(0.35)
+                            : PageTheme.nutrients.accentColor,
+                        in: RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    )
+            }
+            .buttonStyle(.plain)
+            .disabled(isDisabled)
+            .padding(.horizontal, 20)
+            .padding(.top, 12)
+            .padding(.bottom, 8)
+        }
+        .background(.ultraThinMaterial)
+    }
+
     // MARK: - Actions
+
+    private func setStage(_ newStage: Stage, animated: Bool = true) {
+        #if os(iOS)
+        let targetDetent: PresentationDetent
+        switch newStage {
+        case .gathering:
+            targetDetent = .medium
+        case .analyzing, .result, .error:
+            targetDetent = .large
+        }
+
+        if animated {
+            withAnimation(.easeInOut(duration: 0.22)) {
+                preferredDetent = targetDetent
+            }
+        } else {
+            preferredDetent = targetDetent
+        }
+        #endif
+
+        stage = newStage
+    }
 
     private func loadPhoto(_ item: PhotosPickerItem) async {
         do {
@@ -393,13 +570,13 @@ struct FoodCaptureHostView: View {
                 startImageAnalysis()
             }
         } catch {
-            await MainActor.run { stage = .error(error.localizedDescription) }
+            await MainActor.run { setStage(.error(error.localizedDescription)) }
         }
     }
 
     private func startImageAnalysis() {
         guard let image = capturedImage else { return }
-        stage = .analyzing
+        setStage(.analyzing)
         Task {
             do {
                 // Normaliza para ≤1024px JPEG 0.8
@@ -418,18 +595,18 @@ struct FoodCaptureHostView: View {
                 switch mode {
                 case .photo:
                     let analysis = try await ai.analyzeFoodImage(imageData: data)
-                    await MainActor.run { stage = .result(analysis) }
+                    await MainActor.run { setStage(.result(analysis)) }
                 case .nutritionLabel:
                     let label = try await ai.analyzeNutritionLabel(imageData: data)
                     let serving = label.servingSizeGrams ?? 100
                     let analysis = label.scaled(to: serving)
-                    await MainActor.run { stage = .result(analysis) }
+                    await MainActor.run { setStage(.result(analysis)) }
                 case .text, .voice:
                     break
                 }
             } catch {
                 let msg = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
-                await MainActor.run { stage = .error(msg) }
+                await MainActor.run { setStage(.error(msg)) }
             }
         }
     }
@@ -437,17 +614,40 @@ struct FoodCaptureHostView: View {
     private func startTextAnalysis() {
         let text = typedText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return }
-        stage = .analyzing
+        setStage(.analyzing)
         Task {
             do {
                 let analysis = try await ai.analyzeText(description: text)
-                await MainActor.run { stage = .result(analysis) }
+                await MainActor.run { setStage(.result(analysis)) }
             } catch {
                 let msg = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
-                await MainActor.run { stage = .error(msg) }
+                await MainActor.run { setStage(.error(msg)) }
             }
         }
     }
+
+    #if os(iOS)
+    private func toggleVoiceCapture() {
+        if speech.state == .recording {
+            speech.stop()
+        } else {
+            if !speech.transcript.isEmpty {
+                speech.reset()
+            }
+            speech.start()
+        }
+    }
+
+    private func analyzeVoiceTranscript() {
+        if speech.state == .recording {
+            speech.stop()
+        }
+        let text = speech.transcript.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return }
+        typedText = text
+        startTextAnalysis()
+    }
+    #endif
 
     // MARK: - Image resize
 

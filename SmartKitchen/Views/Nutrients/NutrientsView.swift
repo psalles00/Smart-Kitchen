@@ -17,6 +17,7 @@ struct NutrientsView: View {
     @State private var activeEntrySheet: NutritionEntrySheet?
     @State private var editingEntry: FoodEntry?
     @State private var pushProgress = false
+    @State private var pushWeightTracker = false
 
     private var profile: NutritionProfile? { profiles.first }
 
@@ -26,6 +27,11 @@ struct NutrientsView: View {
             header: { isInverted in
                 PageHeader(title: "Nutrição", isInverted: isInverted) {
                     HStack(spacing: 6) {
+                        GlassButtonGroup {
+                            GlassGroupButton(systemImage: "scalemass") {
+                                pushWeightTracker = true
+                            }
+                        }
                         GlassButtonGroup {
                             GlassGroupButton(systemImage: "chart.line.uptrend.xyaxis") {
                                 pushProgress = true
@@ -126,6 +132,9 @@ struct NutrientsView: View {
         }
         .navigationDestination(isPresented: $pushProgress) {
             NutritionProgressView()
+        }
+        .navigationDestination(isPresented: $pushWeightTracker) {
+            WeightTrackerView()
         }
     }
 

@@ -53,6 +53,12 @@ struct FullscreenAssistantView: View {
     private var assistantRecipesAccent: Color { PageTheme.recipes.accentColor }
     private var assistantNutrientsAccent: Color { PageTheme.nutrients.accentColor }
     private var assistantActionButtonBaseHeight: CGFloat { 62 }
+    private var assistantActionColumns: [GridItem] {
+        [
+            GridItem(.flexible(), spacing: 6),
+            GridItem(.flexible(), spacing: 6)
+        ]
+    }
 
     var body: some View {
         ZStack {
@@ -200,182 +206,167 @@ struct FullscreenAssistantView: View {
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 24)
 
-                    VStack(alignment: .leading, spacing: 10) {
-                        assistantActionSection(title: "IA") {
-                            HStack(alignment: .top, spacing: 6) {
-                                assistantActionButton(
-                                    title: "Perguntar à IA",
-                                    icon: "sparkles",
-                                    tint: assistantIAAccent,
-                                    imageName: "modo ia",
-                                    imageHeight: 82,
-                                    imageOffset: CGSize(width: 8, height: 0)
-                                ) {
-                                    searchBarState.mode = .aiChat
-                                    pendingChatQuery = nil
-                                    pendingOpenChat = true
-                                }
+                    LazyVGrid(columns: assistantActionColumns, alignment: .leading, spacing: 6) {
+                        assistantActionButton(
+                            title: "Perguntar à IA",
+                            icon: "sparkles",
+                            tint: assistantIAAccent,
+                            imageName: "modo ia",
+                            imageHeight: 82,
+                            imageOffset: CGSize(width: 8, height: 0)
+                        ) {
+                            searchBarState.mode = .aiChat
+                            pendingChatQuery = nil
+                            pendingOpenChat = true
+                        }
 
-                                assistantActionButton(
-                                    title: "Indicação de receitas",
-                                    icon: "fork.knife.circle.fill",
-                                    tint: assistantIAAccent,
-                                    imageName: "ideis",
-                                    imageHeight: 74,
-                                    imageOffset: CGSize(width: 6, height: 0)
-                                ) {
-                                    searchBarState.mode = .aiChat
-                                    pendingOpenChat = false
-                                    pendingChatQuery = "Sugira novas receitas."
-                                }
+                        assistantActionButton(
+                            title: "Indicação de receitas",
+                            icon: "fork.knife.circle.fill",
+                            tint: assistantIAAccent,
+                            imageName: "ideis",
+                            imageHeight: 74,
+                            imageOffset: CGSize(width: 6, height: 0)
+                        ) {
+                            searchBarState.mode = .aiChat
+                            pendingOpenChat = false
+                            pendingChatQuery = "Sugira novas receitas."
+                        }
+
+                        assistantActionButton(
+                            title: "Adicionar à Despensa",
+                            icon: "shippingbox.fill",
+                            tint: assistantListsAccent,
+                            imageName: "despensa",
+                            imageHeight: 72,
+                            imageOffset: CGSize(width: 6, height: 0)
+                        ) {
+                            triggerAction(.addPantryItem(prefill: ""))
+                        }
+
+                        assistantActionButton(
+                            title: "Adicionar ao Mercado",
+                            icon: "cart.badge.plus",
+                            tint: assistantListsAccent,
+                            imageName: "mercado",
+                            imageHeight: 76,
+                            imageOffset: CGSize(width: 6, height: 0)
+                        ) {
+                            triggerAction(.addGroceryItem(prefill: ""))
+                        }
+
+                        if settings?.showUtensils == true {
+                            assistantActionButton(
+                                title: "Adicionar Utensílio",
+                                icon: "fork.knife",
+                                tint: assistantListsAccent,
+                                imageName: "listas-utensilio",
+                                imageHeight: 76,
+                                imageOffset: CGSize(width: 6, height: 0)
+                            ) {
+                                triggerAction(.addUtensil(prefill: ""))
                             }
                         }
 
-                        assistantActionSection(title: "Listas") {
-                            HStack(alignment: .top, spacing: 6) {
-                                assistantActionButton(
-                                    title: "Adicionar à Despensa",
-                                    icon: "shippingbox.fill",
-                                    tint: assistantListsAccent,
-                                    imageName: "despensa",
-                                    imageHeight: 72,
-                                    imageOffset: CGSize(width: 6, height: 0)
-                                ) {
-                                    triggerAction(.addPantryItem(prefill: ""))
-                                }
-
-                                assistantActionButton(
-                                    title: "Adicionar ao Mercado",
-                                    icon: "cart.badge.plus",
-                                    tint: assistantListsAccent,
-                                    imageName: "mercado",
-                                    imageHeight: 76,
-                                    imageOffset: CGSize(width: 6, height: 0)
-                                ) {
-                                    triggerAction(.addGroceryItem(prefill: ""))
-                                }
-                            }
-
-                            if settings?.showUtensils == true {
-                                HStack(alignment: .top, spacing: 6) {
-                                    assistantActionButton(
-                                        title: "Adicionar Utensílio",
-                                        icon: "fork.knife",
-                                        tint: assistantListsAccent,
-                                        imageName: "listas-utensilio",
-                                        imageHeight: 76,
-                                        imageOffset: CGSize(width: 6, height: 0)
-                                    ) {
-                                        triggerAction(.addUtensil(prefill: ""))
-                                    }
-
-                                    assistantActionPlaceholder()
-                                }
-                            }
+                        assistantActionButton(
+                            title: "Criar Receita",
+                            icon: "book.badge.plus",
+                            tint: assistantRecipesAccent,
+                            imageName: "receitas",
+                            imageHeight: 70,
+                            imageOffset: CGSize(width: 6, height: 0)
+                        ) {
+                            triggerAction(.addRecipe(prefill: ""))
                         }
 
-                        assistantActionSection(title: "Receitas") {
-                            HStack(alignment: .top, spacing: 6) {
-                                assistantActionButton(
-                                    title: "Criar Receita",
-                                    icon: "book.badge.plus",
-                                    tint: assistantRecipesAccent,
-                                    imageName: "receitas",
-                                    imageHeight: 70,
-                                    imageOffset: CGSize(width: 6, height: 0)
-                                ) {
-                                    triggerAction(.addRecipe(prefill: ""))
-                                }
-
-                                assistantActionButton(
-                                    title: "Importar da Galeria",
-                                    icon: "photo.on.rectangle.angled",
-                                    tint: assistantRecipesAccent,
-                                    imageName: "receitas-importar",
-                                    imageHeight: 78,
-                                    imageOffset: CGSize(width: 6, height: 0)
-                                ) {
-                                    openRecipeImport(.gallery)
-                                }
-                            }
-
-                            HStack(alignment: .top, spacing: 6) {
-                                assistantActionButton(
-                                    title: "Ler Receita",
-                                    icon: "camera.viewfinder",
-                                    tint: assistantRecipesAccent,
-                                    imageName: "receitas-ler",
-                                    imageHeight: 78,
-                                    imageOffset: CGSize(width: 6, height: 0)
-                                ) {
-                                    openRecipeImport(.camera)
-                                }
-
-                                #if os(macOS)
-                                assistantActionButton(
-                                    title: "Importar dos Arquivos",
-                                    icon: "folder.fill",
-                                    tint: assistantRecipesAccent,
-                                    imageName: "receitas-importar",
-                                    imageHeight: 78,
-                                    imageOffset: CGSize(width: 6, height: 0)
-                                ) {
-                                    openRecipeImport(.files)
-                                }
-                                #else
-                                assistantActionPlaceholder()
-                                #endif
-                            }
+                        assistantActionButton(
+                            title: "Importar da Galeria",
+                            icon: "photo.on.rectangle.angled",
+                            tint: assistantRecipesAccent,
+                            imageName: "receitas-importar",
+                            imageHeight: 78,
+                            imageOffset: CGSize(width: 6, height: 0)
+                        ) {
+                            openRecipeImport(.gallery)
                         }
 
-                        assistantActionSection(title: "Nutrição") {
-                            HStack(alignment: .top, spacing: 6) {
-                                assistantActionButton(
-                                    title: "Salvar Alimento",
-                                    icon: "fork.knife.circle.fill",
-                                    tint: assistantNutrientsAccent,
-                                    imageName: "nutrientes",
-                                    imageHeight: 74,
-                                    imageOffset: CGSize(width: 6, height: 0)
-                                ) {
-                                    pendingPlaceholderTitle = "Salvar Alimento"
-                                }
+                        assistantActionButton(
+                            title: "Ler Receita",
+                            icon: "camera.viewfinder",
+                            tint: assistantRecipesAccent,
+                            imageName: "receitas-ler",
+                            imageHeight: 78,
+                            imageOffset: CGSize(width: 6, height: 0)
+                        ) {
+                            openRecipeImport(.camera)
+                        }
 
-                                assistantActionButton(
-                                    title: "Registrar com Áudio",
-                                    icon: "mic.fill",
-                                    tint: assistantNutrientsAccent,
-                                    imageName: "nutrientes-audio",
-                                    imageHeight: 74,
-                                    imageOffset: CGSize(width: 6, height: 0)
-                                ) {
-                                    pendingPlaceholderTitle = "Registrar com Áudio"
-                                }
-                            }
+                        #if os(macOS)
+                        assistantActionButton(
+                            title: "Importar dos Arquivos",
+                            icon: "folder.fill",
+                            tint: assistantRecipesAccent,
+                            imageName: "receitas-importar",
+                            imageHeight: 78,
+                            imageOffset: CGSize(width: 6, height: 0)
+                        ) {
+                            openRecipeImport(.files)
+                        }
+                        #endif
 
-                            HStack(alignment: .top, spacing: 6) {
-                                assistantActionButton(
-                                    title: "Registrar com Galeria",
-                                    icon: "photo.on.rectangle.angled",
-                                    tint: assistantNutrientsAccent,
-                                    imageName: "nutrientes-galeria",
-                                    imageHeight: 68,
-                                    imageOffset: CGSize(width: 6, height: 0)
-                                ) {
-                                    pendingPlaceholderTitle = "Registrar com Galeria"
-                                }
+                        assistantActionButton(
+                            title: "Salvar Alimento",
+                            icon: "fork.knife.circle.fill",
+                            tint: assistantNutrientsAccent,
+                            imageName: "nutrientes",
+                            imageHeight: 74,
+                            imageOffset: CGSize(width: 6, height: 0)
+                        ) {
+                            pendingPlaceholderTitle = "Salvar Alimento"
+                        }
 
-                                assistantActionButton(
-                                    title: "Registrar com Câmera",
-                                    icon: "camera.fill",
-                                    tint: assistantNutrientsAccent,
-                                    imageName: "nutrientes-camera",
-                                    imageHeight: 72,
-                                    imageOffset: CGSize(width: 6, height: 0)
-                                ) {
-                                    pendingPlaceholderTitle = "Registrar com Câmera"
-                                }
-                            }
+                        assistantActionButton(
+                            title: "Registrar com Áudio",
+                            icon: "mic.fill",
+                            tint: assistantNutrientsAccent,
+                            imageName: "nutrientes-audio",
+                            imageHeight: 74,
+                            imageOffset: CGSize(width: 6, height: 0)
+                        ) {
+                            pendingPlaceholderTitle = "Registrar com Áudio"
+                        }
+
+                        assistantActionButton(
+                            title: "Registrar com Galeria",
+                            icon: "photo.on.rectangle.angled",
+                            tint: assistantNutrientsAccent,
+                            imageName: "nutrientes-galeria",
+                            imageHeight: 68,
+                            imageOffset: CGSize(width: 6, height: 0)
+                        ) {
+                            pendingPlaceholderTitle = "Registrar com Galeria"
+                        }
+
+                        assistantActionButton(
+                            title: "Registrar com Câmera",
+                            icon: "camera.fill",
+                            tint: assistantNutrientsAccent,
+                            imageName: "nutrientes-camera",
+                            imageHeight: 72,
+                            imageOffset: CGSize(width: 6, height: 0)
+                        ) {
+                            pendingPlaceholderTitle = "Registrar com Câmera"
+                        }
+
+                        assistantActionButton(
+                            title: "Rastreio de Peso",
+                            icon: "scalemass.fill",
+                            tint: assistantNutrientsAccent,
+                            imageName: "peso",
+                            imageHeight: 82,
+                            imageOffset: CGSize(width: 10, height: 0)
+                        ) {
+                            triggerAction(.openWeightTracker)
                         }
                     }
                     .padding(.horizontal, 20)
@@ -442,21 +433,6 @@ struct FullscreenAssistantView: View {
         searchBarState.selectResult()
     }
 
-    private func assistantActionSection<Content: View>(
-        title: String,
-        @ViewBuilder content: () -> Content
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title)
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
-
-            VStack(alignment: .leading, spacing: 6) {
-                content()
-            }
-        }
-    }
-
     private func assistantActionButton(
         title: String,
         icon: String,
@@ -510,12 +486,6 @@ struct FullscreenAssistantView: View {
         }
         .frame(maxWidth: .infinity)
         .buttonStyle(.plain)
-    }
-
-    private func assistantActionPlaceholder() -> some View {
-        Color.clear
-            .frame(maxWidth: .infinity, minHeight: assistantActionButtonBaseHeight)
-            .allowsHitTesting(false)
     }
 
     private var pinnedHeader: some View {

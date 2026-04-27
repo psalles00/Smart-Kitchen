@@ -22,6 +22,7 @@ enum CommandBarAction {
     case addRecipe(prefill: String)
     case addUtensil(prefill: String)
     case registerFood(prefill: String)
+    case openWeightTracker
     case askAssistant(prefill: String)
     case openAssistant
     case movePantryToGrocery(UUID)
@@ -286,8 +287,8 @@ struct CommandBarSearchContent: View {
             // Action buttons
             actionButtonsSection(query: trimmedQuery, isQuestion: isQuestion)
 
-            // Quick "Salvar alimento" shortcut
-            if !trimmedQuery.isEmpty && !isQuestion {
+            // Quick "Salvar alimento" shortcut — sempre disponível enquanto houver texto.
+            if !trimmedQuery.isEmpty {
                 registerFoodRow(query: trimmedQuery)
             }
 
@@ -595,7 +596,7 @@ struct CommandBarView: View {
 
             actionButtonsSection(query: trimmedQuery, isQuestion: isQuestion)
 
-            if !trimmedQuery.isEmpty && !isQuestion {
+            if !trimmedQuery.isEmpty {
                 registerFoodRow(query: trimmedQuery)
             }
 

@@ -128,6 +128,10 @@ struct RecentsView: View {
             }
             .tint(PageTheme.nutrients.accentColor)
         }
+        #if os(iOS)
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
+        #endif
     }
 
     @ViewBuilder

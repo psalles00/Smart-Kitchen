@@ -44,6 +44,7 @@ struct ContentView: View {
     @State private var showAddRecipe = false
     @State private var showAddUtensil = false
     @State private var showAddItem = false
+    @State private var showWeightTracker = false
     @State private var addItemPrefill = ""
     @State private var addItemIconFileName: String?
     @State private var addItemCategory: String?
@@ -246,6 +247,12 @@ struct ContentView: View {
         .sheet(item: $searchEditItem, onDismiss: { searchEditItem = nil }) { selection in
             ItemDetailContainerView(itemID: selection.id)
                 .forceLightStatusBar()
+        }
+        .sheet(isPresented: $showWeightTracker) {
+            NavigationStack {
+                WeightTrackerView()
+            }
+            .forceLightStatusBar()
         }
         .sheet(item: $searchEditRecipe, onDismiss: { searchEditRecipe = nil }) { selection in
             NavigationStack {
@@ -980,6 +987,8 @@ struct ContentView: View {
             showAddUtensil = true
         case .registerFood(let prefill):
             searchBarState.pendingNutritionSheet = .manual(prefillName: prefill)
+        case .openWeightTracker:
+            showWeightTracker = true
         case .askAssistant(let prefill):
             pendingChatQuery = prefill
             searchBarState.reveal(mode: .aiChat)

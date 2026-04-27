@@ -113,6 +113,10 @@ struct FoodEntryFormView: View {
                     .trimmingCharacters(in: .whitespaces)
                 aiPrompt = combined
             }
+            #if os(iOS)
+            .presentationDetents([.medium, .large])
+            .presentationDragIndicator(.visible)
+            #endif
         }
     }
 

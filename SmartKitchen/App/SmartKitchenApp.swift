@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import CloudKit
+import CoreText
 
 #if canImport(UIKit)
 import UIKit
@@ -210,29 +211,28 @@ struct SmartKitchenApp: App {
 
     #if os(iOS)
     private static func configureNavigationAppearance() {
-        // Variable font registered as "PlayfairDisplay-Regular" — use UIFontDescriptor for weights
-        let baseName = "PlayfairDisplay-Regular"
-        let largeTitleFont: UIFont = {
-            if let base = UIFont(name: baseName, size: 34) {
-                let desc = base.fontDescriptor.addingAttributes([
-                    .traits: [UIFontDescriptor.TraitKey.weight: UIFont.Weight.bold.rawValue]
-                ])
-                return UIFont(descriptor: desc, size: 34)
-            }
-            return .systemFont(ofSize: 34, weight: .bold)
-        }()
-        let titleFont: UIFont = {
-            if let base = UIFont(name: baseName, size: 17) {
-                let desc = base.fontDescriptor.addingAttributes([
-                    .traits: [UIFontDescriptor.TraitKey.weight: UIFont.Weight.semibold.rawValue]
-                ])
-                return UIFont(descriptor: desc, size: 17)
-            }
-            return .systemFont(ofSize: 17, weight: .semibold)
-        }()
+        let largeTitleFont = makeBrandedNavigationFont(size: 34, weight: 760)
+        let titleFont = makeBrandedNavigationFont(size: 17, weight: 650)
 
         UINavigationBar.appearance().largeTitleTextAttributes = [.font: largeTitleFont]
         UINavigationBar.appearance().titleTextAttributes = [.font: titleFont]
+    }
+
+    private static func makeBrandedNavigationFont(size: CGFloat, weight: CGFloat) -> UIFont {
+        guard let base = UIFont(name: "Bricolage Grotesque", size: size) else {
+            return .systemFont(ofSize: size, weight: size >= 30 ? .bold : .semibold)
+        }
+
+        let opticalSize = min(max(size, 12), 96)
+        let variation: [NSNumber: NSNumber] = [
+            1869640570: NSNumber(value: Double(opticalSize)),
+            2003265652: NSNumber(value: Double(weight)),
+            2003072104: 100
+        ]
+        let descriptor = base.fontDescriptor.addingAttributes([
+            UIFontDescriptor.AttributeName(rawValue: kCTFontVariationAttribute as String): variation
+        ])
+        return UIFont(descriptor: descriptor, size: size)
     }
     #endif
 }

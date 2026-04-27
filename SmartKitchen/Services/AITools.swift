@@ -248,6 +248,41 @@ struct AITools {
                 "name": ["type": "string", "description": "Food name or substring to match. Use empty string to delete the most recent entry."]
             ],
             required: ["name"]
+        ),
+        makeTool(
+            name: "list_weight_entries",
+            description: "List the user's weight history (most recent first). Returns id, ISO date, and weight in kilograms for each entry.",
+            parameters: [
+                "limit": ["type": "integer", "description": "Maximum number of entries to return. Defaults to 30."]
+            ],
+            required: []
+        ),
+        makeTool(
+            name: "add_weight_entry",
+            description: "Register a new body-weight entry for the user. Weight must be in kilograms. The user's nutrition profile is updated when the new entry is the most recent.",
+            parameters: [
+                "weightKg": ["type": "number", "description": "Body weight in kilograms."],
+                "date":     ["type": "string", "description": "ISO date (YYYY-MM-DD) when the measurement was taken. Defaults to today."]
+            ],
+            required: ["weightKg"]
+        ),
+        makeTool(
+            name: "update_weight_entry",
+            description: "Update an existing weight entry. Provide the entry id from list_weight_entries plus the new weightKg and/or date.",
+            parameters: [
+                "id":       ["type": "string", "description": "Entry UUID returned by list_weight_entries."],
+                "weightKg": ["type": "number", "description": "New body weight in kilograms (optional)."],
+                "date":     ["type": "string", "description": "New ISO date (YYYY-MM-DD) (optional)."]
+            ],
+            required: ["id"]
+        ),
+        makeTool(
+            name: "delete_weight_entry",
+            description: "Delete a weight entry. Pass the id from list_weight_entries, or omit it to remove the most recent entry.",
+            parameters: [
+                "id": ["type": "string", "description": "Entry UUID. Omit to delete the most recent entry."]
+            ],
+            required: []
         )
     ]
 
@@ -322,6 +357,14 @@ struct AITools {
             return getNutritionProfile(context: context)
         case "delete_food_entry":
             return deleteFoodEntry(name: call.arguments["name"] as? String ?? "", context: context)
+        case "list_weight_entries":
+            return listWeightEntries(args: call.arguments, context: context)
+        case "add_weight_entry":
+            return addWeightEntry(args: call.arguments, context: context)
+        case "update_weight_entry":
+            return updateWeightEntry(args: call.arguments, context: context)
+        case "delete_weight_entry":
+            return deleteWeightEntry(args: call.arguments, context: context)
         default:
             return "{\"error\": \"Unknown tool: \(call.name)\"}"
         }
@@ -935,6 +978,164 @@ struct AITools {
         context.delete(entry)
         try? context.save()
         return "{\"success\": true, \"deleted\": \"\(removedName)\"}"
+    }
+
+    // MARK: - Weight tracking
+
+    private static let isoDateTimeFormatter: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime]
+        return f
+    }()
+
+    private static func listWeightEntries(args: [String: Any], context: ModelContext) -> String {
+        let limit = max(1, min(args["limit"] as? Int ?? 30, 500))
+        let descriptor = FetchDescriptor<WeightEntry>(
+            sortBy: [SortDescriptor(\.date, order: .reverse)]
+        )
+        let all = (try? context.fetch(descriptor)) ?? []
+        let entries = Array(all.prefix(limit))
+
+        let payload = entries.map { entry -> [String: Any] in
+            [
+                "id": entry.id.uuidString,
+                "date": isoDateTimeFormatter.string(from: entry.date),
+                "weightKg": entry.weightKg
+            ]
+        }
+
+        let profile = NutritionProfileStore.fetch(in: context)
+        return toJSON([
+            "count": entries.count,
+            "totalCount": all.count,
+            "currentWeightKg": profile?.weightKg ?? entries.first?.weightKg ?? 0,
+            "targetWeightKg": profile?.targetWeightKg as Any? ?? NSNull(),
+            "entries": payload
+        ])
+    }
+
+    private static func addWeightEntry(args: [String: Any], context: ModelContext) -> String {
+        let weightKg: Double = {
+            if let d = args["weightKg"] as? Double { return d }
+            if let i = args["weightKg"] as? Int { return Double(i) }
+            return 0
+        }()
+        guard weightKg > 0 else { return "{\"error\": \"invalid weightKg\"}" }
+
+        let date: Date = {
+            if let iso = args["date"] as? String, let parsed = parseDate(iso) {
+                let now = Date()
+                let calendar = Calendar.current
+                var comps = calendar.dateComponents([.year, .month, .day], from: parsed)
+                let timeComps = calendar.dateComponents([.hour, .minute], from: now)
+                comps.hour = timeComps.hour
+                comps.minute = timeComps.minute
+                return calendar.date(from: comps) ?? now
+            }
+            return Date()
+        }()
+
+        let entry = WeightEntry(date: date, weightKg: weightKg)
+        context.insert(entry)
+
+        // Atualiza o perfil somente se este for o registro mais recente.
+        let descriptor = FetchDescriptor<WeightEntry>(
+            sortBy: [SortDescriptor(\.date, order: .reverse)]
+        )
+        let all = (try? context.fetch(descriptor)) ?? []
+        if let mostRecent = all.first ?? Optional(entry),
+           mostRecent.id == entry.id || mostRecent.date <= entry.date,
+           let profile = NutritionProfileStore.fetch(in: context) {
+            profile.weightKg = weightKg
+            profile.updatedAt = .now
+        }
+        try? context.save()
+
+        return toJSON([
+            "success": true,
+            "id": entry.id.uuidString,
+            "date": isoDateTimeFormatter.string(from: entry.date),
+            "weightKg": entry.weightKg
+        ])
+    }
+
+    private static func updateWeightEntry(args: [String: Any], context: ModelContext) -> String {
+        guard let idString = args["id"] as? String, let id = UUID(uuidString: idString) else {
+            return "{\"error\": \"invalid id\"}"
+        }
+        let descriptor = FetchDescriptor<WeightEntry>(
+            predicate: #Predicate { $0.id == id }
+        )
+        guard let entry = (try? context.fetch(descriptor))?.first else {
+            return "{\"error\": \"entry not found\"}"
+        }
+
+        if let newWeight = args["weightKg"] as? Double {
+            entry.weightKg = newWeight
+        } else if let newWeightInt = args["weightKg"] as? Int {
+            entry.weightKg = Double(newWeightInt)
+        }
+
+        if let iso = args["date"] as? String, let parsed = parseDate(iso) {
+            let calendar = Calendar.current
+            var comps = calendar.dateComponents([.year, .month, .day], from: parsed)
+            let timeComps = calendar.dateComponents([.hour, .minute], from: entry.date)
+            comps.hour = timeComps.hour
+            comps.minute = timeComps.minute
+            if let merged = calendar.date(from: comps) {
+                entry.date = merged
+            }
+        }
+
+        // Se a entrada continuar sendo a mais recente, espelha no perfil.
+        let allDescriptor = FetchDescriptor<WeightEntry>(
+            sortBy: [SortDescriptor(\.date, order: .reverse)]
+        )
+        let all = (try? context.fetch(allDescriptor)) ?? []
+        if let mostRecent = all.first, mostRecent.id == entry.id,
+           let profile = NutritionProfileStore.fetch(in: context) {
+            profile.weightKg = entry.weightKg
+            profile.updatedAt = .now
+        }
+        try? context.save()
+
+        return toJSON([
+            "success": true,
+            "id": entry.id.uuidString,
+            "date": isoDateTimeFormatter.string(from: entry.date),
+            "weightKg": entry.weightKg
+        ])
+    }
+
+    private static func deleteWeightEntry(args: [String: Any], context: ModelContext) -> String {
+        let descriptor = FetchDescriptor<WeightEntry>(
+            sortBy: [SortDescriptor(\.date, order: .reverse)]
+        )
+        let all = (try? context.fetch(descriptor)) ?? []
+        guard !all.isEmpty else { return "{\"error\": \"no entries\"}" }
+
+        let target: WeightEntry?
+        if let idString = args["id"] as? String, let id = UUID(uuidString: idString) {
+            target = all.first(where: { $0.id == id })
+        } else {
+            target = all.first
+        }
+        guard let entry = target else { return "{\"error\": \"entry not found\"}" }
+
+        let removedId = entry.id.uuidString
+        let wasMostRecent = (entry.id == all.first?.id)
+        context.delete(entry)
+
+        if wasMostRecent, let profile = NutritionProfileStore.fetch(in: context) {
+            let remaining = all.filter { $0.id != entry.id }
+            if let next = remaining.first {
+                profile.weightKg = next.weightKg
+                profile.updatedAt = .now
+            }
+        }
+        try? context.save()
+
+        return "{\"success\": true, \"deleted\": \"\(removedId)\"}"
     }
 
     // MARK: - Helpers
