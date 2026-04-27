@@ -47,10 +47,19 @@ struct NutrientsInfoContent: View {
 
             if profile?.hasCompletedOnboarding == true {
                 Button(action: onTapScore) {
-                    Image(systemName: score.systemImage)
-                        .font(.system(size: 20, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.95))
-                        .symbolRenderingMode(.hierarchical)
+                    VStack(spacing: 4) {
+                        Image(systemName: score.systemImage)
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundStyle(.white.opacity(0.95))
+                            .symbolRenderingMode(.hierarchical)
+
+                        Text(score.title)
+                            .font(.system(.caption2, design: .rounded, weight: .semibold))
+                            .foregroundStyle(.white.opacity(0.92))
+                            .multilineTextAlignment(.center)
+                            .lineLimit(2)
+                    }
+                    .frame(maxWidth: 92)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("\(score.title). Toque para ver progresso.")
