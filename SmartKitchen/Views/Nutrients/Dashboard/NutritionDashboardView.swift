@@ -155,6 +155,18 @@ struct NutritionDashboardView: View {
         HStack {
             Spacer()
             Menu {
+                Section("Registros Salvos") {
+                    Button {
+                        onPickEntry(.manual(prefillName: nil, prefillMealType: meal))
+                    } label: {
+                        Label("Salvar alimento", systemImage: "fork.knife")
+                    }
+                    Button {
+                        onPickEntry(.recents)
+                    } label: {
+                        Label("Alimentos salvos", systemImage: "clock.arrow.circlepath")
+                    }
+                }
                 Section("Registrar por…") {
                     Button {
                         onPickEntry(.captureLabel)
@@ -182,18 +194,6 @@ struct NutritionDashboardView: View {
                         onPickEntry(.captureText)
                     } label: {
                         Label("Texto", systemImage: "character.cursor.ibeam")
-                    }
-                }
-                Section("Registros Salvos") {
-                    Button {
-                        onPickEntry(.manual(prefillName: nil, prefillMealType: meal))
-                    } label: {
-                        Label("Salvar alimento", systemImage: "fork.knife")
-                    }
-                    Button {
-                        onPickEntry(.recents)
-                    } label: {
-                        Label("Alimentos salvos", systemImage: "clock.arrow.circlepath")
                     }
                 }
             } label: {

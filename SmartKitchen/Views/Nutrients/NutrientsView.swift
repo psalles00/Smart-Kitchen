@@ -33,6 +33,18 @@ struct NutrientsView: View {
                         }
                         GlassButtonGroup {
                             GlassGroupMenu(systemImage: "plus") {
+                                Section("Registros Salvos") {
+                                    Button {
+                                        activeEntrySheet = .manual()
+                                    } label: {
+                                        Label("Salvar alimento", systemImage: "fork.knife")
+                                    }
+                                    Button {
+                                        activeEntrySheet = .recents
+                                    } label: {
+                                        Label("Alimentos salvos", systemImage: "clock.arrow.circlepath")
+                                    }
+                                }
                                 Section("Registrar por…") {
                                     Button {
                                         activeEntrySheet = .captureLabel
@@ -60,18 +72,6 @@ struct NutrientsView: View {
                                         activeEntrySheet = .captureText
                                     } label: {
                                         Label("Texto", systemImage: "character.cursor.ibeam")
-                                    }
-                                }
-                                Section("Registros Salvos") {
-                                    Button {
-                                        activeEntrySheet = .manual()
-                                    } label: {
-                                        Label("Salvar alimento", systemImage: "fork.knife")
-                                    }
-                                    Button {
-                                        activeEntrySheet = .recents
-                                    } label: {
-                                        Label("Alimentos salvos", systemImage: "clock.arrow.circlepath")
                                     }
                                 }
                             }

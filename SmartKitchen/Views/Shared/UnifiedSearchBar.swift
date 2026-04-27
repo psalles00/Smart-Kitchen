@@ -210,6 +210,14 @@ struct UnifiedSearchBar: View {
 
     @ViewBuilder
     private var nutritionCollapsedQuickSection: some View {
+        Section("Registros Salvos") {
+            Button("Salvar alimento", systemImage: "fork.knife") {
+                presentNutritionSheet(.manual())
+            }
+            Button("Alimentos salvos", systemImage: "clock.arrow.circlepath") {
+                presentNutritionSheet(.recents)
+            }
+        }
         Section("Registrar por…") {
             Button("Rótulo", systemImage: "doc.text.viewfinder") {
                 presentNutritionSheet(.captureLabel)
@@ -227,20 +235,20 @@ struct UnifiedSearchBar: View {
             }
             Button("Texto", systemImage: "character.cursor.ibeam") {
                 presentNutritionSheet(.captureText)
-            }
-        }
-        Section("Registros Salvos") {
-            Button("Salvar alimento", systemImage: "fork.knife") {
-                presentNutritionSheet(.manual())
-            }
-            Button("Alimentos salvos", systemImage: "clock.arrow.circlepath") {
-                presentNutritionSheet(.recents)
             }
         }
     }
 
     @ViewBuilder
     private var nutritionQuickSection: some View {
+        Section("Registros Salvos") {
+            Button("Salvar alimento", systemImage: "fork.knife") {
+                presentNutritionSheet(.manual())
+            }
+            Button("Alimentos salvos", systemImage: "clock.arrow.circlepath") {
+                presentNutritionSheet(.recents)
+            }
+        }
         Section("Registrar por…") {
             Button("Rótulo", systemImage: "doc.text.viewfinder") {
                 presentNutritionSheet(.captureLabel)
@@ -258,14 +266,6 @@ struct UnifiedSearchBar: View {
             }
             Button("Texto", systemImage: "character.cursor.ibeam") {
                 presentNutritionSheet(.captureText)
-            }
-        }
-        Section("Registros Salvos") {
-            Button("Salvar alimento", systemImage: "fork.knife") {
-                presentNutritionSheet(.manual())
-            }
-            Button("Alimentos salvos", systemImage: "clock.arrow.circlepath") {
-                presentNutritionSheet(.recents)
             }
         }
     }
