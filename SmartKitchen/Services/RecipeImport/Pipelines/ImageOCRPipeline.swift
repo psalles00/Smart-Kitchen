@@ -81,14 +81,28 @@ struct ImageOCRPipeline: RecipeImportPipeline {
 
     // MARK: - OCR
 
-    private func recognizeText(in data: Data) async throws -> String {
+    /// `nonisolated` para que os closures literais usados em
+    /// `VNRecognizeTextRequest(completionHandler:)` e na chamada do `handler.perform`
+    /// não herdem `@MainActor` da struct externa. O Vision invoca o completion
+    /// handler em uma thread interna; closures `@MainActor` ali disparam
+    /// `_swift_task_checkIsolatedSwift` → EXC_BREAKPOINT.
+    private nonisolated func recognizeText(in data: Data) async throws -> String {
         #if canImport(Vision) && canImport(UIKit)
         guard let image = UIImage(data: data), let cgImage = image.cgImage else {
             RecipeImportLogger.error("ocr invalid image payload")
             throw RecipeImportError.invalidImage
         }
 
-        return try await withCheckedThrowingContinuation { continuation in
+        return try await Self.performOCR(on: cgImage)
+        #else
+        RecipeImportLogger.error("ocr unsupported platform")
+        throw RecipeImportError.unsupportedSource("OCR não disponível nesta plataforma.")
+        #endif
+    }
+
+    #if canImport(Vision) && canImport(UIKit)
+    private nonisolated static func performOCR(on cgImage: CGImage) async throws -> String {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<String, Error>) in
             let request = VNRecognizeTextRequest { request, error in
                 if let error {
                     RecipeImportLogger.error("ocr Vision request error=\(error.localizedDescription)")
@@ -114,9 +128,6 @@ struct ImageOCRPipeline: RecipeImportPipeline {
                 }
             }
         }
-        #else
-        RecipeImportLogger.error("ocr unsupported platform")
-        throw RecipeImportError.unsupportedSource("OCR não disponível nesta plataforma.")
-        #endif
     }
+    #endif
 }

@@ -78,7 +78,6 @@ struct FoodCaptureHostView: View {
                     FoodAnalyzingView(image: capturedImage, message: analyzingMessage)
                 case .result(let analysis):
                     FoodResultView(analysis: analysis, image: capturedImage, logDate: logDate)
-                        .toolbar(.hidden, for: .navigationBar)
                 case .error(let message):
                     errorView(message)
                 }
@@ -295,7 +294,7 @@ struct FoodCaptureHostView: View {
                     )
                 )
                 .scaleEffect(speech.state == .recording ? 1.1 : 1.0)
-                .animation(.spring(duration: 0.4).repeatForever(), value: speech.state)
+                .animation(.easeInOut(duration: 0.4), value: speech.state)
 
             Text(speech.transcript.isEmpty ? "Fale o que você comeu…" : speech.transcript)
                 .font(.body)
@@ -314,23 +313,11 @@ struct FoodCaptureHostView: View {
 
             HStack(spacing: 12) {
                 Button {
+                    // Para a gravação (se ainda estiver ativa) e dispara a
+                    // análise com a transcrição capturada até o momento.
                     if speech.state == .recording {
                         speech.stop()
-                    } else {
-                        speech.start()
                     }
-                } label: {
-                    Label(
-                        speech.state == .recording ? "Parar" : "Gravar",
-                        systemImage: speech.state == .recording ? "stop.fill" : "mic.fill"
-                    )
-                    .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(speech.state == .recording ? .red : PageTheme.nutrients.accentColor)
-                .controlSize(.large)
-
-                Button {
                     let text = speech.transcript.trimmingCharacters(in: .whitespaces)
                     guard !text.isEmpty else { return }
                     typedText = text
@@ -339,7 +326,7 @@ struct FoodCaptureHostView: View {
                     Label("Analisar", systemImage: "sparkles")
                         .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(.borderedProminent)
                 .tint(PageTheme.nutrients.accentColor)
                 .controlSize(.large)
                 .disabled(speech.transcript.trimmingCharacters(in: .whitespaces).isEmpty)

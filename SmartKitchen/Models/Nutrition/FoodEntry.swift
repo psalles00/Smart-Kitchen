@@ -44,6 +44,9 @@ final class FoodEntry {
     /// Arquivo (apenas nome) em Application Support/sk-food-images/. Nunca bytes inline.
     var imageFilename: String? = nil
 
+    /// Marcado pelo usuário como favorito; aparece em uma aba dedicada em Recentes.
+    var isFavorite: Bool = false
+
     init(
         name: String,
         calories: Int,

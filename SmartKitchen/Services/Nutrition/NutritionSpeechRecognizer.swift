@@ -3,9 +3,16 @@ import Foundation
 import AVFoundation
 import Speech
 
-/// Wrapper simples de SFSpeechRecognizer com streaming de transcrições parciais.
-@MainActor
+/// Wrapper de SFSpeechRecognizer com streaming de transcrições parciais.
+///
+/// Os callbacks de `SFSpeechRecognizer.requestAuthorization`,
+/// `AVAudioApplication.requestRecordPermission` e `recognitionTask(with:)` são
+/// entregues em queues arbitrárias do TCC/Speech. Em Swift 6, closures literais
+/// dentro de uma classe `@MainActor` herdam esse isolamento, e o runtime aborta
+/// com `_swift_task_checkIsolatedSwift` quando o callback é invocado fora do main.
+/// Por isso, esses callbacks são embrulhados em helpers `nonisolated static`.
 @Observable
+@MainActor
 final class NutritionSpeechRecognizer {
     enum State: Equatable {
         case idle
@@ -17,10 +24,11 @@ final class NutritionSpeechRecognizer {
     private(set) var transcript: String = ""
     private(set) var state: State = .idle
 
-    private let recognizer: SFSpeechRecognizer?
-    private var request: SFSpeechAudioBufferRecognitionRequest?
-    private var task: SFSpeechRecognitionTask?
-    private let engine = AVAudioEngine()
+    @ObservationIgnored private let recognizer: SFSpeechRecognizer?
+    @ObservationIgnored private var request: SFSpeechAudioBufferRecognitionRequest?
+    @ObservationIgnored private var task: SFSpeechRecognitionTask?
+    @ObservationIgnored private let engine = AVAudioEngine()
+    @ObservationIgnored private var isStarting: Bool = false
 
     init(locale: Locale = Locale(identifier: "pt-BR")) {
         self.recognizer = SFSpeechRecognizer(locale: locale) ?? SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
@@ -28,30 +36,39 @@ final class NutritionSpeechRecognizer {
 
     // MARK: - Public
 
+    /// Idempotente. Inicia (ou ignora) o ciclo de gravação.
     func start() {
-        SFSpeechRecognizer.requestAuthorization { [weak self] auth in
-            DispatchQueue.main.async {
-                guard let self else { return }
-                guard auth == .authorized else {
-                    self.state = .error("Permissão de reconhecimento de voz negada. Habilite em Ajustes.")
-                    return
-                }
-                AVAudioApplication.requestRecordPermission { allowed in
-                    DispatchQueue.main.async {
-                        guard allowed else {
-                            self.state = .error("Permissão de microfone negada. Habilite em Ajustes.")
-                            return
-                        }
-                        self.beginSession()
-                    }
-                }
+        guard state != .recording, !isStarting else { return }
+        isStarting = true
+
+        Task { [weak self] in
+            let speechAuth = await Self.requestSpeechAuthorization()
+            guard let self else { return }
+            guard speechAuth == .authorized else {
+                self.isStarting = false
+                self.state = .error("Permissão de reconhecimento de voz negada. Habilite em Ajustes.")
+                return
             }
+
+            let micAllowed = await Self.requestMicrophonePermission()
+            guard !Task.isCancelled else { return }
+            guard micAllowed else {
+                self.isStarting = false
+                self.state = .error("Permissão de microfone negada. Habilite em Ajustes.")
+                return
+            }
+
+            self.isStarting = false
+            guard self.state != .recording else { return }
+            self.beginSession()
         }
     }
 
     func stop() {
         guard state == .recording else { return }
-        engine.stop()
+        if engine.isRunning {
+            engine.stop()
+        }
         engine.inputNode.removeTap(onBus: 0)
         request?.endAudio()
         request = nil
@@ -67,7 +84,25 @@ final class NutritionSpeechRecognizer {
         state = .idle
     }
 
-    // MARK: - Internals
+    // MARK: - Permission helpers (nonisolated)
+
+    private nonisolated static func requestSpeechAuthorization() async -> SFSpeechRecognizerAuthorizationStatus {
+        await withCheckedContinuation { (cont: CheckedContinuation<SFSpeechRecognizerAuthorizationStatus, Never>) in
+            SFSpeechRecognizer.requestAuthorization { status in
+                cont.resume(returning: status)
+            }
+        }
+    }
+
+    private nonisolated static func requestMicrophonePermission() async -> Bool {
+        await withCheckedContinuation { (cont: CheckedContinuation<Bool, Never>) in
+            AVAudioApplication.requestRecordPermission { allowed in
+                cont.resume(returning: allowed)
+            }
+        }
+    }
+
+    // MARK: - Session
 
     private func beginSession() {
         guard let recognizer, recognizer.isAvailable else {
@@ -94,28 +129,63 @@ final class NutritionSpeechRecognizer {
         let input = engine.inputNode
         input.removeTap(onBus: 0)
         let format = input.outputFormat(forBus: 0)
-        input.installTap(onBus: 0, bufferSize: 1024, format: format) { buffer, _ in
-            req.append(buffer)
+        guard format.sampleRate > 0, format.channelCount > 0 else {
+            request = nil
+            try? session.setActive(false, options: .notifyOthersOnDeactivation)
+            state = .error("Entrada de áudio indisponível. Verifique o microfone do dispositivo.")
+            return
         }
+        // O bloco do tap é executado na thread real-time de áudio. Encaminhamos
+        // a instalação por um helper nonisolated para o closure literal não
+        // herdar `@MainActor` (que dispararia _swift_task_checkIsolatedSwift).
+        Self.installAudioTap(on: input, format: format, request: req)
         engine.prepare()
         do {
             try engine.start()
             state = .recording
         } catch {
+            input.removeTap(onBus: 0)
+            request = nil
+            try? session.setActive(false, options: .notifyOthersOnDeactivation)
             state = .error("Falha ao iniciar gravação.")
             return
         }
 
-        task = recognizer.recognitionTask(with: req) { [weak self] result, error in
-            DispatchQueue.main.async {
+        // recognitionTask: closure entregue fora do MainActor, então
+        // encaminhamos via helper nonisolated.
+        self.task = Self.makeRecognitionTask(
+            recognizer: recognizer,
+            request: req
+        ) { [weak self] transcript, isFinal, hasError in
+            Task { @MainActor [weak self] in
                 guard let self else { return }
-                if let result {
-                    self.transcript = result.bestTranscription.formattedString
+                if let transcript {
+                    self.transcript = transcript
                 }
-                if error != nil || (result?.isFinal ?? false) {
+                if hasError || isFinal {
                     self.stop()
                 }
             }
+        }
+    }
+
+    private nonisolated static func makeRecognitionTask(
+        recognizer: SFSpeechRecognizer,
+        request: SFSpeechAudioBufferRecognitionRequest,
+        update: @Sendable @escaping (_ transcript: String?, _ isFinal: Bool, _ hasError: Bool) -> Void
+    ) -> SFSpeechRecognitionTask {
+        recognizer.recognitionTask(with: request) { result, error in
+            update(result?.bestTranscription.formattedString, result?.isFinal ?? false, error != nil)
+        }
+    }
+
+    private nonisolated static func installAudioTap(
+        on input: AVAudioInputNode,
+        format: AVAudioFormat,
+        request: SFSpeechAudioBufferRecognitionRequest
+    ) {
+        input.installTap(onBus: 0, bufferSize: 1024, format: format) { buffer, _ in
+            request.append(buffer)
         }
     }
 }

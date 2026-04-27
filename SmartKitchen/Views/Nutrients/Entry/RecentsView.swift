@@ -14,6 +14,7 @@ struct RecentsView: View {
     @State private var segment: Segment = .recents
 
     private enum Segment: String, CaseIterable, Identifiable {
+        case favorites = "Favoritos"
         case recents = "Recentes"
         case frequent = "Frequentes"
         var id: String { rawValue }
@@ -60,6 +61,42 @@ struct RecentsView: View {
         "\(entry.name.lowercased())#\(entry.calories)"
     }
 
+    /// Conjunto de chaves dedupe que estão favoritadas (qualquer entrada com
+    /// aquela chave marcada como favorita conta como favorita).
+    private var favoriteKeys: Set<String> {
+        Set(allEntries.filter { $0.isFavorite }.map { dedupeKey(for: $0) })
+    }
+
+    /// Lista única por chave entre as entradas favoritas, mostrando a mais recente.
+    private var favoriteUnique: [FoodEntry] {
+        let favKeys = favoriteKeys
+        var seen = Set<String>()
+        var result: [FoodEntry] = []
+        for entry in allEntries {
+            let key = dedupeKey(for: entry)
+            guard favKeys.contains(key) else { continue }
+            if seen.insert(key).inserted {
+                result.append(entry)
+            }
+        }
+        return result
+    }
+
+    private func isFavorite(_ entry: FoodEntry) -> Bool {
+        favoriteKeys.contains(dedupeKey(for: entry))
+    }
+
+    /// Alterna favorito propagando para todas as entradas com a mesma chave,
+    /// para que a marca persista mesmo após relogs/duplicatas.
+    private func toggleFavorite(for entry: FoodEntry) {
+        let key = dedupeKey(for: entry)
+        let newValue = !favoriteKeys.contains(key)
+        for e in allEntries where dedupeKey(for: e) == key {
+            e.isFavorite = newValue
+        }
+        try? modelContext.save()
+    }
+
     // MARK: - Body
 
     var body: some View {
@@ -90,16 +127,25 @@ struct RecentsView: View {
     @ViewBuilder
     private var contentList: some View {
         switch segment {
+        case .favorites:
+            if favoriteUnique.isEmpty {
+                emptyState(icon: "star", message: "Nenhum favorito ainda.\nMarque alimentos com a estrela em Recentes ou Frequentes.")
+            } else {
+                List {
+                    ForEach(favoriteUnique) { entry in
+                        favoriteRow(entry)
+                    }
+                }
+                .listStyle(.insetGrouped)
+                .scrollContentBackground(.hidden)
+            }
         case .recents:
             if recentUnique.isEmpty {
                 emptyState(icon: "clock", message: "Nenhum registro ainda.\nComece adicionando uma entrada manual.")
             } else {
                 List {
                     ForEach(recentUnique) { entry in
-                        Button { relog(entry) } label: {
-                            SavedMealRow(entry: entry, subtitle: nil)
-                        }
-                        .buttonStyle(.plain)
+                        favoriteRow(entry)
                     }
                 }
                 .listStyle(.insetGrouped)
@@ -111,14 +157,37 @@ struct RecentsView: View {
             } else {
                 List {
                     ForEach(frequentGroups) { group in
-                        Button { relog(group.template) } label: {
-                            SavedMealRow(entry: group.template, subtitle: "\(group.count)× registrado")
-                        }
-                        .buttonStyle(.plain)
+                        favoriteRow(group.template, subtitle: "\(group.count)× registrado")
                     }
                 }
                 .listStyle(.insetGrouped)
                 .scrollContentBackground(.hidden)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func favoriteRow(_ entry: FoodEntry, subtitle: String? = nil) -> some View {
+        let favorite = isFavorite(entry)
+        Button { relog(entry) } label: {
+            SavedMealRow(entry: entry, subtitle: subtitle, isFavorite: favorite)
+        }
+        .buttonStyle(.plain)
+        .swipeActions(edge: .leading, allowsFullSwipe: true) {
+            Button {
+                toggleFavorite(for: entry)
+            } label: {
+                Label(favorite ? "Desfavoritar" : "Favoritar",
+                      systemImage: favorite ? "star.slash.fill" : "star.fill")
+            }
+            .tint(.yellow)
+        }
+        .contextMenu {
+            Button {
+                toggleFavorite(for: entry)
+            } label: {
+                Label(favorite ? "Remover dos favoritos" : "Adicionar aos favoritos",
+                      systemImage: favorite ? "star.slash" : "star")
             }
         }
     }
@@ -161,6 +230,9 @@ struct RecentsView: View {
             emoji: template.emoji,
             servingSizeGrams: template.servingSizeGrams
         )
+        // Propaga marca de favorito para que duplicatas mantenham a mesma chave
+        // visível no segmento Favoritos.
+        copy.isFavorite = isFavorite(template)
         modelContext.insert(copy)
         try? modelContext.save()
         dismiss()
@@ -181,6 +253,7 @@ private struct FrequentGroup: Identifiable {
 private struct SavedMealRow: View {
     let entry: FoodEntry
     let subtitle: String?
+    var isFavorite: Bool = false
 
     var body: some View {
         HStack(spacing: 12) {
@@ -189,10 +262,18 @@ private struct SavedMealRow: View {
                 .clipShape(.rect(cornerRadius: 12))
 
             VStack(alignment: .leading, spacing: 3) {
-                Text(entry.name)
-                    .font(.system(.body, design: .rounded, weight: .medium))
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
+                HStack(spacing: 6) {
+                    Text(entry.name)
+                        .font(.system(.body, design: .rounded, weight: .medium))
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                    if isFavorite {
+                        Image(systemName: "star.fill")
+                            .font(.caption)
+                            .foregroundStyle(.yellow)
+                    }
+                }
+                Group {
                 HStack(spacing: 6) {
                     Text("\(entry.calories) kcal")
                         .font(.system(.subheadline, design: .rounded, weight: .semibold))
@@ -208,6 +289,7 @@ private struct SavedMealRow: View {
                     macroTag("P", Int(entry.proteinG))
                     macroTag("C", Int(entry.carbsG))
                     macroTag("G", Int(entry.fatG))
+                }
                 }
             }
 

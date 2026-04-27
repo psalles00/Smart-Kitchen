@@ -36,8 +36,7 @@ struct FoodResultView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            Form {
+        Form {
                 heroSection
 
                 Section("Alimento") {
@@ -101,7 +100,6 @@ struct FoodResultView: View {
                 }
             }
             .tint(PageTheme.nutrients.accentColor)
-        }
         .onAppear {
             if name.isEmpty { name = analysis.name }
             if servingText.isEmpty {
