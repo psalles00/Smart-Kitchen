@@ -256,6 +256,7 @@ struct RecipesView: View {
             refreshRecipeProjectionsIfNeeded(force: true)
             refreshNotebookSummariesIfNeeded(force: true)
             handleScrollToItemRequest(scrollToItem)
+            prefetchGalleryThumbnails()
         }
         // PERF: previously these used `.onChange(of: pantryItems)` /
         // `.onChange(of: allRecipes)` which fire on EVERY SwiftData @Query
@@ -1235,6 +1236,34 @@ struct RecipesView: View {
                     key: key, data: data, maxPixel: maxPixel
                 )
             }
+        }
+    }
+
+    /// Pre-warm the on-disk + in-memory thumbnail cache for the recipes
+    /// that will appear in the gallery on first paint. Subsequent launches
+    /// hit the persistent disk cache, so visible cards render instantly
+    /// without the expensive original-image decode on a cold start.
+    private func prefetchGalleryThumbnails() {
+        let cols = settings?.recipeGalleryColumns ?? 3
+        let maxPixel: CGFloat = {
+            switch cols {
+            case 1: return 1200
+            case 2: return 900
+            case 3: return 600
+            default: return 500
+            }
+        }()
+        // Two screens worth of cards is plenty without flooding the queue.
+        let visibleBatch = max(cols * 6, 12)
+        let candidates = recipes.prefix(visibleBatch)
+        for recipe in candidates {
+            guard let data = recipe.imageData, !data.isEmpty else { continue }
+            let key = RecipeImageCache.key(
+                recipeID: recipe.id,
+                dataCount: data.count,
+                maxPixel: maxPixel
+            )
+            RecipeImageCache.shared.prewarm(key: key, data: data, maxPixel: maxPixel)
         }
     }
 
