@@ -15,6 +15,7 @@ struct NutritionDashboardView: View {
 
     @State private var isMonthExpanded = false
     @State private var isPrimaryActionHighlighted = false
+    @State private var macroPageIndex: Int = 0
 
     private var calendar: Calendar { .current }
 
@@ -36,6 +37,30 @@ struct NutritionDashboardView: View {
 
     private var fatConsumed: Int {
         Int(entriesForSelectedDate.reduce(0) { $0 + $1.fatG }.rounded())
+    }
+
+    private var fiberConsumed: Double {
+        entriesForSelectedDate.reduce(0) { $0 + ($1.fiberG ?? 0) }
+    }
+
+    private var sugarConsumed: Double {
+        entriesForSelectedDate.reduce(0) { $0 + ($1.sugarG ?? 0) }
+    }
+
+    private var sodiumConsumed: Double {
+        entriesForSelectedDate.reduce(0) { $0 + ($1.sodiumMg ?? 0) }
+    }
+
+    private var saturatedFatConsumed: Double {
+        entriesForSelectedDate.reduce(0) { $0 + ($1.saturatedFatG ?? 0) }
+    }
+
+    private var cholesterolConsumed: Double {
+        entriesForSelectedDate.reduce(0) { $0 + ($1.cholesterolMg ?? 0) }
+    }
+
+    private var potassiumConsumed: Double {
+        entriesForSelectedDate.reduce(0) { $0 + ($1.potassiumMg ?? 0) }
     }
 
     private func caloriesFor(_ date: Date) -> Int {
@@ -74,27 +99,8 @@ struct NutritionDashboardView: View {
                     CalorieRingView(consumed: caloriesConsumed, goal: profile.effectiveCalories)
                         .padding(.top, 4)
 
-                    HStack(spacing: 10) {
-                        MacroCard(
-                            label: "Proteína",
-                            current: proteinConsumed,
-                            goal: profile.effectiveProteinG,
-                            tint: Color(red: 0.20, green: 0.50, blue: 0.93)
-                        )
-                        MacroCard(
-                            label: "Carbos",
-                            current: carbsConsumed,
-                            goal: profile.effectiveCarbsG,
-                            tint: Color(red: 0.85, green: 0.58, blue: 0.12)
-                        )
-                        MacroCard(
-                            label: "Gordura",
-                            current: fatConsumed,
-                            goal: profile.effectiveFatG,
-                            tint: Color(red: 0.90, green: 0.75, blue: 0.15)
-                        )
-                    }
-                    .padding(.horizontal, 16)
+                    macrosPager
+                        .padding(.horizontal, 16)
 
                     mealSections
                         .padding(.horizontal, 16)
@@ -113,7 +119,75 @@ struct NutritionDashboardView: View {
 
     // MARK: - Registros (entradas do dia)
 
-    /// Card unificado “Registros”, com subseções por `MealType`. Cada subseção
+    /// Carrossel paginado de macros / micros. Página 1 = macros principais
+    /// (Proteína / Carbos / Gordura). Páginas 2 e 3 mostram micronutrientes
+    /// adicionais (fibra, açúcar, sódio, gordura saturada, colesterol, potássio).
+    /// Indicador de pontos abaixo, padrão de paging do iOS.
+    @ViewBuilder
+    private var macrosPager: some View {
+        VStack(spacing: 10) {
+            TabView(selection: $macroPageIndex) {
+                macroPageMain
+                    .padding(.horizontal, 0)
+                    .tag(0)
+
+                macroPageMicros1
+                    .padding(.horizontal, 0)
+                    .tag(1)
+
+                macroPageMicros2
+                    .padding(.horizontal, 0)
+                    .tag(2)
+            }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            .frame(height: 86)
+
+            // Indicador customizado para garantir aparência neutra.
+            HStack(spacing: 6) {
+                ForEach(0..<3, id: \.self) { idx in
+                    Circle()
+                        .fill(idx == macroPageIndex
+                              ? Color.primary.opacity(0.55)
+                              : Color.primary.opacity(0.18))
+                        .frame(width: 6, height: 6)
+                }
+            }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Página \(macroPageIndex + 1) de 3")
+        }
+    }
+
+    @ViewBuilder
+    private var macroPageMain: some View {
+        HStack(spacing: 10) {
+            MacroCard(label: "Proteína", current: proteinConsumed, goal: profile.effectiveProteinG)
+            MacroCard(label: "Carbos", current: carbsConsumed, goal: profile.effectiveCarbsG)
+            MacroCard(label: "Gordura", current: fatConsumed, goal: profile.effectiveFatG)
+        }
+    }
+
+    /// Página 2 — micronutrientes comuns. Metas baseadas em referências
+    /// de DRI gerais (placeholder enquanto não há configuração de meta para
+    /// micros no perfil).
+    @ViewBuilder
+    private var macroPageMicros1: some View {
+        HStack(spacing: 10) {
+            MacroCard(label: "Fibra", current: fiberConsumed, goal: 25)
+            MacroCard(label: "Açúcar", current: sugarConsumed, goal: 50)
+            MacroCard(label: "Sódio", current: sodiumConsumed, goal: 2300)
+        }
+    }
+
+    @ViewBuilder
+    private var macroPageMicros2: some View {
+        HStack(spacing: 10) {
+            MacroCard(label: "Saturada", current: saturatedFatConsumed, goal: 20)
+            MacroCard(label: "Colesterol", current: cholesterolConsumed, goal: 300)
+            MacroCard(label: "Potássio", current: potassiumConsumed, goal: 3500)
+        }
+    }
+
+    /// Card unificado “Refeições do dia”, com subseções por `MealType`. Cada subseção
     /// usa `ItemListDivider` pontilhado entre as linhas, mesmo padrão de
     /// Listas/Receitas. O botão "Adicionar registro" aparece no header do card,
     /// enquanto cada subseção tem um botão discreto (apenas ícone +) ao lado do
@@ -130,7 +204,7 @@ struct NutritionDashboardView: View {
         return VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Registros")
+                    Text("Refeições do dia")
                         .font(.headline.weight(.semibold))
                     Text("Tudo o que você registrou neste dia")
                         .font(.caption)
@@ -211,8 +285,8 @@ struct NutritionDashboardView: View {
         }
     }
 
-    /// Botão do header do card “Registros”. Reutiliza o mesmo menu da assistant
-    /// bar via `onPickEntry`. Sem preferência de refeição (deixa o usuário decidir).
+    /// Botão do header do card “Refeições do dia”. Outline-only, sem cor de
+    /// preenchimento — apenas borda neutra que combina com o texto.
     @ViewBuilder
     private var addRegistroMenu: some View {
         Menu {
@@ -222,10 +296,10 @@ struct NutritionDashboardView: View {
                 .font(.caption.weight(.semibold))
                 .padding(.horizontal, 12)
                 .padding(.vertical, 7)
-                .background(
-                    Capsule().fill(PageTheme.nutrients.accentColor.opacity(0.16))
+                .foregroundStyle(.primary)
+                .overlay(
+                    Capsule().stroke(Color.primary.opacity(0.25), lineWidth: 1)
                 )
-                .foregroundStyle(PageTheme.nutrients.accentColor)
         }
         .menuOrder(.fixed)
     }

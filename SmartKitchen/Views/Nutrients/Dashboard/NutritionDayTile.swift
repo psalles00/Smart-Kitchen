@@ -37,6 +37,22 @@ struct NutritionDayTile: View {
 
     private var isFuture: Bool { state == .future }
 
+    /// Cores discretas e modernas usadas para indicar status (sem bordas).
+    private static let modernAmber = Color(red: 0.96, green: 0.78, blue: 0.26)
+    private static let modernGreen = Color(red: 0.31, green: 0.74, blue: 0.46)
+
+    /// Há fundo destacado para esse dia? Usado no week view (rounded rect)
+    /// e no month view (circle) — apenas quando há significado real
+    /// (hoje, em andamento, concluído) ou quando o dia está selecionado.
+    private var hasFill: Bool {
+        switch state {
+        case .todayEmpty, .todayInProgress, .pastInProgress, .completed:
+            return true
+        default:
+            return isSelected
+        }
+    }
+
     var body: some View {
         Button {
             guard !isFuture else { return }
@@ -45,87 +61,67 @@ struct NutritionDayTile: View {
             #endif
             onTap()
         } label: {
-            VStack(spacing: 4) {
-                if showWeekday {
-                    Text(date.formatted(.dateTime.weekday(.narrow)))
-                        .font(.system(.caption2, design: .rounded, weight: .medium))
-                        .foregroundStyle(weekdayLabelColor)
-                }
-
-                ZStack {
-                    backgroundLayer
-                    ringLayer
-                    Text(date.formatted(.dateTime.day()))
-                        .font(.system(.callout, design: .rounded, weight: .semibold))
-                        .foregroundStyle(numberColor)
-                        .strikethrough(state == .canceled, color: .secondary)
-                }
-                .frame(width: 36, height: 36)
-                .overlay {
-                    if isSelected {
-                        Circle().stroke(Color.primary.opacity(0.4), lineWidth: 1.2)
-                    }
-                }
-            }
-            .opacity(isFuture ? 0.35 : 1)
-            .frame(maxWidth: .infinity)
+            content
+                .opacity(isFuture ? 0.35 : 1)
+                .frame(maxWidth: .infinity)
         }
         .buttonStyle(.plain)
         .disabled(isFuture)
         .accessibilityLabel(accessibilityLabel)
     }
 
-    // MARK: - Layers
+    // MARK: - Layouts
 
     @ViewBuilder
-    private var backgroundLayer: some View {
-        let baseColor = stateBackgroundColor
-        Circle().fill(baseColor)
-        // Borda sutil para reforçar o contorno do dia.
-        Circle().stroke(stateBorderColor, lineWidth: 1)
-    }
-
-    @ViewBuilder
-    private var ringLayer: some View {
-        // Ring só faz sentido para dias com consumo registrado (em andamento ou concluído).
-        if state == .todayInProgress || state == .completed {
-            Circle()
-                .trim(from: 0, to: max(0, min(progress, 1.0)))
-                .stroke(
-                    ringColor,
-                    style: StrokeStyle(lineWidth: 2, lineCap: .round)
-                )
-                .rotationEffect(.degrees(-90))
+    private var content: some View {
+        if showWeekday {
+            // Week view: rounded rect cobrindo dia da semana + número.
+            VStack(spacing: 2) {
+                Text(date.formatted(.dateTime.weekday(.narrow)))
+                    .font(.system(size: 10, weight: .medium, design: .rounded))
+                    .foregroundStyle(weekdayLabelColor)
+                Text(date.formatted(.dateTime.day()))
+                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .foregroundStyle(numberColor)
+                    .strikethrough(state == .canceled, color: .secondary)
+            }
+            .padding(.vertical, 6)
+            .frame(width: 38)
+            .background {
+                if hasFill {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(stateBackgroundColor)
+                }
+            }
+        } else {
+            // Month view: continua usando círculo, sem borda.
+            ZStack {
+                if hasFill {
+                    Circle().fill(stateBackgroundColor)
+                }
+                Text(date.formatted(.dateTime.day()))
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .foregroundStyle(numberColor)
+                    .strikethrough(state == .canceled, color: .secondary)
+            }
+            .frame(width: 32, height: 32)
         }
     }
 
     // MARK: - Color mapping
 
     private var stateBackgroundColor: Color {
+        // Estados com significado vencem qualquer destaque de seleção.
         switch state {
-        case .future:           return Color.secondary.opacity(0.06)
-        case .todayEmpty:       return Color.secondary.opacity(0.10)
-        case .todayInProgress:  return Color.yellow.opacity(0.18)
-        case .completed:        return PageTheme.nutrients.accentColor.opacity(0.18)
-        case .pastInProgress:   return Color.yellow.opacity(0.18)
-        case .pastEmpty:        return Color.secondary.opacity(0.08)
-        case .canceled:         return Color.secondary.opacity(0.08)
-        }
-    }
-
-    private var stateBorderColor: Color {
-        switch state {
-        case .future, .todayEmpty, .canceled, .pastEmpty: return Color.secondary.opacity(0.18)
-        case .todayInProgress, .pastInProgress:           return Color.yellow.opacity(0.45)
-        case .completed:                                  return PageTheme.nutrients.accentColor.opacity(0.55)
-        }
-    }
-
-    private var ringColor: Color {
-        switch state {
-        case .completed:                          return PageTheme.nutrients.accentColor
-        case .todayInProgress, .pastInProgress:   return Color.yellow
-        default:                                  return .clear
+        case .todayInProgress, .pastInProgress:
+            return Self.modernAmber.opacity(isSelected ? 0.32 : 0.22)
+        case .completed:
+            return Self.modernGreen.opacity(isSelected ? 0.32 : 0.22)
+        case .todayEmpty:
+            return Color.primary.opacity(isSelected ? 0.14 : 0.08)
+        default:
+            // Selecionado sem estado especial: sutil indicador neutro.
+            return isSelected ? Color.primary.opacity(0.10) : .clear
         }
     }
 
@@ -134,13 +130,15 @@ struct NutritionDayTile: View {
         case .future:           return .secondary
         case .canceled:         return .secondary
         case .pastEmpty:        return .secondary
-        case .completed:        return PageTheme.nutrients.accentColor
+        case .completed:        return Self.modernGreen
+        case .todayInProgress, .pastInProgress: return .primary
         default:                return .primary
         }
     }
 
     private var weekdayLabelColor: Color {
-        isSelected ? .primary : .secondary
+        if state == .completed { return Self.modernGreen.opacity(0.9) }
+        return isSelected ? .primary : .secondary
     }
 
     // MARK: - Accessibility

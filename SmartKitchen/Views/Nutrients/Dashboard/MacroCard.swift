@@ -1,60 +1,72 @@
 import SwiftUI
 
-/// Cartão de macro (Proteína / Carbos / Gordura) com barra de progresso.
+/// Cartão compacto de nutriente. Mostra o título (mesma fonte dos itens
+/// "Mercado / Despensa / Receitas / Alimento" da Home) e o valor formatado
+/// (geralmente uma porcentagem) em fonte maior porém com peso menor.
+///
+/// Background: superfície neutra (`neutralSurfaceColor`) — adapta ao modo
+/// escuro automaticamente via `secondarySystemBackground` no fallback.
 struct MacroCard: View {
     let label: String
-    let current: Int
-    let goal: Int
-    let tint: Color
-
-    private var progress: Double {
-        goal > 0 ? min(Double(current) / Double(goal), 1.0) : 0
-    }
+    /// Texto principal já formatado (ex: "32%", "—").
+    let valueText: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .lastTextBaseline, spacing: 2) {
-                Text("\(current)")
-                    .font(.system(.title3, design: .rounded, weight: .bold))
-                    .foregroundStyle(tint)
-                Text("/\(goal)g")
-                    .font(.system(.subheadline, design: .rounded, weight: .medium))
-                    .foregroundStyle(.secondary)
-            }
-            .lineLimit(1)
-            .minimumScaleFactor(0.6)
-
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    Capsule()
-                        .fill(tint.opacity(0.14))
-                    Capsule()
-                        .fill(tint)
-                        .frame(width: max(6, geo.size.width * progress))
-                        .animation(.spring(response: 0.8, dampingFraction: 0.75), value: current)
-                }
-            }
-            .frame(height: 6)
-
+        VStack(spacing: 6) {
             Text(label)
-                .font(.caption.weight(.medium))
-                .foregroundStyle(.secondary)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.primary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
 
-            Text(goal > current ? "\(goal - current)g restam" : "Meta atingida")
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
+            Text(valueText)
+                .font(.system(size: 22, weight: .regular, design: .rounded))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
         }
-        .padding(12)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.ultraThinMaterial, in: .rect(cornerRadius: 14))
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 12)
+        .padding(.horizontal, 8)
+        .background(MacroCard.cardBackground, in: .rect(cornerRadius: 14))
+    }
+
+    /// Background adaptativo: claro = #F8F8FA; escuro = `secondarySystemBackground`.
+    private static var cardBackground: Color {
+        #if canImport(UIKit)
+        return Color(uiColor: UIColor { trait in
+            trait.userInterfaceStyle == .dark
+                ? UIColor.secondarySystemBackground
+                : UIColor(red: 248/255, green: 248/255, blue: 250/255, alpha: 1)
+        })
+        #else
+        return neutralSurfaceColor
+        #endif
+    }
+}
+
+extension MacroCard {
+    /// Conveniência: monta a partir de current/goal exibindo "X%" do progresso.
+    init(label: String, current: Double, goal: Double) {
+        self.label = label
+        if goal > 0 {
+            let pct = Int((min(current / goal, 1.0) * 100).rounded())
+            self.valueText = "\(pct)%"
+        } else {
+            self.valueText = "—"
+        }
+    }
+
+    init(label: String, current: Int, goal: Int) {
+        self.init(label: label, current: Double(current), goal: Double(goal))
     }
 }
 
 #Preview {
     HStack {
-        MacroCard(label: "Proteína", current: 60, goal: 120, tint: .blue)
-        MacroCard(label: "Carbos", current: 180, goal: 250, tint: .orange)
-        MacroCard(label: "Gordura", current: 40, goal: 70, tint: .yellow)
+        MacroCard(label: "Proteína", valueText: "32%")
+        MacroCard(label: "Carbos", valueText: "44%")
+        MacroCard(label: "Gordura", valueText: "28%")
     }
     .padding()
 }
