@@ -8,21 +8,34 @@ struct CalorieRingView: View {
 
     var remaining: Int { max(goal - consumed, 0) }
 
+    private var titleColor: Color {
+        #if canImport(UIKit)
+        return Color(uiColor: UIColor { trait in
+            trait.userInterfaceStyle == .dark
+                ? UIColor(white: 0.92, alpha: 1)
+                : UIColor(red: 39 / 255, green: 39 / 255, blue: 39 / 255, alpha: 1)
+        })
+        #else
+        return Color(red: 39 / 255, green: 39 / 255, blue: 39 / 255)
+        #endif
+    }
+
     var body: some View {
-        VStack(spacing: 4) {
+        VStack(spacing: 2) {
             Text("\(remaining)")
                 .font(.custom("Bricolage Grotesque", size: 96, relativeTo: .largeTitle).weight(.bold))
-                .foregroundStyle(.primary)
+                .foregroundStyle(titleColor)
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
                 .contentTransition(.numericText())
 
-            Text("Kcal restantes")
+            Text("de \(goal) kcal restantes")
                 .font(.subheadline.weight(.medium))
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
+        .contentShape(Rectangle())
     }
 }
 

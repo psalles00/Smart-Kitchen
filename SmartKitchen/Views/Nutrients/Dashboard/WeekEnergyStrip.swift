@@ -64,23 +64,23 @@ struct WeekEnergyStrip: View {
                 isMonthExpanded.toggle()
             }
         } label: {
-            VStack(spacing: 4) {
-                // Reservar a mesma altura do label de dia ("S", "T", etc.) para
-                // que o círculo fique alinhado com os tiles ao lado.
+            VStack(spacing: 2) {
+                // Mantém a mesma altura visual dos tiles vizinhos.
                 Text(" ")
-                    .font(.system(.caption2, design: .rounded, weight: .medium))
+                    .font(.system(size: 10, weight: .medium, design: .rounded))
+                    .hidden()
 
-                ZStack {
-                    Circle()
-                        .fill(PageTheme.nutrients.accentColor.opacity(0.10))
-                    Circle()
-                        .stroke(PageTheme.nutrients.accentColor.opacity(0.25), lineWidth: 1)
-                    Image(systemName: isMonthExpanded ? "calendar.badge.minus" : "calendar")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(PageTheme.nutrients.accentColor)
-                }
-                .frame(width: 36, height: 36)
+                Image(systemName: isMonthExpanded ? "calendar.badge.minus" : "calendar")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.primary)
+                    .frame(height: 14)
             }
+            .padding(.vertical, 6)
+            .frame(width: 38)
+            .overlay(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .stroke(Color.primary.opacity(0.18), lineWidth: 1)
+            )
             .frame(maxWidth: .infinity)
             .frame(width: 44)
         }

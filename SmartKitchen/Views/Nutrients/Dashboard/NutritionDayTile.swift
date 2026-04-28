@@ -118,11 +118,24 @@ struct NutritionDayTile: View {
         case .completed:
             return Self.modernGreen.opacity(isSelected ? 0.32 : 0.22)
         case .todayEmpty:
-            return Color.primary.opacity(isSelected ? 0.14 : 0.08)
+            return Self.todayNeutralFill
         default:
             // Selecionado sem estado especial: sutil indicador neutro.
-            return isSelected ? Color.primary.opacity(0.10) : .clear
+            return isSelected ? Self.todayNeutralFill : .clear
         }
+    }
+
+    /// Cinza neutro #F8F8FA (com fallback para modo escuro).
+    private static var todayNeutralFill: Color {
+        #if canImport(UIKit)
+        return Color(uiColor: UIColor { trait in
+            trait.userInterfaceStyle == .dark
+                ? UIColor.secondarySystemBackground
+                : UIColor(red: 248/255, green: 248/255, blue: 250/255, alpha: 1)
+        })
+        #else
+        return neutralSurfaceColor
+        #endif
     }
 
     private var numberColor: Color {

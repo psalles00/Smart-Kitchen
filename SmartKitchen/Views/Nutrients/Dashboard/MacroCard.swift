@@ -12,23 +12,24 @@ struct MacroCard: View {
     let valueText: String
 
     var body: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 4) {
             Text(label)
-                .font(.subheadline.weight(.semibold))
+                .font(.footnote.weight(.semibold))
                 .foregroundStyle(.primary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
 
             Text(valueText)
-                .font(.system(size: 22, weight: .regular, design: .rounded))
+                .font(.system(size: 17, weight: .regular, design: .rounded))
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
+        .padding(.vertical, 10)
         .padding(.horizontal, 8)
         .background(MacroCard.cardBackground, in: .rect(cornerRadius: 14))
+        .contentShape(.rect(cornerRadius: 14))
     }
 
     /// Background adaptativo: claro = #F8F8FA; escuro = `secondarySystemBackground`.

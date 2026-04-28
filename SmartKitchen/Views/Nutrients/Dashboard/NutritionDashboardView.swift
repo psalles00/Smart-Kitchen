@@ -12,6 +12,7 @@ struct NutritionDashboardView: View {
     var onTapEntry: (FoodEntry) -> Void = { _ in }
     var onDeleteEntry: (FoodEntry) -> Void = { _ in }
     var onPickEntry: (NutritionEntrySheet) -> Void = { _ in }
+    var onOpenProgress: () -> Void = {}
 
     @State private var isMonthExpanded = false
     @State private var isPrimaryActionHighlighted = false
@@ -85,7 +86,7 @@ struct NutritionDashboardView: View {
     var body: some View {
         VStack(spacing: 0) {
             ScrollView {
-                VStack(spacing: 22) {
+                VStack(spacing: 18) {
                     WeekEnergyStrip(
                         selectedDate: $selectedDate,
                         caloriesForDate: caloriesFor,
@@ -96,18 +97,25 @@ struct NutritionDashboardView: View {
                     )
                     .padding(.horizontal, 12)
 
-                    CalorieRingView(consumed: caloriesConsumed, goal: profile.effectiveCalories)
-                        .padding(.top, 4)
+                    Button(action: onOpenProgress) {
+                        VStack(spacing: 14) {
+                            CalorieRingView(consumed: caloriesConsumed, goal: profile.effectiveCalories)
+                                .padding(.top, 0)
 
-                    macrosPager
-                        .padding(.horizontal, 16)
+                            macrosPager
+                                .padding(.horizontal, 4)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal, 12)
 
                     mealSections
+                        .padding(.top, 12)
                         .padding(.horizontal, 16)
 
                     Color.clear.frame(height: 88)
                 }
-                .padding(.top, 6)
+                .padding(.top, 0)
             }
         }
         .overlay(alignment: .bottomLeading) {
@@ -230,7 +238,7 @@ struct NutritionDashboardView: View {
             HStack(spacing: 6) {
                 Image(systemName: meal.icon)
                     .font(.footnote)
-                    .foregroundStyle(PageTheme.nutrients.accentColor)
+                    .foregroundStyle(.secondary)
                 Text(meal.displayName)
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.secondary)
@@ -285,8 +293,8 @@ struct NutritionDashboardView: View {
         }
     }
 
-    /// Botão do header do card “Refeições do dia”. Outline-only, sem cor de
-    /// preenchimento — apenas borda neutra que combina com o texto.
+    /// Botão do header do card “Refeições do dia”. Outline-only com verde
+    /// discreto aplicado tanto no texto quanto na borda.
     @ViewBuilder
     private var addRegistroMenu: some View {
         Menu {
@@ -296,9 +304,9 @@ struct NutritionDashboardView: View {
                 .font(.caption.weight(.semibold))
                 .padding(.horizontal, 12)
                 .padding(.vertical, 7)
-                .foregroundStyle(.primary)
+                .foregroundStyle(Color(red: 0.31, green: 0.74, blue: 0.46))
                 .overlay(
-                    Capsule().stroke(Color.primary.opacity(0.25), lineWidth: 1)
+                    Capsule().stroke(Color(red: 0.31, green: 0.74, blue: 0.46), lineWidth: 1)
                 )
         }
         .menuOrder(.fixed)

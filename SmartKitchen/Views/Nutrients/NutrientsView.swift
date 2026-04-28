@@ -135,7 +135,8 @@ struct NutrientsView: View {
                         onDeleteEntry: delete,
                         onPickEntry: { sheet in
                             activeEntrySheet = sheet
-                        }
+                        },
+                        onOpenProgress: { pushProgress = true }
                     )
                 } else {
                     emptyState
