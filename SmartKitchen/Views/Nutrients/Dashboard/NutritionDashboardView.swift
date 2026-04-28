@@ -87,41 +87,42 @@ struct NutritionDashboardView: View {
         VStack(spacing: 0) {
             ScrollView {
                 VStack(spacing: 18) {
-                    WeekEnergyStrip(
-                        selectedDate: $selectedDate,
-                        caloriesForDate: caloriesFor,
-                        calorieGoal: profile.effectiveCalories,
-                        weekStartsOnMonday: profile.weekStartsOnMonday,
-                        stateForDate: stateFor,
-                        isMonthExpanded: $isMonthExpanded
-                    )
-                    .padding(.horizontal, 12)
+                    VStack(spacing: 18) {
+                        WeekEnergyStrip(
+                            selectedDate: $selectedDate,
+                            caloriesForDate: caloriesFor,
+                            calorieGoal: profile.effectiveCalories,
+                            weekStartsOnMonday: profile.weekStartsOnMonday,
+                            stateForDate: stateFor,
+                            isMonthExpanded: $isMonthExpanded
+                        )
+                        .padding(.horizontal, 12)
 
-                    Button(action: onOpenProgress) {
-                        VStack(spacing: 14) {
-                            CalorieRingView(consumed: caloriesConsumed, goal: profile.effectiveCalories)
-                                .padding(.top, 0)
+                        Button(action: onOpenProgress) {
+                            VStack(spacing: 14) {
+                                CalorieRingView(consumed: caloriesConsumed, goal: profile.effectiveCalories)
+                                    .padding(.top, 0)
 
-                            macrosPager
-                                .padding(.horizontal, 4)
+                                macrosPager
+                                    .padding(.horizontal, 4)
+                            }
                         }
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.horizontal, 12)
+                        .buttonStyle(.plain)
+                        .padding(.horizontal, 12)
 
-                    mealSections
-                        .padding(.top, 12)
-                        .padding(.horizontal, 16)
+                        mealSections
+                            .padding(.top, 12)
+                            .padding(.horizontal, 16)
+                            .padding(.bottom, 24)
+                    }
+                    .padding(.top, -5)
+                    .overlay(alignment: .top) {
+                        wavyStateBorder
+                            .padding(.top, -5)
+                            .allowsHitTesting(false)
+                    }
 
                     Color.clear.frame(height: 88)
-                }
-                .padding(.top, -5)
-                // Borda ondulada — overlay no conteúdo do scroll, então rola
-                // junto e termina exatamente no final da página.
-                .overlay(alignment: .top) {
-                    wavyStateBorder
-                        .padding(.top, -5)
-                        .allowsHitTesting(false)
                 }
             }
         }
@@ -132,10 +133,10 @@ struct NutritionDashboardView: View {
         }
     }
 
-    /// Borda ondulada que aparece como overlay sobre a área de conteúdo
-    /// (dentro do scroll, então acompanha o scroll e termina junto com a
-    /// página). Amarelo quando o dia tem registro iniciado e não concluído;
-    /// verde quando o dia foi concluído.
+    /// Borda ondulada que aparece como overlay sobre o bloco principal do
+    /// conteúdo da Nutrição. Como fica dentro do scroll, acompanha o fundo
+    /// branco ao rolar, mas termina logo abaixo de "Refeições do dia" — sem
+    /// incluir o spacer final da página.
     @ViewBuilder
     private var wavyStateBorder: some View {
         switch selectedDayState {
