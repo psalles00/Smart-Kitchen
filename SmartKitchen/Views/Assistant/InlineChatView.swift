@@ -2000,7 +2000,7 @@ struct InlineChatView: View {
         // Mensagem temporária de progresso.
         let loadingMessage = ChatMessage(
             role: .assistant,
-            content: "✨ Estruturando \"\(idea.title)\"…",
+            content: "✨ Escrevendo a receita \"\(idea.title)\"…",
             conversationId: convId
         )
         insertMessage(loadingMessage)

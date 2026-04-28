@@ -82,8 +82,10 @@ final class RecipeImageCache: @unchecked Sendable {
         }
         // Hop to a detached task so image decoding never blocks the caller.
         let result: (image: PlatformImage, fromDisk: Bool)? = await Task.detached(priority: .userInitiated) { [data, maxPixel, key] in
-            // Tier 2: try the on-disk JPEG first.
+            // Tier 2: try the on-disk JPEG first. Guard against missing files
+            // (cache pode ter sido purgada pelo iOS) para evitar logs de IIOImageSource.
             if let diskURL = RecipeImageCache.diskURL(for: key),
+               FileManager.default.fileExists(atPath: diskURL.path),
                let diskImage = RecipeImageCache.loadFromDisk(url: diskURL, maxPixel: maxPixel) {
                 return (diskImage, true)
             }
@@ -117,6 +119,7 @@ final class RecipeImageCache: @unchecked Sendable {
         Task.detached(priority: .utility) { [weak self, data, maxPixel, key] in
             // If disk already has it, just decode + populate memory.
             if let diskURL = RecipeImageCache.diskURL(for: key),
+               FileManager.default.fileExists(atPath: diskURL.path),
                let diskImage = RecipeImageCache.loadFromDisk(url: diskURL, maxPixel: maxPixel) {
                 let cost = RecipeImageCache.estimatedCost(for: diskImage)
                 self?.cache.setObject(Entry(diskImage), forKey: key as NSString, cost: cost)

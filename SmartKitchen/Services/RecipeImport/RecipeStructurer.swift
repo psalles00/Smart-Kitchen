@@ -312,6 +312,8 @@ struct RecipeStructurer {
     - Preserve o idioma do texto original (provavelmente pt-BR).
     - Não use emojis, hashtags ou texto promocional no resultado.
     - IGNORE conteúdo extra-receita: links de navegação do site, listas de "artigos relacionados", banners, propagandas, cabeçalhos/rodapés. Extraia APENAS a receita central.
+    - LISTICLES (páginas com VÁRIAS receitas, ex.: "8 pratos rápidos com ovo", "10 sobremesas fáceis"): se houver mais de uma receita completa no texto, escolha APENAS UMA — preferencialmente a primeira receita completa, OU a que melhor casar com o "Título sugerido da fonte" / hint do usuário. Use o nome dessa receita específica em "name", NÃO o título do artigo (que costuma ser "8 pratos…"). NÃO concatene ingredientes/passos de receitas diferentes.
+    - LIMITE DE TAMANHO: uma receita realista raramente tem mais de ~25 ingredientes ou ~20 passos. Se você está produzindo muito mais que isso, provavelmente está misturando várias receitas — refine para uma só.
     - NUTRIÇÃO: SEMPRE preencha nutrition_per_serving com uma boa estimativa POR PORÇÃO baseada nos ingredientes e quantidades, mesmo se a página não trouxer valores explícitos. Marque "estimated": true. Se a página tiver tabela nutricional clara, use os valores dela e marque "estimated": false.
     - VALIDE "steps": passos devem ser instruções culinárias ("misture", "asse", "bata"). Se uma linha parece um link, título de outro artigo, marca de tempo de vídeo ou texto solto, descarte-a.
     """
