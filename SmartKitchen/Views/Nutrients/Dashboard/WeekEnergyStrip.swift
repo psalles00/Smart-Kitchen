@@ -64,19 +64,14 @@ struct WeekEnergyStrip: View {
                 isMonthExpanded.toggle()
             }
         } label: {
-            VStack(spacing: 2) {
-                // Mantém a mesma altura visual dos tiles vizinhos.
-                Text(" ")
-                    .font(.system(size: 10, weight: .medium, design: .rounded))
-                    .hidden()
-
+            // Reservamos a mesma altura dos tiles vizinhos e centralizamos o
+            // ícone verticalmente dentro do retângulo arredondado.
+            ZStack {
                 Image(systemName: isMonthExpanded ? "calendar.badge.minus" : "calendar")
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(.primary)
-                    .frame(height: 14)
             }
-            .padding(.vertical, 6)
-            .frame(width: 38)
+            .frame(width: 38, height: 42)
             .overlay(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .stroke(Color.primary.opacity(0.18), lineWidth: 1)

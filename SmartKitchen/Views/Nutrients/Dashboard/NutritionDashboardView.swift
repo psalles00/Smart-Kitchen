@@ -115,13 +115,38 @@ struct NutritionDashboardView: View {
 
                     Color.clear.frame(height: 88)
                 }
-                .padding(.top, 0)
+                .padding(.top, -5)
+                // Borda ondulada — overlay no conteúdo do scroll, então rola
+                // junto e termina exatamente no final da página.
+                .overlay(alignment: .top) {
+                    wavyStateBorder
+                        .padding(.top, -5)
+                        .allowsHitTesting(false)
+                }
             }
         }
         .overlay(alignment: .bottomLeading) {
             floatingDayActionButton
                 .padding(.leading, 16)
                 .padding(.bottom, 8)
+        }
+    }
+
+    /// Borda ondulada que aparece como overlay sobre a área de conteúdo
+    /// (dentro do scroll, então acompanha o scroll e termina junto com a
+    /// página). Amarelo quando o dia tem registro iniciado e não concluído;
+    /// verde quando o dia foi concluído.
+    @ViewBuilder
+    private var wavyStateBorder: some View {
+        switch selectedDayState {
+        case .todayInProgress, .pastInProgress:
+            WavyPanelBorder()
+                .stroke(Color(red: 0.96, green: 0.78, blue: 0.26), lineWidth: 1.4)
+        case .completed:
+            WavyPanelBorder()
+                .stroke(Color(red: 0.31, green: 0.74, blue: 0.46), lineWidth: 1.4)
+        default:
+            EmptyView()
         }
     }
 
