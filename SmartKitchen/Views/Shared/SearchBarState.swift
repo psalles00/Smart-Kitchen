@@ -9,6 +9,20 @@ enum SearchMode: Equatable {
     case aiChat
 }
 
+enum AIChatPreset: Equatable {
+    case nutritionCoach
+    case recipeIdeas
+
+    var searchPlaceholder: String {
+        switch self {
+        case .nutritionCoach:
+            return "Converse com a IA…"
+        case .recipeIdeas:
+            return "Peça ideias de receitas…"
+        }
+    }
+}
+
 // MARK: - Page Context for Search Prioritization
 
 enum SearchPageContext: Equatable {
@@ -26,6 +40,7 @@ final class SearchBarState: ObservableObject {
     @Published var isVisible: Bool = false
     @Published var searchText: String = ""
     @Published var mode: SearchMode = .idle
+    @Published var aiChatPreset: AIChatPreset = .nutritionCoach
     @Published var pageContext: SearchPageContext = .home
 
     /// Debounced version of searchText for expensive operations (search, filtering).
@@ -92,6 +107,7 @@ final class SearchBarState: ObservableObject {
             self?.searchText = ""
             self?.debouncedSearchText = ""
             self?.mode = .idle
+            self?.aiChatPreset = .nutritionCoach
         }
     }
 
@@ -102,5 +118,6 @@ final class SearchBarState: ObservableObject {
         searchText = ""
         debouncedSearchText = ""
         mode = .idle
+        aiChatPreset = .nutritionCoach
     }
 }

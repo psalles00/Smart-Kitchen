@@ -128,7 +128,7 @@ struct FullscreenAssistantView: View {
 
     @ViewBuilder
     private var header: some View {
-        HStack(alignment: .center) {
+        HStack(alignment: .top) {
             Text(searchBarState.mode == .aiChat ? "Modo IA" : "Assistente")
                 .font(.pageTitle)
                 .foregroundStyle(Color.primary)
@@ -216,22 +216,24 @@ struct FullscreenAssistantView: View {
                             imageHeight: 82,
                             imageOffset: CGSize(width: 8, height: 0)
                         ) {
+                            searchBarState.aiChatPreset = .nutritionCoach
                             searchBarState.mode = .aiChat
                             pendingChatQuery = nil
                             pendingOpenChat = true
                         }
 
                         assistantActionButton(
-                            title: "Indicação de receitas",
+                            title: "Ideias de receitas",
                             icon: "fork.knife.circle.fill",
                             tint: assistantIAAccent,
                             imageName: "ideis",
                             imageHeight: 74,
                             imageOffset: CGSize(width: 6, height: 0)
                         ) {
+                            searchBarState.aiChatPreset = .recipeIdeas
                             searchBarState.mode = .aiChat
-                            pendingOpenChat = false
-                            pendingChatQuery = "Sugira novas receitas."
+                            pendingChatQuery = nil
+                            pendingOpenChat = true
                         }
 
                         assistantActionButton(

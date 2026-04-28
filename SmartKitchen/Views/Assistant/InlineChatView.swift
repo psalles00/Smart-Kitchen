@@ -75,6 +75,7 @@ struct InlineChatView: View {
 
     /// Whether this chat is in "AI Mode" (embedded with unified search bar) vs standalone assistant.
     private var isAIMode: Bool { searchBarState != nil }
+    private var aiChatPreset: AIChatPreset { searchBarState?.aiChatPreset ?? .nutritionCoach }
 
     private var settings: AppSettings? { settingsArray.first }
 
@@ -111,6 +112,33 @@ struct InlineChatView: View {
                 "Sugestões de macros?",
                 "Como está minha tendência?"
             ]
+        }
+    }
+
+    private var recipeIdeasStarterPrompts: [String] {
+        [
+            "Sugira novas receitas de jantar rápido.",
+            "Sugira novas receitas com frango e legumes.",
+            "Sugira novas receitas vegetarianas simples.",
+            "Sugira novas receitas de sobremesa."
+        ]
+    }
+
+    private var aiModeDescription: String {
+        switch aiChatPreset {
+        case .nutritionCoach:
+            return "Seu coach pode ver seu histórico de peso, consumo diário e metas. Pergunte sobre peso esperado, o que comer ou como atingir seu objetivo."
+        case .recipeIdeas:
+            return "Crie ideias novas partindo do zero ou com os ingredientes que você quiser usar."
+        }
+    }
+
+    private var aiModeStarterPrompts: [String] {
+        switch aiChatPreset {
+        case .nutritionCoach:
+            return coachStarterPrompts
+        case .recipeIdeas:
+            return recipeIdeasStarterPrompts
         }
     }
 
@@ -406,7 +434,7 @@ struct InlineChatView: View {
                 Text("Modo IA")
                     .font(.title3.weight(.bold))
 
-                Text("Seu coach pode ver seu histórico de peso, consumo diário e metas. Pergunte sobre peso esperado, o que comer ou como atingir seu objetivo.")
+                Text(aiModeDescription)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -414,7 +442,7 @@ struct InlineChatView: View {
             }
 
             VStack(alignment: .leading, spacing: 10) {
-                ForEach(Array(coachStarterPrompts.enumerated()), id: \.offset) { index, prompt in
+                ForEach(Array(aiModeStarterPrompts.enumerated()), id: \.offset) { index, prompt in
                     aiSuggestionRow(emoji: aiSuggestionEmoji(for: index), text: prompt)
                 }
             }
@@ -446,11 +474,21 @@ struct InlineChatView: View {
     }
 
     private func aiSuggestionEmoji(for index: Int) -> String {
-        switch index {
-        case 0: return "📈"
-        case 1: return "🎯"
-        case 2: return "🍽️"
-        default: return "🥗"
+        switch aiChatPreset {
+        case .nutritionCoach:
+            switch index {
+            case 0: return "📈"
+            case 1: return "🎯"
+            case 2: return "🍽️"
+            default: return "🥗"
+            }
+        case .recipeIdeas:
+            switch index {
+            case 0: return "⚡"
+            case 1: return "🍗"
+            case 2: return "🌿"
+            default: return "🍰"
+            }
         }
     }
 
@@ -654,7 +692,8 @@ struct InlineChatView: View {
         inputText = ""
         errorMessage = nil
 
-        if let recipeDiscoveryResponse = makeRecipeDiscoveryResponse(for: text) {
+        if aiChatPreset != .recipeIdeas,
+           let recipeDiscoveryResponse = makeRecipeDiscoveryResponse(for: text) {
             let assistantMessage = ChatMessage(
                 role: .assistant,
                 content: recipeDiscoveryResponse.content,
@@ -768,6 +807,13 @@ struct InlineChatView: View {
 
         let systemPrompt = buildSystemPrompt(includeInventoryContext: !isRecipeManagementRequest)
         msgs.append(["role": "system", "content": systemPrompt])
+
+        if aiChatPreset == .recipeIdeas {
+            msgs.append([
+                "role": "system",
+                "content": "O usuário abriu o modo Ideias de receitas. Priorize sugerir receitas novas e criativas, em vez de listar apenas receitas já salvas. Não trate a despensa como restrição padrão; só use a despensa quando o usuário pedir isso explicitamente ou citar ingredientes que quer aproveitar."
+            ])
+        }
 
         let history = Array(messages.suffix(20))
         for msg in history {

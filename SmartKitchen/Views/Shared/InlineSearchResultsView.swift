@@ -351,6 +351,7 @@ struct InlineSearchResultsView: View {
         chatInitialQuery = initialQuery
         chatExistingConversationId = nil
         showInlineChat = true
+        searchBarState.aiChatPreset = .nutritionCoach
         searchBarState.mode = .aiChat
         searchBarState.searchText = ""
     }
@@ -360,6 +361,7 @@ struct InlineSearchResultsView: View {
         chatInitialQuery = nil
         showConversationHistory = false
         showInlineChat = true
+        searchBarState.aiChatPreset = .nutritionCoach
     }
 
     private func dismissInlineChat() {

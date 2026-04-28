@@ -108,6 +108,12 @@ struct ContentView: View {
 
     private var settings: AppSettings? { settingsArray.first }
     private var activePageTheme: PageTheme { selectedTab.pageTheme ?? lastContentTab.pageTheme ?? .home }
+    private var assistantOverlayTitle: String {
+        searchBarState.mode == .aiChat ? "Modo IA" : "Assistente"
+    }
+    private var assistantOverlaySubtitle: String {
+        return "Adicione itens, busque na despensa ou pergunte à IA."
+    }
 
     private var fullscreenNutritionEntrySheetBinding: Binding<NutritionEntrySheet?> {
         Binding(
@@ -346,8 +352,7 @@ struct ContentView: View {
             if selectedTab != .assistant { selectedTab = .assistant }
             #endif
             // Reveal in AI chat mode with keyboard open.
-            pendingOpenChat = true
-            searchBarState.reveal(mode: .aiChat)
+            openAIMode()
         }
         .onReceive(NotificationCenter.default.publisher(for: .openNutritionAtDate)) { _ in
             // The date itself is consumed by `NutrientsView`; here we only need
@@ -406,8 +411,10 @@ struct ContentView: View {
                         HomeView(
                             onSettingsTap: { showSettings = true },
                             onOpenChat: {
-                                pendingOpenChat = true
-                                searchBarState.reveal(mode: .aiChat)
+                                openAIMode()
+                            },
+                            onOpenRecipeIdeas: {
+                                openAIMode(preset: .recipeIdeas)
                             },
                             onOpenSearch: {
                                 searchBarState.reveal(mode: .idle)
@@ -602,13 +609,13 @@ struct ContentView: View {
                 // Title + action buttons (aligned to bottom-right of subtitle)
                 HStack(alignment: .bottom) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(searchBarState.mode == .aiChat ? "Modo IA" : "Assistente")
+                        Text(assistantOverlayTitle)
                             .font(.pageTitle)
-                        Text(searchBarState.mode == .aiChat
-                             ? "Converse com a IA sobre sua cozinha."
-                             : "Adicione itens, busque na despensa ou pergunte à IA.")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                        if searchBarState.mode != .aiChat {
+                            Text(assistantOverlaySubtitle)
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
                     }
                     Spacer()
                     if searchBarState.mode == .aiChat {
@@ -741,7 +748,7 @@ struct ContentView: View {
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundStyle(.secondary)
                         TextField(
-                            searchBarState.mode == .aiChat ? "Converse com a IA…" : "Adicione, busque, ou pergunte…",
+                            searchBarState.mode == .aiChat ? searchBarState.aiChatPreset.searchPlaceholder : "Adicione, busque, ou pergunte…",
                             text: $searchBarState.searchText
                         )
                         .textFieldStyle(.plain)
@@ -797,7 +804,11 @@ struct ContentView: View {
                     HomeView(
                         onSettingsTap: { selectedSidebar = .settings },
                         onOpenChat: {
-                            pendingOpenChat = true
+                            openAIMode()
+                            macSearchFieldFocused = true
+                        },
+                        onOpenRecipeIdeas: {
+                            openAIMode(preset: .recipeIdeas)
                             macSearchFieldFocused = true
                         },
                         onOpenSearch: {
@@ -892,13 +903,13 @@ struct ContentView: View {
             // Header
             HStack(alignment: .bottom) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(searchBarState.mode == .aiChat ? "Modo IA" : "Assistente")
+                    Text(assistantOverlayTitle)
                         .font(.pageTitle)
-                    Text(searchBarState.mode == .aiChat
-                         ? "Converse com a IA sobre sua cozinha."
-                         : "Adicione itens, busque na despensa ou pergunte à IA.")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                    if searchBarState.mode != .aiChat {
+                        Text(assistantOverlaySubtitle)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
                 }
                 Spacer()
                 if searchBarState.mode == .aiChat {
@@ -1054,11 +1065,9 @@ struct ContentView: View {
         case .openWeightTracker:
             showWeightTracker = true
         case .askAssistant(let prefill):
-            pendingChatQuery = prefill
-            searchBarState.reveal(mode: .aiChat)
+            openAIMode(prefill: prefill)
         case .openAssistant:
-            pendingOpenChat = true
-            searchBarState.reveal(mode: .aiChat)
+            openAIMode()
         case .movePantryToGrocery(let id):
             movePantryItemToGrocery(id: id)
             refreshSearchAfterMove()
@@ -1108,8 +1117,23 @@ struct ContentView: View {
     }
 
     private func openAssistantFromSharedImport(prefill: String) {
-        pendingOpenChat = false
-        pendingChatQuery = prefill
+        openAIMode(prefill: prefill)
+    }
+
+    private func openAIMode(preset: AIChatPreset = .nutritionCoach, prefill: String? = nil) {
+        pendingShowHistory = false
+        pendingNewConversation = false
+        searchBarState.aiChatPreset = preset
+        searchBarState.searchText = ""
+
+        if let prefill {
+            pendingOpenChat = false
+            pendingChatQuery = prefill
+        } else {
+            pendingChatQuery = nil
+            pendingOpenChat = true
+        }
+
         searchBarState.reveal(mode: .aiChat)
     }
 
@@ -1387,6 +1411,7 @@ private struct HomeView: View {
     
     let onSettingsTap: () -> Void
     let onOpenChat: () -> Void
+    let onOpenRecipeIdeas: () -> Void
     let onOpenSearch: () -> Void
     let onOpenRecipeImport: (RecipeImportLaunchMode) -> Void
     let onOpenFoodCameraDirect: () -> Void
@@ -1605,7 +1630,7 @@ private struct HomeView: View {
                     VStack(spacing: spacing) {
                         homeShortcutButton(
                             title: "Modo IA",
-                            subtitle: "",
+                            subtitle: "Inteligência",
                             imageName: "modo ia",
                             style: .wide,
                             imageSize: 86,
@@ -1617,13 +1642,13 @@ private struct HomeView: View {
 
                         homeShortcutButton(
                             title: "Ideias",
-                            subtitle: "",
+                            subtitle: "de receitas",
                             imageName: "ideis",
                             style: .wide,
                             imageSize: 70,
                             imageOffset: CGSize(width: 60, height: 14)
                         ) {
-                            onOpenChat()
+                            onOpenRecipeIdeas()
                         }
                         .frame(height: stackedHeight)
                     }
@@ -1722,7 +1747,7 @@ private struct HomeView: View {
                     VStack(spacing: spacing) {
                         homeShortcutButton(
                             title: "Modo IA",
-                            subtitle: "",
+                            subtitle: "Inteligência",
                             imageName: "modo ia",
                             style: .wide,
                             imageSize: 126,
@@ -1734,13 +1759,13 @@ private struct HomeView: View {
 
                         homeShortcutButton(
                             title: "Ideias",
-                            subtitle: "",
+                            subtitle: "de receitas",
                             imageName: "ideis",
                             style: .wide,
                             imageSize: 99,
                             imageOffset: CGSize(width: 95, height: 20)
                         ) {
-                            onOpenChat()
+                            onOpenRecipeIdeas()
                         }
                         .frame(height: smallSide)
                     }
@@ -2063,11 +2088,20 @@ private struct HomeView: View {
                 .padding(18)
 
             case .wide:
-                Text(title)
-                    .font(.headline.weight(.bold))
-                    .foregroundStyle(.primary)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(title)
+                        .font(.headline.weight(.bold))
+                        .foregroundStyle(.primary)
+                    if !subtitle.isEmpty {
+                        Text(subtitle)
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
+                }
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
-                    .padding(16)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 10)
 
             case .compact:
                 Color.clear

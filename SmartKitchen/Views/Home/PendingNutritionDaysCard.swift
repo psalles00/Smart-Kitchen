@@ -17,19 +17,11 @@ struct PendingNutritionDaysCard: View {
     @Query(sort: \NutritionDayLog.dayStart, order: .reverse) private var allDayLogs: [NutritionDayLog]
     @Query(sort: \NutritionProfile.createdAt) private var profiles: [NutritionProfile]
 
-    @State private var pendingConfirmation: PendingConfirmation?
     @State private var revealedDayID: Date?
 
     private var calendar: Calendar { .current }
     private var profile: NutritionProfile? { profiles.first }
     private var calorieGoal: Int { profile?.effectiveCalories ?? 0 }
-
-    private struct PendingConfirmation: Identifiable {
-        enum Kind { case complete, cancel }
-        let id = UUID()
-        let kind: Kind
-        let date: Date
-    }
 
     private var startedDays: [PendingNutritionDaysCard_RowDay] {
         let today = calendar.startOfDay(for: .now)
@@ -102,13 +94,11 @@ struct PendingNutritionDaysCard: View {
                             onRevealChange: { shouldReveal in
                                 revealedDayID = shouldReveal ? day.id : nil
                             },
-                            onComplete: {
-                                revealedDayID = nil
-                                pendingConfirmation = PendingConfirmation(kind: .complete, date: day.date)
+                            onCompleteConfirmed: {
+                                NutritionDayLogStore.complete(date: day.date, in: modelContext)
                             },
-                            onCancel: {
-                                revealedDayID = nil
-                                pendingConfirmation = PendingConfirmation(kind: .cancel, date: day.date)
+                            onCancelConfirmed: {
+                                NutritionDayLogStore.cancel(date: day.date, in: modelContext)
                             },
                             titleProvider: { titleLabel(for: day.date) }
                         )
@@ -120,55 +110,6 @@ struct PendingNutritionDaysCard: View {
                 .background(Self.cardBackground, in: .rect(cornerRadius: 18))
                 .clipShape(.rect(cornerRadius: 18))
             }
-            .confirmationDialog(
-                confirmationTitle,
-                isPresented: confirmationBinding,
-                titleVisibility: .visible,
-                presenting: pendingConfirmation
-            ) { confirmation in
-                Button(
-                    confirmation.kind == .complete ? "Concluir dia" : "Desistir do dia",
-                    role: confirmation.kind == .cancel ? .destructive : nil
-                ) {
-                    perform(confirmation)
-                }
-                Button("Cancelar", role: .cancel) {}
-            } message: { confirmation in
-                Text(confirmationMessage(for: confirmation))
-            }
-        }
-    }
-
-    // MARK: - Confirmation handling
-
-    private var confirmationBinding: Binding<Bool> {
-        Binding(
-            get: { pendingConfirmation != nil },
-            set: { if !$0 { pendingConfirmation = nil } }
-        )
-    }
-
-    private var confirmationTitle: String {
-        guard let kind = pendingConfirmation?.kind else { return "" }
-        return kind == .complete ? "Concluir este dia?" : "Desistir deste dia?"
-    }
-
-    private func confirmationMessage(for confirmation: PendingConfirmation) -> String {
-        let label = titleLabel(for: confirmation.date).lowercased()
-        switch confirmation.kind {
-        case .complete:
-            return "Os registros de \(label) entrarão no cálculo da sua média e o dia sairá desta lista."
-        case .cancel:
-            return "Os registros de \(label) serão descartados do cálculo da média e o dia sairá desta lista. Você poderá reabrir mais tarde, se quiser."
-        }
-    }
-
-    private func perform(_ confirmation: PendingConfirmation) {
-        switch confirmation.kind {
-        case .complete:
-            NutritionDayLogStore.complete(date: confirmation.date, in: modelContext)
-        case .cancel:
-            NutritionDayLogStore.cancel(date: confirmation.date, in: modelContext)
         }
     }
 
@@ -199,16 +140,22 @@ struct PendingNutritionDaysCard: View {
 // MARK: - Swipeable row
 
 private struct SwipeablePendingRow: View {
+    private enum PendingAction {
+        case complete
+        case cancel
+    }
+
     let day: PendingNutritionDaysCard_RowDay
     let calorieGoal: Int
     let isRevealed: Bool
     let onTap: () -> Void
     let onRevealChange: (Bool) -> Void
-    let onComplete: () -> Void
-    let onCancel: () -> Void
+    let onCompleteConfirmed: () -> Void
+    let onCancelConfirmed: () -> Void
     let titleProvider: () -> String
 
     @State private var dragOffset: CGFloat = 0
+    @State private var pendingAction: PendingAction?
 
     private let actionWidth: CGFloat = 76
     private let revealThreshold: CGFloat = 50
@@ -228,13 +175,13 @@ private struct SwipeablePendingRow: View {
                     title: "Concluir",
                     icon: "checkmark.circle.fill",
                     background: PageTheme.nutrients.accentColor,
-                    action: onComplete
+                    action: { openConfirmation(.complete) }
                 )
                 actionButton(
                     title: "Desistir",
                     icon: "xmark.circle.fill",
                     background: .red,
-                    action: onCancel
+                    action: { openConfirmation(.cancel) }
                 )
             }
             .frame(width: totalRevealedWidth)
@@ -245,16 +192,42 @@ private struct SwipeablePendingRow: View {
                 .offset(x: effectiveOffset)
                 .gesture(swipeGesture)
                 .onTapGesture { onTap() }
+                .confirmationDialog(
+                    confirmationTitle,
+                    isPresented: confirmationBinding,
+                    titleVisibility: .visible,
+                    presenting: pendingAction
+                ) { action in
+                    Button(
+                        action == .complete ? "Concluir dia" : "Desistir do dia",
+                        role: action == .cancel ? .destructive : nil
+                    ) {
+                        switch action {
+                        case .complete:
+                            onCompleteConfirmed()
+                        case .cancel:
+                            onCancelConfirmed()
+                        }
+                        pendingAction = nil
+                    }
+                    Button("Cancelar", role: .cancel) {}
+                } message: { action in
+                    Text(confirmationMessage(for: action))
+                }
                 .contextMenu {
                     Button {
                         onTap() // openNutrition path when not revealed
                     } label: {
                         Label("Continuar", systemImage: "arrow.right.circle")
                     }
-                    Button(action: onComplete) {
+                    Button {
+                        openConfirmation(.complete)
+                    } label: {
                         Label("Concluir", systemImage: "checkmark.circle")
                     }
-                    Button(role: .destructive, action: onCancel) {
+                    Button(role: .destructive) {
+                        openConfirmation(.cancel)
+                    } label: {
                         Label("Desistir", systemImage: "xmark.circle")
                     }
                 }
@@ -313,6 +286,36 @@ private struct SwipeablePendingRow: View {
                     onRevealChange(shouldReveal)
                 }
             }
+    }
+
+    private var confirmationBinding: Binding<Bool> {
+        Binding(
+            get: { pendingAction != nil },
+            set: { if !$0 { pendingAction = nil } }
+        )
+    }
+
+    private var confirmationTitle: String {
+        guard let pendingAction else { return "" }
+        return pendingAction == .complete ? "Concluir este dia?" : "Desistir deste dia?"
+    }
+
+    private func confirmationMessage(for action: PendingAction) -> String {
+        let label = titleProvider().lowercased()
+        switch action {
+        case .complete:
+            return "Os registros de \(label) entrarão no cálculo da sua média e o dia sairá desta lista."
+        case .cancel:
+            return "Os registros de \(label) serão descartados do cálculo da média e o dia sairá desta lista. Você poderá reabrir mais tarde, se quiser."
+        }
+    }
+
+    private func openConfirmation(_ action: PendingAction) {
+        dragOffset = 0
+        if isRevealed {
+            onRevealChange(false)
+        }
+        pendingAction = action
     }
 
     @ViewBuilder
