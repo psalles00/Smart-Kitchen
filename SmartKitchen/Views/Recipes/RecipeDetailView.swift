@@ -26,6 +26,9 @@ struct RecipeDetailView: View {
     @State private var ingredientEditorSheet: IngredientEditorSheet?
     @State private var pendingIngredientReplacement: PendingIngredientReplacement?
     @State private var showMoreActions = false
+    /// Porções exibidas no detail. Não persiste; só aplica multiplicador a quantities/nutrição.
+    @State private var displayServings: Int = 1
+    @State private var didInitDisplayServings = false
 
     private let heroHeight: CGFloat = 580
     private let baseContentOverlap: CGFloat = 34
@@ -205,6 +208,12 @@ struct RecipeDetailView: View {
             }
         }
         .coordinateSpace(name: "recipe-detail-scroll")
+        .onAppear {
+            if !didInitDisplayServings {
+                displayServings = max(recipe.servings, 1)
+                didInitDisplayServings = true
+            }
+        }
         #if os(macOS)
         .padding(.top, -10)
         #else
@@ -550,6 +559,11 @@ struct RecipeDetailView: View {
                 ingredientsSection
             }
 
+            // Nutrição
+            if hasNutritionInfo {
+                nutritionSection
+            }
+
             // Utensils
             if !(recipe.requiredUtensils ?? []).isEmpty, settings?.showUtensils == true {
                 utensilsSection
@@ -656,6 +670,13 @@ struct RecipeDetailView: View {
 
     // MARK: - Ingredients
 
+    /// Multiplicador aplicado a quantidades/nutrição quando o usuário ajusta as porções.
+    private var portionMultiplier: Double {
+        let original = max(recipe.servings, 1)
+        let target = max(displayServings, 1)
+        return Double(target) / Double(original)
+    }
+
     private var ingredientsSection: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text("Ingredientes")
@@ -700,7 +721,9 @@ struct RecipeDetailView: View {
             }
             .background(detailSurfaceColor, in: .rect(cornerRadius: 18))
 
-            HStack {
+            HStack(alignment: .center, spacing: 12) {
+                portionsStepper
+
                 Spacer()
 
                 Button {
@@ -753,11 +776,12 @@ struct RecipeDetailView: View {
 
             Spacer()
 
-            if !ingredient.formattedQuantity.isEmpty {
-                Text(ingredient.formattedQuantity)
+            if let scaledQty = scaledQuantityText(for: ingredient), !scaledQty.isEmpty {
+                Text(scaledQty)
                     .font(.footnote)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.trailing)
+                    .frame(minWidth: 64, alignment: .trailing)
             }
 
             NeutralItemActionButton(systemImage: isInGrocery ? "checkmark" : "cart.badge.plus") {
@@ -800,6 +824,206 @@ struct RecipeDetailView: View {
                 Button("Já está disponível", systemImage: "checkmark.circle") { }
             }
         }
+    }
+
+    /// Retorna a quantidade exibida aplicando o multiplicador de porção quando aplicável.
+    private func scaledQuantityText(for ingredient: RecipeIngredient) -> String? {
+        let m = portionMultiplier
+        let unit = ingredient.unit.trimmingCharacters(in: .whitespaces)
+
+        if let qty = ingredient.quantity, qty > 0 {
+            let scaled = IngredientQuantityScaler.formatNumber(qty * m)
+            if unit.isEmpty {
+                return scaled
+            }
+            return "\(scaled) \(unit)"
+        }
+
+        // Sem quantidade numérica armazenada: mantém o `formattedQuantity` original
+        // (não tenta escalar texto livre para evitar resultados confusos).
+        let original = ingredient.formattedQuantity
+        return original.isEmpty ? nil : original
+    }
+
+    // MARK: - Portions stepper
+
+    private var portionsStepper: some View {
+        HStack(spacing: 8) {
+            Button {
+                if displayServings > 1 {
+                    displayServings -= 1
+                }
+            } label: {
+                Image(systemName: "minus.circle.fill")
+                    .font(.title3)
+                    .foregroundStyle(displayServings > 1 ? Color.accentColor : Color.gray.opacity(0.4))
+            }
+            .buttonStyle(.plain)
+            .disabled(displayServings <= 1)
+
+            VStack(spacing: 0) {
+                Text("\(displayServings)")
+                    .font(.headline.monospacedDigit())
+                    .frame(minWidth: 26)
+                Text(displayServings == 1 ? "porção" : "porções")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+
+            Button {
+                if displayServings < 64 {
+                    displayServings += 1
+                }
+            } label: {
+                Image(systemName: "plus.circle.fill")
+                    .font(.title3)
+                    .foregroundStyle(displayServings < 64 ? Color.accentColor : Color.gray.opacity(0.4))
+            }
+            .buttonStyle(.plain)
+            .disabled(displayServings >= 64)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(Color(.tertiarySystemFill).opacity(0.6), in: .capsule)
+    }
+
+    // MARK: - Nutrition
+
+    /// `true` quando há ao menos um valor nutricional para mostrar.
+    private var hasNutritionInfo: Bool {
+        recipe.calories != nil
+            || recipe.proteinG != nil
+            || recipe.carbsG != nil
+            || recipe.fatG != nil
+    }
+
+    private var nutritionSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("Nutrição")
+                    .font(.sectionTitle)
+                if recipe.nutritionEstimated == true {
+                    Text("estimada")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(Color(.tertiarySystemFill).opacity(0.7), in: .capsule)
+                }
+                Spacer()
+                Text(displayServings == 1 ? "por porção" : "para \(displayServings) porções")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.top, 8)
+
+            LazyVGrid(
+                columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)],
+                spacing: 10
+            ) {
+                if let kcal = recipe.calories {
+                    nutritionTile(
+                        title: "Calorias",
+                        value: formatNutrition(Double(kcal), suffix: " kcal", isInt: true),
+                        accent: .orange,
+                        icon: "flame.fill"
+                    )
+                }
+                if let p = recipe.proteinG {
+                    nutritionTile(
+                        title: "Proteínas",
+                        value: formatNutrition(p, suffix: " g"),
+                        accent: .red,
+                        icon: "fish.fill"
+                    )
+                }
+                if let c = recipe.carbsG {
+                    nutritionTile(
+                        title: "Carboidratos",
+                        value: formatNutrition(c, suffix: " g"),
+                        accent: .yellow,
+                        icon: "leaf.fill"
+                    )
+                }
+                if let f = recipe.fatG {
+                    nutritionTile(
+                        title: "Gorduras",
+                        value: formatNutrition(f, suffix: " g"),
+                        accent: .purple,
+                        icon: "drop.fill"
+                    )
+                }
+            }
+
+            if recipe.fiberG != nil || recipe.sugarG != nil || recipe.sodiumMg != nil {
+                HStack(spacing: 10) {
+                    if let fiber = recipe.fiberG {
+                        nutritionMicroChip(label: "Fibras", value: formatNutrition(fiber, suffix: " g"))
+                    }
+                    if let sugar = recipe.sugarG {
+                        nutritionMicroChip(label: "Açúcares", value: formatNutrition(sugar, suffix: " g"))
+                    }
+                    if let sodium = recipe.sodiumMg {
+                        nutritionMicroChip(label: "Sódio", value: formatNutrition(sodium, suffix: " mg", isInt: true))
+                    }
+                }
+            }
+        }
+    }
+
+    private func nutritionTile(title: String, value: String, accent: Color, icon: String) -> some View {
+        HStack(alignment: .center, spacing: 10) {
+            ZStack {
+                Circle()
+                    .fill(accent.opacity(0.18))
+                Image(systemName: icon)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(accent)
+            }
+            .frame(width: 32, height: 32)
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text(value)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.primary)
+                Text(title)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(detailSurfaceColor, in: .rect(cornerRadius: 14))
+    }
+
+    private func nutritionMicroChip(label: String, value: String) -> some View {
+        HStack(spacing: 4) {
+            Text(label)
+                .foregroundStyle(.secondary)
+            Text(value)
+                .foregroundStyle(.primary)
+                .fontWeight(.semibold)
+        }
+        .font(.caption)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(Color(.tertiarySystemFill).opacity(0.5), in: .capsule)
+    }
+
+    /// Formata um valor nutricional aplicando o multiplicador de porção.
+    private func formatNutrition(_ value: Double, suffix: String, isInt: Bool = false) -> String {
+        let scaled = value * portionMultiplier
+        if isInt {
+            return "\(Int(scaled.rounded()))\(suffix)"
+        }
+        let formatter = NumberFormatter()
+        formatter.locale = Locale(identifier: "pt_BR")
+        formatter.minimumFractionDigits = 0
+        formatter.maximumFractionDigits = 1
+        let str = formatter.string(from: NSNumber(value: scaled)) ?? "\(scaled)"
+        return "\(str)\(suffix)"
     }
 
     // MARK: - Utensils

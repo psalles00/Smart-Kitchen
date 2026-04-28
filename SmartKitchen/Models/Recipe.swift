@@ -166,6 +166,16 @@ final class Recipe {
     var cookTime: Int = 0       // minutes
     var servings: Int = 1
     var calories: Int? = nil
+    // Nutrição por porção (todos opcionais — lightweight migration safe com CloudKit).
+    var proteinG: Double? = nil
+    var carbsG: Double? = nil
+    var fatG: Double? = nil
+    var fiberG: Double? = nil
+    var sugarG: Double? = nil
+    var sodiumMg: Double? = nil
+    /// `true` quando os macros vieram de estimativa por IA, `false` se vieram do site/usuário.
+    var nutritionEstimated: Bool? = nil
+    var nutritionUpdatedAt: Date? = nil
     var difficulty: Difficulty = Difficulty.easy
     var isFavorite: Bool = false
     var requiredUtensils: [String]? = []

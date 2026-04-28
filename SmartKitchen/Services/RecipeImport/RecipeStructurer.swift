@@ -147,6 +147,27 @@ struct RecipeStructurer {
             d.servingsConfidence = .high
         }
         if let v = dict["calories"] as? Int { d.calories = v }
+        if let nutrition = dict["nutrition_per_serving"] as? [String: Any] {
+            func num(_ k: String) -> Double? {
+                if let v = nutrition[k] as? Double { return v }
+                if let v = nutrition[k] as? Int { return Double(v) }
+                if let v = nutrition[k] as? String, let n = Double(v.replacingOccurrences(of: ",", with: ".")) { return n }
+                return nil
+            }
+            if d.calories == nil, let v = num("calories") { d.calories = Int(v.rounded()) }
+            d.proteinG = num("protein_g")
+            d.carbsG = num("carbs_g")
+            d.fatG = num("fat_g")
+            d.fiberG = num("fiber_g")
+            d.sugarG = num("sugar_g")
+            d.sodiumMg = num("sodium_mg")
+            if let estimated = nutrition["estimated"] as? Bool {
+                d.nutritionEstimated = estimated
+            } else if d.proteinG != nil || d.carbsG != nil || d.fatG != nil || d.calories != nil {
+                // Default: assume estimated unless explicitly marked false.
+                d.nutritionEstimated = true
+            }
+        }
         if let utensils = dict["required_utensils"] as? [String] {
             d.requiredUtensils = utensils.map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
         }
@@ -290,6 +311,9 @@ struct RecipeStructurer {
     - Não invente ingredientes nem passos. Se o texto for insuficiente, devolva arrays vazios.
     - Preserve o idioma do texto original (provavelmente pt-BR).
     - Não use emojis, hashtags ou texto promocional no resultado.
+    - IGNORE conteúdo extra-receita: links de navegação do site, listas de "artigos relacionados", banners, propagandas, cabeçalhos/rodapés. Extraia APENAS a receita central.
+    - NUTRIÇÃO: SEMPRE preencha nutrition_per_serving com uma boa estimativa POR PORÇÃO baseada nos ingredientes e quantidades, mesmo se a página não trouxer valores explícitos. Marque "estimated": true. Se a página tiver tabela nutricional clara, use os valores dela e marque "estimated": false.
+    - VALIDE "steps": passos devem ser instruções culinárias ("misture", "asse", "bata"). Se uma linha parece um link, título de outro artigo, marca de tempo de vídeo ou texto solto, descarte-a.
     """
 
     static func userPrompt(text: String, hints: Hints) -> String {
@@ -316,7 +340,21 @@ struct RecipeStructurer {
             "prep_time_minutes": ["type": "integer", "minimum": 0],
             "cook_time_minutes": ["type": "integer", "minimum": 0],
             "servings":       ["type": "integer", "minimum": 1],
-            "calories":       ["type": "integer", "minimum": 0],
+            "calories":       ["type": "integer", "minimum": 0, "description": "Calorias por porção (kcal). Estimar a partir dos ingredientes se não explícito."],
+            "nutrition_per_serving": [
+                "type": "object",
+                "description": "Macronutrientes por porção. Estimar a partir dos ingredientes se a página não trouxer valores.",
+                "properties": [
+                    "calories":  ["type": "number", "minimum": 0],
+                    "protein_g": ["type": "number", "minimum": 0],
+                    "carbs_g":   ["type": "number", "minimum": 0],
+                    "fat_g":     ["type": "number", "minimum": 0],
+                    "fiber_g":   ["type": "number", "minimum": 0],
+                    "sugar_g":   ["type": "number", "minimum": 0],
+                    "sodium_mg": ["type": "number", "minimum": 0],
+                    "estimated": ["type": "boolean", "description": "true se foi estimado pela IA, false se vem de tabela explícita."]
+                ]
+            ],
             "required_utensils": [
                 "type": "array",
                 "items": ["type": "string"]

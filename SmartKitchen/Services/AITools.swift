@@ -1197,7 +1197,7 @@ struct AITools {
     }
 
     @discardableResult
-    private static func persistImportedDraft(_ draft: RecipeDraft, in context: ModelContext) -> Recipe {
+    static func persistImportedDraft(_ draft: RecipeDraft, in context: ModelContext) -> Recipe {
         let recipe = Recipe(
             name: draft.name.trimmingCharacters(in: .whitespacesAndNewlines),
             descriptionText: draft.descriptionText.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -1212,6 +1212,18 @@ struct AITools {
         )
         context.insert(recipe)
         recipe.requiredUtensils = draft.requiredUtensils.filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+
+        // Nutrição por porção (se a IA preencheu).
+        recipe.proteinG = draft.proteinG
+        recipe.carbsG = draft.carbsG
+        recipe.fatG = draft.fatG
+        recipe.fiberG = draft.fiberG
+        recipe.sugarG = draft.sugarG
+        recipe.sodiumMg = draft.sodiumMg
+        recipe.nutritionEstimated = draft.nutritionEstimated
+        if draft.calories != nil || draft.proteinG != nil || draft.carbsG != nil || draft.fatG != nil {
+            recipe.nutritionUpdatedAt = .now
+        }
 
         var sectionIDMap: [UUID: UUID] = [:]
         let sortedSectionDrafts = draft.ingredientSections.sorted { $0.sortOrder < $1.sortOrder }

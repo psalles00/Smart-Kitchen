@@ -185,6 +185,11 @@ struct SettingsView: View {
                         in: 10...100,
                         step: 5
                     )
+
+                    Toggle("Ideias só com itens da despensa", isOn: Binding(
+                        get: { settings.recipeIdeasFilterByPantry },
+                        set: { settings.recipeIdeasFilterByPantry = $0 }
+                    ))
                 }
             }
 

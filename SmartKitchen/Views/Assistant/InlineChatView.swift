@@ -5,6 +5,7 @@ import SwiftData
 /// Manages a single conversation with the AI, including tool execution, recipe discovery, and confirmation flows.
 struct InlineChatView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.openRecipeInRecipesTab) private var openRecipeInRecipesTab
     @Query private var settingsArray: [AppSettings]
     @Query private var nutritionProfiles: [NutritionProfile]
     @Query(sort: \Recipe.name) private var allRecipes: [Recipe]
@@ -19,6 +20,14 @@ struct InlineChatView: View {
     @State private var cachedInventoryContext: String?
     @State private var cachedInventoryDate: Date?
     private let contextCacheTTL: TimeInterval = 10
+
+    // Recipe Ideas wizard state (apenas usado quando aiChatPreset == .recipeIdeas)
+    /// Override por sessão do filtro "apenas itens da despensa". `nil` = usa AppSettings.
+    @State private var wizardPantryFilterOverride: Bool? = nil
+    /// Flag que mostra o loader enquanto buscamos ideias na EXA.
+    @State private var isLoadingExaIdeas: Bool = false
+    /// Seed incremental para "Gerar mais ideias".
+    @State private var exaSearchSeed: Int = 0
 
     private var apiKey: String { APIConfig.openAIAPIKey }
     private let confirmPrompt = "__confirm_pending_ai_change__"
@@ -168,7 +177,7 @@ struct InlineChatView: View {
                         LazyVStack(spacing: 14) {
                             ScrollOffsetReader(coordinateSpace: "AssistantInlineChatScroll")
 
-                            if messages.isEmpty && !aiService.isLoading {
+                            if messages.isEmpty && !aiService.isLoading && !isLoadingExaIdeas {
                                 if isAIMode {
                                     aiModeEmptyState
                                 } else {
@@ -194,6 +203,8 @@ struct InlineChatView: View {
                                     VStack(spacing: 6) {
                                         if message.role == .system {
                                             // Skip system messages
+                                        } else if let wizardKind = wizardSentinelKind(for: message) {
+                                            wizardMessageView(message: message, kind: wizardKind)
                                         } else if parseRecipeDetailCard(from: message) != nil {
                                             if let card = parseRecipeDetailCard(from: message) {
                                                 RecipeDetailCard(recipe: card) {
@@ -239,6 +250,11 @@ struct InlineChatView: View {
                             if aiService.isLoading {
                                 typingIndicator
                                     .id("typing")
+                            }
+
+                            if isLoadingExaIdeas {
+                                typingIndicator
+                                    .id("typingExa")
                             }
 
                             // Invisible bottom anchor for scroll tracking
@@ -418,39 +434,86 @@ struct InlineChatView: View {
 
     // MARK: - AI Mode Empty State
 
+    @ViewBuilder
     private var aiModeEmptyState: some View {
-        VStack(spacing: 20) {
-            Spacer()
+        if aiChatPreset == .recipeIdeas {
+            recipeIdeasKickoffState
+        } else {
+            VStack(spacing: 20) {
+                Spacer()
 
-            Image(systemName: "sparkles")
-                .font(.system(size: 44))
-                .foregroundStyle(.linearGradient(
-                    colors: [.purple, .blue],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                ))
+                Image(systemName: "sparkles")
+                    .font(.system(size: 44))
+                    .foregroundStyle(.linearGradient(
+                        colors: [.purple, .blue],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ))
 
-            VStack(spacing: 8) {
-                Text("Modo IA")
-                    .font(.title3.weight(.bold))
+                VStack(spacing: 8) {
+                    Text("Modo IA")
+                        .font(.title3.weight(.bold))
 
-                Text(aiModeDescription)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 24)
+                    Text(aiModeDescription)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 24)
+                }
+
+                VStack(alignment: .leading, spacing: 10) {
+                    ForEach(Array(aiModeStarterPrompts.enumerated()), id: \.offset) { index, prompt in
+                        aiSuggestionRow(emoji: aiSuggestionEmoji(for: index), text: prompt)
+                    }
+                }
+                .padding(.horizontal, 32)
+                .padding(.top, 4)
+
+                Spacer()
             }
+        }
+    }
 
-            VStack(alignment: .leading, spacing: 10) {
-                ForEach(Array(aiModeStarterPrompts.enumerated()), id: \.offset) { index, prompt in
-                    aiSuggestionRow(emoji: aiSuggestionEmoji(for: index), text: prompt)
+    // MARK: - Recipe Ideas Wizard — Kickoff
+
+    private var recipeIdeasKickoffState: some View {
+        let occasions = RecipeIdeaOccasion.orderedForHour(Calendar.current.component(.hour, from: .now))
+        let chips = occasions.map {
+            RecipeIdeasChipsRow.Chip(id: $0.rawValue, label: $0.label, emoji: $0.emoji)
+        }
+        return VStack(alignment: .leading, spacing: 16) {
+            Spacer().frame(height: 4)
+
+            HStack(alignment: .top, spacing: 8) {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 22))
+                    .foregroundStyle(.linearGradient(
+                        colors: [.purple, .blue],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ))
+                    .frame(width: 32, height: 32)
+                    .background(Color(.secondarySystemBackground), in: Circle())
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("O que você quer preparar agora?")
+                        .font(.subheadline.weight(.semibold))
+                    Text("Toque uma opção ou escreva direto no campo abaixo.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
                 }
             }
-            .padding(.horizontal, 32)
-            .padding(.top, 4)
+            .padding(.horizontal, 16)
+
+            RecipeIdeasChipsRow(chips: chips) { chip in
+                guard let occasion = RecipeIdeaOccasion(rawValue: chip.id) else { return }
+                handleOccasionTap(occasion)
+            }
 
             Spacer()
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.top, 12)
     }
 
     private func aiSuggestionRow(emoji: String, text: String) -> some View {
@@ -691,6 +754,19 @@ struct InlineChatView: View {
         pinnedUserMessageID = userMessage.id
         inputText = ""
         errorMessage = nil
+
+        if aiChatPreset == .recipeIdeas {
+            // Texto livre vira customQuery direto na EXA.
+            Task {
+                await runRecipeIdeasSearch(
+                    occasion: nil,
+                    refinement: nil,
+                    customQuery: text,
+                    conversationId: convId
+                )
+            }
+            return
+        }
 
         if aiChatPreset != .recipeIdeas,
            let recipeDiscoveryResponse = makeRecipeDiscoveryResponse(for: text) {
@@ -1515,13 +1591,32 @@ struct InlineChatView: View {
 
         let result = AITools.createRecipeFromArgs(args, context: modelContext)
 
+        // Tenta extrair o id da nova receita do JSON retornado para abrir
+        // imediatamente na aba Receitas.
+        var newRecipeID: UUID? = nil
+        if let data = result.data(using: .utf8),
+           let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+           let idStr = json["id"] as? String,
+           let id = UUID(uuidString: idStr) {
+            newRecipeID = id
+        }
+
+        let success = (newRecipeID != nil) || result.contains("success") || result.contains("Receita")
         insertMessage(ChatMessage(
             role: .assistant,
-            content: result.contains("sucesso") || result.contains("Receita")
+            content: success
                 ? "✅ Receita \"\(card.title)\" adicionada às suas receitas!"
                 : "Não foi possível adicionar a receita: \(result)",
             conversationId: convId
         ))
+
+        if let newRecipeID {
+            // Pequeno atraso permite a UI atualizar a bolha antes de navegar.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                searchBarState?.dismiss()
+                openRecipeInRecipesTab(newRecipeID)
+            }
+        }
     }
 
     /// Parses recipe option suggestions from AI messages (format: **Name** — Description).
@@ -1544,6 +1639,468 @@ struct InlineChatView: View {
             let description = nsContent.substring(with: match.range(at: 2)).trimmingCharacters(in: .whitespaces)
             let iconFilename = IconResolver.resolve(name)
             return RecipeOption(name: name, description: description, iconFilename: iconFilename)
+        }
+    }
+
+    // MARK: - Recipe Ideas Wizard — Helpers
+
+    /// Tipos de mensagens do wizard, identificados pelo prompt da primeira QuickAction.
+    private enum WizardKind {
+        case occasion                          // chips de ocasião
+        case refinement(RecipeIdeaOccasion)    // chips de refinamento
+        case results                           // resultados EXA + receitas locais
+        case pantryBanner                      // banner de toggle inline
+    }
+
+    private func wizardSentinelKind(for message: ChatMessage) -> WizardKind? {
+        guard message.role == .assistant,
+              let prompt = message.quickActions.first?.prompt else { return nil }
+        if prompt == RecipeIdeasSentinel.occasionPrefix { return .occasion }
+        if let occ = RecipeIdeasSentinel.refinementOccasion(from: prompt) { return .refinement(occ) }
+        if prompt == RecipeIdeasSentinel.resultsPrefix { return .results }
+        if prompt == RecipeIdeasSentinel.pantryBannerPrefix { return .pantryBanner }
+        return nil
+    }
+
+    @ViewBuilder
+    private func wizardMessageView(message: ChatMessage, kind: WizardKind) -> some View {
+        switch kind {
+        case .occasion:
+            // Sem fluxo atual a partir do histórico — mostramos apenas o texto.
+            assistantTextBubble(message.content)
+            let occasions = RecipeIdeaOccasion.orderedForHour(Calendar.current.component(.hour, from: .now))
+            RecipeIdeasChipsRow(chips: occasions.map { .init(id: $0.rawValue, label: $0.label, emoji: $0.emoji) }) { chip in
+                guard let occasion = RecipeIdeaOccasion(rawValue: chip.id) else { return }
+                handleOccasionTap(occasion)
+            }
+        case .refinement(let occasion):
+            assistantTextBubble(message.content)
+            let refinements = occasion.refinements
+            RecipeIdeasChipsRow(chips: refinements.map { .init(id: $0, label: $0) }) { chip in
+                handleRefinementTap(chip.label, for: occasion)
+            }
+        case .results:
+            recipeIdeasResultsView(for: message)
+        case .pantryBanner:
+            recipeIdeasPantryBanner(for: message)
+        }
+    }
+
+    /// Tap em uma ocasião: registra mensagem do usuário, pergunta de refinamento
+    /// (a menos que seja "Outro", que foca o teclado).
+    private func handleOccasionTap(_ occasion: RecipeIdeaOccasion) {
+        let convId = ensureConversation()
+
+        if occasion == .outro {
+            insertMessage(ChatMessage(role: .user, content: occasion.label, conversationId: convId))
+            insertMessage(ChatMessage(
+                role: .assistant,
+                content: "Pode escrever direto no campo abaixo o que você quer cozinhar.",
+                conversationId: convId
+            ))
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                searchBarState?.focusTrigger += 1
+                isInputFocused = true
+            }
+            return
+        }
+
+        let userMsg = ChatMessage(role: .user, content: occasion.label, conversationId: convId)
+        insertMessage(userMsg)
+        pinnedUserMessageID = userMsg.id
+
+        insertMessage(ChatMessage(
+            role: .assistant,
+            content: occasion.refinementQuestion,
+            quickActions: [QuickAction(label: "_wizard", prompt: RecipeIdeasSentinel.refinementPrompt(for: occasion))],
+            conversationId: convId
+        ))
+    }
+
+    /// Tap em um refinamento: registra mensagem do usuário e dispara busca EXA.
+    private func handleRefinementTap(_ refinement: String, for occasion: RecipeIdeaOccasion) {
+        let convId = ensureConversation()
+
+        if refinement == "Outro" {
+            insertMessage(ChatMessage(role: .user, content: refinement, conversationId: convId))
+            insertMessage(ChatMessage(
+                role: .assistant,
+                content: "Diga no campo abaixo o que você procura (estilo, ingrediente principal, tempo, porções...).",
+                conversationId: convId
+            ))
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                searchBarState?.focusTrigger += 1
+                isInputFocused = true
+            }
+            return
+        }
+
+        let userMsg = ChatMessage(role: .user, content: refinement, conversationId: convId)
+        insertMessage(userMsg)
+        pinnedUserMessageID = userMsg.id
+
+        Task {
+            await runRecipeIdeasSearch(
+                occasion: occasion,
+                refinement: refinement,
+                customQuery: nil,
+                conversationId: convId
+            )
+        }
+    }
+
+    /// Dispara busca na EXA + matching local; insere mensagem com resultados.
+    private func runRecipeIdeasSearch(
+        occasion: RecipeIdeaOccasion?,
+        refinement: String?,
+        customQuery: String?,
+        conversationId: UUID
+    ) async {
+        isLoadingExaIdeas = true
+        defer { isLoadingExaIdeas = false }
+
+        let pantryItems = (try? modelContext.fetch(FetchDescriptor<UnifiedItem>())) ?? []
+        let pantryNames = pantryItems.filter { $0.isPantry }.map { $0.name }
+        let filterEnabled = currentPantryFilterEnabled
+
+        do {
+            let results = try await EXARecipeIdeasService.shared.search(
+                occasion: occasion,
+                refinement: refinement,
+                customQuery: customQuery,
+                pantryItems: pantryNames,
+                filterByPantry: filterEnabled,
+                limit: 6,
+                seed: exaSearchSeed
+            )
+
+            let localMatchedRecipeIDs = matchLocalRecipes(occasion: occasion, refinement: refinement, customQuery: customQuery)
+
+            let payload = ResultsPayload(
+                ideas: results,
+                localRecipeIDs: localMatchedRecipeIDs,
+                occasionRaw: occasion?.rawValue,
+                refinement: refinement,
+                customQuery: customQuery
+            )
+
+            insertMessage(ChatMessage(
+                role: .assistant,
+                content: payload.encoded(),
+                quickActions: [QuickAction(label: "_wizard", prompt: RecipeIdeasSentinel.resultsPrefix)],
+                conversationId: conversationId
+            ))
+        } catch let EXARecipeIdeasService.ServiceError.empty where filterEnabled && pantryNames.count <= 2 {
+            // Pouca despensa + filtro ativo → oferece banner para desligar filtro.
+            insertMessage(ChatMessage(
+                role: .assistant,
+                content: "Não encontrei ideias usando só itens da despensa. Quer buscar sem essa restrição?",
+                quickActions: [QuickAction(label: "_wizard", prompt: RecipeIdeasSentinel.pantryBannerPrefix)],
+                conversationId: conversationId
+            ))
+        } catch {
+            errorMessage = error.localizedDescription
+            insertMessage(ChatMessage(
+                role: .assistant,
+                content: "Não consegui buscar ideias agora. \(error.localizedDescription)",
+                conversationId: conversationId
+            ))
+        }
+    }
+
+    /// Filtro ativo (override de sessão > AppSettings).
+    private var currentPantryFilterEnabled: Bool {
+        if let override = wizardPantryFilterOverride { return override }
+        return settings?.recipeIdeasFilterByPantry ?? true
+    }
+
+    /// Tenta encontrar receitas locais compatíveis com a ocasião/refinamento.
+    private func matchLocalRecipes(
+        occasion: RecipeIdeaOccasion?,
+        refinement: String?,
+        customQuery: String?
+    ) -> [UUID] {
+        let pantryItems = (try? modelContext.fetch(FetchDescriptor<UnifiedItem>())) ?? []
+        let pantryNames = pantryItems.filter { $0.isPantry }.map { normalized($0.name) }
+
+        var keywords: [String] = []
+        if let occasion {
+            switch occasion {
+            case .cafeDaManha: keywords += ["cafe", "manha", "breakfast"]
+            case .almoco: keywords += ["almoco", "lunch"]
+            case .jantar: keywords += ["jantar", "dinner"]
+            case .lancheRapido: keywords += ["lanche", "snack"]
+            case .drinks: keywords += ["drink", "coquetel"]
+            case .bebidas: keywords += ["bebida", "suco", "smoothie", "vitamina"]
+            case .sobremesa: keywords += ["sobremesa", "doce", "dessert"]
+            case .outro: break
+            }
+        }
+        if let refinement { keywords.append(normalized(refinement)) }
+        if let customQuery {
+            customQuery.split(separator: " ").forEach { keywords.append(normalized(String($0))) }
+        }
+
+        let thresholdPercent = Double(settings?.recipeCompatibilityThresholdPercentValue ?? 80) / 100.0
+
+        let scored: [(Recipe, Double, Int)] = allRecipes.compactMap { recipe in
+            let category = normalized(recipe.category)
+            let tags = recipe.tags.map(normalized)
+            let name = normalized(recipe.name)
+            let categoryMatches = keywords.contains(where: { kw in
+                !kw.isEmpty && (category.contains(kw) || tags.contains(where: { $0.contains(kw) }) || name.contains(kw))
+            })
+            // Sem keywords (ocasião nil/customQuery vazio), aceita qualquer categoria.
+            if !keywords.isEmpty && !categoryMatches { return nil }
+
+            let ingredientNames = (recipe.ingredients ?? []).map { normalized($0.name) }
+            guard !ingredientNames.isEmpty else { return nil }
+            let score = ingredientNames.reduce(into: 0) { acc, ing in
+                if pantryNames.contains(where: { $0 == ing || $0.contains(ing) || ing.contains($0) }) {
+                    acc += 1
+                }
+            }
+            let ratio = Double(score) / Double(ingredientNames.count)
+            return (recipe, ratio, score)
+        }
+        .sorted { lhs, rhs in
+            if lhs.1 != rhs.1 { return lhs.1 > rhs.1 }
+            return lhs.0.name.localizedCaseInsensitiveCompare(rhs.0.name) == .orderedAscending
+        }
+
+        let filtered = scored.filter { $0.1 >= thresholdPercent }
+        let chosen = filtered.isEmpty ? Array(scored.prefix(4)) : Array(filtered.prefix(4))
+        return chosen.map(\.0.id)
+    }
+
+    // MARK: - Recipe Ideas Wizard — Results View
+
+    @ViewBuilder
+    private func recipeIdeasResultsView(for message: ChatMessage) -> some View {
+        let payload = ResultsPayload.decode(message.content)
+        VStack(alignment: .leading, spacing: 16) {
+            if !payload.localRecipeIDs.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Receitas suas")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 16)
+                    RecipeCardMessage(recipeIds: payload.localRecipeIDs)
+                }
+            }
+
+            if !payload.ideas.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Novas ideias")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 16)
+
+                    VStack(spacing: 10) {
+                        ForEach(payload.ideas) { idea in
+                            RecipeIdeaSuggestionCard(
+                                title: idea.title,
+                                summary: idea.summary,
+                                sourceHost: idea.sourceHost,
+                                heroImageURL: idea.heroImageURL,
+                                mainIngredient: idea.mainIngredient
+                            ) {
+                                handleNewIdeaTap(idea, payload: payload)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 16)
+
+                    Button {
+                        handleGenerateMoreTap(payload: payload)
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "sparkles")
+                            Text("Gerar mais ideias")
+                                .font(.subheadline.weight(.semibold))
+                        }
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(Color.accentColor.gradient, in: .rect(cornerRadius: 12))
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 4)
+                }
+            } else if payload.localRecipeIDs.isEmpty {
+                Text("Não encontrei nenhuma ideia agora.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 16)
+            }
+        }
+    }
+
+    /// Banner inline para desligar o filtro de despensa quando 0 resultados.
+    @ViewBuilder
+    private func recipeIdeasPantryBanner(for message: ChatMessage) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            assistantTextBubble(message.content)
+            Button {
+                wizardPantryFilterOverride = false
+                let convId = message.conversationId ?? ensureConversation()
+                Task {
+                    await runRecipeIdeasSearch(
+                        occasion: nil,
+                        refinement: nil,
+                        customQuery: lastWizardCustomContext(),
+                        conversationId: convId
+                    )
+                }
+            } label: {
+                HStack {
+                    Image(systemName: "tray.full")
+                    Text("Buscar sem restringir à despensa")
+                        .font(.subheadline.weight(.semibold))
+                }
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background(Color.accentColor.gradient, in: .rect(cornerRadius: 12))
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 16)
+        }
+    }
+
+    /// Recupera, do histórico, a última intenção (occasion + refinement ou customQuery)
+    /// para retomar a busca quando o usuário aciona o banner.
+    private func lastWizardCustomContext() -> String? {
+        // Heurística simples: pega as duas últimas mensagens .user e concatena.
+        let userTexts = messages.filter { $0.role == .user }.suffix(2).map(\.content)
+        return userTexts.isEmpty ? nil : userTexts.joined(separator: " ")
+    }
+
+    /// "Gerar mais ideias" — incrementa o seed e refaz a busca com o mesmo contexto.
+    private func handleGenerateMoreTap(payload: ResultsPayload) {
+        exaSearchSeed += 1
+        let convId = ensureConversation()
+        let occasion = payload.occasionRaw.flatMap(RecipeIdeaOccasion.init(rawValue:))
+        Task {
+            await runRecipeIdeasSearch(
+                occasion: occasion,
+                refinement: payload.refinement,
+                customQuery: payload.customQuery,
+                conversationId: convId
+            )
+        }
+    }
+
+    /// Tap em uma "Nova ideia": chama o estruturador (LLM), baixa a imagem hero
+    /// em paralelo, salva como Recipe e abre na aba Receitas.
+    private func handleNewIdeaTap(_ idea: RecipeIdeaResult, payload _: ResultsPayload) {
+        let convId = ensureConversation()
+
+        // Mensagem temporária de progresso.
+        let loadingMessage = ChatMessage(
+            role: .assistant,
+            content: "✨ Estruturando \"\(idea.title)\"…",
+            conversationId: convId
+        )
+        insertMessage(loadingMessage)
+        let loadingId = loadingMessage.id
+
+        Task {
+            // Texto-base para a LLM: rawText sempre que houver, fallback para summary.
+            let baseText: String = {
+                if let raw = idea.rawText, !raw.isEmpty {
+                    // Limita a ~6000 chars para controlar custo/latência.
+                    return raw.count > 6000 ? String(raw.prefix(6000)) : raw
+                }
+                return idea.summary
+            }()
+
+            let hints = RecipeStructurer.Hints(
+                title: idea.title,
+                description: idea.summary.isEmpty ? nil : idea.summary,
+                externalURL: idea.sourceURL.flatMap(URL.init(string:)),
+                imageURL: idea.heroImageURL.flatMap(URL.init(string:)),
+                sourceLabel: idea.sourceHost ?? "EXA"
+            )
+
+            // Estrutura + download da imagem em paralelo.
+            async let structuredTask: RecipeDraft? = {
+                do {
+                    return try await RecipeStructurer().structure(text: baseText, hints: hints)
+                } catch {
+                    return nil
+                }
+            }()
+            async let imageTask: Data? = ImageDownloader.fetch(idea.heroImageURL)
+
+            let (draftOpt, imageData) = await (structuredTask, imageTask)
+
+            await MainActor.run {
+                // Remove mensagem de loading.
+                if let idx = messages.firstIndex(where: { $0.id == loadingId }) {
+                    messages.remove(at: idx)
+                    try? modelContext.save()
+                }
+
+                guard var draft = draftOpt, !draft.name.isEmpty else {
+                    insertMessage(ChatMessage(
+                        role: .assistant,
+                        content: "Não consegui estruturar essa receita agora. Tente outra ideia ou abra o link: \(idea.sourceURL ?? "—")",
+                        conversationId: convId
+                    ))
+                    return
+                }
+
+                // Garante hero image: prioriza a baixada da EXA; senão usa a do site (já no draft.imageURL).
+                if draft.imageData == nil, let data = imageData, !data.isEmpty {
+                    draft.imageData = data
+                }
+                if draft.externalURLString.isEmpty, let url = idea.sourceURL {
+                    draft.externalURLString = url
+                }
+                if draft.sourceLabel.isEmpty {
+                    draft.sourceLabel = idea.sourceHost ?? "EXA"
+                }
+
+                let recipe = AITools.persistImportedDraft(draft, in: modelContext)
+                let newRecipeID = recipe.id
+
+                insertMessage(ChatMessage(
+                    role: .assistant,
+                    content: "✅ Receita \"\(recipe.name)\" adicionada às suas receitas!",
+                    conversationId: convId
+                ))
+
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                    searchBarState?.dismiss()
+                    openRecipeInRecipesTab(newRecipeID)
+                }
+            }
+        }
+    }
+
+    // MARK: - Results Payload (serialized into ChatMessage.content)
+
+    private struct ResultsPayload: Codable {
+        var ideas: [RecipeIdeaResult]
+        var localRecipeIDs: [UUID]
+        var occasionRaw: String?
+        var refinement: String?
+        var customQuery: String?
+
+        func encoded() -> String {
+            guard let data = try? JSONEncoder().encode(self),
+                  let str = String(data: data, encoding: .utf8) else { return "{}" }
+            return str
+        }
+
+        static func decode(_ raw: String) -> ResultsPayload {
+            guard let data = raw.data(using: .utf8),
+                  let payload = try? JSONDecoder().decode(ResultsPayload.self, from: data) else {
+                return ResultsPayload(ideas: [], localRecipeIDs: [], occasionRaw: nil, refinement: nil, customQuery: nil)
+            }
+            return payload
         }
     }
 }

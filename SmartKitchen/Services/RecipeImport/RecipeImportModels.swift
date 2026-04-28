@@ -45,6 +45,15 @@ struct RecipeDraft: Equatable {
     var servings: Int = 1
     var servingsConfidence: FieldConfidence = .low
     var calories: Int? = nil
+    /// Nutrição por porção (opcional, geralmente preenchida por estimativa de IA).
+    var proteinG: Double? = nil
+    var carbsG: Double? = nil
+    var fatG: Double? = nil
+    var fiberG: Double? = nil
+    var sugarG: Double? = nil
+    var sodiumMg: Double? = nil
+    /// `true` quando os macros vieram de estimativa por IA.
+    var nutritionEstimated: Bool? = nil
     var externalURLString: String = ""
     var imageData: Data? = nil
     var imageURL: URL? = nil

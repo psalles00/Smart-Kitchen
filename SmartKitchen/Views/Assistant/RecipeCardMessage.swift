@@ -80,6 +80,9 @@ struct RecipeCardMessage: View {
                         Label("\(recipe.totalTime) min", systemImage: "clock")
                     }
                     Label(recipe.difficulty.rawValue, systemImage: recipe.difficulty.icon)
+                    if let kcal = recipe.calories {
+                        Label("\(kcal) kcal", systemImage: "flame")
+                    }
                 }
                 .font(.caption2)
                 .foregroundStyle(.white.opacity(0.85))

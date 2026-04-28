@@ -128,6 +128,9 @@ final class AppSettings {
     var recipeViewMode: RecipeViewMode = RecipeViewMode.gallery
     var expiringItemsLeadDays: Int = 30
     var recipeCompatibilityThresholdPercentValue: Int? = 80
+    /// Quando true (padrão), o modo Ideias de receitas só sugere receitas que
+    /// usem itens presentes na despensa. Optional para resiliência a migrações.
+    var recipeIdeasFilterByPantryValue: Bool? = true
     /// Embedded API key for OpenAI.
     var openAIAPIKey: String = ""
     var hasCompletedOnboarding: Bool = false
@@ -156,6 +159,7 @@ final class AppSettings {
         self.recipeGalleryColumns = 3
         self.expiringItemsLeadDays = 30
         self.recipeCompatibilityThresholdPercentValue = 80
+        self.recipeIdeasFilterByPantryValue = true
         self.openAIAPIKey = ""
         self.hasCompletedOnboarding = false
         self.showUtensils = false
@@ -189,6 +193,12 @@ final class AppSettings {
     var recipeCompatibilityThresholdPercent: Int {
         get { recipeCompatibilityThresholdPercentValue ?? 80 }
         set { recipeCompatibilityThresholdPercentValue = newValue }
+    }
+
+    @Transient
+    var recipeIdeasFilterByPantry: Bool {
+        get { recipeIdeasFilterByPantryValue ?? true }
+        set { recipeIdeasFilterByPantryValue = newValue }
     }
 
     @Transient
