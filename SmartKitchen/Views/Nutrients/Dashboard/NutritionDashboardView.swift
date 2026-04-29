@@ -99,7 +99,7 @@ struct NutritionDashboardView: View {
                         .padding(.horizontal, 12)
 
                         Button(action: onOpenProgress) {
-                            VStack(spacing: 14) {
+                            VStack(spacing: 18) {
                                 CalorieRingView(consumed: caloriesConsumed, goal: profile.effectiveCalories)
                                     .padding(.top, 0)
 

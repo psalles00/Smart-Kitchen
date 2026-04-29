@@ -33,7 +33,7 @@ struct CalorieRingView: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
                 .contentTransition(.numericText())
-                .foregroundStyle(titleColor)
+                .foregroundStyle(Color(red: 5/255, green: 32/255, blue: 15/255))
 
             Text("de \(goal) kcal restantes")
                 .font(.subheadline.weight(.medium))
