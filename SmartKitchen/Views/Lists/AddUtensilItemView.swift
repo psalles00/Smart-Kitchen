@@ -36,9 +36,9 @@ struct AddUtensilItemView: View {
                     applySelectedEntry(entry)
                 }
 
-                Picker("Categoria", selection: $selectedCategory) {
+                Picker(String(localized: "Categoria"), selection: $selectedCategory) {
                     ForEach(categories) { cat in
-                        Text(cat.name).tag(cat.name)
+                        Text(cat.localizedDisplayName).tag(cat.name)
                     }
                 }
                 .controlSize(.small)
@@ -209,7 +209,7 @@ struct EditUtensilItemView: View {
                 }
 
                 CategorySelectionRow(
-                    title: "Categoria",
+                    title: String(localized: "Categoria"),
                     categories: categories,
                     selection: $item.category
                 )

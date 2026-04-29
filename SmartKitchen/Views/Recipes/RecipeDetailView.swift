@@ -152,7 +152,7 @@ struct RecipeDetailView: View {
             items.append(HeroMetadataItem(systemImage: "clock", text: "\(recipe.totalTime) min"))
         }
 
-        items.append(HeroMetadataItem(systemImage: recipe.difficulty.icon, text: recipe.difficulty.rawValue))
+        items.append(HeroMetadataItem(systemImage: recipe.difficulty.icon, text: recipe.difficulty.displayName))
 
         if recipe.servings > 0 {
             items.append(HeroMetadataItem(systemImage: "person.2", text: "\(recipe.servings) porções"))

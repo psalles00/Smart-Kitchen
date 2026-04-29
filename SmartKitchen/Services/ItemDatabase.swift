@@ -219,12 +219,9 @@ final class ItemDatabase: Sendable {
     }
 
     /// Ordered list of market sections for sorting.
-    static let marketSectionOrder: [String] = [
-        "Hortifruti", "Açougue", "Peixaria", "Padaria", "Refrigerados",
-        "Mercearia", "Bebidas", "Temperos", "Enlatados", "Doces",
-        "Salgadinhos", "Congelados", "Limpeza", "Utilidades", "Eletro",
-        "Saúde", "Outros"
-    ]
+    static var marketSectionOrder: [String] {
+        CategoryDatabase.shared.marketSectionsInDisplayOrder
+    }
 
     // MARK: - Helpers
 

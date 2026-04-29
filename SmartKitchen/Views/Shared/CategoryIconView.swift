@@ -26,10 +26,14 @@ struct CategoryLabelView: View {
     var spacing: CGFloat = 8
     var font: Font = .caption
 
+    private var displayName: String {
+        CategoryMutationService.localizedDisplayName(for: categoryName)
+    }
+
     var body: some View {
         HStack(spacing: spacing) {
             CategoryIconView(categoryName: categoryName, size: iconSize)
-            Text(categoryName)
+            Text(displayName)
                 .font(font)
                 .lineLimit(1)
                 .minimumScaleFactor(0.85)
@@ -55,7 +59,7 @@ struct CategorySelectionView: View {
                     HStack(spacing: 10) {
                         CategoryIconView(categoryName: category.name, size: 24)
 
-                        Text(category.name)
+                        Text(CategoryMutationService.localizedDisplayName(for: category.name))
                             .font(.subheadline)
                             .foregroundStyle(.primary)
 

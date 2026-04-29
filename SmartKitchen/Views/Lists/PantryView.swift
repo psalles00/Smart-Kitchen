@@ -281,7 +281,7 @@ struct PantryView: View {
 
     private func pantryHeader(for category: String) -> some View {
         HStack(spacing: 6) {
-            Text(category)
+            Text(displayName(for: category))
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.secondary)
             Spacer()
@@ -317,6 +317,15 @@ struct PantryView: View {
             Label("Despensa Vazia", systemImage: "refrigerator")
         } description: {
             Text("Adicione itens à sua despensa para acompanhar o que você tem em casa.")
+        }
+    }
+
+    private func displayName(for category: String) -> String {
+        switch groupingMode {
+        case .category:
+            return CategoryMutationService.localizedDisplayName(for: category, type: .pantry)
+        case .marketSection, .validade:
+            return category
         }
     }
 

@@ -99,14 +99,14 @@ struct RecipeImportPreviewView: View {
                 }
             }
 
-            Section("Categoria") {
-                Picker("Categoria", selection: $draft.category) {
+            Section(String(localized: "Categoria")) {
+                Picker(String(localized: "Categoria"), selection: $draft.category) {
                     ForEach(allCategoryOptions, id: \.self) { name in
-                        Text(name).tag(name)
+                        Text(CategoryMutationService.localizedDisplayName(for: name, type: .recipe)).tag(name)
                     }
                 }
                 .pickerStyle(.menu)
-                confidenceHint(draft.categoryConfidence, label: "Categoria")
+                confidenceHint(draft.categoryConfidence, label: String(localized: "Categoria"))
             }
 
             Section("Tempo e porções") {
@@ -136,7 +136,7 @@ struct RecipeImportPreviewView: View {
                 }
                 Picker("Dificuldade", selection: $draft.difficulty) {
                     ForEach(Difficulty.allCases) { diff in
-                        Label(diff.rawValue, systemImage: diff.icon).tag(diff)
+                        Label(diff.displayName, systemImage: diff.icon).tag(diff)
                     }
                 }
             }

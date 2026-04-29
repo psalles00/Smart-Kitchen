@@ -1127,23 +1127,23 @@ struct InlineChatView: View {
         let recipesToShow = thresholdRecipes.isEmpty ? rankedRecipes : thresholdRecipes
 
         if recipesToShow.isEmpty {
-            let noResultLabel = wantsDessert ? "sobremesa" : "receita"
+            let noResultLabel = wantsDessert ? String(localized: "sobremesa") : String(localized: "receita")
             let newRecipePrompt: String
             if pantryItems.count >= 3 {
                 newRecipePrompt = wantsDessert
-                    ? "Sugira novas receitas de sobremesa com base na minha despensa."
-                    : "Sugira novas receitas com base na minha despensa."
+                    ? String(localized: "Sugira novas receitas de sobremesa com base na minha despensa.")
+                    : String(localized: "Sugira novas receitas com base na minha despensa.")
             } else {
                 newRecipePrompt = wantsDessert
-                    ? "Sugira novas receitas de sobremesa."
-                    : "Sugira novas receitas."
+                    ? String(localized: "Sugira novas receitas de sobremesa.")
+                    : String(localized: "Sugira novas receitas.")
             }
             return RecipeDiscoveryResponse(
-                content: "Não encontrei nenhuma \(noResultLabel) compatível com o que você tem na despensa e nas suas receitas salvas.",
+                content: "\(String(localized: "Não encontrei nenhuma")) \(noResultLabel) \(String(localized: "compatível com o que você tem na despensa e nas suas receitas salvas."))",
                 recipeIds: [],
                 quickActions: [
                     QuickAction(
-                        label: "🍳 Criar novas receitas",
+                        label: String(localized: "🍳 Criar novas receitas"),
                         prompt: newRecipePrompt
                     )
                 ]
@@ -1154,29 +1154,29 @@ struct InlineChatView: View {
         let intro: String
         if thresholdRecipes.isEmpty {
             intro = wantsDessert
-                ? "Não encontrei sobremesas com compatibilidade ideal, mas estas são as melhores opções com o que você tem:"
-                : "Não encontrei receitas com compatibilidade ideal, mas estas são as melhores opções com o que você tem:"
+                ? String(localized: "Não encontrei sobremesas com compatibilidade ideal, mas estas são as melhores opções com o que você tem:")
+                : String(localized: "Não encontrei receitas com compatibilidade ideal, mas estas são as melhores opções com o que você tem:")
         } else {
             intro = wantsDessert
-                ? "A partir dos itens da sua despensa, essas são as sobremesas compatíveis:"
-                : "A partir dos itens da sua despensa, essas são as receitas compatíveis:"
+                ? String(localized: "A partir dos itens da sua despensa, essas são as sobremesas compatíveis:")
+                : String(localized: "A partir dos itens da sua despensa, essas são as receitas compatíveis:")
         }
 
         // Always offer to create new recipes
         let newRecipePrompt: String
         if pantryItems.count >= 3 {
             newRecipePrompt = wantsDessert
-                ? "Sugira novas receitas de sobremesa com base na minha despensa."
-                : "Sugira novas receitas com base na minha despensa."
+                ? String(localized: "Sugira novas receitas de sobremesa com base na minha despensa.")
+                : String(localized: "Sugira novas receitas com base na minha despensa.")
         } else {
             newRecipePrompt = wantsDessert
-                ? "Sugira novas receitas de sobremesa."
-                : "Sugira novas receitas."
+                ? String(localized: "Sugira novas receitas de sobremesa.")
+                : String(localized: "Sugira novas receitas.")
         }
 
         let quickActions = [
             QuickAction(
-                label: "🍳 Criar novas receitas",
+                label: String(localized: "🍳 Criar novas receitas"),
                 prompt: newRecipePrompt
             )
         ]
@@ -1525,8 +1525,8 @@ struct InlineChatView: View {
         insertMessage(ChatMessage(
             role: .assistant,
             content: success
-                ? "✅ Receita \"\(card.title)\" adicionada às suas receitas!"
-                : "Não foi possível adicionar a receita: \(result)",
+                ? "✅ \(String(localized: "Receita")) \"\(card.title)\" \(String(localized: "adicionada às suas receitas!"))"
+                : "\(String(localized: "Não foi possível adicionar a receita:")) \(result)",
             conversationId: convId
         ))
 

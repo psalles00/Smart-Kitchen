@@ -69,16 +69,16 @@ final class UniversalSearchService: ObservableObject {
             // Determine primary type & subtitle
             let primaryType: SearchResultType
             let icon: String
-            var subtitle = item.category
+            var subtitle = item.localizedCategoryDisplayName
             if item.isPantry {
                 primaryType = .pantryItem
                 icon = "refrigerator"
                 let qty = item.formattedQuantity
-                if !qty.isEmpty { subtitle = "\(item.category) · \(qty)" }
+                if !qty.isEmpty { subtitle = "\(item.localizedCategoryDisplayName) · \(qty)" }
             } else if item.isGrocery {
                 primaryType = .groceryItem
                 icon = "cart"
-                if item.isChecked { subtitle = "✓ \(item.category)" }
+                if item.isChecked { subtitle = "✓ \(item.localizedCategoryDisplayName)" }
             } else {
                 primaryType = .utensil
                 icon = "fork.knife"
@@ -113,7 +113,7 @@ final class UniversalSearchService: ObservableObject {
                 all.append(SearchResult(
                     id: "recipe-\(recipe.id)",
                     title: recipe.name,
-                    subtitle: recipe.totalTime > 0 ? "\(recipe.category) · \(recipe.totalTime) min" : recipe.category,
+                    subtitle: recipe.totalTime > 0 ? "\(recipe.localizedCategorySummary) · \(recipe.totalTime) min" : recipe.localizedCategorySummary,
                     icon: "book.closed",
                     type: .recipe,
                     score: score + recencyBoost,

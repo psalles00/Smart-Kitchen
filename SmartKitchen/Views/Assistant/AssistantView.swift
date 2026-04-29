@@ -574,15 +574,15 @@ struct AssistantView: View {
         if rankedRecipes.isEmpty {
             return RecipeDiscoveryResponse(
                 content: wantsDessert
-                    ? "Não encontrei uma sobremesa compatível com o que você tem salvo na despensa e nas suas receitas. Se quiser, posso sugerir outras receitas baseadas no que você tem agora."
-                    : "Não encontrei receitas compatíveis com o que você tem salvo na despensa e nas suas receitas. Se quiser, posso sugerir outras opções baseadas no que você tem agora.",
+                    ? String(localized: "Não encontrei uma sobremesa compatível com o que você tem salvo na despensa e nas suas receitas. Se quiser, posso sugerir outras receitas baseadas no que você tem agora.")
+                    : String(localized: "Não encontrei receitas compatíveis com o que você tem salvo na despensa e nas suas receitas. Se quiser, posso sugerir outras opções baseadas no que você tem agora."),
                 recipeIds: [],
                 quickActions: [
                     QuickAction(
-                        label: wantsDessert ? "Sugerir outras sobremesas" : "Sugerir outras receitas",
+                        label: wantsDessert ? String(localized: "Sugerir outras sobremesas") : String(localized: "Sugerir outras receitas"),
                         prompt: wantsDessert
-                            ? "Sugira outras sobremesas com base na minha despensa."
-                            : "Sugira outras receitas com base na minha despensa."
+                            ? String(localized: "Sugira outras sobremesas com base na minha despensa.")
+                            : String(localized: "Sugira outras receitas com base na minha despensa.")
                     )
                 ]
             )
@@ -590,18 +590,18 @@ struct AssistantView: View {
 
         let recipes = rankedRecipes.prefix(6).map(\.0)
         let intro = wantsDessert
-            ? "A partir dos itens da sua despensa e da sua lista de receitas, essas são as opções de sobremesa disponíveis:"
-            : "A partir dos itens da sua despensa e da sua lista de receitas, essas são as opções disponíveis:"
+            ? String(localized: "A partir dos itens da sua despensa e da sua lista de receitas, essas são as opções de sobremesa disponíveis:")
+            : String(localized: "A partir dos itens da sua despensa e da sua lista de receitas, essas são as opções disponíveis:")
 
         return RecipeDiscoveryResponse(
-            content: "\(intro)\n\nSe quiser, posso sugerir outras receitas com base na sua despensa.",
+            content: "\(intro)\n\n\(String(localized: "Se quiser, posso sugerir outras receitas com base na sua despensa."))",
             recipeIds: recipes.map(\.id),
             quickActions: [
                 QuickAction(
-                    label: wantsDessert ? "Sugerir outras sobremesas" : "Sugerir outras receitas",
+                    label: wantsDessert ? String(localized: "Sugerir outras sobremesas") : String(localized: "Sugerir outras receitas"),
                     prompt: wantsDessert
-                        ? "Sugira outras sobremesas com base na minha despensa."
-                        : "Sugira outras receitas com base na minha despensa."
+                        ? String(localized: "Sugira outras sobremesas com base na minha despensa.")
+                        : String(localized: "Sugira outras receitas com base na minha despensa.")
                 )
             ]
         )

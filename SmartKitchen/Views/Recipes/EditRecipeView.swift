@@ -406,7 +406,7 @@ struct EditRecipeView: View {
                                     size: 18,
                                     showBalloon: false
                                 )
-                                Text(cat.name)
+                                Text(cat.localizedDisplayName)
                                     .font(.subheadline)
                             }
                             .padding(.horizontal, 12)
@@ -421,7 +421,7 @@ struct EditRecipeView: View {
 
             Picker("Dificuldade", selection: $recipe.difficulty) {
                 ForEach(Difficulty.allCases) { d in
-                    Text(d.rawValue).tag(d)
+                    Text(d.displayName).tag(d)
                 }
             }
         }

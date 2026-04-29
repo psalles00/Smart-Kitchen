@@ -37,7 +37,7 @@ struct RecipeRowView: View, Equatable {
                     if recipe.totalTime > 0 {
                         Label("\(recipe.totalTime) min", systemImage: "clock")
                     }
-                    Label(recipe.difficulty.rawValue, systemImage: recipe.difficulty.icon)
+                    Label(recipe.difficulty.displayName, systemImage: recipe.difficulty.icon)
                     if recipe.servings > 0 {
                         Label("\(recipe.servings)", systemImage: "person.2")
                     }

@@ -203,7 +203,7 @@ struct GroceryListView: View {
 
     private func groceryHeader(for category: String) -> some View {
         HStack(spacing: 6) {
-            Text(category)
+            Text(displayName(for: category))
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.primary.opacity(0.72))
             Spacer()
@@ -232,6 +232,15 @@ struct GroceryListView: View {
             .listRowInsets(EdgeInsets())
             .listRowSeparator(.hidden)
             .listRowBackground(Color.clear)
+    }
+
+    private func displayName(for category: String) -> String {
+        switch groupingMode {
+        case .category, .validade:
+            return CategoryMutationService.localizedDisplayName(for: category, type: .pantry)
+        case .marketSection:
+            return category
+        }
     }
 
     @ViewBuilder

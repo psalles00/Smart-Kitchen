@@ -79,7 +79,7 @@ struct WeightTrackerView: View {
         }
         .scrollIndicators(.hidden)
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
-        .navigationTitle("Rastreio de peso")
+        .navigationTitle(String(localized: "Rastreio de peso"))
         #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
         #endif
@@ -89,7 +89,7 @@ struct WeightTrackerView: View {
                 Button {
                     showLogSheet = true
                 } label: {
-                    Label("Registrar", systemImage: "plus")
+                    Label(String(localized: "Registrar"), systemImage: "plus")
                 }
             }
         }
@@ -116,23 +116,23 @@ struct WeightTrackerView: View {
         card {
             HStack(alignment: .top, spacing: 12) {
                 if let current = currentWeightKg {
-                    metric(label: "Atual", value: formatWeight(current))
+                    metric(label: String(localized: "Atual"), value: formatWeight(current))
                 }
                 if let goal = profile?.targetWeightKg {
-                    metric(label: "Meta", value: formatWeight(goal))
+                    metric(label: String(localized: "Meta"), value: formatWeight(goal))
                 }
                 if let current = currentWeightKg,
                    let goal = profile?.targetWeightKg,
                    abs(goal - current) > 0.05 {
                     metric(
-                        label: "Faltam",
+                        label: String(localized: "Faltam"),
                         value: String(format: "%.1f %@", abs(displayWeight(goal) - displayWeight(current)), unit)
                     )
                 } else if let first = firstWeightKg, let current = currentWeightKg, first != current {
                     let delta = displayWeight(current) - displayWeight(first)
                     let sign = delta >= 0 ? "+" : "−"
                     metric(
-                        label: "Variação",
+                        label: String(localized: "Variação"),
                         value: String(format: "%@%.1f %@", sign, abs(delta), unit)
                     )
                 }
@@ -157,24 +157,24 @@ struct WeightTrackerView: View {
     private var chartCard: some View {
         card {
             HStack {
-                Text("Evolução")
+                Text(String(localized: "Evolução"))
                     .font(.cardTitle)
                 Spacer()
-                Text("\(allEntries.count) registros")
+                Text(entryCountLabel(allEntries.count))
                     .font(.system(.caption, design: .rounded))
                     .foregroundStyle(.secondary)
             }
 
             if sortedAscending.isEmpty {
-                emptyMessage("Nenhum registro ainda. Toque em + para começar.")
+                emptyMessage(String(localized: "Nenhum registro ainda. Toque em + para começar."))
             } else {
                 let baseline = yDomain.lowerBound
                 Chart {
                     ForEach(sortedAscending) { entry in
                         AreaMark(
-                            x: .value("Data", entry.date),
-                            yStart: .value("Base", baseline),
-                            yEnd: .value("Peso", displayWeight(entry.weightKg))
+                            x: .value(String(localized: "Data"), entry.date),
+                            yStart: .value(String(localized: "Base"), baseline),
+                            yEnd: .value(String(localized: "Peso"), displayWeight(entry.weightKg))
                         )
                         .foregroundStyle(
                             LinearGradient(
@@ -190,27 +190,27 @@ struct WeightTrackerView: View {
                         .interpolationMethod(.catmullRom)
 
                         LineMark(
-                            x: .value("Data", entry.date),
-                            y: .value("Peso", displayWeight(entry.weightKg))
+                            x: .value(String(localized: "Data"), entry.date),
+                            y: .value(String(localized: "Peso"), displayWeight(entry.weightKg))
                         )
                         .foregroundStyle(accent)
                         .interpolationMethod(.catmullRom)
                         .lineStyle(StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
 
                         PointMark(
-                            x: .value("Data", entry.date),
-                            y: .value("Peso", displayWeight(entry.weightKg))
+                            x: .value(String(localized: "Data"), entry.date),
+                            y: .value(String(localized: "Peso"), displayWeight(entry.weightKg))
                         )
                         .foregroundStyle(accent)
                         .symbolSize(28)
                     }
 
                     if let goalKg = profile?.targetWeightKg {
-                        RuleMark(y: .value("Meta", displayWeight(goalKg)))
+                        RuleMark(y: .value(String(localized: "Meta"), displayWeight(goalKg)))
                             .foregroundStyle(.green.opacity(0.8))
                             .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
                             .annotation(position: .top, alignment: .trailing) {
-                                Text("Meta")
+                                Text(String(localized: "Meta"))
                                     .font(.caption2.weight(.semibold))
                                     .foregroundStyle(.green)
                                     .padding(.horizontal, 6)
@@ -236,13 +236,13 @@ struct WeightTrackerView: View {
     private var historyCard: some View {
         card {
             HStack {
-                Text("Histórico")
+                Text(String(localized: "Histórico"))
                     .font(.cardTitle)
                 Spacer()
             }
 
             if allEntries.isEmpty {
-                emptyMessage("Sem registros ainda.")
+                emptyMessage(String(localized: "Sem registros ainda."))
             } else {
                 VStack(spacing: 16) {
                     ForEach(entriesByYear, id: \.year) { group in
@@ -320,6 +320,12 @@ struct WeightTrackerView: View {
             .multilineTextAlignment(.center)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 28)
+    }
+
+    private func entryCountLabel(_ count: Int) -> String {
+        count == 1
+            ? "1 \(String(localized: "registro"))"
+            : "\(count) \(String(localized: "registros"))"
     }
 
     // MARK: - Mutations

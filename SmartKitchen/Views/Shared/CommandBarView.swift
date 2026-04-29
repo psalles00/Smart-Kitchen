@@ -745,15 +745,15 @@ enum CommandBarHelpers {
     static func fullWidthActionButtonTitle(item: ActionItem) -> String {
         switch item.id {
         case "ask-assistant":
-            return "Perguntar \"\(item.title)\" à IA"
+            return String(format: String(localized: "Perguntar \"%@\" à IA"), item.title)
         case "add-pantry":
-            return "Adicionar \"\(item.title)\" à Despensa"
+            return String(format: String(localized: "Adicionar \"%@\" à Despensa"), item.title)
         case "add-grocery":
-            return "Adicionar \"\(item.title)\" ao Mercado"
+            return String(format: String(localized: "Adicionar \"%@\" ao Mercado"), item.title)
         case "create-recipe":
-            return "Criar receita \"\(item.title)\""
+            return String(format: String(localized: "Criar receita \"%@\""), item.title)
         case "register-food-text":
-            return "Registrar alimento \"\(item.title)\""
+            return String(format: String(localized: "Registrar alimento \"%@\""), item.title)
         default:
             return item.title
         }
@@ -945,42 +945,13 @@ enum CommandBarHelpers {
     }
 
     private static func compactActionButtonTitle(item: ActionItem) -> AttributedString {
-        var baseText = ""
-        var boldRange: String = ""
-        var boldTerm: String = ""
-
-        switch item.id {
-        case "ask-assistant":
-            baseText = "Perguntar \"\(item.title)\" à IA"
-            boldRange = "\"\(item.title)\""
-            boldTerm = "IA"
-        case "add-pantry":
-            baseText = "Adicionar \"\(item.title)\" à Despensa"
-            boldRange = "\"\(item.title)\""
-            boldTerm = "Despensa"
-        case "add-grocery":
-            baseText = "Adicionar \"\(item.title)\" ao Mercado"
-            boldRange = "\"\(item.title)\""
-            boldTerm = "Mercado"
-        case "create-recipe":
-            baseText = "Criar receita \"\(item.title)\""
-            boldRange = "\"\(item.title)\""
-            boldTerm = "receita"
-        case "register-food-text":
-            baseText = "Registrar alimento \"\(item.title)\""
-            boldRange = "\"\(item.title)\""
-            boldTerm = "alimento"
-        default:
-            return AttributedString(item.title)
-        }
+        let baseText = fullWidthActionButtonTitle(item: item)
+        let boldRange = "\"\(item.title)\""
 
         var attributed = AttributedString(baseText)
         attributed.font = .caption
 
         if let range = attributed.range(of: boldRange) {
-            attributed[range].font = .caption.bold()
-        }
-        if let range = attributed.range(of: boldTerm) {
             attributed[range].font = .caption.bold()
         }
 

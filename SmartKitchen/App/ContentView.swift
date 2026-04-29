@@ -1892,7 +1892,7 @@ private struct HomeView: View {
                 }
 
                 ForEach(recipeCategoriesState) { category in
-                    filterChip(label: category.name, isSelected: selectedCompatibleCategory == category.name) {
+                    filterChip(label: category.localizedDisplayName, isSelected: selectedCompatibleCategory == category.name) {
                         selectedCompatibleCategory = category.name
                     }
                 }
@@ -2303,7 +2303,7 @@ private struct HomeRecipeMatchCard: View {
                     if match.recipe.totalTime > 0 {
                         Label("\(match.recipe.totalTime) min", systemImage: "clock")
                     }
-                    Label(match.recipe.difficulty.rawValue, systemImage: match.recipe.difficulty.icon)
+                    Label(match.recipe.difficulty.displayName, systemImage: match.recipe.difficulty.icon)
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)

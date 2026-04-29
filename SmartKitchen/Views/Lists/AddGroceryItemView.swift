@@ -46,7 +46,7 @@ struct AddGroceryItemView: View {
                 }
 
                 CategorySelectionRow(
-                    title: "Categoria",
+                    title: String(localized: "Categoria"),
                     categories: CategoryDatabase.shared.allCategories,
                     selection: $selectedCategory
                 )
@@ -297,7 +297,7 @@ struct EditGroceryItemView: View {
                 }
 
                 CategorySelectionRow(
-                    title: "Categoria",
+                    title: String(localized: "Categoria"),
                     categories: categories,
                     selection: $item.category
                 )

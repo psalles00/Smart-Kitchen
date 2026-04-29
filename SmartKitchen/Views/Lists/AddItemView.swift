@@ -77,7 +77,7 @@ struct AddItemView: View {
                 }
 
                 CategorySelectionRow(
-                    title: "Categoria",
+                    title: String(localized: "Categoria"),
                     categories: CategoryDatabase.shared.allCategories,
                     selection: $selectedCategory
                 )

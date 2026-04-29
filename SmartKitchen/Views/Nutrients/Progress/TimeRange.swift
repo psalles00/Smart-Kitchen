@@ -10,6 +10,16 @@ enum NutritionTimeRange: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
+    var displayLabel: String {
+        switch self {
+        case .week: String(localized: "1S")
+        case .month: String(localized: "1M")
+        case .threeMonths: String(localized: "3M")
+        case .sixMonths: String(localized: "6M")
+        case .year: String(localized: "1A")
+        }
+    }
+
     var days: Int {
         switch self {
         case .week: 7

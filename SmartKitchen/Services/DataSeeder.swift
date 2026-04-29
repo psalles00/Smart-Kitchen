@@ -4,40 +4,40 @@ import SwiftData
 /// Seeds the database with demo data on first launch.
 struct DataSeeder {
     static let pantryCategoryDefinitions: [CategorySeedDefinition] = [
-        CategorySeedDefinition(name: "Frutas", iconName: "apple.png"),
-        CategorySeedDefinition(name: "Verduras e Legumes", iconName: "broccoli.png"),
-        CategorySeedDefinition(name: "Carnes e Aves", iconName: "chicken-raw.png"),
-        CategorySeedDefinition(name: "Peixes e Frutos do Mar", iconName: "fish.png"),
-        CategorySeedDefinition(name: "Laticínios e Ovos", iconName: "milk.png"),
-        CategorySeedDefinition(name: "Padaria", iconName: "bread-white.png"),
-        CategorySeedDefinition(name: "Grãos, Massas e Cereais", iconName: "rice.png"),
-        CategorySeedDefinition(name: "Bebidas", iconName: "water-bottle.png"),
-        CategorySeedDefinition(name: "Temperos e Condimentos", iconName: "salt.png"),
-        CategorySeedDefinition(name: "Enlatados e Conservas", iconName: "canned-tuna.png"),
-        CategorySeedDefinition(name: "Doces e Sobremesas", iconName: "cake.png"),
-        CategorySeedDefinition(name: "Snacks e Petiscos", iconName: "chips.png"),
-        CategorySeedDefinition(name: "Pratos Prontos", iconName: "lunch-box.png"),
-        CategorySeedDefinition(name: "Limpeza e Higiene", iconName: "dish-soap.png"),
-        CategorySeedDefinition(name: "Utensílios de Cozinha", iconName: "frying-pan.png"),
-        CategorySeedDefinition(name: "Eletrodomésticos", iconName: "blender.png"),
-        CategorySeedDefinition(name: "Saúde e Bem-estar", iconName: "healthy-food.png"),
-        CategorySeedDefinition(name: "Outros", iconName: nil),
+        CategorySeedDefinition(name: "Frutas", iconName: "apple.png", localizedNames: ["en": "Fruits"]),
+        CategorySeedDefinition(name: "Verduras e Legumes", iconName: "broccoli.png", localizedNames: ["en": "Vegetables & Greens"]),
+        CategorySeedDefinition(name: "Carnes e Aves", iconName: "chicken-raw.png", localizedNames: ["en": "Meat & Poultry"]),
+        CategorySeedDefinition(name: "Peixes e Frutos do Mar", iconName: "fish.png", localizedNames: ["en": "Fish & Seafood"]),
+        CategorySeedDefinition(name: "Laticínios e Ovos", iconName: "milk.png", localizedNames: ["en": "Dairy & Eggs"]),
+        CategorySeedDefinition(name: "Padaria", iconName: "bread-white.png", localizedNames: ["en": "Bakery"]),
+        CategorySeedDefinition(name: "Grãos, Massas e Cereais", iconName: "rice.png", localizedNames: ["en": "Grains, Pasta & Cereals"]),
+        CategorySeedDefinition(name: "Bebidas", iconName: "water-bottle.png", localizedNames: ["en": "Beverages"]),
+        CategorySeedDefinition(name: "Temperos e Condimentos", iconName: "salt.png", localizedNames: ["en": "Seasonings & Condiments"]),
+        CategorySeedDefinition(name: "Enlatados e Conservas", iconName: "canned-tuna.png", localizedNames: ["en": "Canned & Preserved Goods"]),
+        CategorySeedDefinition(name: "Doces e Sobremesas", iconName: "cake.png", localizedNames: ["en": "Desserts & Sweets"]),
+        CategorySeedDefinition(name: "Snacks e Petiscos", iconName: "chips.png", localizedNames: ["en": "Snacks & Bites"]),
+        CategorySeedDefinition(name: "Pratos Prontos", iconName: "lunch-box.png", localizedNames: ["en": "Ready Meals"]),
+        CategorySeedDefinition(name: "Limpeza e Higiene", iconName: "dish-soap.png", localizedNames: ["en": "Cleaning & Hygiene"]),
+        CategorySeedDefinition(name: "Utensílios de Cozinha", iconName: "frying-pan.png", localizedNames: ["en": "Kitchen Tools"]),
+        CategorySeedDefinition(name: "Eletrodomésticos", iconName: "blender.png", localizedNames: ["en": "Appliances"]),
+        CategorySeedDefinition(name: "Saúde e Bem-estar", iconName: "healthy-food.png", localizedNames: ["en": "Health & Wellness"]),
+        CategorySeedDefinition(name: "Outros", iconName: nil, localizedNames: ["en": "Other"]),
     ]
 
     static let recipeCategoryDefinitions: [CategorySeedDefinition] = [
-        CategorySeedDefinition(name: "Café da manhã", iconName: "pancakes.png"),
-        CategorySeedDefinition(name: "Almoço", iconName: "lunch-box.png"),
-        CategorySeedDefinition(name: "Jantar", iconName: "dinner.png"),
-        CategorySeedDefinition(name: "Lanche", iconName: "sandwich.png"),
-        CategorySeedDefinition(name: "Sobremesa", iconName: "cake.png"),
-        CategorySeedDefinition(name: "Bebida", iconName: "smoothie.png"),
-        CategorySeedDefinition(name: "Outros", iconName: "recipe-card.png"),
+        CategorySeedDefinition(name: "Café da manhã", iconName: "pancakes.png", localizedNames: ["en": "Breakfast"]),
+        CategorySeedDefinition(name: "Almoço", iconName: "lunch-box.png", localizedNames: ["en": "Lunch"]),
+        CategorySeedDefinition(name: "Jantar", iconName: "dinner.png", localizedNames: ["en": "Dinner"]),
+        CategorySeedDefinition(name: "Lanche", iconName: "sandwich.png", localizedNames: ["en": "Snack"]),
+        CategorySeedDefinition(name: "Sobremesa", iconName: "cake.png", localizedNames: ["en": "Dessert"]),
+        CategorySeedDefinition(name: "Bebida", iconName: "smoothie.png", localizedNames: ["en": "Drink"]),
+        CategorySeedDefinition(name: "Outros", iconName: "recipe-card.png", localizedNames: ["en": "Other"]),
     ]
 
     static let utensilCategoryDefinitions: [CategorySeedDefinition] = [
-        CategorySeedDefinition(name: "Utensílios de Cozinha", iconName: "frying-pan.png"),
-        CategorySeedDefinition(name: "Eletrodomésticos", iconName: "blender.png"),
-        CategorySeedDefinition(name: "Outros", iconName: nil),
+        CategorySeedDefinition(name: "Utensílios de Cozinha", iconName: "frying-pan.png", localizedNames: ["en": "Kitchen Tools"]),
+        CategorySeedDefinition(name: "Eletrodomésticos", iconName: "blender.png", localizedNames: ["en": "Appliances"]),
+        CategorySeedDefinition(name: "Outros", iconName: nil, localizedNames: ["en": "Other"]),
     ]
 
     private static let legacyPantryCategoryMapping: [String: String] = [
@@ -211,9 +211,9 @@ struct DataSeeder {
 
     private static func seedPantryItems(context: ModelContext) {
         let items: [(String, String, String?)] = [
-            ("Banana", "Frutas", "banana.png"),
-            ("Arroz", "Grãos", "rice.png"),
-            ("Leite", "Laticínios", "milk.png"),
+            (localizedSeedItemName(fileName: "banana.png", fallbackName: "Banana"), "Frutas", "banana.png"),
+            (localizedSeedItemName(fileName: "rice.png", fallbackName: "Arroz"), "Grãos, Massas e Cereais", "rice.png"),
+            (localizedSeedItemName(fileName: "milk.png", fallbackName: "Leite"), "Laticínios e Ovos", "milk.png"),
         ]
         for (name, category, icon) in items {
             let item = UnifiedItem(name: name, category: category, iconName: icon, isPantry: true)
@@ -225,9 +225,9 @@ struct DataSeeder {
 
     private static func seedGroceryItems(context: ModelContext) {
         let items: [(String, String, String?, Int)] = [
-            ("Tomate", "Vegetais", "tomato.png", 0),
-            ("Frango", "Carnes", "chicken.png", 1),
-            ("Azeite", "Outros", "olive-oil.png", 2),
+            (localizedSeedItemName(fileName: "tomato.png", fallbackName: "Tomate"), "Verduras e Legumes", "tomato.png", 0),
+            (localizedSeedItemName(fileName: "chicken.png", fallbackName: "Frango"), "Carnes e Aves", "chicken.png", 1),
+            (localizedSeedItemName(fileName: "olive-oil.png", fallbackName: "Azeite"), "Outros", "olive-oil.png", 2),
         ]
         for (name, category, icon, order) in items {
             let item = UnifiedItem(name: name, category: category, iconName: icon, isGrocery: true, grocerySortOrder: order)
@@ -240,10 +240,10 @@ struct DataSeeder {
     private static func seedRecipes(context: ModelContext) {
         // 1 — Panqueca Americana
         let pancake = Recipe(
-            name: "Panqueca Americana",
-            descriptionText: "Panquecas fofas e douradas, perfeitas para o café da manhã.",
+            name: String(localized: "Panqueca Americana"),
+            descriptionText: String(localized: "Panquecas fofas e douradas, perfeitas para o café da manhã."),
             category: "Café da manhã",
-            tags: ["doce", "café da manhã", "rápido"],
+            tags: [String(localized: "doce"), String(localized: "café da manhã"), String(localized: "rápido")],
             prepTime: 10,
             cookTime: 15,
             servings: 4,
@@ -253,12 +253,12 @@ struct DataSeeder {
         context.insert(pancake)
 
         let pancakeIngredients: [(String, Double?, String, String?, Int)] = [
-            ("Farinha de trigo", 2, "xícaras", "flour.png", 0),
-            ("Leite", 1.5, "xícaras", "milk.png", 1),
-            ("Ovos", 2, "", "egg.png", 2),
-            ("Açúcar", 3, "colheres de sopa", "sugar.png", 3),
-            ("Fermento em pó", 2, "colheres de chá", nil, 4),
-            ("Manteiga", 2, "colheres de sopa", "butter.png", 5),
+            (String(localized: "Farinha de trigo"), 2, String(localized: "xícaras"), "flour.png", 0),
+            (String(localized: "Leite"), 1.5, String(localized: "xícaras"), "milk.png", 1),
+            (String(localized: "Ovos"), 2, "", "egg.png", 2),
+            (String(localized: "Açúcar"), 3, String(localized: "colheres de sopa"), "sugar.png", 3),
+            (String(localized: "Fermento em pó"), 2, String(localized: "colheres de chá"), nil, 4),
+            (String(localized: "Manteiga"), 2, String(localized: "colheres de sopa"), "butter.png", 5),
         ]
         for (name, qty, unit, icon, order) in pancakeIngredients {
             let ing = RecipeIngredient(name: name, quantity: qty, unit: unit, iconName: icon, sortOrder: order)
@@ -267,12 +267,12 @@ struct DataSeeder {
         }
 
         let pancakeSteps = [
-            "Misture a farinha, o açúcar e o fermento em uma tigela grande.",
-            "Em outra tigela, bata os ovos com o leite e a manteiga derretida.",
-            "Combine os ingredientes líquidos com os secos, mexendo até formar uma massa homogênea.",
-            "Aqueça uma frigideira antiaderente em fogo médio.",
-            "Despeje uma concha de massa e cozinhe até formar bolhas. Vire e cozinhe o outro lado.",
-            "Sirva com mel, frutas ou manteiga.",
+            String(localized: "Misture a farinha, o açúcar e o fermento em uma tigela grande."),
+            String(localized: "Em outra tigela, bata os ovos com o leite e a manteiga derretida."),
+            String(localized: "Combine os ingredientes líquidos com os secos, mexendo até formar uma massa homogênea."),
+            String(localized: "Aqueça uma frigideira antiaderente em fogo médio."),
+            String(localized: "Despeje uma concha de massa e cozinhe até formar bolhas. Vire e cozinhe o outro lado."),
+            String(localized: "Sirva com mel, frutas ou manteiga."),
         ]
         for (index, instruction) in pancakeSteps.enumerated() {
             let step = RecipeStep(order: index + 1, instruction: instruction)
@@ -282,10 +282,10 @@ struct DataSeeder {
 
         // 2 — Salada Caesar
         let salad = Recipe(
-            name: "Salada Caesar",
-            descriptionText: "Salada clássica com alface crocante, croutons e molho caesar cremoso.",
+            name: String(localized: "Salada Caesar"),
+            descriptionText: String(localized: "Salada clássica com alface crocante, croutons e molho caesar cremoso."),
             category: "Almoço",
-            tags: ["saudável", "salada", "leve"],
+            tags: [String(localized: "saudável"), String(localized: "salada"), String(localized: "leve")],
             prepTime: 15,
             cookTime: 0,
             servings: 2,
@@ -295,11 +295,11 @@ struct DataSeeder {
         context.insert(salad)
 
         let saladIngredients: [(String, Double?, String, String?, Int)] = [
-            ("Alface romana", 1, "pé", "lettuce.png", 0),
-            ("Croutons", 1, "xícara", "bread.png", 1),
-            ("Parmesão ralado", 50, "g", "cheese.png", 2),
-            ("Peito de frango grelhado", 200, "g", "chicken.png", 3),
-            ("Molho caesar", 4, "colheres de sopa", nil, 4),
+            (String(localized: "Alface romana"), 1, String(localized: "pé"), "lettuce.png", 0),
+            (String(localized: "Croutons"), 1, String(localized: "xícara"), "bread.png", 1),
+            (String(localized: "Parmesão ralado"), 50, "g", "cheese.png", 2),
+            (String(localized: "Peito de frango grelhado"), 200, "g", "chicken.png", 3),
+            (String(localized: "Molho caesar"), 4, String(localized: "colheres de sopa"), nil, 4),
         ]
         for (name, qty, unit, icon, order) in saladIngredients {
             let ing = RecipeIngredient(name: name, quantity: qty, unit: unit, iconName: icon, sortOrder: order)
@@ -308,11 +308,11 @@ struct DataSeeder {
         }
 
         let saladSteps = [
-            "Lave e rasgue as folhas de alface em pedaços.",
-            "Grelhe o peito de frango temperado e corte em tiras.",
-            "Em uma tigela grande, combine a alface, croutons e frango.",
-            "Regue com o molho caesar e polvilhe o parmesão.",
-            "Misture delicadamente e sirva.",
+            String(localized: "Lave e rasgue as folhas de alface em pedaços."),
+            String(localized: "Grelhe o peito de frango temperado e corte em tiras."),
+            String(localized: "Em uma tigela grande, combine a alface, croutons e frango."),
+            String(localized: "Regue com o molho caesar e polvilhe o parmesão."),
+            String(localized: "Misture delicadamente e sirva."),
         ]
         for (index, instruction) in saladSteps.enumerated() {
             let step = RecipeStep(order: index + 1, instruction: instruction)
@@ -322,10 +322,10 @@ struct DataSeeder {
 
         // 3 — Brigadeiro
         let brigadeiro = Recipe(
-            name: "Brigadeiro",
-            descriptionText: "O doce brasileiro mais amado — cremoso e irresistível.",
+            name: String(localized: "Brigadeiro"),
+            descriptionText: String(localized: "O doce brasileiro mais amado — cremoso e irresistível."),
             category: "Sobremesa",
-            tags: ["doce", "sobremesa", "brasileiro", "chocolate"],
+            tags: [String(localized: "doce"), String(localized: "sobremesa"), String(localized: "brasileiro"), String(localized: "chocolate")],
             prepTime: 5,
             cookTime: 15,
             servings: 20,
@@ -335,10 +335,10 @@ struct DataSeeder {
         context.insert(brigadeiro)
 
         let brigadeiroIngredients: [(String, Double?, String, String?, Int)] = [
-            ("Leite condensado", 1, "lata (395g)", "milk.png", 0),
-            ("Achocolatado em pó", 3, "colheres de sopa", "chocolate.png", 1),
-            ("Manteiga", 1, "colher de sopa", "butter.png", 2),
-            ("Granulado de chocolate", nil, "a gosto", "chocolate.png", 3),
+            (String(localized: "Leite condensado"), 1, String(localized: "lata (395g)"), "milk.png", 0),
+            (String(localized: "Achocolatado em pó"), 3, String(localized: "colheres de sopa"), "chocolate.png", 1),
+            (String(localized: "Manteiga"), 1, String(localized: "colher de sopa"), "butter.png", 2),
+            (String(localized: "Granulado de chocolate"), nil, String(localized: "a gosto"), "chocolate.png", 3),
         ]
         for (name, qty, unit, icon, order) in brigadeiroIngredients {
             let ing = RecipeIngredient(name: name, quantity: qty, unit: unit, iconName: icon, sortOrder: order)
@@ -347,16 +347,22 @@ struct DataSeeder {
         }
 
         let brigadeiroSteps = [
-            "Em uma panela, misture o leite condensado, o achocolatado e a manteiga.",
-            "Cozinhe em fogo médio, mexendo sem parar, até a massa desgrudar do fundo da panela.",
-            "Transfira para um prato untado e deixe esfriar.",
-            "Com as mãos untadas, enrole pequenas bolinhas.",
-            "Passe no granulado de chocolate e coloque em forminhas.",
+            String(localized: "Em uma panela, misture o leite condensado, o achocolatado e a manteiga."),
+            String(localized: "Cozinhe em fogo médio, mexendo sem parar, até a massa desgrudar do fundo da panela."),
+            String(localized: "Transfira para um prato untado e deixe esfriar."),
+            String(localized: "Com as mãos untadas, enrole pequenas bolinhas."),
+            String(localized: "Passe no granulado de chocolate e coloque em forminhas."),
         ]
         for (index, instruction) in brigadeiroSteps.enumerated() {
             let step = RecipeStep(order: index + 1, instruction: instruction)
             step.recipe = brigadeiro
             context.insert(step)
         }
+    }
+
+    private static func localizedSeedItemName(fileName: String, fallbackName: String) -> String {
+        ItemDatabase.shared.entry(forFilename: fileName)?
+            .preferredTitle(localization: .current())
+            ?? NSLocalizedString(fallbackName, comment: "")
     }
 }

@@ -65,7 +65,7 @@ struct RecipeCardView: View, Equatable {
                             Label("\(recipe.totalTime)\(columns == 3 ? "m" : " min")", systemImage: "clock")
                         }
                         if columns == 2 {
-                            Label(recipe.difficulty.rawValue, systemImage: recipe.difficulty.icon)
+                            Label(recipe.difficulty.displayName, systemImage: recipe.difficulty.icon)
                         }
                     }
                     .font(columns == 3 ? .caption2 : .caption)

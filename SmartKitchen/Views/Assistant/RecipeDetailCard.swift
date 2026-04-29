@@ -22,7 +22,7 @@ struct RecipeDetailCard: View {
                 }
 
                 if let category = recipe.category, !category.isEmpty {
-                    Label(category, systemImage: "books.vertical")
+                    Label(CategoryMutationService.localizedDisplayName(for: category, type: .recipe), systemImage: "books.vertical")
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(Color.accentColor)
                         .padding(.top, 4)
@@ -37,7 +37,7 @@ struct RecipeDetailCard: View {
 
             // Ingredients
             VStack(alignment: .leading, spacing: 8) {
-                Label("Ingredientes", systemImage: "basket")
+                Label(String(localized: "Ingredientes"), systemImage: "basket")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondary)
 
@@ -71,7 +71,7 @@ struct RecipeDetailCard: View {
 
             // Steps
             VStack(alignment: .leading, spacing: 8) {
-                Label("Modo de Preparo", systemImage: "list.number")
+                Label(String(localized: "Modo de Preparo"), systemImage: "list.number")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondary)
 
@@ -105,7 +105,7 @@ struct RecipeDetailCard: View {
                 HStack(spacing: 6) {
                     Image(systemName: "plus.circle")
                         .font(.caption.weight(.medium))
-                    Text("Criar receita no app")
+                    Text(String(localized: "Criar receita no app"))
                         .font(.caption.weight(.medium))
                 }
                 .foregroundStyle(Color.accentColor)

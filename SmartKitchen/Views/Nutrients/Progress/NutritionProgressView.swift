@@ -40,7 +40,7 @@ struct NutritionProgressView: View {
         }
         .scrollIndicators(.hidden)
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
-        .navigationTitle("Progresso")
+        .navigationTitle(String(localized: "Progresso"))
         #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
         #endif
@@ -59,9 +59,9 @@ struct NutritionProgressView: View {
     // MARK: - Range picker
 
     private var rangePicker: some View {
-        Picker("Período", selection: $range) {
+        Picker(String(localized: "Período"), selection: $range) {
             ForEach(NutritionTimeRange.allCases) { r in
-                Text(r.rawValue).tag(r)
+                Text(r.displayLabel).tag(r)
             }
         }
         .pickerStyle(.segmented)
@@ -87,13 +87,13 @@ struct NutritionProgressView: View {
     private var weightUnit: String { useMetric ? "kg" : "lbs" }
 
     private var weightSection: some View {
-        progressCard(title: "Peso") {
+        progressCard(title: String(localized: "Peso")) {
             HStack(spacing: 0) {
                 Spacer()
                 Button {
                     showLogWeight = true
                 } label: {
-                    Label("Registrar", systemImage: "plus.circle.fill")
+                    Label(String(localized: "Registrar"), systemImage: "plus.circle.fill")
                         .font(.system(.subheadline, design: .rounded, weight: .medium))
                         .foregroundStyle(PageTheme.nutrients.accentColor)
                 }
@@ -101,14 +101,14 @@ struct NutritionProgressView: View {
             }
 
             if weightEntries.isEmpty {
-                emptyMessage("Nenhum registro ainda. Toque em Registrar para começar.")
+                emptyMessage(String(localized: "Nenhum registro ainda. Toque em Registrar para começar."))
             } else {
                 HStack(spacing: 16) {
                     if let current = currentWeightKg {
-                        statBadge(label: "Atual", value: String(format: "%.1f %@", displayWeight(current), weightUnit))
+                        statBadge(label: String(localized: "Atual"), value: String(format: "%.1f %@", displayWeight(current), weightUnit))
                     }
                     if let goal = profile?.targetWeightKg {
-                        statBadge(label: "Meta", value: String(format: "%.1f %@", displayWeight(goal), weightUnit))
+                        statBadge(label: String(localized: "Meta"), value: String(format: "%.1f %@", displayWeight(goal), weightUnit))
                     }
                     Spacer()
                 }
@@ -116,23 +116,23 @@ struct NutritionProgressView: View {
                 Chart {
                     ForEach(weightEntries) { entry in
                         LineMark(
-                            x: .value("Data", entry.date, unit: .day),
-                            y: .value("Peso", displayWeight(entry.weightKg))
+                            x: .value(String(localized: "Data"), entry.date, unit: .day),
+                            y: .value(String(localized: "Peso"), displayWeight(entry.weightKg))
                         )
                         .foregroundStyle(PageTheme.nutrients.accentColor)
                         .interpolationMethod(.catmullRom)
                         .lineStyle(StrokeStyle(lineWidth: 2))
 
                         PointMark(
-                            x: .value("Data", entry.date, unit: .day),
-                            y: .value("Peso", displayWeight(entry.weightKg))
+                            x: .value(String(localized: "Data"), entry.date, unit: .day),
+                            y: .value(String(localized: "Peso"), displayWeight(entry.weightKg))
                         )
                         .foregroundStyle(PageTheme.nutrients.accentColor)
                         .symbolSize(30)
                     }
 
                     if let goalKg = profile?.targetWeightKg {
-                        RuleMark(y: .value("Meta", displayWeight(goalKg)))
+                        RuleMark(y: .value(String(localized: "Meta"), displayWeight(goalKg)))
                             .foregroundStyle(.green.opacity(0.7))
                             .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
                     }
@@ -183,12 +183,12 @@ struct NutritionProgressView: View {
     private var calorieAvg: Int { calorieAverageResult.macros.calories }
 
     private var calorieSection: some View {
-        progressCard(title: "Calorias") {
+        progressCard(title: String(localized: "Calorias")) {
             HStack {
                 Spacer()
                 if !dailyCalories.isEmpty {
                     VStack(alignment: .trailing, spacing: 2) {
-                        Text("Média: \(calorieAvg) kcal")
+                        Text("\(String(localized: "Média")): \(calorieAvg) kcal")
                             .font(.system(.subheadline, design: .rounded, weight: .medium))
                             .foregroundStyle(.secondary)
                         if calorieAverageResult.basis != .none {
@@ -201,13 +201,13 @@ struct NutritionProgressView: View {
             }
 
             if dailyCalories.allSatisfy({ $0.calories == 0 }) {
-                emptyMessage("Nenhuma refeição registrada no período.")
+                emptyMessage(String(localized: "Nenhuma refeição registrada no período."))
             } else {
                 Chart {
                     ForEach(dailyCalories, id: \.date) { item in
                         BarMark(
-                            x: .value("Data", item.date, unit: .day),
-                            y: .value("Calorias", item.calories)
+                            x: .value(String(localized: "Data"), item.date, unit: .day),
+                            y: .value(String(localized: "Calorias"), item.calories)
                         )
                         .foregroundStyle(
                             LinearGradient(
@@ -222,7 +222,7 @@ struct NutritionProgressView: View {
                     }
 
                     if let goal = profile?.effectiveCalories, goal > 0 {
-                        RuleMark(y: .value("Meta", goal))
+                        RuleMark(y: .value(String(localized: "Meta"), goal))
                             .foregroundStyle(PageTheme.nutrients.accentColor.opacity(0.6))
                             .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
                     }
@@ -257,7 +257,7 @@ struct NutritionProgressView: View {
     }
 
     private var macroAveragesSection: some View {
-        progressCard(title: "Média de macros") {
+        progressCard(title: String(localized: "Média de macros")) {
             let avg = macroAverages
             HStack {
                 Spacer()
@@ -268,19 +268,19 @@ struct NutritionProgressView: View {
                 }
             }
             macroRow(
-                label: "Proteína",
+                label: String(localized: "Proteína"),
                 current: avg.protein,
                 goal: profile?.effectiveProteinG ?? 0,
                 tint: Color(red: 0.20, green: 0.50, blue: 0.93)
             )
             macroRow(
-                label: "Carbos",
+                label: String(localized: "Carbos"),
                 current: avg.carbs,
                 goal: profile?.effectiveCarbsG ?? 0,
                 tint: Color(red: 0.85, green: 0.58, blue: 0.12)
             )
             macroRow(
-                label: "Gordura",
+                label: String(localized: "Gordura"),
                 current: avg.fat,
                 goal: profile?.effectiveFatG ?? 0,
                 tint: Color(red: 0.90, green: 0.75, blue: 0.15)
@@ -373,13 +373,13 @@ struct NutritionProgressView: View {
     }
 
     private var statsSection: some View {
-        progressCard(title: "Hábitos") {
+        progressCard(title: String(localized: "Hábitos")) {
             let s = stats
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                statTile(icon: "flame.fill", label: "Sequência atual", value: "\(s.streak) dias", color: .orange)
-                statTile(icon: "trophy.fill", label: "Melhor sequência", value: "\(s.best) dias", color: .yellow)
-                statTile(icon: "target", label: "Dias na meta", value: "\(s.daysOnTarget)", color: PageTheme.nutrients.accentColor)
-                statTile(icon: "fork.knife", label: "Registros", value: "\(s.totalEntries)", color: Color(red: 0.20, green: 0.50, blue: 0.93))
+                statTile(icon: "flame.fill", label: String(localized: "Sequência atual"), value: dayCountLabel(s.streak), color: .orange)
+                statTile(icon: "trophy.fill", label: String(localized: "Melhor sequência"), value: dayCountLabel(s.best), color: .yellow)
+                statTile(icon: "target", label: String(localized: "Dias na meta"), value: "\(s.daysOnTarget)", color: PageTheme.nutrients.accentColor)
+                statTile(icon: "fork.knife", label: String(localized: "Registros"), value: "\(s.totalEntries)", color: Color(red: 0.20, green: 0.50, blue: 0.93))
             }
         }
     }
@@ -480,27 +480,29 @@ struct NutritionProgressView: View {
 
     private func scoreDetail(score: NutritionScore, sample: Int, goal: Int) -> String {
         guard sample > 0 else {
-            return "Conclua pelo menos um dia para eu calcular uma média e te mostrar uma leitura mais fiel do seu progresso."
+            return String(localized: "Conclua pelo menos um dia para eu calcular uma média e te mostrar uma leitura mais fiel do seu progresso.")
         }
         let avg = calorieAvg
         let diff = avg - goal
         let absDiff = abs(diff)
-        let basis = "a média dos seus \(sample) dia\(sample == 1 ? "" : "s") concluído\(sample == 1 ? "" : "s") no período"
+        let basis = sample == 1
+            ? String(localized: "a média do seu dia concluído no período")
+            : "\(String(localized: "a média dos seus")) \(sample) \(String(localized: "dias concluídos no período"))"
         switch score {
         case .noData:
-            return "Conclua pelo menos um dia para eu calcular uma média e te mostrar uma leitura mais fiel do seu progresso."
+            return String(localized: "Conclua pelo menos um dia para eu calcular uma média e te mostrar uma leitura mais fiel do seu progresso.")
         case .excellent:
-            return "Sua média (\(avg) kcal) está bem próxima da meta de \(goal). Aqui estou olhando para \(basis)."
+            return "\(String(localized: "Sua média")) (\(avg) kcal) \(String(localized: "está bem próxima da meta de")) \(goal). \(String(localized: "Aqui estou olhando para")) \(basis)."
         case .good:
-            if diff == 0 { return "Sua média (\(avg) kcal) está alinhada à meta. Aqui estou olhando para \(basis)." }
-            let dir = diff > 0 ? "acima" : "abaixo"
-            return "Sua média (\(avg) kcal) está \(absDiff) kcal \(dir) da meta. Continue assim. Aqui estou olhando para \(basis)."
+            if diff == 0 { return "\(String(localized: "Sua média")) (\(avg) kcal) \(String(localized: "está alinhada à meta.")) \(String(localized: "Aqui estou olhando para")) \(basis)." }
+            let dir = diff > 0 ? String(localized: "acima") : String(localized: "abaixo")
+            return "\(String(localized: "Sua média")) (\(avg) kcal) \(String(localized: "está")) \(absDiff) kcal \(dir) \(String(localized: "da meta. Continue assim.")) \(String(localized: "Aqui estou olhando para")) \(basis)."
         case .average:
-            let dir = diff > 0 ? "acima" : "abaixo"
-            return "Sua média (\(avg) kcal) está \(absDiff) kcal \(dir) da meta. Pequenos ajustes ajudam a aproximar. Aqui estou olhando para \(basis)."
+            let dir = diff > 0 ? String(localized: "acima") : String(localized: "abaixo")
+            return "\(String(localized: "Sua média")) (\(avg) kcal) \(String(localized: "está")) \(absDiff) kcal \(dir) \(String(localized: "da meta. Pequenos ajustes ajudam a aproximar.")) \(String(localized: "Aqui estou olhando para")) \(basis)."
         case .needsImprovement:
-            let dir = diff > 0 ? "acima" : "abaixo"
-            return "Sua média (\(avg) kcal) está \(absDiff) kcal \(dir) da meta — vale revisar porções e horários. Aqui estou olhando para \(basis)."
+            let dir = diff > 0 ? String(localized: "acima") : String(localized: "abaixo")
+            return "\(String(localized: "Sua média")) (\(avg) kcal) \(String(localized: "está")) \(absDiff) kcal \(dir) \(String(localized: "da meta. Vale revisar porções e horários.")) \(String(localized: "Aqui estou olhando para")) \(basis)."
         }
     }
 
@@ -510,9 +512,12 @@ struct NutritionProgressView: View {
         let sample = macroAverageResult.basis.sampleSize
         let copy: String = {
             if sample == 0 {
-                return "Ainda não tenho uma média para te mostrar por aqui. Assim que você concluir um dia de registro, eu passo a calcular essa estimativa com base nos dias fechados por você."
+                return String(localized: "Ainda não tenho uma média para te mostrar por aqui. Assim que você concluir um dia de registro, eu passo a calcular essa estimativa com base nos dias fechados por você.")
             }
-            return "Os valores desta página são uma média tirada dos seus \(sample) dia\(sample == 1 ? "" : "s") concluído\(sample == 1 ? "" : "s"). Em outras palavras: só entram na conta os dias que você fechou, para a estimativa ficar mais fiel ao seu ritmo."
+            if sample == 1 {
+                return String(localized: "Os valores desta página são uma média tirada do seu dia concluído. Em outras palavras: só entra na conta o dia que você fechou, para a estimativa ficar mais fiel ao seu ritmo.")
+            }
+            return "\(String(localized: "Os valores desta página são uma média tirada dos seus")) \(sample) \(String(localized: "dias concluídos.")) \(String(localized: "Em outras palavras: só entram na conta os dias que você fechou, para a estimativa ficar mais fiel ao seu ritmo."))"
         }()
 
         HStack(alignment: .top, spacing: 10) {
@@ -544,35 +549,35 @@ struct NutritionProgressView: View {
                     return (
                         "lightbulb.fill",
                         Color.yellow,
-                        "Ainda poucos dados",
-                        "Conclua mais dias para eu montar uma média mais estável e confiável."
+                        String(localized: "Ainda poucos dados"),
+                        String(localized: "Conclua mais dias para eu montar uma média mais estável e confiável.")
                     )
                 }
                 if pct <= 0.10 {
                     return (
                         "checkmark.seal.fill",
                         PageTheme.nutrients.accentColor,
-                        "Você está dentro da meta",
-                        "Sua média está próxima do alvo (\(goal) kcal). Continue assim — consistência é o que importa."
+                        String(localized: "Você está dentro da meta"),
+                        "\(String(localized: "Sua média está próxima do alvo")) (\(goal) kcal). \(String(localized: "Continue assim. Consistência é o que importa."))"
                     )
                 }
                 if diff > 0 {
                     return (
                         "arrow.up.right.circle.fill",
                         Color.orange,
-                        "Acima da meta em média",
-                        "Considerando a média dos seus dias concluídos, você está consumindo cerca de \(diff) kcal acima da meta. Pequenos ajustes nas porções podem aproximar do objetivo."
+                        String(localized: "Acima da meta em média"),
+                        "\(String(localized: "Considerando a média dos seus dias concluídos, você está consumindo cerca de")) \(diff) kcal \(String(localized: "acima da meta. Pequenos ajustes nas porções podem aproximar do objetivo."))"
                     )
                 }
                 return (
                     "arrow.down.right.circle.fill",
                     Color.blue,
-                    "Abaixo da meta em média",
-                    "Considerando a média dos seus dias concluídos, você está cerca de \(-diff) kcal abaixo da meta. Atenção a sinais de baixa energia."
+                    String(localized: "Abaixo da meta em média"),
+                    "\(String(localized: "Considerando a média dos seus dias concluídos, você está cerca de")) \(-diff) kcal \(String(localized: "abaixo da meta. Atenção a sinais de baixa energia."))"
                 )
             }()
 
-            progressCard(title: "Como você está") {
+            progressCard(title: String(localized: "Como você está")) {
                 HStack(alignment: .top, spacing: 12) {
                     Image(systemName: icon)
                         .font(.system(size: 20, weight: .medium))
@@ -634,6 +639,12 @@ struct NutritionProgressView: View {
             cursor = next
         }
         return result
+    }
+
+    private func dayCountLabel(_ count: Int) -> String {
+        count == 1
+            ? "1 \(String(localized: "dia"))"
+            : "\(count) \(String(localized: "dias"))"
     }
 
     // MARK: - Actions

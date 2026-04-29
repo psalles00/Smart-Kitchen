@@ -5,6 +5,20 @@ import SwiftUI
 struct CategorySeedDefinition: Hashable {
     let name: String
     let iconName: String?
+
+    let localizedNames: [String: String]
+
+    init(name: String, iconName: String?, localizedNames: [String: String] = [:]) {
+        self.name = name
+        self.iconName = iconName
+        self.localizedNames = localizedNames
+    }
+
+    func displayName(localization: AppLocalization = .current()) -> String {
+        localizedNames[localization.language.bundleLocalizationIdentifier]
+            ?? localizedNames[localization.language.baseLanguageCode]
+            ?? name
+    }
 }
 
 enum CategoryType: String, Codable, CaseIterable, Identifiable {
@@ -54,6 +68,11 @@ final class Category {
         self.type = type
         self.iconName = iconName
         self.sortOrder = sortOrder
+    }
+
+    @Transient
+    var localizedDisplayName: String {
+        CategoryMutationService.localizedDisplayName(for: name, type: type)
     }
 }
 
@@ -177,6 +196,26 @@ enum CategoryMutationService {
 
     static func normalizedRecipeCategoryString(from rawValue: String, context: ModelContext) -> String {
         normalizedRecipeCategories(from: rawValue, context: context).joined(separator: ", ")
+    }
+
+    static func localizedDisplayName(for name: String, type: CategoryType? = nil) -> String {
+        if let type {
+            if let definition = defaultDefinition(named: name, type: type.canonicalType) {
+                return definition.displayName()
+            }
+        } else {
+            for candidateType in CategoryType.allCases {
+                if let definition = defaultDefinition(named: name, type: candidateType.canonicalType) {
+                    return definition.displayName()
+                }
+            }
+        }
+
+        if let entry = CategoryDatabase.shared.entry(for: name) {
+            return entry.displayName
+        }
+
+        return name
     }
 
     @discardableResult

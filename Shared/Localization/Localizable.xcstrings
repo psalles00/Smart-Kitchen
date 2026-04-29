@@ -147,6 +147,16 @@
         }
       }
     },
+    "%@: %lld kcal" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@: %2$lld kcal"
+          }
+        }
+      }
+    },
     "%@: baixa confiança, revise." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -422,6 +432,17 @@
         }
       }
     },
+    "🍳 Criar novas receitas" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🍳 Create new recipes"
+          }
+        }
+      }
+    },
     "🍳 O que posso cozinhar?" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -543,6 +564,61 @@
         }
       }
     },
+    "1A" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1Y"
+          }
+        }
+      }
+    },
+    "1M" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1M"
+          }
+        }
+      }
+    },
+    "1S" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1W"
+          }
+        }
+      }
+    },
+    "3M" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3M"
+          }
+        }
+      }
+    },
+    "6M" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "6M"
+          }
+        }
+      }
+    },
     "100" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -583,6 +659,83 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "The cover will be saved with the recipe"
+          }
+        }
+      }
+    },
+    "a gosto" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "to taste"
+          }
+        }
+      }
+    },
+    "a média do seu dia concluído no período" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the average of your completed day in this period"
+          }
+        }
+      }
+    },
+    "a média dos seus" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the average of your"
+          }
+        }
+      }
+    },
+    "A partir dos itens da sua despensa e da sua lista de receitas, essas são as opções de sobremesa disponíveis:" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Based on the items in your pantry and your recipe list, these are the available dessert options:"
+          }
+        }
+      }
+    },
+    "A partir dos itens da sua despensa e da sua lista de receitas, essas são as opções disponíveis:" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Based on the items in your pantry and your recipe list, these are the available options:"
+          }
+        }
+      }
+    },
+    "A partir dos itens da sua despensa, essas são as receitas compatíveis:" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Based on the items in your pantry, these are the compatible recipes:"
+          }
+        }
+      }
+    },
+    "A partir dos itens da sua despensa, essas são as sobremesas compatíveis:" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Based on the items in your pantry, these are the compatible desserts:"
           }
         }
       }
@@ -638,6 +791,39 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "The expiration date for %@ is today. Check your pantry!"
+          }
+        }
+      }
+    },
+    "abaixo" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "under"
+          }
+        }
+      }
+    },
+    "Abaixo da meta em média" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Below target on average"
+          }
+        }
+      }
+    },
+    "abaixo da meta. Atenção a sinais de baixa energia." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "below target. Watch for signs of low energy."
           }
         }
       }
@@ -741,6 +927,50 @@
         }
       }
     },
+    "Achocolatado em pó" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chocolate drink powder"
+          }
+        }
+      }
+    },
+    "acima" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "over"
+          }
+        }
+      }
+    },
+    "Acima da meta em média" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Above target on average"
+          }
+        }
+      }
+    },
+    "acima da meta. Pequenos ajustes nas porções podem aproximar do objetivo." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "above target. Small portion adjustments can bring you closer to your goal."
+          }
+        }
+      }
+    },
     "Ações" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -785,6 +1015,28 @@
         }
       }
     },
+    "Açúcar" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sugar"
+          }
+        }
+      }
+    },
+    "adicionada às suas receitas!" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "added to your recipes!"
+          }
+        }
+      }
+    },
     "Adicionar" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -807,6 +1059,17 @@
         }
       }
     },
+    "Adicionar \"%@\" à Despensa" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add \"%@\" to Pantry"
+          }
+        }
+      }
+    },
     "Adicionar ao Mercado" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -814,6 +1077,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Add to Grocery List"
+          }
+        }
+      }
+    },
+    "Adicionar \"%@\" ao Mercado" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add \"%@\" to Grocery List"
           }
         }
       }
@@ -1126,6 +1400,28 @@
         }
       }
     },
+    "Ainda não tenho uma média para te mostrar por aqui. Assim que você concluir um dia de registro, eu passo a calcular essa estimativa com base nos dias fechados por você." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I don't have an average to show you here yet. As soon as you complete a logged day, I'll start calculating this estimate based on the days you closed."
+          }
+        }
+      }
+    },
+    "Ainda poucos dados" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not enough data yet"
+          }
+        }
+      }
+    },
     "Ajuste o nível de compatibilidade nas configurações ou adicione mais itens à despensa." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1133,6 +1429,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Adjust the compatibility level in settings or add more items to your pantry."
+          }
+        }
+      }
+    },
+    "Alface romana" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Romaine lettuce"
           }
         }
       }
@@ -1577,6 +1884,28 @@
         }
       }
     },
+    "Aqueça uma frigideira antiaderente em fogo médio." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Heat a nonstick skillet over medium heat."
+          }
+        }
+      }
+    },
+    "Aqui estou olhando para" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Here I'm looking at"
+          }
+        }
+      }
+    },
     "Argumentos da função em formato inválido." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1683,6 +2012,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Active"
+          }
+        }
+      }
+    },
+    "Atual" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Current"
           }
         }
       }
@@ -1830,6 +2170,28 @@
         }
       }
     },
+    "brasileiro" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brazilian"
+          }
+        }
+      }
+    },
+    "Brigadeiro" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brigadeiro"
+          }
+        }
+      }
+    },
     "Buscando a receita" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1914,6 +2276,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Notebooks"
+          }
+        }
+      }
+    },
+    "café da manhã" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "breakfast"
           }
         }
       }
@@ -2149,6 +2522,17 @@
         }
       }
     },
+    "chocolate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "chocolate"
+          }
+        }
+      }
+    },
     "Chocolate" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2248,6 +2632,61 @@
         }
       }
     },
+    "Colesterol" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cholesterol"
+          }
+        }
+      }
+    },
+    "colher de sopa" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "tablespoon"
+          }
+        }
+      }
+    },
+    "colheres de chá" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "teaspoons"
+          }
+        }
+      }
+    },
+    "colheres de sopa" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "tablespoons"
+          }
+        }
+      }
+    },
+    "Com as mãos untadas, enrole pequenas bolinhas." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grease your hands and roll into small balls."
+          }
+        }
+      }
+    },
     "Com base na sua despensa e horário do dia" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2288,6 +2727,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "With expiration"
+          }
+        }
+      }
+    },
+    "Combine os ingredientes líquidos com os secos, mexendo até formar uma massa homogênea." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Combine the wet and dry ingredients, stirring until the batter is smooth."
           }
         }
       }
@@ -2387,6 +2837,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "How can I gain weight in a healthy way?"
+          }
+        }
+      }
+    },
+    "Como você está" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How you're doing"
           }
         }
       }
@@ -2497,6 +2958,39 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Compatible from %lld%%"
+          }
+        }
+      }
+    },
+    "compatível com o que você tem na despensa e nas suas receitas salvas." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "compatible with what you have in your pantry and saved recipes."
+          }
+        }
+      }
+    },
+    "Conclua mais dias para eu montar uma média mais estável e confiável." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Complete more days so I can build a more stable and reliable average."
+          }
+        }
+      }
+    },
+    "Conclua pelo menos um dia para eu calcular uma média e te mostrar uma leitura mais fiel do seu progresso." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Complete at least one day so I can calculate an average and show you a more accurate view of your progress."
           }
         }
       }
@@ -2666,6 +3160,28 @@
         }
       }
     },
+    "Considerando a média dos seus dias concluídos, você está cerca de" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Based on the average of your completed days, you are about"
+          }
+        }
+      }
+    },
+    "Considerando a média dos seus dias concluídos, você está consumindo cerca de" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Based on the average of your completed days, you are consuming about"
+          }
+        }
+      }
+    },
     "Considerando meu objetivo atual e o que está na minha despensa, na lista de mercado e nas minhas receitas, sugira substituições mais alinhadas com a meta (por exemplo, trocar um achocolatado calórico por uma versão de baixa caloria, ou um doce frequente por uma alternativa mais leve).\n\nSe identificar padrões repetitivos (mesmo doce ou snack calórico aparecendo várias vezes), proponha alternativas — e, quando fizer sentido, indique novas receitas saudáveis para substituir." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2695,6 +3211,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Continue"
+          }
+        }
+      }
+    },
+    "Continue assim. Consistência é o que importa." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep going. Consistency matters most."
           }
         }
       }
@@ -2787,6 +3314,17 @@
         }
       }
     },
+    "Cozinhe em fogo médio, mexendo sem parar, até a massa desgrudar do fundo da panela." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cook over medium heat, stirring constantly, until the mixture pulls away from the bottom of the pan."
+          }
+        }
+      }
+    },
     "Cremosa" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2853,6 +3391,17 @@
         }
       }
     },
+    "Criar receita \"%@\"" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create recipe \"%@\""
+          }
+        }
+      }
+    },
     "Criar Receita" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2893,6 +3442,50 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Create your first notebook to organize recipes by theme, meal, or occasion."
+          }
+        }
+      }
+    },
+    "Croutons" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Croutons"
+          }
+        }
+      }
+    },
+    "da meta. Continue assim." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the target. Keep it up."
+          }
+        }
+      }
+    },
+    "da meta. Pequenos ajustes ajudam a aproximar." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the target. Small adjustments can help bring it closer."
+          }
+        }
+      }
+    },
+    "da meta. Vale revisar porções e horários." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the target. It may be worth reviewing portions and meal timing."
           }
         }
       }
@@ -3238,6 +3831,17 @@
         }
       }
     },
+    "Despeje uma concha de massa e cozinhe até formar bolhas. Vire e cozinhe o outro lado." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pour in a ladle of batter and cook until bubbles form. Flip and cook the other side."
+          }
+        }
+      }
+    },
     "Despensa" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3293,6 +3897,17 @@
         }
       }
     },
+    "dia" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "day"
+          }
+        }
+      }
+    },
     "Dia concluído" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3344,6 +3959,50 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "days"
+          }
+        }
+      }
+    },
+    "dias concluídos no período" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "completed days in this period"
+          }
+        }
+      }
+    },
+    "dias concluídos." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "completed days."
+          }
+        }
+      }
+    },
+    "Dias na meta" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Days on target"
+          }
+        }
+      }
+    },
+    "Difícil" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hard"
           }
         }
       }
@@ -3410,6 +4069,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dictate"
+          }
+        }
+      }
+    },
+    "doce" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sweet"
           }
         }
       }
@@ -3553,6 +4223,50 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Coming soon"
+          }
+        }
+      }
+    },
+    "Em outra tigela, bata os ovos com o leite e a manteiga derretida." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In another bowl, whisk the eggs with the milk and melted butter."
+          }
+        }
+      }
+    },
+    "Em outras palavras: só entram na conta os dias que você fechou, para a estimativa ficar mais fiel ao seu ritmo." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In other words: only the days you completed are counted, so the estimate stays closer to your routine."
+          }
+        }
+      }
+    },
+    "Em uma panela, misture o leite condensado, o achocolatado e a manteiga." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In a saucepan, combine the condensed milk, chocolate powder, and butter."
+          }
+        }
+      }
+    },
+    "Em uma tigela grande, combine a alface, croutons e frango." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In a large bowl, combine the lettuce, croutons, and chicken."
           }
         }
       }
@@ -3718,6 +4432,39 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "This item is already in %@. Open the existing item to edit the lists instead of creating a new one."
+          }
+        }
+      }
+    },
+    "está" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "is"
+          }
+        }
+      }
+    },
+    "está alinhada à meta." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "is aligned with the target."
+          }
+        }
+      }
+    },
+    "está bem próxima da meta de" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "is very close to the target of"
           }
         }
       }
@@ -4096,6 +4843,17 @@
         }
       }
     },
+    "Fácil" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Easy"
+          }
+        }
+      }
+    },
     "Fale normalmente. A transcrição aparece em tempo real." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4217,6 +4975,28 @@
         }
       }
     },
+    "Faltam" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remaining"
+          }
+        }
+      }
+    },
+    "Farinha de trigo" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All-purpose flour"
+          }
+        }
+      }
+    },
     "Favoritar" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4268,6 +5048,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Female"
+          }
+        }
+      }
+    },
+    "Fermento em pó" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Baking powder"
+          }
+        }
+      }
+    },
+    "Fibra" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fiber"
           }
         }
       }
@@ -4569,6 +5371,17 @@
         }
       }
     },
+    "Granulado de chocolate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chocolate sprinkles"
+          }
+        }
+      }
+    },
     "Gravar de novo" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4580,6 +5393,17 @@
         }
       }
     },
+    "Grelhe o peito de frango temperado e corte em tiras." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grill the seasoned chicken breast and slice it into strips."
+          }
+        }
+      }
+    },
     "Guarde esta imagem como referência para o módulo de Nutrientes." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4587,6 +5411,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Save this image as a reference for the Nutrients module."
+          }
+        }
+      }
+    },
+    "Hábitos" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Habits"
           }
         }
       }
@@ -5031,6 +5866,17 @@
         }
       }
     },
+    "Iniciar dia" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start day"
+          }
+        }
+      }
+    },
     "Início" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5229,6 +6075,28 @@
         }
       }
     },
+    "lata (395g)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "can (395g)"
+          }
+        }
+      }
+    },
+    "Lave e rasgue as folhas de alface em pedaços." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wash and tear the lettuce leaves into pieces."
+          }
+        }
+      }
+    },
     "Lavender" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5236,6 +6104,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lavender"
+          }
+        }
+      }
+    },
+    "Leite" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Milk"
+          }
+        }
+      }
+    },
+    "Leite condensado" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sweetened condensed milk"
           }
         }
       }
@@ -5291,6 +6181,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Scan Recipe"
+          }
+        }
+      }
+    },
+    "leve" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "light"
           }
         }
       }
@@ -5471,6 +6372,17 @@
         }
       }
     },
+    "Manteiga" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Butter"
+          }
+        }
+      }
+    },
     "Mantém as cores e o caráter visual de cada tema" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5537,6 +6449,17 @@
         }
       }
     },
+    "Média" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Average"
+          }
+        }
+      }
+    },
     "Média de %@" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5570,6 +6493,17 @@
         }
       }
     },
+    "Média de macros" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Average macros"
+          }
+        }
+      }
+    },
     "Média geral" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5588,6 +6522,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Average: %lld kcal"
+          }
+        }
+      }
+    },
+    "Médio" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medium"
+          }
+        }
+      }
+    },
+    "Melhor sequência" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Best streak"
           }
         }
       }
@@ -5724,6 +6680,28 @@
         }
       }
     },
+    "Misture a farinha, o açúcar e o fermento em uma tigela grande." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Combine the flour, sugar, and baking powder in a large bowl."
+          }
+        }
+      }
+    },
+    "Misture delicadamente e sirva." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toss gently and serve."
+          }
+        }
+      }
+    },
     "Modelo IA" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5808,6 +6786,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Smart Kitchen AI Mode"
+          }
+        }
+      }
+    },
+    "Molho caesar" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caesar dressing"
           }
         }
       }
@@ -6010,6 +6999,17 @@
         }
       }
     },
+    "Não encontrei nenhuma" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I couldn't find any"
+          }
+        }
+      }
+    },
     "Não encontrei nenhuma ideia agora." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6017,6 +7017,50 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Couldn't find any ideas right now."
+          }
+        }
+      }
+    },
+    "Não encontrei receitas com compatibilidade ideal, mas estas são as melhores opções com o que você tem:" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I couldn't find recipes with ideal compatibility, but these are the best options with what you have:"
+          }
+        }
+      }
+    },
+    "Não encontrei receitas compatíveis com o que você tem salvo na despensa e nas suas receitas. Se quiser, posso sugerir outras opções baseadas no que você tem agora." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I couldn't find compatible recipes with what you have saved in your pantry and recipes. If you want, I can suggest other options based on what you have right now."
+          }
+        }
+      }
+    },
+    "Não encontrei sobremesas com compatibilidade ideal, mas estas são as melhores opções com o que você tem:" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I couldn't find desserts with ideal compatibility, but these are the best options with what you have:"
+          }
+        }
+      }
+    },
+    "Não encontrei uma sobremesa compatível com o que você tem salvo na despensa e nas suas receitas. Se quiser, posso sugerir outras receitas baseadas no que você tem agora." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I couldn't find a compatible dessert with what you have saved in your pantry and recipes. If you want, I can suggest other recipes based on what you have right now."
           }
         }
       }
@@ -6039,6 +7083,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Unable to access the camera on this device right now."
+          }
+        }
+      }
+    },
+    "Não foi possível adicionar a receita:" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't add the recipe:"
           }
         }
       }
@@ -6241,6 +7296,28 @@
         }
       }
     },
+    "Nenhum registro ainda. Toque em + para começar." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No entries yet. Tap + to get started."
+          }
+        }
+      }
+    },
+    "Nenhum registro ainda. Toque em Registrar para começar." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No entries yet. Tap Log to get started."
+          }
+        }
+      }
+    },
     "Nenhum resultado encontrado" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6303,6 +7380,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No additional media will be saved"
+          }
+        }
+      }
+    },
+    "Nenhuma refeição registrada no período." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No meals logged in this period."
           }
         }
       }
@@ -6593,6 +7681,17 @@
         }
       }
     },
+    "O doce brasileiro mais amado — cremoso e irresistível." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brazil's most beloved sweet — creamy and irresistible."
+          }
+        }
+      }
+    },
     "O que compartilhar" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6824,7 +7923,40 @@
         }
       }
     },
+    "Os valores desta página são uma média tirada do seu dia concluído. Em outras palavras: só entra na conta o dia que você fechou, para a estimativa ficar mais fiel ao seu ritmo." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The values on this page are an average based on your completed day. In other words: only the day you completed is counted, so the estimate stays closer to your routine."
+          }
+        }
+      }
+    },
+    "Os valores desta página são uma média tirada dos seus" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The values on this page are an average based on your"
+          }
+        }
+      }
+    },
     "Outra" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Other"
+          }
+        }
+      }
+    },
+    "Outras" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -6857,6 +7989,17 @@
         }
       }
     },
+    "Ovos" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eggs"
+          }
+        }
+      }
+    },
     "P %lldg" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6875,6 +8018,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Page %lld of 3"
+          }
+        }
+      }
+    },
+    "Panqueca Americana" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "American Pancakes"
+          }
+        }
+      }
+    },
+    "Panquecas fofas e douradas, perfeitas para o café da manhã." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fluffy golden pancakes, perfect for breakfast."
           }
         }
       }
@@ -6923,6 +8088,17 @@
         }
       }
     },
+    "Parmesão ralado" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grated Parmesan"
+          }
+        }
+      }
+    },
     "Participante" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6945,6 +8121,17 @@
         }
       }
     },
+    "Passe no granulado de chocolate e coloque em forminhas." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Roll in chocolate sprinkles and place in paper cups."
+          }
+        }
+      }
+    },
     "Passo %lld" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6956,6 +8143,17 @@
         }
       }
     },
+    "pé" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "head"
+          }
+        }
+      }
+    },
     "Peça ideias de receitas…" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6963,6 +8161,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ask for recipe ideas…"
+          }
+        }
+      }
+    },
+    "Peito de frango grelhado" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grilled chicken breast"
           }
         }
       }
@@ -7007,6 +8216,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ask the AI"
+          }
+        }
+      }
+    },
+    "Perguntar \"%@\" à IA" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ask the AI about \"%@\""
           }
         }
       }
@@ -7249,6 +8469,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Has expiration"
+          }
+        }
+      }
+    },
+    "Potássio" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Potassium"
           }
         }
       }
@@ -7649,6 +8880,17 @@
         }
       }
     },
+    "rápido" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "quick"
+          }
+        }
+      }
+    },
     "Rápido" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7689,6 +8931,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Weight Tracking"
+          }
+        }
+      }
+    },
+    "Reabrir dia" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reopen day"
+          }
+        }
+      }
+    },
+    "receita" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "recipe"
           }
         }
       }
@@ -7935,6 +9199,17 @@
         }
       }
     },
+    "Registrar alimento \"%@\"" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Log food \"%@\""
+          }
+        }
+      }
+    },
     "Registrar com Áudio" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8056,6 +9331,17 @@
         }
       }
     },
+    "registro" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "entry"
+          }
+        }
+      }
+    },
     "Registro em andamento" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8078,6 +9364,28 @@
         }
       }
     },
+    "registros" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "entries"
+          }
+        }
+      }
+    },
+    "Registros" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entries"
+          }
+        }
+      }
+    },
     "Registros Manuais" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8096,6 +9404,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Saved Entries"
+          }
+        }
+      }
+    },
+    "Regue com o molho caesar e polvilhe o parmesão." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drizzle with Caesar dressing and sprinkle with Parmesan."
           }
         }
       }
@@ -8463,6 +9782,39 @@
         }
       }
     },
+    "salada" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "salad"
+          }
+        }
+      }
+    },
+    "Salada Caesar" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caesar Salad"
+          }
+        }
+      }
+    },
+    "Salada clássica com alface crocante, croutons e molho caesar cremoso." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Classic salad with crisp lettuce, croutons, and creamy Caesar dressing."
+          }
+        }
+      }
+    },
     "Salgado" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8507,6 +9859,28 @@
         }
       }
     },
+    "Saturada" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saturated"
+          }
+        }
+      }
+    },
+    "saudável" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "healthy"
+          }
+        }
+      }
+    },
     "Saudável" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8514,6 +9888,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Healthy"
+          }
+        }
+      }
+    },
+    "Se quiser, posso sugerir outras receitas com base na sua despensa." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If you want, I can suggest other recipes based on your pantry."
           }
         }
       }
@@ -8672,6 +10057,17 @@
         }
       }
     },
+    "Sem registros ainda." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No entries yet."
+          }
+        }
+      }
+    },
     "Sem registros neste dia" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8701,6 +10097,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Week starts on Monday"
+          }
+        }
+      }
+    },
+    "Sequência atual" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Current streak"
           }
         }
       }
@@ -8848,6 +10255,17 @@
         }
       }
     },
+    "Sirva com mel, frutas ou manteiga." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serve with honey, fruit, or butter."
+          }
+        }
+      }
+    },
     "Sistema" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8881,6 +10299,17 @@
         }
       }
     },
+    "sobremesa" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dessert"
+          }
+        }
+      }
+    },
     "Sobremesa" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8888,6 +10317,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dessert"
+          }
+        }
+      }
+    },
+    "Sódio" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sodium"
           }
         }
       }
@@ -8910,6 +10350,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "HTTP status %lld."
+          }
+        }
+      }
+    },
+    "Sua média" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your average"
+          }
+        }
+      }
+    },
+    "Sua média está próxima do alvo" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your average is close to the target"
           }
         }
       }
@@ -8958,6 +10420,28 @@
         }
       }
     },
+    "Sugerir outras receitas" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suggest other recipes"
+          }
+        }
+      }
+    },
+    "Sugerir outras sobremesas" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suggest other desserts"
+          }
+        }
+      }
+    },
     "Sugestão" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9002,6 +10486,17 @@
         }
       }
     },
+    "Sugira novas receitas com base na minha despensa." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suggest new recipes based on my pantry."
+          }
+        }
+      }
+    },
     "Sugira novas receitas com frango e legumes." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9020,6 +10515,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Suggest new quick dinner recipes."
+          }
+        }
+      }
+    },
+    "Sugira novas receitas de sobremesa com base na minha despensa." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suggest new dessert recipes based on my pantry."
           }
         }
       }
@@ -9046,6 +10552,17 @@
         }
       }
     },
+    "Sugira novas receitas." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suggest new recipes."
+          }
+        }
+      }
+    },
     "Sugira o que substituir" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9053,6 +10570,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Suggest what to replace"
+          }
+        }
+      }
+    },
+    "Sugira outras receitas com base na minha despensa." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suggest other recipes based on my pantry."
+          }
+        }
+      }
+    },
+    "Sugira outras sobremesas com base na minha despensa." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suggest other desserts based on my pantry."
           }
         }
       }
@@ -9530,6 +11069,17 @@
         }
       }
     },
+    "Transfira para um prato untado e deixe esfriar." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transfer to a greased plate and let cool."
+          }
+        }
+      }
+    },
     "Treino físico pesado ou trabalho manual" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9827,6 +11377,17 @@
         }
       }
     },
+    "Variação" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change"
+          }
+        }
+      }
+    },
     "Velocidade" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9948,6 +11509,17 @@
         }
       }
     },
+    "Você está dentro da meta" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You're on target"
+          }
+        }
+      }
+    },
     "Você pode renomear, reordenar ou remover qualquer caderno. Se um caderno tiver receitas, escolha antes se quer mover ou apagar essas receitas." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9988,6 +11560,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Voice"
+          }
+        }
+      }
+    },
+    "xícara" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "cup"
+          }
+        }
+      }
+    },
+    "xícaras" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "cups"
           }
         }
       }

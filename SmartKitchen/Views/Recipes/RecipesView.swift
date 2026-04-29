@@ -315,7 +315,7 @@ struct RecipesView: View {
 
     @ViewBuilder
     private func recipesListHeader(isInverted: Bool) -> some View {
-        PageHeader(title: isShowingCadernos ? "Cadernos" : "Receitas", isInverted: isInverted) {
+        PageHeader(title: isShowingCadernos ? String(localized: "Cadernos") : String(localized: "Receitas"), isInverted: isInverted) {
             HStack(spacing: 6) {
                 GlassButtonGroup {
                     GlassGroupMenu(systemImage: "plus") {
@@ -570,7 +570,9 @@ struct RecipesView: View {
 
             guard !searchText.isEmpty else { return summary }
 
+            let localizedCategoryName = category.localizedDisplayName
             let categoryMatches = category.name.localizedCaseInsensitiveContains(searchText)
+                || localizedCategoryName.localizedCaseInsensitiveContains(searchText)
             let recipeMatches = matchingRecipes.contains { recipe in
                 recipe.name.localizedCaseInsensitiveContains(searchText) ||
                 recipe.tags.contains(where: { $0.localizedCaseInsensitiveContains(searchText) })
@@ -668,7 +670,7 @@ struct RecipesView: View {
 
                     ForEach(recipeCategories) { category in
                         filterChip(
-                            label: category.name,
+                            label: category.localizedDisplayName,
                             iconFileName: category.iconName,
                             fallbackSymbol: recipeCategorySymbol(for: category.name),
                             isSelected: selectedCategory == category.name
@@ -1326,7 +1328,7 @@ private struct RecipeNotebookCard: View {
                     .frame(height: 118)
 
                 VStack(alignment: .leading, spacing: 5) {
-                    Text(summary.category.name)
+                    Text(summary.category.localizedDisplayName)
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.primary)
                         .lineLimit(2)
@@ -1562,7 +1564,7 @@ private struct RecipeNotebookManagerSheet: View {
                         .accessibilityLabel("Alterar ícone de \(category.name)")
 
                         VStack(alignment: .leading, spacing: 3) {
-                            Text(category.name)
+                            Text(category.localizedDisplayName)
                                 .font(.body.weight(.medium))
 
                             Text(recipeCountLabel(for: category))
@@ -1711,7 +1713,7 @@ private struct RecipeNotebookManagerSheet: View {
                                         size: 18
                                     )
                                     .frame(width: 22, height: 22)
-                                    Text(category.name)
+                                    Text(category.localizedDisplayName)
                                     Spacer()
                                 }
                             }

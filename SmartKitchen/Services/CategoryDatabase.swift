@@ -110,8 +110,21 @@ final class CategoryDatabase: Sendable {
         normalizedEntries[Self.normalize(name)]
     }
 
+    func displayName(for category: String) -> String {
+        entry(for: category)?.displayName ?? category
+    }
+
     func marketSection(for category: String) -> String {
         entry(for: category)?.displayMarketSection ?? Self.fallbackEntries.last?.marketSection ?? "Outros"
+    }
+
+    var marketSectionsInDisplayOrder: [String] {
+        var seen = Set<String>()
+        return allCategories.compactMap { entry in
+            let section = entry.displayMarketSection
+            guard seen.insert(section).inserted else { return nil }
+            return section
+        }
     }
 
     private static func normalize(_ text: String) -> String {
@@ -131,23 +144,23 @@ final class CategoryDatabase: Sendable {
     }
 
     private static let fallbackEntries: [CategoryDatabaseEntry] = [
-        .init(identifier: "fruits", name: "Frutas", iconFileName: "apple.png", marketSection: "Hortifruti"),
-        .init(identifier: "vegetables", name: "Verduras e Legumes", iconFileName: "broccoli.png", marketSection: "Hortifruti"),
-        .init(identifier: "meats", name: "Carnes e Aves", iconFileName: "chicken-raw.png", marketSection: "Açougue"),
-        .init(identifier: "seafood", name: "Peixes e Frutos do Mar", iconFileName: "fish-raw.png", marketSection: "Peixaria"),
-        .init(identifier: "bakery", name: "Padaria", iconFileName: "bread-white.png", marketSection: "Padaria"),
-        .init(identifier: "dairy", name: "Laticínios e Ovos", iconFileName: "milk.png", marketSection: "Refrigerados"),
-        .init(identifier: "grains", name: "Grãos, Massas e Cereais", iconFileName: "rice.png", marketSection: "Mercearia"),
-        .init(identifier: "beverages", name: "Bebidas", iconFileName: "water-bottle.png", marketSection: "Bebidas"),
-        .init(identifier: "seasonings", name: "Temperos e Condimentos", iconFileName: "salt.png", marketSection: "Temperos"),
-        .init(identifier: "canned", name: "Enlatados e Conservas", iconFileName: "canned-tuna.png", marketSection: "Enlatados"),
-        .init(identifier: "desserts", name: "Doces e Sobremesas", iconFileName: "cake.png", marketSection: "Doces"),
-        .init(identifier: "snacks", name: "Snacks e Petiscos", iconFileName: "chips.png", marketSection: "Salgadinhos"),
-        .init(identifier: "prepared-meals", name: "Pratos Prontos", iconFileName: "lunch-box.png", marketSection: "Congelados"),
-        .init(identifier: "cleaning", name: "Limpeza e Higiene", iconFileName: "dish-soap.png", marketSection: "Limpeza"),
-        .init(identifier: "kitchen-tools", name: "Utensílios de Cozinha", iconFileName: "frying-pan.png", marketSection: "Utilidades"),
-        .init(identifier: "appliances", name: "Eletrodomésticos", iconFileName: "blender.png", marketSection: "Eletro"),
-        .init(identifier: "wellness", name: "Saúde e Bem-estar", iconFileName: "healthy-food.png", marketSection: "Saúde"),
-        .init(identifier: "other", name: "Outros", iconFileName: nil, marketSection: "Outros"),
+        .init(identifier: "fruits", name: "Frutas", iconFileName: "apple.png", marketSection: "Hortifruti", localizedNames: ["en": "Fruits"], localizedMarketSections: ["en": "Produce"]),
+        .init(identifier: "vegetables", name: "Verduras e Legumes", iconFileName: "broccoli.png", marketSection: "Hortifruti", localizedNames: ["en": "Vegetables & Greens"], localizedMarketSections: ["en": "Produce"]),
+        .init(identifier: "meats", name: "Carnes e Aves", iconFileName: "chicken-raw.png", marketSection: "Açougue", localizedNames: ["en": "Meat & Poultry"], localizedMarketSections: ["en": "Butcher"]),
+        .init(identifier: "seafood", name: "Peixes e Frutos do Mar", iconFileName: "fish-raw.png", marketSection: "Peixaria", localizedNames: ["en": "Fish & Seafood"], localizedMarketSections: ["en": "Seafood"]),
+        .init(identifier: "bakery", name: "Padaria", iconFileName: "bread-white.png", marketSection: "Padaria", localizedNames: ["en": "Bakery"], localizedMarketSections: ["en": "Bakery"]),
+        .init(identifier: "dairy", name: "Laticínios e Ovos", iconFileName: "milk.png", marketSection: "Refrigerados", localizedNames: ["en": "Dairy & Eggs"], localizedMarketSections: ["en": "Refrigerated"]),
+        .init(identifier: "grains", name: "Grãos, Massas e Cereais", iconFileName: "rice.png", marketSection: "Mercearia", localizedNames: ["en": "Grains, Pasta & Cereals"], localizedMarketSections: ["en": "Grocery"]),
+        .init(identifier: "beverages", name: "Bebidas", iconFileName: "water-bottle.png", marketSection: "Bebidas", localizedNames: ["en": "Beverages"], localizedMarketSections: ["en": "Beverages"]),
+        .init(identifier: "seasonings", name: "Temperos e Condimentos", iconFileName: "salt.png", marketSection: "Temperos", localizedNames: ["en": "Seasonings & Condiments"], localizedMarketSections: ["en": "Seasonings"]),
+        .init(identifier: "canned", name: "Enlatados e Conservas", iconFileName: "canned-tuna.png", marketSection: "Enlatados", localizedNames: ["en": "Canned & Preserved Goods"], localizedMarketSections: ["en": "Canned Goods"]),
+        .init(identifier: "desserts", name: "Doces e Sobremesas", iconFileName: "cake.png", marketSection: "Doces", localizedNames: ["en": "Desserts & Sweets"], localizedMarketSections: ["en": "Sweets"]),
+        .init(identifier: "snacks", name: "Snacks e Petiscos", iconFileName: "chips.png", marketSection: "Salgadinhos", localizedNames: ["en": "Snacks & Bites"], localizedMarketSections: ["en": "Snacks"]),
+        .init(identifier: "prepared-meals", name: "Pratos Prontos", iconFileName: "lunch-box.png", marketSection: "Congelados", localizedNames: ["en": "Ready Meals"], localizedMarketSections: ["en": "Frozen"]),
+        .init(identifier: "cleaning", name: "Limpeza e Higiene", iconFileName: "dish-soap.png", marketSection: "Limpeza", localizedNames: ["en": "Cleaning & Hygiene"], localizedMarketSections: ["en": "Cleaning"]),
+        .init(identifier: "kitchen-tools", name: "Utensílios de Cozinha", iconFileName: "frying-pan.png", marketSection: "Utilidades", localizedNames: ["en": "Kitchen Tools"], localizedMarketSections: ["en": "Housewares"]),
+        .init(identifier: "appliances", name: "Eletrodomésticos", iconFileName: "blender.png", marketSection: "Eletro", localizedNames: ["en": "Appliances"], localizedMarketSections: ["en": "Appliances"]),
+        .init(identifier: "wellness", name: "Saúde e Bem-estar", iconFileName: "healthy-food.png", marketSection: "Saúde", localizedNames: ["en": "Health & Wellness"], localizedMarketSections: ["en": "Health"]),
+        .init(identifier: "other", name: "Outros", iconFileName: nil, marketSection: "Outros", localizedNames: ["en": "Other"], localizedMarketSections: ["en": "Other"]),
     ]
 }

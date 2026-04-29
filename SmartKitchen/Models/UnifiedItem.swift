@@ -119,6 +119,11 @@ final class UnifiedItem {
         return expirationDate.formatted(date: .abbreviated, time: .omitted)
     }
 
+    var localizedCategoryDisplayName: String {
+        let categoryType: CategoryType = isUtensil ? .utensil : .pantry
+        return CategoryMutationService.localizedDisplayName(for: category, type: categoryType)
+    }
+
     /// Plain-text summary for AI context.
     var aiReadableDescription: String {
         var text = name

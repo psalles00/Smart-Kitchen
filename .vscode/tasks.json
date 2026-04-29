@@ -4,42 +4,42 @@
 		{
 			"label": "Build and launch SmartKitchen media fullscreen",
 			"type": "shell",
-			"command": "cd \"/Users/pedrosalles/Documents/Coding/Smart Kitchen\" && FILES_DIR=\"/Users/pedrosalles/Documents/Coding/Smart Kitchen - Files\" && mkdir -p \"$FILES_DIR\" && BUILD_DIR=\"$FILES_DIR/build-copilot-recipe-media-fullscreen\" && xcodebuild -project SmartKitchen.xcodeproj -scheme SmartKitchen -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -derivedDataPath \"$BUILD_DIR\" -quiet build && APP_PATH=\"$BUILD_DIR/Build/Products/Debug-iphonesimulator/SmartKitchen.app\" && xcrun simctl boot 'iPhone 17 Pro' 2>/dev/null || true && open -a Simulator && xcrun simctl install booted \"$APP_PATH\" && xcrun simctl launch booted com.pedrosalles.smartkitchen.sync",
+			"command": "cd \"/Users/pedrosalles/Documents/Coding/Smart Kitchen\" && FILES_DIR=\"/Users/pedrosalles/Documents/Coding/Smart Kitchen - Files\" && mkdir -p \"$FILES_DIR\" && BUILD_DIR=\"$FILES_DIR/build-copilot-recipe-media-fullscreen\" && xcodebuild -project SmartKitchen.xcodeproj -scheme SmartKitchen -configuration Release -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -derivedDataPath \"$BUILD_DIR\" -quiet build && APP_PATH=\"$BUILD_DIR/Build/Products/Release-iphonesimulator/SmartKitchen.app\" && xcrun simctl boot 'iPhone 17 Pro' 2>/dev/null || true && open -a Simulator && xcrun simctl install booted \"$APP_PATH\" && xcrun simctl launch booted com.pedrosalles.smartkitchen.sync",
 			"isBackground": false,
 			"group": "build"
 		},
 		{
 			"label": "Build SmartKitchen after media perf fix",
 			"type": "shell",
-			"command": "cd \"/Users/pedrosalles/Documents/Coding/Smart Kitchen\" && FILES_DIR=\"/Users/pedrosalles/Documents/Coding/Smart Kitchen - Files\" && mkdir -p \"$FILES_DIR\" && BUILD_DIR=\"$FILES_DIR/build-copilot-recipe-media-perf\" && xcodebuild -project SmartKitchen.xcodeproj -scheme SmartKitchen -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -derivedDataPath \"$BUILD_DIR\" -quiet build",
+			"command": "cd \"/Users/pedrosalles/Documents/Coding/Smart Kitchen\" && FILES_DIR=\"/Users/pedrosalles/Documents/Coding/Smart Kitchen - Files\" && mkdir -p \"$FILES_DIR\" && BUILD_DIR=\"$FILES_DIR/build-copilot-recipe-media-perf\" && xcodebuild -project SmartKitchen.xcodeproj -scheme SmartKitchen -configuration Release -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -derivedDataPath \"$BUILD_DIR\" -quiet build",
 			"isBackground": false,
 			"group": "build"
 		},
 		{
 			"label": "Launch SmartKitchen after media perf fix",
 			"type": "shell",
-			"command": "cd \"/Users/pedrosalles/Documents/Coding/Smart Kitchen\" && FILES_DIR=\"/Users/pedrosalles/Documents/Coding/Smart Kitchen - Files\" && APP_PATH=\"$FILES_DIR/build-copilot-recipe-media-perf/Build/Products/Debug-iphonesimulator/SmartKitchen.app\" && test -d \"$APP_PATH\" && xcrun simctl boot 'iPhone 17 Pro' 2>/dev/null || true && open -a Simulator && xcrun simctl install booted \"$APP_PATH\" && xcrun simctl launch booted com.pedrosalles.smartkitchen.sync",
+			"command": "cd \"/Users/pedrosalles/Documents/Coding/Smart Kitchen\" && FILES_DIR=\"/Users/pedrosalles/Documents/Coding/Smart Kitchen - Files\" && APP_PATH=\"$FILES_DIR/build-copilot-recipe-media-perf/Build/Products/Release-iphonesimulator/SmartKitchen.app\" && test -d \"$APP_PATH\" && xcrun simctl boot 'iPhone 17 Pro' 2>/dev/null || true && open -a Simulator && xcrun simctl install booted \"$APP_PATH\" && xcrun simctl launch booted com.pedrosalles.smartkitchen.sync",
 			"isBackground": false,
 			"group": "build"
 		},
 		{
 			"label": "Build SmartKitchen after media UI tweaks",
 			"type": "shell",
-			"command": "cd \"/Users/pedrosalles/Documents/Coding/Smart Kitchen\" && FILES_DIR=\"/Users/pedrosalles/Documents/Coding/Smart Kitchen - Files\" && mkdir -p \"$FILES_DIR\" && BUILD_DIR=\"$FILES_DIR/build-copilot-recipe-media-ui-tweaks\" && xcodebuild -project SmartKitchen.xcodeproj -scheme SmartKitchen -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -derivedDataPath \"$BUILD_DIR\" -quiet build",
+			"command": "cd \"/Users/pedrosalles/Documents/Coding/Smart Kitchen\" && FILES_DIR=\"/Users/pedrosalles/Documents/Coding/Smart Kitchen - Files\" && mkdir -p \"$FILES_DIR\" && BUILD_DIR=\"$FILES_DIR/build-copilot-recipe-media-ui-tweaks\" && xcodebuild -project SmartKitchen.xcodeproj -scheme SmartKitchen -configuration Release -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -derivedDataPath \"$BUILD_DIR\" -quiet build",
 			"isBackground": false,
 			"group": "build"
 		},
 		{
 			"label": "Build SmartKitchen after fullscreen close fix",
 			"type": "shell",
-			"command": "cd \"/Users/pedrosalles/Documents/Coding/Smart Kitchen\" && FILES_DIR=\"/Users/pedrosalles/Documents/Coding/Smart Kitchen - Files\" && mkdir -p \"$FILES_DIR\" && BUILD_DIR=\"$FILES_DIR/build-copilot-fullscreen-close-fix\" && xcodebuild -project SmartKitchen.xcodeproj -scheme SmartKitchen -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -derivedDataPath \"$BUILD_DIR\" -quiet build",
+			"command": "cd \"/Users/pedrosalles/Documents/Coding/Smart Kitchen\" && FILES_DIR=\"/Users/pedrosalles/Documents/Coding/Smart Kitchen - Files\" && mkdir -p \"$FILES_DIR\" && BUILD_DIR=\"$FILES_DIR/build-copilot-fullscreen-close-fix\" && xcodebuild -project SmartKitchen.xcodeproj -scheme SmartKitchen -configuration Release -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -derivedDataPath \"$BUILD_DIR\" -quiet build",
 			"isBackground": false,
 			"group": "build"
 		},
 		{
 			"label": "Build SmartKitchen after fullscreen close scope fix",
 			"type": "shell",
-			"command": "cd \"/Users/pedrosalles/Documents/Coding/Smart Kitchen\" && FILES_DIR=\"/Users/pedrosalles/Documents/Coding/Smart Kitchen - Files\" && mkdir -p \"$FILES_DIR\" && BUILD_DIR=\"$FILES_DIR/build-copilot-fullscreen-close-fix\" && xcodebuild -project SmartKitchen.xcodeproj -scheme SmartKitchen -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -derivedDataPath \"$BUILD_DIR\" -quiet build",
+			"command": "cd \"/Users/pedrosalles/Documents/Coding/Smart Kitchen\" && FILES_DIR=\"/Users/pedrosalles/Documents/Coding/Smart Kitchen - Files\" && mkdir -p \"$FILES_DIR\" && BUILD_DIR=\"$FILES_DIR/build-copilot-fullscreen-close-fix\" && xcodebuild -project SmartKitchen.xcodeproj -scheme SmartKitchen -configuration Release -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -derivedDataPath \"$BUILD_DIR\" -quiet build",
 			"isBackground": false,
 			"group": "build"
 		}

@@ -162,6 +162,16 @@ final class Recipe {
             category = newValue.joined(separator: ", ")
         }
     }
+
+    @Transient
+    var localizedCategories: [String] {
+        categories.map { CategoryMutationService.localizedDisplayName(for: $0, type: .recipe) }
+    }
+
+    @Transient
+    var localizedCategorySummary: String {
+        localizedCategories.joined(separator: ", ")
+    }
     var prepTime: Int = 0       // minutes
     var cookTime: Int = 0       // minutes
     var servings: Int = 1
@@ -373,6 +383,14 @@ enum Difficulty: String, Codable, CaseIterable, Identifiable {
     case hard   = "Difícil"
 
     var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .easy:   String(localized: "Fácil")
+        case .medium: String(localized: "Médio")
+        case .hard:   String(localized: "Difícil")
+        }
+    }
 
     var icon: String {
         switch self {

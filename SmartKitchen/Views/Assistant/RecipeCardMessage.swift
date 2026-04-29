@@ -79,7 +79,7 @@ struct RecipeCardMessage: View {
                     if recipe.totalTime > 0 {
                         Label("\(recipe.totalTime) min", systemImage: "clock")
                     }
-                    Label(recipe.difficulty.rawValue, systemImage: recipe.difficulty.icon)
+                    Label(recipe.difficulty.displayName, systemImage: recipe.difficulty.icon)
                     if let kcal = recipe.calories {
                         Label("\(kcal) kcal", systemImage: "flame")
                     }

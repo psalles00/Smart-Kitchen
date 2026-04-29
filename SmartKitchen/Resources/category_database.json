@@ -3,108 +3,216 @@
     "identifier": "fruits",
     "name": "Frutas",
     "icon_file_name": "apple.png",
-    "market_section": "Hortifruti"
+    "market_section": "Hortifruti",
+    "localized_names": {
+      "en": "Fruits"
+    },
+    "localized_market_sections": {
+      "en": "Produce"
+    }
   },
   {
     "identifier": "vegetables",
     "name": "Verduras e Legumes",
     "icon_file_name": "broccoli.png",
-    "market_section": "Hortifruti"
+    "market_section": "Hortifruti",
+    "localized_names": {
+      "en": "Vegetables & Greens"
+    },
+    "localized_market_sections": {
+      "en": "Produce"
+    }
   },
   {
     "identifier": "meats",
     "name": "Carnes e Aves",
     "icon_file_name": "chicken-raw.png",
-    "market_section": "Açougue"
+    "market_section": "Açougue",
+    "localized_names": {
+      "en": "Meat & Poultry"
+    },
+    "localized_market_sections": {
+      "en": "Butcher"
+    }
   },
   {
     "identifier": "seafood",
     "name": "Peixes e Frutos do Mar",
     "icon_file_name": "fish-raw.png",
-    "market_section": "Peixaria"
+    "market_section": "Peixaria",
+    "localized_names": {
+      "en": "Fish & Seafood"
+    },
+    "localized_market_sections": {
+      "en": "Seafood"
+    }
   },
   {
     "identifier": "bakery",
     "name": "Padaria",
     "icon_file_name": "bread-white.png",
-    "market_section": "Padaria"
+    "market_section": "Padaria",
+    "localized_names": {
+      "en": "Bakery"
+    },
+    "localized_market_sections": {
+      "en": "Bakery"
+    }
   },
   {
     "identifier": "dairy",
     "name": "Laticínios e Ovos",
     "icon_file_name": "milk.png",
-    "market_section": "Refrigerados"
+    "market_section": "Refrigerados",
+    "localized_names": {
+      "en": "Dairy & Eggs"
+    },
+    "localized_market_sections": {
+      "en": "Refrigerated"
+    }
   },
   {
     "identifier": "grains",
     "name": "Grãos, Massas e Cereais",
     "icon_file_name": "rice.png",
-    "market_section": "Mercearia"
+    "market_section": "Mercearia",
+    "localized_names": {
+      "en": "Grains, Pasta & Cereals"
+    },
+    "localized_market_sections": {
+      "en": "Grocery"
+    }
   },
   {
     "identifier": "beverages",
     "name": "Bebidas",
     "icon_file_name": "water-bottle.png",
-    "market_section": "Bebidas"
+    "market_section": "Bebidas",
+    "localized_names": {
+      "en": "Beverages"
+    },
+    "localized_market_sections": {
+      "en": "Beverages"
+    }
   },
   {
     "identifier": "seasonings",
     "name": "Temperos e Condimentos",
     "icon_file_name": "salt.png",
-    "market_section": "Temperos"
+    "market_section": "Temperos",
+    "localized_names": {
+      "en": "Seasonings & Condiments"
+    },
+    "localized_market_sections": {
+      "en": "Seasonings"
+    }
   },
   {
     "identifier": "canned",
     "name": "Enlatados e Conservas",
     "icon_file_name": "canned-tuna.png",
-    "market_section": "Enlatados"
+    "market_section": "Enlatados",
+    "localized_names": {
+      "en": "Canned & Preserved Goods"
+    },
+    "localized_market_sections": {
+      "en": "Canned Goods"
+    }
   },
   {
     "identifier": "desserts",
     "name": "Doces e Sobremesas",
     "icon_file_name": "cake.png",
-    "market_section": "Doces"
+    "market_section": "Doces",
+    "localized_names": {
+      "en": "Desserts & Sweets"
+    },
+    "localized_market_sections": {
+      "en": "Sweets"
+    }
   },
   {
     "identifier": "snacks",
     "name": "Snacks e Petiscos",
     "icon_file_name": "chips.png",
-    "market_section": "Salgadinhos"
+    "market_section": "Salgadinhos",
+    "localized_names": {
+      "en": "Snacks & Bites"
+    },
+    "localized_market_sections": {
+      "en": "Snacks"
+    }
   },
   {
     "identifier": "prepared-meals",
     "name": "Pratos Prontos",
     "icon_file_name": "lunch-box.png",
-    "market_section": "Congelados"
+    "market_section": "Congelados",
+    "localized_names": {
+      "en": "Ready Meals"
+    },
+    "localized_market_sections": {
+      "en": "Frozen"
+    }
   },
   {
     "identifier": "cleaning",
     "name": "Limpeza e Higiene",
     "icon_file_name": "dish-soap.png",
-    "market_section": "Limpeza"
+    "market_section": "Limpeza",
+    "localized_names": {
+      "en": "Cleaning & Hygiene"
+    },
+    "localized_market_sections": {
+      "en": "Cleaning"
+    }
   },
   {
     "identifier": "kitchen-tools",
     "name": "Utensílios de Cozinha",
     "icon_file_name": "frying-pan.png",
-    "market_section": "Utilidades"
+    "market_section": "Utilidades",
+    "localized_names": {
+      "en": "Kitchen Tools"
+    },
+    "localized_market_sections": {
+      "en": "Housewares"
+    }
   },
   {
     "identifier": "appliances",
     "name": "Eletrodomésticos",
     "icon_file_name": "blender.png",
-    "market_section": "Eletro"
+    "market_section": "Eletro",
+    "localized_names": {
+      "en": "Appliances"
+    },
+    "localized_market_sections": {
+      "en": "Appliances"
+    }
   },
   {
     "identifier": "wellness",
     "name": "Saúde e Bem-estar",
     "icon_file_name": "healthy-food.png",
-    "market_section": "Saúde"
+    "market_section": "Saúde",
+    "localized_names": {
+      "en": "Health & Wellness"
+    },
+    "localized_market_sections": {
+      "en": "Health"
+    }
   },
   {
     "identifier": "other",
     "name": "Outros",
     "icon_file_name": null,
-    "market_section": "Outros"
+    "market_section": "Outros",
+    "localized_names": {
+      "en": "Other"
+    },
+    "localized_market_sections": {
+      "en": "Other"
+    }
   }
 ]

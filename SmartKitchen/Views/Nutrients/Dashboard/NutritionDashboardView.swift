@@ -194,9 +194,9 @@ struct NutritionDashboardView: View {
     @ViewBuilder
     private var macroPageMain: some View {
         HStack(spacing: 10) {
-            MacroCard(label: "Proteína", current: proteinConsumed, goal: profile.effectiveProteinG)
-            MacroCard(label: "Carbos", current: carbsConsumed, goal: profile.effectiveCarbsG)
-            MacroCard(label: "Gordura", current: fatConsumed, goal: profile.effectiveFatG)
+            MacroCard(label: String(localized: "Proteína"), current: proteinConsumed, goal: profile.effectiveProteinG)
+            MacroCard(label: String(localized: "Carbos"), current: carbsConsumed, goal: profile.effectiveCarbsG)
+            MacroCard(label: String(localized: "Gordura"), current: fatConsumed, goal: profile.effectiveFatG)
         }
     }
 
@@ -206,18 +206,18 @@ struct NutritionDashboardView: View {
     @ViewBuilder
     private var macroPageMicros1: some View {
         HStack(spacing: 10) {
-            MacroCard(label: "Fibra", current: fiberConsumed, goal: 25)
-            MacroCard(label: "Açúcar", current: sugarConsumed, goal: 50)
-            MacroCard(label: "Sódio", current: sodiumConsumed, goal: 2300)
+            MacroCard(label: String(localized: "Fibra"), current: fiberConsumed, goal: 25)
+            MacroCard(label: String(localized: "Açúcar"), current: sugarConsumed, goal: 50)
+            MacroCard(label: String(localized: "Sódio"), current: sodiumConsumed, goal: 2300)
         }
     }
 
     @ViewBuilder
     private var macroPageMicros2: some View {
         HStack(spacing: 10) {
-            MacroCard(label: "Saturada", current: saturatedFatConsumed, goal: 20)
-            MacroCard(label: "Colesterol", current: cholesterolConsumed, goal: 300)
-            MacroCard(label: "Potássio", current: potassiumConsumed, goal: 3500)
+            MacroCard(label: String(localized: "Saturada"), current: saturatedFatConsumed, goal: 20)
+            MacroCard(label: String(localized: "Colesterol"), current: cholesterolConsumed, goal: 300)
+            MacroCard(label: String(localized: "Potássio"), current: potassiumConsumed, goal: 3500)
         }
     }
 
@@ -238,9 +238,9 @@ struct NutritionDashboardView: View {
         return VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Refeições do dia")
+                    Text(String(localized: "Refeições do dia"))
                         .font(.headline.weight(.semibold))
-                    Text("Tudo o que você registrou neste dia")
+                    Text(String(localized: "Tudo o que você registrou neste dia"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -282,7 +282,7 @@ struct NutritionDashboardView: View {
             .padding(.bottom, 2)
 
             if rows.isEmpty {
-                Text("Nenhum registro")
+                Text(String(localized: "Nenhum registro"))
                     .font(.footnote)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -326,7 +326,7 @@ struct NutritionDashboardView: View {
         Menu {
             entryPickerMenuContent(prefilledMeal: nil)
         } label: {
-            Label("Adicionar", systemImage: "plus")
+            Label(String(localized: "Adicionar"), systemImage: "plus")
                 .font(.caption.weight(.semibold))
                 .padding(.horizontal, 12)
                 .padding(.vertical, 7)
@@ -361,59 +361,59 @@ struct NutritionDashboardView: View {
             Button {
                 onPickEntry(.manual(prefillName: nil, prefillMealType: prefilledMeal))
             } label: {
-                Label("Salvar alimento", systemImage: "fork.knife")
+                Label(String(localized: "Salvar alimento"), systemImage: "fork.knife")
             }
             Button {
                 onPickEntry(.recents)
             } label: {
-                Label("Alimentos salvos", systemImage: "clock.arrow.circlepath")
+                Label(String(localized: "Alimentos salvos"), systemImage: "clock.arrow.circlepath")
             }
         }
         Section("Registros Manuais") {
             Button {
                 onPickEntry(.manual(prefillName: nil, prefillMealType: prefilledMeal))
             } label: {
-                Label("Registrar manualmente", systemImage: "square.and.pencil")
+                Label(String(localized: "Registrar manualmente"), systemImage: "square.and.pencil")
             }
         }
         Section("Registrar por…") {
             Button {
                 onPickEntry(.captureLabel)
             } label: {
-                Label("Rótulo", systemImage: "doc.text.viewfinder")
+                Label(String(localized: "Rótulo"), systemImage: "doc.text.viewfinder")
             }
             Button {
                 onPickEntry(.capturePhotoGallery)
             } label: {
-                Label("Galeria", systemImage: "photo")
+                Label(String(localized: "Galeria"), systemImage: "photo")
             }
             #if os(iOS)
             Button {
                 onPickEntry(.capturePhotoCamera)
             } label: {
-                Label("Câmera", systemImage: "camera")
+                Label(String(localized: "Câmera"), systemImage: "camera")
             }
             #endif
             Button {
                 onPickEntry(.captureVoice)
             } label: {
-                Label("Voz", systemImage: "waveform")
+                Label(String(localized: "Voz"), systemImage: "waveform")
             }
             Button {
                 onPickEntry(.captureText(prefillText: nil, autoAnalyze: false))
             } label: {
-                Label("Texto", systemImage: "character.cursor.ibeam")
+                Label(String(localized: "Texto"), systemImage: "character.cursor.ibeam")
             }
         }
     }
 
     private func localizedDisplayName(_ meal: MealType) -> String {
         switch meal {
-        case .breakfast: "Café da manhã"
-        case .lunch:     "Almoço"
-        case .dinner:    "Jantar"
-        case .snack:     "Lanche"
-        case .other:     "Outras"
+        case .breakfast: String(localized: "Café da manhã")
+        case .lunch:     String(localized: "Almoço")
+        case .dinner:    String(localized: "Jantar")
+        case .snack:     String(localized: "Lanche")
+        case .other:     String(localized: "Outras")
         }
     }
 
@@ -429,9 +429,9 @@ struct NutritionDashboardView: View {
         let state = selectedDayState
         switch state {
         case .completed, .canceled:
-            actionPill("Reabrir dia", style: .secondary, icon: "arrow.uturn.backward.circle") { reopenSelectedDay() }
+            actionPill(String(localized: "Reabrir dia"), style: .secondary, icon: "arrow.uturn.backward.circle") { reopenSelectedDay() }
         case .todayInProgress, .pastInProgress:
-            actionPill("Concluir dia", style: .primary, icon: "checkmark.circle.fill") { completeSelectedDay() }
+            actionPill(String(localized: "Concluir dia"), style: .primary, icon: "checkmark.circle.fill") { completeSelectedDay() }
         case .future, .todayEmpty, .pastEmpty:
             EmptyView()
         }
@@ -445,20 +445,20 @@ struct NutritionDashboardView: View {
         switch selectedDayState {
         case .completed, .canceled:
             floatingActionButton(
-                title: "Reabrir dia",
+                title: String(localized: "Reabrir dia"),
                 icon: "arrow.uturn.backward",
                 tint: Color.orange,
                 action: reopenSelectedDay
             )
         case .todayInProgress, .pastInProgress:
             floatingActionButton(
-                title: "Concluir dia",
+                title: String(localized: "Concluir dia"),
                 icon: "checkmark.circle.fill",
                 tint: Color(red: 0.15, green: 0.45, blue: 0.25),
                 action: completeSelectedDay
             )
         case .todayEmpty, .pastEmpty:
-            floatingEntryMenuButton(title: "Iniciar dia", icon: "plus")
+            floatingEntryMenuButton(title: String(localized: "Iniciar dia"), icon: "plus")
         case .future:
             EmptyView()
         }
