@@ -2237,7 +2237,7 @@ private struct HomeView: View {
     }
 }
 
-private let homeShortcutBackgroundColor = Color(red: 248 / 255, green: 248 / 255, blue: 250 / 255)
+private let homeShortcutBackgroundColor = neutralSurfaceColor
 
 private struct HomeShortcutButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {

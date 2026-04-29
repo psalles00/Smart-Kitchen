@@ -134,7 +134,7 @@ struct PendingNutritionDaysCard: View {
 
     /// Mesma cor do `homeShortcutBackgroundColor` em `ContentView` (aquele é
     /// `fileprivate`).
-    fileprivate static let cardBackground = Color(red: 248 / 255, green: 248 / 255, blue: 250 / 255)
+    fileprivate static let cardBackground = neutralSurfaceColor
 }
 
 // MARK: - Swipeable row

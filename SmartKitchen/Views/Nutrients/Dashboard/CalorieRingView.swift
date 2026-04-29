@@ -9,6 +9,7 @@ struct CalorieRingView: View {
     var remaining: Int { max(goal - consumed, 0) }
     var rawRemaining: Int { goal - consumed }
 
+    @Environment(\.colorScheme) private var colorScheme
     @State private var displayedRemaining = 0
 
     private var titleColor: Color {
@@ -49,6 +50,7 @@ struct CalorieRingView: View {
                         endRadius: 320
                     )
                 )
+                .brightness(colorScheme == .dark ? 0.14 : 0)
 
             Text(displayedRemaining < 0 ? "kcal extras consumidas" : "de \(goal) kcal restantes")
                 .font(.subheadline.weight(.medium))

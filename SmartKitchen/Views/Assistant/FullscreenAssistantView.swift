@@ -635,7 +635,7 @@ struct FullscreenAssistantView: View {
                         gesture: dismissDragGesture
                     )
                 )
-                .background(Color.white, ignoresSafeAreaEdges: .top)
+                .background(appPrimaryBackground, ignoresSafeAreaEdges: .top)
 
             Rectangle()
                 .fill(.bar)
@@ -660,7 +660,7 @@ struct FullscreenAssistantView: View {
     @ViewBuilder
     private var pageBackground: some View {
         Rectangle()
-            .fill(Color.white)
+            .fill(appPrimaryBackground)
     }
 }
 

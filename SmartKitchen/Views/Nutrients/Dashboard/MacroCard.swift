@@ -32,18 +32,8 @@ struct MacroCard: View {
         .contentShape(.rect(cornerRadius: 14))
     }
 
-    /// Background adaptativo: claro = #F8F8FA; escuro = `secondarySystemBackground`.
-    private static var cardBackground: Color {
-        #if canImport(UIKit)
-        return Color(uiColor: UIColor { trait in
-            trait.userInterfaceStyle == .dark
-                ? UIColor.secondarySystemBackground
-                : UIColor(red: 248/255, green: 248/255, blue: 250/255, alpha: 1)
-        })
-        #else
-        return neutralSurfaceColor
-        #endif
-    }
+    /// Background adaptativo: claro = `#F8F8FA`; escuro = `#2C2C2E`.
+    private static var cardBackground: Color { neutralSurfaceColor }
 }
 
 extension MacroCard {

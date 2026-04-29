@@ -125,7 +125,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
 
                 ZStack {
                     RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                        .fill(Color(.controlBackgroundColor))
+                        .fill(appPrimaryBackground)
 
                     VStack(spacing: 0) {
                         Color.clear.frame(height: topMargin)
@@ -211,7 +211,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
         .safeAreaInset(edge: .bottom) {
             Color.clear.frame(height: bottomTabBarContentInset)
         }
-        .background(Color(.systemBackground))
+        .background(appPrimaryBackground)
         .clipShape(
             UnevenRoundedRectangle(
                 topLeadingRadius: cornerRadius,

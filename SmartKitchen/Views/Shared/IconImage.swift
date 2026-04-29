@@ -60,7 +60,7 @@ struct IconImage: View {
         }
 
         return colorScheme == .dark
-            ? Color(red: 28 / 255, green: 28 / 255, blue: 31 / 255)
+            ? Color(red: 0x54 / 255.0, green: 0x54 / 255.0, blue: 0x58 / 255.0)
             : neutralSurfaceColor
     }
 }

@@ -4,9 +4,51 @@ import UniformTypeIdentifiers
 
 #if canImport(UIKit)
 import UIKit
+#elseif canImport(AppKit)
+import AppKit
 #endif
 
-let neutralSurfaceColor = Color(red: 248 / 255, green: 248 / 255, blue: 250 / 255)
+/// Superfície neutra adaptativa usada por cards, chips, barras de filtro,
+/// botões da Home, etc.
+/// - Light: `#F8F8FA`
+/// - Dark:  `#2C2C2E`
+let neutralSurfaceColor: Color = {
+    #if canImport(UIKit)
+    return Color(uiColor: UIColor { trait in
+        trait.userInterfaceStyle == .dark
+            ? UIColor(red: 0x2C / 255.0, green: 0x2C / 255.0, blue: 0x2E / 255.0, alpha: 1)
+            : UIColor(red: 248 / 255.0, green: 248 / 255.0, blue: 250 / 255.0, alpha: 1)
+    })
+    #else
+    return Color(red: 248 / 255, green: 248 / 255, blue: 250 / 255)
+    #endif
+}()
+
+/// Fundo principal das telas (área onde antes era branco).
+/// - Light: `#FFFFFF`
+/// - Dark:  `#19191A`
+let appPrimaryBackground: Color = {
+    #if canImport(UIKit)
+    return Color(uiColor: UIColor { trait in
+        trait.userInterfaceStyle == .dark
+            ? UIColor(red: 0x19 / 255.0, green: 0x19 / 255.0, blue: 0x1A / 255.0, alpha: 1)
+            : UIColor.white
+    })
+    #elseif canImport(AppKit)
+    return Color(nsColor: NSColor(name: nil) { appearance in
+        let isDark = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        return isDark
+            ? NSColor(srgbRed: 0x19 / 255.0, green: 0x19 / 255.0, blue: 0x1A / 255.0, alpha: 1)
+            : NSColor.white
+    } ?? NSColor.windowBackgroundColor)
+    #else
+    return Color.white
+    #endif
+}()
+
+/// Cor da divisória de itens em listas no modo escuro (`#545458`). No modo
+/// claro mantemos a estética dashed atual via `Color.primary`/`Color.white`.
+let listItemDividerDarkColor = Color(red: 0x54 / 255.0, green: 0x54 / 255.0, blue: 0x58 / 255.0)
 
 // MARK: - Typography
 
@@ -80,16 +122,22 @@ struct GlassGroupDivider: View {
 }
 
 struct ItemListDivider: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
         Capsule(style: .continuous)
             .strokeBorder(
-                Color.white.opacity(0.34),
+                colorScheme == .dark
+                    ? listItemDividerDarkColor.opacity(0.95)
+                    : Color.white.opacity(0.34),
                 style: StrokeStyle(lineWidth: 0.9, lineCap: .round, dash: [1.0, 3.6])
             )
             .background(
                 Capsule(style: .continuous)
                     .strokeBorder(
-                        Color.primary.opacity(0.1),
+                        colorScheme == .dark
+                            ? listItemDividerDarkColor
+                            : Color.primary.opacity(0.1),
                         style: StrokeStyle(lineWidth: 0.9, lineCap: .round, dash: [1.0, 3.6], dashPhase: 1.8)
                     )
             )
@@ -345,7 +393,7 @@ struct AnimatedItemActionButton: View {
 
     private var uncheckedColor: Color {
         colorScheme == .dark
-            ? Color(red: 28/255, green: 28/255, blue: 31/255)
+            ? Color(red: 0x54 / 255.0, green: 0x54 / 255.0, blue: 0x58 / 255.0)
             : Color(red: 243/255, green: 243/255, blue: 244/255)
     }
 

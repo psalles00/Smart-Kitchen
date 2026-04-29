@@ -717,7 +717,7 @@ struct RecipesView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color(red: 248 / 255, green: 248 / 255, blue: 250 / 255), in: .rect(cornerRadius: 12))
+            .background(neutralSurfaceColor, in: .rect(cornerRadius: 12))
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             .padding(.horizontal, 16)
             .padding(.top, 8)
@@ -1342,7 +1342,7 @@ private struct RecipeNotebookSummary: Identifiable {
     }
 }
 
-private let notebookSuggestedCardBackgroundColor = Color(red: 248 / 255, green: 248 / 255, blue: 250 / 255)
+private let notebookSuggestedCardBackgroundColor = neutralSurfaceColor
 
 private struct RecipeNotebookCard: View {
     @Environment(\.modelContext) private var modelContext

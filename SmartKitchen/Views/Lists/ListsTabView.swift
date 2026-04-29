@@ -370,7 +370,7 @@ struct ListsTabView: View {
             }
         }
         .padding(4)
-        .background(Color(red: 248 / 255, green: 248 / 255, blue: 250 / 255), in: .rect(cornerRadius: 12))
+        .background(neutralSurfaceColor, in: .rect(cornerRadius: 12))
     }
 
     private func badgeText(for tab: ListSubtab) -> String? {

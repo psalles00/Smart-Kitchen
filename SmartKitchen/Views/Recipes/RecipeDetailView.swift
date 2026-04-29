@@ -89,15 +89,11 @@ struct RecipeDetailView: View {
     private var settings: AppSettings? { settingsArray.first }
 
     private var mainAreaColor: Color {
-        colorScheme == .dark
-            ? Color(red: 18 / 255, green: 18 / 255, blue: 20 / 255)
-            : Color.white
+        appPrimaryBackground
     }
 
     private var detailSurfaceColor: Color {
-        colorScheme == .dark
-            ? Color.white.opacity(0.06)
-            : Color(red: 248 / 255, green: 248 / 255, blue: 250 / 255)
+        neutralSurfaceColor
     }
 
     private var contentTopPadding: CGFloat { 34 }
