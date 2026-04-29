@@ -7,6 +7,7 @@ struct CalorieRingView: View {
     let goal: Int
 
     var remaining: Int { max(goal - consumed, 0) }
+    var rawRemaining: Int { goal - consumed }
 
     @State private var displayedRemaining = 0
 
@@ -33,9 +34,23 @@ struct CalorieRingView: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
                 .contentTransition(.numericText())
-                .foregroundStyle(Color(red: 5/255, green: 32/255, blue: 15/255))
+                .foregroundStyle(
+                    RadialGradient(
+                        colors: [
+                            displayedRemaining < 0 
+                                ? Color(red: 0.9, green: 0.3, blue: 0.3) 
+                                : Color(red: 0.35, green: 0.85, blue: 0.45),
+                            displayedRemaining < 0
+                                ? Color(red: 0.15, green: 0.02, blue: 0.02)
+                                : Color(red: 0.02, green: 0.12, blue: 0.06)
+                        ],
+                        center: UnitPoint(x: 0.5, y: -1.5),
+                        startRadius: 0,
+                        endRadius: 320
+                    )
+                )
 
-            Text("de \(goal) kcal restantes")
+            Text(displayedRemaining < 0 ? "kcal extras consumidas" : "de \(goal) kcal restantes")
                 .font(.subheadline.weight(.medium))
                 .foregroundStyle(.secondary)
         }
@@ -47,11 +62,11 @@ struct CalorieRingView: View {
 
             DispatchQueue.main.async {
                 withAnimation(.snappy(duration: 0.25)) {
-                    displayedRemaining = remaining
+                    displayedRemaining = rawRemaining
                 }
             }
         }
-        .onChange(of: remaining) { _, newValue in
+        .onChange(of: rawRemaining) { _, newValue in
             withAnimation(.snappy(duration: 0.25)) {
                 displayedRemaining = newValue
             }
