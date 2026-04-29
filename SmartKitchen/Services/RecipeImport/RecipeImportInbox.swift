@@ -215,6 +215,30 @@ final class SharedImportInbox {
 
     private init() {}
 
+    @discardableResult
+    func claimPendingFromBridge() -> Bool {
+        guard let token = SharedImportBridge.pendingToken else {
+            return false
+        }
+
+        if pendingItem?.id == token {
+            RecipeImportLogger.info("shared inbox bridge token already active token=\(token)")
+            return true
+        }
+
+        do {
+            let loaded = try SharedImportStorage.loadItem(token: token)
+            replacePendingItem(with: loaded.item, folderURL: loaded.folderURL)
+            RecipeImportLogger.info("shared inbox claimed pending bridge token=\(token)")
+            SharedImportBridge.log("app claimed pending token=\(token)")
+            return true
+        } catch {
+            RecipeImportLogger.error("shared inbox failed claiming bridge token=\(token) error=\(error.localizedDescription)")
+            SharedImportBridge.log("app failed to claim token=\(token) error=\(error.localizedDescription)")
+            return false
+        }
+    }
+
     func ingest(url: URL) -> Bool {
         guard url.scheme?.lowercased() == "smartkitchen",
               let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
@@ -227,6 +251,8 @@ final class SharedImportInbox {
             RecipeImportLogger.error("shared inbox missing token")
             return false
         }
+
+        SharedImportBridge.setPendingToken(token)
 
         if pendingItem?.id == token {
             RecipeImportLogger.info("shared inbox ignored duplicate token=\(token)")
@@ -249,21 +275,62 @@ final class SharedImportInbox {
             return
         }
 
+        let tokenToClear = pendingItem?.id
         pendingItem = nil
         if let pendingFolderURL {
             try? FileManager.default.removeItem(at: pendingFolderURL)
         }
         pendingFolderURL = nil
+        SharedImportBridge.clearPendingToken(matching: token ?? tokenToClear)
     }
 
     private func replacePendingItem(with item: SharedImportItem, folderURL: URL) {
         let previousFolderURL = pendingFolderURL
         pendingItem = item
         pendingFolderURL = folderURL
+        SharedImportBridge.setPendingToken(item.id)
 
         if let previousFolderURL, previousFolderURL != folderURL {
             try? FileManager.default.removeItem(at: previousFolderURL)
         }
+    }
+}
+
+private enum SharedImportBridge {
+    static let appGroupIdentifier = SharedImportStorage.appGroupIdentifier
+    static let pendingTokenKey = "SharedImport.PendingToken"
+    static let debugTrailKey = "SharedImport.DebugTrail"
+    static let maxTrailEntries = 40
+
+    private static var defaults: UserDefaults? {
+        UserDefaults(suiteName: appGroupIdentifier)
+    }
+
+    static var pendingToken: String? {
+        defaults?.string(forKey: pendingTokenKey)
+    }
+
+    static func setPendingToken(_ token: String) {
+        defaults?.set(token, forKey: pendingTokenKey)
+        log("bridge stored token=\(token)")
+    }
+
+    static func clearPendingToken(matching token: String?) {
+        guard let token else { return }
+        guard pendingToken == token else { return }
+        defaults?.removeObject(forKey: pendingTokenKey)
+        log("bridge cleared token=\(token)")
+    }
+
+    static func log(_ message: String) {
+        let entry = "\(Date().timeIntervalSince1970) \(message)"
+        var trail = defaults?.stringArray(forKey: debugTrailKey) ?? []
+        trail.append(entry)
+        if trail.count > maxTrailEntries {
+            trail.removeFirst(trail.count - maxTrailEntries)
+        }
+        defaults?.set(trail, forKey: debugTrailKey)
+        NSLog("[SharedImportBridge] %@", entry)
     }
 }
 

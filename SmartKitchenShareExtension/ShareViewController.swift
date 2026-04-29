@@ -135,13 +135,45 @@ private enum SharedPayloadStore {
     }
 }
 
+private enum SharedImportBridge {
+    static let appGroupIdentifier = SharedPayloadStore.appGroupIdentifier
+    static let pendingTokenKey = "SharedImport.PendingToken"
+    static let debugTrailKey = "SharedImport.DebugTrail"
+    static let maxTrailEntries = 40
+
+    private static var defaults: UserDefaults? {
+        UserDefaults(suiteName: appGroupIdentifier)
+    }
+
+    static func setPendingToken(_ token: String) {
+        defaults?.set(token, forKey: pendingTokenKey)
+        log("share extension stored pending token=\(token)")
+    }
+
+    static func log(_ message: String) {
+        let entry = "\(Date().timeIntervalSince1970) \(message)"
+        var trail = defaults?.stringArray(forKey: debugTrailKey) ?? []
+        trail.append(entry)
+        if trail.count > maxTrailEntries {
+            trail.removeFirst(trail.count - maxTrailEntries)
+        }
+        defaults?.set(trail, forKey: debugTrailKey)
+        NSLog("[SharedImportBridge] %@", entry)
+    }
+}
+
 /// Share Extension: extracts URL, text, image or video from the host app,
 /// persists it into a shared inbox, and opens the main app with a token.
 @objc(SmartKitchenShareViewController)
 class ShareViewController: UIViewController {
 
+    private var hasStartedProcessing = false
+    private var hasCompletedRequest = false
+
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        guard !hasStartedProcessing else { return }
+        hasStartedProcessing = true
         Task { await processIncoming() }
     }
 
@@ -371,6 +403,8 @@ class ShareViewController: UIViewController {
     private func open(payload: SharedPayload) async {
         do {
             let token = try SharedPayloadStore.save(payload)
+            SharedImportBridge.setPendingToken(token)
+            SharedImportBridge.log("share extension saved payload kind=\(payloadKindLabel(payload)) token=\(token)")
 
             if case .video(let localURL, _) = payload {
                 try? FileManager.default.removeItem(at: localURL)
@@ -389,34 +423,72 @@ class ShareViewController: UIViewController {
 
     @MainActor
     private func openDeepLink(_ url: URL) async {
-        // Walk up the responder chain to find an object that can call `open(_:)`.
-        var responder: UIResponder? = self
-        while let current = responder {
-            if let app = current as? UIApplication {
-                app.open(url, options: [:], completionHandler: nil)
-                break
+        SharedImportBridge.log("share extension handoff start url=\(url.absoluteString)")
+        completeRequestIfNeeded { [weak self] expired in
+            guard let self else { return }
+            guard !expired else {
+                SharedImportBridge.log("share extension completion expired before open")
+                return
             }
-            // Private selector available on UIApplication via responder chain.
-            if current.responds(to: Selector(("openURL:"))) {
-                _ = current.perform(Selector(("openURL:")), with: url)
-                break
+
+            DispatchQueue.main.async {
+                let opened = self.openURLViaResponderChain(url)
+                SharedImportBridge.log("share extension responder open attempted opened=\(opened) url=\(url.absoluteString)")
             }
-            responder = current.next
         }
-        await finish(with: nil)
     }
 
     @MainActor
     private func presentErrorAndFinish(message: String) async {
         let alert = UIAlertController(title: "Não foi possível compartilhar", message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default) { [weak self] _ in
-            self?.extensionContext?.completeRequest(returningItems: nil, completionHandler: nil)
+            self?.completeRequestIfNeeded()
         })
         present(alert, animated: true)
     }
 
     @MainActor
     private func finish(with error: Error?) async {
-        self.extensionContext?.completeRequest(returningItems: nil, completionHandler: nil)
+        if let error {
+            SharedImportBridge.log("share extension finish error=\(error.localizedDescription)")
+        } else {
+            SharedImportBridge.log("share extension finish success")
+        }
+        completeRequestIfNeeded()
+    }
+
+    private func openURLViaResponderChain(_ url: URL) -> Bool {
+        var responder: UIResponder? = self
+        while let current = responder {
+            if let app = current as? UIApplication {
+                app.open(url, options: [:], completionHandler: nil)
+                return true
+            }
+            if current.responds(to: Selector(("openURL:"))) {
+                _ = current.perform(Selector(("openURL:")), with: url)
+                return true
+            }
+            responder = current.next
+        }
+        return false
+    }
+
+    private func completeRequestIfNeeded(completionHandler: (@Sendable (Bool) -> Void)? = nil) {
+        guard !hasCompletedRequest else { return }
+        hasCompletedRequest = true
+        extensionContext?.completeRequest(returningItems: nil, completionHandler: completionHandler)
+    }
+
+    private func payloadKindLabel(_ payload: SharedPayload) -> String {
+        switch payload {
+        case .url:
+            return "url"
+        case .text:
+            return "text"
+        case .image:
+            return "image"
+        case .video:
+            return "video"
+        }
     }
 }

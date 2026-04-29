@@ -75,6 +75,11 @@ struct SharedImportInboxHost: ViewModifier {
             .sheet(isPresented: $isPresented, onDismiss: handleDismiss) {
                 sheetBody
             }
+            .onAppear {
+                guard !isPresented, let pendingItem = inbox.pendingItem else { return }
+                RecipeImportLogger.info("shared-import host presenting existing pending item token=\(pendingItem.id)")
+                present(pendingItem)
+            }
             .onChange(of: inbox.pendingItem?.id) { _, newValue in
                 guard let token = newValue,
                       let pendingItem = inbox.pendingItem,

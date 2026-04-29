@@ -135,6 +135,7 @@ struct SmartKitchenApp: App {
                 .recipeImportInboxHost()
                 .sharedImportInboxHost()
                 .onOpenURL { url in
+                    RecipeImportLogger.info("app onOpenURL received url=\(url.absoluteString)")
                     // Widget deep links
                     if url.scheme == "smartkitchen", url.host == "assistant" {
                         NotificationCenter.default.post(name: .openAssistantFromWidget, object: nil)
@@ -150,10 +151,12 @@ struct SmartKitchenApp: App {
                     _ = RecipeImportInbox.shared.ingest(url: url)
                 }
                 .task {
+                    _ = SharedImportInbox.shared.claimPendingFromBridge()
                     await runPostLaunchBootstrapIfNeeded()
                 }
                 .onChange(of: scenePhase) { oldValue, newValue in
                     if newValue == .active {
+                        _ = SharedImportInbox.shared.claimPendingFromBridge()
                         // Throttle: avoid running sync + notification reschedule
                         // every time the user briefly leaves and returns. The
                         // previous unconditional behaviour caused noticeable
