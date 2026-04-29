@@ -16,11 +16,11 @@ enum SidebarItem: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .home: return "Início"
-        case .lists: return "Listas"
-        case .recipes: return "Receitas"
-        case .nutrients: return "Nutrição"
-        case .settings: return "Configurações"
+        case .home: return String(localized: "Início")
+        case .lists: return String(localized: "Listas")
+        case .recipes: return String(localized: "Receitas")
+        case .nutrients: return String(localized: "Nutrição")
+        case .settings: return String(localized: "Configurações")
         }
     }
 

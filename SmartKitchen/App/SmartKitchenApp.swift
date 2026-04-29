@@ -77,14 +77,14 @@ struct MacNewItemCommands: Commands {
 
     var body: some Commands {
         CommandGroup(replacing: .newItem) {
-            Button("Buscar e Adicionar…") {
+            Button(String(localized: "Buscar e Adicionar…")) {
                 openCommandBarAction?()
             }
             .keyboardShortcut("k", modifiers: .command)
 
             Divider()
 
-            Button(newItemCommandAction?.title ?? "Novo") {
+            Button(newItemCommandAction?.title ?? String(localized: "Novo")) {
                 newItemCommandAction?.perform()
             }
             .keyboardShortcut("n", modifiers: .command)
@@ -215,7 +215,7 @@ struct SmartKitchenApp: App {
         .commands {
             MacNewItemCommands()
             CommandGroup(replacing: .appSettings) {
-                Button("Configurações…") {
+                Button(String(localized: "Configurações…")) {
                     NotificationCenter.default.post(name: .openSettings, object: nil)
                 }
                 .keyboardShortcut(",", modifiers: .command)

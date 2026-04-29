@@ -185,12 +185,12 @@ enum RecipeImportStage: Equatable {
 
     var title: String {
         switch self {
-        case .analyzing:            return "Analisando conteúdo"
-        case .fetching:             return "Buscando a receita"
-        case .extractingText:       return "Extraindo receita"
-        case .readingVideo:         return "Lendo vídeo"
-        case .organizingIngredients: return "Organizando ingredientes"
-        case .finalizing:           return "Finalizando receita"
+        case .analyzing:            return String(localized: "Analisando conteúdo")
+        case .fetching:             return String(localized: "Buscando a receita")
+        case .extractingText:       return String(localized: "Extraindo receita")
+        case .readingVideo:         return String(localized: "Lendo vídeo")
+        case .organizingIngredients: return String(localized: "Organizando ingredientes")
+        case .finalizing:           return String(localized: "Finalizando receita")
         }
     }
 
@@ -228,12 +228,12 @@ enum RecipeImportImprovementStage: CaseIterable, Equatable, Hashable {
 
     var title: String {
         switch self {
-        case .locatingVideo:     return "Localizando o vídeo"
-        case .downloadingVideo:  return "Baixando o vídeo"
-        case .extractingAudio:   return "Extraindo o áudio"
-        case .transcribingAudio: return "Transcrevendo o vídeo"
-        case .restructuringDraft: return "Reorganizando a receita"
-        case .finalizing:        return "Finalizando o refino"
+        case .locatingVideo:     return String(localized: "Localizando o vídeo")
+        case .downloadingVideo:  return String(localized: "Baixando o vídeo")
+        case .extractingAudio:   return String(localized: "Extraindo o áudio")
+        case .transcribingAudio: return String(localized: "Transcrevendo o vídeo")
+        case .restructuringDraft: return String(localized: "Reorganizando a receita")
+        case .finalizing:        return String(localized: "Finalizando o refino")
         }
     }
 
@@ -266,27 +266,27 @@ struct RecipeDraftMediaSaveSummary: Equatable {
 
     var title: String {
         if totalCount == 0 {
-            return "Nenhuma mídia adicional será salva"
+            return String(localized: "Nenhuma mídia adicional será salva")
         }
         if usesCoverFallback && videoCount == 0 && photoCount == 1 {
-            return "A capa será salva com a receita"
+            return String(localized: "A capa será salva com a receita")
         }
-        return "A revisão vai salvar mídia"
+        return String(localized: "A revisão vai salvar mídia")
     }
 
     var detail: String {
         if totalCount == 0 {
-            return "Este rascunho não tem fotos ou vídeos extras para persistir."
+            return String(localized: "Este rascunho não tem fotos ou vídeos extras para persistir.")
         }
 
         var sentences: [String] = []
         if !breakdown.isEmpty {
-            sentences.append("Serão salvos \(breakdown).")
+            sentences.append(String(localized: "Serão salvos \(breakdown)."))
         }
         if includesSourceOriginalMedia {
-            sentences.append("Inclui mídia original da importação.")
+            sentences.append(String(localized: "Inclui mídia original da importação."))
         } else if usesCoverFallback {
-            sentences.append("A capa será preservada como mídia de apoio.")
+            sentences.append(String(localized: "A capa será preservada como mídia de apoio."))
         }
         return sentences.joined(separator: " ")
     }

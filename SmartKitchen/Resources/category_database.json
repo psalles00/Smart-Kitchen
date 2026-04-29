@@ -1,90 +1,108 @@
 [
   {
+    "identifier": "fruits",
     "name": "Frutas",
     "icon_file_name": "apple.png",
     "market_section": "Hortifruti"
   },
   {
+    "identifier": "vegetables",
     "name": "Verduras e Legumes",
     "icon_file_name": "broccoli.png",
     "market_section": "Hortifruti"
   },
   {
+    "identifier": "meats",
     "name": "Carnes e Aves",
     "icon_file_name": "chicken-raw.png",
     "market_section": "Açougue"
   },
   {
+    "identifier": "seafood",
     "name": "Peixes e Frutos do Mar",
     "icon_file_name": "fish-raw.png",
     "market_section": "Peixaria"
   },
   {
+    "identifier": "bakery",
     "name": "Padaria",
     "icon_file_name": "bread-white.png",
     "market_section": "Padaria"
   },
   {
+    "identifier": "dairy",
     "name": "Laticínios e Ovos",
     "icon_file_name": "milk.png",
     "market_section": "Refrigerados"
   },
   {
+    "identifier": "grains",
     "name": "Grãos, Massas e Cereais",
     "icon_file_name": "rice.png",
     "market_section": "Mercearia"
   },
   {
+    "identifier": "beverages",
     "name": "Bebidas",
     "icon_file_name": "water-bottle.png",
     "market_section": "Bebidas"
   },
   {
+    "identifier": "seasonings",
     "name": "Temperos e Condimentos",
     "icon_file_name": "salt.png",
     "market_section": "Temperos"
   },
   {
+    "identifier": "canned",
     "name": "Enlatados e Conservas",
     "icon_file_name": "canned-tuna.png",
     "market_section": "Enlatados"
   },
   {
+    "identifier": "desserts",
     "name": "Doces e Sobremesas",
     "icon_file_name": "cake.png",
     "market_section": "Doces"
   },
   {
+    "identifier": "snacks",
     "name": "Snacks e Petiscos",
     "icon_file_name": "chips.png",
     "market_section": "Salgadinhos"
   },
   {
+    "identifier": "prepared-meals",
     "name": "Pratos Prontos",
     "icon_file_name": "lunch-box.png",
     "market_section": "Congelados"
   },
   {
+    "identifier": "cleaning",
     "name": "Limpeza e Higiene",
     "icon_file_name": "dish-soap.png",
     "market_section": "Limpeza"
   },
   {
+    "identifier": "kitchen-tools",
     "name": "Utensílios de Cozinha",
     "icon_file_name": "frying-pan.png",
     "market_section": "Utilidades"
   },
   {
+    "identifier": "appliances",
     "name": "Eletrodomésticos",
     "icon_file_name": "blender.png",
     "market_section": "Eletro"
   },
   {
+    "identifier": "wellness",
     "name": "Saúde e Bem-estar",
     "icon_file_name": "healthy-food.png",
     "market_section": "Saúde"
   },
   {
+    "identifier": "other",
     "name": "Outros",
     "icon_file_name": null,
     "market_section": "Outros"

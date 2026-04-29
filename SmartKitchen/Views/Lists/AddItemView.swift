@@ -10,9 +10,9 @@ enum AddItemDestination: String, CaseIterable {
 
     var label: String {
         switch self {
-        case .pantry:   "Despensa"
-        case .grocery:  "Mercado"
-        case .utensil:  "Utensílios"
+        case .pantry:   String(localized: "Despensa")
+        case .grocery:  String(localized: "Mercado")
+        case .utensil:  String(localized: "Utensílios")
         }
     }
 }

@@ -12,9 +12,9 @@ enum BackgroundType: String, Codable, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .original: return "Original"
-        case .texturedGradient: return "Textured Gradient"
-        case .waves: return "Ondas"
+        case .original: return String(localized: "Original")
+        case .texturedGradient: return String(localized: "Textured Gradient")
+        case .waves: return String(localized: "Ondas")
         }
     }
 }

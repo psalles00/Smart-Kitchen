@@ -46,23 +46,29 @@ enum IconResolver {
         }
 
         let result: String? = {
-            // 1. Exact match in mapping
-            if let file = keywordMap[lower] {
+            // 1. Locale-aware database exact match.
+            if let file = ItemDatabase.shared.exactMatch(for: lower)?.nomeDoArquivo {
                 return file
             }
 
-            // 2. Partial match — check if any keyword is contained in the name
-            for (keyword, file) in keywordMap where lower.contains(keyword) {
-                return file
-            }
-
-            // 3. Database-backed fallback for compound names like
+            // 2. Locale-aware database fallback for compound names like
             // "pure de abobora" -> "abobora".
             if let file = ItemDatabase.shared.preferredMatch(for: lower)?.nomeDoArquivo {
                 return file
             }
 
-            // 4. Slug-based guess: "name" -> "name.png"
+            // 3. Legacy keyword map kept as a compatibility layer for older
+            // item names that predate the structured locale metadata.
+            if let file = keywordMap[lower] {
+                return file
+            }
+
+            // 4. Partial match — check if any keyword is contained in the name.
+            for (keyword, file) in keywordMap where lower.contains(keyword) {
+                return file
+            }
+
+            // 5. Slug-based guess: "name" -> "name.png"
             let slug = lower
                 .replacingOccurrences(of: " ", with: "-")
                 .replacingOccurrences(of: "á", with: "a")
@@ -112,9 +118,9 @@ enum IconResolver {
         return image
     }
 
-    // MARK: - Keyword Map (PT-BR → icon filename)
+    // MARK: - Legacy Keyword Map
 
-    /// Maps Portuguese ingredient/item names to icon filenames.
+    /// Compatibility map for historic keyword-only icon resolution.
     private static let keywordMap: [String: String] = [
         // Frutas
         "banana": "banana.png",

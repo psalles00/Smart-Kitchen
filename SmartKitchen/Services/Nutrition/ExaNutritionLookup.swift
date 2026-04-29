@@ -29,7 +29,7 @@ final class ExaNutritionLookup {
     /// Returns one `Per100gNutrition` entry per input name. Items Exa couldn't
     /// resolve are returned with empty macros (`hasMacros == false`) so the
     /// orchestrator can fall back to the LLM for just those.
-    func fetchPer100g(for names: [String], locale: String = "pt-BR") async throws -> [Per100gNutrition] {
+    func fetchPer100g(for names: [String], locale: String = AppLocalization.current().nutritionCacheLocaleIdentifier) async throws -> [Per100gNutrition] {
         guard !names.isEmpty else { return [] }
         let apiKey = APIConfig.exaAPIKey
         guard !apiKey.isEmpty else {

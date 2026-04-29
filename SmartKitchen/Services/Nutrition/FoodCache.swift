@@ -84,7 +84,7 @@ final class FoodCache {
 
     /// Returns the cached row for `name` (already canonicalized) in the given
     /// locale, or `nil` on miss / when caching is disabled.
-    func lookup(canonicalName: String, locale: String = "pt-BR") async -> Per100gNutrition? {
+    func lookup(canonicalName: String, locale: String = AppLocalization.current().nutritionCacheLocaleIdentifier) async -> Per100gNutrition? {
         guard isEnabled else { return nil }
 
         let escapedName = urlEncode(canonicalName)
@@ -191,7 +191,7 @@ final class FoodCache {
     /// no diacritics, single-spaced, trimmed. Plural-stripping is intentionally
     /// minimal (only trailing 's') — a more robust normalizer can come later.
     static func canonicalize(_ raw: String) -> String {
-        let folded = raw.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: Locale(identifier: "pt_BR"))
+        let folded = raw.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: AppLocalization.current().foldingLocale)
         let collapsed = folded
             .components(separatedBy: .whitespacesAndNewlines)
             .filter { !$0.isEmpty }

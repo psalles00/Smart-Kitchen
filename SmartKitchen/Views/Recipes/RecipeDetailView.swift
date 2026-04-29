@@ -1019,7 +1019,7 @@ struct RecipeDetailView: View {
             return "\(Int(scaled.rounded()))\(suffix)"
         }
         let formatter = NumberFormatter()
-        formatter.locale = Locale(identifier: "pt_BR")
+        formatter.locale = AppLocalization.current().formattingLocale
         formatter.minimumFractionDigits = 0
         formatter.maximumFractionDigits = 1
         let str = formatter.string(from: NSNumber(value: scaled)) ?? "\(scaled)"
@@ -1477,11 +1477,11 @@ private enum IngredientReplacementSourceFilter: String, CaseIterable, Identifiab
     var title: String {
         switch self {
         case .all:
-            return "Ambos"
+            return String(localized: "Ambos")
         case .grocery:
-            return "Mercado"
+            return String(localized: "Mercado")
         case .pantry:
-            return "Despensa"
+            return String(localized: "Despensa")
         }
     }
 
@@ -1816,11 +1816,11 @@ private struct IngredientListTag: View {
     private var title: String {
         switch type {
         case .pantryItem:
-            return "Despensa"
+            return String(localized: "Despensa")
         case .groceryItem:
-            return "Mercado"
+            return String(localized: "Mercado")
         default:
-            return "Lista"
+            return String(localized: "Lista")
         }
     }
 

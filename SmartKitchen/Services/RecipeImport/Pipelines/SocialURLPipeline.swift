@@ -195,7 +195,7 @@ struct SocialURLPipeline: RecipeImportPipeline {
 
     private static func hasIngredientSignals(in text: String) -> Bool {
         guard !text.isEmpty else { return false }
-        let lower = text.lowercased().folding(options: .diacriticInsensitive, locale: .init(identifier: "pt_BR"))
+        let lower = text.lowercased().folding(options: .diacriticInsensitive, locale: AppLocalization.current().foldingLocale)
         let keywords = [
             "ingredientes", "ingredient", "modo de preparo", "preparo",
             "xicara", "xícara", "colher", "gramas", " g ", " ml ", " kg ",
@@ -259,7 +259,7 @@ struct SocialURLPipeline: RecipeImportPipeline {
             forHTTPHeaderField: "User-Agent"
         )
         request.setValue("text/html,application/xhtml+xml,*/*;q=0.8", forHTTPHeaderField: "Accept")
-        request.setValue("pt-BR,pt;q=0.9,en;q=0.8", forHTTPHeaderField: "Accept-Language")
+        request.setValue(AppLocalization.current().acceptLanguageHeader, forHTTPHeaderField: "Accept-Language")
         request.timeoutInterval = 15
 
         let (data, _) = try await URLSession.shared.data(for: request)

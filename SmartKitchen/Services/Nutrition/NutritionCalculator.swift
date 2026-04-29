@@ -86,7 +86,7 @@ enum NutritionCalculator {
             return qty * perPieceGrams(for: name)
         }
         let unit = rawUnit
-            .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: Locale(identifier: "pt_BR"))
+            .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: AppLocalization.current().foldingLocale)
             .lowercased()
 
         switch unit {
@@ -127,7 +127,7 @@ enum NutritionCalculator {
     /// Conservative defaults that round to a recognizable number of grams.
     private static func perPieceGrams(for name: String) -> Double {
         let n = name
-            .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: Locale(identifier: "pt_BR"))
+            .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: AppLocalization.current().foldingLocale)
             .lowercased()
         if n.contains("ovo")      { return 50 }
         if n.contains("banana")   { return 120 }

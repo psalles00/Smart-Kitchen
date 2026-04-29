@@ -119,7 +119,7 @@ struct PendingNutritionDaysCard: View {
         if calendar.isDateInToday(date) { return "Hoje" }
         if calendar.isDateInYesterday(date) { return "Ontem" }
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "pt-BR")
+        formatter.locale = AppLocalization.current().formattingLocale
         formatter.dateFormat = "EEEE, d 'de' MMMM"
         return formatter.string(from: date).localizedCapitalized
     }

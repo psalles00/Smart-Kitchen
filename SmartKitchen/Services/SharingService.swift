@@ -14,17 +14,17 @@ enum SharingScope: String, CaseIterable, Identifiable, Codable {
 
     var displayName: String {
         switch self {
-        case .everything: "Tudo"
-        case .listsOnly: "Apenas Listas"
-        case .recipesOnly: "Apenas Receitas"
+        case .everything: String(localized: "Tudo")
+        case .listsOnly: String(localized: "Apenas Listas")
+        case .recipesOnly: String(localized: "Apenas Receitas")
         }
     }
 
     var description: String {
         switch self {
-        case .everything: "Compartilha receitas, despensa, lista de compras, utensílios e categorias."
-        case .listsOnly: "Compartilha despensa, lista de compras, utensílios e categorias."
-        case .recipesOnly: "Compartilha apenas as receitas."
+        case .everything: String(localized: "Compartilha receitas, despensa, lista de compras, utensílios e categorias.")
+        case .listsOnly: String(localized: "Compartilha despensa, lista de compras, utensílios e categorias.")
+        case .recipesOnly: String(localized: "Compartilha apenas as receitas.")
         }
     }
 

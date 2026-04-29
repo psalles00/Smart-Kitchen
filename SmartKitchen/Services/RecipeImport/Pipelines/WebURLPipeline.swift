@@ -100,7 +100,7 @@ struct WebURLPipeline: RecipeImportPipeline {
             forHTTPHeaderField: "User-Agent"
         )
         request.setValue("text/html,application/xhtml+xml,*/*;q=0.8", forHTTPHeaderField: "Accept")
-        request.setValue("pt-BR,pt;q=0.9,en;q=0.8", forHTTPHeaderField: "Accept-Language")
+        request.setValue(AppLocalization.current().acceptLanguageHeader, forHTTPHeaderField: "Accept-Language")
         request.timeoutInterval = 25
 
         do {

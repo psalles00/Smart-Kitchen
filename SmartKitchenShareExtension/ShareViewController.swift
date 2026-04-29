@@ -6,7 +6,7 @@ import AVFoundation
 private enum SharedVideoImportPolicy {
     static let maxDurationMinutes = 20
     static let maxDurationSeconds = Double(maxDurationMinutes * 60)
-    static let durationLimitMessage = "Vídeos enviados devem ter no máximo 20 minutos."
+    static let durationLimitMessage = String(localized: "Vídeos enviados devem ter no máximo 20 minutos.")
 }
 
 private enum SharedPayloadKind: String, Codable {
@@ -29,7 +29,7 @@ private enum SharedPayloadStoreError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .containerUnavailable:
-            return "O container compartilhado do Smart Kitchen não está disponível."
+            return String(localized: "O container compartilhado do Smart Kitchen não está disponível.")
         }
     }
 }

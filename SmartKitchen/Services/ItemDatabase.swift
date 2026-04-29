@@ -6,6 +6,12 @@ final class ItemDatabase: Sendable {
 
     static let shared = ItemDatabase()
 
+    private struct IndexedTitle {
+        let normalized: String
+        let entry: ItemEntry
+        let sourceRank: Int
+    }
+
     private struct InheritedMatchScore: Comparable {
         let wordCount: Int
         let characterCount: Int
@@ -19,13 +25,16 @@ final class ItemDatabase: Sendable {
     }
 
     private static let ignoredInheritanceWords: Set<String> = [
-        "a", "as", "com", "da", "das", "de", "do", "dos", "e", "em",
-        "na", "nas", "no", "nos", "o", "os", "para", "por", "sem",
-        "um", "uma", "uns", "umas"
+        "a", "an", "and", "as", "com", "con", "da", "das", "de", "des",
+        "di", "do", "dos", "e", "el", "em", "et", "for", "la", "las",
+        "le", "les", "mit", "na", "nas", "no", "nos", "o", "of", "os",
+        "para", "por", "sem", "the", "um", "uma", "unas", "und", "uns",
+        "with", "y"
     ]
 
-    /// Flattened index: each title maps to its parent entry.
-    private let index: [(normalized: String, entry: ItemEntry)]
+    /// Locale-aware flattened indexes: active locale aliases first, English
+    /// second, and the legacy mixed `titulos` array last for compatibility.
+    private let localizedIndexes: [AppLanguage: [IndexedTitle]]
 
     /// All entries keyed by filename for direct lookup.
     private let byFilename: [String: ItemEntry]
@@ -33,23 +42,37 @@ final class ItemDatabase: Sendable {
 
     private init() {
         let entries = Self.loadEntries()
-        var idx: [(String, ItemEntry)] = []
-        idx.reserveCapacity(entries.count * 3)
         var byFile: [String: ItemEntry] = [:]
         byFile.reserveCapacity(entries.count)
+        var indexes: [AppLanguage: [IndexedTitle]] = [:]
+        for language in AppLanguage.allCases {
+            indexes[language] = []
+        }
 
         for entry in entries {
             byFile[entry.nomeDoArquivo] = entry
-            for title in entry.titulos {
-                idx.append((Self.normalize(title), entry))
+
+            for language in AppLanguage.allCases {
+                let localization = AppLocalization(language: language)
+                let titles = entry.searchableTitles(localization: localization)
+                var languageIndexes = indexes[language] ?? []
+                languageIndexes.reserveCapacity(languageIndexes.count + titles.count)
+                for title in titles {
+                    languageIndexes.append(
+                        IndexedTitle(
+                            normalized: Self.normalize(title.title),
+                            entry: entry,
+                            sourceRank: title.sourceRank
+                        )
+                    )
+                }
+                indexes[language] = languageIndexes
             }
         }
 
-        self.index = idx
+        self.localizedIndexes = indexes
         self.byFilename = byFile
-        self.entries = entries.sorted {
-            $0.preferredTitle().localizedCaseInsensitiveCompare($1.preferredTitle()) == .orderedAscending
-        }
+        self.entries = entries
         self.allCategories = Array(Set(byFile.values.map(\.categoria))).sorted()
     }
 
@@ -57,6 +80,7 @@ final class ItemDatabase: Sendable {
 
     /// Search by prefix. Returns up to `limit` unique entries matching the query.
     func search(query: String, limit: Int = 12, fallbackToFeatured: Bool = false) -> [ItemEntry] {
+        let localization = AppLocalization.current()
         let q = Self.normalize(query)
         guard q.count >= 2 else {
             return fallbackToFeatured ? featuredEntries(limit: limit) : []
@@ -64,15 +88,20 @@ final class ItemDatabase: Sendable {
 
         var seen = Set<String>()
         var results: [ItemEntry] = []
+        var bestSourceRanks: [String: Int] = [:]
+        let index = localizedIndexes[localization.language] ?? []
 
         // Gather candidates – always use word-prefix matching to avoid
         // noise (e.g. "Pera" matching "Paciente Pré-Operatório" via
         // substring "opera" containing "pera").
-        for (normalized, entry) in index {
+        for candidate in index {
+            let normalized = candidate.normalized
+            let entry = candidate.entry
             let matches = normalized.hasPrefix(q)
                 || normalized.split(whereSeparator: { $0 == " " || $0 == "-" })
                     .contains { $0.hasPrefix(q) }
             if matches {
+                bestSourceRanks[entry.nomeDoArquivo] = min(bestSourceRanks[entry.nomeDoArquivo] ?? Int.max, candidate.sourceRank)
                 if seen.insert(entry.nomeDoArquivo).inserted {
                     results.append(entry)
                 }
@@ -81,8 +110,14 @@ final class ItemDatabase: Sendable {
         
         // Sort by match quality
         let sorted = results.sorted { (a: ItemEntry, b: ItemEntry) -> Bool in
-            let titleA = Self.normalize(a.preferredTitle(matching: query))
-            let titleB = Self.normalize(b.preferredTitle(matching: query))
+            let sourceRankA = bestSourceRanks[a.nomeDoArquivo] ?? Int.max
+            let sourceRankB = bestSourceRanks[b.nomeDoArquivo] ?? Int.max
+            if sourceRankA != sourceRankB {
+                return sourceRankA < sourceRankB
+            }
+
+            let titleA = Self.normalize(a.preferredTitle(matching: query, localization: localization))
+            let titleB = Self.normalize(b.preferredTitle(matching: query, localization: localization))
             
             let aExact = titleA == q
             let bExact = titleB == q
@@ -105,16 +140,22 @@ final class ItemDatabase: Sendable {
     }
 
     func featuredEntries(limit: Int = 12) -> [ItemEntry] {
-        Array(entries.prefix(limit))
+        let localization = AppLocalization.current()
+        let sortedEntries = entries.sorted {
+            $0.preferredTitle(localization: localization)
+                .localizedCaseInsensitiveCompare($1.preferredTitle(localization: localization)) == .orderedAscending
+        }
+        return Array(sortedEntries.prefix(limit))
     }
 
     /// Returns an entry if any of its titles match the given name exactly
     /// (case-insensitive, diacritics-insensitive).
     func exactMatch(for name: String) -> ItemEntry? {
+        let index = localizedIndexes[AppLocalization.current().language] ?? []
         let q = Self.normalize(name)
         guard !q.isEmpty else { return nil }
-        for (normalized, entry) in index where normalized == q {
-            return entry
+        for candidate in index where candidate.normalized == q {
+            return candidate.entry
         }
         return nil
     }
@@ -126,13 +167,16 @@ final class ItemDatabase: Sendable {
             return exact
         }
 
+        let index = localizedIndexes[AppLocalization.current().language] ?? []
         let normalizedQuery = Self.normalizeForInheritedMatching(name)
         guard !normalizedQuery.isEmpty else { return nil }
 
         var bestEntry: ItemEntry?
         var bestScore: InheritedMatchScore?
 
-        for (normalized, entry) in index {
+        for candidate in index {
+            let normalized = candidate.normalized
+            let entry = candidate.entry
             let normalizedTitle = Self.normalizeForInheritedMatching(normalized)
             guard normalizedTitle != normalizedQuery,
                   Self.isEligibleInheritedTitle(normalizedTitle),
@@ -186,7 +230,7 @@ final class ItemDatabase: Sendable {
 
     private static func normalize(_ text: String) -> String {
         text.lowercased()
-            .folding(options: [.diacriticInsensitive, .widthInsensitive], locale: .current)
+            .folding(options: [.diacriticInsensitive, .widthInsensitive], locale: AppLocalization.current().foldingLocale)
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 

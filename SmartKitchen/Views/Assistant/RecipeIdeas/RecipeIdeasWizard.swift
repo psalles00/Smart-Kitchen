@@ -17,14 +17,14 @@ enum RecipeIdeaOccasion: String, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .cafeDaManha: return "Café da manhã"
-        case .almoco: return "Almoço"
-        case .jantar: return "Jantar"
-        case .lancheRapido: return "Lanche rápido"
-        case .drinks: return "Drinks"
-        case .bebidas: return "Bebidas"
-        case .sobremesa: return "Sobremesa"
-        case .outro: return "Outro"
+        case .cafeDaManha: return String(localized: "Café da manhã")
+        case .almoco: return String(localized: "Almoço")
+        case .jantar: return String(localized: "Jantar")
+        case .lancheRapido: return String(localized: "Lanche rápido")
+        case .drinks: return String(localized: "Drinks")
+        case .bebidas: return String(localized: "Bebidas")
+        case .sobremesa: return String(localized: "Sobremesa")
+        case .outro: return String(localized: "Outro")
         }
     }
 

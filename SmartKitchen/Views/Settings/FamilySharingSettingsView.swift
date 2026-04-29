@@ -269,7 +269,7 @@ struct ParticipantRowView: View {
         }
         return participant.userIdentity.lookupInfo?.emailAddress
             ?? participant.userIdentity.lookupInfo?.phoneNumber
-            ?? "Participante"
+            ?? String(localized: "Participante")
     }
 
     private var statusText: String {

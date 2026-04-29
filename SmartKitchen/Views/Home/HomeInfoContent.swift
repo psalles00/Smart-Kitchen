@@ -13,7 +13,7 @@ struct HomeInfoContent: View {
 
     private var todayString: String {
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "pt-BR")
+        formatter.locale = AppLocalization.current().formattingLocale
         formatter.dateFormat = "EEEE, d 'de' MMMM"
         return formatter.string(from: .now).localizedCapitalized
     }

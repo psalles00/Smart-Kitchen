@@ -69,7 +69,7 @@ enum IngredientQuantityScaler {
 
         // Fallback: formato decimal pt-BR com até 1 casa.
         let formatter = NumberFormatter()
-        formatter.locale = Locale(identifier: "pt_BR")
+        formatter.locale = AppLocalization.current().formattingLocale
         formatter.minimumFractionDigits = 0
         formatter.maximumFractionDigits = 2
         return formatter.string(from: NSNumber(value: rounded)) ?? "\(rounded)"

@@ -360,13 +360,13 @@ enum TexturedGradientPreset: String, CaseIterable, Identifiable, Codable {
 
     var displayName: String {
         switch self {
-        case .sun: return "Sun"
-        case .sunset: return "Sunset"
-        case .ocean: return "Ocean"
-        case .forest: return "Forest"
-        case .lavender: return "Lavender"
-        case .midnight: return "Midnight"
-        case .aurora: return "Aurora"
+        case .sun: return String(localized: "Sun")
+        case .sunset: return String(localized: "Sunset")
+        case .ocean: return String(localized: "Ocean")
+        case .forest: return String(localized: "Forest")
+        case .lavender: return String(localized: "Lavender")
+        case .midnight: return String(localized: "Midnight")
+        case .aurora: return String(localized: "Aurora")
         }
     }
 

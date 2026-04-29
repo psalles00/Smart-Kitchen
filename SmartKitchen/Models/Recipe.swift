@@ -317,8 +317,8 @@ enum RecipePreparationMediaType: String, Codable, CaseIterable {
 
     var label: String {
         switch self {
-        case .photo: "Foto"
-        case .video: "Vídeo"
+        case .photo: String(localized: "Foto")
+        case .video: String(localized: "Vídeo")
         }
     }
 }

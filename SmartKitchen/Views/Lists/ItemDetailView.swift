@@ -13,9 +13,9 @@ enum ItemListType: String, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .pantry:  "Despensa"
-        case .grocery: "Mercado"
-        case .utensil: "Utensílio"
+        case .pantry:  String(localized: "Despensa")
+        case .grocery: String(localized: "Mercado")
+        case .utensil: String(localized: "Utensílio")
         }
     }
 
@@ -37,9 +37,9 @@ enum ItemListType: String, CaseIterable, Identifiable {
 
     var listName: String {
         switch self {
-        case .pantry:  "Despensa"
-        case .grocery: "Mercado"
-        case .utensil: "Utensílios"
+        case .pantry:  String(localized: "Despensa")
+        case .grocery: String(localized: "Mercado")
+        case .utensil: String(localized: "Utensílios")
         }
     }
 

@@ -258,7 +258,7 @@ struct BackupEntry: Identifiable {
         } else {
             let formatter = DateFormatter()
             formatter.dateFormat = "EEEE, d MMM"
-            formatter.locale = Locale(identifier: "pt_BR")
+            formatter.locale = AppLocalization.current().formattingLocale
             return formatter.string(from: date).localizedCapitalized
         }
     }

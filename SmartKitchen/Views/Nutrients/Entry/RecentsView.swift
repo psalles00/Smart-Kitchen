@@ -190,7 +190,7 @@ struct RecentsView: View {
 
     private static func dateSubtitle(_ date: Date) -> String {
         let f = DateFormatter()
-        f.locale = Locale(identifier: "pt_BR")
+        f.locale = AppLocalization.current().formattingLocale
         f.dateStyle = .short
         f.timeStyle = .short
         return f.string(from: date)

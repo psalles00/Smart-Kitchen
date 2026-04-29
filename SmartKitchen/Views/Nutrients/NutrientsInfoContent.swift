@@ -101,14 +101,14 @@ struct NutrientsInfoContent: View {
         if calendar.isDateInYesterday(date) { return "Ontem" }
         if calendar.isDateInTomorrow(date) { return "Amanhã" }
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "pt-BR")
+        formatter.locale = AppLocalization.current().formattingLocale
         formatter.dateFormat = "EEEE"
         return formatter.string(from: date).localizedCapitalized
     }
 
     private func fullDateString(for date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "pt-BR")
+        formatter.locale = AppLocalization.current().formattingLocale
         formatter.dateFormat = "d 'de' MMMM"
         return formatter.string(from: date)
     }

@@ -220,7 +220,7 @@ final class NutritionAIService {
         }
         return Per100gNutrition(
             canonicalName: FoodCache.canonicalize(name),
-            locale: "pt-BR",
+            locale: AppLocalization.current().nutritionCacheLocaleIdentifier,
             displayName: (obj["display_name"] as? String) ?? name,
             kcal: kcal, protein: protein, carbs: carbs, fat: fat,
             sugar: d("sugar_per_100g"),

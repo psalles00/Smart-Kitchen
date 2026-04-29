@@ -136,7 +136,7 @@ struct MonthCalendarStrip: View {
 
     private func monthHeader(_ date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "pt-BR")
+        formatter.locale = AppLocalization.current().formattingLocale
         formatter.dateFormat = "MMMM yyyy"
         return formatter.string(from: date).localizedCapitalized
     }

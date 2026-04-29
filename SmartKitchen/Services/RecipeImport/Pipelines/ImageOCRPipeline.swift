@@ -116,7 +116,7 @@ struct ImageOCRPipeline: RecipeImportPipeline {
             }
             request.recognitionLevel = .accurate
             request.usesLanguageCorrection = true
-            request.recognitionLanguages = ["pt-BR", "en-US"]
+            request.recognitionLanguages = AppLocalization.current().visionRecognitionLanguages
 
             let handler = VNImageRequestHandler(cgImage: cgImage, orientation: .up, options: [:])
             DispatchQueue.global(qos: .userInitiated).async {

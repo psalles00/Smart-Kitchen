@@ -30,8 +30,9 @@ final class NutritionSpeechRecognizer {
     @ObservationIgnored private let engine = AVAudioEngine()
     @ObservationIgnored private var isStarting: Bool = false
 
-    init(locale: Locale = Locale(identifier: "pt-BR")) {
-        self.recognizer = SFSpeechRecognizer(locale: locale) ?? SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
+    init(locale: Locale = AppLocalization.current().speechRecognizerLocale) {
+        self.recognizer = SFSpeechRecognizer(locale: locale)
+            ?? SFSpeechRecognizer(locale: AppLocalization.current().fallbackSpeechRecognizerLocale)
     }
 
     // MARK: - Public
@@ -46,7 +47,7 @@ final class NutritionSpeechRecognizer {
             guard let self else { return }
             guard speechAuth == .authorized else {
                 self.isStarting = false
-                self.state = .error("Permissão de reconhecimento de voz negada. Habilite em Ajustes.")
+                self.state = .error(String(localized: "Permissão de reconhecimento de voz negada. Habilite em Ajustes."))
                 return
             }
 
@@ -54,7 +55,7 @@ final class NutritionSpeechRecognizer {
             guard !Task.isCancelled else { return }
             guard micAllowed else {
                 self.isStarting = false
-                self.state = .error("Permissão de microfone negada. Habilite em Ajustes.")
+                self.state = .error(String(localized: "Permissão de microfone negada. Habilite em Ajustes."))
                 return
             }
 

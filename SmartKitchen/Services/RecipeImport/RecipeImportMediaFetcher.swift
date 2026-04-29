@@ -151,7 +151,7 @@ enum RecipeImportMediaFetcher {
             forHTTPHeaderField: "User-Agent"
         )
         request.setValue("text/html,application/xhtml+xml,*/*;q=0.8", forHTTPHeaderField: "Accept")
-        request.setValue("pt-BR,pt;q=0.9,en;q=0.8", forHTTPHeaderField: "Accept-Language")
+        request.setValue(AppLocalization.current().acceptLanguageHeader, forHTTPHeaderField: "Accept-Language")
 
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
