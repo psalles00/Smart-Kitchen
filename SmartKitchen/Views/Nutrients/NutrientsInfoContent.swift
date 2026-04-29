@@ -56,7 +56,7 @@ struct NutrientsInfoContent: View {
                 Button(action: onTapScore) {
                     VStack(alignment: .trailing, spacing: 2) {
                         Image(systemName: score.systemImage)
-                            .font(.system(size: 20, weight: .semibold))
+                            .font(.system(size: 24, weight: .semibold))
                             .foregroundStyle(.white.opacity(0.95))
                             .symbolRenderingMode(.hierarchical)
 
