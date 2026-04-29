@@ -12,6 +12,7 @@
 		031012BD70D7A1A3D51558A0 /* WavyPanelBorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82FB6F8A2D7A9D059FB30D1C /* WavyPanelBorder.swift */; };
 		036E40BDDCD3848779A4FA25 /* BackupSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BBA1CA5A04B774EAAD63D2E /* BackupSettingsView.swift */; };
 		0443E1DB88404C26CFD854F1 /* RecipesInfoContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 269243D37B6FC903CD8D17DE /* RecipesInfoContent.swift */; };
+		04DA4AACEF92FF6954CE244E /* meta-de.json in Resources */ = {isa = PBXBuildFile; fileRef = 2B6EC0A97005293326313EC2 /* meta-de.json */; };
 		0537901AEEF9E19326112851 /* Telma-Regular.otf in Resources */ = {isa = PBXBuildFile; fileRef = 6762814ECB350EDAE1E3C831 /* Telma-Regular.otf */; };
 		0629B3BEB7C2B43ACB8A6607 /* ItemDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D23D5730AFF637BAC6DCE1E /* ItemDatabase.swift */; };
 		071D9822054DAE765A9FF4B0 /* NutritionEnums.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C3C8D46F59AFD47DE7AEEC /* NutritionEnums.swift */; };
@@ -287,6 +288,7 @@
 		269243D37B6FC903CD8D17DE /* RecipesInfoContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipesInfoContent.swift; sourceTree = "<group>"; };
 		2AA5493DC675E50A63A65459 /* RecipeDetailCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeDetailCard.swift; sourceTree = "<group>"; };
 		2B3A2113D1124A32B7191F8B /* FoodEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodEntry.swift; sourceTree = "<group>"; };
+		2B6EC0A97005293326313EC2 /* meta-de.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "meta-de.json"; sourceTree = "<group>"; };
 		2BE8A662434D9495BDC8B6F2 /* MonthCalendarStrip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthCalendarStrip.swift; sourceTree = "<group>"; };
 		2C063670EE4F7988218002A6 /* CloudSharingControllerRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSharingControllerRepresentable.swift; sourceTree = "<group>"; };
 		2D11C9DAD56B01DB249CFF1F /* Category.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Category.swift; sourceTree = "<group>"; };
@@ -768,6 +770,7 @@
 			isa = PBXGroup;
 			children = (
 				E5AEE72295DDF210EBDBBF9A /* images-128 */,
+				2B6EC0A97005293326313EC2 /* meta-de.json */,
 				41340DD47388F9AEF5B06243 /* meta-en.json */,
 				34EDFC8006585B1EA7500849 /* meta-es.json */,
 				678AFBB472665B3EF5D72032 /* meta-fr.json */,
@@ -1120,6 +1123,7 @@
 				30DCC9899692118EA7B3B6A7 /* category_database.json in Resources */,
 				4B3DA7067DB683837533E8D8 /* images-128 in Resources */,
 				8862DB8C679EB8A8579B988B /* items_database.json in Resources */,
+				04DA4AACEF92FF6954CE244E /* meta-de.json in Resources */,
 				E86A1179A1AF464ED7638278 /* meta-en.json in Resources */,
 				1152792F9A61F44478BA5016 /* meta-es.json in Resources */,
 				20D2BCEA77DE73540A796337 /* meta-fr.json in Resources */,

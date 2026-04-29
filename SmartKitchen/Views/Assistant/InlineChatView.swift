@@ -1212,7 +1212,8 @@ struct InlineChatView: View {
         if isRecipeManagementPrompt(text) { return false }
         // "Sugira novas receitas" should go to AI for generation, not local discovery
         let newRecipesCues = ["novas receitas", "receitas novas", "crie receitas", "criar receitas",
-                              "nouvelles recettes", "recettes nouvelles", "cree des recettes", "creer des recettes"]
+                              "nouvelles recettes", "recettes nouvelles", "cree des recettes", "creer des recettes",
+                              "neue rezepte", "rezepte erstellen", "erstelle rezepte"]
         if newRecipesCues.contains(where: text.contains) { return false }
 
         let suggestionCues = [
@@ -1225,12 +1226,15 @@ struct InlineChatView: View {
             "que puis-je", "puis-je faire", "puis-je cuisiner", "suggere", "suggere-moi", "suggerer",
             "quelles options", "quelles recettes", "options disponibles", "montre-moi",
             "je veux une", "je veux un", "avec mon garde-manger",
+            "was kann", "kann ich kochen", "kann ich machen", "schlage vor", "schlag vor",
+            "zeig mir", "ich mochte", "welche optionen", "welche rezepte",
             "what can", "can i make", "can i cook", "suggest", "show me", "i want", "based on my pantry"
         ]
         let recipeCues = [
             "receita", "receitas", "cozinhar", "fazer", "preparar", "sobremesa", "doce", "despensa",
             "receta", "recetas", "cocinar", "preparar", "postre", "dulce",
             "recette", "recettes", "cuisiner", "faire", "preparer", "dessert", "sucre", "garde-manger",
+            "rezept", "rezepte", "kochen", "machen", "zubereiten", "nachtisch", "dessert", "suss", "vorratskammer",
             "recipe", "recipes", "cook", "make", "dessert", "sweet", "pantry"
         ]
         return suggestionCues.contains(where: text.contains) && recipeCues.contains(where: text.contains)
@@ -1247,12 +1251,16 @@ struct InlineChatView: View {
             "ajoute", "ajouter", "cree", "creer", "enregistre", "enregistrer",
             "modifie", "modifier", "mets a jour", "mettre a jour",
             "supprime", "supprimer", "efface", "effacer", "retire", "retirer",
+            "hinzufugen", "fuge hinzu", "erstelle", "erstellen",
+            "speichern", "speichere", "bearbeiten", "bearbeite",
+            "aktualisieren", "aktualisiere", "loschen", "losche", "entfernen", "entferne",
             "add", "create", "save", "edit", "update", "delete", "remove"
         ]
         let recipeTargets = [
             "receita", "receitas", "como fazer", "modo de preparo",
             "receta", "recetas", "como hacer", "modo de preparación",
             "recette", "recettes", "comment faire", "preparation",
+            "rezept", "rezepte", "wie macht man", "zubereitung",
             "recipe", "recipes", "how to make", "instructions"
         ]
         return managementCues.contains(where: text.contains) && recipeTargets.contains(where: text.contains)
