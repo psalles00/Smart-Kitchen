@@ -457,7 +457,9 @@ struct NutritionDashboardView: View {
                 tint: Color(red: 0.15, green: 0.45, blue: 0.25),
                 action: completeSelectedDay
             )
-        case .future, .todayEmpty, .pastEmpty:
+        case .todayEmpty, .pastEmpty:
+            floatingEntryMenuButton(title: "Iniciar dia", icon: "plus")
+        case .future:
             EmptyView()
         }
     }
@@ -479,6 +481,25 @@ struct NutritionDashboardView: View {
     }
 
     @ViewBuilder
+    private func floatingEntryMenuButton(title: String, icon: String) -> some View {
+        Menu {
+            entryPickerMenuContent(prefilledMeal: nil)
+        } label: {
+            Label(title, systemImage: icon)
+                .labelStyle(.titleAndIcon)
+                .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                .foregroundStyle(Color.primary)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .contentShape(.capsule)
+                .background(floatingNeutralActionBackground())
+        }
+        .buttonStyle(.plain)
+        .menuOrder(.fixed)
+        .accessibilityLabel(title)
+    }
+
+    @ViewBuilder
     private func floatingActionBackground(tint: Color) -> some View {
         if #available(iOS 26, macOS 26, *) {
             Capsule()
@@ -489,6 +510,21 @@ struct NutritionDashboardView: View {
                 .fill(.ultraThinMaterial)
                 .overlay(
                     Capsule().fill(tint.opacity(0.14))
+                )
+        }
+    }
+
+    @ViewBuilder
+    private func floatingNeutralActionBackground() -> some View {
+        if #available(iOS 26, macOS 26, *) {
+            Capsule()
+                .fill(.clear)
+                .glassEffect(.regular.interactive(), in: .capsule)
+        } else {
+            Capsule()
+                .fill(.ultraThinMaterial)
+                .overlay(
+                    Capsule().stroke(Color.primary.opacity(0.08), lineWidth: 1)
                 )
         }
     }
