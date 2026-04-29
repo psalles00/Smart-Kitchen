@@ -1,6 +1,13 @@
 # Xcode
 build/
 DerivedData/
+build-copilot-*/
+build-copilot-*.log
+Backups/
+ref/
+device-recovery/
+tmp-debug/
+tmp-device-recovery/
 
 # Secrets (API keys injected via xcconfig → Info.plist)
 Config/Secrets.xcconfig
