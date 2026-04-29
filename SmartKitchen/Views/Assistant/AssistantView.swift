@@ -625,7 +625,11 @@ struct AssistantView: View {
             "me mostre",
             "me mostra",
             "quero uma",
-            "quero um"
+            "quero um",
+            "que puedo", "puedo hacer", "puedo cocinar", "sugiereme", "sugiere",
+            "que opciones", "que recetas", "opciones disponibles", "muestrame",
+            "quiero una", "quiero un",
+            "what can", "can i make", "can i cook", "suggest", "show me", "i want"
         ]
         let recipeCues = [
             "receita",
@@ -634,7 +638,9 @@ struct AssistantView: View {
             "fazer",
             "preparar",
             "sobremesa",
-            "doce"
+            "doce",
+            "receta", "recetas", "cocinar", "postre", "dulce",
+            "recipe", "recipes", "cook", "make", "dessert", "sweet"
         ]
 
         return suggestionCues.contains(where: text.contains) && recipeCues.contains(where: text.contains)
@@ -659,13 +665,19 @@ struct AssistantView: View {
             "apague",
             "apagar",
             "remova",
-            "remover"
+            "remover",
+            "añade", "añadir", "agrega", "agregar", "crea", "crear",
+            "guarda", "guardar", "edita", "actualiza", "actualizar",
+            "elimina", "eliminar", "borra", "borrar", "quita", "quitar",
+            "add", "create", "save", "edit", "update", "delete", "remove"
         ]
         let recipeTargets = [
             "receita",
             "receitas",
             "como fazer",
-            "modo de preparo"
+            "modo de preparo",
+            "receta", "recetas", "como hacer", "modo de preparación",
+            "recipe", "recipes", "how to make", "instructions"
         ]
 
         return managementCues.contains(where: text.contains) && recipeTargets.contains(where: text.contains)

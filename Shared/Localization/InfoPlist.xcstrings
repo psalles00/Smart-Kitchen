@@ -28,10 +28,22 @@
     "NSCameraUsageDescription" : {
       "extractionState" : "manual",
       "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Smart Kitchen usa a câmera para tirar fotos das suas receitas e refeições."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Smart Kitchen uses the camera to take photos of your recipes and meals."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Smart Kitchen usa la cámara para tomar fotos de tus recetas y comidas."
           }
         }
       }
@@ -39,10 +51,22 @@
     "NSMicrophoneUsageDescription" : {
       "extractionState" : "manual",
       "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Smart Kitchen usa o microfone para registrar refeições por voz."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Smart Kitchen uses the microphone to log meals by voice."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Smart Kitchen usa el micrófono para registrar comidas por voz."
           }
         }
       }
@@ -50,10 +74,22 @@
     "NSPhotoLibraryUsageDescription" : {
       "extractionState" : "manual",
       "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Smart Kitchen acessa a galeria para anexar fotos às suas receitas."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Smart Kitchen accesses your photo library to attach photos to your recipes."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Smart Kitchen accede a tu galería para adjuntar fotos a tus recetas."
           }
         }
       }
@@ -61,10 +97,22 @@
     "NSSpeechRecognitionUsageDescription" : {
       "extractionState" : "manual",
       "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Smart Kitchen usa reconhecimento de voz para transcrever o que você falou sobre sua refeição."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Smart Kitchen uses speech recognition to transcribe what you said about your meal."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Smart Kitchen usa el reconocimiento de voz para transcribir lo que dijiste sobre tu comida."
           }
         }
       }

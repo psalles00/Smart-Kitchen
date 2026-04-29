@@ -451,9 +451,20 @@ final class AssistantChatManager: ObservableObject {
         let suggestionCues = [
             "o que posso", "posso fazer", "posso cozinhar", "me sugira", "sugira", "sugerir",
             "quais opcoes", "quais receitas", "opcoes disponiveis", "me mostre", "me mostra",
-            "quero uma", "quero um"
+            "quero uma", "quero um",
+            // ES
+            "que puedo", "puedo hacer", "puedo cocinar", "sugiereme", "sugiere", "sugerir",
+            "que opciones", "que recetas", "opciones disponibles", "muestrame", "quiero una", "quiero un",
+            // EN
+            "what can", "can i make", "can i cook", "suggest", "show me", "i want"
         ]
-        let recipeCues = ["receita", "receitas", "cozinhar", "fazer", "preparar", "sobremesa", "doce"]
+        let recipeCues = [
+            "receita", "receitas", "cozinhar", "fazer", "preparar", "sobremesa", "doce",
+            // ES
+            "receta", "recetas", "cocinar", "preparar", "postre", "dulce",
+            // EN
+            "recipe", "recipes", "cook", "make", "dessert", "sweet"
+        ]
 
         return suggestionCues.contains(where: text.contains) && recipeCues.contains(where: text.contains)
     }
@@ -462,9 +473,19 @@ final class AssistantChatManager: ObservableObject {
         let managementCues = [
             "adicione", "adicionar", "crie", "criar", "cadastre", "cadastrar",
             "salve", "salvar", "edite", "editar", "atualize", "atualizar",
-            "exclua", "excluir", "apague", "apagar", "remova", "remover"
+            "exclua", "excluir", "apague", "apagar", "remova", "remover",
+            // ES
+            "añade", "añadir", "agrega", "agregar", "crea", "crear", "registra", "registrar",
+            "guarda", "guardar", "edita", "editar", "actualiza", "actualizar",
+            "elimina", "eliminar", "borra", "borrar", "quita", "quitar",
+            // EN
+            "add", "create", "save", "edit", "update", "delete", "remove"
         ]
-        let recipeTargets = ["receita", "receitas", "como fazer", "modo de preparo"]
+        let recipeTargets = [
+            "receita", "receitas", "como fazer", "modo de preparo",
+            "receta", "recetas", "como hacer", "modo de preparación",
+            "recipe", "recipes", "how to make", "instructions"
+        ]
         return managementCues.contains(where: text.contains) && recipeTargets.contains(where: text.contains)
     }
 

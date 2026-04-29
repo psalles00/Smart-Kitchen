@@ -23,6 +23,7 @@
 		0E34335A87858C10F15A9D3B /* HTMLRecipeExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D589E4E539EC17B2EAC8C106 /* HTMLRecipeExtractor.swift */; };
 		0E7E071C945C2EFECB22D70D /* BackupManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9B3D291B4129B374AEF734A /* BackupManager.swift */; };
 		0FC1A5E42DFADFC3AE09A8AD /* ChatConversation.swift in Sources */ = {isa = PBXBuildFile; fileRef = F21B363D1F25116C3B95156D /* ChatConversation.swift */; };
+		1152792F9A61F44478BA5016 /* meta-es.json in Resources */ = {isa = PBXBuildFile; fileRef = 34EDFC8006585B1EA7500849 /* meta-es.json */; };
 		13CA2C2B4FD025FB249FBAB5 /* GroceryItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0DB3612494917CB802BC7CC /* GroceryItem.swift */; };
 		13D3339D5C01016C338DF5F8 /* AddGroceryItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD63B6313209711B5CC7C9BC /* AddGroceryItemView.swift */; };
 		1463A33CEB85EA5B7C145162 /* PlatformImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0BA783D43E37794EE28298C /* PlatformImage.swift */; };
@@ -293,6 +294,7 @@
 		32C7420251B5AC99F9AB0623 /* IngredientQuantityScaler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IngredientQuantityScaler.swift; sourceTree = "<group>"; };
 		3309C6A15E4419F2A438556C /* ExaClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExaClient.swift; sourceTree = "<group>"; };
 		342C68A1E133DA815A5B3DA4 /* RecipeImportModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeImportModels.swift; sourceTree = "<group>"; };
+		34EDFC8006585B1EA7500849 /* meta-es.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "meta-es.json"; sourceTree = "<group>"; };
 		353C1175CD2B3C3C3D1C0DCD /* InlineSearchResultsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineSearchResultsView.swift; sourceTree = "<group>"; };
 		3788BD683F7C5CAD5A294F19 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		382D66BD301AABE81FA0E3A3 /* WavesShaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WavesShaderView.swift; sourceTree = "<group>"; };
@@ -765,6 +767,7 @@
 			children = (
 				E5AEE72295DDF210EBDBBF9A /* images-128 */,
 				41340DD47388F9AEF5B06243 /* meta-en.json */,
+				34EDFC8006585B1EA7500849 /* meta-es.json */,
 				4998806E0D06C1D40F262CA5 /* meta-ptbr.json */,
 			);
 			path = icons;
@@ -1061,6 +1064,12 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				Base,
+				de,
+				en,
+				es,
+				fr,
+				it,
+				ja,
 				"pt-BR",
 			);
 			mainGroup = 4C408B7153C68979189A3876;
@@ -1109,6 +1118,7 @@
 				4B3DA7067DB683837533E8D8 /* images-128 in Resources */,
 				8862DB8C679EB8A8579B988B /* items_database.json in Resources */,
 				E86A1179A1AF464ED7638278 /* meta-en.json in Resources */,
+				1152792F9A61F44478BA5016 /* meta-es.json in Resources */,
 				F554C5B2D131148EAAA88E7F /* meta-ptbr.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
