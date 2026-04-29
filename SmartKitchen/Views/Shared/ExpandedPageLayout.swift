@@ -86,12 +86,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
 
     #if os(macOS)
     private var macContainerTopGap: CGFloat {
-        switch pageTheme {
-        case .lists, .recipes, .nutrients:
-            18
-        case .home:
-            0
-        }
+        18
     }
     #endif
 
