@@ -19,3 +19,6 @@
 - Sempre verificar `git diff` após rodar `xcodegen generate`.
 - Restaurar entitlements imediatamente se houver mudanças não intencionais.
 - Confirmar manualmente o container correto antes de instalar builds.
+
+# Tradução
+- Sempre que adicionar ou modificar um texto, faça com que essas mudanças sejam traduzidas e aplicadas em todos os idiomas disponíveis no app.

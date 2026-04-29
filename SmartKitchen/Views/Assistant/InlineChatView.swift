@@ -1228,6 +1228,8 @@ struct InlineChatView: View {
             "je veux une", "je veux un", "avec mon garde-manger",
             "was kann", "kann ich kochen", "kann ich machen", "schlage vor", "schlag vor",
             "zeig mir", "ich mochte", "welche optionen", "welche rezepte",
+            "cosa posso", "posso fare", "posso cucinare", "suggerisci", "suggeriscimi",
+            "mostrami", "voglio una", "voglio un", "quali opzioni", "quali ricette", "opzioni disponibili",
             "what can", "can i make", "can i cook", "suggest", "show me", "i want", "based on my pantry"
         ]
         let recipeCues = [
@@ -1235,6 +1237,7 @@ struct InlineChatView: View {
             "receta", "recetas", "cocinar", "preparar", "postre", "dulce",
             "recette", "recettes", "cuisiner", "faire", "preparer", "dessert", "sucre", "garde-manger",
             "rezept", "rezepte", "kochen", "machen", "zubereiten", "nachtisch", "dessert", "suss", "vorratskammer",
+            "ricetta", "ricette", "cucinare", "fare", "preparare", "dessert", "dolce", "dispensa",
             "recipe", "recipes", "cook", "make", "dessert", "sweet", "pantry"
         ]
         return suggestionCues.contains(where: text.contains) && recipeCues.contains(where: text.contains)
@@ -1254,6 +1257,9 @@ struct InlineChatView: View {
             "hinzufugen", "fuge hinzu", "erstelle", "erstellen",
             "speichern", "speichere", "bearbeiten", "bearbeite",
             "aktualisieren", "aktualisiere", "loschen", "losche", "entfernen", "entferne",
+            "aggiungi", "aggiungere", "crea", "creare", "salva", "salvare",
+            "modifica", "modificare", "aggiorna", "aggiornare",
+            "elimina", "eliminare", "rimuovi", "rimuovere", "cancella", "cancellare",
             "add", "create", "save", "edit", "update", "delete", "remove"
         ]
         let recipeTargets = [
@@ -1261,6 +1267,7 @@ struct InlineChatView: View {
             "receta", "recetas", "como hacer", "modo de preparación",
             "recette", "recettes", "comment faire", "preparation",
             "rezept", "rezepte", "wie macht man", "zubereitung",
+            "ricetta", "ricette", "come fare", "preparazione", "modo di preparazione",
             "recipe", "recipes", "how to make", "instructions"
         ]
         return managementCues.contains(where: text.contains) && recipeTargets.contains(where: text.contains)

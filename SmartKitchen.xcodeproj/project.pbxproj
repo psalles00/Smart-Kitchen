@@ -134,6 +134,7 @@
 		8FFCEF035198CE9DD4729BE8 /* ItemDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6B02BCCEF9DC3980BC03691 /* ItemDetailView.swift */; };
 		90605337AFE0B9C0CF7EE56C /* CommandBarResultRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEBFB0D07FF508C9D65AF2A4 /* CommandBarResultRow.swift */; };
 		90A040866250128A00CB6B74 /* Boska-Italic.otf in Resources */ = {isa = PBXBuildFile; fileRef = 51B3504E5B6AEC4327A2CE73 /* Boska-Italic.otf */; };
+		91ED1A2929F4C9D41C04D9D6 /* meta-it.json in Resources */ = {isa = PBXBuildFile; fileRef = 7387F4D918F7B1429792DB78 /* meta-it.json */; };
 		94058E2EEFEE3B9D2D7AD778 /* AIChatWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E74389E6DBB6C57ABD1D15D /* AIChatWidget.swift */; };
 		98DB1D45E86EA5E9FC85523F /* WeightEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D63859282A31776469BAD94 /* WeightEntry.swift */; };
 		995A56B1C0277119812063CB /* NutritionCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58F16601767D28480F28D243 /* NutritionCalculator.swift */; };
@@ -357,6 +358,7 @@
 		71EA39E201D01426855B0453 /* ExpandedPageLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpandedPageLayout.swift; sourceTree = "<group>"; };
 		7208600E7E29C32EF7BF03C1 /* ExaNutritionLookup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExaNutritionLookup.swift; sourceTree = "<group>"; };
 		72CE4B2891F05A6C6E8CA356 /* MacroCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacroCard.swift; sourceTree = "<group>"; };
+		7387F4D918F7B1429792DB78 /* meta-it.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "meta-it.json"; sourceTree = "<group>"; };
 		75728DA118DDAF7AFE520AFD /* NutrientsInfoContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutrientsInfoContent.swift; sourceTree = "<group>"; };
 		75AD97696B4183C30DFFE782 /* SupabaseClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseClient.swift; sourceTree = "<group>"; };
 		75B2AAF14060085FA1C4A5F5 /* WeekEnergyStrip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeekEnergyStrip.swift; sourceTree = "<group>"; };
@@ -774,6 +776,7 @@
 				41340DD47388F9AEF5B06243 /* meta-en.json */,
 				34EDFC8006585B1EA7500849 /* meta-es.json */,
 				678AFBB472665B3EF5D72032 /* meta-fr.json */,
+				7387F4D918F7B1429792DB78 /* meta-it.json */,
 				4998806E0D06C1D40F262CA5 /* meta-ptbr.json */,
 			);
 			path = icons;
@@ -1127,6 +1130,7 @@
 				E86A1179A1AF464ED7638278 /* meta-en.json in Resources */,
 				1152792F9A61F44478BA5016 /* meta-es.json in Resources */,
 				20D2BCEA77DE73540A796337 /* meta-fr.json in Resources */,
+				91ED1A2929F4C9D41C04D9D6 /* meta-it.json in Resources */,
 				F554C5B2D131148EAAA88E7F /* meta-ptbr.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
