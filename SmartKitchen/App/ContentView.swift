@@ -2157,27 +2157,25 @@ private struct HomeView: View {
             Button("Criar receita", systemImage: "square.and.pencil") {
                 showAddRecipe = true
             }
-            Menu {
-                Button("Colar link", systemImage: "link") {
-                    onOpenRecipeImport(.link)
-                }
-                Button("Importar da galeria", systemImage: "photo.on.rectangle.angled") {
-                    onOpenRecipeImport(.gallery)
-                }
-                Button("Ler com câmera", systemImage: "camera.viewfinder") {
-                    onOpenRecipeImport(.camera)
-                }
-                Button("Colar texto", systemImage: "text.alignleft") {
-                    onOpenRecipeImport(.text)
-                }
-                #if os(macOS)
-                Button("Importar dos arquivos", systemImage: "folder.fill") {
-                    onOpenRecipeImport(.files)
-                }
-                #endif
-            } label: {
-                Label("Importar receita", systemImage: "square.and.arrow.down")
+        }
+        Section("Importar receita") {
+            Button("Colar link", systemImage: "link") {
+                onOpenRecipeImport(.link)
             }
+            Button("Importar da galeria", systemImage: "photo.on.rectangle.angled") {
+                onOpenRecipeImport(.gallery)
+            }
+            Button("Ler com câmera", systemImage: "camera.viewfinder") {
+                onOpenRecipeImport(.camera)
+            }
+            Button("Colar texto", systemImage: "text.alignleft") {
+                onOpenRecipeImport(.text)
+            }
+            #if os(macOS)
+            Button("Importar dos arquivos", systemImage: "folder.fill") {
+                onOpenRecipeImport(.files)
+            }
+            #endif
         }
     }
 

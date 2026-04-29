@@ -343,21 +343,32 @@ private struct SwipeablePendingRow: View {
             guard goal > 0 else { return 0 }
             return min(Double(consumed) / Double(goal), 1.0)
         }()
+        let valueText = String(consumed)
+        let fontSize: CGFloat = {
+            switch valueText.count {
+            case 0...2: return 11
+            case 3: return 10
+            case 4: return 8.5
+            default: return 7.5
+            }
+        }()
+        let textWidth: CGFloat = valueText.count >= 4 ? 24 : 20
         ZStack {
             Circle()
-                .stroke(Color.yellow.opacity(0.15), lineWidth: 3)
+                .stroke(Color.yellow.opacity(0.15), lineWidth: 2.5)
             Circle()
                 .trim(from: 0, to: progress)
-                .stroke(Color.yellow, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                .stroke(Color.yellow, style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
                 .rotationEffect(.degrees(-90))
-            Text("\(consumed)")
-                .font(.system(size: 11, weight: .semibold, design: .rounded))
+            Text(valueText)
+                .font(.system(size: fontSize, weight: .semibold, design: .rounded))
                 .foregroundStyle(.primary)
                 .lineLimit(1)
-                .minimumScaleFactor(0.7)
-                .padding(.horizontal, 2)
+                .minimumScaleFactor(0.55)
+                .allowsTightening(true)
+                .frame(maxWidth: textWidth)
         }
-        .frame(width: 36, height: 36)
+        .frame(width: 40, height: 40)
     }
 }
 

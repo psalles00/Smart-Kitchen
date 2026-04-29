@@ -31,7 +31,6 @@ struct RecipeDetailView: View {
 
     private let heroHeight: CGFloat = 580
     private let baseContentOverlap: CGFloat = 34
-    private let floatingHeroActionSize: CGFloat = 62
 
     private var sortedIngredients: [RecipeIngredient] {
         (recipe.ingredients ?? []).sorted { $0.sortOrder < $1.sortOrder }
@@ -74,31 +73,8 @@ struct RecipeDetailView: View {
         !sortedPreparationMedia.isEmpty
     }
 
-    private var containsVideoMedia: Bool {
-        sortedPreparationMedia.contains { $0.mediaType == .video }
-    }
-
-    private var mediaHeroActionIcon: String {
-        containsVideoMedia ? "video" : "photo.stack"
-    }
-
-    private var mediaHeroActionAccessibilityLabel: String {
-        containsVideoMedia ? "Abrir vídeos da receita" : "Abrir mídias da receita"
-    }
-
-    private var heroActionCount: Int {
-        var count = 1 // favorite
-        if externalURL != nil { count += 1 }
-        if hasPreparationMedia { count += 1 }
-        return count
-    }
-
-    private var heroActionVerticalInset: CGFloat {
-        heroActionCount >= 3 ? 8 : 0
-    }
-
     private var contentOverlap: CGFloat {
-        baseContentOverlap - (heroActionCount >= 3 ? 6 : 0)
+        baseContentOverlap
     }
 
     private var preferredPreviewMedia: RecipePreparationMedia? {
@@ -124,7 +100,7 @@ struct RecipeDetailView: View {
             : Color(red: 248 / 255, green: 248 / 255, blue: 250 / 255)
     }
 
-    private var contentTopPadding: CGFloat { 34 + heroActionVerticalInset }
+    private var contentTopPadding: CGFloat { 34 }
     private var contentBottomPadding: CGFloat { 132 }
 
     private var heroTitleFontSize: CGFloat {
@@ -169,12 +145,6 @@ struct RecipeDetailView: View {
         }
 
         return items
-    }
-
-    private var externalURL: URL? {
-        let trimmed = recipe.externalURLString.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return nil }
-        return URL(string: trimmed)
     }
 
     private var pantryNames: [String] {
@@ -228,29 +198,15 @@ struct RecipeDetailView: View {
         #if os(iOS)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                HStack(spacing: 14) {
-                    if let externalURL {
-                        Button {
-                            openExternalURL(externalURL)
-                        } label: {
-                            Image(systemName: "globe")
-                                .font(.body.weight(.semibold))
-                                .foregroundStyle(.white)
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel("Abrir no navegador")
-                    }
-
-                    Button {
-                        showEditRecipe = true
-                    } label: {
-                        Image(systemName: "pencil")
-                            .font(.body.weight(.semibold))
-                            .foregroundStyle(.white)
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Editar")
+                Button {
+                    showEditRecipe = true
+                } label: {
+                    Image(systemName: "pencil")
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(.white)
                 }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Editar")
             }
         }
         #endif
@@ -459,14 +415,6 @@ struct RecipeDetailView: View {
         openPreparationMedia(previewMedia)
     }
 
-    private func openExternalURL(_ url: URL) {
-        #if os(macOS)
-        NSWorkspace.shared.open(url)
-        #else
-        UIApplication.shared.open(url)
-        #endif
-    }
-
     private var heroMetadataRow: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 14) {
@@ -528,81 +476,6 @@ struct RecipeDetailView: View {
             )
             .fill(mainAreaColor)
             .shadow(color: Color.black.opacity(0.12), radius: 26, x: 0, y: -8)
-        }
-        .overlay(alignment: .topTrailing) {
-            HStack(spacing: 10) {
-                if hasPreparationMedia, let previewMedia = preferredPreviewMedia {
-                    Button {
-                        openPreparationMedia(previewMedia)
-                    } label: {
-                        Image(systemName: mediaHeroActionIcon)
-                            .font(.system(size: 24, weight: .semibold))
-                            .foregroundStyle(.primary)
-                            .frame(width: floatingHeroActionSize, height: floatingHeroActionSize)
-                    }
-                    .buttonStyle(.plain)
-                    .background {
-                        if #available(iOS 26, macOS 26, *) {
-                            Circle()
-                                .fill(.clear)
-                                .glassEffect(.regular.interactive(), in: Circle())
-                        } else {
-                            Circle()
-                                .fill(Color.clear)
-                                .background(.ultraThinMaterial, in: Circle())
-                        }
-                    }
-                    .accessibilityLabel(mediaHeroActionAccessibilityLabel)
-                }
-
-                if let externalURL {
-                    Button {
-                        openExternalURL(externalURL)
-                    } label: {
-                        Image(systemName: "globe")
-                            .font(.system(size: 24, weight: .semibold))
-                            .foregroundStyle(.primary)
-                            .frame(width: floatingHeroActionSize, height: floatingHeroActionSize)
-                    }
-                    .buttonStyle(.plain)
-                    .background {
-                        if #available(iOS 26, macOS 26, *) {
-                            Circle()
-                                .fill(.clear)
-                                .glassEffect(.regular.interactive(), in: Circle())
-                        } else {
-                            Circle()
-                                .fill(Color.clear)
-                                .background(.ultraThinMaterial, in: Circle())
-                        }
-                    }
-                    .accessibilityLabel("Abrir receita na web")
-                }
-
-                Button {
-                    recipe.isFavorite.toggle()
-                } label: {
-                    Image(systemName: recipe.isFavorite ? "heart.fill" : "heart")
-                        .font(.system(size: 24, weight: .semibold))
-                        .foregroundStyle(recipe.isFavorite ? .red : .primary)
-                        .frame(width: floatingHeroActionSize, height: floatingHeroActionSize)
-                }
-                .buttonStyle(.plain)
-                .background {
-                    if #available(iOS 26, macOS 26, *) {
-                        Circle()
-                            .fill(.clear)
-                            .glassEffect(.regular.interactive(), in: Circle())
-                    } else {
-                        Circle()
-                            .fill(Color.clear)
-                            .background(.ultraThinMaterial, in: Circle())
-                    }
-                }
-                .accessibilityLabel(recipe.isFavorite ? "Desfavoritar receita" : "Favoritar receita")
-            }
-            .padding(.trailing, 18)
-            .offset(y: -(floatingHeroActionSize / 2))
         }
     }
 

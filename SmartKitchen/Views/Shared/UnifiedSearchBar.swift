@@ -57,12 +57,8 @@ struct UnifiedSearchBar: View {
             HStack(spacing: 10) {
                 Image(systemName: state.mode == .aiChat ? "sparkles" : "sparkle.magnifyingglass")
                     .font(.system(size: 16, weight: .medium))
-                    .foregroundStyle(state.mode == .aiChat
-                        ? AnyShapeStyle(.linearGradient(
-                            colors: [.purple, .blue],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing))
-                        : AnyShapeStyle(Color.secondary))
+                    .symbolRenderingMode(.monochrome)
+                    .foregroundStyle(.secondary)
 
                 TextField(state.mode == .aiChat ? state.aiChatPreset.searchPlaceholder : String(localized: "Assistente"), text: $state.searchText)
                     .foregroundStyle(.primary)
@@ -142,14 +138,7 @@ struct UnifiedSearchBar: View {
                 Image(systemName: "arrow.up.circle.fill")
                     .font(.system(size: 26, weight: .semibold))
                     .symbolRenderingMode(.hierarchical)
-                    .foregroundStyle(
-                        state.mode == .aiChat
-                            ? AnyShapeStyle(.linearGradient(
-                                colors: [.purple, .blue],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing))
-                            : AnyShapeStyle(Color.accentColor)
-                    )
+                    .foregroundStyle(.secondary)
                     .frame(width: 32, height: 32)
                     .contentShape(Rectangle())
             }
@@ -235,27 +224,25 @@ struct UnifiedSearchBar: View {
             Button("Criar receita", systemImage: "square.and.pencil") {
                 presentCommandAction(.addRecipe(prefill: ""))
             }
-            Menu {
-                Button("Colar link", systemImage: "link") {
-                    presentRecipeImport(.link)
-                }
-                Button("Importar da galeria", systemImage: "photo.on.rectangle.angled") {
-                    presentRecipeImport(.gallery)
-                }
-                Button("Ler com câmera", systemImage: "camera.viewfinder") {
-                    presentRecipeImport(.camera)
-                }
-                Button("Colar texto", systemImage: "text.alignleft") {
-                    presentRecipeImport(.text)
-                }
-                #if os(macOS)
-                Button("Importar dos arquivos", systemImage: "folder.fill") {
-                    presentRecipeImport(.files)
-                }
-                #endif
-            } label: {
-                Label("Importar receita", systemImage: "square.and.arrow.down")
+        }
+        Section("Importar receita") {
+            Button("Colar link", systemImage: "link") {
+                presentRecipeImport(.link)
             }
+            Button("Importar da galeria", systemImage: "photo.on.rectangle.angled") {
+                presentRecipeImport(.gallery)
+            }
+            Button("Ler com câmera", systemImage: "camera.viewfinder") {
+                presentRecipeImport(.camera)
+            }
+            Button("Colar texto", systemImage: "text.alignleft") {
+                presentRecipeImport(.text)
+            }
+            #if os(macOS)
+            Button("Importar dos arquivos", systemImage: "folder.fill") {
+                presentRecipeImport(.files)
+            }
+            #endif
         }
     }
 

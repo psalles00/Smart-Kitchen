@@ -4,48 +4,13 @@ import SwiftData
 struct HomeInfoContent: View {
     @Query(filter: #Predicate<UnifiedItem> { $0.isPantry }, sort: \UnifiedItem.name) private var pantryItems: [UnifiedItem]
     @Query(filter: #Predicate<UnifiedItem> { $0.isGrocery }, sort: \UnifiedItem.name) private var groceryItems: [UnifiedItem]
+    @Query(sort: \Recipe.name) private var recipes: [Recipe]
     @Query(sort: \FoodEntry.timestamp, order: .reverse) private var foodEntries: [FoodEntry]
     @Query(sort: \NutritionDayLog.dayStart, order: .reverse) private var dayLogs: [NutritionDayLog]
     @Query(sort: \NutritionProfile.createdAt) private var profiles: [NutritionProfile]
 
     private var calendar: Calendar { .current }
     private var profile: NutritionProfile? { profiles.first }
-
-    // MARK: - Greeting
-
-    private var greeting: String {
-        let hour = calendar.component(.hour, from: .now)
-        switch hour {
-        case 5..<12: return String(localized: "Bom dia")
-        case 12..<18: return String(localized: "Boa tarde")
-        default: return String(localized: "Boa noite")
-        }
-    }
-
-    // MARK: - Streak (dias concluídos consecutivos terminando hoje ou ontem)
-
-    private var streak: Int {
-        let completedDays = Set(
-            dayLogs
-                .filter { $0.isCompleted }
-                .map { calendar.startOfDay(for: $0.dayStart) }
-        )
-        guard !completedDays.isEmpty else { return 0 }
-        var count = 0
-        var cursor = calendar.startOfDay(for: .now)
-        if !completedDays.contains(cursor) {
-            guard let prev = calendar.date(byAdding: .day, value: -1, to: cursor) else { return 0 }
-            cursor = prev
-        }
-        while completedDays.contains(cursor) {
-            count += 1
-            guard let prev = calendar.date(byAdding: .day, value: -1, to: cursor) else { break }
-            cursor = prev
-        }
-        return count
-    }
-
-    // MARK: - Dynamic middle line
 
     private var expiringSoonCount: Int {
         guard let limit = calendar.date(byAdding: .day, value: 3, to: .now) else { return 0 }
@@ -76,23 +41,26 @@ struct HomeInfoContent: View {
         return count
     }
 
-    private enum MiddleStat {
-        case expiring(Int)
-        case pending(Int)
-        case lists(pantry: Int, grocery: Int)
+    private var statusLine: String {
+        let fragments = [expiringStatusText, pendingStatusText].compactMap { $0 }
+        return fragments.isEmpty
+            ? String(localized: "Tudo certo na sua cozinha!")
+            : fragments.joined(separator: " · ")
     }
 
-    private var middleStat: MiddleStat {
-        if expiringSoonCount > 0 {
-            return .expiring(expiringSoonCount)
-        }
-        if pendingNutritionDaysCount > 0 {
-            return .pending(pendingNutritionDaysCount)
-        }
-        return .lists(pantry: pantryItems.count, grocery: groceryItems.count)
+    private var expiringStatusText: String? {
+        guard expiringSoonCount > 0 else { return nil }
+        return expiringSoonCount == 1
+            ? String(localized: "1 item vencendo")
+            : String(localized: "\(expiringSoonCount) itens vencendo")
     }
 
-    // MARK: - Calorie ring
+    private var pendingStatusText: String? {
+        guard pendingNutritionDaysCount > 0 else { return nil }
+        return pendingNutritionDaysCount == 1
+            ? String(localized: "1 dia não concluído")
+            : String(localized: "\(pendingNutritionDaysCount) dias não concluídos")
+    }
 
     private var caloriesConsumedToday: Int {
         let today = calendar.startOfDay(for: .now)
@@ -112,36 +80,42 @@ struct HomeInfoContent: View {
         return min(1.0, Double(caloriesConsumedToday) / Double(calorieGoal))
     }
 
-    var body: some View {
-        HStack(alignment: .center, spacing: 14) {
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 6) {
-                    Text(greeting)
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .lineLimit(1)
-                        .fixedSize(horizontal: true, vertical: false)
-                    if streak > 0 {
-                        HStack(spacing: 3) {
-                            Image(systemName: "flame.fill")
-                                .font(.system(size: 11, weight: .bold))
-                                .foregroundStyle(.orange)
-                            Text("\(streak)")
-                                .font(.system(size: 12, weight: .heavy, design: .rounded))
-                                .foregroundStyle(.white)
-                        }
-                        .padding(.horizontal, 7)
-                        .padding(.vertical, 3)
-                        .background(Color.white.opacity(0.18), in: .capsule)
-                    }
-                }
+    private var calorieValueText: String {
+        String(caloriesRemaining)
+    }
 
-                middleLine
-                    .font(.subheadline)
-                    .foregroundColor(.white.opacity(0.85))
+    private var calorieValueFontSize: CGFloat {
+        switch calorieValueText.count {
+        case 0...3: 17
+        case 4: 15
+        case 5: 13.5
+        default: 12
+        }
+    }
+
+    private var calorieValueFrameWidth: CGFloat {
+        switch calorieValueText.count {
+        case 0...3: 29
+        case 4: 33
+        case 5: 36
+        default: 37
+        }
+    }
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(statusLine)
+                    .font(.headline)
+                    .foregroundColor(.white)
                     .lineLimit(1)
-                    .fixedSize(horizontal: true, vertical: false)
+                    .minimumScaleFactor(0.72)
+                    .allowsTightening(true)
+                    .layoutPriority(1)
+
+                compactCountersLine
             }
+            .layoutPriority(1)
 
             Spacer()
 
@@ -149,29 +123,23 @@ struct HomeInfoContent: View {
         }
     }
 
-    @ViewBuilder
-    private var middleLine: some View {
-        switch middleStat {
-        case .expiring(let n):
-            Label(
-                n == 1
-                    ? String(localized: "1 item vencendo")
-                    : String(localized: "\(n) itens vencendo"),
-                systemImage: "clock.badge.exclamationmark"
-            )
-        case .pending(let n):
-            Label(
-                n == 1
-                    ? String(localized: "1 dia não concluído")
-                    : String(localized: "\(n) dias não concluídos"),
-                systemImage: "exclamationmark.circle"
-            )
-        case .lists(let pantry, let grocery):
-            HStack(spacing: 8) {
-                Label("\(pantry) na despensa", systemImage: "refrigerator")
-                Label("\(grocery) no mercado", systemImage: "cart")
-            }
+    private var compactCountersLine: some View {
+        HStack(spacing: 10) {
+            compactCounter(String(localized: "\(pantryItems.count) desp."))
+            compactCounter(String(localized: "\(groceryItems.count) merc."))
+            compactCounter(String(localized: "\(recipes.count) rec."))
         }
+        .font(.caption.weight(.semibold))
+        .foregroundColor(.white.opacity(0.84))
+        .lineLimit(1)
+        .minimumScaleFactor(0.72)
+        .allowsTightening(true)
+    }
+
+    private func compactCounter(_ text: String) -> some View {
+        Text(text)
+            .font(.system(.caption, design: .rounded, weight: .bold))
+            .monospacedDigit()
     }
 
     @ViewBuilder
@@ -185,11 +153,13 @@ struct HomeInfoContent: View {
                     .stroke(Color.white, style: StrokeStyle(lineWidth: 4, lineCap: .round))
                     .rotationEffect(.degrees(-90))
                 VStack(spacing: 0) {
-                    Text("\(caloriesRemaining)")
-                        .font(.system(size: 16, weight: .heavy, design: .rounded))
+                    Text(calorieValueText)
+                        .font(.system(size: calorieValueFontSize, weight: .heavy, design: .rounded))
                         .foregroundStyle(.white)
                         .lineLimit(1)
-                        .minimumScaleFactor(0.7)
+                        .minimumScaleFactor(0.55)
+                        .allowsTightening(true)
+                        .frame(maxWidth: calorieValueFrameWidth)
                     Text("kcal")
                         .font(.system(size: 9, weight: .semibold, design: .rounded))
                         .foregroundStyle(.white.opacity(0.85))
