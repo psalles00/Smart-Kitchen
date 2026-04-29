@@ -1110,9 +1110,6 @@
         }
       }
     },
-    "Abrir no navegador" : {
-
-    },
     "Abrir receita na web" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2380,15 +2377,6 @@
           }
         }
       }
-    },
-    "Boa noite" : {
-
-    },
-    "Boa tarde" : {
-
-    },
-    "Bom dia" : {
-
     },
     "brasileiro" : {
       "extractionState" : "manual",
@@ -4088,6 +4076,47 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Give up the day"
+          }
+        }
+      }
+    },
+    "desp." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorr."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "pan."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "desp."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "plac."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "disp."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "食品庫"
           }
         }
       }
@@ -6848,6 +6877,47 @@
         }
       }
     },
+    "merc." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eink."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "groc."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "merc."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "courses"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "spesa"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "買い物"
+          }
+        }
+      }
+    },
     "Mercado" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9216,6 +9286,47 @@
         }
       }
     },
+    "rec." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rez."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "rcp."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "rec."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "rec."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ric."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "レシピ"
+          }
+        }
+      }
+    },
     "receita" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9245,47 +9356,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "recipes"
-          }
-        }
-      }
-    },
-    "Tudo certo na sua cozinha!" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "In deiner Küche ist alles in Ordnung!"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Everything looks great in your kitchen!"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "¡Todo está bien en tu cocina!"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tout va bien dans votre cuisine !"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Va tutto bene nella tua cucina!"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "キッチンはすべて順調です！"
           }
         }
       }
@@ -11431,6 +11501,47 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Everything"
+          }
+        }
+      }
+    },
+    "Tudo certo na sua cozinha!" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In deiner Küche ist alles in Ordnung!"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Everything looks great in your kitchen!"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¡Todo está bien en tu cocina!"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tout va bien dans votre cuisine !"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Va tutto bene nella tua cucina!"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "キッチンはすべて順調です！"
           }
         }
       }

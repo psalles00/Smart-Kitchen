@@ -11,6 +11,7 @@ struct HomeInfoContent: View {
 
     private var calendar: Calendar { .current }
     private var profile: NutritionProfile? { profiles.first }
+    private let secondaryLineOpacity: Double = 0.85
 
     private var expiringSoonCount: Int {
         guard let limit = calendar.date(byAdding: .day, value: 3, to: .now) else { return 0 }
@@ -104,16 +105,18 @@ struct HomeInfoContent: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 1) {
                 Text(statusLine)
                     .font(.headline)
                     .foregroundColor(.white)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.72)
+                    .minimumScaleFactor(0.85)
                     .allowsTightening(true)
                     .layoutPriority(1)
+                    .padding(.top, -7)
 
                 compactCountersLine
+                    .padding(.top, 3)
             }
             .layoutPriority(1)
 
@@ -121,25 +124,30 @@ struct HomeInfoContent: View {
 
             calorieRing
         }
+        .padding(.bottom, -3)
     }
 
     private var compactCountersLine: some View {
         HStack(spacing: 10) {
-            compactCounter(String(localized: "\(pantryItems.count) desp."))
-            compactCounter(String(localized: "\(groceryItems.count) merc."))
-            compactCounter(String(localized: "\(recipes.count) rec."))
+            compactCounter(icon: "refrigerator", count: pantryItems.count, label: String(localized: "desp."))
+            compactCounter(icon: "cart", count: groceryItems.count, label: String(localized: "merc."))
+            compactCounter(icon: "book.closed", count: recipes.count, label: String(localized: "rec."))
         }
-        .font(.caption.weight(.semibold))
-        .foregroundColor(.white.opacity(0.84))
+        .font(.subheadline)
+        .foregroundColor(.white.opacity(secondaryLineOpacity))
         .lineLimit(1)
-        .minimumScaleFactor(0.72)
+        .minimumScaleFactor(0.85)
         .allowsTightening(true)
     }
 
-    private func compactCounter(_ text: String) -> some View {
-        Text(text)
-            .font(.system(.caption, design: .rounded, weight: .bold))
-            .monospacedDigit()
+    private func compactCounter(icon: String, count: Int, label: String) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: icon)
+                .font(.system(size: 12, weight: .semibold))
+            Text("\(count.formatted()) \(label)")
+                .font(.subheadline)
+                .monospacedDigit()
+        }
     }
 
     @ViewBuilder
@@ -165,7 +173,7 @@ struct HomeInfoContent: View {
                         .foregroundStyle(.white.opacity(0.85))
                 }
             }
-            .frame(width: 56, height: 56)
+            .frame(width: 54, height: 54)
             .accessibilityLabel(Text(String(localized: "\(caloriesRemaining) kcal restantes hoje")))
         } else {
             VStack(alignment: .trailing, spacing: 2) {
