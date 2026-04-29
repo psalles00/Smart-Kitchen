@@ -228,11 +228,14 @@ final class SharedImportInbox {
             return false
         }
 
+        if pendingItem?.id == token {
+            RecipeImportLogger.info("shared inbox ignored duplicate token=\(token)")
+            return true
+        }
+
         do {
-            clear()
             let loaded = try SharedImportStorage.loadItem(token: token)
-            pendingItem = loaded.item
-            pendingFolderURL = loaded.folderURL
+            replacePendingItem(with: loaded.item, folderURL: loaded.folderURL)
             RecipeImportLogger.info("shared inbox queued kind=\(loaded.item.kind.rawValue) token=\(token)")
             return true
         } catch {
@@ -241,12 +244,26 @@ final class SharedImportInbox {
         }
     }
 
-    func clear() {
+    func clear(token: String? = nil) {
+        guard token == nil || pendingItem?.id == token else {
+            return
+        }
+
         pendingItem = nil
         if let pendingFolderURL {
             try? FileManager.default.removeItem(at: pendingFolderURL)
         }
         pendingFolderURL = nil
+    }
+
+    private func replacePendingItem(with item: SharedImportItem, folderURL: URL) {
+        let previousFolderURL = pendingFolderURL
+        pendingItem = item
+        pendingFolderURL = folderURL
+
+        if let previousFolderURL, previousFolderURL != folderURL {
+            try? FileManager.default.removeItem(at: previousFolderURL)
+        }
     }
 }
 
