@@ -8,6 +8,8 @@ struct CalorieRingView: View {
 
     var remaining: Int { max(goal - consumed, 0) }
 
+    @State private var displayedRemaining = 0
+
     private var titleColor: Color {
         #if canImport(UIKit)
         return Color(uiColor: UIColor { trait in
@@ -26,7 +28,7 @@ struct CalorieRingView: View {
 
     var body: some View {
         VStack(spacing: -10) {
-            Text("\(remaining)")
+            Text("\(displayedRemaining)")
                 .font(titleFont)
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
@@ -40,6 +42,20 @@ struct CalorieRingView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
         .contentShape(Rectangle())
+        .onAppear {
+            displayedRemaining = 0
+
+            DispatchQueue.main.async {
+                withAnimation(.snappy(duration: 0.25)) {
+                    displayedRemaining = remaining
+                }
+            }
+        }
+        .onChange(of: remaining) { _, newValue in
+            withAnimation(.snappy(duration: 0.25)) {
+                displayedRemaining = newValue
+            }
+        }
     }
 }
 
