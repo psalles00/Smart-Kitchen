@@ -440,8 +440,8 @@ class ShareViewController: UIViewController {
 
     @MainActor
     private func presentErrorAndFinish(message: String) async {
-        let alert = UIAlertController(title: "Não foi possível compartilhar", message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default) { [weak self] _ in
+        let alert = UIAlertController(title: String(localized: "Não foi possível compartilhar"), message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: String(localized: "OK"), style: .default) { [weak self] _ in
             self?.completeRequestIfNeeded()
         })
         present(alert, animated: true)

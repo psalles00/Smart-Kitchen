@@ -278,8 +278,8 @@ struct SharedImportActionView: View {
                         if let onRegisterFood {
                             actionCard(
                                 icon: "fork.knife.circle.fill",
-                                title: "Salvar alimento",
-                                subtitle: "Guarde esta imagem como referência para o módulo de Nutrientes.",
+                                title: String(localized: "Salvar alimento"),
+                                subtitle: String(localized: "Guarde esta imagem como referência para o módulo de Nutrientes."),
                                 accent: PageTheme.nutrients.accentColor,
                                 action: onRegisterFood
                             )
@@ -288,8 +288,8 @@ struct SharedImportActionView: View {
                         if let onAskAssistant {
                             actionCard(
                                 icon: "sparkles",
-                                title: "Abrir no assistente",
-                                subtitle: "Usar o conteúdo compartilhado como contexto na conversa com a IA.",
+                                title: String(localized: "Abrir no assistente"),
+                                subtitle: String(localized: "Usar o conteúdo compartilhado como contexto na conversa com a IA."),
                                 accent: PageTheme.home.accentColor,
                                 action: onAskAssistant
                             )
@@ -300,7 +300,7 @@ struct SharedImportActionView: View {
                 .padding(.top, 10)
                 .padding(.bottom, 24)
             }
-            .modalNavigationTitle("O que você quer fazer?")
+            .modalNavigationTitle(String(localized: "O que você quer fazer?"))
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -364,37 +364,37 @@ struct SharedImportActionView: View {
             }
 
         case .video:
-            infoCard(icon: "video.fill", title: "Vídeo recebido", subtitle: item.filename ?? item.mediaFileURL?.lastPathComponent ?? "Vídeo compartilhado")
+            infoCard(icon: "video.fill", title: String(localized: "Vídeo recebido"), subtitle: item.filename ?? item.mediaFileURL?.lastPathComponent ?? String(localized: "Vídeo compartilhado"))
 
         case .url:
-            infoCard(icon: "link", title: "Link recebido", subtitle: item.url?.absoluteString ?? "")
+            infoCard(icon: "link", title: String(localized: "Link recebido"), subtitle: item.url?.absoluteString ?? "")
 
         case .text:
-            infoCard(icon: "text.alignleft", title: "Texto recebido", subtitle: item.text ?? "")
+            infoCard(icon: "text.alignleft", title: String(localized: "Texto recebido"), subtitle: item.text ?? "")
         }
     }
 
     private var recipeActionTitle: String {
         switch item.kind {
         case .image:
-            return "Identificar receita"
+            return String(localized: "Identificar receita")
         case .video:
-            return "Revisar receita do vídeo"
+            return String(localized: "Revisar receita do vídeo")
         case .url, .text:
-            return "Revisar como receita"
+            return String(localized: "Revisar como receita")
         }
     }
 
     private var recipeActionSubtitle: String {
         switch item.kind {
         case .image:
-            return "Extrair ingredientes e etapas da imagem e abrir a revisão antes de salvar."
+            return String(localized: "Extrair ingredientes e etapas da imagem e abrir a revisão antes de salvar.")
         case .video:
-            return "Transcrever o vídeo, estruturar a receita e abrir a revisão antes de salvar."
+            return String(localized: "Transcrever o vídeo, estruturar a receita e abrir a revisão antes de salvar.")
         case .url:
-            return "Importar o link compartilhado e abrir a revisão da receita."
+            return String(localized: "Importar o link compartilhado e abrir a revisão da receita.")
         case .text:
-            return "Organizar o texto compartilhado em ingredientes e modo de preparo."
+            return String(localized: "Organizar o texto compartilhado em ingredientes e modo de preparo.")
         }
     }
 

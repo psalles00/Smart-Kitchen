@@ -1601,7 +1601,7 @@ private struct RecipeNotebookManagerSheet: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .modalNavigationTitle("Gerenciar cadernos")
+        .modalNavigationTitle(String(localized: "Gerenciar cadernos"))
         .toolbar {
             #if os(iOS)
             ToolbarItem(placement: .topBarLeading) {
@@ -1719,7 +1719,7 @@ private struct RecipeNotebookManagerSheet: View {
                         }
                     }
                 }
-                .modalNavigationTitle("Mover receitas")
+                .modalNavigationTitle(String(localized: "Mover receitas"))
                 .toolbar {
                     #if os(iOS)
                     ToolbarItem(placement: .topBarTrailing) {

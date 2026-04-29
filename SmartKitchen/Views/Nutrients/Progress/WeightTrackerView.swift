@@ -446,7 +446,7 @@ private struct EditWeightSheet: View {
                     }
                 }
             }
-            .modalNavigationTitle("Editar registro")
+            .modalNavigationTitle(String(localized: "Editar registro"))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancelar") { dismiss() }

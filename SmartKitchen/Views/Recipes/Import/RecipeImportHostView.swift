@@ -431,7 +431,7 @@ struct RecipeLinkInputSheet: View {
                     Label("Colar do clipboard", systemImage: "doc.on.clipboard")
                 }
             }
-            .modalNavigationTitle("Colar link")
+            .modalNavigationTitle(String(localized: "Colar link"))
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -518,7 +518,7 @@ struct RecipeTextInputSheet: View {
                     Label("Colar do clipboard", systemImage: "doc.on.clipboard")
                 }
             }
-            .modalNavigationTitle("Colar texto")
+            .modalNavigationTitle(String(localized: "Colar texto"))
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif

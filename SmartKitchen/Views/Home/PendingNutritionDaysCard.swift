@@ -116,11 +116,11 @@ struct PendingNutritionDaysCard: View {
     // MARK: - Helpers
 
     private func titleLabel(for date: Date) -> String {
-        if calendar.isDateInToday(date) { return "Hoje" }
-        if calendar.isDateInYesterday(date) { return "Ontem" }
+        if calendar.isDateInToday(date) { return String(localized: "Hoje") }
+        if calendar.isDateInYesterday(date) { return String(localized: "Ontem") }
         let formatter = DateFormatter()
         formatter.locale = AppLocalization.current().formattingLocale
-        formatter.dateFormat = "EEEE, d 'de' MMMM"
+        formatter.setLocalizedDateFormatFromTemplate("EEEE d MMMM")
         return formatter.string(from: date).localizedCapitalized
     }
 
@@ -172,13 +172,13 @@ private struct SwipeablePendingRow: View {
         ZStack(alignment: .trailing) {
             HStack(spacing: 0) {
                 actionButton(
-                    title: "Concluir",
+                    title: String(localized: "Concluir"),
                     icon: "checkmark.circle.fill",
                     background: PageTheme.nutrients.accentColor,
                     action: { openConfirmation(.complete) }
                 )
                 actionButton(
-                    title: "Desistir",
+                    title: String(localized: "Desistir"),
                     icon: "xmark.circle.fill",
                     background: .red,
                     action: { openConfirmation(.cancel) }
@@ -199,7 +199,7 @@ private struct SwipeablePendingRow: View {
                     presenting: pendingAction
                 ) { action in
                     Button(
-                        action == .complete ? "Concluir dia" : "Desistir do dia",
+                        action == .complete ? String(localized: "Concluir dia") : String(localized: "Desistir do dia"),
                         role: action == .cancel ? .destructive : nil
                     ) {
                         switch action {
@@ -297,16 +297,16 @@ private struct SwipeablePendingRow: View {
 
     private var confirmationTitle: String {
         guard let pendingAction else { return "" }
-        return pendingAction == .complete ? "Concluir este dia?" : "Desistir deste dia?"
+        return pendingAction == .complete ? String(localized: "Concluir este dia?") : String(localized: "Desistir deste dia?")
     }
 
     private func confirmationMessage(for action: PendingAction) -> String {
         let label = titleProvider().lowercased()
         switch action {
         case .complete:
-            return "Os registros de \(label) entrarão no cálculo da sua média e o dia sairá desta lista."
+            return String(localized: "Os registros de \(label) entrarão no cálculo da sua média e o dia sairá desta lista.")
         case .cancel:
-            return "Os registros de \(label) serão descartados do cálculo da média e o dia sairá desta lista. Você poderá reabrir mais tarde, se quiser."
+            return String(localized: "Os registros de \(label) serão descartados do cálculo da média e o dia sairá desta lista. Você poderá reabrir mais tarde, se quiser.")
         }
     }
 

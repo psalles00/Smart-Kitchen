@@ -9,7 +9,7 @@ struct NutrientsPlaceholderView: View {
         ExpandedPageLayout(
             pageTheme: .nutrients,
             header: { isInverted in
-                PageHeader(title: "Nutrição", isInverted: isInverted) {
+                PageHeader(title: String(localized: "Nutrição"), isInverted: isInverted) {
                     SettingsButton()
                 }
             },
@@ -39,9 +39,9 @@ struct NutrientsPlaceholderView: View {
                         .background(.tint, in: .capsule)
 
                     VStack(alignment: .leading, spacing: 16) {
-                        featureRow(icon: "flame", title: "Calorias diárias", description: "Acompanhe sua ingestão calórica")
-                        featureRow(icon: "chart.pie", title: "Macronutrientes", description: "Carboidratos, proteínas e gorduras")
-                        featureRow(icon: "bell.badge", title: "Metas e alertas", description: "Defina metas nutricionais personalizadas")
+                        featureRow(icon: "flame", title: String(localized: "Calorias diárias"), description: String(localized: "Acompanhe sua ingestão calórica"))
+                        featureRow(icon: "chart.pie", title: String(localized: "Macronutrientes"), description: String(localized: "Carboidratos, proteínas e gorduras"))
+                        featureRow(icon: "bell.badge", title: String(localized: "Metas e alertas"), description: String(localized: "Defina metas nutricionais personalizadas"))
                     }
                     .padding(.horizontal, 32)
                     .padding(.top, 16)

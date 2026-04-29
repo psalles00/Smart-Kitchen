@@ -106,11 +106,11 @@ struct WebURLPipeline: RecipeImportPipeline {
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
             guard let http = response as? HTTPURLResponse else {
-                throw RecipeImportError.fetchFailed("Resposta inválida do servidor.")
+                throw RecipeImportError.fetchFailed(String(localized: "Resposta inválida do servidor."))
             }
             RecipeImportLogger.debug("fetchHTML status=\(http.statusCode) bytes=\(data.count)")
             guard (200...299).contains(http.statusCode) else {
-                throw RecipeImportError.fetchFailed("Status HTTP \(http.statusCode).")
+                throw RecipeImportError.fetchFailed(String(localized: "Status HTTP \(http.statusCode)."))
             }
             let encoding = encoding(from: http) ?? .utf8
             if let html = String(data: data, encoding: encoding) { return html }

@@ -294,7 +294,7 @@ struct FullscreenAssistantView: View {
 
                     LazyVGrid(columns: assistantActionColumns, alignment: .leading, spacing: 6) {
                         assistantActionButton(
-                            title: "Perguntar à IA",
+                            title: String(localized: "Perguntar à IA"),
                             icon: "sparkles",
                             tint: assistantIAAccent,
                             imageName: "modo ia",
@@ -312,7 +312,7 @@ struct FullscreenAssistantView: View {
                         }
 
                         assistantActionButton(
-                            title: "Ideias de receitas",
+                            title: String(localized: "Ideias de receitas"),
                             icon: "fork.knife.circle.fill",
                             tint: assistantIAAccent,
                             imageName: "ideis",
@@ -330,7 +330,7 @@ struct FullscreenAssistantView: View {
                         }
 
                         assistantActionButton(
-                            title: "Adicionar à Despensa",
+                            title: String(localized: "Adicionar à Despensa"),
                             icon: "shippingbox.fill",
                             tint: assistantListsAccent,
                             imageName: "despensa",
@@ -341,7 +341,7 @@ struct FullscreenAssistantView: View {
                         }
 
                         assistantActionButton(
-                            title: "Adicionar ao Mercado",
+                            title: String(localized: "Adicionar ao Mercado"),
                             icon: "cart.badge.plus",
                             tint: assistantListsAccent,
                             imageName: "mercado",
@@ -353,7 +353,7 @@ struct FullscreenAssistantView: View {
 
                         if settings?.showUtensils == true {
                             assistantActionButton(
-                                title: "Adicionar Utensílio",
+                                title: String(localized: "Adicionar Utensílio"),
                                 icon: "fork.knife",
                                 tint: assistantListsAccent,
                                 imageName: "listas-utensilio",
@@ -365,7 +365,7 @@ struct FullscreenAssistantView: View {
                         }
 
                         assistantActionButton(
-                            title: "Criar Receita",
+                            title: String(localized: "Criar Receita"),
                             icon: "book.badge.plus",
                             tint: assistantRecipesAccent,
                             imageName: "receitas",
@@ -376,7 +376,7 @@ struct FullscreenAssistantView: View {
                         }
 
                         assistantActionButton(
-                            title: "Importar da Galeria",
+                            title: String(localized: "Importar da Galeria"),
                             icon: "photo.on.rectangle.angled",
                             tint: assistantRecipesAccent,
                             imageName: "receitas-importar",
@@ -387,7 +387,7 @@ struct FullscreenAssistantView: View {
                         }
 
                         assistantActionButton(
-                            title: "Ler Receita",
+                            title: String(localized: "Ler Receita"),
                             icon: "camera.viewfinder",
                             tint: assistantRecipesAccent,
                             imageName: "receitas-ler",
@@ -399,7 +399,7 @@ struct FullscreenAssistantView: View {
 
                         #if os(macOS)
                         assistantActionButton(
-                            title: "Importar dos Arquivos",
+                            title: String(localized: "Importar dos Arquivos"),
                             icon: "folder.fill",
                             tint: assistantRecipesAccent,
                             imageName: "receitas-importar",
@@ -411,7 +411,7 @@ struct FullscreenAssistantView: View {
                         #endif
 
                         assistantActionButton(
-                            title: "Registrar Alimento",
+                            title: String(localized: "Registrar Alimento"),
                             icon: "fork.knife.circle.fill",
                             tint: assistantNutrientsAccent,
                             imageName: "nutrientes",
@@ -422,7 +422,7 @@ struct FullscreenAssistantView: View {
                         }
 
                         assistantActionButton(
-                            title: "Registrar com Áudio",
+                            title: String(localized: "Registrar com Áudio"),
                             icon: "mic.fill",
                             tint: assistantNutrientsAccent,
                             imageName: "nutrientes-audio",
@@ -433,7 +433,7 @@ struct FullscreenAssistantView: View {
                         }
 
                         assistantActionButton(
-                            title: "Registrar com Galeria",
+                            title: String(localized: "Registrar com Galeria"),
                             icon: "photo.on.rectangle.angled",
                             tint: assistantNutrientsAccent,
                             imageName: "nutrientes-galeria",
@@ -444,7 +444,7 @@ struct FullscreenAssistantView: View {
                         }
 
                         assistantActionButton(
-                            title: "Registrar com Câmera",
+                            title: String(localized: "Registrar com Câmera"),
                             icon: "camera.fill",
                             tint: assistantNutrientsAccent,
                             imageName: "nutrientes-camera",
@@ -455,7 +455,7 @@ struct FullscreenAssistantView: View {
                         }
 
                         assistantActionButton(
-                            title: "Rastreio de Peso",
+                            title: String(localized: "Rastreio de Peso"),
                             icon: "scalemass.fill",
                             tint: assistantNutrientsAccent,
                             imageName: "peso",

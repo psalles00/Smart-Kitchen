@@ -42,10 +42,10 @@ final class AssistantChatManager: ObservableObject {
         if pendingToolExecution != nil {
             context.insert(ChatMessage(
                 role: .assistant,
-                content: "Tenho uma alteração pendente. Confirme ou cancele antes de continuar.",
+                content: String(localized: "Tenho uma alteração pendente. Confirme ou cancele antes de continuar."),
                 quickActions: [
-                    QuickAction(label: "Confirmar", prompt: confirmPrompt),
-                    QuickAction(label: "Cancelar", prompt: cancelPrompt)
+                    QuickAction(label: String(localized: "Confirmar"), prompt: confirmPrompt),
+                    QuickAction(label: String(localized: "Cancelar"), prompt: cancelPrompt)
                 ]
             ))
             return
@@ -193,8 +193,8 @@ final class AssistantChatManager: ObservableObject {
                     role: .assistant,
                     content: confirmationMessage(for: response.toolCalls),
                     quickActions: [
-                        QuickAction(label: "Confirmar", prompt: confirmPrompt),
-                        QuickAction(label: "Cancelar", prompt: cancelPrompt)
+                        QuickAction(label: String(localized: "Confirmar"), prompt: confirmPrompt),
+                        QuickAction(label: String(localized: "Cancelar"), prompt: cancelPrompt)
                     ]
                 ))
                 return
@@ -216,7 +216,7 @@ final class AssistantChatManager: ObservableObject {
             return
         }
 
-        let content = response.content ?? "Desculpe, não consegui gerar uma resposta."
+        let content = response.content ?? String(localized: "Desculpe, não consegui gerar uma resposta.")
         let recipeIds = extractRecipeIds(from: content, allRecipes: allRecipes)
         context.insert(ChatMessage(
             role: .assistant,
@@ -230,7 +230,7 @@ final class AssistantChatManager: ObservableObject {
 
         var apiMessages = pending.messages
         self.pendingToolExecution = nil
-        context.insert(ChatMessage(role: .user, content: "Confirmar alteração"))
+        context.insert(ChatMessage(role: .user, content: String(localized: "Confirmar alteração")))
 
         do {
             for toolCall in pending.toolCalls {
@@ -251,17 +251,17 @@ final class AssistantChatManager: ObservableObject {
             errorMessage = error.localizedDescription
             context.insert(ChatMessage(
                 role: .assistant,
-                content: "Desculpe, ocorreu um erro ao aplicar a alteração: \(error.localizedDescription)"
+                content: String(localized: "Desculpe, ocorreu um erro ao aplicar a alteração: \(error.localizedDescription)")
             ))
         }
     }
 
     private func cancelPendingToolExecution(context: ModelContext) {
         pendingToolExecution = nil
-        context.insert(ChatMessage(role: .user, content: "Cancelar alteração"))
+        context.insert(ChatMessage(role: .user, content: String(localized: "Cancelar alteração")))
         context.insert(ChatMessage(
             role: .assistant,
-            content: "Alteração cancelada. Nenhuma informação foi modificada."
+            content: String(localized: "Alteração cancelada. Nenhuma informação foi modificada.")
         ))
     }
 
@@ -500,24 +500,24 @@ final class AssistantChatManager: ObservableObject {
     private func confirmationMessage(for toolCalls: [ToolCallRequest]) -> String {
         let summary = toolCalls.map { toolCall in
             switch toolCall.name {
-            case "create_recipe": "criar receita"
-            case "update_recipe": "editar receita"
-            case "delete_recipe": "excluir receita"
-            case "add_pantry_item": "adicionar item na despensa"
-            case "remove_pantry_item": "remover item da despensa"
-            case "add_grocery_item": "adicionar item no mercado"
-            case "create_category": "criar categoria"
-            case "rename_category": "renomear categoria"
-            case "delete_category": "excluir categoria"
-            case "move_category": "reordenar categoria"
-            case "log_food_manual": "registrar refeição"
-            case "delete_food_entry": "remover refeição registrada"
-            default: "alterar informações"
+            case "create_recipe": String(localized: "criar receita")
+            case "update_recipe": String(localized: "editar receita")
+            case "delete_recipe": String(localized: "excluir receita")
+            case "add_pantry_item": String(localized: "adicionar item na despensa")
+            case "remove_pantry_item": String(localized: "remover item da despensa")
+            case "add_grocery_item": String(localized: "adicionar item no mercado")
+            case "create_category": String(localized: "criar categoria")
+            case "rename_category": String(localized: "renomear categoria")
+            case "delete_category": String(localized: "excluir categoria")
+            case "move_category": String(localized: "reordenar categoria")
+            case "log_food_manual": String(localized: "registrar refeição")
+            case "delete_food_entry": String(localized: "remover refeição registrada")
+            default: String(localized: "alterar informações")
             }
         }
         .joined(separator: ", ")
 
-        return "Confirma esta alteração no app?\n\nAção pendente: \(summary)."
+        return String(localized: "Confirma esta alteração no app?\n\nAção pendente: \(summary).")
     }
 
     // MARK: - Nutrition prompt section

@@ -109,7 +109,7 @@ struct FoodResultView: View {
                 }
             }
             .scrollDismissesKeyboard(.interactively)
-            .modalNavigationTitle("Revisar refeição")
+            .modalNavigationTitle(String(localized: "Revisar refeição"))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancelar") { dismiss() }

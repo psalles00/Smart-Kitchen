@@ -16,9 +16,9 @@ enum AIChatPreset: Equatable {
     var searchPlaceholder: String {
         switch self {
         case .nutritionCoach:
-            return "Converse com a IA…"
+            return String(localized: "Converse com a IA…")
         case .recipeIdeas:
-            return "Peça ideias de receitas…"
+            return String(localized: "Peça ideias de receitas…")
         }
     }
 }

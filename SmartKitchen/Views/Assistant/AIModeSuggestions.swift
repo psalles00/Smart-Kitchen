@@ -15,6 +15,19 @@ struct AIModeSuggestion: Identifiable, Hashable {
 }
 
 enum AIModeSuggestions {
+    private static func suggestion(
+        id: String,
+        emoji: String,
+        label: String.LocalizationValue,
+        prompt: String.LocalizationValue
+    ) -> AIModeSuggestion {
+        AIModeSuggestion(
+            id: id,
+            emoji: emoji,
+            label: String(localized: label),
+            prompt: String(localized: prompt)
+        )
+    }
 
     // MARK: Fixed AI-driven actions (sempre visíveis no Modo IA / Assistente)
 
@@ -22,7 +35,7 @@ enum AIModeSuggestions {
     /// recebe contexto completo (despensa, mercado, receitas, nutrição), os
     /// prompts apenas pedem a análise — sem precisar de ferramentas extras.
     static let fixedActions: [AIModeSuggestion] = [
-        AIModeSuggestion(
+        suggestion(
             id: "ai_analyze_diet",
             emoji: "🔍",
             label: "Analise minha alimentação",
@@ -35,7 +48,7 @@ enum AIModeSuggestions {
             Diga objetivamente o que está alinhado com meus objetivos e o que está atrapalhando, e finalize com 3 a 5 dicas práticas e personalizadas para melhorar.
             """
         ),
-        AIModeSuggestion(
+        suggestion(
             id: "ai_progress",
             emoji: "📊",
             label: "Como está meu progresso?",
@@ -45,7 +58,7 @@ enum AIModeSuggestions {
             Aponte pontos fortes, pontos de atenção e sugira 3 ajustes concretos para eu evoluir mais rápido com segurança.
             """
         ),
-        AIModeSuggestion(
+        suggestion(
             id: "ai_substitutes",
             emoji: "🔁",
             label: "Sugira o que substituir",
@@ -63,34 +76,34 @@ enum AIModeSuggestions {
         guard profile?.hasCompletedOnboarding == true,
               let goal = profile?.weightGoal else {
             return [
-                AIModeSuggestion(id: "coach_default_1", emoji: "📈", label: "Qual é meu peso esperado em 30 dias?", prompt: "Qual é meu peso esperado em 30 dias?"),
-                AIModeSuggestion(id: "coach_default_2", emoji: "🎯", label: "O que devo comer no jantar?", prompt: "O que devo comer no jantar?"),
-                AIModeSuggestion(id: "coach_default_3", emoji: "🍽️", label: "Como bato minha meta?", prompt: "Como bato minha meta?"),
-                AIModeSuggestion(id: "coach_default_4", emoji: "🥗", label: "Como está minha tendência?", prompt: "Como está minha tendência?")
+                suggestion(id: "coach_default_1", emoji: "📈", label: "Qual é meu peso esperado em 30 dias?", prompt: "Qual é meu peso esperado em 30 dias?"),
+                suggestion(id: "coach_default_2", emoji: "🎯", label: "O que devo comer no jantar?", prompt: "O que devo comer no jantar?"),
+                suggestion(id: "coach_default_3", emoji: "🍽️", label: "Como bato minha meta?", prompt: "Como bato minha meta?"),
+                suggestion(id: "coach_default_4", emoji: "🥗", label: "Como está minha tendência?", prompt: "Como está minha tendência?")
             ]
         }
 
         switch goal {
         case .lose:
             return [
-                AIModeSuggestion(id: "coach_lose_1", emoji: "📈", label: "Qual é meu peso esperado em 30 dias?", prompt: "Qual é meu peso esperado em 30 dias?"),
-                AIModeSuggestion(id: "coach_lose_2", emoji: "🎯", label: "Como posso emagrecer mais rápido com segurança?", prompt: "Como posso emagrecer mais rápido com segurança?"),
-                AIModeSuggestion(id: "coach_lose_3", emoji: "🍽️", label: "Estou comendo demais?", prompt: "Estou comendo demais?"),
-                AIModeSuggestion(id: "coach_lose_4", emoji: "🥗", label: "O que devo comer no jantar?", prompt: "O que devo comer no jantar?")
+                suggestion(id: "coach_lose_1", emoji: "📈", label: "Qual é meu peso esperado em 30 dias?", prompt: "Qual é meu peso esperado em 30 dias?"),
+                suggestion(id: "coach_lose_2", emoji: "🎯", label: "Como posso emagrecer mais rápido com segurança?", prompt: "Como posso emagrecer mais rápido com segurança?"),
+                suggestion(id: "coach_lose_3", emoji: "🍽️", label: "Estou comendo demais?", prompt: "Estou comendo demais?"),
+                suggestion(id: "coach_lose_4", emoji: "🥗", label: "O que devo comer no jantar?", prompt: "O que devo comer no jantar?")
             ]
         case .gain:
             return [
-                AIModeSuggestion(id: "coach_gain_1", emoji: "📈", label: "Qual é meu peso esperado em 30 dias?", prompt: "Qual é meu peso esperado em 30 dias?"),
-                AIModeSuggestion(id: "coach_gain_2", emoji: "🎯", label: "Como posso ganhar peso de forma saudável?", prompt: "Como posso ganhar peso de forma saudável?"),
-                AIModeSuggestion(id: "coach_gain_3", emoji: "🍽️", label: "Estou comendo o suficiente?", prompt: "Estou comendo o suficiente?"),
-                AIModeSuggestion(id: "coach_gain_4", emoji: "🥗", label: "Quais alimentos ricos em proteína posso adicionar?", prompt: "Quais alimentos ricos em proteína posso adicionar?")
+                suggestion(id: "coach_gain_1", emoji: "📈", label: "Qual é meu peso esperado em 30 dias?", prompt: "Qual é meu peso esperado em 30 dias?"),
+                suggestion(id: "coach_gain_2", emoji: "🎯", label: "Como posso ganhar peso de forma saudável?", prompt: "Como posso ganhar peso de forma saudável?"),
+                suggestion(id: "coach_gain_3", emoji: "🍽️", label: "Estou comendo o suficiente?", prompt: "Estou comendo o suficiente?"),
+                suggestion(id: "coach_gain_4", emoji: "🥗", label: "Quais alimentos ricos em proteína posso adicionar?", prompt: "Quais alimentos ricos em proteína posso adicionar?")
             ]
         case .maintain:
             return [
-                AIModeSuggestion(id: "coach_maintain_1", emoji: "📈", label: "Estou mantendo meu peso?", prompt: "Estou mantendo meu peso?"),
-                AIModeSuggestion(id: "coach_maintain_2", emoji: "🎯", label: "Qual é meu consumo médio?", prompt: "Qual é meu consumo médio?"),
-                AIModeSuggestion(id: "coach_maintain_3", emoji: "🍽️", label: "Sugestões de macros?", prompt: "Sugestões de macros?"),
-                AIModeSuggestion(id: "coach_maintain_4", emoji: "🥗", label: "Como está minha tendência?", prompt: "Como está minha tendência?")
+                suggestion(id: "coach_maintain_1", emoji: "📈", label: "Estou mantendo meu peso?", prompt: "Estou mantendo meu peso?"),
+                suggestion(id: "coach_maintain_2", emoji: "🎯", label: "Qual é meu consumo médio?", prompt: "Qual é meu consumo médio?"),
+                suggestion(id: "coach_maintain_3", emoji: "🍽️", label: "Sugestões de macros?", prompt: "Sugestões de macros?"),
+                suggestion(id: "coach_maintain_4", emoji: "🥗", label: "Como está minha tendência?", prompt: "Como está minha tendência?")
             ]
         }
     }
@@ -105,10 +118,10 @@ enum AIModeSuggestions {
     // MARK: Recipe ideas starter prompts
 
     static let recipeIdeasStarters: [AIModeSuggestion] = [
-        AIModeSuggestion(id: "ideas_1", emoji: "⚡", label: "Sugira novas receitas de jantar rápido.", prompt: "Sugira novas receitas de jantar rápido."),
-        AIModeSuggestion(id: "ideas_2", emoji: "🍗", label: "Sugira novas receitas com frango e legumes.", prompt: "Sugira novas receitas com frango e legumes."),
-        AIModeSuggestion(id: "ideas_3", emoji: "🌿", label: "Sugira novas receitas vegetarianas simples.", prompt: "Sugira novas receitas vegetarianas simples."),
-        AIModeSuggestion(id: "ideas_4", emoji: "🍰", label: "Sugira novas receitas de sobremesa.", prompt: "Sugira novas receitas de sobremesa.")
+        suggestion(id: "ideas_1", emoji: "⚡", label: "Sugira novas receitas de jantar rápido.", prompt: "Sugira novas receitas de jantar rápido."),
+        suggestion(id: "ideas_2", emoji: "🍗", label: "Sugira novas receitas com frango e legumes.", prompt: "Sugira novas receitas com frango e legumes."),
+        suggestion(id: "ideas_3", emoji: "🌿", label: "Sugira novas receitas vegetarianas simples.", prompt: "Sugira novas receitas vegetarianas simples."),
+        suggestion(id: "ideas_4", emoji: "🍰", label: "Sugira novas receitas de sobremesa.", prompt: "Sugira novas receitas de sobremesa.")
     ]
 }
 

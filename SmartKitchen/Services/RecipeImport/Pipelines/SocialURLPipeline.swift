@@ -316,7 +316,7 @@ struct SocialURLPipeline: RecipeImportPipeline {
         let data = try await fetchData(url: url)
         guard data.count <= maxBytes else {
             RecipeImportLogger.info("social fetchData exceeded maxBytes bytes=\(data.count) max=\(maxBytes) url=\(url.absoluteString)")
-            throw RecipeImportError.fetchFailed("Arquivo grande demais para anexar.")
+            throw RecipeImportError.fetchFailed(String(localized: "Arquivo grande demais para anexar."))
         }
         return data
     }

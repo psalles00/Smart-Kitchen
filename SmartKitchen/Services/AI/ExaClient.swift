@@ -16,9 +16,9 @@ final class ExaClient {
 
         var errorDescription: String? {
             switch self {
-            case .missingAPIKey: return "Chave Exa não configurada."
-            case .invalidResponse: return "Resposta inválida do Exa."
-            case .apiError(let code, let msg): return "Exa API erro \(code): \(msg)"
+            case .missingAPIKey: return String(localized: "Chave Exa não configurada.")
+            case .invalidResponse: return String(localized: "Resposta inválida do Exa.")
+            case .apiError(let code, let msg): return String(localized: "Exa API erro \(code): \(msg)")
             }
         }
     }

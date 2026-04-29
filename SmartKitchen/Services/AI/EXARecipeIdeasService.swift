@@ -70,10 +70,10 @@ final class EXARecipeIdeasService {
 
         var errorDescription: String? {
             switch self {
-            case .missingAPIKey: return "Chave Exa não configurada."
-            case .invalidResponse: return "Resposta inválida da EXA."
-            case .apiError(let code, let msg): return "EXA \(code): \(msg)"
-            case .empty: return "Nenhuma ideia encontrada agora. Tente novamente."
+            case .missingAPIKey: return String(localized: "Chave Exa não configurada.")
+            case .invalidResponse: return String(localized: "Resposta inválida da EXA.")
+            case .apiError(let code, let msg): return String(localized: "EXA \(code): \(msg)")
+            case .empty: return String(localized: "Nenhuma ideia encontrada agora. Tente novamente.")
             }
         }
     }

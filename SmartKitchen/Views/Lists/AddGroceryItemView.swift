@@ -148,7 +148,7 @@ struct AddGroceryItemView: View {
         .padding(.bottom, 20)
         .frame(minWidth: 500, minHeight: 600)
         #endif
-        .modalNavigationTitle("Novo Item")
+        .modalNavigationTitle(String(localized: "Novo Item"))
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
@@ -407,7 +407,7 @@ struct EditGroceryItemView: View {
         .padding(.bottom, 20)
         .frame(minWidth: 500, minHeight: 600)
         #endif
-        .modalNavigationTitle("Editar Item")
+        .modalNavigationTitle(String(localized: "Editar Item"))
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif

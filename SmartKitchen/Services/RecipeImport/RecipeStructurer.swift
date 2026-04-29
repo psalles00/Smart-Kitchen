@@ -104,13 +104,13 @@ struct RecipeStructurer {
                 return parse(dict: dict)
             }
             RecipeImportLogger.error("openai returned no tool call and no JSON content")
-            throw RecipeImportError.aiFailed("A resposta do modelo não contém dados estruturados.")
+            throw RecipeImportError.aiFailed(String(localized: "A resposta do modelo não contém dados estruturados."))
         }
 
         guard let data = call.argumentsJSON.data(using: .utf8),
               let dict = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             RecipeImportLogger.error("openai tool arguments invalid JSON")
-            throw RecipeImportError.aiFailed("Argumentos da função em formato inválido.")
+                        throw RecipeImportError.aiFailed(String(localized: "Argumentos da função em formato inválido."))
         }
 
         RecipeImportLogger.debug("openai tool arguments parsed keys=\(dict.keys.sorted().joined(separator: ","))")
@@ -439,7 +439,7 @@ final class RecipeImportImprover {
         onStage: @escaping @MainActor (RecipeImportImprovementStage) -> Void
     ) async throws -> RecipeDraft {
         guard !apiKey.isEmpty else {
-            throw RecipeImportError.aiFailed("Chave da OpenAI não configurada para melhorar a importação.")
+            throw RecipeImportError.aiFailed(String(localized: "Chave da OpenAI não configurada para melhorar a importação."))
         }
 
         func reportStage(_ stage: RecipeImportImprovementStage) {
@@ -507,7 +507,7 @@ final class RecipeImportImprover {
                 description: draft.descriptionText,
                 externalURL: URL(string: draft.externalURLString),
                 imageURL: draft.imageURL,
-                sourceLabel: draft.sourceLabel.isEmpty ? "Importação refinada" : draft.sourceLabel
+                sourceLabel: draft.sourceLabel.isEmpty ? String(localized: "Importação refinada") : draft.sourceLabel
             )
         )
 
@@ -637,7 +637,7 @@ final class RecipeImportImprover {
 
         let (tempURL, response) = try await URLSession.shared.download(for: request)
         guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
-            throw RecipeImportError.fetchFailed("Falha ao baixar vídeo para transcrição.")
+            throw RecipeImportError.fetchFailed(String(localized: "Falha ao baixar vídeo para transcrição."))
         }
 
         let finalURL = FileManager.default.temporaryDirectory
@@ -658,7 +658,7 @@ final class RecipeImportImprover {
         try? FileManager.default.removeItem(at: outputURL)
 
         guard let exporter = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetAppleM4A) else {
-            throw RecipeImportError.fetchFailed("Não foi possível preparar extração de áudio.")
+            throw RecipeImportError.fetchFailed(String(localized: "Não foi possível preparar extração de áudio."))
         }
 
         exporter.outputURL = outputURL
@@ -670,11 +670,11 @@ final class RecipeImportImprover {
                 case .completed:
                     continuation.resume(returning: ())
                 case .failed:
-                    continuation.resume(throwing: exporter.error ?? RecipeImportError.fetchFailed("Falha ao extrair áudio."))
+                    continuation.resume(throwing: exporter.error ?? RecipeImportError.fetchFailed(String(localized: "Falha ao extrair áudio.")))
                 case .cancelled:
                     continuation.resume(throwing: RecipeImportError.cancelled)
                 default:
-                    continuation.resume(throwing: RecipeImportError.fetchFailed("Falha ao extrair áudio."))
+                    continuation.resume(throwing: RecipeImportError.fetchFailed(String(localized: "Falha ao extrair áudio.")))
                 }
             }
         }
@@ -714,16 +714,16 @@ final class RecipeImportImprover {
 
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse else {
-            throw RecipeImportError.aiFailed("Resposta inválida na transcrição de áudio.")
+            throw RecipeImportError.aiFailed(String(localized: "Resposta inválida na transcrição de áudio."))
         }
         guard (200...299).contains(http.statusCode) else {
             let payload = String(data: data, encoding: .utf8) ?? ""
-            throw RecipeImportError.aiFailed("Falha na transcrição (\(http.statusCode)): \(payload)")
+            throw RecipeImportError.aiFailed(String(localized: "Falha na transcrição (\(http.statusCode)): \(payload)"))
         }
 
         let transcript = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         guard transcript.count >= 20 else {
-            throw RecipeImportError.insufficientContent(suggestion: "A transcrição do vídeo retornou pouco conteúdo útil.")
+            throw RecipeImportError.insufficientContent(suggestion: String(localized: "A transcrição do vídeo retornou pouco conteúdo útil."))
         }
         return transcript
     }
@@ -867,7 +867,7 @@ final class RecipeImportImprover {
 
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
-            throw RecipeImportError.fetchFailed("Não foi possível carregar a página do vídeo.")
+            throw RecipeImportError.fetchFailed(String(localized: "Não foi possível carregar a página do vídeo."))
         }
         return String(data: data, encoding: .utf8) ?? String(decoding: data, as: UTF8.self)
     }

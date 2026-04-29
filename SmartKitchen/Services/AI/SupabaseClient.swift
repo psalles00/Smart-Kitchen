@@ -18,11 +18,11 @@ final class SupabaseClient {
         var errorDescription: String? {
             switch self {
             case .notConfigured:
-                return "Supabase não configurado (SUPABASE_URL/SUPABASE_ANON_KEY)."
+                return String(localized: "Supabase não configurado (SUPABASE_URL/SUPABASE_ANON_KEY).")
             case .invalidResponse:
-                return "Resposta inválida do Supabase."
+                return String(localized: "Resposta inválida do Supabase.")
             case .apiError(let code, let msg):
-                return "Supabase erro \(code): \(msg)"
+                return String(localized: "Supabase erro \(code): \(msg)")
             }
         }
     }

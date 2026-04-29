@@ -1606,7 +1606,7 @@ private struct IngredientReplacementSheet: View {
                     .listStyle(.plain)
                 }
             }
-            .modalNavigationTitle("Trocar ingrediente")
+            .modalNavigationTitle(String(localized: "Trocar ingrediente"))
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             .searchable(
@@ -1703,7 +1703,7 @@ private struct IngredientQuantitySheet: View {
                     }
                 }
             }
-            .modalNavigationTitle("Alterar quantidade")
+            .modalNavigationTitle(String(localized: "Alterar quantidade"))
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -1787,7 +1787,7 @@ private struct IngredientStateSheet: View {
                     .buttonStyle(.plain)
                 }
             }
-            .modalNavigationTitle("Alterar estado")
+            .modalNavigationTitle(String(localized: "Alterar estado"))
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif

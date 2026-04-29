@@ -91,7 +91,7 @@ enum RecipeImportMediaFetcher {
 
         let (tempURL, response) = try await URLSession.shared.download(for: request)
         guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
-            throw RecipeImportError.fetchFailed("Falha ao baixar vídeo (\((response as? HTTPURLResponse)?.statusCode ?? -1)).")
+            throw RecipeImportError.fetchFailed(String(localized: "Falha ao baixar vídeo (\((response as? HTTPURLResponse)?.statusCode ?? -1))."))
         }
 
         let ext = url.pathExtension.isEmpty ? "mp4" : url.pathExtension.lowercased()
@@ -155,7 +155,7 @@ enum RecipeImportMediaFetcher {
 
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
-            throw RecipeImportError.fetchFailed("Não foi possível carregar a página do vídeo.")
+            throw RecipeImportError.fetchFailed(String(localized: "Não foi possível carregar a página do vídeo."))
         }
         return String(data: data, encoding: .utf8) ?? String(decoding: data, as: UTF8.self)
     }

@@ -1052,15 +1052,15 @@ enum BackupTransferError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidFileName:
-            "Nome do arquivo de backup inválido."
+            String(localized: "Nome do arquivo de backup inválido.")
         case .payloadTooLarge:
-            "O backup é grande demais para ser compactado neste formato."
+            String(localized: "O backup é grande demais para ser compactado neste formato.")
         case .invalidArchive:
-            "O arquivo .zip selecionado é inválido."
+            String(localized: "O arquivo .zip selecionado é inválido.")
         case .unsupportedZipCompression:
-            "O arquivo .zip usa um tipo de compactação não suportado por este app."
+            String(localized: "O arquivo .zip usa um tipo de compactação não suportado por este app.")
         case .missingBackupPayload:
-            "O arquivo .zip não contém um backup válido do Smart Kitchen."
+            String(localized: "O arquivo .zip não contém um backup válido do Smart Kitchen.")
         }
     }
 }

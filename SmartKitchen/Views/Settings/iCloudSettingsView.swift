@@ -37,7 +37,7 @@ struct iCloudSettingsView: View {
                                 .fill(cloudSync.iCloudAvailable ? .green : .orange)
                                 .frame(width: 8, height: 8)
                         }
-                        Text(isTransitioning ? "Configurando…" : cloudSync.statusDescription)
+                        Text(isTransitioning ? String(localized: "Configurando…") : cloudSync.statusDescription)
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -81,12 +81,12 @@ struct iCloudSettingsView: View {
             if cloudSync.syncEnabled {
                 Section {
                     VStack(alignment: .leading, spacing: 12) {
-                        infoRow(icon: "checkmark.icloud", text: "Receitas, ingredientes e passos")
-                        infoRow(icon: "checkmark.icloud", text: "Itens da despensa")
-                        infoRow(icon: "checkmark.icloud", text: "Lista de compras")
-                        infoRow(icon: "checkmark.icloud", text: "Categorias personalizadas")
-                        infoRow(icon: "checkmark.icloud", text: "Histórico da IA")
-                        infoRow(icon: "checkmark.icloud", text: "Configurações do app")
+                        infoRow(icon: "checkmark.icloud", text: String(localized: "Receitas, ingredientes e passos"))
+                        infoRow(icon: "checkmark.icloud", text: String(localized: "Itens da despensa"))
+                        infoRow(icon: "checkmark.icloud", text: String(localized: "Lista de compras"))
+                        infoRow(icon: "checkmark.icloud", text: String(localized: "Categorias personalizadas"))
+                        infoRow(icon: "checkmark.icloud", text: String(localized: "Histórico da IA"))
+                        infoRow(icon: "checkmark.icloud", text: String(localized: "Configurações do app"))
                     }
                     .padding(.vertical, 4)
                 } header: {
@@ -129,7 +129,7 @@ struct iCloudSettingsView: View {
             }
         }
         .macSettingsContainer()
-        .modalNavigationTitle("iCloud")
+        .modalNavigationTitle(String(localized: "iCloud"))
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif

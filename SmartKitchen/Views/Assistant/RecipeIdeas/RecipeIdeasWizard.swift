@@ -61,13 +61,13 @@ enum RecipeIdeaOccasion: String, CaseIterable, Identifiable {
     /// Texto da pergunta de refinamento.
     var refinementQuestion: String {
         switch self {
-        case .cafeDaManha: return "Como você quer seu café da manhã?"
-        case .almoco: return "Que tipo de almoço você quer?"
-        case .jantar: return "Como deve ser seu jantar?"
-        case .lancheRapido: return "Que lanche combina agora?"
-        case .drinks: return "Qual vibe do drink?"
-        case .bebidas: return "Que bebida você quer?"
-        case .sobremesa: return "Como você quer a sobremesa?"
+        case .cafeDaManha: return String(localized: "Como você quer seu café da manhã?")
+        case .almoco: return String(localized: "Que tipo de almoço você quer?")
+        case .jantar: return String(localized: "Como deve ser seu jantar?")
+        case .lancheRapido: return String(localized: "Que lanche combina agora?")
+        case .drinks: return String(localized: "Qual vibe do drink?")
+        case .bebidas: return String(localized: "Que bebida você quer?")
+        case .sobremesa: return String(localized: "Como você quer a sobremesa?")
         case .outro: return ""
         }
     }
@@ -75,13 +75,13 @@ enum RecipeIdeaOccasion: String, CaseIterable, Identifiable {
     /// Refinamentos disponíveis (último é sempre "Outro" → texto livre).
     var refinements: [String] {
         switch self {
-        case .cafeDaManha: return ["Rápido", "Saudável", "Doce", "Proteico", "Outro"]
-        case .almoco: return ["Rápido", "Saudável", "Refeição completa", "Econômico", "Outro"]
-        case .jantar: return ["Leve", "Rápido", "Saudável", "Caprichado", "Outro"]
-        case .lancheRapido: return ["Salgado", "Doce", "Fit", "Muito rápido", "Com poucos ingredientes", "Outro"]
-        case .drinks: return ["Refrescante", "Forte", "Doce", "Sem álcool", "Outro"]
-        case .bebidas: return ["Gelada", "Quente", "Energizante", "Saudável", "Cremosa", "Outro"]
-        case .sobremesa: return ["Rápida", "Gelada", "Chocolate", "Frutas", "Poucos ingredientes", "Outro"]
+        case .cafeDaManha: return [String(localized: "Rápido"), String(localized: "Saudável"), String(localized: "Doce"), String(localized: "Proteico"), String(localized: "Outro")]
+        case .almoco: return [String(localized: "Rápido"), String(localized: "Saudável"), String(localized: "Refeição completa"), String(localized: "Econômico"), String(localized: "Outro")]
+        case .jantar: return [String(localized: "Leve"), String(localized: "Rápido"), String(localized: "Saudável"), String(localized: "Caprichado"), String(localized: "Outro")]
+        case .lancheRapido: return [String(localized: "Salgado"), String(localized: "Doce"), String(localized: "Fit"), String(localized: "Muito rápido"), String(localized: "Com poucos ingredientes"), String(localized: "Outro")]
+        case .drinks: return [String(localized: "Refrescante"), String(localized: "Forte"), String(localized: "Doce"), String(localized: "Sem álcool"), String(localized: "Outro")]
+        case .bebidas: return [String(localized: "Gelada"), String(localized: "Quente"), String(localized: "Energizante"), String(localized: "Saudável"), String(localized: "Cremosa"), String(localized: "Outro")]
+        case .sobremesa: return [String(localized: "Rápida"), String(localized: "Gelada"), String(localized: "Chocolate"), String(localized: "Frutas"), String(localized: "Poucos ingredientes"), String(localized: "Outro")]
         case .outro: return []
         }
     }

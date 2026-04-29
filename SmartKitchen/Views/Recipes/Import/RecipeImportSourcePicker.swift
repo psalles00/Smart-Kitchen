@@ -32,8 +32,8 @@ struct RecipeImportSourcePicker: View {
 
                         card(
                             icon: "photo.on.rectangle.angled",
-                            title: "Importar da galeria",
-                            subtitle: "Foto ou screenshot da receita",
+                            title: String(localized: "Importar da galeria"),
+                            subtitle: String(localized: "Foto ou screenshot da receita"),
                             accent: .orange
                         ) {
                             onPickImage()
@@ -41,8 +41,8 @@ struct RecipeImportSourcePicker: View {
 
                         card(
                             icon: "camera.viewfinder",
-                            title: "Ler com câmera",
-                            subtitle: "Fotografe a receita impressa ou na tela",
+                            title: String(localized: "Ler com câmera"),
+                            subtitle: String(localized: "Fotografe a receita impressa ou na tela"),
                             accent: .green
                         ) {
                             onPickCamera()
@@ -52,8 +52,8 @@ struct RecipeImportSourcePicker: View {
                         if let onPickFiles {
                             card(
                                 icon: "folder.fill",
-                                title: "Importar dos arquivos",
-                                subtitle: "Abrir uma imagem salva no Mac",
+                                title: String(localized: "Importar dos arquivos"),
+                                subtitle: String(localized: "Abrir uma imagem salva no Mac"),
                                 accent: .indigo
                             ) {
                                 onPickFiles()
@@ -63,8 +63,8 @@ struct RecipeImportSourcePicker: View {
 
                         card(
                             icon: "video.fill",
-                            title: "Importar vídeo",
-                            subtitle: "Reels, TikTok, YouTube — em breve",
+                            title: String(localized: "Importar vídeo"),
+                            subtitle: String(localized: "Reels, TikTok, YouTube — em breve"),
                             accent: .pink,
                             disabled: true
                         ) {
@@ -73,8 +73,8 @@ struct RecipeImportSourcePicker: View {
 
                         card(
                             icon: "text.alignleft",
-                            title: "Colar texto",
-                            subtitle: "Texto bruto de uma receita",
+                            title: String(localized: "Colar texto"),
+                            subtitle: String(localized: "Texto bruto de uma receita"),
                             accent: .purple
                         ) {
                             onPickText()
@@ -103,7 +103,7 @@ struct RecipeImportSourcePicker: View {
                 .padding(.top, 6)
                 .padding(.bottom, 24)
             }
-            .modalNavigationTitle("Adicionar receita")
+            .modalNavigationTitle(String(localized: "Adicionar receita"))
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif

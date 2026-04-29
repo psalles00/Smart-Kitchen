@@ -70,7 +70,7 @@ struct NutrientsInfoContent: View {
                     .frame(width: 92, alignment: .trailing)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("\(score.title). Toque para ver progresso.")
+                .accessibilityLabel(String(localized: "\(score.title). Toque para ver progresso."))
             }
         }
         .padding(.bottom, 4)
@@ -81,25 +81,25 @@ struct NutrientsInfoContent: View {
     private var dateLine: String {
         let relative = relativeLabel(for: selectedDate)
         let full = fullDateString(for: selectedDate)
-        return "\(relative) · \(full)"
+        return String(localized: "\(relative) · \(full)")
     }
 
     private var statusLine: String {
         switch selectedDayState {
-        case .future:           return "Dia futuro"
-        case .todayEmpty:       return "Sem registros ainda"
-        case .todayInProgress:  return "Registro em andamento"
-        case .completed:        return "Dia concluído"
-        case .pastInProgress:   return "Dia iniciado e não concluído"
-        case .pastEmpty:        return "Sem registros neste dia"
-        case .canceled:         return "Dia marcado como vazio"
+        case .future:           return String(localized: "Dia futuro")
+        case .todayEmpty:       return String(localized: "Sem registros ainda")
+        case .todayInProgress:  return String(localized: "Registro em andamento")
+        case .completed:        return String(localized: "Dia concluído")
+        case .pastInProgress:   return String(localized: "Dia iniciado e não concluído")
+        case .pastEmpty:        return String(localized: "Sem registros neste dia")
+        case .canceled:         return String(localized: "Dia marcado como vazio")
         }
     }
 
     private func relativeLabel(for date: Date) -> String {
-        if calendar.isDateInToday(date) { return "Hoje" }
-        if calendar.isDateInYesterday(date) { return "Ontem" }
-        if calendar.isDateInTomorrow(date) { return "Amanhã" }
+        if calendar.isDateInToday(date) { return String(localized: "Hoje") }
+        if calendar.isDateInYesterday(date) { return String(localized: "Ontem") }
+        if calendar.isDateInTomorrow(date) { return String(localized: "Amanhã") }
         let formatter = DateFormatter()
         formatter.locale = AppLocalization.current().formattingLocale
         formatter.dateFormat = "EEEE"
@@ -109,7 +109,7 @@ struct NutrientsInfoContent: View {
     private func fullDateString(for date: Date) -> String {
         let formatter = DateFormatter()
         formatter.locale = AppLocalization.current().formattingLocale
-        formatter.dateFormat = "d 'de' MMMM"
+        formatter.setLocalizedDateFormatFromTemplate("d MMMM")
         return formatter.string(from: date)
     }
 }

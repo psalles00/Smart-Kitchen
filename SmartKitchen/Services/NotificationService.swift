@@ -84,14 +84,14 @@ final class NotificationService {
                 content.sound = .default
 
                 if daysBefore == 0 {
-                    content.title = "\(item.name) vence hoje!"
-                    content.body = "A validade de \(item.name) expira hoje. Confira sua despensa!"
+                    content.title = String(localized: "\(item.name) vence hoje!")
+                    content.body = String(localized: "A validade de \(item.name) expira hoje. Confira sua despensa!")
                 } else if daysBefore == 1 {
-                    content.title = "Validade de \(item.name) está prestes a expirar!"
-                    content.body = "\(item.name) vence amanhã. Hora de usar ou repor!"
+                    content.title = String(localized: "Validade de \(item.name) está prestes a expirar!")
+                    content.body = String(localized: "\(item.name) vence amanhã. Hora de usar ou repor!")
                 } else {
-                    content.title = "Validade de \(item.name) se aproxima"
-                    content.body = "\(item.name) vence em \(daysBefore) dias. Fique de olho!"
+                    content.title = String(localized: "Validade de \(item.name) se aproxima")
+                    content.body = String(localized: "\(item.name) vence em \(daysBefore) dias. Fique de olho!")
                 }
 
                 let identifier = "expiry-\(item.id.uuidString)-\(daysBefore)"

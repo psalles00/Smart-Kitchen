@@ -190,11 +190,11 @@ enum AIError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .missingAPIKey:
-            return "Chave de API não configurada. Adicione sua chave OpenAI em Ajustes."
+            return String(localized: "Chave de API não configurada. Adicione sua chave OpenAI em Ajustes.")
         case .invalidResponse:
-            return "Resposta inválida do servidor."
+            return String(localized: "Resposta inválida do servidor.")
         case .apiError(let code, let msg):
-            return "Erro da API (\(code)): \(msg)"
+            return String(localized: "Erro da API (\(code)): \(msg)")
         }
     }
 }

@@ -193,9 +193,9 @@ struct FoodCaptureHostView: View {
                         }
 
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(mode == .photo ? "Registrar por foto" : "Registrar por rótulo")
+                            Text(mode == .photo ? String(localized: "Registrar por foto") : String(localized: "Registrar por rótulo"))
                                 .font(.title3.weight(.semibold))
-                            Text(mode == .photo ? "IA visual" : "Leitura assistida")
+                            Text(mode == .photo ? String(localized: "IA visual") : String(localized: "Leitura assistida"))
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(PageTheme.nutrients.accentColor)
                         }
@@ -290,8 +290,8 @@ struct FoodCaptureHostView: View {
                 compactCapturePanel {
                     minimalCaptureHeader(
                         systemImage: "character.cursor.ibeam",
-                        title: "Descreva a refeição",
-                        subtitle: "Ingredientes, quantidades e preparo em linguagem natural.",
+                        title: String(localized: "Descreva a refeição"),
+                        subtitle: String(localized: "Ingredientes, quantidades e preparo em linguagem natural."),
                         trailingCount: typedText.isEmpty ? nil : typedText.count
                     )
 
@@ -330,7 +330,7 @@ struct FoodCaptureHostView: View {
                 action: startTextAnalysis
             )
         }
-        .modalNavigationTitle("Registrar por texto")
+        .modalNavigationTitle(String(localized: "Registrar por texto"))
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancelar") { dismiss() }
@@ -354,8 +354,8 @@ struct FoodCaptureHostView: View {
                         minimalCaptureHeader(
                             systemImage: speech.state == .recording ? "waveform.circle.fill" : "mic.fill",
                             tint: speech.state == .recording ? .red : PageTheme.nutrients.accentColor,
-                            title: speech.state == .recording ? "Ouvindo agora" : (speech.transcript.isEmpty ? "Ditado" : "Transcrição pronta"),
-                            subtitle: speech.state == .recording ? "Fale normalmente. A transcrição aparece em tempo real." : "Revise a transcrição e analise quando estiver pronto.",
+                            title: speech.state == .recording ? String(localized: "Ouvindo agora") : (speech.transcript.isEmpty ? String(localized: "Ditado") : String(localized: "Transcrição pronta")),
+                            subtitle: speech.state == .recording ? String(localized: "Fale normalmente. A transcrição aparece em tempo real.") : String(localized: "Revise a transcrição e analise quando estiver pronto."),
                             trailingCount: speech.transcript.isEmpty ? nil : speech.transcript.count,
                             showsLiveDot: speech.state == .recording
                         )
@@ -421,7 +421,7 @@ struct FoodCaptureHostView: View {
                 action: analyzeVoiceTranscript
             )
         }
-        .modalNavigationTitle("Registrar por voz")
+        .modalNavigationTitle(String(localized: "Registrar por voz"))
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancelar") { speech.stop(); dismiss() }
@@ -462,19 +462,19 @@ struct FoodCaptureHostView: View {
 
     private var analyzingMessage: String {
         switch mode {
-        case .photo:           "Identificando a refeição…"
-        case .nutritionLabel:  "Lendo rótulo nutricional…"
-        case .text:            "Estimando nutrientes…"
-        case .voice:           "Estimando nutrientes…"
+        case .photo:           String(localized: "Identificando a refeição…")
+        case .nutritionLabel:  String(localized: "Lendo rótulo nutricional…")
+        case .text:            String(localized: "Estimando nutrientes…")
+        case .voice:           String(localized: "Estimando nutrientes…")
         }
     }
 
     private var captureModalTitle: String {
         switch mode {
-        case .photo:          "Registrar por foto"
-        case .nutritionLabel: "Registrar por rótulo"
-        case .text:           "Registrar por texto"
-        case .voice:          "Registrar por voz"
+        case .photo:          String(localized: "Registrar por foto")
+        case .nutritionLabel: String(localized: "Registrar por rótulo")
+        case .text:           String(localized: "Registrar por texto")
+        case .voice:          String(localized: "Registrar por voz")
         }
     }
 

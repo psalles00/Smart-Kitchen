@@ -283,11 +283,11 @@ struct CommandBarResultRow: View {
 
     private func tagLabel(for type: SearchResultType) -> String {
         switch type {
-        case .pantryItem:  return "Despensa"
-        case .groceryItem: return "Mercado"
-        case .recipe:      return "Receita"
-        case .utensil:     return "Utensílio"
-        case .suggestion:  return "Sugestão"
+        case .pantryItem:  return String(localized: "Despensa")
+        case .groceryItem: return String(localized: "Mercado")
+        case .recipe:      return String(localized: "Receita")
+        case .utensil:     return String(localized: "Utensílio")
+        case .suggestion:  return String(localized: "Sugestão")
         case .action:      return ""
         }
     }

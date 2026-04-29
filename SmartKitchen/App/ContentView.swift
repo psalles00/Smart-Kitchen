@@ -121,10 +121,10 @@ struct ContentView: View {
     private var settings: AppSettings? { settingsArray.first }
     private var activePageTheme: PageTheme { selectedTab.pageTheme ?? lastContentTab.pageTheme ?? .home }
     private var assistantOverlayTitle: String {
-        searchBarState.mode == .aiChat ? "Modo IA" : "Assistente"
+        searchBarState.mode == .aiChat ? String(localized: "Modo IA") : String(localized: "Assistente")
     }
     private var assistantOverlaySubtitle: String {
-        return "Adicione itens, busque na despensa ou pergunte à IA."
+        String(localized: "Adicione itens, busque na despensa ou pergunte à IA.")
     }
 
     private var fullscreenNutritionEntrySheetBinding: Binding<NutritionEntrySheet?> {
@@ -761,7 +761,7 @@ struct ContentView: View {
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundStyle(.secondary)
                         TextField(
-                            searchBarState.mode == .aiChat ? searchBarState.aiChatPreset.searchPlaceholder : "Adicione, busque, ou pergunte…",
+                            searchBarState.mode == .aiChat ? searchBarState.aiChatPreset.searchPlaceholder : String(localized: "Adicione, busque, ou pergunte…"),
                             text: $searchBarState.searchText
                         )
                         .textFieldStyle(.plain)
@@ -1338,7 +1338,7 @@ private struct HomeView: View {
         ExpandedPageLayout(
             pageTheme: .home,
             header: { isInverted in
-                PageHeader(title: "Início", isInverted: isInverted) {
+                PageHeader(title: String(localized: "Início"), isInverted: isInverted) {
                     SettingsButton(onTap: onSettingsTap)
                 }
             },
@@ -1533,8 +1533,8 @@ private struct HomeView: View {
             VStack(alignment: .leading, spacing: spacing) {
                 HStack(alignment: .top, spacing: spacing) {
                     homeShortcutButton(
-                        title: "Assistente",
-                        subtitle: "Adicione, busque ou pergunte...",
+                        title: String(localized: "Assistente"),
+                        subtitle: String(localized: "Adicione, busque ou pergunte..."),
                         imageName: "assistente",
                         style: .featured,
                         imageSize: 112,
@@ -1546,8 +1546,8 @@ private struct HomeView: View {
 
                     VStack(spacing: spacing) {
                         homeShortcutButton(
-                            title: "Modo IA",
-                            subtitle: "Inteligência",
+                            title: String(localized: "Modo IA"),
+                            subtitle: String(localized: "Inteligência"),
                             imageName: "modo ia",
                             style: .wide,
                             imageSize: 86,
@@ -1558,8 +1558,8 @@ private struct HomeView: View {
                         .frame(height: stackedHeight)
 
                         homeShortcutButton(
-                            title: "Ideias",
-                            subtitle: "de receitas",
+                            title: String(localized: "Ideias"),
+                            subtitle: String(localized: "de receitas"),
                             imageName: "ideis",
                             style: .wide,
                             imageSize: 70,
@@ -1573,19 +1573,19 @@ private struct HomeView: View {
                 }
 
                 HStack(alignment: .top, spacing: spacing) {
-                    macShortcutAddTile(title: "Mercado", imageName: "mercado", imageSize: 58) {
+                    macShortcutAddTile(title: String(localized: "Mercado"), imageName: "mercado", imageSize: 58) {
                         showAddGrocery = true
                     }
 
-                    macShortcutAddTile(title: "Despensa", imageName: "despensa", imageSize: 50) {
+                    macShortcutAddTile(title: String(localized: "Despensa"), imageName: "despensa", imageSize: 50) {
                         showAddPantry = true
                     }
 
-                    macShortcutAddTileMenu(title: "Receitas", imageName: "receitas", imageSize: 56) {
+                    macShortcutAddTileMenu(title: String(localized: "Receitas"), imageName: "receitas", imageSize: 56) {
                         recipeShortcutMenuContent
                     }
 
-                    macShortcutAddTileMenu(title: "Alimento", imageName: "nutrientes", imageSize: 50) {
+                    macShortcutAddTileMenu(title: String(localized: "Alimento"), imageName: "nutrientes", imageSize: 50) {
                         foodShortcutMenuContent
                     }
                 }
@@ -1650,8 +1650,8 @@ private struct HomeView: View {
                 // Linha superior: Assistente (featured) + Modo IA / Receitas (wide)
                 HStack(spacing: spacing) {
                     homeShortcutButton(
-                        title: "Assistente",
-                        subtitle: "Adicione, busque ou pergunte...",
+                        title: String(localized: "Assistente"),
+                        subtitle: String(localized: "Adicione, busque ou pergunte..."),
                         imageName: "assistente",
                         style: .featured,
                         imageSize: 135,
@@ -1663,8 +1663,8 @@ private struct HomeView: View {
 
                     VStack(spacing: spacing) {
                         homeShortcutButton(
-                            title: "Modo IA",
-                            subtitle: "Inteligência",
+                            title: String(localized: "Modo IA"),
+                            subtitle: String(localized: "Inteligência"),
                             imageName: "modo ia",
                             style: .wide,
                             imageSize: 126,
@@ -1675,8 +1675,8 @@ private struct HomeView: View {
                         .frame(height: smallSide)
 
                         homeShortcutButton(
-                            title: "Ideias",
-                            subtitle: "de receitas",
+                            title: String(localized: "Ideias"),
+                            subtitle: String(localized: "de receitas"),
                             imageName: "ideis",
                             style: .wide,
                             imageSize: 99,
@@ -1696,7 +1696,7 @@ private struct HomeView: View {
                             showAddGrocery = true
                         }
                         .frame(height: smallSide)
-                        Text("Mercado")
+                        Text(String(localized: "Mercado"))
                             .font(.caption.weight(.bold))
                             .foregroundStyle(.primary)
                     }
@@ -1706,7 +1706,7 @@ private struct HomeView: View {
                             showAddPantry = true
                         }
                         .frame(height: smallSide)
-                        Text("Despensa")
+                        Text(String(localized: "Despensa"))
                             .font(.caption.weight(.bold))
                             .foregroundStyle(.primary)
                     }
@@ -1716,7 +1716,7 @@ private struct HomeView: View {
                             recipeShortcutMenuContent
                         }
                         .frame(height: smallSide)
-                        Text("Receitas")
+                        Text(String(localized: "Receitas"))
                             .font(.caption.weight(.bold))
                             .foregroundStyle(.primary)
                     }
@@ -1726,7 +1726,7 @@ private struct HomeView: View {
                             foodShortcutMenuContent
                         }
                         .frame(height: smallSide)
-                        Text("Alimento")
+                        Text(String(localized: "Alimento"))
                             .font(.caption.weight(.bold))
                             .foregroundStyle(.primary)
                     }
@@ -1887,7 +1887,7 @@ private struct HomeView: View {
     private var compatibleCategoryFilter: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                filterChip(label: "Sugestões", isSelected: selectedCompatibleCategory == nil) {
+                filterChip(label: String(localized: "Sugestões"), isSelected: selectedCompatibleCategory == nil) {
                     selectedCompatibleCategory = nil
                 }
 

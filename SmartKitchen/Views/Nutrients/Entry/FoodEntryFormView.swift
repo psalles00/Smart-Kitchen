@@ -91,7 +91,7 @@ struct FoodEntryFormView: View {
                 }
             }
             .scrollDismissesKeyboard(.interactively)
-            .modalNavigationTitle(isEdit ? "Editar registro" : "Salvar Alimento")
+            .modalNavigationTitle(isEdit ? String(localized: "Editar registro") : String(localized: "Salvar Alimento"))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancelar") { dismiss() }

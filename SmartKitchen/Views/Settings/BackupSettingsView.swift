@@ -74,7 +74,7 @@ struct BackupSettingsView: View {
             }
         }
         .macSettingsContainer()
-        .modalNavigationTitle("Backup")
+        .modalNavigationTitle(String(localized: "Backup"))
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
@@ -91,9 +91,9 @@ struct BackupSettingsView: View {
                 Task {
                     let success = await backupManager.restore(from: target, context: modelContext)
                     if success {
-                        presentAlert(title: "Backup restaurado", message: "Os dados foram restaurados com sucesso.")
+                        presentAlert(title: String(localized: "Backup restaurado"), message: String(localized: "Os dados foram restaurados com sucesso."))
                     } else {
-                        presentAlert(title: "Falha", message: "Não foi possível restaurar o backup.")
+                        presentAlert(title: String(localized: "Falha"), message: String(localized: "Não foi possível restaurar o backup."))
                     }
                 }
             }
@@ -112,7 +112,7 @@ struct BackupSettingsView: View {
             defaultFilename: exportFileName
         ) { result in
             if case .failure(let error) = result {
-                presentAlert(title: "Falha ao exportar", message: error.localizedDescription)
+                presentAlert(title: String(localized: "Falha ao exportar"), message: error.localizedDescription)
             }
         }
         .fileImporter(
@@ -123,7 +123,7 @@ struct BackupSettingsView: View {
             case .success(let url):
                 importBackup(from: url)
             case .failure(let error):
-                presentAlert(title: "Falha ao importar", message: error.localizedDescription)
+                presentAlert(title: String(localized: "Falha ao importar"), message: error.localizedDescription)
             }
         }
         .alert(alertTitle, isPresented: $showAlert) {
@@ -167,7 +167,7 @@ struct BackupSettingsView: View {
             exportDocument = BackupZipDocument(data: try backupManager.exportCurrentData(context: modelContext))
             isExporting = true
         } catch {
-            presentAlert(title: "Falha ao exportar", message: error.localizedDescription)
+            presentAlert(title: String(localized: "Falha ao exportar"), message: error.localizedDescription)
         }
     }
 
@@ -182,9 +182,9 @@ struct BackupSettingsView: View {
         do {
             let data = try Data(contentsOf: url)
             try backupManager.importBackup(from: data, context: modelContext)
-            presentAlert(title: "Backup importado", message: "Os dados do aplicativo foram restaurados com sucesso.")
+            presentAlert(title: String(localized: "Backup importado"), message: String(localized: "Os dados do aplicativo foram restaurados com sucesso."))
         } catch {
-            presentAlert(title: "Falha ao importar", message: error.localizedDescription)
+            presentAlert(title: String(localized: "Falha ao importar"), message: error.localizedDescription)
         }
     }
 

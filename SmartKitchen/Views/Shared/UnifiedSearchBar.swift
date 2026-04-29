@@ -64,7 +64,7 @@ struct UnifiedSearchBar: View {
                             endPoint: .bottomTrailing))
                         : AnyShapeStyle(Color.secondary))
 
-                TextField(state.mode == .aiChat ? state.aiChatPreset.searchPlaceholder : "Assistente", text: $state.searchText)
+                TextField(state.mode == .aiChat ? state.aiChatPreset.searchPlaceholder : String(localized: "Assistente"), text: $state.searchText)
                     .foregroundStyle(.primary)
                     #if os(iOS)
                     .textInputAutocapitalization(.never)
@@ -302,7 +302,7 @@ struct UnifiedSearchBar: View {
                 .frame(width: chromeHeight, height: chromeHeight)
                 .contentShape(Circle())
         }
-        .accessibilityLabel("Fechar")
+        .accessibilityLabel(Text("Fechar"))
         .modifier(NativeGlassCloseButtonModifier())
         .transition(.move(edge: .trailing).combined(with: .opacity))
     }

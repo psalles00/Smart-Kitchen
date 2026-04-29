@@ -54,7 +54,7 @@ struct NutrientsView: View {
         ExpandedPageLayout(
             pageTheme: .nutrients,
             header: { isInverted in
-                PageHeader(title: "Nutrição", isInverted: isInverted) {
+                PageHeader(title: String(localized: "Nutrição"), isInverted: isInverted) {
                     HStack(spacing: 6) {
                         GlassButtonGroup {
                             GlassGroupButton(systemImage: "scalemass") {

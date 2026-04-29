@@ -376,21 +376,21 @@ enum RecipeImportError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidURL:
-            return "URL inválida."
+            return String(localized: "URL inválida.")
         case .invalidImage:
-            return "Imagem inválida ou ilegível."
+            return String(localized: "Imagem inválida ou ilegível.")
         case .emptyContent:
-            return "Conteúdo vazio. Cole um link, texto ou envie uma imagem ou vídeo."
+            return String(localized: "Conteúdo vazio. Cole um link, texto ou envie uma imagem ou vídeo.")
         case .fetchFailed(let msg):
-            return "Não foi possível buscar o conteúdo: \(msg)"
+            return String(localized: "Não foi possível buscar o conteúdo: \(msg)")
         case .unsupportedSource(let msg):
-            return "Fonte não suportada: \(msg)"
+            return String(localized: "Fonte não suportada: \(msg)")
         case .insufficientContent(let suggestion):
-            return "Não encontramos informação suficiente. \(suggestion)"
+            return String(localized: "Não encontramos informação suficiente. \(suggestion)")
         case .aiFailed(let msg):
-            return "Falha ao estruturar a receita: \(msg)"
+            return String(localized: "Falha ao estruturar a receita: \(msg)")
         case .cancelled:
-            return "Importação cancelada."
+            return String(localized: "Importação cancelada.")
         }
     }
 }

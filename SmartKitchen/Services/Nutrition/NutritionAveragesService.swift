@@ -183,13 +183,13 @@ extension NutritionAverageBasis {
     var shortDescription: String {
         switch self {
         case .perWeekday(let weekday, _):
-            return "Média de \(Self.weekdayName(weekday).lowercased())"
+            return String(localized: "Média de \(Self.weekdayName(weekday).lowercased())")
         case .group(let isWeekend, _):
-            return isWeekend ? "Média de fim de semana" : "Média de dias úteis"
+            return isWeekend ? String(localized: "Média de fim de semana") : String(localized: "Média de dias úteis")
         case .overall:
-            return "Média geral"
+            return String(localized: "Média geral")
         case .none:
-            return "Sem dados"
+            return String(localized: "Sem dados")
         }
     }
 
@@ -203,14 +203,14 @@ extension NutritionAverageBasis {
     private static func weekdayName(_ weekday: Int) -> String {
         // Plural: "domingos", "segundas-feiras", etc.
         switch weekday {
-        case 1: return "domingos"
-        case 2: return "segundas-feiras"
-        case 3: return "terças-feiras"
-        case 4: return "quartas-feiras"
-        case 5: return "quintas-feiras"
-        case 6: return "sextas-feiras"
-        case 7: return "sábados"
-        default: return "dias"
+        case 1: return String(localized: "domingos")
+        case 2: return String(localized: "segundas-feiras")
+        case 3: return String(localized: "terças-feiras")
+        case 4: return String(localized: "quartas-feiras")
+        case 5: return String(localized: "quintas-feiras")
+        case 6: return String(localized: "sextas-feiras")
+        case 7: return String(localized: "sábados")
+        default: return String(localized: "dias")
         }
     }
 }

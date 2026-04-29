@@ -121,7 +121,7 @@ struct ListsTabView: View {
         ExpandedPageLayout(
             pageTheme: .lists,
             header: { isInverted in
-                PageHeader(title: "Listas", isInverted: isInverted) {
+                PageHeader(title: String(localized: "Listas"), isInverted: isInverted) {
                     HStack(spacing: 6) {
                         GlassButtonGroup {
                             GlassGroupButton(systemImage: "plus") {

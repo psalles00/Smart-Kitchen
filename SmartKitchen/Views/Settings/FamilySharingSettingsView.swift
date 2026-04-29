@@ -146,10 +146,10 @@ struct FamilySharingSettingsView: View {
             // MARK: - Info
             Section {
                 VStack(alignment: .leading, spacing: 8) {
-                    infoRow(icon: "person.2", text: "Ideal para casais e famílias que compartilham a mesma cozinha.")
-                    infoRow(icon: "pencil.and.outline", text: "Todos os participantes podem adicionar, editar e remover itens.")
-                    infoRow(icon: "icloud", text: "Requer que todos os participantes tenham iCloud ativado.")
-                    infoRow(icon: "lock.shield", text: "Configurações pessoais e histórico da IA nunca são compartilhados.")
+                    infoRow(icon: "person.2", text: String(localized: "Ideal para casais e famílias que compartilham a mesma cozinha."))
+                    infoRow(icon: "pencil.and.outline", text: String(localized: "Todos os participantes podem adicionar, editar e remover itens."))
+                    infoRow(icon: "icloud", text: String(localized: "Requer que todos os participantes tenham iCloud ativado."))
+                    infoRow(icon: "lock.shield", text: String(localized: "Configurações pessoais e histórico da IA nunca são compartilhados."))
                 }
                 .padding(.vertical, 4)
             } header: {
@@ -157,7 +157,7 @@ struct FamilySharingSettingsView: View {
             }
         }
         .macSettingsContainer()
-        .modalNavigationTitle("Compartilhamento Familiar")
+        .modalNavigationTitle(String(localized: "Compartilhamento Familiar"))
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
@@ -274,11 +274,11 @@ struct ParticipantRowView: View {
 
     private var statusText: String {
         switch participant.acceptanceStatus {
-        case .accepted: "Aceito"
-        case .pending: "Pendente"
-        case .removed: "Removido"
-        case .unknown: "Desconhecido"
-        @unknown default: "Desconhecido"
+        case .accepted: String(localized: "Aceito")
+        case .pending: String(localized: "Pendente")
+        case .removed: String(localized: "Removido")
+        case .unknown: String(localized: "Desconhecido")
+        @unknown default: String(localized: "Desconhecido")
         }
     }
 

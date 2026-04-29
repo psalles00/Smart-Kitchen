@@ -93,7 +93,7 @@ struct AddUtensilItemView: View {
         .padding(.bottom, 20)
         .frame(minWidth: 500, minHeight: 450)
         #endif
-        .modalNavigationTitle("Novo Utensílio")
+        .modalNavigationTitle(String(localized: "Novo Utensílio"))
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
@@ -252,7 +252,7 @@ struct EditUtensilItemView: View {
         .padding(.bottom, 20)
         .frame(minWidth: 500, minHeight: 450)
         #endif
-        .modalNavigationTitle("Editar Utensílio")
+        .modalNavigationTitle(String(localized: "Editar Utensílio"))
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif

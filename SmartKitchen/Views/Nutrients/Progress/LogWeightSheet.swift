@@ -93,7 +93,7 @@ struct LogWeightSheet: View {
                 Spacer(minLength: 0)
             }
             .padding()
-            .modalNavigationTitle("Registrar peso")
+            .modalNavigationTitle(String(localized: "Registrar peso"))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancelar") { dismiss() }

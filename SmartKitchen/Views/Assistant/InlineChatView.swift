@@ -101,9 +101,9 @@ struct InlineChatView: View {
     private var aiModeDescription: String {
         switch aiChatPreset {
         case .nutritionCoach:
-            return "Seu coach pode ver seu histórico de peso, consumo diário e metas. Pergunte sobre peso esperado, o que comer ou como atingir seu objetivo."
+            return String(localized: "Seu coach pode ver seu histórico de peso, consumo diário e metas. Pergunte sobre peso esperado, o que comer ou como atingir seu objetivo.")
         case .recipeIdeas:
-            return "Crie ideias novas partindo do zero ou com os ingredientes que você quiser usar."
+            return String(localized: "Crie ideias novas partindo do zero ou com os ingredientes que você quiser usar.")
         }
     }
 
@@ -658,10 +658,10 @@ struct InlineChatView: View {
             let convId = ensureConversation()
             insertMessage(ChatMessage(
                 role: .assistant,
-                content: "Tenho uma alteração pendente. Confirme ou cancele antes de continuar.",
+                content: String(localized: "Tenho uma alteração pendente. Confirme ou cancele antes de continuar."),
                 quickActions: [
-                    QuickAction(label: "Confirmar", prompt: confirmPrompt),
-                    QuickAction(label: "Cancelar", prompt: cancelPrompt)
+                    QuickAction(label: String(localized: "Confirmar"), prompt: confirmPrompt),
+                    QuickAction(label: String(localized: "Cancelar"), prompt: cancelPrompt)
                 ],
                 conversationId: convId
             ))
@@ -857,8 +857,8 @@ struct InlineChatView: View {
                     role: .assistant,
                     content: confirmationMessage(for: response.toolCalls),
                     quickActions: [
-                        QuickAction(label: "Confirmar", prompt: confirmPrompt),
-                        QuickAction(label: "Cancelar", prompt: cancelPrompt)
+                        QuickAction(label: String(localized: "Confirmar"), prompt: confirmPrompt),
+                        QuickAction(label: String(localized: "Cancelar"), prompt: cancelPrompt)
                     ],
                     conversationId: convId
                 ))
@@ -881,7 +881,7 @@ struct InlineChatView: View {
             return
         }
 
-        let content = response.content ?? "Desculpe, não consegui gerar uma resposta."
+        let content = response.content ?? String(localized: "Desculpe, não consegui gerar uma resposta.")
         let recipeIds = extractRecipeIds(from: content)
         let convId = ensureConversation()
         insertMessage(ChatMessage(
@@ -898,7 +898,7 @@ struct InlineChatView: View {
         var apiMessages = pending.messages
         self.pendingToolExecution = nil
         let convId = ensureConversation()
-        let confirmationMessage = ChatMessage(role: .user, content: "Confirmar alteração", conversationId: convId)
+        let confirmationMessage = ChatMessage(role: .user, content: String(localized: "Confirmar alteração"), conversationId: convId)
         insertMessage(confirmationMessage)
         pinnedUserMessageID = confirmationMessage.id
 
@@ -920,7 +920,7 @@ struct InlineChatView: View {
             errorMessage = error.localizedDescription
             insertMessage(ChatMessage(
                 role: .assistant,
-                content: "Desculpe, ocorreu um erro ao aplicar a alteração: \(error.localizedDescription)",
+                content: String(localized: "Desculpe, ocorreu um erro ao aplicar a alteração: \(error.localizedDescription)"),
                 conversationId: convId
             ))
         }
@@ -929,12 +929,12 @@ struct InlineChatView: View {
     private func cancelPendingToolExecution() {
         pendingToolExecution = nil
         let convId = ensureConversation()
-        let cancellationMessage = ChatMessage(role: .user, content: "Cancelar alteração", conversationId: convId)
+        let cancellationMessage = ChatMessage(role: .user, content: String(localized: "Cancelar alteração"), conversationId: convId)
         insertMessage(cancellationMessage)
         pinnedUserMessageID = cancellationMessage.id
         insertMessage(ChatMessage(
             role: .assistant,
-            content: "Alteração cancelada. Nenhuma informação foi modificada.",
+            content: String(localized: "Alteração cancelada. Nenhuma informação foi modificada."),
             conversationId: convId
         ))
     }
@@ -1277,21 +1277,21 @@ struct InlineChatView: View {
     private func confirmationMessage(for toolCalls: [ToolCallRequest]) -> String {
         let summary = toolCalls.map { toolCall in
             switch toolCall.name {
-            case "create_recipe": "criar receita"
-            case "update_recipe": "editar receita"
-            case "delete_recipe": "excluir receita"
-            case "add_pantry_item": "adicionar item na despensa"
-            case "remove_pantry_item": "remover item da despensa"
-            case "add_grocery_item": "adicionar item no mercado"
-            case "create_category": "criar categoria"
-            case "rename_category": "renomear categoria"
-            case "delete_category": "excluir categoria"
-            case "move_category": "reordenar categoria"
-            default: "alterar informações"
+            case "create_recipe": String(localized: "criar receita")
+            case "update_recipe": String(localized: "editar receita")
+            case "delete_recipe": String(localized: "excluir receita")
+            case "add_pantry_item": String(localized: "adicionar item na despensa")
+            case "remove_pantry_item": String(localized: "remover item da despensa")
+            case "add_grocery_item": String(localized: "adicionar item no mercado")
+            case "create_category": String(localized: "criar categoria")
+            case "rename_category": String(localized: "renomear categoria")
+            case "delete_category": String(localized: "excluir categoria")
+            case "move_category": String(localized: "reordenar categoria")
+            default: String(localized: "alterar informações")
             }
         }
         .joined(separator: ", ")
-        return "Confirma esta alteração no app?\n\nAção pendente: \(summary)."
+        return String(localized: "Confirma esta alteração no app?\n\nAção pendente: \(summary).")
     }
 
     // MARK: - Display Helpers

@@ -107,7 +107,7 @@ final class NutritionSpeechRecognizer {
 
     private func beginSession() {
         guard let recognizer, recognizer.isAvailable else {
-            state = .error("Reconhecimento de voz indisponível neste dispositivo.")
+            state = .error(String(localized: "Reconhecimento de voz indisponível neste dispositivo."))
             return
         }
         task?.cancel()
@@ -118,7 +118,7 @@ final class NutritionSpeechRecognizer {
             try session.setCategory(.record, mode: .measurement, options: .duckOthers)
             try session.setActive(true, options: .notifyOthersOnDeactivation)
         } catch {
-            state = .error("Falha ao configurar áudio.")
+            state = .error(String(localized: "Falha ao configurar áudio."))
             return
         }
 
@@ -133,7 +133,7 @@ final class NutritionSpeechRecognizer {
         guard format.sampleRate > 0, format.channelCount > 0 else {
             request = nil
             try? session.setActive(false, options: .notifyOthersOnDeactivation)
-            state = .error("Entrada de áudio indisponível. Verifique o microfone do dispositivo.")
+            state = .error(String(localized: "Entrada de áudio indisponível. Verifique o microfone do dispositivo."))
             return
         }
         // O bloco do tap é executado na thread real-time de áudio. Encaminhamos
@@ -148,7 +148,7 @@ final class NutritionSpeechRecognizer {
             input.removeTap(onBus: 0)
             request = nil
             try? session.setActive(false, options: .notifyOthersOnDeactivation)
-            state = .error("Falha ao iniciar gravação.")
+            state = .error(String(localized: "Falha ao iniciar gravação."))
             return
         }
 
