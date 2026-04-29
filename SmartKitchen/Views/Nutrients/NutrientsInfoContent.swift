@@ -27,12 +27,13 @@ struct NutrientsInfoContent: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: 16) {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(dateLine)
                     .font(.headline)
                     .foregroundColor(.white)
                     .lineLimit(1)
                     .minimumScaleFactor(0.85)
+                    .padding(.top, 4)
 
                 if profile?.hasCompletedOnboarding == true {
                     Text(statusLine)
@@ -72,7 +73,7 @@ struct NutrientsInfoContent: View {
                 .accessibilityLabel("\(score.title). Toque para ver progresso.")
             }
         }
-        .padding(.bottom, 6)
+        .padding(.bottom, 4)
     }
 
     // MARK: - Composição de texto
