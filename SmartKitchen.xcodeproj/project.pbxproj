@@ -39,6 +39,7 @@
 		1BB5E688AF8BFEE228F01A7E /* AssistantChatManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F95839547159000637E07B07 /* AssistantChatManager.swift */; };
 		1F1DCA77E18AF1B735DA83AD /* NutritionScore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95C7D569A1E2AF11186C7EDE /* NutritionScore.swift */; };
 		1F60F7B0D8566E0FB6604085 /* DictationButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90105047663BE8A4F0F3E64 /* DictationButton.swift */; };
+		20D2BCEA77DE73540A796337 /* meta-fr.json in Resources */ = {isa = PBXBuildFile; fileRef = 678AFBB472665B3EF5D72032 /* meta-fr.json */; };
 		22291D641D0EBDD094548050 /* WebURLPipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4F29CCEC6FC8E6E2DFFD7D2 /* WebURLPipeline.swift */; };
 		2284AB10BD5726144C4D9404 /* Telma-Bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 45656677AD3714E163ED9011 /* Telma-Bold.otf */; };
 		2447B82F271152F2AB5DDEF9 /* Boska-Regular.otf in Resources */ = {isa = PBXBuildFile; fileRef = 4F4B90D9D920F1E391155645 /* Boska-Regular.otf */; };
@@ -344,6 +345,7 @@
 		65B9C18EA33BF7B878D2662E /* AddItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddItemView.swift; sourceTree = "<group>"; };
 		666404C5C00E49B47AFFC4BA /* NutritionDayLogStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionDayLogStore.swift; sourceTree = "<group>"; };
 		6762814ECB350EDAE1E3C831 /* Telma-Regular.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Telma-Regular.otf"; sourceTree = "<group>"; };
+		678AFBB472665B3EF5D72032 /* meta-fr.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "meta-fr.json"; sourceTree = "<group>"; };
 		69DAED45966A299314A19A92 /* FoodCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodCache.swift; sourceTree = "<group>"; };
 		6A6AECCA37DCF985379A2794 /* WeightTrackerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeightTrackerView.swift; sourceTree = "<group>"; };
 		6BAF026839BBC04F2BB2A869 /* FoodEntryRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodEntryRow.swift; sourceTree = "<group>"; };
@@ -768,6 +770,7 @@
 				E5AEE72295DDF210EBDBBF9A /* images-128 */,
 				41340DD47388F9AEF5B06243 /* meta-en.json */,
 				34EDFC8006585B1EA7500849 /* meta-es.json */,
+				678AFBB472665B3EF5D72032 /* meta-fr.json */,
 				4998806E0D06C1D40F262CA5 /* meta-ptbr.json */,
 			);
 			path = icons;
@@ -1119,6 +1122,7 @@
 				8862DB8C679EB8A8579B988B /* items_database.json in Resources */,
 				E86A1179A1AF464ED7638278 /* meta-en.json in Resources */,
 				1152792F9A61F44478BA5016 /* meta-es.json in Resources */,
+				20D2BCEA77DE73540A796337 /* meta-fr.json in Resources */,
 				F554C5B2D131148EAAA88E7F /* meta-ptbr.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

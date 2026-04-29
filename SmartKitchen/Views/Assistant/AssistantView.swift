@@ -629,6 +629,9 @@ struct AssistantView: View {
             "que puedo", "puedo hacer", "puedo cocinar", "sugiereme", "sugiere",
             "que opciones", "que recetas", "opciones disponibles", "muestrame",
             "quiero una", "quiero un",
+            "que puis-je", "puis-je faire", "puis-je cuisiner", "suggere", "suggere-moi", "suggerer",
+            "quelles options", "quelles recettes", "options disponibles", "montre-moi",
+            "je veux une", "je veux un",
             "what can", "can i make", "can i cook", "suggest", "show me", "i want"
         ]
         let recipeCues = [
@@ -640,6 +643,7 @@ struct AssistantView: View {
             "sobremesa",
             "doce",
             "receta", "recetas", "cocinar", "postre", "dulce",
+            "recette", "recettes", "cuisiner", "preparer", "dessert", "sucre",
             "recipe", "recipes", "cook", "make", "dessert", "sweet"
         ]
 
@@ -669,6 +673,9 @@ struct AssistantView: View {
             "añade", "añadir", "agrega", "agregar", "crea", "crear",
             "guarda", "guardar", "edita", "actualiza", "actualizar",
             "elimina", "eliminar", "borra", "borrar", "quita", "quitar",
+            "ajoute", "ajouter", "cree", "creer", "enregistre", "enregistrer",
+            "modifie", "modifier", "mets a jour", "mettre a jour",
+            "supprime", "supprimer", "efface", "effacer", "retire", "retirer",
             "add", "create", "save", "edit", "update", "delete", "remove"
         ]
         let recipeTargets = [
@@ -677,6 +684,7 @@ struct AssistantView: View {
             "como fazer",
             "modo de preparo",
             "receta", "recetas", "como hacer", "modo de preparación",
+            "recette", "recettes", "comment faire", "preparation",
             "recipe", "recipes", "how to make", "instructions"
         ]
 

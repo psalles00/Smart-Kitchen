@@ -455,6 +455,9 @@ final class AssistantChatManager: ObservableObject {
             // ES
             "que puedo", "puedo hacer", "puedo cocinar", "sugiereme", "sugiere", "sugerir",
             "que opciones", "que recetas", "opciones disponibles", "muestrame", "quiero una", "quiero un",
+            // FR
+            "que puis-je", "puis-je faire", "puis-je cuisiner", "suggere", "suggerer", "suggere-moi",
+            "quelles options", "quelles recettes", "options disponibles", "montre-moi", "je veux une", "je veux un",
             // EN
             "what can", "can i make", "can i cook", "suggest", "show me", "i want"
         ]
@@ -462,6 +465,8 @@ final class AssistantChatManager: ObservableObject {
             "receita", "receitas", "cozinhar", "fazer", "preparar", "sobremesa", "doce",
             // ES
             "receta", "recetas", "cocinar", "preparar", "postre", "dulce",
+            // FR
+            "recette", "recettes", "cuisiner", "faire", "preparer", "dessert", "sucre",
             // EN
             "recipe", "recipes", "cook", "make", "dessert", "sweet"
         ]
@@ -478,12 +483,17 @@ final class AssistantChatManager: ObservableObject {
             "añade", "añadir", "agrega", "agregar", "crea", "crear", "registra", "registrar",
             "guarda", "guardar", "edita", "editar", "actualiza", "actualizar",
             "elimina", "eliminar", "borra", "borrar", "quita", "quitar",
+            // FR
+            "ajoute", "ajouter", "cree", "creer", "enregistre", "enregistrer",
+            "modifie", "modifier", "mets a jour", "mettre a jour",
+            "supprime", "supprimer", "efface", "effacer", "retire", "retirer",
             // EN
             "add", "create", "save", "edit", "update", "delete", "remove"
         ]
         let recipeTargets = [
             "receita", "receitas", "como fazer", "modo de preparo",
             "receta", "recetas", "como hacer", "modo de preparación",
+            "recette", "recettes", "comment faire", "preparation",
             "recipe", "recipes", "how to make", "instructions"
         ]
         return managementCues.contains(where: text.contains) && recipeTargets.contains(where: text.contains)

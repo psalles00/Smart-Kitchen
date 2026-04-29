@@ -1,122 +1,146 @@
 {
-  "sourceLanguage" : "pt-BR",
-  "strings" : {
-    "CFBundleDisplayName" : {
-      "comment" : "Bundle display name",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Smart Kitchen"
+  "sourceLanguage": "pt-BR",
+  "strings": {
+    "CFBundleDisplayName": {
+      "comment": "Bundle display name",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Smart Kitchen"
           }
         }
       }
     },
-    "CFBundleName" : {
-      "comment" : "Bundle name",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "SmartKitchen"
+    "CFBundleName": {
+      "comment": "Bundle name",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "new",
+            "value": "SmartKitchen"
           }
         }
       }
     },
-    "NSCameraUsageDescription" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "O Smart Kitchen usa a câmera para tirar fotos das suas receitas e refeições."
+    "NSCameraUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Smart Kitchen usa a câmera para tirar fotos das suas receitas e refeições."
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Smart Kitchen uses the camera to take photos of your recipes and meals."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smart Kitchen uses the camera to take photos of your recipes and meals."
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Smart Kitchen usa la cámara para tomar fotos de tus recetas y comidas."
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smart Kitchen usa la cámara para tomar fotos de tus recetas y comidas."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smart Kitchen utilise l'appareil photo pour prendre des photos de vos recettes et repas."
           }
         }
       }
     },
-    "NSMicrophoneUsageDescription" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "O Smart Kitchen usa o microfone para registrar refeições por voz."
+    "NSMicrophoneUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Smart Kitchen usa o microfone para registrar refeições por voz."
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Smart Kitchen uses the microphone to log meals by voice."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smart Kitchen uses the microphone to log meals by voice."
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Smart Kitchen usa el micrófono para registrar comidas por voz."
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smart Kitchen usa el micrófono para registrar comidas por voz."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smart Kitchen utilise le microphone pour enregistrer des repas à la voix."
           }
         }
       }
     },
-    "NSPhotoLibraryUsageDescription" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "O Smart Kitchen acessa a galeria para anexar fotos às suas receitas."
+    "NSPhotoLibraryUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Smart Kitchen acessa a galeria para anexar fotos às suas receitas."
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Smart Kitchen accesses your photo library to attach photos to your recipes."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smart Kitchen accesses your photo library to attach photos to your recipes."
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Smart Kitchen accede a tu galería para adjuntar fotos a tus recetas."
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smart Kitchen accede a tu galería para adjuntar fotos a tus recetas."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smart Kitchen accède à votre galerie pour joindre des photos à vos recettes."
           }
         }
       }
     },
-    "NSSpeechRecognitionUsageDescription" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "O Smart Kitchen usa reconhecimento de voz para transcrever o que você falou sobre sua refeição."
+    "NSSpeechRecognitionUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Smart Kitchen usa reconhecimento de voz para transcrever o que você falou sobre sua refeição."
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Smart Kitchen uses speech recognition to transcribe what you said about your meal."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smart Kitchen uses speech recognition to transcribe what you said about your meal."
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Smart Kitchen usa el reconocimiento de voz para transcribir lo que dijiste sobre tu comida."
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smart Kitchen usa el reconocimiento de voz para transcribir lo que dijiste sobre tu comida."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smart Kitchen utilise la reconnaissance vocale pour transcrire ce que vous avez dit sur votre repas."
           }
         }
       }
     }
   },
-  "version" : "1.0"
+  "version": "1.0"
 }
