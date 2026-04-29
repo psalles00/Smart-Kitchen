@@ -58,6 +58,7 @@
 		30DCC9899692118EA7B3B6A7 /* category_database.json in Resources */ = {isa = PBXBuildFile; fileRef = 09E1E857B0D7E0889E28BAFF /* category_database.json */; };
 		31D5CDAF339CA4850B60BED6 /* iCloudSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE34761A8547DB1BC47F0FF5 /* iCloudSettingsView.swift */; };
 		3240CF720DDBCD8CA1B0DA4B /* APIConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 980285F2E9866A086F1FC846 /* APIConfig.swift */; };
+		33D2EC55C4BFBFD6712B95EC /* meta-ja.json in Resources */ = {isa = PBXBuildFile; fileRef = A1D8CBA67DBB7AF6528D0F4D /* meta-ja.json */; };
 		34C4D9EBC144B792537D7BA5 /* SmartKitchenApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0E510B072AA05179DF44BD5 /* SmartKitchenApp.swift */; };
 		375D19649480F7B5238A40DC /* SupabaseClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75AD97696B4183C30DFFE782 /* SupabaseClient.swift */; };
 		3C03E83003EA4DD33E4E1852 /* PlayfairDisplay-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 8C144A56063311B85CEF7DBB /* PlayfairDisplay-Italic.ttf */; };
@@ -395,6 +396,7 @@
 		9FB27D36035A17E426278482 /* NutritionDayState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionDayState.swift; sourceTree = "<group>"; };
 		A01C258879867293F931BB38 /* AddUtensilItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddUtensilItemView.swift; sourceTree = "<group>"; };
 		A0E510B072AA05179DF44BD5 /* SmartKitchenApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartKitchenApp.swift; sourceTree = "<group>"; };
+		A1D8CBA67DBB7AF6528D0F4D /* meta-ja.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "meta-ja.json"; sourceTree = "<group>"; };
 		A4524078F523E665278B2F59 /* Telma-Light.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Telma-Light.otf"; sourceTree = "<group>"; };
 		A5B145E85B7267D6568C3401 /* CalorieRingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalorieRingView.swift; sourceTree = "<group>"; };
 		A60237FCFFA1478DAAEB7DFE /* NutritionAveragesService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionAveragesService.swift; sourceTree = "<group>"; };
@@ -777,6 +779,7 @@
 				34EDFC8006585B1EA7500849 /* meta-es.json */,
 				678AFBB472665B3EF5D72032 /* meta-fr.json */,
 				7387F4D918F7B1429792DB78 /* meta-it.json */,
+				A1D8CBA67DBB7AF6528D0F4D /* meta-ja.json */,
 				4998806E0D06C1D40F262CA5 /* meta-ptbr.json */,
 			);
 			path = icons;
@@ -1131,6 +1134,7 @@
 				1152792F9A61F44478BA5016 /* meta-es.json in Resources */,
 				20D2BCEA77DE73540A796337 /* meta-fr.json in Resources */,
 				91ED1A2929F4C9D41C04D9D6 /* meta-it.json in Resources */,
+				33D2EC55C4BFBFD6712B95EC /* meta-ja.json in Resources */,
 				F554C5B2D131148EAAA88E7F /* meta-ptbr.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

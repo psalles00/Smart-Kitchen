@@ -63,6 +63,12 @@
             "state": "translated",
             "value": "Smart Kitchen utilizza la fotocamera per acquisire etichette degli alimenti e foto dei tuoi pasti e ricette."
           }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smart Kitchenは、食品ラベルや食事・レシピの写真を撮影するためにカメラを使用します。"
+          }
         }
       }
     },
@@ -103,6 +109,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Smart Kitchen utilizza il microfono per registrare note vocali sui tuoi pasti."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smart Kitchenは、食事に関する音声メモを録音するためにマイクを使用します。"
           }
         }
       }
@@ -145,6 +157,12 @@
             "state": "translated",
             "value": "Smart Kitchen ha bisogno di accedere alle tue foto per importare immagini di pasti e ricette."
           }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smart Kitchenは、食事やレシピの画像をインポートするために写真へのアクセスが必要です。"
+          }
         }
       }
     },
@@ -185,6 +203,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Smart Kitchen utilizza il riconoscimento vocale per trascrivere ciò che hai detto sul tuo pasto."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smart Kitchenは、食事について話した内容を文字起こしするために音声認識を使用します。"
           }
         }
       }

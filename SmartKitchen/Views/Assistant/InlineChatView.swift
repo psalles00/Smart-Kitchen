@@ -1230,6 +1230,7 @@ struct InlineChatView: View {
             "zeig mir", "ich mochte", "welche optionen", "welche rezepte",
             "cosa posso", "posso fare", "posso cucinare", "suggerisci", "suggeriscimi",
             "mostrami", "voglio una", "voglio un", "quali opzioni", "quali ricette", "opzioni disponibili",
+            "何を作", "何が作", "何が料理", "提案", "おすすめ", "見せて", "欲しい", "どんなレシピ", "どんなオプション",
             "what can", "can i make", "can i cook", "suggest", "show me", "i want", "based on my pantry"
         ]
         let recipeCues = [
@@ -1238,6 +1239,7 @@ struct InlineChatView: View {
             "recette", "recettes", "cuisiner", "faire", "preparer", "dessert", "sucre", "garde-manger",
             "rezept", "rezepte", "kochen", "machen", "zubereiten", "nachtisch", "dessert", "suss", "vorratskammer",
             "ricetta", "ricette", "cucinare", "fare", "preparare", "dessert", "dolce", "dispensa",
+            "レシピ", "料理", "作る", "準備", "デザート", "甘い", "パントリー",
             "recipe", "recipes", "cook", "make", "dessert", "sweet", "pantry"
         ]
         return suggestionCues.contains(where: text.contains) && recipeCues.contains(where: text.contains)
@@ -1260,6 +1262,7 @@ struct InlineChatView: View {
             "aggiungi", "aggiungere", "crea", "creare", "salva", "salvare",
             "modifica", "modificare", "aggiorna", "aggiornare",
             "elimina", "eliminare", "rimuovi", "rimuovere", "cancella", "cancellare",
+            "追加", "作成", "保存", "編集", "更新", "削除", "消去",
             "add", "create", "save", "edit", "update", "delete", "remove"
         ]
         let recipeTargets = [
@@ -1268,6 +1271,7 @@ struct InlineChatView: View {
             "recette", "recettes", "comment faire", "preparation",
             "rezept", "rezepte", "wie macht man", "zubereitung",
             "ricetta", "ricette", "come fare", "preparazione", "modo di preparazione",
+            "レシピ", "作り方", "調理法",
             "recipe", "recipes", "how to make", "instructions"
         ]
         return managementCues.contains(where: text.contains) && recipeTargets.contains(where: text.contains)
