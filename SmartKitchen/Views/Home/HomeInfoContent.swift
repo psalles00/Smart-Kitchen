@@ -123,6 +123,8 @@ struct HomeInfoContent: View {
             Spacer()
 
             calorieRing
+                .padding(.top, -6)
+                .padding(.bottom, 6)
         }
         .padding(.bottom, -3)
     }
