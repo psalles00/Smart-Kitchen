@@ -48,6 +48,10 @@ struct InlineChatView: View {
     @Binding var pendingExternalMessage: String?
     /// Called when a new conversation is created, so the parent can track the active ID.
     var onConversationCreated: ((UUID) -> Void)? = nil
+    /// When `false`, tapping the empty area below the chat does NOT trigger
+    /// `onDismiss()`. Used by the search-tab AI page where the only way out
+    /// is the explicit "Voltar" button.
+    var dismissOnEmptyTap: Bool = true
 
     /// Current conversation ID. Nil means a new conversation will be created on first message.
     @State private var conversationId: UUID?
@@ -69,7 +73,8 @@ struct InlineChatView: View {
         searchBarState: SearchBarState? = nil,
         isScrollAtTop: Binding<Bool> = .constant(true),
         pendingExternalMessage: Binding<String?> = .constant(nil),
-        onConversationCreated: ((UUID) -> Void)? = nil
+        onConversationCreated: ((UUID) -> Void)? = nil,
+        dismissOnEmptyTap: Bool = true
     ) {
         self.initialQuery = initialQuery
         self.existingConversationId = existingConversationId
@@ -80,6 +85,7 @@ struct InlineChatView: View {
         self._isScrollAtTop = isScrollAtTop
         self._pendingExternalMessage = pendingExternalMessage
         self.onConversationCreated = onConversationCreated
+        self.dismissOnEmptyTap = dismissOnEmptyTap
     }
 
     /// Whether this chat is in "AI Mode" (embedded with unified search bar) vs standalone assistant.
@@ -268,9 +274,12 @@ struct InlineChatView: View {
                             Color.clear
                                 .frame(height: max(chatAreaHeight - 80, 0))
                                 .contentShape(Rectangle())
-                                .onTapGesture {
-                                    onDismiss()
-                                }
+                                .modifier(
+                                    ConditionalEmptyTapDismissModifier(
+                                        enabled: dismissOnEmptyTap,
+                                        onDismiss: onDismiss
+                                    )
+                                )
                         }
                         .padding(.top, isAIMode ? topPinnedInset : 12)
                         .padding(.bottom, 12)
@@ -2126,5 +2135,17 @@ private extension String {
     func capitalizingFirstLetter() -> String {
         guard let first = self.first else { return self }
         return first.uppercased() + self.dropFirst()
+    }
+}
+
+private struct ConditionalEmptyTapDismissModifier: ViewModifier {
+    let enabled: Bool
+    let onDismiss: () -> Void
+    func body(content: Content) -> some View {
+        if enabled {
+            content.onTapGesture { onDismiss() }
+        } else {
+            content
+        }
     }
 }

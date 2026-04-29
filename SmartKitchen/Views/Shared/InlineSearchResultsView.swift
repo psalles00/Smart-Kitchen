@@ -25,6 +25,9 @@ struct InlineSearchResultsView: View {
     @Binding var pendingOpenChat: Bool
     @Binding var pendingNewConversation: Bool
     @Binding var pendingShowHistory: Bool
+    /// When true, suppress the empty-area tap-to-dismiss in the results list and
+    /// in the inline chat. Used by the search-tab AI page.
+    var disableEmptyTapDismiss: Bool = false
 
     private var scrollTopThreshold: CGFloat {
         AssistantScrollMetrics.topThreshold(forTopPadding: topPinnedInset)
@@ -39,7 +42,8 @@ struct InlineSearchResultsView: View {
         pendingChatQuery: Binding<String?>,
         pendingOpenChat: Binding<Bool>,
         pendingNewConversation: Binding<Bool>,
-        pendingShowHistory: Binding<Bool>
+        pendingShowHistory: Binding<Bool>,
+        disableEmptyTapDismiss: Bool = false
     ) {
         self.searchBarState = searchBarState
         self.searchService = searchService
@@ -50,6 +54,7 @@ struct InlineSearchResultsView: View {
         _pendingOpenChat = pendingOpenChat
         _pendingNewConversation = pendingNewConversation
         _pendingShowHistory = pendingShowHistory
+        self.disableEmptyTapDismiss = disableEmptyTapDismiss
 
         let shouldShowHistory = pendingShowHistory.wrappedValue
         let shouldOpenChat = searchBarState.mode == .aiChat
@@ -192,7 +197,8 @@ struct InlineSearchResultsView: View {
             pendingExternalMessage: $pendingExternalChatMessage,
             onConversationCreated: { id in
                 chatExistingConversationId = id
-            }
+            },
+            dismissOnEmptyTap: !disableEmptyTapDismiss
         )
     }
 
@@ -262,9 +268,12 @@ struct InlineSearchResultsView: View {
                     Spacer(minLength: 0)
                         .frame(maxWidth: .infinity)
                         .contentShape(Rectangle())
-                        .onTapGesture {
-                            searchBarState.dismiss()
-                        }
+                        .modifier(
+                            ConditionalEmptyTapDismissResultsModifier(
+                                enabled: !disableEmptyTapDismiss,
+                                onDismiss: { searchBarState.dismiss() }
+                            )
+                        )
                 }
                 .frame(maxWidth: .infinity, minHeight: proxy.size.height, alignment: .top)
                 .padding(.top, topPinnedInset)
@@ -500,4 +509,16 @@ private func looksLikeQuestion(_ query: String) -> Bool {
         if lower.hasPrefix(starter + " ") || lower.hasPrefix(starter + ",") { return true }
     }
     return false
+}
+
+private struct ConditionalEmptyTapDismissResultsModifier: ViewModifier {
+    let enabled: Bool
+    let onDismiss: () -> Void
+    func body(content: Content) -> some View {
+        if enabled {
+            content.onTapGesture { onDismiss() }
+        } else {
+            content
+        }
+    }
 }

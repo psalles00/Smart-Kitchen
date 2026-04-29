@@ -1,6 +1,9 @@
 import SwiftUI
 import SwiftData
 import PhotosUI
+#if os(iOS)
+import UIKit
+#endif
 
 enum SidebarItem: String, CaseIterable, Identifiable {
     case home
@@ -55,6 +58,15 @@ struct ContentView: View {
     @State private var searchDragOffset: CGFloat = 0
     @StateObject private var searchService = UniversalSearchService()
     @StateObject private var searchBarState = SearchBarState()
+
+    // Navigation stack for the search/assistant tab. Owned here so that the
+    // home view's "Perguntar à IA" / "Ideias de receitas" / "Assistente"
+    // shortcuts can both switch to the search tab AND push the AI page.
+    @State private var assistantTabPath: [AssistantTabAIDestination] = []
+    /// Tracks whether the on-screen keyboard is visible so we can hide the tab
+    /// bar only while the user is actively typing. Driven by UIKit keyboard
+    /// notifications on iOS.
+    @State private var isKeyboardVisible: Bool = false
 
     // Search-triggered edit sheets
     @State private var searchEditItem: UnifiedItemSelection?
@@ -342,16 +354,13 @@ struct ContentView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .openAssistantFromWidget)) { _ in
             #if os(iOS)
-            if selectedTab != .assistant { selectedTab = .assistant }
-            #endif
-            // Reveal in idle (search) mode — not AI chat.
+            openAssistantTab()
+            #else
             searchBarState.reveal(mode: .idle)
+            #endif
         }
         .onReceive(NotificationCenter.default.publisher(for: .openAIChatFromWidget)) { _ in
-            #if os(iOS)
-            if selectedTab != .assistant { selectedTab = .assistant }
-            #endif
-            // Reveal in AI chat mode with keyboard open.
+            // Open AI chat mode (handles iOS tab switch + push internally).
             openAIMode()
         }
         .onReceive(NotificationCenter.default.publisher(for: .openNutritionAtDate)) { _ in
@@ -417,7 +426,7 @@ struct ContentView: View {
                                 openAIMode(preset: .recipeIdeas)
                             },
                             onOpenSearch: {
-                                searchBarState.reveal(mode: .idle)
+                                openAssistantTab()
                             },
                             onOpenRecipeImport: openQuickRecipeImport,
                             onOpenFoodCameraDirect: openDirectFoodCamera,
@@ -451,39 +460,54 @@ struct ContentView: View {
                 } label: {
                     Label("Nutrição", systemImage: AppTab.nutrients.icon)
                 }
+
+                Tab(value: AppTab.commandBar, role: .search) {
+                    AssistantSearchTabContent(
+                        searchBarState: searchBarState,
+                        searchService: searchService,
+                        onAction: { handleCommandBarAction($0) },
+                        onOpenFoodCameraDirect: openDirectFoodCamera,
+                        onOpenFoodGalleryDirect: openDirectFoodGallery,
+                        pendingChatQuery: $pendingChatQuery,
+                        pendingOpenChat: $pendingOpenChat,
+                        pendingNewConversation: $pendingNewConversation,
+                        pendingShowHistory: $pendingShowHistory,
+                        path: $assistantTabPath
+                    )
+                } label: {
+                    Label("Buscar", systemImage: AppTab.commandBar.icon)
+                }
             }
             #if os(iOS)
-            .toolbar(searchBarState.isVisible ? .hidden : .automatic, for: .tabBar)
+            // Hide the tab bar only while the keyboard is up; otherwise the
+            // assistant bar always shows alongside the tab bar.
+            .toolbar(isKeyboardVisible ? .hidden : .visible, for: .tabBar)
             #endif
-            .animation(.snappy(duration: 0.22, extraBounce: 0.02), value: searchBarState.isVisible)
             .onChange(of: searchBarState.debouncedSearchText) { _, newValue in
                 guard searchBarState.mode != .aiChat else { return }
                 searchService.search(query: newValue, context: modelContext, showUtensils: settings?.showUtensils == true)
             }
             .environment(\.searchOverlay, searchOverlayView)
-
-            if searchBarState.isVisible {
-                FullscreenAssistantView(
-                    searchBarState: searchBarState,
-                    searchService: searchService,
-                    onAction: { handleCommandBarAction($0) },
-                    onOpenFoodCameraDirect: openDirectFoodCamera,
-                    onOpenFoodGalleryDirect: openDirectFoodGallery,
-                    pendingChatQuery: $pendingChatQuery,
-                    pendingOpenChat: $pendingOpenChat,
-                    pendingNewConversation: $pendingNewConversation,
-                    pendingShowHistory: $pendingShowHistory
-                )
-                .environmentObject(searchBarState)
-                .environment(\.modelContext, modelContext)
-                .transition(.opacity)
-                .zIndex(1)
-            }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             persistentAssistantBar
         }
-        .animation(.snappy(duration: 0.22, extraBounce: 0.02), value: searchBarState.isVisible)
+        #if os(iOS)
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
+            isKeyboardVisible = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+            isKeyboardVisible = false
+        }
+        #endif
+        .onChange(of: searchBarState.isVisible) { _, newValue in
+            // Tapping the persistent assistant bar from any tab focuses it; in
+            // that case we always switch to the assistant (search) tab so the
+            // user sees the assistant content above the bar.
+            if newValue && selectedTab != .commandBar {
+                selectedTab = .commandBar
+            }
+        }
     }
 
     // MARK: - Persistent Search Bar
@@ -497,7 +521,10 @@ struct ContentView: View {
             onOpenFoodGalleryDirect: openDirectFoodGallery
         )
             .padding(.vertical, 6)
-            .padding(.bottom, searchBarState.isVisible ? 0 : 45)
+            // Compensate for the floating tab bar only while it is visible.
+            // When the keyboard opens, the tab bar hides and the safe area
+            // already repositions this inset above the keyboard.
+            .padding(.bottom, isKeyboardVisible ? 0 : 49)
     }
 
     private func openQuickRecipeImport(_ launchMode: RecipeImportLaunchMode) {
@@ -994,9 +1021,13 @@ struct ContentView: View {
     private func handleTabSelectionChange(_ newValue: AppTab) {
         lastContentTab = newValue
 
-        // Dismiss assistant/AI mode when switching tabs
-        if searchBarState.isVisible {
-            searchBarState.dismiss()
+        // When leaving the assistant tab to a content tab, defocus the search
+        // field (hides keyboard) but DO NOT call `searchBarState.dismiss()` —
+        // the AI page navigation state inside the assistant tab must survive
+        // tab switches so the user can come back to where they were.
+        if newValue != .commandBar && searchBarState.isVisible {
+            searchBarState.defocusTrigger += 1
+            searchBarState.isVisible = false
         }
 
         // Animate background theme change with a fade, independently of content swap
@@ -1123,18 +1154,27 @@ struct ContentView: View {
     private func openAIMode(preset: AIChatPreset = .nutritionCoach, prefill: String? = nil) {
         pendingShowHistory = false
         pendingNewConversation = false
-        searchBarState.aiChatPreset = preset
-        searchBarState.searchText = ""
+        // Switch to the assistant (search) tab and push the AI page. The page
+        // itself sets `searchBarState.mode = .aiChat` and routes the prefill
+        // through `pendingChatQuery` / `pendingOpenChat` on appear.
+        openAssistantTab(push: AssistantTabAIDestination(preset: preset, prefill: prefill))
+    }
 
-        if let prefill {
-            pendingOpenChat = false
-            pendingChatQuery = prefill
+    /// Switches the active tab to the assistant (search) tab. If `push` is
+    /// provided, also pushes the corresponding AI page on top of the tab's
+    /// navigation stack. Use `openAssistantTab()` (no argument) to land on
+    /// the idle assistant page (action grid / search results).
+    private func openAssistantTab(push destination: AssistantTabAIDestination? = nil) {
+        if let destination {
+            // Replace the stack with just this destination so repeated taps
+            // don't accumulate duplicate pages.
+            assistantTabPath = [destination]
         } else {
-            pendingChatQuery = nil
-            pendingOpenChat = true
+            assistantTabPath = []
         }
-
-        searchBarState.reveal(mode: .aiChat)
+        if selectedTab != .commandBar {
+            selectedTab = .commandBar
+        }
     }
 
     private func handleQuickRecipeImportDismissed() {
@@ -2230,6 +2270,8 @@ private struct HomeView: View {
         Section("Receitas") {
             Button("Procurar receitas", systemImage: "magnifyingglass") {
                 searchBarState.pageContext = .recipes
+                // Reveal triggers ContentView.onChange(isVisible) which
+                // switches to the assistant tab.
                 searchBarState.reveal(mode: .idle)
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
                     searchBarState.mode = .searching

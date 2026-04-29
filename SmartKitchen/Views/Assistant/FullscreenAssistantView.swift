@@ -18,6 +18,14 @@ enum AssistantScrollMetrics {
 /// Background: LiquidGlass on iOS 26+, solid white/black on older iOS.
 /// Dismiss: tap empty area, drag down, or close button.
 struct FullscreenAssistantView: View {
+    /// How this view is being presented.
+    /// - `.overlay` (default): legacy floating overlay over the app, dismissable
+    ///   via background tap, drag-down, or the close button.
+    /// - `.tab`: hosted as a permanent tab page. All dismiss affordances are
+    ///   suppressed (tap, drag, close button) and the AI chat mode is reached
+    ///   through a navigation push instead of a global mode toggle.
+    enum Presentation { case overlay, tab }
+
     @ObservedObject var searchBarState: SearchBarState
     @ObservedObject var searchService: UniversalSearchService
     @Environment(\.openRecipeInRecipesTab) private var openRecipeInRecipesTab
@@ -32,6 +40,18 @@ struct FullscreenAssistantView: View {
     @Binding var pendingOpenChat: Bool
     @Binding var pendingNewConversation: Bool
     @Binding var pendingShowHistory: Bool
+
+    var presentation: Presentation = .overlay
+    /// When set, the idle "Perguntar à IA" / "Ideias de receitas" buttons call
+    /// this closure (with the desired preset) instead of mutating the global
+    /// `searchBarState.mode`. Used by the search-tab to push the AI page.
+    var onRequestAIMode: ((AIChatPreset) -> Void)? = nil
+    /// When true, render a native back button at the left of the title and use
+    /// the SwiftUI `\.dismiss` environment to pop. Used only by the pushed AI
+    /// page inside the search-tab navigation stack.
+    var showsBackButton: Bool = false
+
+    @Environment(\.dismiss) private var environmentDismiss
 
     // Drag-to-dismiss
     @State private var dragOffset: CGFloat = 0
@@ -63,16 +83,24 @@ struct FullscreenAssistantView: View {
 
     var body: some View {
         ZStack {
-            // Tappable background — dismiss on tap
-            pageBackground
-                .ignoresSafeArea()
-                .onTapGesture { searchBarState.dismiss() }
+            // Background — only dismiss on tap when presented as overlay.
+            if presentation == .overlay {
+                pageBackground
+                    .ignoresSafeArea()
+                    .onTapGesture { searchBarState.dismiss() }
+            } else {
+                pageBackground
+                    .ignoresSafeArea()
+            }
 
             contentArea
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .simultaneousGesture(
-                    dismissDragGesture,
-                    including: isScrollableContentAtTop ? .subviews : .none
+                .modifier(
+                    OverlayDragGestureModifier(
+                        enabled: presentation == .overlay,
+                        gesture: dismissDragGesture,
+                        includeSubviewsWhenAtTop: isScrollableContentAtTop
+                    )
                 )
                 .overlay(alignment: .top) {
                     pinnedHeader
@@ -83,6 +111,38 @@ struct FullscreenAssistantView: View {
         .onAppear {
             withAnimation(.smooth(duration: 0.12)) {
                 contentOpacity = 1
+            }
+        }
+    }
+
+    /// Helper that conditionally attaches the dismiss drag gesture only when
+    /// the view is presented as an overlay. In tab mode no dismiss gesture is
+    /// attached at all.
+    private struct OverlayDragGestureModifier<G: Gesture>: ViewModifier {
+        let enabled: Bool
+        let gesture: G
+        let includeSubviewsWhenAtTop: Bool
+        func body(content: Content) -> some View {
+            if enabled {
+                content.simultaneousGesture(
+                    gesture,
+                    including: includeSubviewsWhenAtTop ? .subviews : .none
+                )
+            } else {
+                content
+            }
+        }
+    }
+
+    /// Same idea for the pinned header high-priority drag.
+    private struct OverlayHeaderDragModifier<G: Gesture>: ViewModifier {
+        let enabled: Bool
+        let gesture: G
+        func body(content: Content) -> some View {
+            if enabled {
+                content.highPriorityGesture(gesture)
+            } else {
+                content
             }
         }
     }
@@ -128,7 +188,21 @@ struct FullscreenAssistantView: View {
 
     @ViewBuilder
     private var header: some View {
-        HStack(alignment: .top) {
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
+            if showsBackButton {
+                Button {
+                    environmentDismiss()
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "chevron.left")
+                        Text("Voltar")
+                    }
+                    .font(.pageTitle)
+                    .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+
             Text(searchBarState.mode == .aiChat ? "Modo IA" : "Assistente")
                 .font(.pageTitle)
                 .foregroundStyle(Color.primary)
@@ -166,6 +240,9 @@ struct FullscreenAssistantView: View {
                     .foregroundStyle(.secondary)
             }
             .buttonStyle(.plain)
+            .opacity(presentation == .tab ? 0 : 1)
+            .allowsHitTesting(presentation != .tab)
+            .frame(width: presentation == .tab ? 0 : nil)
         }
     }
 
@@ -186,7 +263,8 @@ struct FullscreenAssistantView: View {
                 pendingChatQuery: $pendingChatQuery,
                 pendingOpenChat: $pendingOpenChat,
                 pendingNewConversation: $pendingNewConversation,
-                pendingShowHistory: $pendingShowHistory
+                pendingShowHistory: $pendingShowHistory,
+                disableEmptyTapDismiss: presentation == .tab
             )
         } else {
             idleActionButtons
@@ -216,10 +294,14 @@ struct FullscreenAssistantView: View {
                             imageHeight: 82,
                             imageOffset: CGSize(width: 8, height: 0)
                         ) {
-                            searchBarState.aiChatPreset = .nutritionCoach
-                            searchBarState.mode = .aiChat
-                            pendingChatQuery = nil
-                            pendingOpenChat = true
+                            if let onRequestAIMode {
+                                onRequestAIMode(.nutritionCoach)
+                            } else {
+                                searchBarState.aiChatPreset = .nutritionCoach
+                                searchBarState.mode = .aiChat
+                                pendingChatQuery = nil
+                                pendingOpenChat = true
+                            }
                         }
 
                         assistantActionButton(
@@ -230,10 +312,14 @@ struct FullscreenAssistantView: View {
                             imageHeight: 74,
                             imageOffset: CGSize(width: 6, height: 0)
                         ) {
-                            searchBarState.aiChatPreset = .recipeIdeas
-                            searchBarState.mode = .aiChat
-                            pendingChatQuery = nil
-                            pendingOpenChat = true
+                            if let onRequestAIMode {
+                                onRequestAIMode(.recipeIdeas)
+                            } else {
+                                searchBarState.aiChatPreset = .recipeIdeas
+                                searchBarState.mode = .aiChat
+                                pendingChatQuery = nil
+                                pendingOpenChat = true
+                            }
                         }
 
                         assistantActionButton(
@@ -501,7 +587,12 @@ struct FullscreenAssistantView: View {
                 .padding(.top, 12)
                 .padding(.bottom, 8)
                 .contentShape(Rectangle())
-                .highPriorityGesture(dismissDragGesture)
+                .modifier(
+                    OverlayHeaderDragModifier(
+                        enabled: presentation == .overlay,
+                        gesture: dismissDragGesture
+                    )
+                )
                 .background(Color.white, ignoresSafeAreaEdges: .top)
 
             Rectangle()
@@ -530,3 +621,124 @@ struct FullscreenAssistantView: View {
             .fill(Color.white)
     }
 }
+
+// MARK: - Search-Tab Hosting
+
+#if os(iOS)
+/// Identifies the AI page pushed onto the search tab navigation stack.
+struct AssistantTabAIDestination: Hashable {
+    let preset: AIChatPreset
+    var prefill: String? = nil
+}
+
+/// Tab content used by the new "Buscar" (search) tab. Hosts the assistant in
+/// `.tab` presentation mode (no close/dismiss affordances) and routes the
+/// "Perguntar à IA" / "Ideias de receitas" actions through a NavigationStack
+/// push so the AI mode lives as a separate page with a native back button.
+struct AssistantSearchTabContent: View {
+    @ObservedObject var searchBarState: SearchBarState
+    @ObservedObject var searchService: UniversalSearchService
+
+    let onAction: (CommandBarAction) -> Void
+    let onOpenFoodCameraDirect: () -> Void
+    let onOpenFoodGalleryDirect: () -> Void
+
+    @Binding var pendingChatQuery: String?
+    @Binding var pendingOpenChat: Bool
+    @Binding var pendingNewConversation: Bool
+    @Binding var pendingShowHistory: Bool
+
+    @Binding var path: [AssistantTabAIDestination]
+
+    var body: some View {
+        NavigationStack(path: $path) {
+            FullscreenAssistantView(
+                searchBarState: searchBarState,
+                searchService: searchService,
+                onAction: onAction,
+                onOpenFoodCameraDirect: onOpenFoodCameraDirect,
+                onOpenFoodGalleryDirect: onOpenFoodGalleryDirect,
+                pendingChatQuery: $pendingChatQuery,
+                pendingOpenChat: $pendingOpenChat,
+                pendingNewConversation: $pendingNewConversation,
+                pendingShowHistory: $pendingShowHistory,
+                presentation: .tab,
+                onRequestAIMode: { preset in
+                    path.append(AssistantTabAIDestination(preset: preset))
+                }
+            )
+            .toolbar(.hidden, for: .navigationBar)
+            .navigationDestination(for: AssistantTabAIDestination.self) { destination in
+                AssistantSearchTabAIPage(
+                    destination: destination,
+                    searchBarState: searchBarState,
+                    searchService: searchService,
+                    onAction: onAction,
+                    onOpenFoodCameraDirect: onOpenFoodCameraDirect,
+                    onOpenFoodGalleryDirect: onOpenFoodGalleryDirect,
+                    pendingChatQuery: $pendingChatQuery,
+                    pendingOpenChat: $pendingOpenChat,
+                    pendingNewConversation: $pendingNewConversation,
+                    pendingShowHistory: $pendingShowHistory
+                )
+            }
+        }
+    }
+}
+
+/// Pushed page that displays the assistant locked in AI chat mode. Uses the
+/// system back button (NavigationStack) and exposes the same chat UI as the
+/// overlay flow, but without any close affordances.
+private struct AssistantSearchTabAIPage: View {
+    let destination: AssistantTabAIDestination
+    @ObservedObject var searchBarState: SearchBarState
+    @ObservedObject var searchService: UniversalSearchService
+
+    let onAction: (CommandBarAction) -> Void
+    let onOpenFoodCameraDirect: () -> Void
+    let onOpenFoodGalleryDirect: () -> Void
+
+    @Binding var pendingChatQuery: String?
+    @Binding var pendingOpenChat: Bool
+    @Binding var pendingNewConversation: Bool
+    @Binding var pendingShowHistory: Bool
+
+    var body: some View {
+        FullscreenAssistantView(
+            searchBarState: searchBarState,
+            searchService: searchService,
+            onAction: onAction,
+            onOpenFoodCameraDirect: onOpenFoodCameraDirect,
+            onOpenFoodGalleryDirect: onOpenFoodGalleryDirect,
+            pendingChatQuery: $pendingChatQuery,
+            pendingOpenChat: $pendingOpenChat,
+            pendingNewConversation: $pendingNewConversation,
+            pendingShowHistory: $pendingShowHistory,
+            presentation: .tab,
+            onRequestAIMode: nil,
+            showsBackButton: true
+        )
+        .toolbar(.hidden, for: .navigationBar)
+        .onAppear {
+            searchBarState.aiChatPreset = destination.preset
+            searchBarState.mode = .aiChat
+            if let prefill = destination.prefill, !prefill.isEmpty {
+                pendingOpenChat = false
+                pendingChatQuery = prefill
+            } else {
+                pendingChatQuery = nil
+                pendingOpenChat = true
+            }
+        }
+        .onDisappear {
+            // Reset to idle so the persistent search bar / other entry points
+            // don't stay stuck in AI mode after popping back.
+            pendingOpenChat = false
+            searchBarState.mode = .idle
+            searchBarState.aiChatPreset = .nutritionCoach
+        }
+    }
+}
+#endif
+
+

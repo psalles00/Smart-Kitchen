@@ -282,7 +282,9 @@ struct UnifiedSearchBar: View {
 
     private var closeButton: some View {
         Button(role: .cancel) {
-            state.dismiss()
+            // Apenas encerra o modo de digitação (defocus + teclado), mantendo
+            // a barra/overlay aberta. O usuário fecha o overlay por outros meios.
+            state.defocusTrigger += 1
         } label: {
             Image(systemName: "xmark")
                 .font(.system(size: 17, weight: .semibold))
