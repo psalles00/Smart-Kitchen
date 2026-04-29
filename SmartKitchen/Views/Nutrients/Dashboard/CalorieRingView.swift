@@ -20,14 +20,17 @@ struct CalorieRingView: View {
         #endif
     }
 
+    private var titleFont: Font {
+        .custom("Bricolage Grotesque", size: 96, relativeTo: .largeTitle).weight(.bold)
+    }
+
     var body: some View {
-        VStack(spacing: 2) {
+        VStack(spacing: -10) {
             Text("\(remaining)")
-                .font(.custom("Bricolage Grotesque", size: 96, relativeTo: .largeTitle).weight(.bold))
-                .foregroundStyle(titleColor)
+                .font(titleFont)
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
-                .contentTransition(.numericText())
+                .foregroundStyle(titleColor)
 
             Text("de \(goal) kcal restantes")
                 .font(.subheadline.weight(.medium))

@@ -91,13 +91,27 @@ struct NutritionDayTile: View {
                 if hasFill {
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
                         .fill(stateBackgroundColor)
+                } else if showsDottedOutline {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .strokeBorder(
+                            Color.secondary.opacity(0.45),
+                            style: StrokeStyle(lineWidth: 1, dash: [2.5, 2.5])
+                        )
                 }
             }
         } else {
-            // Month view: continua usando círculo, sem borda.
+            // Month view: continua usando círculo, sem borda — exceto pelos
+            // dias passados sem registros, que recebem uma borda pontilhada
+            // sutil para indicar que existem (mas estão vazios).
             ZStack {
                 if hasFill {
                     Circle().fill(stateBackgroundColor)
+                } else if showsDottedOutline {
+                    Circle()
+                        .strokeBorder(
+                            Color.secondary.opacity(0.45),
+                            style: StrokeStyle(lineWidth: 1, dash: [2.5, 2.5])
+                        )
                 }
                 Text(date.formatted(.dateTime.day()))
                     .font(.system(size: 13, weight: .semibold, design: .rounded))
@@ -105,6 +119,19 @@ struct NutritionDayTile: View {
                     .strikethrough(state == .canceled, color: .secondary)
             }
             .frame(width: 32, height: 32)
+        }
+    }
+
+    /// Mostra apenas em dias que não estão ativos/preenchidos e não são futuros:
+    /// hoje sem registros nunca cai aqui (tem fundo cinza), futuro fica dimmed.
+    /// Sobra o caso `pastEmpty` (passado sem registros) — exatamente o pedido.
+    private var showsDottedOutline: Bool {
+        guard !hasFill, !isFuture else { return false }
+        switch state {
+        case .pastEmpty:
+            return true
+        default:
+            return false
         }
     }
 

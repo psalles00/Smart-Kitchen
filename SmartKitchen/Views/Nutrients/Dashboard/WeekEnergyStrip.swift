@@ -16,6 +16,10 @@ struct WeekEnergyStrip: View {
 
     private static let totalWeeks = 53
     private static let currentWeekIndex = totalWeeks - 1
+    /// Altura comum entre week scroll e a barra do month view, para que o
+    /// botão de calendário (e o botão Hoje) preservem a mesma posição
+    /// vertical ao alternar entre os dois modos.
+    private static let toolbarRowHeight: CGFloat = 74
 
     @State private var hasScrolledToInitial = false
 
@@ -28,12 +32,13 @@ struct WeekEnergyStrip: View {
     var body: some View {
         if isMonthExpanded {
             VStack(spacing: 6) {
-                HStack(alignment: .top, spacing: 8) {
+                HStack(alignment: .center, spacing: 0) {
                     calendarToggleButton
                     Spacer()
                     backToTodayButton
+                        .padding(.trailing, 4)
                 }
-                .padding(.horizontal, 4)
+                .frame(height: Self.toolbarRowHeight)
 
                 MonthCalendarStrip(
                     selectedDate: $selectedDate,
@@ -47,6 +52,7 @@ struct WeekEnergyStrip: View {
                 calendarToggleButton
                 weekScrollView
             }
+            .frame(height: Self.toolbarRowHeight)
         }
     }
 
@@ -84,7 +90,8 @@ struct WeekEnergyStrip: View {
     }
 
     /// Pill discreto exibido quando o calendário está aberto, para retornar
-    /// rapidamente para o dia de hoje.
+    /// rapidamente para o dia de hoje. Mantido na mesma linha horizontal
+    /// do botão de calendário (alinhado pelo container `toolbarRowHeight`).
     private var backToTodayButton: some View {
         Button {
             #if canImport(UIKit)
@@ -94,19 +101,14 @@ struct WeekEnergyStrip: View {
                 selectedDate = Calendar.current.startOfDay(for: .now)
             }
         } label: {
-            VStack(spacing: 4) {
-                Text(" ")
-                    .font(.system(.caption2, design: .rounded, weight: .medium))
-
-                Label("Hoje", systemImage: "target")
-                    .font(.system(.caption, design: .rounded, weight: .semibold))
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(
-                        Capsule().fill(PageTheme.nutrients.accentColor.opacity(0.14))
-                    )
-                    .foregroundStyle(PageTheme.nutrients.accentColor)
-            }
+            Label("Hoje", systemImage: "target")
+                .font(.system(.caption, design: .rounded, weight: .semibold))
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(
+                    Capsule().fill(PageTheme.nutrients.accentColor.opacity(0.14))
+                )
+                .foregroundStyle(PageTheme.nutrients.accentColor)
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Voltar para hoje")
@@ -127,11 +129,16 @@ struct WeekEnergyStrip: View {
                 .scrollTargetLayout()
             }
             .scrollTargetBehavior(.paging)
-            .frame(height: 74)
+            .frame(height: Self.toolbarRowHeight)
             .onAppear {
-                guard !hasScrolledToInitial else { return }
+                // O LazyHStack reinicia em offset 0 quando reaparece; sempre
+                // reposicionamos para a semana da data selecionada, tanto na
+                // primeira aparição quanto ao voltar do calendário mensal.
                 hasScrolledToInitial = true
-                proxy.scrollTo(weekIndex(for: selectedDate), anchor: .trailing)
+                let target = weekIndex(for: selectedDate)
+                DispatchQueue.main.async {
+                    proxy.scrollTo(target, anchor: .trailing)
+                }
             }
             .onChange(of: weekStartsOnMonday) { _, _ in
                 proxy.scrollTo(Self.currentWeekIndex, anchor: .trailing)
