@@ -215,6 +215,16 @@ final class SharedImportInbox {
 
     private init() {}
 
+    private func explicitToken(from url: URL) -> String? {
+        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
+            return nil
+        }
+
+        return components.queryItems?
+            .first(where: { $0.name == "token" })?
+            .value
+    }
+
     @discardableResult
     func claimPendingFromBridge() -> Bool {
         guard let token = SharedImportBridge.pendingToken else {
@@ -246,10 +256,22 @@ final class SharedImportInbox {
             return false
         }
 
-        guard let token = components.queryItems?.first(where: { $0.name == "token" })?.value,
-              !token.isEmpty else {
-            RecipeImportLogger.error("shared inbox missing token")
+        let urlToken = explicitToken(from: url)
+        let bridgeToken = SharedImportBridge.pendingToken
+
+        if let bridgeToken,
+           urlToken == nil || bridgeToken == urlToken {
+            RecipeImportLogger.info("shared inbox claiming pending bridge token=\(bridgeToken) from route")
+            return claimPendingFromBridge()
+        }
+
+        guard let token = urlToken, !token.isEmpty else {
+            RecipeImportLogger.error("shared inbox missing token and bridge was empty")
             return false
+        }
+
+        if let bridgeToken, bridgeToken != token {
+            RecipeImportLogger.info("shared inbox route token mismatch bridge=\(bridgeToken) url=\(token); preferring url token")
         }
 
         SharedImportBridge.setPendingToken(token)

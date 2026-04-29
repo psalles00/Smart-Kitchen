@@ -12,27 +12,32 @@ final class UniversalSearchService: ObservableObject {
     private var debounceTask: Task<Void, Never>?
 
     /// Perform a search across all data sources.
-    /// SwiftData queries are debounced; ItemDatabase results are immediate.
+    /// Both ItemDatabase suggestions and SwiftData queries are debounced by 1s
+    /// so that typing in the assistant search field stays responsive — work
+    /// only fires once the user pauses for ≥ 1 second.
     func search(query: String, context: ModelContext, showUtensils: Bool = false) {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        // Immediate: ItemDatabase suggestions (in-memory, very fast)
-        suggestions = ItemDatabase.shared.search(query: trimmed, limit: 20)
-
-        // Debounce SwiftData queries
+        // Cancel any in-flight debounced search.
         debounceTask?.cancel()
+
         guard !trimmed.isEmpty else {
             results = []
+            suggestions = []
             isSearching = false
             return
         }
 
         isSearching = true
-        debounceTask = Task {
-            try? await Task.sleep(nanoseconds: 120_000_000) // 120ms debounce
+        debounceTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 1_000_000_000) // 1s debounce
+            guard !Task.isCancelled, let self else { return }
+
+            let nextSuggestions = ItemDatabase.shared.search(query: trimmed, limit: 20)
+            let found = self.performSearch(query: trimmed, context: context, showUtensils: showUtensils)
             guard !Task.isCancelled else { return }
-            let found = performSearch(query: trimmed, context: context, showUtensils: showUtensils)
-            guard !Task.isCancelled else { return }
+
+            self.suggestions = nextSuggestions
             self.results = found
             self.isSearching = false
         }

@@ -5,6 +5,7 @@
 - Recuperação: Se o app abrir "vazio" ou houver falha de persistência, PARE. Priorize a recuperação dos dados.
 - Sempre busque a documentação oficial da SwiftUI e do Xcode pra entender o que fazer.
 - NUNCA remova ou altere o "Team" em Signing & Capabilities dos Targets.
+- NUNCA remova ou altere a Capability "App Groups" em SmartKitchenShareExtension.
 - Se for necessário passar por cima de alguma das regras deste documento, o agente deve perguntar ao usuário e obter confirmação explícita ANTES de executar a ação. Isso é inegociável.
 
 # Procedimento e Build

@@ -20,6 +20,17 @@ extension Notification.Name {
     static let shareImportRecipeSaved = Notification.Name("com.smartkitchen.shareImport.recipeSaved")
 }
 
+private struct SharedImportPresentationEnabledKey: EnvironmentKey {
+    static let defaultValue = true
+}
+
+extension EnvironmentValues {
+    var sharedImportPresentationEnabled: Bool {
+        get { self[SharedImportPresentationEnabledKey.self] }
+        set { self[SharedImportPresentationEnabledKey.self] = newValue }
+    }
+}
+
 /// View modifier that presents the Recipe Import flow automatically whenever
 /// `RecipeImportInbox.shared.pendingSource` becomes non-nil. Attach once at the
 /// scene root (applied in `SmartKitchenApp`).
@@ -62,23 +73,44 @@ struct RecipeImportInboxHost: ViewModifier {
 /// callbacks routed back to ContentView.
 struct SharedImportInboxHost: ViewModifier {
 
+    private enum Presentation: Identifiable, Equatable {
+        case recipe(token: String, source: RecipeImportSource)
+        case actions(SharedImportItem)
+
+        var id: String {
+            switch self {
+            case .recipe(let token, _):
+                return "\(token)-recipe"
+            case .actions(let item):
+                return "\(item.id)-actions"
+            }
+        }
+
+        var token: String {
+            switch self {
+            case .recipe(let token, _):
+                return token
+            case .actions(let item):
+                return item.id
+            }
+        }
+    }
+
+    @Environment(\.sharedImportPresentationEnabled) private var isPresentationEnabled
     @State private var inbox = SharedImportInbox.shared
-    @State private var activeItem: SharedImportItem?
-    @State private var recipeSource: RecipeImportSource?
-    @State private var isPresented: Bool = false
+    @State private var activePresentation: Presentation?
+    @State private var activeToken: String?
     /// Tracks the recipe id saved from inside the host so we can post it on
     /// dismissal (avoids racing the sheet-dismiss transaction).
     @State private var pendingSavedRecipeID: UUID?
 
     func body(content: Content) -> some View {
         content
-            .sheet(isPresented: $isPresented, onDismiss: handleDismiss) {
-                sheetBody
+            .sheet(item: $activePresentation, onDismiss: handleDismiss) { presentation in
+                sheetBody(for: presentation)
             }
             .onAppear {
-                guard !isPresented, let pendingItem = inbox.pendingItem else { return }
-                RecipeImportLogger.info("shared-import host presenting existing pending item token=\(pendingItem.id)")
-                present(pendingItem)
+                presentPendingItemIfPossible(trigger: "onAppear")
             }
             .onChange(of: inbox.pendingItem?.id) { _, newValue in
                 guard let token = newValue,
@@ -90,40 +122,46 @@ struct SharedImportInboxHost: ViewModifier {
                     return
                 }
                 RecipeImportLogger.info("shared-import host pendingItem detected token=\(token) kind=\(pendingItem.kind.rawValue)")
-                present(pendingItem)
+                presentPendingItemIfPossible(item: pendingItem, trigger: "pending item change")
+            }
+            .onChange(of: isPresentationEnabled) { _, newValue in
+                guard newValue else { return }
+                presentPendingItemIfPossible(trigger: "presentation gate enabled")
             }
     }
 
     @ViewBuilder
-    private var sheetBody: some View {
-        if let source = recipeSource {
+    private func sheetBody(for presentation: Presentation) -> some View {
+        switch presentation {
+        case .recipe(_, let source):
             RecipeImportHostView(initialSource: source) { recipeID in
                 RecipeImportLogger.info("shared-import host recipe saved id=\(recipeID.uuidString)")
                 pendingSavedRecipeID = recipeID
-                isPresented = false
+                activePresentation = nil
             }
             .modelContainer(CloudSyncService.shared.container)
             #if os(iOS)
             .forceLightStatusBar()
             #endif
-        } else if let item = activeItem {
+
+        case .actions(let item):
             SharedImportActionView(
                 item: item,
                 onReviewRecipe: {
                     guard let source = item.recipeImportSource else {
                         RecipeImportLogger.error("shared-import host onReviewRecipe missing source kind=\(item.kind.rawValue)")
-                        isPresented = false
+                        activePresentation = nil
                         return
                     }
                     RecipeImportLogger.info("shared-import host swap to RecipeImportHostView \(RecipeImportLogger.sourceSummary(source))")
-                    recipeSource = source
+                    activePresentation = .recipe(token: item.id, source: source)
                 },
                 onRegisterFood: item.foodCapture == nil ? nil : {
                     if let capture = item.foodCapture {
                         SharedFoodCaptureInbox.shared.capture(capture)
                     }
                     NotificationCenter.default.post(name: .shareImportRouteToNutrients, object: nil)
-                    isPresented = false
+                    activePresentation = nil
                 },
                 onAskAssistant: item.assistantPrefill == nil ? nil : {
                     if let prefill = item.assistantPrefill {
@@ -133,60 +171,47 @@ struct SharedImportInboxHost: ViewModifier {
                             userInfo: ["prefill": prefill]
                         )
                     }
-                    isPresented = false
+                    activePresentation = nil
                 },
                 onDismiss: {
-                    isPresented = false
+                    activePresentation = nil
                 }
             )
-        } else {
-            // Fallback: this should never present, but if it ever does we
-            // show an explicit error rather than silently auto-dismissing,
-            // which previously masked the regression.
-            NavigationStack {
-                VStack(spacing: 16) {
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .font(.system(size: 36))
-                        .foregroundStyle(.orange)
-                    Text("Não foi possível abrir o compartilhamento")
-                        .font(.headline)
-                    Text("O conteúdo compartilhado ficou indisponível antes da importação começar. Tente compartilhar novamente.")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
-                    Button("Fechar") { isPresented = false }
-                        .buttonStyle(.borderedProminent)
-                }
-                .padding(24)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                #if os(iOS)
-                .navigationBarTitleDisplayMode(.inline)
-                #endif
-                .onAppear {
-                    RecipeImportLogger.error("shared-import host presented without payload")
-                }
-            }
         }
     }
 
     private func present(_ item: SharedImportItem) {
-        activeItem = item
+        activeToken = item.id
         // For URL shares we skip the action chooser and go straight to the
         // Recipe Import host (matches the previous behavior).
         if item.kind == .url, let source = item.recipeImportSource {
-            recipeSource = source
+            RecipeImportLogger.info("shared-import host prepared direct RecipeImportHostView token=\(item.id) \(RecipeImportLogger.sourceSummary(source))")
+            activePresentation = .recipe(token: item.id, source: source)
         } else {
-            recipeSource = nil
+            activePresentation = .actions(item)
         }
-        isPresented = true
+    }
+
+    private func presentPendingItemIfPossible(item: SharedImportItem? = nil, trigger: String) {
+        guard activePresentation == nil else { return }
+
+        let pendingItem = item ?? inbox.pendingItem
+        guard let pendingItem else { return }
+
+        guard isPresentationEnabled else {
+            RecipeImportLogger.info("shared-import host deferred presentation token=\(pendingItem.id) trigger=\(trigger)")
+            return
+        }
+
+        RecipeImportLogger.info("shared-import host presenting token=\(pendingItem.id) trigger=\(trigger)")
+        present(pendingItem)
     }
 
     private func handleDismiss() {
-        let token = activeItem?.id
+        let token = activeToken
         let savedRecipeID = pendingSavedRecipeID
         pendingSavedRecipeID = nil
-        recipeSource = nil
-        activeItem = nil
+        activeToken = nil
 
         if let token {
             inbox.clear(token: token)
@@ -204,7 +229,7 @@ struct SharedImportInboxHost: ViewModifier {
         // dismissing, present it on the next runloop tick.
         if let next = inbox.pendingItem, next.id != token {
             Task { @MainActor in
-                present(next)
+                    presentPendingItemIfPossible(item: next, trigger: "post-dismiss pending item")
             }
         }
     }

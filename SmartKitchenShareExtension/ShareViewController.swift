@@ -410,7 +410,7 @@ class ShareViewController: UIViewController {
                 try? FileManager.default.removeItem(at: localURL)
             }
 
-            guard let deepLink = URL(string: "smartkitchen://shared-import?token=\(token)") else {
+            guard let deepLink = URL(string: "smartkitchen://shared-import") else {
                 await finish(with: nil)
                 return
             }

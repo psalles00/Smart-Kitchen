@@ -62,7 +62,7 @@ targets:
     capabilities:
       - iCloud:
           cloudKit: true
-        containerIdentifiers: [iCloud.com.pedrosalles.smartkitchen.sync, iCloud.com.pedrosalles.smartkitchen.syn]
+        containerIdentifiers: [iCloud.com.pedrosalles.smartkitchen.syn, iCloud.com.pedrosalles.smartkitchen.sync]
       - pushNotifications: {}
       - backgroundModes:
           modes: [remote-notification]
@@ -111,6 +111,9 @@ targets:
               NSExtensionActivationSupportsText: true
     entitlements:
       path: SmartKitchenShareExtension/SmartKitchenShareExtension.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.pedrosalles.smartkitchen.sync
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.pedrosalles.smartkitchen.sync.ShareExtension

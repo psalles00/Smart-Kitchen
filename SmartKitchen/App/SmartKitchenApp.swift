@@ -105,6 +105,11 @@ struct SmartKitchenApp: App {
     @Environment(\.scenePhase) private var scenePhase
     @State private var cloudSync = CloudSyncService.shared
     @State private var didRunPostLaunchBootstrap = false
+    /// Drives the splash screen overlay: stays `false` until the data layer
+    /// (SwiftData container + seeders + migrations + backup recovery) has
+    /// finished its post-launch bootstrap. While `false`, the user cannot
+    /// interact with the app — they see the centered logo splash instead.
+    @State private var isAppReady = false
     /// Last time we ran the on-foreground maintenance work
     /// (`syncNow` + reschedule expiry notifications). Used to throttle that
     /// work so brief background hops don't repeatedly hit the model
@@ -123,9 +128,24 @@ struct SmartKitchenApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .modelContainer(cloudSync.container)
-                .id(cloudSync.containerID)
+            ZStack {
+                ContentView()
+                    .modelContainer(cloudSync.container)
+                    .id(cloudSync.containerID)
+                    // Hide ContentView entirely while the splash is up so it
+                    // can't capture taps and so its first frame work happens
+                    // off the user's critical path.
+                    .opacity(isAppReady ? 1 : 0)
+                    .allowsHitTesting(isAppReady)
+
+                if !isAppReady {
+                    SplashView()
+                        .transition(.opacity)
+                        .zIndex(1)
+                }
+            }
+            .animation(.easeOut(duration: 0.25), value: isAppReady)
+            .environment(\.sharedImportPresentationEnabled, isAppReady && scenePhase == .active)
                 // Sheets hosted OUTSIDE `.id(cloudSync.containerID)` survive
                 // the ContentView teardown that happens when CloudKit
                 // activation swaps the `ModelContainer` shortly after launch.
@@ -209,8 +229,8 @@ struct SmartKitchenApp: App {
         guard !didRunPostLaunchBootstrap else { return }
         didRunPostLaunchBootstrap = true
 
-        // Let the first frame render before running store maintenance.
-        try? await Task.sleep(for: .milliseconds(350))
+        // Let the splash render its first frame before doing heavy work.
+        try? await Task.sleep(for: .milliseconds(50))
 
         let context = ModelContext(cloudSync.container)
         DataSeeder.seedIfNeeded(context: context)
@@ -218,6 +238,10 @@ struct SmartKitchenApp: App {
         _ = BackupManager.shared.restoreLatestBackupIfCurrentStoreNeedsRecovery(context: context)
 
         cloudSync.activateCloudSyncIfNeededOnLaunch()
+
+        // Lift the splash now that the data layer is ready and ContentView
+        // can render with all SwiftData stores fully prepared.
+        isAppReady = true
     }
 
     // MARK: - Appearance

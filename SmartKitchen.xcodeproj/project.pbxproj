@@ -76,6 +76,7 @@
 		59DE40F206690892F957BCE8 /* RecipeIngredientsEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 025B8D2CE9B972E1D778416B /* RecipeIngredientsEditor.swift */; };
 		5B159D7F29B8A025F734BEB3 /* Boska-ExtralightItalic.otf in Resources */ = {isa = PBXBuildFile; fileRef = D2D194C91AB19D58E1F0BEB6 /* Boska-ExtralightItalic.otf */; };
 		5BB768416FD55EBFE8C38AB3 /* NutritionOnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ECDADFEB6EE40C450C80E7B /* NutritionOnboardingView.swift */; };
+		5C93BCEFA1F9E892A85293AA /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFD9A8F429B03EDF77B771FE /* SplashView.swift */; };
 		5CB1DC3167BF6B3686A75305 /* IngredientNormalizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3975EB9E1F06E9235BC26A63 /* IngredientNormalizer.swift */; };
 		5D2205566544B0E0E3120C08 /* AssistantWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54BACCB0F0C76EA946F2CE95 /* AssistantWidget.swift */; };
 		5EEC1B0DA5DA071C0FF43DED /* ItemEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A2B9A25959E9E24FA72DBF7 /* ItemEntry.swift */; };
@@ -457,6 +458,7 @@
 		FD5ABCE32502F5BC5C5CB4DF /* DataSeeder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataSeeder.swift; sourceTree = "<group>"; };
 		FF771623AD1F947418F58497 /* SmartKitchenShareExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SmartKitchenShareExtension.entitlements; sourceTree = "<group>"; };
 		FFD9669D9EEC7E8ED456843E /* UnifiedSearchBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnifiedSearchBar.swift; sourceTree = "<group>"; };
+		FFD9A8F429B03EDF77B771FE /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -837,6 +839,7 @@
 				10B7620BD02EA643ABD8F85C /* RecipeImagePlaceholder.swift */,
 				95C0A549E03D17B6CB5D79C2 /* SearchBarState.swift */,
 				AFCEEBA0F45A1486F9EE603B /* SettingsButton.swift */,
+				FFD9A8F429B03EDF77B771FE /* SplashView.swift */,
 				0AFAA134B36C06334F7B143B /* StatusBarStyleView.swift */,
 				600EDD530C0ABD3D8C83E88F /* Theme.swift */,
 				76914732873AAE3D425B8975 /* ThemedBackgroundView.swift */,
@@ -1232,6 +1235,7 @@
 				41968D938670AE56F73104AF /* SharingService.swift in Sources */,
 				34C4D9EBC144B792537D7BA5 /* SmartKitchenApp.swift in Sources */,
 				D87D8AD485F062B81200217A /* SocialURLPipeline.swift in Sources */,
+				5C93BCEFA1F9E892A85293AA /* SplashView.swift in Sources */,
 				AA81B7D69F5621CEB19398EB /* StatusBarStyleView.swift in Sources */,
 				7807253BB73E6F7177EECA32 /* SuggestionChipsView.swift in Sources */,
 				375D19649480F7B5238A40DC /* SupabaseClient.swift in Sources */,
