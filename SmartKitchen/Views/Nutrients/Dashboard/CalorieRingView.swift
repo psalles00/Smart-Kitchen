@@ -44,7 +44,7 @@ struct CalorieRingView: View {
                                 ? Color(red: 0.15, green: 0.02, blue: 0.02)
                                 : Color(red: 0.02, green: 0.12, blue: 0.06)
                         ],
-                        center: UnitPoint(x: 0.5, y: -1.8),
+                        center: UnitPoint(x: 0.5, y: -2.6),
                         startRadius: 0,
                         endRadius: 320
                     )

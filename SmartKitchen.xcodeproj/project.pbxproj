@@ -36,6 +36,7 @@
 		1B0C4B101196B1D8A925D1BE /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54E9C41052AFBFDE995CAA53 /* NotificationService.swift */; };
 		1BB5E688AF8BFEE228F01A7E /* AssistantChatManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F95839547159000637E07B07 /* AssistantChatManager.swift */; };
 		1F1DCA77E18AF1B735DA83AD /* NutritionScore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95C7D569A1E2AF11186C7EDE /* NutritionScore.swift */; };
+		1F60F7B0D8566E0FB6604085 /* DictationButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90105047663BE8A4F0F3E64 /* DictationButton.swift */; };
 		22291D641D0EBDD094548050 /* WebURLPipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4F29CCEC6FC8E6E2DFFD7D2 /* WebURLPipeline.swift */; };
 		2284AB10BD5726144C4D9404 /* Telma-Bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 45656677AD3714E163ED9011 /* Telma-Bold.otf */; };
 		2447B82F271152F2AB5DDEF9 /* Boska-Regular.otf in Resources */ = {isa = PBXBuildFile; fileRef = 4F4B90D9D920F1E391155645 /* Boska-Regular.otf */; };
@@ -99,6 +100,7 @@
 		751B7A12165A82AE95684224 /* ConversationHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23BD6AC4B303BC43FF6948FB /* ConversationHistoryView.swift */; };
 		75F19966C3ADBF3C1FD656FA /* HapticManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39E3D008679762441FBCD92E /* HapticManager.swift */; };
 		76B7379BFC060F245F9CB736 /* AddRecipeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6BE4C724AFB81764F1B248F /* AddRecipeView.swift */; };
+		77235BEF81D671EBB2EF503D /* AIModeSuggestions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE82C062B050BC096DBDDAA2 /* AIModeSuggestions.swift */; };
 		7807253BB73E6F7177EECA32 /* SuggestionChipsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88169FAA4B287DCB9C18EC8D /* SuggestionChipsView.swift */; };
 		7B0EB9E21395E97532FB33B6 /* ImageDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88F448E79C9A14ECE7D06604 /* ImageDownloader.swift */; };
 		7B26A0D398BE763B89AC5079 /* OpenRouterClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9356E8DED49AB482579FA115 /* OpenRouterClient.swift */; };
@@ -378,6 +380,7 @@
 		AB394495821B8AC8F358A0D8 /* Boska-Medium.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Boska-Medium.otf"; sourceTree = "<group>"; };
 		AB5922AD808C26CB4738DAC7 /* CookingModeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CookingModeView.swift; sourceTree = "<group>"; };
 		AE323113A368602122AD89DE /* TimeRange.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeRange.swift; sourceTree = "<group>"; };
+		AE82C062B050BC096DBDDAA2 /* AIModeSuggestions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIModeSuggestions.swift; sourceTree = "<group>"; };
 		AF2A69495D5099735600135C /* BricolageGrotesque-Variable.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "BricolageGrotesque-Variable.ttf"; sourceTree = "<group>"; };
 		AFCEEBA0F45A1486F9EE603B /* SettingsButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsButton.swift; sourceTree = "<group>"; };
 		B0BA783D43E37794EE28298C /* PlatformImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformImage.swift; sourceTree = "<group>"; };
@@ -419,6 +422,7 @@
 		D6BE4C724AFB81764F1B248F /* AddRecipeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddRecipeView.swift; sourceTree = "<group>"; };
 		D73CF9864B8CB3F466CA29F4 /* CategoryDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryDatabase.swift; sourceTree = "<group>"; };
 		D8C16DA117DC717DADE1AF74 /* AssistantView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssistantView.swift; sourceTree = "<group>"; };
+		D90105047663BE8A4F0F3E64 /* DictationButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DictationButton.swift; sourceTree = "<group>"; };
 		D91DCD9189D0778478997A07 /* UniversalSearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UniversalSearchService.swift; sourceTree = "<group>"; };
 		DB768039F88F9878E87FABA4 /* ItemSearchField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemSearchField.swift; sourceTree = "<group>"; };
 		DE0267B15A323F9C43F70E31 /* CategoryManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryManagementView.swift; sourceTree = "<group>"; };
@@ -822,6 +826,7 @@
 				BEBFB0D07FF508C9D65AF2A4 /* CommandBarResultRow.swift */,
 				E27D653FE356C349A8C27D88 /* CommandBarSuggestionChips.swift */,
 				6D3A8A7840E1C2C1529B3007 /* CommandBarView.swift */,
+				D90105047663BE8A4F0F3E64 /* DictationButton.swift */,
 				71EA39E201D01426855B0453 /* ExpandedPageLayout.swift */,
 				C97DDE84F26B0242CD107962 /* IconImage.swift */,
 				353C1175CD2B3C3C3D1C0DCD /* InlineSearchResultsView.swift */,
@@ -871,6 +876,7 @@
 			isa = PBXGroup;
 			children = (
 				6BBB58990DA924F069F64FA8 /* RecipeIdeas */,
+				AE82C062B050BC096DBDDAA2 /* AIModeSuggestions.swift */,
 				D8C16DA117DC717DADE1AF74 /* AssistantView.swift */,
 				5E0128131D22D908484AA9D1 /* ChatBubbleView.swift */,
 				23BD6AC4B303BC43FF6948FB /* ConversationHistoryView.swift */,
@@ -1073,6 +1079,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				77235BEF81D671EBB2EF503D /* AIModeSuggestions.swift in Sources */,
 				83F358E5E9D958331D75C655 /* AIService.swift in Sources */,
 				AA387922D9FD1D499A1CDD89 /* AITools.swift in Sources */,
 				3240CF720DDBCD8CA1B0DA4B /* APIConfig.swift in Sources */,
@@ -1107,6 +1114,7 @@
 				751B7A12165A82AE95684224 /* ConversationHistoryView.swift in Sources */,
 				4F72E60F6B6210D496C588E9 /* CookingModeView.swift in Sources */,
 				A17E29B2E7808DFDB7AAA704 /* DataSeeder.swift in Sources */,
+				1F60F7B0D8566E0FB6604085 /* DictationButton.swift in Sources */,
 				632A712C07E15628659D0AE1 /* EXARecipeIdeasService.swift in Sources */,
 				B845D9D6FA4F82B450218518 /* EditRecipeView.swift in Sources */,
 				BF5BDABD7F4734D5D3FD2F41 /* ExaClient.swift in Sources */,

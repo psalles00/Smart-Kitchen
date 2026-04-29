@@ -1,5 +1,25 @@
 import SwiftUI
 
+// MARK: - Notifications relayed from the shared-import host to ContentView.
+//
+// The shared-import sheet is hosted at the scene root (outside ContentView's
+// `.id(cloudSync.containerID)` rebuild boundary) so that container swaps
+// during launch never dismiss it. Because of that, action callbacks that
+// need to mutate ContentView state (switch tabs, navigate to imported
+// recipe, open assistant with prefill) are forwarded via NotificationCenter.
+extension Notification.Name {
+    /// User chose "Salvar alimento" on a shared image. ContentView should
+    /// switch to the Nutrição tab — `SharedFoodCaptureInbox.shared` already
+    /// holds the captured image.
+    static let shareImportRouteToNutrients = Notification.Name("com.smartkitchen.shareImport.routeToNutrients")
+    /// User chose "Abrir no assistente" on a shared link/text. `userInfo["prefill"]`
+    /// carries the prompt to inject into the assistant chat.
+    static let shareImportOpenAssistant = Notification.Name("com.smartkitchen.shareImport.openAssistant")
+    /// A recipe was saved through the shared-import host. `userInfo["recipeID"]`
+    /// is the new recipe's `UUID` — ContentView navigates the Receitas tab.
+    static let shareImportRecipeSaved = Notification.Name("com.smartkitchen.shareImport.recipeSaved")
+}
+
 /// View modifier that presents the Recipe Import flow automatically whenever
 /// `RecipeImportInbox.shared.pendingSource` becomes non-nil. Attach once at the
 /// scene root (applied in `SmartKitchenApp`).
@@ -16,8 +36,13 @@ struct RecipeImportInboxHost: ViewModifier {
                 )
             ) {
                 if let source = inbox.pendingSource {
-                    RecipeImportHostView(initialSource: source) { _ in
+                    RecipeImportHostView(initialSource: source) { recipeID in
                         inbox.clear()
+                        NotificationCenter.default.post(
+                            name: .shareImportRecipeSaved,
+                            object: nil,
+                            userInfo: ["recipeID": recipeID]
+                        )
                     }
                     .modelContainer(CloudSyncService.shared.container)
                     #if os(iOS)
@@ -28,11 +53,172 @@ struct RecipeImportInboxHost: ViewModifier {
     }
 }
 
+/// Hosts the shared-import (Share Extension) flow at the scene root, OUTSIDE
+/// ContentView's `.id(cloudSync.containerID)` rebuild boundary. Without this
+/// hoist the sheet would be torn down whenever CloudSync swaps the
+/// `ModelContainer` after launch — exactly the moment the user just tapped
+/// "Compartilhar" from another app — making the import modal "open and
+/// immediately close." See `Notification.Name.shareImport*` above for the
+/// callbacks routed back to ContentView.
+struct SharedImportInboxHost: ViewModifier {
+
+    @State private var inbox = SharedImportInbox.shared
+    @State private var activeItem: SharedImportItem?
+    @State private var recipeSource: RecipeImportSource?
+    @State private var isPresented: Bool = false
+    /// Tracks the recipe id saved from inside the host so we can post it on
+    /// dismissal (avoids racing the sheet-dismiss transaction).
+    @State private var pendingSavedRecipeID: UUID?
+
+    func body(content: Content) -> some View {
+        content
+            .sheet(isPresented: $isPresented, onDismiss: handleDismiss) {
+                sheetBody
+            }
+            .onChange(of: inbox.pendingItem?.id) { _, newValue in
+                guard let token = newValue,
+                      let pendingItem = inbox.pendingItem,
+                      pendingItem.id == token else {
+                    if newValue == nil {
+                        RecipeImportLogger.info("shared-import host pendingItem cleared")
+                    }
+                    return
+                }
+                RecipeImportLogger.info("shared-import host pendingItem detected token=\(token) kind=\(pendingItem.kind.rawValue)")
+                present(pendingItem)
+            }
+    }
+
+    @ViewBuilder
+    private var sheetBody: some View {
+        if let source = recipeSource {
+            RecipeImportHostView(initialSource: source) { recipeID in
+                RecipeImportLogger.info("shared-import host recipe saved id=\(recipeID.uuidString)")
+                pendingSavedRecipeID = recipeID
+                isPresented = false
+            }
+            .modelContainer(CloudSyncService.shared.container)
+            #if os(iOS)
+            .forceLightStatusBar()
+            #endif
+        } else if let item = activeItem {
+            SharedImportActionView(
+                item: item,
+                onReviewRecipe: {
+                    guard let source = item.recipeImportSource else {
+                        RecipeImportLogger.error("shared-import host onReviewRecipe missing source kind=\(item.kind.rawValue)")
+                        isPresented = false
+                        return
+                    }
+                    RecipeImportLogger.info("shared-import host swap to RecipeImportHostView \(RecipeImportLogger.sourceSummary(source))")
+                    recipeSource = source
+                },
+                onRegisterFood: item.foodCapture == nil ? nil : {
+                    if let capture = item.foodCapture {
+                        SharedFoodCaptureInbox.shared.capture(capture)
+                    }
+                    NotificationCenter.default.post(name: .shareImportRouteToNutrients, object: nil)
+                    isPresented = false
+                },
+                onAskAssistant: item.assistantPrefill == nil ? nil : {
+                    if let prefill = item.assistantPrefill {
+                        NotificationCenter.default.post(
+                            name: .shareImportOpenAssistant,
+                            object: nil,
+                            userInfo: ["prefill": prefill]
+                        )
+                    }
+                    isPresented = false
+                },
+                onDismiss: {
+                    isPresented = false
+                }
+            )
+        } else {
+            // Fallback: this should never present, but if it ever does we
+            // show an explicit error rather than silently auto-dismissing,
+            // which previously masked the regression.
+            NavigationStack {
+                VStack(spacing: 16) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 36))
+                        .foregroundStyle(.orange)
+                    Text("Não foi possível abrir o compartilhamento")
+                        .font(.headline)
+                    Text("O conteúdo compartilhado ficou indisponível antes da importação começar. Tente compartilhar novamente.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                    Button("Fechar") { isPresented = false }
+                        .buttonStyle(.borderedProminent)
+                }
+                .padding(24)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                #if os(iOS)
+                .navigationBarTitleDisplayMode(.inline)
+                #endif
+                .onAppear {
+                    RecipeImportLogger.error("shared-import host presented without payload")
+                }
+            }
+        }
+    }
+
+    private func present(_ item: SharedImportItem) {
+        activeItem = item
+        // For URL shares we skip the action chooser and go straight to the
+        // Recipe Import host (matches the previous behavior).
+        if item.kind == .url, let source = item.recipeImportSource {
+            recipeSource = source
+        } else {
+            recipeSource = nil
+        }
+        isPresented = true
+    }
+
+    private func handleDismiss() {
+        let token = activeItem?.id
+        let savedRecipeID = pendingSavedRecipeID
+        pendingSavedRecipeID = nil
+        recipeSource = nil
+        activeItem = nil
+
+        if let token {
+            inbox.clear(token: token)
+        }
+
+        if let savedRecipeID {
+            NotificationCenter.default.post(
+                name: .shareImportRecipeSaved,
+                object: nil,
+                userInfo: ["recipeID": savedRecipeID]
+            )
+        }
+
+        // If a different shared payload arrived while the previous sheet was
+        // dismissing, present it on the next runloop tick.
+        if let next = inbox.pendingItem, next.id != token {
+            Task { @MainActor in
+                present(next)
+            }
+        }
+    }
+}
+
 extension View {
     /// Presents the Recipe Import host whenever a new source arrives via the
     /// `RecipeImportInbox` (URL schemes, share extension, deep links).
     func recipeImportInboxHost() -> some View {
         modifier(RecipeImportInboxHost())
+    }
+
+    /// Presents the Share-Extension import flow at the scene root. MUST be
+    /// applied OUTSIDE any `.id(...)` boundary that can rebuild on launch
+    /// (e.g. `cloudSync.containerID`); otherwise a container swap
+    /// immediately after the share-extension deep link will dismiss the
+    /// freshly presented sheet.
+    func sharedImportInboxHost() -> some View {
+        modifier(SharedImportInboxHost())
     }
 }
 

@@ -31,6 +31,7 @@ struct FullscreenAssistantView: View {
     @Environment(\.openRecipeInRecipesTab) private var openRecipeInRecipesTab
     @Environment(\.colorScheme) private var colorScheme
     @Query private var settingsArray: [AppSettings]
+    @Query private var nutritionProfiles: [NutritionProfile]
 
     let onAction: (CommandBarAction) -> Void
     let onOpenFoodCameraDirect: () -> Void
@@ -45,7 +46,7 @@ struct FullscreenAssistantView: View {
     /// When set, the idle "Perguntar à IA" / "Ideias de receitas" buttons call
     /// this closure (with the desired preset) instead of mutating the global
     /// `searchBarState.mode`. Used by the search-tab to push the AI page.
-    var onRequestAIMode: ((AIChatPreset) -> Void)? = nil
+    var onRequestAIMode: ((AIChatPreset, String?) -> Void)? = nil
     /// When true, render a native back button at the left of the title and use
     /// the SwiftUI `\.dismiss` environment to pop. Used only by the pushed AI
     /// page inside the search-tab navigation stack.
@@ -191,14 +192,20 @@ struct FullscreenAssistantView: View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
             if showsBackButton {
                 Button {
+                    // Reset AI state BEFORE popping so the parent view re-renders
+                    // with the idle "Assistente" title during the pop animation.
+                    // Otherwise the user briefly sees a second "Modo IA" screen
+                    // (the parent FullscreenAssistantView still in `.aiChat` mode).
+                    pendingOpenChat = false
+                    searchBarState.mode = .idle
+                    searchBarState.aiChatPreset = .nutritionCoach
                     environmentDismiss()
                 } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: "chevron.left")
-                        Text("Voltar")
-                    }
-                    .font(.pageTitle)
-                    .foregroundStyle(.secondary)
+                    Image(systemName: "chevron.left")
+                        .font(.pageTitle)
+                        .foregroundStyle(.secondary)
+                        .frame(minWidth: 32, minHeight: 32, alignment: .leading)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
@@ -295,7 +302,7 @@ struct FullscreenAssistantView: View {
                             imageOffset: CGSize(width: 8, height: 0)
                         ) {
                             if let onRequestAIMode {
-                                onRequestAIMode(.nutritionCoach)
+                                onRequestAIMode(.nutritionCoach, nil)
                             } else {
                                 searchBarState.aiChatPreset = .nutritionCoach
                                 searchBarState.mode = .aiChat
@@ -313,7 +320,7 @@ struct FullscreenAssistantView: View {
                             imageOffset: CGSize(width: 6, height: 0)
                         ) {
                             if let onRequestAIMode {
-                                onRequestAIMode(.recipeIdeas)
+                                onRequestAIMode(.recipeIdeas, nil)
                             } else {
                                 searchBarState.aiChatPreset = .recipeIdeas
                                 searchBarState.mode = .aiChat
@@ -460,6 +467,8 @@ struct FullscreenAssistantView: View {
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 8)
+
+                    aiModeSuggestionsSection
                 }
                 .frame(maxWidth: .infinity, alignment: .top)
                 .padding(.top, topPinnedInset)
@@ -523,6 +532,39 @@ struct FullscreenAssistantView: View {
     private func triggerAction(_ action: CommandBarAction) {
         onAction(action)
         searchBarState.selectResult()
+    }
+
+    // MARK: - Sugestões do Modo IA (espelhadas no Modo IA)
+
+    @ViewBuilder
+    private var aiModeSuggestionsSection: some View {
+        let suggestions = AIModeSuggestions.nutritionCoachSuggestions(profile: nutritionProfiles.first)
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Sugestões do Modo IA")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 4)
+
+            AIModeSuggestionsList(suggestions: suggestions) { suggestion in
+                openAIChat(with: suggestion.prompt)
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 24)
+    }
+
+    /// Opens the AI chat (overlay or pushed tab) and pre-fills it with the
+    /// suggestion prompt so it is auto-sent.
+    private func openAIChat(with prompt: String) {
+        if let onRequestAIMode {
+            // Tab presentation: push the AI page with prefill so it auto-sends.
+            onRequestAIMode(.nutritionCoach, prompt)
+        } else {
+            searchBarState.aiChatPreset = .nutritionCoach
+            searchBarState.mode = .aiChat
+            pendingOpenChat = false
+            pendingChatQuery = prompt
+        }
     }
 
     private func assistantActionButton(
@@ -663,8 +705,8 @@ struct AssistantSearchTabContent: View {
                 pendingNewConversation: $pendingNewConversation,
                 pendingShowHistory: $pendingShowHistory,
                 presentation: .tab,
-                onRequestAIMode: { preset in
-                    path.append(AssistantTabAIDestination(preset: preset))
+                onRequestAIMode: { preset, prefill in
+                    path.append(AssistantTabAIDestination(preset: preset, prefill: prefill))
                 }
             )
             .toolbar(.hidden, for: .navigationBar)

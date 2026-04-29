@@ -55,9 +55,14 @@ struct UnifiedSearchBar: View {
     private var controlsRow: some View {
         HStack(spacing: 10) {
             HStack(spacing: 10) {
-                Image(systemName: state.mode == .aiChat ? "paperplane.fill" : "sparkle.magnifyingglass")
+                Image(systemName: state.mode == .aiChat ? "sparkles" : "sparkle.magnifyingglass")
                     .font(.system(size: 16, weight: .medium))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(state.mode == .aiChat
+                        ? AnyShapeStyle(.linearGradient(
+                            colors: [.purple, .blue],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing))
+                        : AnyShapeStyle(Color.secondary))
 
                 TextField(state.mode == .aiChat ? state.aiChatPreset.searchPlaceholder : "Assistente", text: $state.searchText)
                     .foregroundStyle(.primary)
@@ -100,7 +105,12 @@ struct UnifiedSearchBar: View {
 
     @ViewBuilder
     private var accessoryActions: some View {
-        if shouldCollapseQuickActions {
+        if state.mode == .aiChat {
+            // In Modo IA, the unified bar acts as the chat input. Replace the
+            // quick-actions menus with an inline dictation button so the user
+            // can dictate the message without leaving the screen.
+            DictationButton(targetText: $state.searchText)
+        } else if shouldCollapseQuickActions {
             collapsedAccessoryMenu
         } else {
             expandedAccessoryActions

@@ -126,7 +126,14 @@ struct SmartKitchenApp: App {
             ContentView()
                 .modelContainer(cloudSync.container)
                 .id(cloudSync.containerID)
+                // Sheets hosted OUTSIDE `.id(cloudSync.containerID)` survive
+                // the ContentView teardown that happens when CloudKit
+                // activation swaps the `ModelContainer` shortly after launch.
+                // Attaching the share-import host here is the load-bearing
+                // fix for the recurrent "compartilhar abre e fecha o modal"
+                // bug — see `SharedImportInboxHost` for details.
                 .recipeImportInboxHost()
+                .sharedImportInboxHost()
                 .onOpenURL { url in
                     // Widget deep links
                     if url.scheme == "smartkitchen", url.host == "assistant" {

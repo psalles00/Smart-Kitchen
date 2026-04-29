@@ -77,11 +77,10 @@ struct ContentView: View {
     @State private var pendingOpenChat = false
     @State private var pendingNewConversation = false
     @State private var pendingShowHistory = false
-    @State private var sharedImportInbox = SharedImportInbox.shared
-    @State private var showSharedImportActions = false
-    @State private var sharedRecipeImportSource: RecipeImportSource?
-    @State private var activeSharedImportItem: SharedImportItem?
-    @State private var pendingSharedImportedRecipeID: UUID? = nil
+    // The shared-import (Share Extension) sheet is presented by
+    // `sharedImportInboxHost()` at the scene root in `SmartKitchenApp`,
+    // OUTSIDE the `.id(cloudSync.containerID)` rebuild boundary.
+    // ContentView only listens for follow-up routing notifications.
     @State private var showQuickRecipeImport = false
     @State private var quickRecipeImportLaunchMode: RecipeImportLaunchMode = .picker
     @State private var pendingQuickImportedRecipeID: UUID? = nil
@@ -217,14 +216,13 @@ struct ContentView: View {
                 pendingQuickImportedRecipeID = recipeID
             },
             onRecipeSourceReady: { source in
-                // Reusa o mesmo sheet unificado — com source já definido o conteúdo
-                // renderiza direto no RecipeImportHostView.
-                RecipeImportLogger.info("direct shortcut -> sharedImport sheet with source \(RecipeImportLogger.sourceSummary(source))")
-                print("[SmartKitchen][share] direct shortcut source ready")
-                activeSharedImportItem = nil
-                pendingSharedImportedRecipeID = nil
-                sharedRecipeImportSource = source
-                showSharedImportActions = true
+                // Direct shortcuts route through `RecipeImportInbox`, which
+                // is hosted at the scene root by `recipeImportInboxHost()`.
+                // This keeps the presenting sheet outside ContentView's
+                // `.id(cloudSync.containerID)` rebuild boundary, matching
+                // the share-extension flow.
+                RecipeImportLogger.info("direct shortcut -> RecipeImportInbox source \(RecipeImportLogger.sourceSummary(source))")
+                RecipeImportInbox.shared.pendingSource = source
             }
         ))
         .sheet(isPresented: $showAddPantry) {
@@ -318,12 +316,6 @@ struct ContentView: View {
             }
             .forceLightStatusBar()
         }
-        // Fluxo de importação via share (SharedImportActionView → RecipeImportHostView).
-        // Um único sheet que alterna o conteúdo internamente evita a corrida de apresentação
-        // dos dois sheets encadeados no root junto com outros sheets irmãos.
-        .sheet(isPresented: $showSharedImportActions, onDismiss: handleSharedImportActionsDismissed) {
-            sharedImportSheetContent
-        }
         .environment(\.openSettings, {
             #if os(macOS)
             selectedSidebar = .settings
@@ -374,26 +366,24 @@ struct ContentView: View {
         #if os(iOS)
         .forceLightStatusBar()
         #endif
-        .onChange(of: sharedImportInbox.pendingItem?.id) { _, newValue in
-            guard newValue != nil else {
-                RecipeImportLogger.info("share flow pendingItem cleared (nil)")
-                print("[SmartKitchen][share] pendingItem cleared")
-                return
-            }
-
-            guard let pendingItem = sharedImportInbox.pendingItem else {
-                RecipeImportLogger.error("share flow pendingItem id changed but item payload is unavailable")
-                print("[SmartKitchen][share] ERROR pendingItem id changed without payload")
-                return
-            }
-
-            RecipeImportLogger.info("share flow pendingItem detected id=\(newValue ?? "-") kind=\(pendingItem.kind.rawValue)")
-            print("[SmartKitchen][share] pendingItem detected id=\(newValue ?? "-") kind=\(pendingItem.kind.rawValue)")
-            presentSharedImport(pendingItem)
+        .onReceive(NotificationCenter.default.publisher(for: .shareImportRouteToNutrients)) { _ in
+            #if os(macOS)
+            selectedSidebar = .nutrients
+            #else
+            if selectedTab != .nutrients { selectedTab = .nutrients }
+            #endif
         }
-        .onChange(of: showSharedImportActions) { _, isPresented in
-            RecipeImportLogger.info("share flow showSharedImportActions=\(isPresented) sharedRecipeImportSource=\(sharedRecipeImportSource != nil) activeItem=\(activeSharedImportItem != nil) pendingItem=\(sharedImportInbox.pendingItem != nil)")
-            print("[SmartKitchen][share] showSharedImportActions=\(isPresented) sourceReady=\(sharedRecipeImportSource != nil)")
+        .onReceive(NotificationCenter.default.publisher(for: .shareImportOpenAssistant)) { note in
+            let prefill = note.userInfo?["prefill"] as? String
+            openAIMode(prefill: prefill)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .shareImportRecipeSaved)) { note in
+            guard let recipeID = note.userInfo?["recipeID"] as? UUID else { return }
+            // Defer to the next main-actor turn so navigation does not race
+            // with the still-committing sheet-dismiss transaction.
+            Task { @MainActor in
+                openRecipeInRecipesTab(recipeID)
+            }
         }
         .onChange(of: selectedTab) { _, newValue in
             handleTabSelectionChange(newValue)
@@ -1185,157 +1175,6 @@ struct ContentView: View {
         Task { @MainActor in
             openRecipeInRecipesTab(importedRecipeID)
         }
-    }
-
-    /// Fires AFTER the `SharedImportActionView` sheet has fully dismissed.
-    /// Using `onDismiss:` (instead of `onChange` + delay) is the supported way to
-    /// chain a follow-up sheet (`RecipeImportHostView`) without presentation races.
-    private func handleSharedImportActionsDismissed() {
-        RecipeImportLogger.info("share flow actions sheet fully dismissed; sharedRecipeImportSource=\(sharedRecipeImportSource != nil) activeItem=\(activeSharedImportItem != nil) pendingItem=\(sharedImportInbox.pendingItem != nil)")
-        print("[SmartKitchen][share] actions sheet fully dismissed sourceReady=\(sharedRecipeImportSource != nil)")
-
-        let importedRecipeID = pendingSharedImportedRecipeID
-        let activeSharedImportToken = activeSharedImportItem?.id
-
-        if importedRecipeID == nil, activeSharedImportToken != nil {
-            RecipeImportLogger.info("share flow actions dismissed without selection, clearing inbox")
-            print("[SmartKitchen][share] actions dismissed without selection, clearing inbox")
-        }
-
-        pendingSharedImportedRecipeID = nil
-        sharedRecipeImportSource = nil
-        activeSharedImportItem = nil
-
-        if let activeSharedImportToken {
-            sharedImportInbox.clear(token: activeSharedImportToken)
-        }
-
-        if let importedRecipeID {
-            // Defer navigation to next main-actor turn so it happens after the
-            // sheet-dismiss + inbox-clear observable updates have fully committed.
-            Task { @MainActor in
-                openRecipeInRecipesTab(importedRecipeID)
-            }
-        }
-
-        if let nextPendingItem = sharedImportInbox.pendingItem,
-           nextPendingItem.id != activeSharedImportToken {
-            Task { @MainActor in
-                presentSharedImport(nextPendingItem)
-            }
-        }
-    }
-
-    private func presentSharedImport(_ pendingItem: SharedImportItem) {
-        pendingSharedImportedRecipeID = nil
-        activeSharedImportItem = pendingItem
-
-        if pendingItem.kind == .url,
-           let source = pendingItem.recipeImportSource {
-            RecipeImportLogger.info("share flow bypassing action sheet for shared link \(RecipeImportLogger.sourceSummary(source))")
-            print("[SmartKitchen][share] bypassing action sheet for shared link")
-            sharedRecipeImportSource = source
-        } else {
-            sharedRecipeImportSource = nil
-        }
-
-        showSharedImportActions = true
-    }
-
-    /// Conteúdo do sheet unificado para o fluxo de importação via share.
-    /// Começa mostrando `SharedImportActionView` e, quando o usuário escolhe "Revisar receita",
-    /// apenas troca a subview para `RecipeImportHostView` — mantendo o mesmo sheet aberto.
-    @ViewBuilder
-    private var sharedImportSheetContent: some View {
-        if let source = sharedRecipeImportSource {
-            RecipeImportHostView(initialSource: source) { recipeID in
-                RecipeImportLogger.info("share flow recipe saved id=\(recipeID.uuidString)")
-                print("[SmartKitchen][share] recipe saved id=\(recipeID.uuidString)")
-                pendingSharedImportedRecipeID = recipeID
-                // Encerra o sheet após salvar.
-                showSharedImportActions = false
-            }
-            .modelContainer(CloudSyncService.shared.container)
-            .forceLightStatusBar()
-            .onAppear {
-                RecipeImportLogger.info("share flow RecipeImportHostView onAppear \(RecipeImportLogger.sourceSummary(source))")
-                print("[SmartKitchen][share] RecipeImportHostView onAppear")
-            }
-            .onDisappear {
-                RecipeImportLogger.info("share flow RecipeImportHostView onDisappear")
-                print("[SmartKitchen][share] RecipeImportHostView onDisappear")
-            }
-        } else if let item = activeSharedImportItem {
-            SharedImportActionView(
-                item: item,
-                onReviewRecipe: {
-                    RecipeImportLogger.info("share flow onReviewRecipe tapped kind=\(item.kind.rawValue)")
-                    print("[SmartKitchen][share] onReviewRecipe tapped kind=\(item.kind.rawValue)")
-                    guard let source = item.recipeImportSource else {
-                        RecipeImportLogger.error("share flow onReviewRecipe no recipeImportSource available, clearing inbox")
-                        print("[SmartKitchen][share] ERROR no recipeImportSource; clearing")
-                        showSharedImportActions = false
-                        return
-                    }
-                    RecipeImportLogger.info("share flow swapping sheet content to host \(RecipeImportLogger.sourceSummary(source))")
-                    print("[SmartKitchen][share] swapping sheet content to host")
-                    // Apenas troca o estado — o mesmo sheet re-renderiza com o host.
-                    sharedRecipeImportSource = source
-                },
-                onRegisterFood: item.foodCapture == nil ? nil : {
-                    if let capture = item.foodCapture {
-                        SharedFoodCaptureInbox.shared.capture(capture)
-                    }
-                    routeSharedImportToNutrients()
-                    showSharedImportActions = false
-                },
-                onAskAssistant: item.assistantPrefill == nil ? nil : {
-                    if let prefill = item.assistantPrefill {
-                        openAssistantFromSharedImport(prefill: prefill)
-                    }
-                    showSharedImportActions = false
-                },
-                onDismiss: {
-                    showSharedImportActions = false
-                }
-            )
-        } else {
-            NavigationStack {
-                VStack(spacing: 16) {
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .font(.system(size: 36))
-                        .foregroundStyle(.orange)
-                    Text("Não foi possível abrir o compartilhamento")
-                        .font(.headline)
-                    Text("O conteúdo compartilhado ficou indisponível antes da importação começar. Tente compartilhar novamente.")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
-                    Button("Fechar") {
-                        showSharedImportActions = false
-                    }
-                    .buttonStyle(.borderedProminent)
-                }
-                .padding(24)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .modalNavigationTitle("Compartilhamento")
-                #if os(iOS)
-                .navigationBarTitleDisplayMode(.inline)
-                #endif
-                .onAppear {
-                    RecipeImportLogger.error("share flow sheet presented but no content available")
-                    print("[SmartKitchen][share] ERROR sheet presented but no content")
-                }
-            }
-        }
-    }
-
-    private func routeSharedImportToNutrients() {
-        #if os(macOS)
-        selectedSidebar = .nutrients
-        #else
-        selectedTab = .nutrients
-        #endif
     }
 
     /// Called when the user presses Enter/Search on the keyboard.

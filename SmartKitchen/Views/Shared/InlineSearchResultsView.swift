@@ -19,6 +19,10 @@ struct InlineSearchResultsView: View {
     @State private var showConversationHistory = false
     /// Relay for pending external messages — @State Binding fires .onChange reliably.
     @State private var pendingExternalChatMessage: String? = nil
+    /// Relay for triggering a new conversation reset on the InlineChatView when
+    /// it is already presented (the global `pendingNewConversation` only opens
+    /// the chat or resets state at this layer).
+    @State private var newConversationRelay: Bool = false
 
     /// External trigger to open chat.
     @Binding var pendingChatQuery: String?
@@ -126,11 +130,19 @@ struct InlineSearchResultsView: View {
         .onChange(of: pendingNewConversation) { _, newValue in
             if newValue {
                 pendingNewConversation = false
-                chatInitialQuery = nil
-                chatExistingConversationId = nil
-                showInlineChat = true
-                searchBarState.mode = .aiChat
-                searchBarState.searchText = ""
+                if showInlineChat {
+                    // Chat already presented — forward to InlineChatView so it
+                    // can clear the active conversation and start fresh.
+                    chatExistingConversationId = nil
+                    newConversationRelay = true
+                    searchBarState.searchText = ""
+                } else {
+                    chatInitialQuery = nil
+                    chatExistingConversationId = nil
+                    showInlineChat = true
+                    searchBarState.mode = .aiChat
+                    searchBarState.searchText = ""
+                }
             }
         }
         .onChange(of: pendingShowHistory) { _, newValue in
@@ -195,6 +207,7 @@ struct InlineSearchResultsView: View {
             searchBarState: searchBarState,
             isScrollAtTop: $isScrollAtTop,
             pendingExternalMessage: $pendingExternalChatMessage,
+            pendingNewConversationTrigger: $newConversationRelay,
             onConversationCreated: { id in
                 chatExistingConversationId = id
             },

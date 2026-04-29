@@ -46,6 +46,8 @@ struct InlineChatView: View {
     @Binding var isScrollAtTop: Bool
     /// External message to send (received from the unified search bar).
     @Binding var pendingExternalMessage: String?
+    /// External trigger to start a new conversation (set by the parent header button).
+    @Binding var pendingNewConversationTrigger: Bool
     /// Called when a new conversation is created, so the parent can track the active ID.
     var onConversationCreated: ((UUID) -> Void)? = nil
     /// When `false`, tapping the empty area below the chat does NOT trigger
@@ -73,6 +75,7 @@ struct InlineChatView: View {
         searchBarState: SearchBarState? = nil,
         isScrollAtTop: Binding<Bool> = .constant(true),
         pendingExternalMessage: Binding<String?> = .constant(nil),
+        pendingNewConversationTrigger: Binding<Bool> = .constant(false),
         onConversationCreated: ((UUID) -> Void)? = nil,
         dismissOnEmptyTap: Bool = true
     ) {
@@ -84,6 +87,7 @@ struct InlineChatView: View {
         self.searchBarState = searchBarState
         self._isScrollAtTop = isScrollAtTop
         self._pendingExternalMessage = pendingExternalMessage
+        self._pendingNewConversationTrigger = pendingNewConversationTrigger
         self.onConversationCreated = onConversationCreated
         self.dismissOnEmptyTap = dismissOnEmptyTap
     }
@@ -94,66 +98,12 @@ struct InlineChatView: View {
 
     private var settings: AppSettings? { settingsArray.first }
 
-    private var coachStarterPrompts: [String] {
-        guard nutritionProfiles.first?.hasCompletedOnboarding == true,
-              let goal = nutritionProfiles.first?.weightGoal else {
-            return [
-                "Qual é meu peso esperado em 30 dias?",
-                "O que devo comer no jantar?",
-                "Como bato minha meta?",
-                "Como está minha tendência?"
-            ]
-        }
-
-        switch goal {
-        case .lose:
-            return [
-                "Qual é meu peso esperado em 30 dias?",
-                "Como posso emagrecer mais rápido com segurança?",
-                "Estou comendo demais?",
-                "O que devo comer no jantar?"
-            ]
-        case .gain:
-            return [
-                "Qual é meu peso esperado em 30 dias?",
-                "Como posso ganhar peso de forma saudável?",
-                "Estou comendo o suficiente?",
-                "Quais alimentos ricos em proteína posso adicionar?"
-            ]
-        case .maintain:
-            return [
-                "Estou mantendo meu peso?",
-                "Qual é meu consumo médio?",
-                "Sugestões de macros?",
-                "Como está minha tendência?"
-            ]
-        }
-    }
-
-    private var recipeIdeasStarterPrompts: [String] {
-        [
-            "Sugira novas receitas de jantar rápido.",
-            "Sugira novas receitas com frango e legumes.",
-            "Sugira novas receitas vegetarianas simples.",
-            "Sugira novas receitas de sobremesa."
-        ]
-    }
-
     private var aiModeDescription: String {
         switch aiChatPreset {
         case .nutritionCoach:
             return "Seu coach pode ver seu histórico de peso, consumo diário e metas. Pergunte sobre peso esperado, o que comer ou como atingir seu objetivo."
         case .recipeIdeas:
             return "Crie ideias novas partindo do zero ou com os ingredientes que você quiser usar."
-        }
-    }
-
-    private var aiModeStarterPrompts: [String] {
-        switch aiChatPreset {
-        case .nutritionCoach:
-            return coachStarterPrompts
-        case .recipeIdeas:
-            return recipeIdeasStarterPrompts
         }
     }
 
@@ -352,6 +302,11 @@ struct InlineChatView: View {
                 sendMessage(message)
             }
         }
+        .onChange(of: pendingNewConversationTrigger) { _, newValue in
+            guard newValue else { return }
+            pendingNewConversationTrigger = false
+            startNewConversation()
+        }
         .onAppear {
             if let existingConversationId {
                 conversationId = existingConversationId
@@ -459,21 +414,16 @@ struct InlineChatView: View {
                         endPoint: .bottomTrailing
                     ))
 
-                VStack(spacing: 8) {
-                    Text("Modo IA")
-                        .font(.title3.weight(.bold))
+                Text(aiModeDescription)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 24)
 
-                    Text(aiModeDescription)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 24)
-                }
-
-                VStack(alignment: .leading, spacing: 10) {
-                    ForEach(Array(aiModeStarterPrompts.enumerated()), id: \.offset) { index, prompt in
-                        aiSuggestionRow(emoji: aiSuggestionEmoji(for: index), text: prompt)
-                    }
+                AIModeSuggestionsList(
+                    suggestions: AIModeSuggestions.nutritionCoachSuggestions(profile: nutritionProfiles.first)
+                ) { suggestion in
+                    sendMessage(suggestion.prompt)
                 }
                 .padding(.horizontal, 32)
                 .padding(.top, 4)
@@ -523,45 +473,6 @@ struct InlineChatView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.top, 12)
-    }
-
-    private func aiSuggestionRow(emoji: String, text: String) -> some View {
-        Button {
-            sendMessage(text)
-        } label: {
-            HStack(spacing: 10) {
-                Text(emoji)
-                    .font(.title3)
-                Text(text)
-                    .font(.subheadline)
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
-                Spacer()
-            }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 10)
-            .background(neutralSurfaceColor, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-        }
-        .buttonStyle(.plain)
-    }
-
-    private func aiSuggestionEmoji(for index: Int) -> String {
-        switch aiChatPreset {
-        case .nutritionCoach:
-            switch index {
-            case 0: return "📈"
-            case 1: return "🎯"
-            case 2: return "🍽️"
-            default: return "🥗"
-            }
-        case .recipeIdeas:
-            switch index {
-            case 0: return "⚡"
-            case 1: return "🍗"
-            case 2: return "🌿"
-            default: return "🍰"
-            }
-        }
     }
 
     private func skillCard(icon: String, title: String, description: String, prompt: String) -> some View {
