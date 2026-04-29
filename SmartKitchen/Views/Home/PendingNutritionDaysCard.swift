@@ -170,7 +170,7 @@ private struct SwipeablePendingRow: View {
 
     var body: some View {
         ZStack(alignment: .trailing) {
-            HStack(spacing: 0) {
+            HStack(spacing: 6) {
                 actionButton(
                     title: String(localized: "Concluir"),
                     icon: "checkmark.circle.fill",
@@ -184,6 +184,8 @@ private struct SwipeablePendingRow: View {
                     action: { openConfirmation(.cancel) }
                 )
             }
+            .padding(.vertical, 4)
+            .padding(.trailing, 6)
             .frame(width: totalRevealedWidth)
             .opacity(min(1.0, Double(abs(effectiveOffset)) / 20.0))
 
@@ -329,10 +331,10 @@ private struct SwipeablePendingRow: View {
             }
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(background)
+            .background(background, in: .rect(cornerRadius: 14, style: .continuous))
         }
         .buttonStyle(.plain)
-        .frame(width: actionWidth)
+        .frame(maxWidth: .infinity)
     }
 
     @ViewBuilder

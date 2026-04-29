@@ -375,30 +375,93 @@ struct NutritionProgressView: View {
     private var statsSection: some View {
         progressCard(title: String(localized: "Hábitos")) {
             let s = stats
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                statTile(icon: "flame.fill", label: String(localized: "Sequência atual"), value: dayCountLabel(s.streak), color: .orange)
-                statTile(icon: "trophy.fill", label: String(localized: "Melhor sequência"), value: dayCountLabel(s.best), color: .yellow)
-                statTile(icon: "target", label: String(localized: "Dias na meta"), value: "\(s.daysOnTarget)", color: PageTheme.nutrients.accentColor)
-                statTile(icon: "fork.knife", label: String(localized: "Registros"), value: "\(s.totalEntries)", color: Color(red: 0.20, green: 0.50, blue: 0.93))
+
+            // Hero: streak atual em destaque
+            HStack(alignment: .center, spacing: 14) {
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [Color.orange.opacity(0.95), Color.red.opacity(0.85)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 64, height: 64)
+                        .shadow(color: Color.orange.opacity(0.35), radius: 10, y: 4)
+                    Image(systemName: "flame.fill")
+                        .font(.system(size: 28, weight: .bold))
+                        .foregroundStyle(.white)
+                        .symbolEffect(.pulse, options: .repeating, value: s.streak)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
+                        Text("\(s.streak)")
+                            .font(.system(size: 34, weight: .heavy, design: .rounded))
+                            .foregroundStyle(.primary)
+                        Text(s.streak == 1 ? String(localized: "dia") : String(localized: "dias"))
+                            .font(.system(.headline, design: .rounded, weight: .semibold))
+                            .foregroundStyle(.secondary)
+                    }
+                    Text(String(localized: "Sequência atual"))
+                        .font(.system(.subheadline, design: .rounded, weight: .medium))
+                        .foregroundStyle(.secondary)
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(.vertical, 4)
+
+            // Linha secundária com 3 mini-stats
+            HStack(spacing: 10) {
+                miniStat(
+                    icon: "trophy.fill",
+                    value: "\(s.best)",
+                    label: String(localized: "Melhor"),
+                    tint: .yellow
+                )
+                miniStat(
+                    icon: "target",
+                    value: "\(s.daysOnTarget)",
+                    label: String(localized: "Na meta"),
+                    tint: PageTheme.nutrients.accentColor
+                )
+                miniStat(
+                    icon: "fork.knife",
+                    value: "\(s.totalEntries)",
+                    label: String(localized: "Registros"),
+                    tint: Color(red: 0.20, green: 0.50, blue: 0.93)
+                )
             }
         }
     }
 
-    private func statTile(icon: String, label: String, value: String, color: Color) -> some View {
-        VStack(spacing: 6) {
-            Image(systemName: icon)
-                .font(.title2)
-                .foregroundStyle(color)
+    private func miniStat(icon: String, value: String, label: String, tint: Color) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(tint)
+                Text(label)
+                    .font(.system(.caption2, design: .rounded, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            }
             Text(value)
                 .font(.system(.title3, design: .rounded, weight: .bold))
-            Text(label)
-                .font(.system(.caption, design: .rounded))
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
+                .foregroundStyle(.primary)
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
-        .background(color.opacity(0.08), in: .rect(cornerRadius: 12))
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(tint.opacity(0.10))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(tint.opacity(0.18), lineWidth: 1)
+        )
     }
 
     // MARK: - Shared card shell
@@ -510,27 +573,26 @@ struct NutritionProgressView: View {
     @ViewBuilder
     private var estimateHeader: some View {
         let sample = macroAverageResult.basis.sampleSize
-        let copy: String = {
-            if sample == 0 {
-                return String(localized: "Ainda não tenho uma média para te mostrar por aqui. Assim que você concluir um dia de registro, eu passo a calcular essa estimativa com base nos dias fechados por você.")
-            }
-            if sample == 1 {
-                return String(localized: "Os valores desta página são uma média tirada do seu dia concluído. Em outras palavras: só entra na conta o dia que você fechou, para a estimativa ficar mais fiel ao seu ritmo.")
-            }
-            return "\(String(localized: "Os valores desta página são uma média tirada dos seus")) \(sample) \(String(localized: "dias concluídos.")) \(String(localized: "Em outras palavras: só entram na conta os dias que você fechou, para a estimativa ficar mais fiel ao seu ritmo."))"
-        }()
+        if sample > 0 {
+            let copy: String = {
+                if sample == 1 {
+                    return String(localized: "Os valores desta página são uma média tirada do seu dia concluído. Em outras palavras: só entra na conta o dia que você fechou, para a estimativa ficar mais fiel ao seu ritmo.")
+                }
+                return "\(String(localized: "Os valores desta página são uma média tirada dos seus")) \(sample) \(String(localized: "dias concluídos.")) \(String(localized: "Em outras palavras: só entram na conta os dias que você fechou, para a estimativa ficar mais fiel ao seu ritmo."))"
+            }()
 
-        HStack(alignment: .top, spacing: 10) {
-            Image(systemName: "info.circle")
-                .foregroundStyle(.tertiary)
-                .font(.system(size: 14))
-            Text(copy)
-                .font(.system(.footnote, design: .rounded))
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-            Spacer(minLength: 0)
+            HStack(alignment: .top, spacing: 10) {
+                Image(systemName: "info.circle")
+                    .foregroundStyle(.tertiary)
+                    .font(.system(size: 14))
+                Text(copy)
+                    .font(.system(.footnote, design: .rounded))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 16)
         }
-        .padding(.horizontal, 16)
     }
 
     /// Card final com mensagem condicional sobre como o usuário está em relação à meta.
@@ -639,12 +701,6 @@ struct NutritionProgressView: View {
             cursor = next
         }
         return result
-    }
-
-    private func dayCountLabel(_ count: Int) -> String {
-        count == 1
-            ? "1 \(String(localized: "dia"))"
-            : "\(count) \(String(localized: "dias"))"
     }
 
     // MARK: - Actions

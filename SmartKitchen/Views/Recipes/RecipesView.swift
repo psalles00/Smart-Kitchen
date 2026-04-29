@@ -47,6 +47,7 @@ struct RecipesView: View {
     @State private var showAddRecipe = false
     @State private var showImportRecipe = false
     @State private var importInitialSource: RecipeImportSource? = nil
+    @State private var importLaunchMode: RecipeImportLaunchMode = .picker
     @State private var pendingImportedRecipeID: UUID? = nil
     @State private var showsInlineTitle = false
     @State private var editingRecipe: RecipeSelection?
@@ -223,7 +224,7 @@ struct RecipesView: View {
             .forceLightStatusBar()
         }
         .sheet(isPresented: $showImportRecipe, onDismiss: handleImportRecipeDismissed) {
-            RecipeImportHostView(initialSource: importInitialSource) { recipeID in
+            RecipeImportHostView(initialSource: importInitialSource, launchMode: importLaunchMode) { recipeID in
                 highlightedRecipeID = recipeID
                 selectedRecipeID = recipeID
                 pendingImportedRecipeID = recipeID
@@ -319,10 +320,34 @@ struct RecipesView: View {
             HStack(spacing: 6) {
                 GlassButtonGroup {
                     GlassGroupMenu(systemImage: "plus") {
-                        Button {
-                            showImportRecipe = true
-                        } label: {
-                            Label("Importar receita", systemImage: "sparkles")
+                        Section("Importar receita") {
+                            Button {
+                                openImport(.link)
+                            } label: {
+                                Label("Colar link", systemImage: "link")
+                            }
+                            Button {
+                                openImport(.gallery)
+                            } label: {
+                                Label("Importar da galeria", systemImage: "photo.on.rectangle.angled")
+                            }
+                            Button {
+                                openImport(.camera)
+                            } label: {
+                                Label("Ler com câmera", systemImage: "camera.viewfinder")
+                            }
+                            Button {
+                                openImport(.text)
+                            } label: {
+                                Label("Colar texto", systemImage: "text.alignleft")
+                            }
+                            #if os(macOS)
+                            Button {
+                                openImport(.files)
+                            } label: {
+                                Label("Importar dos arquivos", systemImage: "folder.fill")
+                            }
+                            #endif
                         }
                         Divider()
                         Button {
@@ -362,11 +387,18 @@ struct RecipesView: View {
         let recipeID = pendingImportedRecipeID
 
         importInitialSource = nil
+        importLaunchMode = .picker
         pendingImportedRecipeID = nil
 
         if let recipeID {
             openRecipeInRecipesTab(recipeID)
         }
+    }
+
+    private func openImport(_ mode: RecipeImportLaunchMode) {
+        importInitialSource = nil
+        importLaunchMode = mode
+        showImportRecipe = true
     }
 
     #if os(macOS)

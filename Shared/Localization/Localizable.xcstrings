@@ -245,6 +245,9 @@
         }
       }
     },
+    "%lld dias não concluídos" : {
+
+    },
     "%lld g" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -256,6 +259,9 @@
         }
       }
     },
+    "%lld itens vencendo" : {
+
+    },
     "%lld kcal" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -266,6 +272,9 @@
           }
         }
       }
+    },
+    "%lld kcal restantes hoje" : {
+
     },
     "%lld min" : {
       "extractionState" : "manual",
@@ -552,6 +561,12 @@
           }
         }
       }
+    },
+    "1 dia não concluído" : {
+
+    },
+    "1 item vencendo" : {
+
     },
     "1.0.0" : {
       "extractionState" : "manual",
@@ -905,6 +920,9 @@
         }
       }
     },
+    "Abrir no navegador" : {
+
+    },
     "Abrir receita na web" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1048,17 +1066,6 @@
         }
       }
     },
-    "Adicionar à Despensa" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add to Pantry"
-          }
-        }
-      }
-    },
     "Adicionar \"%@\" à Despensa" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1070,17 +1077,6 @@
         }
       }
     },
-    "Adicionar ao Mercado" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add to Grocery List"
-          }
-        }
-      }
-    },
     "Adicionar \"%@\" ao Mercado" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1088,6 +1084,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Add \"%@\" to Grocery List"
+          }
+        }
+      }
+    },
+    "Adicionar à Despensa" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add to Pantry"
+          }
+        }
+      }
+    },
+    "Adicionar ao Mercado" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add to Grocery List"
           }
         }
       }
@@ -1763,6 +1781,9 @@
         }
       }
     },
+    "Apagar" : {
+
+    },
     "Apagar os dados do iCloud só está disponível em um device físico com suporte a CloudKit." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2169,6 +2190,15 @@
           }
         }
       }
+    },
+    "Boa noite" : {
+
+    },
+    "Boa tarde" : {
+
+    },
+    "Bom dia" : {
+
     },
     "brasileiro" : {
       "extractionState" : "manual",
@@ -3083,6 +3113,9 @@
         }
       }
     },
+    "Configurar" : {
+
+    },
     "Configurar iCloud" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3391,17 +3424,6 @@
         }
       }
     },
-    "Criar receita \"%@\"" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Create recipe \"%@\""
-          }
-        }
-      }
-    },
     "Criar Receita" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3409,6 +3431,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Create Recipe"
+          }
+        }
+      }
+    },
+    "Criar receita \"%@\"" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create recipe \"%@\""
           }
         }
       }
@@ -4314,6 +4347,9 @@
           }
         }
       }
+    },
+    "Enviar" : {
+
     },
     "Erro" : {
       "extractionState" : "manual",
@@ -6537,6 +6573,9 @@
         }
       }
     },
+    "Melhor" : {
+
+    },
     "Melhor sequência" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6965,6 +7004,9 @@
           }
         }
       }
+    },
+    "Na meta" : {
+
     },
     "Não consegui analisar" : {
       "extractionState" : "manual",
@@ -8209,17 +8251,6 @@
         }
       }
     },
-    "Perguntar à IA" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ask the AI"
-          }
-        }
-      }
-    },
     "Perguntar \"%@\" à IA" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8227,6 +8258,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ask the AI about \"%@\""
+          }
+        }
+      }
+    },
+    "Perguntar à IA" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ask the AI"
           }
         }
       }

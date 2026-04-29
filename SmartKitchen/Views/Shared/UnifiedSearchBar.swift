@@ -96,24 +96,65 @@ struct UnifiedSearchBar: View {
             .onTapGesture {
                 requestFocus()
             }
-
-            if state.isVisible {
-                closeButton
-            }
         }
     }
 
     @ViewBuilder
     private var accessoryActions: some View {
-        if state.mode == .aiChat {
-            // In Modo IA, the unified bar acts as the chat input. Replace the
-            // quick-actions menus with an inline dictation button so the user
-            // can dictate the message without leaving the screen.
+        if hasTypedText {
+            // Quando o usuário digita, mostramos apagar + enviar.
+            inlineSendActions
+        } else if state.mode == .aiChat {
+            // Em Modo IA sem texto, oferecemos ditado para puxar a fala.
             DictationButton(targetText: $state.searchText)
         } else if shouldCollapseQuickActions {
             collapsedAccessoryMenu
         } else {
             expandedAccessoryActions
+        }
+    }
+
+    private var inlineSendActions: some View {
+        HStack(spacing: 4) {
+            Button {
+                state.searchText = ""
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 17, weight: .medium))
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 32, height: 32)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text("Apagar"))
+
+            Button {
+                let trimmed = state.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !trimmed.isEmpty else { return }
+                if state.mode == .aiChat {
+                    state.pendingChatMessage = trimmed
+                    state.searchText = ""
+                } else {
+                    state.submitTrigger += 1
+                }
+            } label: {
+                Image(systemName: "arrow.up.circle.fill")
+                    .font(.system(size: 26, weight: .semibold))
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(
+                        state.mode == .aiChat
+                            ? AnyShapeStyle(.linearGradient(
+                                colors: [.purple, .blue],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing))
+                            : AnyShapeStyle(Color.accentColor)
+                    )
+                    .frame(width: 32, height: 32)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text("Enviar"))
         }
     }
 
@@ -290,23 +331,6 @@ struct UnifiedSearchBar: View {
         }
     }
 
-    private var closeButton: some View {
-        Button(role: .cancel) {
-            // Apenas encerra o modo de digitação (defocus + teclado), mantendo
-            // a barra/overlay aberta. O usuário fecha o overlay por outros meios.
-            state.defocusTrigger += 1
-        } label: {
-            Image(systemName: "xmark")
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(.secondary)
-                .frame(width: chromeHeight, height: chromeHeight)
-                .contentShape(Circle())
-        }
-        .accessibilityLabel(Text("Fechar"))
-        .modifier(NativeGlassCloseButtonModifier())
-        .transition(.move(edge: .trailing).combined(with: .opacity))
-    }
-
     @ViewBuilder
     private var searchBarBackground: some View {
         if #available(iOS 26, macOS 26, *) {
@@ -357,28 +381,6 @@ struct UnifiedSearchBar: View {
         state.dismiss()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
             onOpenFoodGalleryDirect()
-        }
-    }
-}
-
-private struct NativeGlassCloseButtonModifier: ViewModifier {
-    @ViewBuilder
-    func body(content: Content) -> some View {
-        if #available(iOS 26, macOS 26, *) {
-            content
-                .buttonStyle(.plain)
-                .contentShape(Circle())
-                .background {
-                    Circle()
-                        .fill(.clear)
-                        .glassEffect(.regular.interactive(), in: Circle())
-                        .allowsHitTesting(false)
-                }
-        } else {
-            content
-                .buttonStyle(.plain)
-                .contentShape(Circle())
-                .background(.ultraThinMaterial, in: Circle())
         }
     }
 }

@@ -25,7 +25,6 @@ struct RecipeDetailView: View {
     @State private var editingItem: UnifiedItemSelection?
     @State private var ingredientEditorSheet: IngredientEditorSheet?
     @State private var pendingIngredientReplacement: PendingIngredientReplacement?
-    @State private var showMoreActions = false
     /// Porções exibidas no detail. Não persiste; só aplica multiplicador a quantities/nutrição.
     @State private var displayServings: Int = 1
     @State private var didInitDisplayServings = false
@@ -229,23 +228,28 @@ struct RecipeDetailView: View {
         #if os(iOS)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    showMoreActions = true
-                } label: {
-                    Image(systemName: "ellipsis")
-                        .font(.body.weight(.semibold))
-                        .foregroundStyle(.white)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Mais opções")
-                .popover(
-                    isPresented: $showMoreActions,
-                    attachmentAnchor: .rect(.bounds),
-                    arrowEdge: .bottom
-                ) {
-                    moreActionsPopover
-                        .presentationCompactAdaptation(.popover)
-                        .presentationBackground(.clear)
+                HStack(spacing: 14) {
+                    if let externalURL {
+                        Button {
+                            openExternalURL(externalURL)
+                        } label: {
+                            Image(systemName: "globe")
+                                .font(.body.weight(.semibold))
+                                .foregroundStyle(.white)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Abrir no navegador")
+                    }
+
+                    Button {
+                        showEditRecipe = true
+                    } label: {
+                        Image(systemName: "pencil")
+                            .font(.body.weight(.semibold))
+                            .foregroundStyle(.white)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Editar")
                 }
             }
         }
@@ -332,72 +336,6 @@ struct RecipeDetailView: View {
         }
         #endif
     }
-
-    #if os(iOS)
-    private var moreActionsPopover: some View {
-        VStack(spacing: 10) {
-            moreActionsPopoverButton(title: "Editar", systemImage: "pencil") {
-                showEditRecipe = true
-            }
-
-            moreActionsPopoverButton(
-                title: recipe.isFavorite ? "Desfavoritar" : "Favoritar",
-                systemImage: recipe.isFavorite ? "heart.slash" : "heart"
-            ) {
-                recipe.isFavorite.toggle()
-            }
-
-            if let externalURL {
-                moreActionsPopoverButton(title: "Abrir no navegador", systemImage: "globe") {
-                    openExternalURL(externalURL)
-                }
-            }
-        }
-        .padding(12)
-        .frame(width: 248)
-        .background {
-            RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .fill(.ultraThinMaterial)
-                .overlay {
-                    RoundedRectangle(cornerRadius: 28, style: .continuous)
-                        .strokeBorder(Color.white.opacity(colorScheme == .dark ? 0.16 : 0.55), lineWidth: 1)
-                }
-        }
-    }
-
-    private func moreActionsPopoverButton(
-        title: String,
-        systemImage: String,
-        action: @escaping () -> Void
-    ) -> some View {
-        Button {
-            showMoreActions = false
-            DispatchQueue.main.async {
-                action()
-            }
-        } label: {
-            HStack(spacing: 10) {
-                Image(systemName: systemImage)
-                    .font(.subheadline.weight(.semibold))
-                    .frame(width: 18)
-
-                Text(title)
-                    .font(.subheadline.weight(.semibold))
-
-                Spacer(minLength: 0)
-            }
-            .foregroundStyle(colorScheme == .dark ? .white : .primary)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 15)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background {
-                Capsule(style: .continuous)
-                    .fill(Color.primary.opacity(colorScheme == .dark ? 0.12 : 0.08))
-            }
-        }
-        .buttonStyle(.plain)
-    }
-    #endif
 
     // MARK: - Hero Image
 
