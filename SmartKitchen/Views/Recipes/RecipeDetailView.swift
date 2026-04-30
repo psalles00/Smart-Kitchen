@@ -492,13 +492,13 @@ struct RecipeDetailView: View {
                 stepsSection
             }
 
+            if hasPreparationMedia {
+                preparationMediaSection
+            }
+
             // Nutrição
             if hasNutritionInfo {
                 nutritionSection
-            }
-
-            if hasPreparationMedia {
-                preparationMediaSection
             }
 
         }
@@ -656,11 +656,11 @@ struct RecipeDetailView: View {
                     )
                 }
                 .buttonStyle(.plain)
-                .font(.caption.weight(.medium))
+                .font(.caption2.weight(.medium))
                 .foregroundStyle(hasMissingIngredientsInGrocery ? .secondary : .tertiary)
-                .frame(maxWidth: .infinity, minHeight: 52)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 10)
+                .frame(maxWidth: .infinity, minHeight: 40)
+                .padding(.horizontal, 4)
+                .padding(.vertical, 6)
                 .background(detailSurfaceColor, in: .capsule)
                 .disabled(!hasMissingIngredientsInGrocery)
             }
@@ -783,14 +783,14 @@ struct RecipeDetailView: View {
             .buttonStyle(.plain)
             .disabled(displayServings <= 1)
 
-            VStack(spacing: 0) {
+            HStack(spacing: 4) {
                 Text("\(displayServings)")
                     .font(.headline.monospacedDigit())
-                    .frame(minWidth: 26)
                 Text(displayServings == 1 ? "porção" : "porções")
-                    .font(.caption2)
+                    .font(.caption)
                     .foregroundStyle(.secondary)
             }
+            .frame(minWidth: 44)
 
             Button {
                 if displayServings < 64 {
@@ -804,9 +804,9 @@ struct RecipeDetailView: View {
             .buttonStyle(.plain)
             .disabled(displayServings >= 64)
         }
-        .frame(maxWidth: .infinity, minHeight: 52)
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity, minHeight: 40)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
         .background(detailSurfaceColor, in: .capsule)
     }
 
