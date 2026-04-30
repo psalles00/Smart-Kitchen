@@ -150,6 +150,22 @@ final class AppSettings {
     var expiryNotificationHour: Int = 9
     var lowStockNotificationsEnabled: Bool = false
 
+    // MARK: - iCloud media
+    /// Quando true (padrão), as mídias de receitas (fotos e vídeos) são
+    /// incluídas em backups e elegíveis para sincronização via iCloud.
+    /// Quando false, novos backups omitem as mídias e novas mídias
+    /// permanecem apenas localmente.
+    /// Optional para resiliência a migrações.
+    var syncRecipeMediaToCloudValue: Bool? = true
+
+    // MARK: - Backup
+    /// Quando true, o app cria um backup automático por dia para a pasta
+    /// escolhida pelo usuário (geralmente iCloud Drive). Default false.
+    var autoDailyBackupEnabledValue: Bool? = false
+    /// Security-scoped bookmark da pasta escolhida para receber backups
+    /// automáticos diários. Nil quando o usuário ainda não escolheu pasta.
+    var autoBackupBookmarkData: Data? = nil
+
     init() {
         self.id = UUID()
         self.pantryDetailLevel = .simple
@@ -171,6 +187,9 @@ final class AppSettings {
         self.expiryReminderDaysJSON = "[3, 1, 0]"
         self.expiryNotificationHour = 9
         self.lowStockNotificationsEnabled = false
+        self.syncRecipeMediaToCloudValue = true
+        self.autoDailyBackupEnabledValue = false
+        self.autoBackupBookmarkData = nil
     }
 
     @Transient
@@ -211,5 +230,17 @@ final class AppSettings {
     var groceryGroupingMode: ListGroupingMode {
         get { ListGroupingMode(rawValue: groceryGroupingModeRaw) ?? .marketSection }
         set { groceryGroupingModeRaw = newValue.rawValue }
+    }
+
+    @Transient
+    var syncRecipeMediaToCloud: Bool {
+        get { syncRecipeMediaToCloudValue ?? true }
+        set { syncRecipeMediaToCloudValue = newValue }
+    }
+
+    @Transient
+    var autoDailyBackupEnabled: Bool {
+        get { autoDailyBackupEnabledValue ?? false }
+        set { autoDailyBackupEnabledValue = newValue }
     }
 }

@@ -3,15 +3,10 @@ import SwiftData
 
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.modelContext) private var modelContext
-    @Query private var settingsArray: [AppSettings]
-    @State private var cloudSync = CloudSyncService.shared
-    @State private var isResettingAllData = false
-    @State private var showFullResetConfirmation = false
-    @State private var showResetError = false
-    @State private var resetErrorMessage = ""
 
-    private var settings: AppSettings? { settingsArray.first }
+    private var appVersion: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "3.2.6"
+    }
 
     var body: some View {
         settingsForm
@@ -27,24 +22,16 @@ struct SettingsView: View {
             }
             #endif
             .macSettingsContainer()
-            .alert("Apagar todos os dados?", isPresented: $showFullResetConfirmation) {
-                Button("Cancelar", role: .cancel) {}
-                Button("Apagar tudo", role: .destructive) {
-                    eraseAllData()
-                }
-            } message: {
-                Text("Isso apagará receitas, listas, categorias, histórico da IA, backups internos e os dados sincronizados no iCloud deste app. A ação é irreversível.")
-            }
-            .alert("Erro", isPresented: $showResetError) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text(resetErrorMessage)
-            }
     }
 
     private var settingsForm: some View {
         Form {
-            // MARK: - iCloud
+            // MARK: - Plano
+            Section {
+                PlanCardView()
+            }
+
+            // MARK: - Conta e Sincronização
             Section {
                 NavigationLink {
                     iCloudSettingsView()
@@ -89,6 +76,33 @@ struct SettingsView: View {
                             .foregroundStyle(.green)
                     }
                 }
+            } header: {
+                Text("Conta e Sincronização")
+            }
+
+            // MARK: - Preferências
+            Section {
+                NavigationLink {
+                    AppearanceSettingsView()
+                } label: {
+                    Label {
+                        Text("Aparência e Performance")
+                    } icon: {
+                        Image(systemName: "paintbrush.pointed")
+                            .foregroundStyle(.indigo)
+                    }
+                }
+
+                NavigationLink {
+                    ListsSettingsView()
+                } label: {
+                    Label {
+                        Text("Listas e Receitas")
+                    } icon: {
+                        Image(systemName: "list.bullet.rectangle")
+                            .foregroundStyle(.teal)
+                    }
+                }
 
                 NavigationLink {
                     NutritionSettingsView()
@@ -100,103 +114,60 @@ struct SettingsView: View {
                             .foregroundStyle(PageTheme.nutrients.accentColor)
                     }
                 }
-
-                NavigationLink {
-                    PerformanceSettingsView()
-                } label: {
-                    Label {
-                        Text("Performance")
-                    } icon: {
-                        Image(systemName: "speedometer")
-                            .foregroundStyle(.orange)
-                    }
-                }
-            }
-
-            // MARK: - IA
-            #if os(iOS)
-            Section("Geral") {
-                if let settings {
-                    Picker("Aparência", selection: Binding(
-                        get: { settings.appearanceMode },
-                        set: { settings.appearanceMode = $0 }
-                    )) {
-                        ForEach(AppearanceMode.allCases) { mode in
-                            Text(mode.displayName).tag(mode)
-                        }
-                    }
-                }
-            }
-            #endif
-
-            Section("IA") {
-                LabeledContent("Modelo IA") {
-                    Text("GPT-4.1 mini")
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            // MARK: - Listas
-            Section("Listas") {
-                if let settings {
-                    Picker("Modo da despensa", selection: Binding(
-                        get: { settings.pantryDetailLevel },
-                        set: { settings.pantryDetailLevel = $0 }
-                    )) {
-                        ForEach(PantryDetailLevel.allCases) { level in
-                            Text(level.displayName).tag(level)
-                        }
-                    }
-
-                    Stepper(
-                        "Avisar validade com \(settings.expiringItemsLeadDays) dias de antecedência",
-                        value: Binding(
-                            get: { settings.expiringItemsLeadDays },
-                            set: { settings.expiringItemsLeadDays = $0 }
-                        ),
-                        in: 1...180
-                    )
-
-                    Toggle("Utensílios", isOn: Binding(
-                        get: { settings.showUtensils },
-                        set: { settings.showUtensils = $0 }
-                    ))
-                }
-            }
-
-            // MARK: - Receitas
-            Section("Receitas") {
-                if let settings {
-                    Picker("Visualização padrão", selection: Binding(
-                        get: { settings.recipeViewMode },
-                        set: { settings.recipeViewMode = $0 }
-                    )) {
-                        ForEach(RecipeViewMode.allCases) { mode in
-                            Label(mode.displayName, systemImage: mode.icon).tag(mode)
-                        }
-                    }
-
-                    Stepper(
-                        "Compatível a partir de \(settings.recipeCompatibilityThresholdPercent)%",
-                        value: Binding(
-                            get: { settings.recipeCompatibilityThresholdPercent },
-                            set: { settings.recipeCompatibilityThresholdPercent = $0 }
-                        ),
-                        in: 10...100,
-                        step: 5
-                    )
-
-                    Toggle("Ideias só com itens da despensa", isOn: Binding(
-                        get: { settings.recipeIdeasFilterByPantry },
-                        set: { settings.recipeIdeasFilterByPantry = $0 }
-                    ))
-                }
+            } header: {
+                Text("Preferências")
             }
 
             // MARK: - Dados
-            Section("Dados") {
-                Button("Restaurar dados de demonstração", role: .destructive) {
+            Section {
+                NavigationLink {
+                    DataSettingsView()
+                } label: {
+                    Label {
+                        Text("Gerenciar dados")
+                    } icon: {
+                        Image(systemName: "externaldrive.fill")
+                            .foregroundStyle(.orange)
+                    }
+                }
+            } header: {
+                Text("Dados")
+            }
+
+            // MARK: - Sobre
+            Section {
+                LabeledContent("Versão") {
+                    Text(appVersion)
+                        .foregroundStyle(.secondary)
+                }
+                LabeledContent("Desenvolvido por") {
+                    Text(verbatim: "Salles Tech")
+                        .foregroundStyle(.secondary)
+                }
+            } header: {
+                Text("Sobre")
+            }
+        }
+        .formStyle(.grouped)
+    }
+}
+
+struct DataSettingsView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
+    @State private var cloudSync = CloudSyncService.shared
+    @State private var isResettingAllData = false
+    @State private var showFullResetConfirmation = false
+    @State private var showResetError = false
+    @State private var resetErrorMessage = ""
+
+    var body: some View {
+        Form {
+            Section {
+                Button(role: .destructive) {
                     restoreDemoData()
+                } label: {
+                    Label("Restaurar dados de demonstração", systemImage: "arrow.counterclockwise")
                 }
                 .disabled(isResettingAllData)
 
@@ -204,7 +175,7 @@ struct SettingsView: View {
                     showFullResetConfirmation = true
                 } label: {
                     HStack {
-                        Text("Apagar todos os dados locais e do iCloud")
+                        Label("Apagar todos os dados locais e do iCloud", systemImage: "trash")
                         Spacer()
                         if isResettingAllData {
                             ProgressView()
@@ -214,20 +185,26 @@ struct SettingsView: View {
                 }
                 .disabled(isResettingAllData)
             }
-
-            // MARK: - Sobre
-            Section("Sobre") {
-                LabeledContent("Versão") {
-                    Text("1.0.0")
-                        .foregroundStyle(.secondary)
-                }
-                LabeledContent("Desenvolvido com") {
-                    Text("SwiftUI + SwiftData")
-                        .foregroundStyle(.secondary)
-                }
-            }
         }
         .formStyle(.grouped)
+        .macSettingsContainer()
+        .modalNavigationTitle(String(localized: "Dados"))
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
+        .alert("Apagar todos os dados?", isPresented: $showFullResetConfirmation) {
+            Button("Cancelar", role: .cancel) {}
+            Button("Apagar tudo", role: .destructive) {
+                eraseAllData()
+            }
+        } message: {
+            Text("Isso apagará receitas, listas, categorias, histórico da IA, backups internos e os dados sincronizados no iCloud deste app. A ação é irreversível.")
+        }
+        .alert("Erro", isPresented: $showResetError) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(resetErrorMessage)
+        }
     }
 
     private func restoreDemoData() {

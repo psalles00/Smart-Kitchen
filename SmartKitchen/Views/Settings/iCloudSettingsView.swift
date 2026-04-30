@@ -1,12 +1,16 @@
 import SwiftUI
+import SwiftData
 
 struct iCloudSettingsView: View {
     @Environment(\.modelContext) private var modelContext
+    @Query private var settingsArray: [AppSettings]
     private var cloudSync = CloudSyncService.shared
     @State private var isTransitioning = false
     @State private var showDisableConfirm = false
     @State private var showError = false
     @State private var errorMessage = ""
+
+    private var settings: AppSettings? { settingsArray.first }
 
     var body: some View {
         Form {
@@ -91,6 +95,21 @@ struct iCloudSettingsView: View {
                     .padding(.vertical, 4)
                 } header: {
                     Text("Dados sincronizados")
+                }
+
+                Section {
+                    if let settings {
+                        Toggle(isOn: Binding(
+                            get: { settings.syncRecipeMediaToCloud },
+                            set: { settings.syncRecipeMediaToCloud = $0 }
+                        )) {
+                            Label("Sincronizar mídias de receitas", systemImage: "photo.on.rectangle.angled")
+                        }
+                    }
+                } header: {
+                    Text("Mídias")
+                } footer: {
+                    Text("Quando ativo (padrão), fotos e vídeos das receitas são incluídos em backups e elegíveis para sincronização entre dispositivos. Ao desativar, novos backups e arquivos exportados deixam de incluir mídias para reduzir uso de armazenamento na nuvem.")
                 }
             }
 

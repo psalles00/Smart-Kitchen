@@ -1,7 +1,7 @@
 {
   "images" : [
     {
-      "filename" : "AppIcon-1024.png",
+      "filename" : "egg4-iconB.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"
@@ -13,7 +13,7 @@
           "value" : "dark"
         }
       ],
-      "filename" : "AppIcon-Dark-1024.png",
+      "filename" : "egg4-iconB 1.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"
@@ -25,7 +25,7 @@
           "value" : "tinted"
         }
       ],
-      "filename" : "AppIcon-Tinted-1024.png",
+      "filename" : "egg4-iconB 2.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"

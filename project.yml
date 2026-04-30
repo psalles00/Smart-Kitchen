@@ -96,7 +96,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.pedrosalles.smartkitchen.sync
         DEVELOPMENT_TEAM: 44K57HQAP9
-        MARKETING_VERSION: "1.0.0"
+        MARKETING_VERSION: "3.2.6"
         CURRENT_PROJECT_VERSION: "1"
         CODE_SIGN_STYLE: Automatic
         TARGETED_DEVICE_FAMILY: "1,2"
@@ -144,7 +144,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.pedrosalles.smartkitchen.sync.ShareExtension
         DEVELOPMENT_TEAM: 44K57HQAP9
-        MARKETING_VERSION: "1.0.0"
+        MARKETING_VERSION: "3.2.6"
         CURRENT_PROJECT_VERSION: "1"
         CODE_SIGN_STYLE: Automatic
         SWIFT_EMIT_LOC_STRINGS: YES
@@ -176,7 +176,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.pedrosalles.smartkitchen.sync.Widgets
         DEVELOPMENT_TEAM: 44K57HQAP9
-        MARKETING_VERSION: "1.0.0"
+        MARKETING_VERSION: "3.2.6"
         CURRENT_PROJECT_VERSION: "1"
         CODE_SIGN_STYLE: Automatic
         TARGETED_DEVICE_FAMILY: "1,2"

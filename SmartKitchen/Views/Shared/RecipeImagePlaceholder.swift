@@ -52,47 +52,55 @@ struct RecipeImagePlaceholder: View {
     let ingredients: [RecipeIngredient]
     var darkenOverlay: Bool = false
 
+    @AppStorage(PerformancePreferences.recipeIllustratedPlaceholdersEnabledKey)
+    private var recipeIllustratedPlaceholdersEnabled = true
+
     private static let cols = 6
     private static let rows = 5
     private static let totalSlots = cols * rows // 30
 
     var body: some View {
         let slots = buildIconSlots(from: ingredients, count: Self.totalSlots)
-        if slots.isEmpty {
+        if !recipeIllustratedPlaceholdersEnabled {
             fallbackPlaceholder
         } else {
-            GeometryReader { geo in
-                let spacing: CGFloat = 6
-                let tileSize = (geo.size.height - spacing * CGFloat(Self.rows - 1)) / CGFloat(Self.rows)
-                let halfShift = (tileSize + spacing) * 0.5
-                // Start before left edge so first tile is cropped
-                let baseOffset = -(tileSize * 0.45)
+            let slots = buildIconSlots(from: ingredients, count: Self.totalSlots)
+            if slots.isEmpty {
+                fallbackPlaceholder
+            } else {
+                GeometryReader { geo in
+                    let spacing: CGFloat = 6
+                    let tileSize = (geo.size.height - spacing * CGFloat(Self.rows - 1)) / CGFloat(Self.rows)
+                    let halfShift = (tileSize + spacing) * 0.5
+                    // Start before left edge so first tile is cropped
+                    let baseOffset = -(tileSize * 0.45)
 
-                ZStack {
-                    recipePlaceholderGradient
+                    ZStack {
+                        recipePlaceholderGradient
 
-                    VStack(spacing: spacing) {
-                        ForEach(0..<Self.rows, id: \.self) { row in
-                            let start = row * Self.cols
-                            let rowSlots = Array(slots[start..<start + Self.cols])
-                            // Rows 2 & 4 (indices 1, 3) get different horizontal shift.
-                            // Rows 1, 3, 5 (indices 0, 2, 4) share the base cropped start.
-                            let rowShift: CGFloat = (row == 1 || row == 3) ? halfShift : 0
+                        VStack(spacing: spacing) {
+                            ForEach(0..<Self.rows, id: \.self) { row in
+                                let start = row * Self.cols
+                                let rowSlots = Array(slots[start..<start + Self.cols])
+                                // Rows 2 & 4 (indices 1, 3) get different horizontal shift.
+                                // Rows 1, 3, 5 (indices 0, 2, 4) share the base cropped start.
+                                let rowShift: CGFloat = (row == 1 || row == 3) ? halfShift : 0
 
-                            HStack(spacing: spacing) {
-                                ForEach(0..<rowSlots.count, id: \.self) { i in
-                                    IngredientTile(image: rowSlots[i], size: tileSize)
+                                HStack(spacing: spacing) {
+                                    ForEach(0..<rowSlots.count, id: \.self) { i in
+                                        IngredientTile(image: rowSlots[i], size: tileSize)
                                 }
+                                }
+                                .offset(x: baseOffset + rowShift)
                             }
-                            .offset(x: baseOffset + rowShift)
+                        }
+
+                        if darkenOverlay {
+                            Color.black.opacity(0.36)
                         }
                     }
-
-                    if darkenOverlay {
-                        Color.black.opacity(0.36)
-                    }
+                    .clipped()
                 }
-                .clipped()
             }
         }
     }
@@ -117,6 +125,9 @@ struct RecipeImagePlaceholderCompact: View {
     let ingredients: [RecipeIngredient]
     var darkenOverlay: Bool = false
 
+    @AppStorage(PerformancePreferences.recipeIllustratedPlaceholdersEnabledKey)
+    private var recipeIllustratedPlaceholdersEnabled = true
+
     private static let baseCols = 5
     private static let expandedCols = 6
     private static let rows = 3
@@ -124,42 +135,47 @@ struct RecipeImagePlaceholderCompact: View {
 
     var body: some View {
         let slots = buildIconSlots(from: ingredients, count: Self.totalSlots)
-        if slots.isEmpty {
+        if !recipeIllustratedPlaceholdersEnabled {
             fallbackPlaceholder
         } else {
-            GeometryReader { geo in
-                let spacing: CGFloat = 4
-                let tileSize = (geo.size.height - spacing * CGFloat(Self.rows - 1)) / CGFloat(Self.rows)
-                let halfShift = (tileSize + spacing) * 0.5
-                let baseOffset = -(tileSize * 0.45)
+            let slots = buildIconSlots(from: ingredients, count: Self.totalSlots)
+            if slots.isEmpty {
+                fallbackPlaceholder
+            } else {
+                GeometryReader { geo in
+                    let spacing: CGFloat = 4
+                    let tileSize = (geo.size.height - spacing * CGFloat(Self.rows - 1)) / CGFloat(Self.rows)
+                    let halfShift = (tileSize + spacing) * 0.5
+                    let baseOffset = -(tileSize * 0.45)
 
-                ZStack {
-                    recipePlaceholderGradient
+                    ZStack {
+                        recipePlaceholderGradient
 
-                    VStack(spacing: spacing) {
-                        ForEach(0..<Self.rows, id: \.self) { row in
-                            let cols = Self.expandedCols
-                            let start = Self.startIndex(forRow: row)
-                            let rowSlots = Array(slots[start..<start + cols])
-                            let step = tileSize + spacing
-                            // Row 2 gains one icon on the left while keeping existing icons fixed.
-                            let rowShift: CGFloat = (row == 1) ? (halfShift - step) : 0
+                        VStack(spacing: spacing) {
+                            ForEach(0..<Self.rows, id: \.self) { row in
+                                let cols = Self.expandedCols
+                                let start = Self.startIndex(forRow: row)
+                                let rowSlots = Array(slots[start..<start + cols])
+                                let step = tileSize + spacing
+                                // Row 2 gains one icon on the left while keeping existing icons fixed.
+                                let rowShift: CGFloat = (row == 1) ? (halfShift - step) : 0
 
-                            HStack(spacing: spacing) {
-                                ForEach(0..<rowSlots.count, id: \.self) { i in
-                                    IngredientTile(image: rowSlots[i], size: tileSize)
+                                HStack(spacing: spacing) {
+                                    ForEach(0..<rowSlots.count, id: \.self) { i in
+                                        IngredientTile(image: rowSlots[i], size: tileSize)
                                 }
+                                }
+                                .offset(x: baseOffset + rowShift)
                             }
-                            .offset(x: baseOffset + rowShift)
+                        }
+                        .scaleEffect(1.25)
+
+                        if darkenOverlay {
+                            Color.black.opacity(0.36)
                         }
                     }
-                    .scaleEffect(1.25)
-
-                    if darkenOverlay {
-                        Color.black.opacity(0.36)
-                    }
+                    .clipped()
                 }
-                .clipped()
             }
         }
     }

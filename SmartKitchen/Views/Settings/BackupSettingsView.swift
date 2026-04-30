@@ -4,6 +4,7 @@ import UniformTypeIdentifiers
 
 struct BackupSettingsView: View {
     @Environment(\.modelContext) private var modelContext
+    @Query private var settingsArray: [AppSettings]
     @State private var backupManager = BackupManager.shared
 
     @State private var showRestoreConfirm = false
@@ -15,11 +16,26 @@ struct BackupSettingsView: View {
     @State private var isExporting = false
     @State private var exportDocument = BackupZipDocument(data: Data())
     @State private var isImporting = false
+    @State private var isPickingFolder = false
+
+    private var settings: AppSettings? { settingsArray.first }
 
     private var exportFileName: String {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd_HH-mm"
         return "SmartKitchen-Backup-\(formatter.string(from: .now))"
+    }
+
+    private var folderDisplayName: String? {
+        guard let bookmark = settings?.autoBackupBookmarkData else { return nil }
+        var isStale = false
+        #if os(macOS)
+        let url = try? URL(resolvingBookmarkData: bookmark, options: [.withSecurityScope], relativeTo: nil, bookmarkDataIsStale: &isStale)
+        #else
+        let url = try? URL(resolvingBookmarkData: bookmark, relativeTo: nil, bookmarkDataIsStale: &isStale)
+        #endif
+        if isStale { return nil }
+        return url?.lastPathComponent
     }
 
     var body: some View {
@@ -58,6 +74,45 @@ struct BackupSettingsView: View {
                 Text("O app mantém até 7 backups diários. Backups antigos são removidos automaticamente.")
             }
 
+            // MARK: - Backup automático em pasta
+            Section {
+                if let settings {
+                    Toggle(isOn: Binding(
+                        get: { settings.autoDailyBackupEnabled },
+                        set: { newValue in
+                            settings.autoDailyBackupEnabled = newValue
+                            if newValue && settings.autoBackupBookmarkData == nil {
+                                isPickingFolder = true
+                            }
+                        }
+                    )) {
+                        Label("Backup automático diário", systemImage: "calendar.badge.clock")
+                    }
+
+                    if settings.autoDailyBackupEnabled {
+                        if let folder = folderDisplayName {
+                            HStack {
+                                Label(folder, systemImage: "folder")
+                                Spacer()
+                                Button("Trocar") { isPickingFolder = true }
+                                    .buttonStyle(.bordered)
+                                    .controlSize(.small)
+                            }
+                        } else {
+                            Button {
+                                isPickingFolder = true
+                            } label: {
+                                Label("Escolher pasta de destino…", systemImage: "folder.badge.plus")
+                            }
+                        }
+                    }
+                }
+            } header: {
+                Text("Automático em pasta")
+            } footer: {
+                Text("Quando ativado, o app cria uma cópia diária do backup na pasta escolhida (recomendamos uma pasta no iCloud Drive). Mantém até 7 cópias mais recentes; arquivos do mesmo dia são substituídos.")
+            }
+
             // MARK: - Exportar/Importar
             Section {
                 Button("Exportar backup (.zip)", systemImage: "square.and.arrow.up") {
@@ -70,7 +125,7 @@ struct BackupSettingsView: View {
             } header: {
                 Text("Transferência Manual")
             } footer: {
-                Text("Use estas opções para transferir backups entre dispositivos ou guardar uma cópia externa.")
+                Text("O backup exportado é um arquivo .zip que contém o conteúdo em CSV e Markdown legíveis sem o aplicativo, além das mídias originais. Pode ser importado neste mesmo formato ou no formato anterior.")
             }
         }
         .macSettingsContainer()
@@ -124,6 +179,20 @@ struct BackupSettingsView: View {
                 importBackup(from: url)
             case .failure(let error):
                 presentAlert(title: String(localized: "Falha ao importar"), message: error.localizedDescription)
+            }
+        }
+        .fileImporter(
+            isPresented: $isPickingFolder,
+            allowedContentTypes: [.folder]
+        ) { result in
+            switch result {
+            case .success(let url):
+                saveAutoBackupFolder(url)
+            case .failure(let error):
+                if let settings, settings.autoBackupBookmarkData == nil {
+                    settings.autoDailyBackupEnabled = false
+                }
+                presentAlert(title: String(localized: "Falha ao escolher pasta"), message: error.localizedDescription)
             }
         }
         .alert(alertTitle, isPresented: $showAlert) {
@@ -192,6 +261,24 @@ struct BackupSettingsView: View {
         alertTitle = title
         alertMessage = message
         showAlert = true
+    }
+
+    private func saveAutoBackupFolder(_ url: URL) {
+        guard let settings else { return }
+        let didStart = url.startAccessingSecurityScopedResource()
+        defer { if didStart { url.stopAccessingSecurityScopedResource() } }
+        do {
+            #if os(macOS)
+            let bookmark = try url.bookmarkData(options: [.withSecurityScope], includingResourceValuesForKeys: nil, relativeTo: nil)
+            #else
+            let bookmark = try url.bookmarkData(options: [], includingResourceValuesForKeys: nil, relativeTo: nil)
+            #endif
+            settings.autoBackupBookmarkData = bookmark
+            settings.autoDailyBackupEnabled = true
+        } catch {
+            settings.autoDailyBackupEnabled = false
+            presentAlert(title: String(localized: "Falha ao salvar pasta"), message: error.localizedDescription)
+        }
     }
 }
 

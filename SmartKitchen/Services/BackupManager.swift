@@ -9,6 +9,7 @@ final class BackupManager {
 
     private static let maxBackups = 7
     private static let lastBackupDateKey = "BackupManager.lastBackupDate"
+    private static let lastExternalBackupDateKey = "BackupManager.lastExternalBackupDate"
     private static let autoRestoredBackupNameKey = "BackupManager.autoRestoredBackupName"
 
     private(set) var backups: [BackupEntry] = []
@@ -32,10 +33,22 @@ final class BackupManager {
         let calendar = Calendar.current
         if let last = UserDefaults.standard.object(forKey: Self.lastBackupDateKey) as? Date,
            calendar.isDateInToday(last) {
+            // internal already done today; still try external below
+        } else {
+            Task { @MainActor in
+                await createBackup(context: context)
+            }
+        }
+
+        // Auto external backup (only if user enabled and configured a folder)
+        let settings = (try? context.fetch(FetchDescriptor<AppSettings>()).first) ?? nil
+        guard let settings, settings.autoDailyBackupEnabled, let bookmark = settings.autoBackupBookmarkData else { return }
+        if let lastExt = UserDefaults.standard.object(forKey: Self.lastExternalBackupDateKey) as? Date,
+           calendar.isDateInToday(lastExt) {
             return
         }
         Task { @MainActor in
-            await createBackup(context: context)
+            await performExternalBackup(context: context, bookmark: bookmark, includeMedia: settings.syncRecipeMediaToCloud)
         }
     }
 
@@ -146,21 +159,82 @@ final class BackupManager {
 
     /// Export current data as zip Data.
     func exportCurrentData(context: ModelContext) throws -> Data {
-        let snapshot = try AppBackupSnapshot(context: context)
-        let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        let data = try encoder.encode(snapshot)
-        return try SimpleZipArchive.archive(fileName: "smart-kitchen-backup.json", data: data)
+        let settings = try? context.fetch(FetchDescriptor<AppSettings>()).first
+        let includeMedia = settings?.syncRecipeMediaToCloud ?? true
+        return try BackupSnapshotV2.makeArchive(context: context, includeMedia: includeMedia)
     }
 
-    /// Import a zip backup from external file.
+    /// Import a zip backup from external file. Accepts both v1 (single
+    /// `smart-kitchen-backup.json`) and v2 (multi-file with `manifest.json`).
     func importBackup(from zipData: Data, context: ModelContext) throws {
-        let jsonData = try SimpleZipArchive.extractFile(named: "smart-kitchen-backup.json", from: zipData)
+        let jsonData: Data
+        if BackupSnapshotV2.isV2Archive(zipData) {
+            jsonData = try BackupSnapshotV2.extractCanonicalJSON(from: zipData)
+        } else {
+            jsonData = try SimpleZipArchive.extractFile(named: "smart-kitchen-backup.json", from: zipData)
+        }
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         let snapshot = try decoder.decode(AppBackupSnapshot.self, from: jsonData)
         try snapshot.restore(into: context)
+    }
+
+    // MARK: - External (auto) backups
+
+    /// Save a v2 backup file into the user-chosen folder using a security-scoped
+    /// bookmark. Returns true on success.
+    @discardableResult
+    func performExternalBackup(context: ModelContext, bookmark: Data, includeMedia: Bool) async -> Bool {
+        do {
+            var isStale = false
+            #if os(macOS)
+            let url = try URL(resolvingBookmarkData: bookmark, options: [.withSecurityScope], relativeTo: nil, bookmarkDataIsStale: &isStale)
+            #else
+            let url = try URL(resolvingBookmarkData: bookmark, relativeTo: nil, bookmarkDataIsStale: &isStale)
+            #endif
+            guard !isStale else {
+                NSLog("[BackupManager] External backup bookmark is stale; user must reselect folder")
+                return false
+            }
+
+            let didStart = url.startAccessingSecurityScopedResource()
+            defer { if didStart { url.stopAccessingSecurityScopedResource() } }
+
+            let zipData = try BackupSnapshotV2.makeArchive(context: context, includeMedia: includeMedia)
+
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd"
+            let fileName = "SmartKitchen-Backup-\(formatter.string(from: .now)).zip"
+            let target = url.appendingPathComponent(fileName)
+
+            // Replace same-day file if exists
+            try? FileManager.default.removeItem(at: target)
+            try zipData.write(to: target, options: .atomic)
+
+            UserDefaults.standard.set(Date.now, forKey: Self.lastExternalBackupDateKey)
+            pruneOldExternalBackups(in: url)
+            return true
+        } catch {
+            NSLog("[BackupManager] External backup failed: %@", String(describing: error))
+            return false
+        }
+    }
+
+    private func pruneOldExternalBackups(in folder: URL) {
+        let fm = FileManager.default
+        guard let files = try? fm.contentsOfDirectory(at: folder, includingPropertiesForKeys: [.creationDateKey], options: .skipsHiddenFiles) else { return }
+        let backups = files
+            .filter { $0.lastPathComponent.hasPrefix("SmartKitchen-Backup-") && $0.pathExtension == "zip" }
+            .sorted { lhs, rhs in
+                let l = (try? lhs.resourceValues(forKeys: [.creationDateKey]))?.creationDate ?? .distantPast
+                let r = (try? rhs.resourceValues(forKeys: [.creationDateKey]))?.creationDate ?? .distantPast
+                return l > r
+            }
+        if backups.count > Self.maxBackups {
+            for url in backups[Self.maxBackups...] {
+                try? fm.removeItem(at: url)
+            }
+        }
     }
 
     /// Reload the list from disk.
