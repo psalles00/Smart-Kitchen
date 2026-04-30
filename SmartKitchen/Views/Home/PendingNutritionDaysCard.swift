@@ -73,10 +73,10 @@ struct PendingNutritionDaysCard: View {
 
                     Text("\(days.count)")
                         .font(.caption.weight(.bold))
-                        .foregroundStyle(PageTheme.nutrients.accentColor)
+                        .foregroundStyle(.secondary)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 5)
-                        .background(PageTheme.nutrients.accentColor.opacity(0.14), in: .capsule)
+                        .background(Color.secondary.opacity(0.14), in: .capsule)
                 }
 
                 VStack(spacing: 0) {
@@ -157,6 +157,7 @@ private struct SwipeablePendingRow: View {
 
     @State private var dragOffset: CGFloat = 0
     @State private var pendingAction: PendingAction?
+    @State private var isDraggingHorizontally: Bool = false
 
     private let actionWidth: CGFloat = 76
     private let revealThreshold: CGFloat = 50
@@ -193,7 +194,6 @@ private struct SwipeablePendingRow: View {
             rowContent
                 .background(PendingNutritionDaysCard.cardBackground)
                 .offset(x: effectiveOffset)
-                .simultaneousGesture(swipeGesture)
                 .onTapGesture { onTap() }
                 .confirmationDialog(
                     confirmationTitle,
@@ -234,6 +234,7 @@ private struct SwipeablePendingRow: View {
                         Label("Desistir", systemImage: "xmark.circle")
                     }
                 }
+                .simultaneousGesture(swipeGesture)
         }
         .clipped()
         .animation(.interactiveSpring(response: 0.3, dampingFraction: 0.85), value: effectiveOffset)
@@ -265,12 +266,21 @@ private struct SwipeablePendingRow: View {
     private var swipeGesture: some Gesture {
         DragGesture(minimumDistance: 12, coordinateSpace: .local)
             .onChanged { value in
-                let horizontal = value.translation.width
-                let vertical = value.translation.height
-                guard abs(horizontal) > abs(vertical) else { return }
-                dragOffset = horizontal
+                // Só assume controle do gesto quando o movimento é claramente
+                // horizontal. Caso contrário, deixa o ScrollView pai rolar
+                // verticalmente sem interferência.
+                guard abs(value.translation.width) > abs(value.translation.height) else { return }
+                isDraggingHorizontally = true
+                dragOffset = value.translation.width
             }
             .onEnded { value in
+                defer {
+                    isDraggingHorizontally = false
+                    dragOffset = 0
+                }
+                guard isDraggingHorizontally,
+                      abs(value.translation.width) > abs(value.translation.height) else { return }
+
                 let horizontal = value.translation.width
                 let predicted = value.predictedEndTranslation.width
                 let combined = (isRevealed ? -totalRevealedWidth : 0) + horizontal
@@ -284,7 +294,6 @@ private struct SwipeablePendingRow: View {
                 } else {
                     shouldReveal = isRevealed
                 }
-                dragOffset = 0
                 if shouldReveal != isRevealed {
                     onRevealChange(shouldReveal)
                 }
