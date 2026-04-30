@@ -11,6 +11,7 @@ import AppKit
 
 struct RecipeDetailView: View {
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.openURL) private var openURL
     @Environment(\.modelContext) private var modelContext
     @Query(filter: #Predicate<UnifiedItem> { $0.isPantry }, sort: \UnifiedItem.name) private var pantryItems: [UnifiedItem]
     @Query(filter: #Predicate<UnifiedItem> { $0.isGrocery }, sort: \UnifiedItem.grocerySortOrder) private var groceryItems: [UnifiedItem]
@@ -31,6 +32,7 @@ struct RecipeDetailView: View {
 
     private let heroHeight: CGFloat = 580
     private let baseContentOverlap: CGFloat = 34
+    private let floatingHeroActionSize: CGFloat = 62
 
     private var sortedIngredients: [RecipeIngredient] {
         (recipe.ingredients ?? []).sorted { $0.sortOrder < $1.sortOrder }
@@ -73,8 +75,37 @@ struct RecipeDetailView: View {
         !sortedPreparationMedia.isEmpty
     }
 
+    private var containsVideoMedia: Bool {
+        sortedPreparationMedia.contains { $0.mediaType == .video }
+    }
+
+    private var mediaHeroActionIcon: String {
+        containsVideoMedia ? "video" : "photo.stack"
+    }
+
+    private var mediaHeroActionAccessibilityLabel: String {
+        String(localized: "Mídias da Receita")
+    }
+
+    private var favoriteHeroActionAccessibilityLabel: String {
+        recipe.isFavorite
+            ? String(localized: "Desfavoritar receita")
+            : String(localized: "Favoritar receita")
+    }
+
+    private var heroActionCount: Int {
+        var count = 1
+        if externalURL != nil { count += 1 }
+        if hasPreparationMedia { count += 1 }
+        return count
+    }
+
+    private var heroActionVerticalInset: CGFloat {
+        heroActionCount >= 3 ? 8 : 0
+    }
+
     private var contentOverlap: CGFloat {
-        baseContentOverlap
+        baseContentOverlap - (heroActionCount >= 3 ? 6 : 0)
     }
 
     private var preferredPreviewMedia: RecipePreparationMedia? {
@@ -96,7 +127,7 @@ struct RecipeDetailView: View {
         neutralSurfaceColor
     }
 
-    private var contentTopPadding: CGFloat { 34 }
+    private var contentTopPadding: CGFloat { 34 + heroActionVerticalInset }
     private var contentBottomPadding: CGFloat { 132 }
 
     private var heroTitleFontSize: CGFloat {
@@ -141,6 +172,12 @@ struct RecipeDetailView: View {
         }
 
         return items
+    }
+
+    private var externalURL: URL? {
+        let trimmed = recipe.externalURLString.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        return URL(string: trimmed)
     }
 
     private var pantryNames: [String] {
@@ -411,6 +448,10 @@ struct RecipeDetailView: View {
         openPreparationMedia(previewMedia)
     }
 
+    private func openExternalURL(_ url: URL) {
+        openURL(url)
+    }
+
     private var heroMetadataRow: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 14) {
@@ -441,11 +482,6 @@ struct RecipeDetailView: View {
                 ingredientsSection
             }
 
-            // Nutrição
-            if hasNutritionInfo {
-                nutritionSection
-            }
-
             // Utensils
             if !(recipe.requiredUtensils ?? []).isEmpty, settings?.showUtensils == true {
                 utensilsSection
@@ -454,6 +490,11 @@ struct RecipeDetailView: View {
             // Steps
             if !sortedSteps.isEmpty {
                 stepsSection
+            }
+
+            // Nutrição
+            if hasNutritionInfo {
+                nutritionSection
             }
 
             if hasPreparationMedia {
@@ -472,6 +513,81 @@ struct RecipeDetailView: View {
             )
             .fill(mainAreaColor)
             .shadow(color: Color.black.opacity(0.12), radius: 26, x: 0, y: -8)
+        }
+        .overlay(alignment: .topTrailing) {
+            HStack(spacing: 10) {
+                if hasPreparationMedia, let previewMedia = preferredPreviewMedia {
+                    Button {
+                        openPreparationMedia(previewMedia)
+                    } label: {
+                        Image(systemName: mediaHeroActionIcon)
+                            .font(.system(size: 24, weight: .semibold))
+                            .foregroundStyle(.primary)
+                            .frame(width: floatingHeroActionSize, height: floatingHeroActionSize)
+                    }
+                    .buttonStyle(.plain)
+                    .background {
+                        if #available(iOS 26, macOS 26, *) {
+                            Circle()
+                                .fill(.clear)
+                                .glassEffect(.regular.interactive(), in: Circle())
+                        } else {
+                            Circle()
+                                .fill(Color.clear)
+                                .background(.ultraThinMaterial, in: Circle())
+                        }
+                    }
+                    .accessibilityLabel(mediaHeroActionAccessibilityLabel)
+                }
+
+                if let externalURL {
+                    Button {
+                        openExternalURL(externalURL)
+                    } label: {
+                        Image(systemName: "globe")
+                            .font(.system(size: 24, weight: .semibold))
+                            .foregroundStyle(.primary)
+                            .frame(width: floatingHeroActionSize, height: floatingHeroActionSize)
+                    }
+                    .buttonStyle(.plain)
+                    .background {
+                        if #available(iOS 26, macOS 26, *) {
+                            Circle()
+                                .fill(.clear)
+                                .glassEffect(.regular.interactive(), in: Circle())
+                        } else {
+                            Circle()
+                                .fill(Color.clear)
+                                .background(.ultraThinMaterial, in: Circle())
+                        }
+                    }
+                    .accessibilityLabel(String(localized: "Abrir receita na web"))
+                }
+
+                Button {
+                    recipe.isFavorite.toggle()
+                } label: {
+                    Image(systemName: recipe.isFavorite ? "heart.fill" : "heart")
+                        .font(.system(size: 24, weight: .semibold))
+                        .foregroundStyle(recipe.isFavorite ? .red : .primary)
+                        .frame(width: floatingHeroActionSize, height: floatingHeroActionSize)
+                }
+                .buttonStyle(.plain)
+                .background {
+                    if #available(iOS 26, macOS 26, *) {
+                        Circle()
+                            .fill(.clear)
+                            .glassEffect(.regular.interactive(), in: Circle())
+                    } else {
+                        Circle()
+                            .fill(Color.clear)
+                            .background(.ultraThinMaterial, in: Circle())
+                    }
+                }
+                .accessibilityLabel(favoriteHeroActionAccessibilityLabel)
+            }
+            .padding(.trailing, 18)
+            .offset(y: -(floatingHeroActionSize / 2))
         }
     }
 
@@ -531,8 +647,6 @@ struct RecipeDetailView: View {
             HStack(alignment: .center, spacing: 12) {
                 portionsStepper
 
-                Spacer()
-
                 Button {
                     addAllIngredientsToGrocery()
                 } label: {
@@ -544,9 +658,10 @@ struct RecipeDetailView: View {
                 .buttonStyle(.plain)
                 .font(.caption.weight(.medium))
                 .foregroundStyle(hasMissingIngredientsInGrocery ? .secondary : .tertiary)
+                .frame(maxWidth: .infinity, minHeight: 52)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
-                .background(Color(.tertiarySystemFill).opacity(hasMissingIngredientsInGrocery ? 0.85 : 0.55), in: .capsule)
+                .background(detailSurfaceColor, in: .capsule)
                 .disabled(!hasMissingIngredientsInGrocery)
             }
         }
@@ -563,7 +678,7 @@ struct RecipeDetailView: View {
                 iconFileName: resolvedIngredientIconName(for: ingredient),
                 fallbackSymbol: "leaf",
                 showBalloon: true,
-                balloonColor: .white
+                balloonColor: Color(red: 0x19 / 255.0, green: 0x19 / 255.0, blue: 0x1A / 255.0)
             )
 
             VStack(alignment: .leading, spacing: 4) {
@@ -689,9 +804,10 @@ struct RecipeDetailView: View {
             .buttonStyle(.plain)
             .disabled(displayServings >= 64)
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
-        .background(Color(.tertiarySystemFill).opacity(0.6), in: .capsule)
+        .frame(maxWidth: .infinity, minHeight: 52)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(detailSurfaceColor, in: .capsule)
     }
 
     // MARK: - Nutrition

@@ -1,8 +1,36 @@
+import StoreKit
 import SwiftUI
 import SwiftData
 
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.requestReview) private var requestReview
+    @State private var placeholderAction: AboutPlaceholderAction?
+
+    private enum AboutPlaceholderAction: Identifiable {
+        case restorePurchases
+        case feedbackSupport
+
+        var id: String { title }
+
+        var title: String {
+            switch self {
+            case .restorePurchases:
+                String(localized: "Restaurar compras")
+            case .feedbackSupport:
+                String(localized: "Feedback e suporte")
+            }
+        }
+    }
+
+    private var appName: String {
+        if let displayName = Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String,
+           !displayName.isEmpty {
+            return displayName
+        }
+
+        return Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String ?? "Smart Kitchen"
+    }
 
     private var appVersion: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "3.2.6"
@@ -21,6 +49,13 @@ struct SettingsView: View {
                 }
             }
             #endif
+            .alert(item: $placeholderAction) { action in
+                Alert(
+                    title: Text(action.title),
+                    message: Text("Em breve"),
+                    dismissButton: .default(Text("OK"))
+                )
+            }
             .macSettingsContainer()
     }
 
@@ -36,45 +71,25 @@ struct SettingsView: View {
                 NavigationLink {
                     iCloudSettingsView()
                 } label: {
-                    Label {
-                        Text("iCloud")
-                    } icon: {
-                        Image(systemName: "icloud")
-                            .foregroundStyle(.blue)
-                    }
+                    SettingsRowLabel("iCloud", systemImage: "icloud")
                 }
 
                 NavigationLink {
                     FamilySharingSettingsView()
                 } label: {
-                    Label {
-                        Text("Compartilhamento Familiar")
-                    } icon: {
-                        Image(systemName: "person.2.fill")
-                            .foregroundStyle(.purple)
-                    }
+                    SettingsRowLabel("Compartilhamento Familiar", systemImage: "person.2")
                 }
 
                 NavigationLink {
                     NotificationSettingsView()
                 } label: {
-                    Label {
-                        Text("Notificações")
-                    } icon: {
-                        Image(systemName: "bell.badge")
-                            .foregroundStyle(.red)
-                    }
+                    SettingsRowLabel("Notificações", systemImage: "bell")
                 }
 
                 NavigationLink {
                     BackupSettingsView()
                 } label: {
-                    Label {
-                        Text("Backup")
-                    } icon: {
-                        Image(systemName: "externaldrive.badge.timemachine")
-                            .foregroundStyle(.green)
-                    }
+                    SettingsRowLabel("Backup", systemImage: "externaldrive.badge.timemachine")
                 }
             } header: {
                 Text("Conta e Sincronização")
@@ -85,34 +100,19 @@ struct SettingsView: View {
                 NavigationLink {
                     AppearanceSettingsView()
                 } label: {
-                    Label {
-                        Text("Aparência e Performance")
-                    } icon: {
-                        Image(systemName: "paintbrush.pointed")
-                            .foregroundStyle(.indigo)
-                    }
+                    SettingsRowLabel("Aparência e Performance", systemImage: "paintbrush")
                 }
 
                 NavigationLink {
                     ListsSettingsView()
                 } label: {
-                    Label {
-                        Text("Listas e Receitas")
-                    } icon: {
-                        Image(systemName: "list.bullet.rectangle")
-                            .foregroundStyle(.teal)
-                    }
+                    SettingsRowLabel("Listas e Receitas", systemImage: "list.bullet.rectangle")
                 }
 
                 NavigationLink {
                     NutritionSettingsView()
                 } label: {
-                    Label {
-                        Text("Nutrição")
-                    } icon: {
-                        Image(systemName: "leaf.fill")
-                            .foregroundStyle(PageTheme.nutrients.accentColor)
-                    }
+                    SettingsRowLabel("Nutrição", systemImage: "leaf")
                 }
             } header: {
                 Text("Preferências")
@@ -123,12 +123,7 @@ struct SettingsView: View {
                 NavigationLink {
                     DataSettingsView()
                 } label: {
-                    Label {
-                        Text("Gerenciar dados")
-                    } icon: {
-                        Image(systemName: "externaldrive.fill")
-                            .foregroundStyle(.orange)
-                    }
+                    SettingsRowLabel("Gerenciar dados", systemImage: "externaldrive")
                 }
             } header: {
                 Text("Dados")
@@ -136,19 +131,66 @@ struct SettingsView: View {
 
             // MARK: - Sobre
             Section {
-                LabeledContent("Versão") {
-                    Text(appVersion)
-                        .foregroundStyle(.secondary)
+                Button {
+                    placeholderAction = .restorePurchases
+                } label: {
+                    SettingsRowLabel("Restaurar compras", systemImage: "arrow.clockwise")
                 }
-                LabeledContent("Desenvolvido por") {
-                    Text(verbatim: "Salles Tech")
-                        .foregroundStyle(.secondary)
+                .buttonStyle(.plain)
+
+                Button {
+                    placeholderAction = .feedbackSupport
+                } label: {
+                    SettingsRowLabel("Feedback e suporte", systemImage: "questionmark.circle")
                 }
+                .buttonStyle(.plain)
+
+                Button {
+                    requestReview()
+                } label: {
+                    SettingsRowLabel("Avaliar na App Store", systemImage: "star")
+                }
+                .buttonStyle(.plain)
+
+                ShareLink(item: appName, subject: Text(verbatim: appName)) {
+                    SettingsRowLabel("Compartilhar app", systemImage: "square.and.arrow.up")
+                }
+                .buttonStyle(.plain)
             } header: {
                 Text("Sobre")
+            } footer: {
+                Text(verbatim: "\(appName) \(appVersion)")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.top, 2)
             }
         }
         .formStyle(.grouped)
+    }
+}
+
+private struct SettingsRowLabel: View {
+    let title: LocalizedStringKey
+    let systemImage: String
+
+    init(_ title: LocalizedStringKey, systemImage: String) {
+        self.title = title
+        self.systemImage = systemImage
+    }
+
+    var body: some View {
+        HStack {
+            Label {
+                Text(title)
+            } icon: {
+                Image(systemName: systemImage)
+                    .symbolRenderingMode(.monochrome)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 0)
+        }
+        .contentShape(Rectangle())
     }
 }
 

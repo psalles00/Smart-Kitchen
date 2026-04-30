@@ -15,11 +15,13 @@ struct PlanCardView: View {
             HStack(spacing: 14) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(LinearGradient(
-                            colors: [.purple.opacity(0.85), .blue.opacity(0.85)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ))
+                        .fill(
+                            LinearGradient(
+                                colors: [Color.blue, Color.purple],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
                         .frame(width: 48, height: 48)
 
                     Image(systemName: "sparkles")
@@ -41,10 +43,13 @@ struct PlanCardView: View {
                 HStack(spacing: 4) {
                     Text("Conhecer Pro")
                         .font(.subheadline.weight(.medium))
-                    Image(systemName: "chevron.right")
-                        .font(.caption.weight(.bold))
                 }
-                .foregroundStyle(.tint)
+                .foregroundStyle(.primary)
+
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.bold))
+                    .symbolRenderingMode(.monochrome)
+                    .foregroundStyle(.secondary)
             }
             .padding(.vertical, 6)
             .contentShape(Rectangle())
