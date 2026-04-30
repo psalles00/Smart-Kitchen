@@ -678,7 +678,7 @@ struct RecipeDetailView: View {
                 iconFileName: resolvedIngredientIconName(for: ingredient),
                 fallbackSymbol: "leaf",
                 showBalloon: true,
-                balloonColor: Color(red: 0x19 / 255.0, green: 0x19 / 255.0, blue: 0x1A / 255.0)
+                balloonColor: colorScheme == .dark ? Color(red: 0x19 / 255.0, green: 0x19 / 255.0, blue: 0x1A / 255.0) : .white
             )
 
             VStack(alignment: .leading, spacing: 4) {
