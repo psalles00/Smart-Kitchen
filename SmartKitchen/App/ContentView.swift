@@ -1300,6 +1300,7 @@ struct ContentView_Previews: PreviewProvider {
 private struct HomeView: View {
     @Environment(\.scrollToTopTrigger) private var scrollToTopTrigger
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.colorScheme) private var colorScheme
     @Environment(\.openRecipeInRecipesTab) private var openRecipeInRecipesTab
     @EnvironmentObject private var searchBarState: SearchBarState
     // Corrigido ciclo do AttributeGraph separando dependências reativas de SwiftData em @State com atualização manual para evitar travamentos no macOS.
@@ -1537,8 +1538,8 @@ private struct HomeView: View {
                         subtitle: String(localized: "Adicione, busque ou pergunte..."),
                         imageName: "assistente",
                         style: .featured,
-                        imageSize: 112,
-                        imageOffset: CGSize(width: 18, height: 18)
+                        imageSize: 124,
+                        imageOffset: CGSize(width: 18, height: 24)
                     ) {
                         onOpenSearch()
                     }
@@ -1551,7 +1552,7 @@ private struct HomeView: View {
                             imageName: "modo ia",
                             style: .wide,
                             imageSize: 86,
-                            imageOffset: CGSize(width: 54, height: 20)
+                            imageOffset: CGSize(width: 54, height: 22)
                         ) {
                             onOpenChat()
                         }
@@ -1563,7 +1564,7 @@ private struct HomeView: View {
                             imageName: "ideis",
                             style: .wide,
                             imageSize: 70,
-                            imageOffset: CGSize(width: 60, height: 14)
+                            imageOffset: CGSize(width: 54, height: 10)
                         ) {
                             onOpenRecipeIdeas()
                         }
@@ -1573,19 +1574,19 @@ private struct HomeView: View {
                 }
 
                 HStack(alignment: .top, spacing: spacing) {
-                    macShortcutAddTile(title: String(localized: "Mercado"), imageName: "mercado", imageSize: 58) {
-                        showAddGrocery = true
-                    }
-
                     macShortcutAddTile(title: String(localized: "Despensa"), imageName: "despensa", imageSize: 50) {
                         showAddPantry = true
+                    }
+
+                    macShortcutAddTile(title: String(localized: "Mercado"), imageName: "mercado", imageSize: 58) {
+                        showAddGrocery = true
                     }
 
                     macShortcutAddTileMenu(title: String(localized: "Receitas"), imageName: "receitas", imageSize: 56) {
                         recipeShortcutMenuContent
                     }
 
-                    macShortcutAddTileMenu(title: String(localized: "Alimento"), imageName: "nutrientes", imageSize: 50) {
+                    macShortcutAddTileMenu(title: String(localized: "Alimento"), imageName: "nutrientes", imageSize: 58) {
                         foodShortcutMenuContent
                     }
                 }
@@ -1654,8 +1655,8 @@ private struct HomeView: View {
                         subtitle: String(localized: "Adicione, busque ou pergunte..."),
                         imageName: "assistente",
                         style: .featured,
-                        imageSize: 135,
-                        imageOffset: CGSize(width: 28, height: 21)
+                        imageSize: 152,
+                        imageOffset: CGSize(width: 28, height: 28)
                     ) {
                         onOpenSearch()
                     }
@@ -1668,7 +1669,7 @@ private struct HomeView: View {
                             imageName: "modo ia",
                             style: .wide,
                             imageSize: 126,
-                            imageOffset: CGSize(width: 80, height: 36)
+                            imageOffset: CGSize(width: 80, height: 38)
                         ) {
                             onOpenChat()
                         }
@@ -1680,7 +1681,7 @@ private struct HomeView: View {
                             imageName: "ideis",
                             style: .wide,
                             imageSize: 99,
-                            imageOffset: CGSize(width: 95, height: 20)
+                            imageOffset: CGSize(width: 95, height: 22)
                         ) {
                             onOpenRecipeIdeas()
                         }
@@ -1692,21 +1693,21 @@ private struct HomeView: View {
                 // Linha inferior: 4 tiles compactos com label abaixo
                 HStack(spacing: spacing) {
                     VStack(spacing: 6) {
-                        homeShortcutAddTile(imageName: "mercado", imageSize: 71) {
-                            showAddGrocery = true
-                        }
-                        .frame(height: smallSide)
-                        Text(String(localized: "Mercado"))
-                            .font(.caption.weight(.bold))
-                            .foregroundStyle(.primary)
-                    }
-
-                    VStack(spacing: 6) {
                         homeShortcutAddTile(imageName: "despensa", imageSize: 58) {
                             showAddPantry = true
                         }
                         .frame(height: smallSide)
                         Text(String(localized: "Despensa"))
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(.primary)
+                    }
+
+                    VStack(spacing: 6) {
+                        homeShortcutAddTile(imageName: "mercado", imageSize: 71) {
+                            showAddGrocery = true
+                        }
+                        .frame(height: smallSide)
+                        Text(String(localized: "Mercado"))
                             .font(.caption.weight(.bold))
                             .foregroundStyle(.primary)
                     }
@@ -1722,7 +1723,7 @@ private struct HomeView: View {
                     }
 
                     VStack(spacing: 6) {
-                        homeShortcutAddTileMenu(imageName: "nutrientes", imageSize: 58) {
+                        homeShortcutAddTileMenu(imageName: "nutrientes", imageSize: 66) {
                             foodShortcutMenuContent
                         }
                         .frame(height: smallSide)
@@ -1752,93 +1753,114 @@ private struct HomeView: View {
 
     private var expiringSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .firstTextBaseline) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Validades próximas")
-                        .font(.headline.weight(.semibold))
-                    Text("Itens da despensa que vencem em breve")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+            expiringSectionHeader
+            expiringSectionList
+        }
+    }
+
+    private var expiringSectionHeader: some View {
+        HStack(alignment: .firstTextBaseline) {
+            HStack(spacing: 4) {
+                Text("Validades próximas")
+                    .font(.headline.weight(.semibold))
+                SectionInfoButton(
+                    title: "Validades próximas",
+                    message: "Itens da despensa cuja data de validade está chegando. Toque em um item para editá-lo. Ajuste o intervalo de antecipáção nas configurações."
+                )
+            }
+
+            Spacer()
+
+            Text("\(expiringItemsState.count)")
+                .font(.caption.weight(.bold))
+                .foregroundStyle(.orange)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(Color.orange.opacity(0.14), in: .capsule)
+        }
+    }
+
+    private var expiringSectionList: some View {
+        let visibleItems = Array(expiringItemsState.prefix(5))
+
+        return VStack(spacing: 0) {
+            ForEach(Array(visibleItems.enumerated()), id: \.element.id) { index, item in
+                expiringSectionRow(for: item)
+
+                if index < visibleItems.count - 1 {
+                    ItemListDivider()
+                        .padding(.horizontal, 14)
+                }
+            }
+        }
+        .background(homeShortcutBackgroundColor, in: .rect(cornerRadius: 18))
+    }
+
+    private func expiringSectionRow(for item: UnifiedItem) -> some View {
+        Button {
+            editingExpiringItem = UnifiedItemSelection(id: item.id)
+        } label: {
+            HStack(spacing: 12) {
+                IconImage(
+                    name: item.name,
+                    iconFileName: item.iconName,
+                    fallbackSymbol: "clock.badge.exclamationmark",
+                    size: 28,
+                    showBalloon: true,
+                    balloonColor: expiringItemBalloonColor
+                )
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(item.name)
+                        .font(.subheadline.weight(.semibold))
+                    if let expiration = item.formattedExpirationDate {
+                        Text("Validade \(expiration)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                 }
 
                 Spacer()
 
-                Text("\(expiringItemsState.count)")
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(.orange)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(Color.orange.opacity(0.14), in: .capsule)
-            }
-
-            VStack(spacing: 0) {
-                ForEach(Array(expiringItemsState.prefix(5).enumerated()), id: \.element.id) { index, item in
-                    Button {
-                        editingExpiringItem = UnifiedItemSelection(id: item.id)
-                    } label: {
-                        HStack(spacing: 12) {
-                            IconImage(
-                                name: item.name,
-                                iconFileName: item.iconName,
-                                fallbackSymbol: "clock.badge.exclamationmark",
-                                size: 28,
-                                showBalloon: true,
-                                balloonColor: .white
-                            )
-
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text(item.name)
-                                    .font(.subheadline.weight(.semibold))
-                                if let expiration = item.formattedExpirationDate {
-                                    Text("Validade \(expiration)")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                            }
-
-                            Spacer()
-
-                            if let expirationDate = item.expirationDate {
-                                Text(relativeExpirationText(for: expirationDate))
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(expirationHighlightColor(for: expirationDate))
-                            }
-                        }
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 10)
-                    }
-                    .buttonStyle(.plain)
-                    .contextMenu {
-                        Button("Editar", systemImage: "pencil") {
-                            editingExpiringItem = UnifiedItemSelection(id: item.id)
-                        }
-                        Divider()
-                        Button("Excluir", systemImage: "trash", role: .destructive) {
-                            withAnimation {
-                                modelContext.delete(item)
-                            }
-                        }
-                    }
-
-                    if index < min(expiringItemsState.count, 5) - 1 {
-                        ItemListDivider()
-                            .padding(.horizontal, 14)
-                    }
+                if let expirationDate = item.expirationDate {
+                    Text(relativeExpirationText(for: expirationDate))
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(expirationHighlightColor(for: expirationDate))
                 }
             }
-            .background(homeShortcutBackgroundColor, in: .rect(cornerRadius: 18))
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
         }
+        .buttonStyle(.plain)
+        .contextMenu {
+            Button("Editar", systemImage: "pencil") {
+                editingExpiringItem = UnifiedItemSelection(id: item.id)
+            }
+            Divider()
+            Button("Excluir", systemImage: "trash", role: .destructive) {
+                withAnimation {
+                    modelContext.delete(item)
+                }
+            }
+        }
+    }
+
+    private var expiringItemBalloonColor: Color {
+        colorScheme == .dark
+            ? Color(red: 0x19 / 255.0, green: 0x19 / 255.0, blue: 0x1A / 255.0)
+            : .white
     }
 
     private var dessertShelf: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
-                VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 4) {
                     Text("Receitas sugeridas")
                         .font(.headline.weight(.semibold))
-                    Text("Com base na sua despensa e horário do dia")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    SectionInfoButton(
+                        title: "Receitas sugeridas",
+                        message: "Receitas compatíveis com o que você tem na despensa, priorizando o horário do dia. Ajuste o nível de compatibilidade nas configurações ou filtre por categoria abaixo."
+                    )
                 }
 
                 Spacer()

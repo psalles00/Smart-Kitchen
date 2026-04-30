@@ -57,16 +57,6 @@ struct NutrientsView: View {
                 PageHeader(title: String(localized: "Nutrição"), isInverted: isInverted) {
                     HStack(spacing: 6) {
                         GlassButtonGroup {
-                            GlassGroupButton(systemImage: "scalemass") {
-                                pushWeightTracker = true
-                            }
-                        }
-                        GlassButtonGroup {
-                            GlassGroupButton(systemImage: "chart.line.uptrend.xyaxis") {
-                                pushProgress = true
-                            }
-                        }
-                        GlassButtonGroup {
                             GlassGroupMenu(systemImage: "plus") {
                                 Section("Registros Salvos") {
                                     Button {
@@ -116,6 +106,16 @@ struct NutrientsView: View {
                                         Label("Texto", systemImage: "character.cursor.ibeam")
                                     }
                                 }
+                            }
+                        }
+                        GlassButtonGroup {
+                            GlassGroupButton(systemImage: "chart.line.uptrend.xyaxis") {
+                                pushProgress = true
+                            }
+                        }
+                        GlassButtonGroup {
+                            GlassGroupButton(systemImage: "scalemass") {
+                                pushWeightTracker = true
                             }
                         }
                         SettingsButton()

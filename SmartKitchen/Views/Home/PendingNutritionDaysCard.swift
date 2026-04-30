@@ -60,22 +60,23 @@ struct PendingNutritionDaysCard: View {
         } else {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(alignment: .firstTextBaseline) {
-                    VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 4) {
                         Text("Registro não concluído")
                             .font(.headline.weight(.semibold))
-                        Text("Você começou estes dias e ainda não concluiu — eles não entram na sua média até serem concluídos.")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                        SectionInfoButton(
+                            title: "Registro não concluído",
+                            message: "Dias que você começou a registrar mas ainda não concluiu. Eles não entram na sua média até serem concluídos. Toque na linha para continuar, ou arraste para concluir/desistir."
+                        )
                     }
 
                     Spacer()
 
                     Text("\(days.count)")
                         .font(.caption.weight(.bold))
-                        .foregroundStyle(.yellow)
+                        .foregroundStyle(PageTheme.nutrients.accentColor)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 5)
-                        .background(Color.yellow.opacity(0.16), in: .capsule)
+                        .background(PageTheme.nutrients.accentColor.opacity(0.14), in: .capsule)
                 }
 
                 VStack(spacing: 0) {
@@ -192,7 +193,7 @@ private struct SwipeablePendingRow: View {
             rowContent
                 .background(PendingNutritionDaysCard.cardBackground)
                 .offset(x: effectiveOffset)
-                .gesture(swipeGesture)
+                .simultaneousGesture(swipeGesture)
                 .onTapGesture { onTap() }
                 .confirmationDialog(
                     confirmationTitle,
@@ -257,7 +258,7 @@ private struct SwipeablePendingRow: View {
                 .foregroundStyle(.tertiary)
         }
         .padding(.horizontal, 14)
-        .padding(.vertical, 12)
+        .padding(.vertical, 10)
         .contentShape(Rectangle())
     }
 

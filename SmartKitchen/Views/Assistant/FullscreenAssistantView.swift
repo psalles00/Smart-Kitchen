@@ -299,7 +299,7 @@ struct FullscreenAssistantView: View {
                             tint: assistantIAAccent,
                             imageName: "modo ia",
                             imageHeight: 82,
-                            imageOffset: CGSize(width: 8, height: 0)
+                            imageOffset: CGSize(width: 8, height: 12)
                         ) {
                             if let onRequestAIMode {
                                 onRequestAIMode(.nutritionCoach, nil)
@@ -317,7 +317,7 @@ struct FullscreenAssistantView: View {
                             tint: assistantIAAccent,
                             imageName: "ideis",
                             imageHeight: 74,
-                            imageOffset: CGSize(width: 6, height: 0)
+                            imageOffset: CGSize(width: 6, height: 12)
                         ) {
                             if let onRequestAIMode {
                                 onRequestAIMode(.recipeIdeas, nil)
@@ -335,7 +335,7 @@ struct FullscreenAssistantView: View {
                             tint: assistantListsAccent,
                             imageName: "despensa",
                             imageHeight: 72,
-                            imageOffset: CGSize(width: 6, height: 0)
+                            imageOffset: CGSize(width: 6, height: 12)
                         ) {
                             triggerAction(.addPantryItem(prefill: ""))
                         }
@@ -346,7 +346,7 @@ struct FullscreenAssistantView: View {
                             tint: assistantListsAccent,
                             imageName: "mercado",
                             imageHeight: 76,
-                            imageOffset: CGSize(width: 6, height: 0)
+                            imageOffset: CGSize(width: 6, height: 12)
                         ) {
                             triggerAction(.addGroceryItem(prefill: ""))
                         }
@@ -358,7 +358,7 @@ struct FullscreenAssistantView: View {
                                 tint: assistantListsAccent,
                                 imageName: "listas-utensilio",
                                 imageHeight: 76,
-                                imageOffset: CGSize(width: 6, height: 0)
+                                imageOffset: CGSize(width: 6, height: 12)
                             ) {
                                 triggerAction(.addUtensil(prefill: ""))
                             }
@@ -370,7 +370,7 @@ struct FullscreenAssistantView: View {
                             tint: assistantRecipesAccent,
                             imageName: "receitas",
                             imageHeight: 70,
-                            imageOffset: CGSize(width: 6, height: 0)
+                            imageOffset: CGSize(width: 6, height: 12)
                         ) {
                             triggerAction(.addRecipe(prefill: ""))
                         }
@@ -381,7 +381,7 @@ struct FullscreenAssistantView: View {
                             tint: assistantRecipesAccent,
                             imageName: "receitas-importar",
                             imageHeight: 78,
-                            imageOffset: CGSize(width: 6, height: 0)
+                            imageOffset: CGSize(width: 6, height: 12)
                         ) {
                             openRecipeImport(.gallery)
                         }
@@ -392,7 +392,7 @@ struct FullscreenAssistantView: View {
                             tint: assistantRecipesAccent,
                             imageName: "receitas-ler",
                             imageHeight: 78,
-                            imageOffset: CGSize(width: 6, height: 0)
+                            imageOffset: CGSize(width: 6, height: 12)
                         ) {
                             openRecipeImport(.camera)
                         }
@@ -404,7 +404,7 @@ struct FullscreenAssistantView: View {
                             tint: assistantRecipesAccent,
                             imageName: "receitas-importar",
                             imageHeight: 78,
-                            imageOffset: CGSize(width: 6, height: 0)
+                            imageOffset: CGSize(width: 6, height: 12)
                         ) {
                             openRecipeImport(.files)
                         }
@@ -416,7 +416,7 @@ struct FullscreenAssistantView: View {
                             tint: assistantNutrientsAccent,
                             imageName: "nutrientes",
                             imageHeight: 74,
-                            imageOffset: CGSize(width: 6, height: 0)
+                            imageOffset: CGSize(width: 6, height: 12)
                         ) {
                             presentNutritionSheet(.captureText(prefillText: nil, autoAnalyze: false))
                         }
@@ -427,7 +427,7 @@ struct FullscreenAssistantView: View {
                             tint: assistantNutrientsAccent,
                             imageName: "nutrientes-audio",
                             imageHeight: 74,
-                            imageOffset: CGSize(width: 6, height: 0)
+                            imageOffset: CGSize(width: 6, height: 12)
                         ) {
                             presentNutritionSheet(.captureVoice)
                         }
@@ -438,7 +438,7 @@ struct FullscreenAssistantView: View {
                             tint: assistantNutrientsAccent,
                             imageName: "nutrientes-galeria",
                             imageHeight: 68,
-                            imageOffset: CGSize(width: 6, height: 0)
+                            imageOffset: CGSize(width: 6, height: 12)
                         ) {
                             presentFoodGalleryDirect()
                         }
@@ -449,7 +449,7 @@ struct FullscreenAssistantView: View {
                             tint: assistantNutrientsAccent,
                             imageName: "nutrientes-camera",
                             imageHeight: 72,
-                            imageOffset: CGSize(width: 6, height: 0)
+                            imageOffset: CGSize(width: 6, height: 12)
                         ) {
                             presentFoodCameraDirect()
                         }
@@ -460,7 +460,7 @@ struct FullscreenAssistantView: View {
                             tint: assistantNutrientsAccent,
                             imageName: "peso",
                             imageHeight: 82,
-                            imageOffset: CGSize(width: 10, height: 0)
+                            imageOffset: CGSize(width: 10, height: 12)
                         ) {
                             triggerAction(.openWeightTracker)
                         }

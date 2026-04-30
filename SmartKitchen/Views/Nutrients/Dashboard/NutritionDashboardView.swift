@@ -237,12 +237,13 @@ struct NutritionDashboardView: View {
 
         return VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
-                VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 4) {
                     Text(String(localized: "Refeições do dia"))
                         .font(.headline.weight(.semibold))
-                    Text(String(localized: "Tudo o que você registrou neste dia"))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    SectionInfoButton(
+                        title: "Refeições do dia",
+                        message: "Lista os alimentos registrados neste dia, agrupados por refeição (café, almoço, lanche e jantar). Use o + para registrar um novo alimento."
+                    )
                 }
                 Spacer()
                 addRegistroMenu
