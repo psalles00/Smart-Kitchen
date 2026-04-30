@@ -33,6 +33,11 @@ struct RecipeCardView: View, Equatable {
         columns == 3
     }
 
+    private var hasStoredImageData: Bool {
+        guard let imageData = recipe.imageData else { return false }
+        return !imageData.isEmpty
+    }
+
     var body: some View {
         ZStack(alignment: .bottomLeading) {
             // Image / placeholder
@@ -114,39 +119,39 @@ struct RecipeCardView: View, Equatable {
 
     @ViewBuilder
     private var recipeImage: some View {
-        // Largest card variant fills ~half screen width (~420pt on large phones).
-        // Use 900px to stay crisp on @3x without holding full-res in memory.
-        // Narrower grid variants still benefit because the downsample is shared
-        // across cells via the cache.
+        // Size thumbnails close to the real rendered size to cut decode cost
+        // and peak memory in gallery mode, especially on first paint.
         let maxPixel: CGFloat = {
             switch columns {
-            case 1: return 1200
-            case 2: return 900
-            case 3: return 600
-            default: return 500
+            case 1: return 960
+            case 2: return 700
+            case 3: return 420
+            default: return 320
             }
         }()
 
-        // Square cells: parent applies `.aspectRatio(1)`, but the inner
-        // `Image.resizable().scaledToFill()` has no intrinsic size, so we
-        // need a concrete frame for the thumbnail+placeholder to compute
-        // the correct fill size. A single GeometryReader at the card level
-        // is cheap (one per visible cell, not per scroll frame).
-        GeometryReader { geo in
-            RecipeThumbnail(recipe: recipe, maxPixel: maxPixel) {
-                RecipeImagePlaceholderCompact(
-                    ingredients: (recipe.ingredients ?? []).sorted { $0.sortOrder < $1.sortOrder },
-                    darkenOverlay: true
-                )
-            }
-            .frame(width: geo.size.width, height: geo.size.height)
-            .clipped()
+        Color.clear
             .overlay {
-                if shouldDarkenRealImageForThreeColumnGrid, recipe.imageData != nil {
+                RecipeThumbnail(recipe: recipe, maxPixel: maxPixel) {
+                    if hasStoredImageData {
+                        RecipeImageLoadingPlaceholder(
+                            darkenOverlay: true,
+                            iconSize: columns >= 3 ? 22 : 28
+                        )
+                    } else {
+                        RecipeImagePlaceholderCompact(
+                            ingredients: (recipe.ingredients ?? []).sorted { $0.sortOrder < $1.sortOrder },
+                            darkenOverlay: true
+                        )
+                    }
+                }
+                .clipped()
+            }
+            .overlay {
+                if shouldDarkenRealImageForThreeColumnGrid, hasStoredImageData {
                     Color.black.opacity(0.2)
                 }
             }
-        }
     }
 
     private func availableIngredientsText(for compatibility: RecipeCompatibility) -> String {

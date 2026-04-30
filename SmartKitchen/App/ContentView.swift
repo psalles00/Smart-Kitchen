@@ -181,6 +181,7 @@ struct ContentView: View {
         .environment(\.scrollToItem, scrollToItemRequest)
         .environment(\.openRecipeInRecipesTab, openRecipeInRecipesTab)
         .environment(\.backgroundTheme, displayedBgTheme)
+        .environment(\.visiblePageTheme, activePageTheme)
         #if os(iOS)
         .fullScreenCover(item: fullscreenNutritionEntrySheetBinding) { sheet in
             nutritionEntrySheetContent(for: sheet)

@@ -4,13 +4,18 @@ struct ThemedBackgroundView: View {
     let theme: PageTheme
     let selection: BackgroundSelection
     var progress: CGFloat = 1.0
+    var animated = true
 
     @AppStorage(PerformancePreferences.backgroundShadersEnabledKey)
     private var backgroundShadersEnabled = true
 
+    private var shouldAnimateBackground: Bool {
+        animated && backgroundShadersEnabled
+    }
+
     var body: some View {
         Group {
-            if backgroundShadersEnabled {
+            if shouldAnimateBackground {
                 animatedBackground
             } else {
                 staticBackground

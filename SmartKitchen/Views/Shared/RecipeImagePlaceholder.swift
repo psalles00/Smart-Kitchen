@@ -64,7 +64,6 @@ struct RecipeImagePlaceholder: View {
         if !recipeIllustratedPlaceholdersEnabled {
             fallbackPlaceholder
         } else {
-            let slots = buildIconSlots(from: ingredients, count: Self.totalSlots)
             if slots.isEmpty {
                 fallbackPlaceholder
             } else {
@@ -138,7 +137,6 @@ struct RecipeImagePlaceholderCompact: View {
         if !recipeIllustratedPlaceholdersEnabled {
             fallbackPlaceholder
         } else {
-            let slots = buildIconSlots(from: ingredients, count: Self.totalSlots)
             if slots.isEmpty {
                 fallbackPlaceholder
             } else {
@@ -195,6 +193,35 @@ struct RecipeImagePlaceholderCompact: View {
             Image(systemName: "book.closed")
                 .font(.system(size: 24))
                 .foregroundStyle(.quaternary)
+        }
+    }
+}
+
+struct RecipeImageLoadingPlaceholder: View {
+    var darkenOverlay = false
+    var iconSize: CGFloat = 26
+
+    var body: some View {
+        ZStack {
+            recipePlaceholderGradient
+
+            LinearGradient(
+                colors: [
+                    Color.white.opacity(0.06),
+                    Color.clear,
+                    Color.black.opacity(0.10)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+
+            Image(systemName: "book.closed")
+                .font(.system(size: iconSize, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.24))
+
+            if darkenOverlay {
+                Color.black.opacity(0.28)
+            }
         }
     }
 }

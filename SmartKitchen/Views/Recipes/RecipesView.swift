@@ -72,6 +72,7 @@ struct RecipesView: View {
     // (CloudKit remote changes, scroll-induced re-evaluations, etc.).
     @State private var lastCompatibilityInputsKey: String = ""
     @State private var pendingCompatibilityRecomputeWork: DispatchWorkItem?
+    @State private var pendingGalleryPrefetchTask: Task<Void, Never>?
     @State private var lastRecipeProjectionInputsKey: Int = 0
     @State private var lastNotebookSummaryInputsKey: Int = 0
 
@@ -257,7 +258,11 @@ struct RecipesView: View {
             refreshRecipeProjectionsIfNeeded(force: true)
             refreshNotebookSummariesIfNeeded(force: true)
             handleScrollToItemRequest(scrollToItem)
-            prefetchGalleryThumbnails()
+            scheduleGalleryPrefetchIfNeeded()
+        }
+        .onDisappear {
+            pendingGalleryPrefetchTask?.cancel()
+            pendingGalleryPrefetchTask = nil
         }
         // PERF: previously these used `.onChange(of: pantryItems)` /
         // `.onChange(of: allRecipes)` which fire on EVERY SwiftData @Query
@@ -299,6 +304,9 @@ struct RecipesView: View {
         }
         .onChange(of: sortOption) { _, _ in
             refreshRecipeProjectionsIfNeeded()
+        }
+        .onChange(of: viewMode) { _, _ in
+            scheduleGalleryPrefetchIfNeeded()
         }
         .onChange(of: lastCompatibilityInputsKey) { _, _ in
             refreshRecipeProjectionsIfNeeded(force: true)
@@ -1281,10 +1289,10 @@ struct RecipesView: View {
         let cols = settings?.recipeGalleryColumns ?? 3
         let maxPixel: CGFloat = {
             switch cols {
-            case 1: return 1200
-            case 2: return 900
-            case 3: return 600
-            default: return 500
+            case 1: return 960
+            case 2: return 700
+            case 3: return 420
+            default: return 320
             }
         }()
         // Two screens worth of cards is plenty without flooding the queue.
@@ -1298,6 +1306,17 @@ struct RecipesView: View {
                 maxPixel: maxPixel
             )
             RecipeImageCache.shared.prewarm(key: key, data: data, maxPixel: maxPixel)
+        }
+    }
+
+    private func scheduleGalleryPrefetchIfNeeded() {
+        pendingGalleryPrefetchTask?.cancel()
+        guard viewMode == .gallery else { return }
+
+        pendingGalleryPrefetchTask = Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(150))
+            guard !Task.isCancelled else { return }
+            prefetchGalleryThumbnails()
         }
     }
 

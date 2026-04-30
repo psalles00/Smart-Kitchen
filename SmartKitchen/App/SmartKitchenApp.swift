@@ -124,6 +124,7 @@ struct SmartKitchenApp: App {
         _ = StatusBarSwizzle.install
         Self.configureNavigationAppearance()
         #endif
+        Self.logBuildConfiguration()
     }
 
     var body: some Scene {
@@ -270,6 +271,14 @@ struct SmartKitchenApp: App {
             UIFontDescriptor.AttributeName(rawValue: kCTFontVariationAttribute as String): variation
         ])
         return UIFont(descriptor: descriptor, size: size)
+    }
+    
+    private static func logBuildConfiguration() {
+        #if DEBUG
+        print("SmartKitchen build configuration: DEBUG")
+        #else
+        print("SmartKitchen build configuration: RELEASE")
+        #endif
     }
     #endif
 }

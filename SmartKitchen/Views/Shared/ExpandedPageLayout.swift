@@ -49,6 +49,8 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
     private var backgroundManager = BackgroundManager.shared
 
     @Environment(\.backgroundTheme) private var backgroundTheme
+    @Environment(\.usesGlobalPageBackground) private var usesGlobalPageBackground
+    @Environment(\.visiblePageTheme) private var visiblePageTheme
     @Environment(\.searchOverlay) private var searchOverlay
     @EnvironmentObject private var searchBarState: SearchBarState
 
@@ -75,6 +77,16 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
     // Drag-to-reveal state
     @State private var dragOffset: CGFloat = 0
     private let revealThreshold: CGFloat = 40
+
+    private var shouldAnimateShaderBackground: Bool {
+        #if os(macOS)
+        true
+        #else
+        guard !usesGlobalPageBackground else { return false }
+        guard let visiblePageTheme else { return true }
+        return visiblePageTheme == pageTheme
+        #endif
+    }
 
     private var trailingPanelInset: CGFloat {
         #if os(macOS)
@@ -142,9 +154,11 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
         #else
         ZStack(alignment: .top) {
             // FIXED BACKGROUND
-            backgroundLayer
-                .ignoresSafeArea()
-                .allowsHitTesting(false)
+            if !usesGlobalPageBackground {
+                backgroundLayer
+                    .ignoresSafeArea()
+                    .allowsHitTesting(false)
+            }
 
             // LAYOUT
             VStack(spacing: 0) {
@@ -287,8 +301,10 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
     private var backgroundLayer: some View {
         ZStack {
             Color.black
-            themedBackground(for: backgroundFromTheme)
-                .opacity(1.0 - backgroundTransitionProgress)
+            if backgroundTransitionProgress < 0.999 {
+                themedBackground(for: backgroundFromTheme)
+                    .opacity(1.0 - backgroundTransitionProgress)
+            }
             themedBackground(for: backgroundToTheme)
                 .opacity(backgroundTransitionProgress)
         }
@@ -317,7 +333,8 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
         ThemedBackgroundView(
             theme: theme,
             selection: backgroundManager.background(for: theme),
-            progress: 1.0
+            progress: 1.0,
+            animated: shouldAnimateShaderBackground
         )
     }
 }

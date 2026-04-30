@@ -5,6 +5,11 @@ struct RecipeRowView: View, Equatable {
     let recipe: Recipe
     var compatibility: RecipeCompatibility? = nil
 
+    private var hasStoredImageData: Bool {
+        guard let imageData = recipe.imageData else { return false }
+        return !imageData.isEmpty
+    }
+
     // PERF: SwiftData @Model classes are reference types — they don't get
     // synthesized Equatable. We compare by the concrete fields actually
     // rendered in `body`, so SwiftUI can skip re-rendering rows that didn't
@@ -71,9 +76,14 @@ struct RecipeRowView: View, Equatable {
 
     @ViewBuilder
     private var recipeThumb: some View {
-        // 60pt thumbnail on @3x screens ≈ 180px; bump to 240 for crispness.
-        RecipeThumbnail(recipe: recipe, maxPixel: 240) {
-            RecipeImagePlaceholderCompact(ingredients: (recipe.ingredients ?? []).sorted { $0.sortOrder < $1.sortOrder })
+        // 60pt on @3x screens lands around 180px; 200px keeps it crisp
+        // without over-decoding large originals while scrolling.
+        RecipeThumbnail(recipe: recipe, maxPixel: 200) {
+            if hasStoredImageData {
+                RecipeImageLoadingPlaceholder(iconSize: 18)
+            } else {
+                RecipeImagePlaceholderCompact(ingredients: (recipe.ingredients ?? []).sorted { $0.sortOrder < $1.sortOrder })
+            }
         }
     }
 }

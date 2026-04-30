@@ -1,6 +1,43 @@
 import SwiftUI
 import SwiftData
 import UniformTypeIdentifiers
+#if os(iOS)
+import UIKit
+#endif
+
+#if os(iOS)
+private enum BackupDocumentPickerRequest: Identifiable {
+    case importArchive
+    case chooseFolder
+
+    var id: String {
+        switch self {
+        case .importArchive:
+            return "importArchive"
+        case .chooseFolder:
+            return "chooseFolder"
+        }
+    }
+
+    var contentTypes: [UTType] {
+        switch self {
+        case .importArchive:
+            return [.zip]
+        case .chooseFolder:
+            return [.directory]
+        }
+    }
+
+    var asCopy: Bool {
+        switch self {
+        case .importArchive:
+            return true
+        case .chooseFolder:
+            return false
+        }
+    }
+}
+#endif
 
 struct BackupSettingsView: View {
     @Environment(\.modelContext) private var modelContext
@@ -15,8 +52,13 @@ struct BackupSettingsView: View {
 
     @State private var isExporting = false
     @State private var exportDocument = BackupZipDocument(data: Data())
+
+    #if os(iOS)
+    @State private var activeDocumentPicker: BackupDocumentPickerRequest?
+    #else
     @State private var isImporting = false
     @State private var isPickingFolder = false
+    #endif
 
     private var settings: AppSettings? { settingsArray.first }
 
@@ -82,7 +124,7 @@ struct BackupSettingsView: View {
                         set: { newValue in
                             settings.autoDailyBackupEnabled = newValue
                             if newValue && settings.autoBackupBookmarkData == nil {
-                                isPickingFolder = true
+                                presentFolderPicker()
                             }
                         }
                     )) {
@@ -94,13 +136,13 @@ struct BackupSettingsView: View {
                             HStack {
                                 Label(folder, systemImage: "folder")
                                 Spacer()
-                                Button("Trocar") { isPickingFolder = true }
+                                Button("Trocar") { presentFolderPicker() }
                                     .buttonStyle(.bordered)
                                     .controlSize(.small)
                             }
                         } else {
                             Button {
-                                isPickingFolder = true
+                                presentFolderPicker()
                             } label: {
                                 Label("Escolher pasta de destino…", systemImage: "folder.badge.plus")
                             }
@@ -120,7 +162,7 @@ struct BackupSettingsView: View {
                 }
 
                 Button("Importar backup (.zip)", systemImage: "square.and.arrow.down") {
-                    isImporting = true
+                    presentImportPicker()
                 }
             } header: {
                 Text("Transferência Manual")
@@ -163,16 +205,27 @@ struct BackupSettingsView: View {
         .fileExporter(
             isPresented: $isExporting,
             document: exportDocument,
-            contentType: .smartKitchenZip,
+            contentType: .zip,
             defaultFilename: exportFileName
         ) { result in
             if case .failure(let error) = result {
                 presentAlert(title: String(localized: "Falha ao exportar"), message: error.localizedDescription)
             }
         }
+        #if os(iOS)
+        .sheet(item: $activeDocumentPicker) { request in
+            BackupDocumentPickerSheet(request: request) { result in
+                handleDocumentPickerResult(result, for: request)
+                activeDocumentPicker = nil
+            } onCancel: {
+                handleDocumentPickerCancellation(for: request)
+                activeDocumentPicker = nil
+            }
+        }
+        #else
         .fileImporter(
             isPresented: $isImporting,
-            allowedContentTypes: [.smartKitchenZip]
+            allowedContentTypes: [.zip]
         ) { result in
             switch result {
             case .success(let url):
@@ -183,7 +236,7 @@ struct BackupSettingsView: View {
         }
         .fileImporter(
             isPresented: $isPickingFolder,
-            allowedContentTypes: [.folder]
+            allowedContentTypes: [.directory]
         ) { result in
             switch result {
             case .success(let url):
@@ -195,6 +248,7 @@ struct BackupSettingsView: View {
                 presentAlert(title: String(localized: "Falha ao escolher pasta"), message: error.localizedDescription)
             }
         }
+        #endif
         .alert(alertTitle, isPresented: $showAlert) {
             Button("OK", role: .cancel) { }
         } message: {
@@ -240,6 +294,22 @@ struct BackupSettingsView: View {
         }
     }
 
+    private func presentImportPicker() {
+        #if os(iOS)
+        activeDocumentPicker = .importArchive
+        #else
+        isImporting = true
+        #endif
+    }
+
+    private func presentFolderPicker() {
+        #if os(iOS)
+        activeDocumentPicker = .chooseFolder
+        #else
+        isPickingFolder = true
+        #endif
+    }
+
     private func importBackup(from url: URL) {
         let hasAccess = url.startAccessingSecurityScopedResource()
         defer {
@@ -280,12 +350,43 @@ struct BackupSettingsView: View {
             presentAlert(title: String(localized: "Falha ao salvar pasta"), message: error.localizedDescription)
         }
     }
+
+    #if os(iOS)
+    private func handleDocumentPickerResult(_ result: Result<URL, Error>, for request: BackupDocumentPickerRequest) {
+        switch result {
+        case .success(let url):
+            switch request {
+            case .importArchive:
+                importBackup(from: url)
+            case .chooseFolder:
+                saveAutoBackupFolder(url)
+            }
+        case .failure(let error):
+            switch request {
+            case .importArchive:
+                presentAlert(title: String(localized: "Falha ao importar"), message: error.localizedDescription)
+            case .chooseFolder:
+                if let settings, settings.autoBackupBookmarkData == nil {
+                    settings.autoDailyBackupEnabled = false
+                }
+                presentAlert(title: String(localized: "Falha ao escolher pasta"), message: error.localizedDescription)
+            }
+        }
+    }
+
+    private func handleDocumentPickerCancellation(for request: BackupDocumentPickerRequest) {
+        guard request == .chooseFolder else { return }
+        if let settings, settings.autoBackupBookmarkData == nil {
+            settings.autoDailyBackupEnabled = false
+        }
+    }
+    #endif
 }
 
 // MARK: - Zip Document
 
 private struct BackupZipDocument: FileDocument {
-    static var readableContentTypes: [UTType] { [.smartKitchenZip] }
+    static var readableContentTypes: [UTType] { [.zip] }
 
     var data: Data
 
@@ -302,6 +403,47 @@ private struct BackupZipDocument: FileDocument {
     }
 }
 
-private extension UTType {
-    static let smartKitchenZip = UTType(filenameExtension: "zip") ?? .data
+#if os(iOS)
+private struct BackupDocumentPickerSheet: UIViewControllerRepresentable {
+    let request: BackupDocumentPickerRequest
+    let onPick: (Result<URL, Error>) -> Void
+    let onCancel: () -> Void
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+
+    func makeUIViewController(context: Context) -> UIDocumentPickerViewController {
+        let picker = UIDocumentPickerViewController(
+            forOpeningContentTypes: request.contentTypes,
+            asCopy: request.asCopy
+        )
+        picker.delegate = context.coordinator
+        picker.allowsMultipleSelection = false
+        return picker
+    }
+
+    func updateUIViewController(_ uiViewController: UIDocumentPickerViewController, context: Context) { }
+
+    final class Coordinator: NSObject, UIDocumentPickerDelegate {
+        private let parent: BackupDocumentPickerSheet
+
+        init(_ parent: BackupDocumentPickerSheet) {
+            self.parent = parent
+        }
+
+        func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
+            parent.onCancel()
+        }
+
+        func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+            guard let url = urls.first else {
+                parent.onCancel()
+                return
+            }
+
+            parent.onPick(.success(url))
+        }
+    }
 }
+#endif
