@@ -6,30 +6,22 @@ struct SelectGroceryStepView: View {
     @Bindable var state: OnboardingState
     let onContinue: () -> Void
 
-    private let columns = [GridItem(.adaptive(minimum: 92, maximum: 130), spacing: 14)]
-
     var body: some View {
-        VStack(spacing: 18) {
+        VStack(spacing: 12) {
             OnboardingHeader(
                 title: String(localized: "O que precisa comprar?"),
-                subtitle: String(localized: "Escolha pelo menos 3 itens para sua primeira lista de compras.")
+                subtitle: String(localized: "Escolha pelo menos 3 itens. Arraste para descobrir mais.")
             )
             .padding(.top, 8)
 
-            ScrollView(showsIndicators: false) {
-                LazyVGrid(columns: columns, spacing: 14) {
-                    ForEach(OnboardingCatalog.groceryItems) { item in
-                        OnboardingItemTile(
-                            title: item.displayName,
-                            iconFileName: item.iconFileName,
-                            isSelected: state.selectedGroceryItemIDs.contains(item.id),
-                            action: { toggle(item.id) }
-                        )
-                    }
-                }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 12)
-            }
+            AsymmetricCircleCanvas(
+                items: OnboardingCatalog.groceryItems,
+                labelFor: { $0.displayName },
+                iconFileFor: { $0.iconFileName },
+                isSelected: { state.selectedGroceryItemIDs.contains($0.id) },
+                toggle: { toggle($0.id) }
+            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             VStack(spacing: 8) {
                 Text(counterLabel)

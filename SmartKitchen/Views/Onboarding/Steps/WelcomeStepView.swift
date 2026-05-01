@@ -24,15 +24,18 @@ struct WelcomeStepView: View {
             VStack(spacing: 28) {
                 Spacer()
 
-                BrandMark()
-                    .frame(width: 132, height: 132)
+                Image("AppLogoB")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 168, height: 168)
+                    .shadow(color: .black.opacity(0.35), radius: 24, y: 10)
                     .scaleEffect(didAppear ? 1 : 0.65)
                     .opacity(didAppear ? 1 : 0)
                     .animation(.spring(response: 0.85, dampingFraction: 0.62).delay(0.05), value: didAppear)
 
                 VStack(spacing: 10) {
-                    Text("Smart Kitchen")
-                        .font(.custom("Bricolage Grotesque", size: 42, relativeTo: .largeTitle).weight(.bold))
+                    Text("Savoria")
+                        .font(.custom("Bricolage Grotesque", size: 48, relativeTo: .largeTitle).weight(.bold))
                         .foregroundStyle(.white)
                         .opacity(didAppear ? 1 : 0)
                         .offset(y: didAppear ? 0 : 14)

@@ -20,7 +20,7 @@ struct RecipesIntroStepView: View {
 
             OnboardingHeader(
                 title: String(localized: "Receitas direto das redes."),
-                subtitle: String(localized: "Compartilhe um link do TikTok ou Instagram e o Smart Kitchen estrutura tudo pra você — ingredientes, passos e mídias.")
+                subtitle: String(localized: "Compartilhe um link do TikTok ou Instagram e o Savoria estrutura tudo pra você — ingredientes, passos e mídias.")
             )
 
             Spacer()

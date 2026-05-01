@@ -22,12 +22,12 @@ enum OnboardingCatalog {
 
     static let pantryItems: [ItemTemplate] = [
         .init(id: "rice",       displayName: String(localized: "Arroz"),        iconFileName: "rice.png",         category: "Grãos, Massas e Cereais"),
-        .init(id: "beans",      displayName: String(localized: "Feijão"),       iconFileName: "beans.png",        category: "Grãos, Massas e Cereais"),
+        .init(id: "oats",       displayName: String(localized: "Aveia"),        iconFileName: "oats.png",         category: "Grãos, Massas e Cereais"),
         .init(id: "pasta",      displayName: String(localized: "Macarrão"),     iconFileName: "pasta.png",        category: "Grãos, Massas e Cereais"),
         .init(id: "olive-oil",  displayName: String(localized: "Azeite"),       iconFileName: "olive-oil.png",    category: "Temperos e Condimentos"),
         .init(id: "salt",       displayName: String(localized: "Sal"),          iconFileName: "salt.png",         category: "Temperos e Condimentos"),
         .init(id: "sugar",      displayName: String(localized: "Açúcar"),       iconFileName: "sugar.png",        category: "Temperos e Condimentos"),
-        .init(id: "coffee",     displayName: String(localized: "Café"),         iconFileName: "coffee-beans.png", category: "Bebidas"),
+        .init(id: "coffee",     displayName: String(localized: "Café"),         iconFileName: "coffee.png",       category: "Bebidas"),
         .init(id: "milk",       displayName: String(localized: "Leite"),        iconFileName: "milk.png",         category: "Laticínios e Ovos"),
         .init(id: "egg",        displayName: String(localized: "Ovos"),         iconFileName: "egg.png",          category: "Laticínios e Ovos"),
         .init(id: "cheese",     displayName: String(localized: "Queijo"),       iconFileName: "cheese.png",       category: "Laticínios e Ovos"),
@@ -37,6 +37,7 @@ enum OnboardingCatalog {
         .init(id: "garlic",     displayName: String(localized: "Alho"),         iconFileName: "garlic.png",       category: "Verduras e Legumes"),
         .init(id: "onion",      displayName: String(localized: "Cebola"),       iconFileName: "onion.png",        category: "Verduras e Legumes"),
         .init(id: "potato",     displayName: String(localized: "Batata"),       iconFileName: "potato.png",       category: "Verduras e Legumes"),
+        .init(id: "honey",      displayName: String(localized: "Mel"),          iconFileName: "honey.png",        category: "Doces e Sobremesas"),
     ]
 
     // MARK: - Grocery catalog (different staples for the first shopping list)
@@ -45,18 +46,20 @@ enum OnboardingCatalog {
         .init(id: "tomato",     displayName: String(localized: "Tomate"),       iconFileName: "tomato.png",       category: "Verduras e Legumes"),
         .init(id: "lettuce",    displayName: String(localized: "Alface"),       iconFileName: "lettuce.png",      category: "Verduras e Legumes"),
         .init(id: "carrot",     displayName: String(localized: "Cenoura"),      iconFileName: "carrot.png",       category: "Verduras e Legumes"),
+        .init(id: "broccoli",   displayName: String(localized: "Brócolis"),     iconFileName: "broccoli.png",     category: "Verduras e Legumes"),
+        .init(id: "avocado",    displayName: String(localized: "Abacate"),      iconFileName: "avocado.png",      category: "Frutas"),
         .init(id: "banana",     displayName: String(localized: "Banana"),       iconFileName: "banana.png",       category: "Frutas"),
         .init(id: "apple",      displayName: String(localized: "Maçã"),         iconFileName: "apple.png",        category: "Frutas"),
         .init(id: "lemon",      displayName: String(localized: "Limão"),        iconFileName: "lemon.png",        category: "Frutas"),
+        .init(id: "orange",     displayName: String(localized: "Laranja"),      iconFileName: "orange.png",       category: "Frutas"),
+        .init(id: "strawberry", displayName: String(localized: "Morango"),      iconFileName: "strawberry.png",   category: "Frutas"),
         .init(id: "chicken",    displayName: String(localized: "Frango"),       iconFileName: "chicken-raw.png",  category: "Carnes e Aves"),
-        .init(id: "ground-beef", displayName: String(localized: "Carne moída"), iconFileName: "ground-beef.png",  category: "Carnes e Aves"),
-        .init(id: "fish",       displayName: String(localized: "Peixe"),        iconFileName: "fish.png",         category: "Peixes e Frutos do Mar"),
+        .init(id: "beef",       displayName: String(localized: "Carne bovina"), iconFileName: "beef.png",         category: "Carnes e Aves"),
+        .init(id: "salmon",     displayName: String(localized: "Salmão"),       iconFileName: "salmon.png",       category: "Peixes e Frutos do Mar"),
         .init(id: "yogurt",     displayName: String(localized: "Iogurte"),      iconFileName: "yogurt.png",       category: "Laticínios e Ovos"),
         .init(id: "water",      displayName: String(localized: "Água"),         iconFileName: "water-bottle.png", category: "Bebidas"),
-        .init(id: "juice",      displayName: String(localized: "Suco"),         iconFileName: "juice.png",        category: "Bebidas"),
+        .init(id: "chocolate",  displayName: String(localized: "Chocolate"),    iconFileName: "chocolate.png",    category: "Doces e Sobremesas"),
         .init(id: "chips",      displayName: String(localized: "Salgadinho"),   iconFileName: "chips.png",        category: "Snacks e Petiscos"),
-        .init(id: "chocolate",  displayName: String(localized: "Chocolate"),    iconFileName: "chocolate-bar.png", category: "Doces e Sobremesas"),
-        .init(id: "soap",       displayName: String(localized: "Sabão"),        iconFileName: "dish-soap.png",    category: "Limpeza e Higiene"),
         .init(id: "toothpaste", displayName: String(localized: "Pasta de dente"), iconFileName: "toothpaste.png", category: "Limpeza e Higiene"),
     ]
 
@@ -115,7 +118,7 @@ enum OnboardingCatalog {
                 (String(localized: "Alface romana"), 1, String(localized: "pé"), "lettuce.png"),
                 (String(localized: "Croutons"), 1, String(localized: "xícara"), "bread-white.png"),
                 (String(localized: "Parmesão ralado"), 50, "g", "cheese.png"),
-                (String(localized: "Peito de frango grelhado"), 200, "g", "chicken.png"),
+                (String(localized: "Peito de frango grelhado"), 200, "g", "chicken-raw.png"),
             ],
             steps: [
                 String(localized: "Lave e rasgue as folhas de alface."),
@@ -174,7 +177,7 @@ enum OnboardingCatalog {
             gradientColors: [0xB983FF, 0x4361EE],
             ingredients: [
                 (String(localized: "Banana congelada"), 1, "", "banana.png"),
-                (String(localized: "Frutas vermelhas"), 1, String(localized: "xícara"), "berries.png"),
+                (String(localized: "Frutas vermelhas"), 1, String(localized: "xícara"), "strawberry.png"),
                 (String(localized: "Iogurte natural"), 0.5, String(localized: "xícara"), "yogurt.png"),
                 (String(localized: "Granola"), 3, String(localized: "colheres de sopa"), "granola.png"),
             ],
@@ -193,7 +196,7 @@ enum OnboardingCatalog {
             prepMinutes: 10, cookMinutes: 20, servings: 2, calories: 420,
             gradientColors: [0xFF7B54, 0xCC2936],
             ingredients: [
-                (String(localized: "Peito de frango"), 400, "g", "chicken.png"),
+                (String(localized: "Peito de frango"), 400, "g", "chicken-raw.png"),
                 (String(localized: "Brócolis"), 1, String(localized: "xícara"), "broccoli.png"),
                 (String(localized: "Cenoura"), 2, "", "carrot.png"),
                 (String(localized: "Azeite"), 2, String(localized: "colheres de sopa"), "olive-oil.png"),

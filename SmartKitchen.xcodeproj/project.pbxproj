@@ -95,6 +95,7 @@
 		52D0DCE4E2C55FEE3BE568B3 /* PerformancePreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF1EEC2FCBBC5D58437FEA8D /* PerformancePreferences.swift */; };
 		53876B0733343ABC49AA7BE2 /* FoodAnalysis.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58DB8F31A9D59E0777AC93A7 /* FoodAnalysis.swift */; };
 		57BDE83C1F73C0E2B15D1CF1 /* APIConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 980285F2E9866A086F1FC846 /* APIConfig.swift */; };
+		5B2D1130DAC5045B6E67BE77 /* AsymmetricCircleCanvas.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3297135DBB54556BEF335EA /* AsymmetricCircleCanvas.swift */; };
 		5D756EBC82F20F883E417D90 /* InlineSearchResultsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 353C1175CD2B3C3C3D1C0DCD /* InlineSearchResultsView.swift */; };
 		5DFA750ECC5EFF4159970567 /* RecentActionsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80D2CBBBCC49CA560D36DA31 /* RecentActionsStore.swift */; };
 		5EC3465A4105196CF8064CA8 /* meta-ja.json in Resources */ = {isa = PBXBuildFile; fileRef = A1D8CBA67DBB7AF6528D0F4D /* meta-ja.json */; };
@@ -505,6 +506,7 @@
 		D1EE932494B1EDF61333EA76 /* Boska-Light.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Boska-Light.otf"; sourceTree = "<group>"; };
 		D2D194C91AB19D58E1F0BEB6 /* Boska-ExtralightItalic.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Boska-ExtralightItalic.otf"; sourceTree = "<group>"; };
 		D2E66DFA5CB4E6DFF6E28A72 /* FoodResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodResultView.swift; sourceTree = "<group>"; };
+		D3297135DBB54556BEF335EA /* AsymmetricCircleCanvas.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsymmetricCircleCanvas.swift; sourceTree = "<group>"; };
 		D38BF79C7924EB863A7AB292 /* WelcomeStepView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeStepView.swift; sourceTree = "<group>"; };
 		D3FB73DF754961AE17B60C8D /* SexStepView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SexStepView.swift; sourceTree = "<group>"; };
 		D589E4E539EC17B2EAC8C106 /* HTMLRecipeExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTMLRecipeExtractor.swift; sourceTree = "<group>"; };
@@ -1087,6 +1089,7 @@
 		F7FCCD3D4BBD23D242F2659C /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				D3297135DBB54556BEF335EA /* AsymmetricCircleCanvas.swift */,
 				E65CAACE80062BD304B8804B /* OnboardingChoiceCard.swift */,
 				EB1E4C1A2315299591C25F88 /* OnboardingHeader.swift */,
 				D7AB5E52644DC9D6024CEE66 /* OnboardingItemTile.swift */,
@@ -1337,6 +1340,7 @@
 				316277379479244210CB92B8 /* AssistantChatManager.swift in Sources */,
 				C4752565CBB223667ACA694B /* AssistantTriggerBar.swift in Sources */,
 				AB0987DB9D66611E7986CEF7 /* AssistantView.swift in Sources */,
+				5B2D1130DAC5045B6E67BE77 /* AsymmetricCircleCanvas.swift in Sources */,
 				DA4F377E458C1FAB95717DF0 /* BackgroundManager.swift in Sources */,
 				B5F73C101C65410AEF4B5443 /* BackupManager.swift in Sources */,
 				2369EBEDC6ED4A14F26058E9 /* BackupSettingsView.swift in Sources */,

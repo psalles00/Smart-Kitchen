@@ -117,10 +117,12 @@ struct OnboardingFlowView: View {
         return Double(state.stepIndex) / Double(total)
     }
 
-    /// Hide the progress bar on the very first hero/welcome step so the
-    /// fullscreen Nebula shader has no UI chrome floating on top of it.
+    /// Hide the progress bar on the very first hero/welcome step (Nebula
+    /// shader takes the whole screen) and on the final paywall step (which
+    /// renders its own full-bleed chrome).
     private var showsProgressBar: Bool {
-        state.stepIndex != OnboardingStep.welcome.rawValue
+        let step = OnboardingStep(rawValue: state.stepIndex) ?? .welcome
+        return step != .welcome && step != .paywall
     }
 
     private var stepTransition: AnyTransition {
@@ -161,49 +163,81 @@ struct OnboardingFlowView: View {
         guard !didCommitChoices else { return }
         didCommitChoices = true
 
-        // Insert NutritionProfile from the captured choices.
+        // Re-running onboarding from Settings must never wipe or duplicate
+        // the user's existing data. Update the singleton nutrition profile,
+        // merge selected items into existing lists, and only insert recipe
+        // templates that don't already exist by exact normalized name.
         let goal = WeightGoal(rawValue: state.nutritionGoalRaw ?? "") ?? .maintain
-        let profile = NutritionProfile(
-            sex: NutritionSex(rawValue: state.nutritionSexRaw ?? "") ?? .other,
-            birthday: state.nutritionBirthday,
-            heightCm: state.nutritionHeightCm,
-            weightKg: state.nutritionWeightKg,
-            activityLevel: ActivityLevel(rawValue: state.nutritionActivityRaw ?? "") ?? .moderate,
-            weightGoal: goal
-        )
+        let profile = NutritionProfileStore.fetchOrCreate(in: modelContext)
+        profile.sex = NutritionSex(rawValue: state.nutritionSexRaw ?? "") ?? .other
+        profile.birthday = state.nutritionBirthday
+        profile.heightCm = state.nutritionHeightCm
+        profile.weightKg = state.nutritionWeightKg
+        profile.activityLevel = ActivityLevel(rawValue: state.nutritionActivityRaw ?? "") ?? .moderate
+        profile.weightGoal = goal
         profile.weeklyChangeKg = state.nutritionWeeklyChangeKg * (goal == .lose ? -1 : 1)
         profile.hasCompletedOnboarding = true
-        modelContext.insert(profile)
+        profile.updatedAt = .now
 
-        // Insert pantry selections.
+        var allItems = (try? modelContext.fetch(FetchDescriptor<UnifiedItem>())) ?? []
+        var nextPantrySortOrder = (allItems.filter(\.isPantry).map(\.pantrySortOrder).max() ?? -1) + 1
+        var nextGrocerySortOrder = (allItems.filter(\.isGrocery).map(\.grocerySortOrder).max() ?? -1) + 1
+
+        // Merge pantry selections into existing items when possible.
         for (index, id) in state.selectedPantryItemIDs.enumerated() {
             guard let template = OnboardingCatalog.pantryItems.first(where: { $0.id == id }) else { continue }
+            if let existingItem = UnifiedItem.existingItem(named: template.displayName, in: allItems) {
+                if !existingItem.isPantry {
+                    existingItem.isPantry = true
+                    existingItem.pantrySortOrder = nextPantrySortOrder
+                    nextPantrySortOrder += 1
+                }
+                continue
+            }
+
             let item = UnifiedItem(
                 name: template.displayName,
                 category: template.category,
                 iconName: template.iconFileName,
                 isPantry: true,
-                pantrySortOrder: index
+                pantrySortOrder: max(index, nextPantrySortOrder)
             )
+            nextPantrySortOrder = item.pantrySortOrder + 1
             modelContext.insert(item)
+            allItems.append(item)
         }
 
-        // Insert grocery selections.
+        // Merge grocery selections into existing items when possible.
         for (index, id) in state.selectedGroceryItemIDs.enumerated() {
             guard let template = OnboardingCatalog.groceryItems.first(where: { $0.id == id }) else { continue }
+            if let existingItem = UnifiedItem.existingItem(named: template.displayName, in: allItems) {
+                if !existingItem.isGrocery {
+                    existingItem.isGrocery = true
+                    existingItem.grocerySortOrder = nextGrocerySortOrder
+                    nextGrocerySortOrder += 1
+                }
+                continue
+            }
+
             let item = UnifiedItem(
                 name: template.displayName,
                 category: template.category,
                 iconName: template.iconFileName,
                 isGrocery: true,
-                grocerySortOrder: index
+                grocerySortOrder: max(index, nextGrocerySortOrder)
             )
+            nextGrocerySortOrder = item.grocerySortOrder + 1
             modelContext.insert(item)
+            allItems.append(item)
         }
 
-        // Insert recipe templates with their full ingredient/step graphs.
+        var existingRecipes = (try? modelContext.fetch(FetchDescriptor<Recipe>())) ?? []
+
+        // Insert recipe templates only when they don't already exist.
         for id in state.selectedRecipeTemplateIDs {
             guard let template = OnboardingCatalog.recipeTemplates.first(where: { $0.id == id }) else { continue }
+            guard !hasExistingRecipe(named: template.name, in: existingRecipes) else { continue }
+
             let recipe = Recipe(
                 name: template.name,
                 descriptionText: template.summary,
@@ -234,6 +268,8 @@ struct OnboardingFlowView: View {
                 step.recipe = recipe
                 modelContext.insert(step)
             }
+
+            existingRecipes.append(recipe)
         }
     }
 
@@ -248,6 +284,12 @@ struct OnboardingFlowView: View {
             modelContext.insert(new)
         }
         try? modelContext.save()
+    }
+
+    private func hasExistingRecipe(named name: String, in recipes: [Recipe]) -> Bool {
+        let normalized = UnifiedItem.normalizedName(name)
+        guard !normalized.isEmpty else { return false }
+        return recipes.contains { UnifiedItem.normalizedName($0.name) == normalized }
     }
 }
 

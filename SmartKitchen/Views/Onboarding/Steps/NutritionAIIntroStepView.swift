@@ -12,18 +12,31 @@ struct NutritionAIIntroStepView: View {
     private struct Day: Identifiable {
         let id = UUID()
         let label: String
-        let kcal: Double  // 0 means "skipped" — drawn as a faint placeholder
+        let kcal: Double  // 0 means "skipped" — drawn as a dotted skeleton
     }
 
+    /// Only logged days carry a value; unlogged days are intentionally
+    /// blank so the chart visually reinforces "we ignore missing days".
     private let days: [Day] = [
         .init(label: "S", kcal: 1840),
         .init(label: "T", kcal: 2120),
         .init(label: "Q", kcal: 0),
         .init(label: "Q", kcal: 1980),
-        .init(label: "S", kcal: 2210),
         .init(label: "S", kcal: 0),
+        .init(label: "S", kcal: 2210),
         .init(label: "D", kcal: 1650),
     ]
+
+    /// Smart average uses logged days only.
+    private var loggedAverage: Int {
+        let logged = days.filter { $0.kcal > 0 }
+        guard !logged.isEmpty else { return 0 }
+        return Int(logged.map(\.kcal).reduce(0, +) / Double(logged.count))
+    }
+
+    private var loggedDaysCount: Int {
+        days.filter { $0.kcal > 0 }.count
+    }
 
     var body: some View {
         VStack(spacing: 28) {
@@ -34,8 +47,8 @@ struct NutritionAIIntroStepView: View {
                 .frame(height: 240)
 
             OnboardingHeader(
-                title: String(localized: "Calorias sem culpa."),
-                subtitle: String(localized: "Conte macros nos dias que quiser. A IA do Smart Kitchen entende as lacunas e ainda dá ideias de receita com o que você tem em casa.")
+                title: String(localized: "Pulou um dia? Sem problema."),
+                subtitle: String(localized: "O Savoria calcula uma média inteligente apenas com os dias que você registrou — nada de zerar sua semana porque você esqueceu de logar.")
             )
 
             Spacer()
@@ -54,18 +67,23 @@ struct NutritionAIIntroStepView: View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(String(localized: "Esta semana"))
+                    Text(String(localized: "Média de \(loggedDaysCount) dias registrados"))
                         .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(.secondary)
-                    Text("11.800 kcal")
-                        .font(.cardTitle)
+                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                        Text("\(loggedAverage)")
+                            .font(.cardTitle)
+                        Text("kcal/dia")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(.secondary)
+                    }
                 }
                 Spacer()
                 aiChip
             }
 
             Chart {
-                ForEach(Array(days.enumerated()), id: \.offset) { idx, day in
+                ForEach(Array(days.enumerated()), id: \.offset) { _, day in
                     if day.kcal > 0 {
                         BarMark(
                             x: .value("Dia", day.label),
@@ -76,19 +94,35 @@ struct NutritionAIIntroStepView: View {
                             startPoint: .top, endPoint: .bottom))
                         .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
                     } else {
+                        // Unlogged day: dashed skeleton, no annotation.
                         BarMark(
                             x: .value("Dia", day.label),
-                            y: .value("kcal", 600)
+                            yStart: .value("zero", 0),
+                            yEnd: .value("kcal", 2400)
                         )
-                        .foregroundStyle(Color.secondary.opacity(0.18))
-                        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
-                        .annotation(position: .top, alignment: .center) {
-                            Text("—")
-                                .font(.system(size: 11, weight: .semibold))
-                                .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.clear)
+                        .annotation(position: .overlay, alignment: .center) {
+                            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                .strokeBorder(
+                                    Color.secondary.opacity(0.35),
+                                    style: StrokeStyle(lineWidth: 1.2, dash: [4, 4])
+                                )
+                                .frame(height: 90)
                         }
                     }
                 }
+
+                RuleMark(y: .value("Média", Double(loggedAverage)))
+                    .foregroundStyle(Color.accentColor.opacity(0.85))
+                    .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [3, 3]))
+                    .annotation(position: .top, alignment: .leading) {
+                        Text(String(localized: "Média"))
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(Color.accentColor)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Capsule().fill(Color.accentColor.opacity(0.12)))
+                    }
             }
             .chartYAxis(.hidden)
             .chartXAxis {

@@ -35,6 +35,16 @@ final class OnboardingState {
     var nutritionWeightKg: Double = 70
     var nutritionActivityRaw: String? = nil   // ActivityLevel raw value
     var nutritionWeeklyChangeKg: Double = 0.5
+    /// Goal-rate input mode used on the rate step. The internal source of
+    /// truth is always `nutritionWeeklyChangeKg` — when the user picks a
+    /// target weight + months, we convert.
+    var nutritionRateMode: RateInputMode = .targetWeight
+    /// Target weight (kg) the user wants to reach. Only used when
+    /// `nutritionRateMode == .targetWeight`. Default = current weight ± 5kg
+    /// computed lazily by the view.
+    var nutritionTargetWeightKg: Double = 65
+    /// Number of months to reach the target weight.
+    var nutritionTargetMonths: Int = 3
 
     // MARK: - Phase 5 paywall
     /// Tracks the plan the user previewed in the paywall (annual/monthly).
@@ -44,4 +54,12 @@ final class OnboardingState {
     var canAdvancePantrySelection: Bool { selectedPantryItemIDs.count >= 3 }
     var canAdvanceGrocerySelection: Bool { selectedGroceryItemIDs.count >= 3 }
     var canAdvanceRecipeSelection: Bool { selectedRecipeTemplateIDs.count >= 3 }
+}
+
+/// Goal-rate input mode for `RateStepView`.
+enum RateInputMode: String, CaseIterable, Identifiable {
+    case targetWeight  // "Quero chegar a X kg em Y meses"
+    case perWeek       // "X kg por semana"
+
+    var id: String { rawValue }
 }

@@ -94,15 +94,16 @@ private struct ShareIllustrationCard: View {
             ZStack {
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
                     .fill(LinearGradient(colors: [
-                        Color(red: 1.0, green: 0.72, blue: 0.30),
-                        Color(red: 1.0, green: 0.40, blue: 0.20),
+                        Color(red: 0.18, green: 0.18, blue: 0.22),
+                        Color(red: 0.06, green: 0.06, blue: 0.08),
                     ], startPoint: .topLeading, endPoint: .bottomTrailing))
-                Image(systemName: "fork.knife")
-                    .font(.system(size: 30, weight: .bold))
-                    .foregroundStyle(.white)
+                Image("AppLogoB")
+                    .resizable()
+                    .scaledToFit()
+                    .padding(8)
             }
             .frame(width: 72, height: 72)
-            .shadow(color: .black.opacity(0.15), radius: 10, y: 4)
+            .shadow(color: .black.opacity(0.25), radius: 10, y: 4)
 
             Text("Savoria")
                 .font(.system(size: 11, weight: .semibold))
@@ -157,12 +158,13 @@ private struct HomeScreenMockup: View {
                         ZStack {
                             RoundedRectangle(cornerRadius: 14, style: .continuous)
                                 .fill(LinearGradient(colors: [
-                                    Color(red: 1.0, green: 0.72, blue: 0.30),
-                                    Color(red: 1.0, green: 0.40, blue: 0.20),
+                                    Color(red: 0.18, green: 0.18, blue: 0.22),
+                                    Color(red: 0.06, green: 0.06, blue: 0.08),
                                 ], startPoint: .topLeading, endPoint: .bottomTrailing))
-                            Image(systemName: "fork.knife")
-                                .font(.system(size: 20, weight: .bold))
-                                .foregroundStyle(.white)
+                            Image("AppLogoB")
+                                .resizable()
+                                .scaledToFit()
+                                .padding(6)
                         }
                         .frame(width: 56, height: 56)
                         .shadow(color: .black.opacity(0.25), radius: 8, y: 3)

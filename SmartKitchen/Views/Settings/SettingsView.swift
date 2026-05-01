@@ -199,6 +199,7 @@ struct DataSettingsView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var cloudSync = CloudSyncService.shared
     @State private var isResettingAllData = false
+    @State private var showRedoOnboarding = false
     @State private var showFullResetConfirmation = false
     @State private var showResetError = false
     @State private var resetErrorMessage = ""
@@ -206,10 +207,10 @@ struct DataSettingsView: View {
     var body: some View {
         Form {
             Section {
-                Button(role: .destructive) {
-                    restoreDemoData()
+                Button {
+                    showRedoOnboarding = true
                 } label: {
-                    Label("Restaurar dados de demonstração", systemImage: "arrow.counterclockwise")
+                    Label("Refazer onboarding", systemImage: "arrow.counterclockwise")
                 }
                 .disabled(isResettingAllData)
 
@@ -234,6 +235,12 @@ struct DataSettingsView: View {
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
+        .fullScreenCover(isPresented: $showRedoOnboarding) {
+            OnboardingFlowView {
+                showRedoOnboarding = false
+            }
+            .interactiveDismissDisabled(true)
+        }
         .alert("Apagar todos os dados?", isPresented: $showFullResetConfirmation) {
             Button("Cancelar", role: .cancel) {}
             Button("Apagar tudo", role: .destructive) {
@@ -247,24 +254,6 @@ struct DataSettingsView: View {
         } message: {
             Text(resetErrorMessage)
         }
-    }
-
-    private func restoreDemoData() {
-        if let recipes = try? modelContext.fetch(FetchDescriptor<Recipe>()) {
-            for recipe in recipes {
-                modelContext.delete(recipe)
-            }
-        }
-        try? modelContext.delete(model: UnifiedItem.self)
-        try? modelContext.delete(model: PantryItem.self)
-        try? modelContext.delete(model: GroceryItem.self)
-        try? modelContext.delete(model: UtensilItem.self)
-        try? modelContext.delete(model: Category.self)
-        try? modelContext.delete(model: DeletedDefaultCategory.self)
-        try? modelContext.delete(model: ChatMessage.self)
-        try? modelContext.delete(model: AppSettings.self)
-        DataSeeder.seedIfNeeded(context: modelContext)
-        try? modelContext.save()
     }
 
     private func eraseAllData() {

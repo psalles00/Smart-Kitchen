@@ -30,10 +30,11 @@ struct PaywallStepView: View {
                     legalLinks
                 }
                 .padding(.horizontal, 22)
-                .padding(.top, 12)
+                .padding(.top, 28)
                 .padding(.bottom, 40)
             }
         }
+        .ignoresSafeArea(edges: .top)
         .task {
             await manager.loadProducts()
         }
@@ -63,17 +64,11 @@ struct PaywallStepView: View {
 
     private var header: some View {
         VStack(spacing: 12) {
-            Image(systemName: "sparkles")
-                .font(.system(size: 36, weight: .bold))
-                .foregroundStyle(.white)
-                .padding(20)
-                .background(
-                    Circle().fill(LinearGradient(colors: [
-                        Color(red: 1.0, green: 0.55, blue: 0.20),
-                        Color(red: 0.85, green: 0.30, blue: 0.15),
-                    ], startPoint: .topLeading, endPoint: .bottomTrailing))
-                )
-                .shadow(color: .black.opacity(0.15), radius: 18, y: 8)
+            Image("AppLogoB")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 96, height: 96)
+                .shadow(color: .black.opacity(0.18), radius: 18, y: 8)
 
             Text(String(localized: "Desbloqueie tudo no Savoria"))
                 .font(.system(size: 30, weight: .bold))
@@ -98,10 +93,7 @@ struct PaywallStepView: View {
         }
         .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(.ultraThinMaterial)
-        )
+        .glassEffect(.regular, in: .rect(cornerRadius: 24))
     }
 
     // MARK: - Plans
@@ -180,13 +172,15 @@ struct PaywallStepView: View {
             }
             .padding(18)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(Color.white.opacity(0.92))
+            .glassEffect(
+                isSelected
+                    ? .regular.tint(Color.white.opacity(0.45)).interactive()
+                    : .regular.interactive(),
+                in: .rect(cornerRadius: 22)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .strokeBorder(isSelected ? Color.primary : Color.black.opacity(0.08), lineWidth: isSelected ? 2.5 : 1)
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .strokeBorder(isSelected ? Color.primary : Color.black.opacity(0.10), lineWidth: isSelected ? 2.5 : 1)
             )
             .scaleEffect(isSelected ? 1.01 : 1.0)
         }
@@ -207,25 +201,20 @@ struct PaywallStepView: View {
                     }
                 }
                 .frame(maxWidth: .infinity)
-                .frame(height: 56)
-                .background(
-                    Capsule().fill(LinearGradient(colors: [
-                        Color(red: 1.0, green: 0.55, blue: 0.20),
-                        Color(red: 0.85, green: 0.30, blue: 0.15),
-                    ], startPoint: .leading, endPoint: .trailing))
-                )
-                .foregroundStyle(.white)
-                .shadow(color: .black.opacity(0.18), radius: 16, y: 8)
+                .padding(.vertical, 6)
             }
+            .buttonStyle(.glassProminent)
+            .tint(Color(red: 0.96, green: 0.40, blue: 0.18))
+            .controlSize(.extraLarge)
             .disabled(manager.products.isEmpty)
             .opacity(manager.products.isEmpty ? 0.6 : 1)
 
             Button(action: { onFinish(false) }) {
                 Text(String(localized: "Continuar com plano grátis"))
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(.secondary)
-                    .padding(.vertical, 8)
             }
+            .buttonStyle(.glass)
+            .controlSize(.regular)
         }
     }
 

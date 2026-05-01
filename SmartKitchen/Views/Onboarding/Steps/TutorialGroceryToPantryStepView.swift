@@ -1,8 +1,8 @@
 import SwiftUI
 
 /// Phase 3 — Step 9. Reverse demo: tap the checkbox on a grocery item to
-/// "buy" it; the item then jumps into the pantry. The user MUST perform the
-/// gesture themselves.
+/// "buy" it; the item then jumps into the pantry. Visually mirrors
+/// `GroceryListRow` (divider, balloon icon, native checkbox).
 struct TutorialGroceryToPantryStepView: View {
     @Bindable var state: OnboardingState
     let onContinue: () -> Void
@@ -25,14 +25,16 @@ struct TutorialGroceryToPantryStepView: View {
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 14) {
-                    panel(
+                    listPanel(
                         title: String(localized: "Mercado"),
                         accent: Color.orange,
                         icon: "cart.fill",
                         items: groceryItems,
-                        showCheckbox: true,
                         emptyMessage: String(localized: "Lista concluída!"),
-                        onCheck: buy(_:)
+                        rowButton: { item in
+                            .checkbox(isChecked: checkedID == item.id,
+                                      action: { buy(item) })
+                        }
                     )
 
                     HStack(spacing: 6) {
@@ -43,14 +45,13 @@ struct TutorialGroceryToPantryStepView: View {
                     }
                     .foregroundStyle(.secondary)
 
-                    panel(
+                    listPanel(
                         title: String(localized: "Despensa"),
                         accent: Color.green,
                         icon: "cabinet",
                         items: pantryItems,
-                        showCheckbox: false,
                         emptyMessage: String(localized: "Marque um item acima"),
-                        onCheck: { _ in }
+                        rowButton: { _ in .none }
                     )
                 }
                 .padding(.horizontal, 20)
@@ -90,16 +91,15 @@ struct TutorialGroceryToPantryStepView: View {
     }
 
     @ViewBuilder
-    private func panel(
+    private func listPanel(
         title: String,
         accent: Color,
         icon: String,
         items: [DemoItem],
-        showCheckbox: Bool,
         emptyMessage: String,
-        onCheck: @escaping (DemoItem) -> Void
+        rowButton: @escaping (DemoItem) -> TutorialItemRow.TrailingButton
     ) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
                 Image(systemName: icon)
                     .font(.system(size: 14, weight: .bold))
@@ -108,59 +108,30 @@ struct TutorialGroceryToPantryStepView: View {
                     .font(.system(size: 14, weight: .bold))
                 Spacer()
             }
+            .padding(.horizontal, 16)
+            .padding(.top, 12)
 
             if items.isEmpty {
                 Text(emptyMessage)
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(.tertiary)
                     .frame(maxWidth: .infinity, minHeight: 56)
+                    .padding(.bottom, 12)
             } else {
-                VStack(spacing: 8) {
-                    ForEach(items) { item in
-                        HStack(spacing: 12) {
-                            if showCheckbox {
-                                Button(action: { onCheck(item) }) {
-                                    ZStack {
-                                        RoundedRectangle(cornerRadius: 7, style: .continuous)
-                                            .strokeBorder(accent, lineWidth: 2)
-                                            .frame(width: 24, height: 24)
-                                        if checkedID == item.id {
-                                            RoundedRectangle(cornerRadius: 7, style: .continuous)
-                                                .fill(accent)
-                                                .frame(width: 24, height: 24)
-                                            Image(systemName: "checkmark")
-                                                .font(.system(size: 12, weight: .bold))
-                                                .foregroundStyle(.white)
-                                        }
-                                    }
-                                }
-                                .buttonStyle(.plain)
-                                .sensoryFeedback(.success, trigger: checkedID == item.id)
-                            }
-
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                    .fill(Color.primary.opacity(0.06))
-                                if let img = IconResolver.image(forFilename: item.iconFileName) {
-                                    Image(platformImage: img)
-                                        .resizable()
-                                        .scaledToFit()
-                                        .padding(6)
-                                }
-                            }
-                            .frame(width: 44, height: 44)
-                            .matchedGeometryEffect(id: item.id, in: ns)
-
-                            Text(item.name)
-                                .font(.system(size: 14, weight: .semibold))
-
-                            Spacer()
-                        }
+                VStack(spacing: 0) {
+                    ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
+                        TutorialItemRow(
+                            item: item,
+                            namespace: ns,
+                            showsDivider: index > 0,
+                            trailingButton: rowButton(item)
+                        )
                     }
                 }
+                .padding(.bottom, 4)
             }
         }
-        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .fill(neutralSurfaceColor)
