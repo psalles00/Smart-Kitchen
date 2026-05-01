@@ -8,8 +8,11 @@ import SwiftData
 /// (menu de contexto) e swipe horizontal revelam `Concluir` e `Desistir`,
 /// ambos com confirmação explicando o efeito.
 ///
-/// O swipe é implementado manualmente porque `.swipeActions` da SwiftUI
-/// só funciona dentro de `List`, e este card vive em um `VStack` da Home.
+/// Backend usa o mesmo padrão das telas em `Views/Lists/`: um `List` com
+/// `.swipeActions(...)` nativos. A `List` interna fica `scrollDisabled` para
+/// que a rolagem vertical seja delegada ao `ScrollView` pai da Home, e o
+/// gesto de swipe horizontal é tratado nativamente pelo SwiftUI sem
+/// interferir na rolagem.
 struct PendingNutritionDaysCard: View {
     @Environment(\.modelContext) private var modelContext
 
@@ -17,7 +20,7 @@ struct PendingNutritionDaysCard: View {
     @Query(sort: \NutritionDayLog.dayStart, order: .reverse) private var allDayLogs: [NutritionDayLog]
     @Query(sort: \NutritionProfile.createdAt) private var profiles: [NutritionProfile]
 
-    @State private var revealedDayID: Date?
+    @State private var pendingAction: PendingActionRequest?
 
     private var calendar: Calendar { .current }
     private var profile: NutritionProfile? { profiles.first }
@@ -80,41 +83,120 @@ struct PendingNutritionDaysCard: View {
                 }
 
                 VStack(spacing: 0) {
-                    ForEach(Array(days.prefix(5).enumerated()), id: \.element.id) { index, day in
-                        SwipeablePendingRow(
-                            day: day,
-                            calorieGoal: calorieGoal,
-                            isRevealed: revealedDayID == day.id,
-                            onTap: {
-                                if revealedDayID != nil {
-                                    revealedDayID = nil
-                                } else {
+                    let visibleDays = Array(days.prefix(5))
+                    List {
+                        ForEach(Array(visibleDays.enumerated()), id: \.element.id) { index, day in
+                            Button {
+                                openNutrition(at: day.date)
+                            } label: {
+                                PendingDayRow(
+                                    day: day,
+                                    calorieGoal: calorieGoal,
+                                    titleProvider: { titleLabel(for: day.date) },
+                                    showsBottomDivider: index < visibleDays.count - 1
+                                )
+                            }
+                            .buttonStyle(.plain)
+                            .contextMenu {
+                                Button {
                                     openNutrition(at: day.date)
+                                } label: {
+                                    Label("Continuar", systemImage: "arrow.right.circle")
                                 }
-                            },
-                            onRevealChange: { shouldReveal in
-                                revealedDayID = shouldReveal ? day.id : nil
-                            },
-                            onCompleteConfirmed: {
-                                NutritionDayLogStore.complete(date: day.date, in: modelContext)
-                            },
-                            onCancelConfirmed: {
-                                NutritionDayLogStore.cancel(date: day.date, in: modelContext)
-                            },
-                            titleProvider: { titleLabel(for: day.date) }
-                        )
-                        if index < min(days.count, 5) - 1 {
-                            ItemListDivider().padding(.horizontal, 14)
+                                Button {
+                                    pendingAction = .init(action: .complete, day: day)
+                                } label: {
+                                    Label("Concluir", systemImage: "checkmark.circle")
+                                }
+                                Button(role: .destructive) {
+                                    pendingAction = .init(action: .cancel, day: day)
+                                } label: {
+                                    Label("Desistir", systemImage: "xmark.circle")
+                                }
+                            }
+                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                Button {
+                                    pendingAction = .init(action: .cancel, day: day)
+                                } label: {
+                                    Label("Desistir", systemImage: "xmark.circle.fill")
+                                }
+                                .tint(.red)
+
+                                Button {
+                                    pendingAction = .init(action: .complete, day: day)
+                                } label: {
+                                    Label("Concluir", systemImage: "checkmark.circle.fill")
+                                }
+                                .tint(PageTheme.nutrients.accentColor)
+                            }
+                            .listRowInsets(EdgeInsets())
+                            .listRowSeparator(.hidden)
+                            .listRowBackground(Color.clear)
                         }
                     }
+                    .listStyle(.plain)
+                    .scrollDisabled(true)
+                    .scrollContentBackground(.hidden)
+                    .environment(\.defaultMinListRowHeight, 0)
+                    .frame(height: CGFloat(visibleDays.count) * Self.rowHeight)
                 }
                 .background(Self.cardBackground, in: .rect(cornerRadius: 18))
                 .clipShape(.rect(cornerRadius: 18))
+                .confirmationDialog(
+                    confirmationTitle(for: pendingAction),
+                    isPresented: confirmationBinding,
+                    titleVisibility: .visible,
+                    presenting: pendingAction
+                ) { request in
+                    Button(
+                        request.action == .complete
+                            ? String(localized: "Concluir dia")
+                            : String(localized: "Desistir do dia"),
+                        role: request.action == .cancel ? .destructive : nil
+                    ) {
+                        switch request.action {
+                        case .complete:
+                            NutritionDayLogStore.complete(date: request.day.date, in: modelContext)
+                        case .cancel:
+                            NutritionDayLogStore.cancel(date: request.day.date, in: modelContext)
+                        }
+                        pendingAction = nil
+                    }
+                    Button("Cancelar", role: .cancel) {}
+                } message: { request in
+                    Text(confirmationMessage(for: request))
+                }
             }
         }
     }
 
     // MARK: - Helpers
+
+    private static let rowHeight: CGFloat = 60
+
+    private var confirmationBinding: Binding<Bool> {
+        Binding(
+            get: { pendingAction != nil },
+            set: { if !$0 { pendingAction = nil } }
+        )
+    }
+
+    private func confirmationTitle(for request: PendingActionRequest?) -> String {
+        guard let request else { return "" }
+        return request.action == .complete
+            ? String(localized: "Concluir este dia?")
+            : String(localized: "Desistir deste dia?")
+    }
+
+    private func confirmationMessage(for request: PendingActionRequest) -> String {
+        let label = titleLabel(for: request.day.date).lowercased()
+        switch request.action {
+        case .complete:
+            return String(localized: "Os registros de \(label) entrarão no cálculo da sua média e o dia sairá desta lista.")
+        case .cancel:
+            return String(localized: "Os registros de \(label) serão descartados do cálculo da média e o dia sairá desta lista. Você poderá reabrir mais tarde, se quiser.")
+        }
+    }
 
     private func titleLabel(for date: Date) -> String {
         if calendar.isDateInToday(date) { return String(localized: "Hoje") }
@@ -138,109 +220,24 @@ struct PendingNutritionDaysCard: View {
     fileprivate static let cardBackground = neutralSurfaceColor
 }
 
-// MARK: - Swipeable row
+// MARK: - Action request
 
-private struct SwipeablePendingRow: View {
-    private enum PendingAction {
-        case complete
-        case cancel
-    }
+private struct PendingActionRequest: Identifiable {
+    enum Kind { case complete, cancel }
+    let action: Kind
+    let day: PendingNutritionDaysCard_RowDay
+    var id: String { "\(action == .complete ? "c" : "x")-\(day.id.timeIntervalSince1970)" }
+}
 
+// MARK: - Row content (visual)
+
+private struct PendingDayRow: View {
     let day: PendingNutritionDaysCard_RowDay
     let calorieGoal: Int
-    let isRevealed: Bool
-    let onTap: () -> Void
-    let onRevealChange: (Bool) -> Void
-    let onCompleteConfirmed: () -> Void
-    let onCancelConfirmed: () -> Void
     let titleProvider: () -> String
-
-    @State private var dragOffset: CGFloat = 0
-    @State private var pendingAction: PendingAction?
-    @State private var isDraggingHorizontally: Bool = false
-
-    private let actionWidth: CGFloat = 76
-    private let revealThreshold: CGFloat = 50
-
-    private var totalRevealedWidth: CGFloat { actionWidth * 2 }
-
-    private var effectiveOffset: CGFloat {
-        let base: CGFloat = isRevealed ? -totalRevealedWidth : 0
-        let combined = base + dragOffset
-        return min(0, max(combined, -totalRevealedWidth - 30))
-    }
+    let showsBottomDivider: Bool
 
     var body: some View {
-        ZStack(alignment: .trailing) {
-            HStack(spacing: 6) {
-                actionButton(
-                    title: String(localized: "Concluir"),
-                    icon: "checkmark.circle.fill",
-                    background: PageTheme.nutrients.accentColor,
-                    action: { openConfirmation(.complete) }
-                )
-                actionButton(
-                    title: String(localized: "Desistir"),
-                    icon: "xmark.circle.fill",
-                    background: .red,
-                    action: { openConfirmation(.cancel) }
-                )
-            }
-            .padding(.vertical, 4)
-            .padding(.trailing, 6)
-            .frame(width: totalRevealedWidth)
-            .opacity(min(1.0, Double(abs(effectiveOffset)) / 20.0))
-
-            rowContent
-                .background(PendingNutritionDaysCard.cardBackground)
-                .offset(x: effectiveOffset)
-                .onTapGesture { onTap() }
-                .confirmationDialog(
-                    confirmationTitle,
-                    isPresented: confirmationBinding,
-                    titleVisibility: .visible,
-                    presenting: pendingAction
-                ) { action in
-                    Button(
-                        action == .complete ? String(localized: "Concluir dia") : String(localized: "Desistir do dia"),
-                        role: action == .cancel ? .destructive : nil
-                    ) {
-                        switch action {
-                        case .complete:
-                            onCompleteConfirmed()
-                        case .cancel:
-                            onCancelConfirmed()
-                        }
-                        pendingAction = nil
-                    }
-                    Button("Cancelar", role: .cancel) {}
-                } message: { action in
-                    Text(confirmationMessage(for: action))
-                }
-                .contextMenu {
-                    Button {
-                        onTap() // openNutrition path when not revealed
-                    } label: {
-                        Label("Continuar", systemImage: "arrow.right.circle")
-                    }
-                    Button {
-                        openConfirmation(.complete)
-                    } label: {
-                        Label("Concluir", systemImage: "checkmark.circle")
-                    }
-                    Button(role: .destructive) {
-                        openConfirmation(.cancel)
-                    } label: {
-                        Label("Desistir", systemImage: "xmark.circle")
-                    }
-                }
-                .simultaneousGesture(swipeGesture)
-        }
-        .clipped()
-        .animation(.interactiveSpring(response: 0.3, dampingFraction: 0.85), value: effectiveOffset)
-    }
-
-    private var rowContent: some View {
         HStack(spacing: 12) {
             miniCalorieRing(consumed: day.calorieTotal, goal: calorieGoal)
 
@@ -260,91 +257,14 @@ private struct SwipeablePendingRow: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(PendingNutritionDaysCard.cardBackground)
+        .overlay(alignment: .bottom) {
+            if showsBottomDivider {
+                ItemListDivider().padding(.horizontal, 14)
+            }
+        }
         .contentShape(Rectangle())
-    }
-
-    private var swipeGesture: some Gesture {
-        DragGesture(minimumDistance: 12, coordinateSpace: .local)
-            .onChanged { value in
-                // Só assume controle do gesto quando o movimento é claramente
-                // horizontal. Caso contrário, deixa o ScrollView pai rolar
-                // verticalmente sem interferência.
-                guard abs(value.translation.width) > abs(value.translation.height) else { return }
-                isDraggingHorizontally = true
-                dragOffset = value.translation.width
-            }
-            .onEnded { value in
-                defer {
-                    isDraggingHorizontally = false
-                    dragOffset = 0
-                }
-                guard isDraggingHorizontally,
-                      abs(value.translation.width) > abs(value.translation.height) else { return }
-
-                let horizontal = value.translation.width
-                let predicted = value.predictedEndTranslation.width
-                let combined = (isRevealed ? -totalRevealedWidth : 0) + horizontal
-                let predictedCombined = (isRevealed ? -totalRevealedWidth : 0) + predicted
-
-                let shouldReveal: Bool
-                if predictedCombined < -revealThreshold {
-                    shouldReveal = true
-                } else if combined > -revealThreshold {
-                    shouldReveal = false
-                } else {
-                    shouldReveal = isRevealed
-                }
-                if shouldReveal != isRevealed {
-                    onRevealChange(shouldReveal)
-                }
-            }
-    }
-
-    private var confirmationBinding: Binding<Bool> {
-        Binding(
-            get: { pendingAction != nil },
-            set: { if !$0 { pendingAction = nil } }
-        )
-    }
-
-    private var confirmationTitle: String {
-        guard let pendingAction else { return "" }
-        return pendingAction == .complete ? String(localized: "Concluir este dia?") : String(localized: "Desistir deste dia?")
-    }
-
-    private func confirmationMessage(for action: PendingAction) -> String {
-        let label = titleProvider().lowercased()
-        switch action {
-        case .complete:
-            return String(localized: "Os registros de \(label) entrarão no cálculo da sua média e o dia sairá desta lista.")
-        case .cancel:
-            return String(localized: "Os registros de \(label) serão descartados do cálculo da média e o dia sairá desta lista. Você poderá reabrir mais tarde, se quiser.")
-        }
-    }
-
-    private func openConfirmation(_ action: PendingAction) {
-        dragOffset = 0
-        if isRevealed {
-            onRevealChange(false)
-        }
-        pendingAction = action
-    }
-
-    @ViewBuilder
-    private func actionButton(title: String, icon: String, background: Color, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            VStack(spacing: 4) {
-                Image(systemName: icon)
-                    .font(.title3)
-                Text(title)
-                    .font(.caption2.weight(.semibold))
-            }
-            .foregroundStyle(.white)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(background, in: .rect(cornerRadius: 14, style: .continuous))
-        }
-        .buttonStyle(.plain)
-        .frame(maxWidth: .infinity)
     }
 
     @ViewBuilder
@@ -382,16 +302,10 @@ private struct SwipeablePendingRow: View {
     }
 }
 
-/// Tipo usado pelas linhas do card. Mantido em escopo de módulo (não privado)
-/// porque `SwipeablePendingRow` precisa referenciá-lo no seu init.
+/// Tipo usado pelas linhas do card.
 struct PendingNutritionDaysCard_RowDay: Identifiable {
     let id: Date
     let date: Date
     let entryCount: Int
     let calorieTotal: Int
-}
-
-private extension PendingNutritionDaysCard {
-    /// Bridge entre o tipo interno e o tipo consumido pela linha.
-    static func bridge(_ day: PendingNutritionDaysCard) {}
 }
