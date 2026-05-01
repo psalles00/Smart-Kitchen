@@ -81,7 +81,7 @@ struct FamilySharingSettingsView: View {
             } header: {
                 Text("Compartilhamento Familiar")
             } footer: {
-                Text("Compartilhe dados do Smart Kitchen com familiares ou parceiros. Todos os participantes podem visualizar e editar os dados compartilhados.")
+                Text("Compartilhe dados do Savoria com familiares ou parceiros. Todos os participantes podem visualizar e editar os dados compartilhados.")
             }
 
             // MARK: - Scope

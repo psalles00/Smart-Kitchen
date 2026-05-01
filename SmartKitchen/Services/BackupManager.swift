@@ -1134,7 +1134,7 @@ enum BackupTransferError: LocalizedError {
         case .unsupportedZipCompression:
             String(localized: "O arquivo .zip usa um tipo de compactação não suportado por este app.")
         case .missingBackupPayload:
-            String(localized: "O arquivo .zip não contém um backup válido do Smart Kitchen.")
+            String(localized: "O arquivo .zip não contém um backup válido do Savoria.")
         }
     }
 }

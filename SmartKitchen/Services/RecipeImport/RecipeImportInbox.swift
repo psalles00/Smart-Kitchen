@@ -157,10 +157,10 @@ struct SharedImportItem: Identifiable, Equatable {
         switch kind {
         case .url:
             guard let url else { return nil }
-            return "Analise este link compartilhado e me diga a melhor ação no Smart Kitchen: \(url.absoluteString)"
+            return "Analise este link compartilhado e me diga a melhor ação no Savoria: \(url.absoluteString)"
         case .text:
             guard let text, !text.isEmpty else { return nil }
-            return "Analise este conteúdo compartilhado e me diga como devo usá-lo no Smart Kitchen:\n\n\(text)"
+            return "Analise este conteúdo compartilhado e me diga como devo usá-lo no Savoria:\n\n\(text)"
         case .image, .video:
             return nil
         }

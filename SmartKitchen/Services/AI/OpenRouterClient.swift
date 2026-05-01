@@ -47,7 +47,7 @@ final class OpenRouterClient {
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         // Optional but recommended by OpenRouter for ranking / attribution.
         request.setValue("https://smartkitchen.app", forHTTPHeaderField: "HTTP-Referer")
-        request.setValue("Smart Kitchen", forHTTPHeaderField: "X-Title")
+        request.setValue("Savoria", forHTTPHeaderField: "X-Title")
         request.timeoutInterval = 60
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
@@ -111,7 +111,7 @@ final class OpenRouterClient {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.setValue("https://smartkitchen.app", forHTTPHeaderField: "HTTP-Referer")
-        request.setValue("Smart Kitchen", forHTTPHeaderField: "X-Title")
+        request.setValue("Savoria", forHTTPHeaderField: "X-Title")
         request.timeoutInterval = 60
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 

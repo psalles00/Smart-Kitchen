@@ -3642,84 +3642,84 @@
         }
       }
     },
-    "Abre o Smart Kitchen direto na conversa com o assistente, com o teclado pronto." : {
+    "Abre o Savoria direto na conversa com o assistente, com o teclado pronto." : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Öffnet Smart Kitchen direkt im Gespräch mit dem Assistenten, mit bereiter Tastatur."
+            "value" : "Öffnet Savoria direkt im Gespräch mit dem Assistenten, mit bereiter Tastatur."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Opens Smart Kitchen straight into the assistant chat with the keyboard ready."
+            "value" : "Opens Savoria straight into the assistant chat with the keyboard ready."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Abre Smart Kitchen directamente en la conversación con el asistente, con el teclado listo."
+            "value" : "Abre Savoria directamente en la conversación con el asistente, con el teclado listo."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ouvre Smart Kitchen directement dans la conversation avec l'assistant, clavier prêt."
+            "value" : "Ouvre Savoria directement dans la conversation avec l'assistant, clavier prêt."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apre Smart Kitchen direttamente nella conversazione con l'assistente, con la tastiera pronta."
+            "value" : "Apre Savoria direttamente nella conversazione con l'assistente, con la tastiera pronta."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "キーボードを準備した状態で、Smart Kitchen をアシスタントとの会話に直接開きます。"
+            "value" : "キーボードを準備した状態で、Savoria をアシスタントとの会話に直接開きます。"
           }
         }
       }
     },
-    "Abre o Smart Kitchen direto no chat com a IA, com o teclado pronto para digitar." : {
+    "Abre o Savoria direto no chat com a IA, com o teclado pronto para digitar." : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Öffnet Smart Kitchen direkt im Chat mit der KI, mit bereiter Tastatur zum Tippen."
+            "value" : "Öffnet Savoria direkt im Chat mit der KI, mit bereiter Tastatur zum Tippen."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Opens Smart Kitchen straight into the AI chat with the keyboard ready to type."
+            "value" : "Opens Savoria straight into the AI chat with the keyboard ready to type."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Abre Smart Kitchen directamente en el chat con la IA, con el teclado listo para escribir."
+            "value" : "Abre Savoria directamente en el chat con la IA, con el teclado listo para escribir."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ouvre Smart Kitchen directement dans le chat avec l'IA, clavier prêt à saisir."
+            "value" : "Ouvre Savoria directement dans le chat avec l'IA, clavier prêt à saisir."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apre Smart Kitchen direttamente nella chat con l'IA, con la tastiera pronta per scrivere."
+            "value" : "Apre Savoria direttamente nella chat con l'IA, con la tastiera pronta per scrivere."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "キーボードを入力できる状態で、Smart Kitchen を AI とのチャットに直接開きます。"
+            "value" : "キーボードを入力できる状態で、Savoria を AI とのチャットに直接開きます。"
           }
         }
       }
@@ -8022,43 +8022,43 @@
         }
       }
     },
-    "Assistente Smart Kitchen" : {
+    "Assistente Savoria" : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Smart Kitchen Assistent"
+            "value" : "Savoria Assistent"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Smart Kitchen Assistant"
+            "value" : "Savoria Assistant"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Asistente Smart Kitchen"
+            "value" : "Asistente Savoria"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Assistant Smart Kitchen"
+            "value" : "Assistant Savoria"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Assistente Smart Kitchen"
+            "value" : "Assistente Savoria"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Smart Kitchen アシスタント"
+            "value" : "Savoria アシスタント"
           }
         }
       }
@@ -11888,43 +11888,43 @@
     "Compartilhamento familiar premium" : {
 
     },
-    "Compartilhar Smart Kitchen" : {
+    "Compartilhar Savoria" : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Smart Kitchen teilen"
+            "value" : "Savoria teilen"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Share Smart Kitchen"
+            "value" : "Share Savoria"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Compartir Smart Kitchen"
+            "value" : "Compartir Savoria"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Partager Smart Kitchen"
+            "value" : "Partager Savoria"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Condividi Smart Kitchen"
+            "value" : "Condividi Savoria"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Smart Kitchenを共有"
+            "value" : "Savoriaを共有"
           }
         }
       }
@@ -12093,43 +12093,43 @@
         }
       }
     },
-    "Compartilhe dados do Smart Kitchen com familiares ou parceiros. Todos os participantes podem visualizar e editar os dados compartilhados." : {
+    "Compartilhe dados do Savoria com familiares ou parceiros. Todos os participantes podem visualizar e editar os dados compartilhados." : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Teilen Sie Smart Kitchen-Daten mit Familie oder Partnern. Alle Teilnehmer können die geteilten Daten anzeigen und bearbeiten."
+            "value" : "Teilen Sie Savoria-Daten mit Familie oder Partnern. Alle Teilnehmer können die geteilten Daten anzeigen und bearbeiten."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Share Smart Kitchen data with family or partners. All participants can view and edit the shared data."
+            "value" : "Share Savoria data with family or partners. All participants can view and edit the shared data."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Comparte los datos de Smart Kitchen con familiares o parejas. Todos los participantes pueden ver y editar los datos compartidos."
+            "value" : "Comparte los datos de Savoria con familiares o parejas. Todos los participantes pueden ver y editar los datos compartidos."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Partagez les données de Smart Kitchen avec votre famille ou vos partenaires. Tous les participants peuvent consulter et modifier les données partagées."
+            "value" : "Partagez les données de Savoria avec votre famille ou vos partenaires. Tous les participants peuvent consulter et modifier les données partagées."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Condividi i dati di Smart Kitchen con familiari o partner. Tutti i partecipanti possono visualizzare e modificare i dati condivisi."
+            "value" : "Condividi i dati di Savoria con familiari o partner. Tutti i partecipanti possono visualizzare e modificare i dati condivisi."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Smart Kitchen のデータを家族やパートナーと共有します。すべての参加者は共有データを表示・編集できます。"
+            "value" : "Savoria のデータを家族やパートナーと共有します。すべての参加者は共有データを表示・編集できます。"
           }
         }
       }
@@ -27630,43 +27630,43 @@
         }
       }
     },
-    "Modo IA Smart Kitchen" : {
+    "Modo IA Savoria" : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Smart Kitchen KI-Modus"
+            "value" : "Savoria KI-Modus"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Smart Kitchen AI Mode"
+            "value" : "Savoria AI Mode"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Modo IA Smart Kitchen"
+            "value" : "Modo IA Savoria"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mode IA Smart Kitchen"
+            "value" : "Mode IA Savoria"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Modalità IA Smart Kitchen"
+            "value" : "Modalità IA Savoria"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Smart Kitchen AI モード"
+            "value" : "Savoria AI モード"
           }
         }
       }
@@ -30821,43 +30821,43 @@
         }
       }
     },
-    "O arquivo .zip não contém um backup válido do Smart Kitchen." : {
+    "O arquivo .zip não contém um backup válido do Savoria." : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Die .zip-Datei enthält kein gültiges Smart Kitchen-Backup."
+            "value" : "Die .zip-Datei enthält kein gültiges Savoria-Backup."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The .zip file does not contain a valid Smart Kitchen backup."
+            "value" : "The .zip file does not contain a valid Savoria backup."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "El archivo .zip no contiene una copia válida de Smart Kitchen."
+            "value" : "El archivo .zip no contiene una copia válida de Savoria."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Le fichier .zip ne contient pas une sauvegarde Smart Kitchen valide."
+            "value" : "Le fichier .zip ne contient pas une sauvegarde Savoria valide."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Il file .zip non contiene un backup valido di Smart Kitchen."
+            "value" : "Il file .zip non contiene un backup valido di Savoria."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : ".zip ファイルには有効な Smart Kitchen のバックアップが含まれていません。"
+            "value" : ".zip ファイルには有効な Savoria のバックアップが含まれていません。"
           }
         }
       }
@@ -31067,43 +31067,43 @@
         }
       }
     },
-    "O container compartilhado do Smart Kitchen não está disponível." : {
+    "O container compartilhado do Savoria não está disponível." : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Der freigegebene Smart Kitchen-Container ist nicht verfügbar."
+            "value" : "Der freigegebene Savoria-Container ist nicht verfügbar."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The Smart Kitchen shared container is not available."
+            "value" : "The Savoria shared container is not available."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "El contenedor compartido de Smart Kitchen no está disponible."
+            "value" : "El contenedor compartido de Savoria no está disponible."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Le conteneur partagé de Smart Kitchen n'est pas disponible."
+            "value" : "Le conteneur partagé de Savoria n'est pas disponible."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Il container condiviso di Smart Kitchen non è disponibile."
+            "value" : "Il container condiviso di Savoria non è disponibile."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Smart Kitchen の共有コンテナは利用できません。"
+            "value" : "Savoria の共有コンテナは利用できません。"
           }
         }
       }
@@ -31436,43 +31436,43 @@
         }
       }
     },
-    "O Smart Kitchen Pro chega em breve. Você poderá assinar diretamente daqui assim que a App Store liberar a função." : {
+    "O Savoria Pro chega em breve. Você poderá assinar diretamente daqui assim que a App Store liberar a função." : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Smart Kitchen Pro kommt bald. Sie können direkt hier abonnieren, sobald die App Store-Funktion verfügbar ist."
+            "value" : "Savoria Pro kommt bald. Sie können direkt hier abonnieren, sobald die App Store-Funktion verfügbar ist."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Smart Kitchen Pro is coming soon. You will be able to subscribe right here as soon as the App Store feature is available."
+            "value" : "Savoria Pro is coming soon. You will be able to subscribe right here as soon as the App Store feature is available."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Smart Kitchen Pro llegará pronto. Podrás suscribirte directamente aquí en cuanto la App Store habilite la función."
+            "value" : "Savoria Pro llegará pronto. Podrás suscribirte directamente aquí en cuanto la App Store habilite la función."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Smart Kitchen Pro arrive bientôt. Vous pourrez vous abonner directement ici dès que l’App Store activera la fonctionnalité."
+            "value" : "Savoria Pro arrive bientôt. Vous pourrez vous abonner directement ici dès que l’App Store activera la fonctionnalité."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Smart Kitchen Pro arriverà presto. Potrai abbonarti direttamente qui non appena l’App Store abiliterà la funzione."
+            "value" : "Savoria Pro arriverà presto. Potrai abbonarti direttamente qui non appena l’App Store abiliterà la funzione."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Smart Kitchen Pro は近日公開です。App Store で機能が利用可能になり次第、ここから直接登録できます。"
+            "value" : "Savoria Pro は近日公開です。App Store で機能が利用可能になり次第、ここから直接登録できます。"
           }
         }
       }
@@ -35214,43 +35214,43 @@
         }
       }
     },
-    "Quando ativado, todos os dados do Smart Kitchen são sincronizados automaticamente entre seus dispositivos Apple via iCloud." : {
+    "Quando ativado, todos os dados do Savoria são sincronizados automaticamente entre seus dispositivos Apple via iCloud." : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wenn aktiviert, werden alle Smart Kitchen-Daten automatisch zwischen Ihren Apple-Geräten über iCloud synchronisiert."
+            "value" : "Wenn aktiviert, werden alle Savoria-Daten automatisch zwischen Ihren Apple-Geräten über iCloud synchronisiert."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "When enabled, all Smart Kitchen data is automatically synced between your Apple devices via iCloud."
+            "value" : "When enabled, all Savoria data is automatically synced between your Apple devices via iCloud."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cuando se activa, todos los datos de Smart Kitchen se sincronizan automáticamente entre tus dispositivos Apple vía iCloud."
+            "value" : "Cuando se activa, todos los datos de Savoria se sincronizan automáticamente entre tus dispositivos Apple vía iCloud."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lorsqu'il est activé, toutes les données de Smart Kitchen sont synchronisées automatiquement entre vos appareils Apple via iCloud."
+            "value" : "Lorsqu'il est activé, toutes les données de Savoria sont synchronisées automatiquement entre vos appareils Apple via iCloud."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Quando attivato, tutti i dati di Smart Kitchen vengono sincronizzati automaticamente tra i tuoi dispositivi Apple tramite iCloud."
+            "value" : "Quando attivato, tutti i dati di Savoria vengono sincronizzati automaticamente tra i tuoi dispositivi Apple tramite iCloud."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "有効にすると、Smart Kitchen のすべてのデータが iCloud 経由で Apple デバイス間で自動的に同期されます。"
+            "value" : "有効にすると、Savoria のすべてのデータが iCloud 経由で Apple デバイス間で自動的に同期されます。"
           }
         }
       }
@@ -41209,84 +41209,84 @@
         }
       }
     },
-    "Smart Kitchen" : {
+    "Savoria" : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Smart Kitchen"
+            "value" : "Savoria"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Smart Kitchen"
+            "value" : "Savoria"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Smart Kitchen"
+            "value" : "Savoria"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Smart Kitchen"
+            "value" : "Savoria"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Smart Kitchen"
+            "value" : "Savoria"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Smart Kitchen"
+            "value" : "Savoria"
           }
         }
       }
     },
-    "Smart Kitchen Pro" : {
+    "Savoria Pro" : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Smart Kitchen Pro"
+            "value" : "Savoria Pro"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Smart Kitchen Pro"
+            "value" : "Savoria Pro"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Smart Kitchen Pro"
+            "value" : "Savoria Pro"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Smart Kitchen Pro"
+            "value" : "Savoria Pro"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Smart Kitchen Pro"
+            "value" : "Savoria Pro"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Smart Kitchen Pro"
+            "value" : "Savoria Pro"
           }
         }
       }

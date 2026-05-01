@@ -29,7 +29,7 @@ private enum SharedPayloadStoreError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .containerUnavailable:
-            return String(localized: "O container compartilhado do Smart Kitchen não está disponível.")
+            return String(localized: "O container compartilhado do Savoria não está disponível.")
         }
     }
 }

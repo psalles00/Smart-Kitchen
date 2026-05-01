@@ -41,7 +41,7 @@ struct AIChatWidget: Widget {
                 .widgetURL(aiChatDeepLink)
         }
         .configurationDisplayName("Modo IA")
-        .description("Abre o Smart Kitchen direto no chat com a IA, com o teclado pronto para digitar.")
+        .description("Abre o Savoria direto no chat com a IA, com o teclado pronto para digitar.")
         .supportedFamilies([
             .accessoryCircular,
             .accessoryRectangular,
@@ -112,7 +112,7 @@ private struct AIChatRectangularView: View {
 
 private struct AIChatInlineView: View {
     var body: some View {
-        Label("Modo IA Smart Kitchen", systemImage: "bubble.and.pencil")
+        Label("Modo IA Savoria", systemImage: "bubble.and.pencil")
     }
 }
 

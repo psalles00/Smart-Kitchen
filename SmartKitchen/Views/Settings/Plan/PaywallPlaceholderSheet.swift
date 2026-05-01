@@ -60,7 +60,7 @@ struct PaywallPlaceholderSheet: View {
                     }
                     .padding(.horizontal)
 
-                    Text("O Smart Kitchen Pro chega em breve. Você poderá assinar diretamente daqui assim que a App Store liberar a função.")
+                    Text("O Savoria Pro chega em breve. Você poderá assinar diretamente daqui assim que a App Store liberar a função.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -80,7 +80,7 @@ struct PaywallPlaceholderSheet: View {
                 }
                 .padding(.top, 8)
             }
-            .modalNavigationTitle(String(localized: "Smart Kitchen Pro"))
+            .modalNavigationTitle(String(localized: "Savoria Pro"))
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -107,7 +107,7 @@ struct PaywallPlaceholderSheet: View {
                     .foregroundStyle(.white)
             }
 
-            Text("Smart Kitchen Pro")
+            Text("Savoria Pro")
                 .font(.title2.weight(.bold))
             Text("Recursos avançados para tirar o máximo da sua cozinha conectada.")
                 .font(.subheadline)

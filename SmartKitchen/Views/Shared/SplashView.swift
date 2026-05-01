@@ -18,7 +18,7 @@ struct SplashView: View {
                 .frame(width: 140, height: 140)
                 .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
                 .shadow(color: .black.opacity(0.08), radius: 20, x: 0, y: 8)
-                .accessibilityLabel("Smart Kitchen")
+                .accessibilityLabel("Savoria")
         }
         .transition(.opacity)
     }

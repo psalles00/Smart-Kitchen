@@ -421,7 +421,7 @@ struct AssistantView: View {
 
         // Core instructions
         parts.append("""
-        Você é o "Smart Kitchen", um assistente de cozinha inteligente e pessoal. \
+        Você é o "Savoria", um assistente de cozinha inteligente e pessoal. \
         Responda SEMPRE em português brasileiro, de forma amigável, concisa e útil.
 
         ## Suas capacidades

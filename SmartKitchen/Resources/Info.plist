@@ -6,6 +6,8 @@
 	<string>.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>Savoria</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -48,13 +50,13 @@
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>NSCameraUsageDescription</key>
-	<string>O Smart Kitchen usa a câmera para tirar fotos das suas receitas e refeições.</string>
+	<string>O Savoria usa a câmera para tirar fotos das suas receitas e refeições.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>O Smart Kitchen usa o microfone para registrar refeições por voz.</string>
+	<string>O Savoria usa o microfone para registrar refeições por voz.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>O Smart Kitchen acessa a galeria para anexar fotos às suas receitas.</string>
+	<string>O Savoria acessa a galeria para anexar fotos às suas receitas.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>O Smart Kitchen usa reconhecimento de voz para transcrever o que você falou sobre sua refeição.</string>
+	<string>O Savoria usa reconhecimento de voz para transcrever o que você falou sobre sua refeição.</string>
 	<key>OpenAIAPIKey</key>
 	<string>$(OPENAI_API_KEY)</string>
 	<key>OpenRouterAPIKey</key>

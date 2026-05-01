@@ -143,7 +143,7 @@ final class SharingService: @unchecked Sendable {
 
         let zoneID = try await discoverSharedZoneID()
         let share = CKShare(recordZoneID: zoneID)
-        share[CKShare.SystemFieldKey.title] = "Smart Kitchen"
+        share[CKShare.SystemFieldKey.title] = "Savoria"
         share.publicPermission = .none
 
         _ = try await ckContainer.privateCloudDatabase.modifyRecords(saving: [share], deleting: [])

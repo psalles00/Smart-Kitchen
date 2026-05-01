@@ -57,7 +57,7 @@ struct CloudSharingControllerRepresentable: UIViewControllerRepresentable {
         }
 
         func itemTitle(for csc: UICloudSharingController) -> String? {
-            "Smart Kitchen"
+            "Savoria"
         }
 
         func itemThumbnailData(for csc: UICloudSharingController) -> Data? {
@@ -82,7 +82,7 @@ struct MacSharingView: View {
                 .font(.system(size: 40))
                 .foregroundStyle(.purple)
 
-            Text("Compartilhar Smart Kitchen")
+            Text("Compartilhar Savoria")
                 .font(.headline)
 
             Text("Envie o link abaixo para convidar participantes. Eles precisam ter iCloud ativo.")

@@ -16,7 +16,7 @@ settings:
     SWIFT_VERSION: "6.0"
 
 targets:
-  SmartKitchen:
+  Savoria:
     type: application
     supportedDestinations: [iOS, macOS]
     configFiles:
@@ -52,10 +52,11 @@ targets:
           - BricolageGrotesque-Variable.ttf
         ATSApplicationFontsPath: "."
         UILaunchScreen: {}
-        NSCameraUsageDescription: O Smart Kitchen usa a câmera para tirar fotos das suas receitas e refeições.
-        NSPhotoLibraryUsageDescription: O Smart Kitchen acessa a galeria para anexar fotos às suas receitas.
-        NSMicrophoneUsageDescription: O Smart Kitchen usa o microfone para registrar refeições por voz.
-        NSSpeechRecognitionUsageDescription: O Smart Kitchen usa reconhecimento de voz para transcrever o que você falou sobre sua refeição.
+        CFBundleDisplayName: Savoria
+        NSCameraUsageDescription: O Savoria usa a câmera para tirar fotos das suas receitas e refeições.
+        NSPhotoLibraryUsageDescription: O Savoria acessa a galeria para anexar fotos às suas receitas.
+        NSMicrophoneUsageDescription: O Savoria usa o microfone para registrar refeições por voz.
+        NSSpeechRecognitionUsageDescription: O Savoria usa reconhecimento de voz para transcrever o que você falou sobre sua refeição.
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
         ITSAppUsesNonExemptEncryption: false
@@ -84,11 +85,11 @@ targets:
       - backgroundModes:
           modes: [remote-notification]
     dependencies:
-      - target: SmartKitchenShareExtension
+      - target: SavoriaShareExtension
         embed: true
         codeSign: true
         platformFilter: iOS
-      - target: SmartKitchenWidgets
+      - target: SavoriaWidgets
         embed: true
         codeSign: true
         platformFilter: iOS
@@ -104,7 +105,7 @@ targets:
       testTargets: []
       gatherCoverageData: false
 
-  SmartKitchenShareExtension:
+  SavoriaShareExtension:
     type: app-extension
     platform: iOS
     deploymentTarget: "26.0"
@@ -114,7 +115,7 @@ targets:
     info:
       path: SmartKitchenShareExtension/Info.plist
       properties:
-        CFBundleDisplayName: Smart Kitchen
+        CFBundleDisplayName: Savoria
         CFBundleLocalizations:
           - pt-BR
           - en
@@ -151,7 +152,7 @@ targets:
         TARGETED_DEVICE_FAMILY: "1,2"
         SKIP_INSTALL: YES
 
-  SmartKitchenWidgets:
+  SavoriaWidgets:
     type: app-extension
     platform: iOS
     deploymentTarget: "26.0"
@@ -161,7 +162,7 @@ targets:
     info:
       path: SmartKitchenWidgets/Info.plist
       properties:
-        CFBundleDisplayName: Smart Kitchen
+        CFBundleDisplayName: Savoria
         CFBundleLocalizations:
           - pt-BR
           - en

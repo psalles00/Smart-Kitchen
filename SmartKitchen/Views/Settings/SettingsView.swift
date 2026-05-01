@@ -29,7 +29,7 @@ struct SettingsView: View {
             return displayName
         }
 
-        return Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String ?? "Smart Kitchen"
+        return Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String ?? "Savoria"
     }
 
     private var appVersion: String {

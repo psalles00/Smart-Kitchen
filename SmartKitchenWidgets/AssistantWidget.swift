@@ -43,7 +43,7 @@ struct AssistantWidget: Widget {
                 .widgetURL(assistantDeepLink)
         }
         .configurationDisplayName("Assistente")
-        .description("Abre o Smart Kitchen direto na conversa com o assistente, com o teclado pronto.")
+        .description("Abre o Savoria direto na conversa com o assistente, com o teclado pronto.")
         .supportedFamilies([
             .accessoryCircular,
             .accessoryRectangular,
@@ -114,7 +114,7 @@ private struct AssistantRectangularView: View {
 
 private struct AssistantInlineView: View {
     var body: some View {
-        Label("Assistente Smart Kitchen", systemImage: "sparkle.magnifyingglass")
+        Label("Assistente Savoria", systemImage: "sparkle.magnifyingglass")
     }
 }
 

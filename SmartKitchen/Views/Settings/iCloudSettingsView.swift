@@ -79,7 +79,7 @@ struct iCloudSettingsView: View {
             } header: {
                 Text("Sincronização")
             } footer: {
-                Text("Quando ativado, todos os dados do Smart Kitchen são sincronizados automaticamente entre seus dispositivos Apple via iCloud.")
+                Text("Quando ativado, todos os dados do Savoria são sincronizados automaticamente entre seus dispositivos Apple via iCloud.")
             }
 
             if cloudSync.syncEnabled {

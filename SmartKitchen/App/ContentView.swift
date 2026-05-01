@@ -16,7 +16,7 @@ enum SidebarItem: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .home: return String(localized: "Início")
+        case .home: return "Savoria"
         case .lists: return String(localized: "Listas")
         case .recipes: return String(localized: "Receitas")
         case .nutrients: return String(localized: "Nutrição")
@@ -421,7 +421,7 @@ struct ContentView: View {
                         )
                     }
                 } label: {
-                    Label("Início", systemImage: AppTab.assistant.icon)
+                    Label("Savoria", systemImage: AppTab.assistant.icon)
                 }
 
                 Tab(value: AppTab.lists) {
@@ -1340,7 +1340,7 @@ private struct HomeView: View {
         ExpandedPageLayout(
             pageTheme: .home,
             header: { isInverted in
-                PageHeader(title: String(localized: "Início"), isInverted: isInverted) {
+                PageHeader(title: "Savoria", isInverted: isInverted) {
                     SettingsButton(onTap: onSettingsTap)
                 }
             },

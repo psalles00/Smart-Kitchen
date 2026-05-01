@@ -8,7 +8,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "new",
-            "value": "Smart Kitchen"
+            "value": "Savoria"
           }
         }
       }
@@ -31,43 +31,43 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O Smart Kitchen usa a câmera para tirar fotos das suas receitas e refeições."
+            "value": "O Savoria usa a câmera para tirar fotos das suas receitas e refeições."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Smart Kitchen uses the camera to take photos of your recipes and meals."
+            "value": "Savoria uses the camera to take photos of your recipes and meals."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Smart Kitchen usa la cámara para tomar fotos de tus recetas y comidas."
+            "value": "Savoria usa la cámara para tomar fotos de tus recetas y comidas."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Smart Kitchen utilise l'appareil photo pour prendre des photos de vos recettes et repas."
+            "value": "Savoria utilise l'appareil photo pour prendre des photos de vos recettes et repas."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Smart Kitchen verwendet die Kamera, um Lebensmitteletiketten und Fotos für Ihre Mahlzeiten und Rezepte aufzunehmen."
+            "value": "Savoria verwendet die Kamera, um Lebensmitteletiketten und Fotos für Ihre Mahlzeiten und Rezepte aufzunehmen."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Smart Kitchen utilizza la fotocamera per acquisire etichette degli alimenti e foto dei tuoi pasti e ricette."
+            "value": "Savoria utilizza la fotocamera per acquisire etichette degli alimenti e foto dei tuoi pasti e ricette."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Smart Kitchenは、食品ラベルや食事・レシピの写真を撮影するためにカメラを使用します。"
+            "value": "Savoriaは、食品ラベルや食事・レシピの写真を撮影するためにカメラを使用します。"
           }
         }
       }
@@ -78,43 +78,43 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O Smart Kitchen usa o microfone para registrar refeições por voz."
+            "value": "O Savoria usa o microfone para registrar refeições por voz."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Smart Kitchen uses the microphone to log meals by voice."
+            "value": "Savoria uses the microphone to log meals by voice."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Smart Kitchen usa el micrófono para registrar comidas por voz."
+            "value": "Savoria usa el micrófono para registrar comidas por voz."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Smart Kitchen utilise le microphone pour enregistrer des repas à la voix."
+            "value": "Savoria utilise le microphone pour enregistrer des repas à la voix."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Smart Kitchen verwendet das Mikrofon, um Sprachnotizen zu Ihren Mahlzeiten aufzunehmen."
+            "value": "Savoria verwendet das Mikrofon, um Sprachnotizen zu Ihren Mahlzeiten aufzunehmen."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Smart Kitchen utilizza il microfono per registrare note vocali sui tuoi pasti."
+            "value": "Savoria utilizza il microfono per registrare note vocali sui tuoi pasti."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Smart Kitchenは、食事に関する音声メモを録音するためにマイクを使用します。"
+            "value": "Savoriaは、食事に関する音声メモを録音するためにマイクを使用します。"
           }
         }
       }
@@ -125,43 +125,43 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O Smart Kitchen acessa a galeria para anexar fotos às suas receitas."
+            "value": "O Savoria acessa a galeria para anexar fotos às suas receitas."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Smart Kitchen accesses your photo library to attach photos to your recipes."
+            "value": "Savoria accesses your photo library to attach photos to your recipes."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Smart Kitchen accede a tu galería para adjuntar fotos a tus recetas."
+            "value": "Savoria accede a tu galería para adjuntar fotos a tus recetas."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Smart Kitchen accède à votre galerie pour joindre des photos à vos recettes."
+            "value": "Savoria accède à votre galerie pour joindre des photos à vos recettes."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Smart Kitchen benötigt Zugriff auf Ihre Fotos, um Mahlzeiten- und Rezeptbilder zu importieren."
+            "value": "Savoria benötigt Zugriff auf Ihre Fotos, um Mahlzeiten- und Rezeptbilder zu importieren."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Smart Kitchen ha bisogno di accedere alle tue foto per importare immagini di pasti e ricette."
+            "value": "Savoria ha bisogno di accedere alle tue foto per importare immagini di pasti e ricette."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Smart Kitchenは、食事やレシピの画像をインポートするために写真へのアクセスが必要です。"
+            "value": "Savoriaは、食事やレシピの画像をインポートするために写真へのアクセスが必要です。"
           }
         }
       }
@@ -172,43 +172,43 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O Smart Kitchen usa reconhecimento de voz para transcrever o que você falou sobre sua refeição."
+            "value": "O Savoria usa reconhecimento de voz para transcrever o que você falou sobre sua refeição."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Smart Kitchen uses speech recognition to transcribe what you said about your meal."
+            "value": "Savoria uses speech recognition to transcribe what you said about your meal."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Smart Kitchen usa el reconocimiento de voz para transcribir lo que dijiste sobre tu comida."
+            "value": "Savoria usa el reconocimiento de voz para transcribir lo que dijiste sobre tu comida."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Smart Kitchen utilise la reconnaissance vocale pour transcrire ce que vous avez dit sur votre repas."
+            "value": "Savoria utilise la reconnaissance vocale pour transcrire ce que vous avez dit sur votre repas."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Smart Kitchen verwendet Spracherkennung, um zu transkribieren, was Sie über Ihre Mahlzeit gesagt haben."
+            "value": "Savoria verwendet Spracherkennung, um zu transkribieren, was Sie über Ihre Mahlzeit gesagt haben."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Smart Kitchen utilizza il riconoscimento vocale per trascrivere ciò che hai detto sul tuo pasto."
+            "value": "Savoria utilizza il riconoscimento vocale per trascrivere ciò che hai detto sul tuo pasto."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Smart Kitchenは、食事について話した内容を文字起こしするために音声認識を使用します。"
+            "value": "Savoriaは、食事について話した内容を文字起こしするために音声認識を使用します。"
           }
         }
       }
