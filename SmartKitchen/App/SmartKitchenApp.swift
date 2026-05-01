@@ -104,6 +104,7 @@ struct SmartKitchenApp: App {
 
     @Environment(\.scenePhase) private var scenePhase
     @State private var cloudSync = CloudSyncService.shared
+    @State private var subscriptionManager = SubscriptionManager()
     @State private var didRunPostLaunchBootstrap = false
     /// Drives the splash screen overlay: stays `false` until the data layer
     /// (SwiftData container + seeders + migrations + backup recovery) has
@@ -133,6 +134,7 @@ struct SmartKitchenApp: App {
                 ContentView()
                     .modelContainer(cloudSync.container)
                     .id(cloudSync.containerID)
+                    .environment(subscriptionManager)
                     // Hide ContentView entirely while the splash is up so it
                     // can't capture taps and so its first frame work happens
                     // off the user's critical path.
@@ -173,6 +175,8 @@ struct SmartKitchenApp: App {
                 }
                 .task {
                     _ = SharedImportInbox.shared.claimPendingFromBridge()
+                    FeatureGate.shared.subscriptionManager = subscriptionManager
+                    await subscriptionManager.loadProducts()
                     await runPostLaunchBootstrapIfNeeded()
                 }
                 .onChange(of: scenePhase) { oldValue, newValue in

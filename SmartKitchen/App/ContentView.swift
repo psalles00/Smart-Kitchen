@@ -99,6 +99,10 @@ struct ContentView: View {
     @State private var directRecipeGalleryItem: PhotosPickerItem?
     @State private var directRecipeCameraActive = false
 
+    /// Controls the first-launch onboarding flow. Driven by
+    /// `AppSettings.hasCompletedOnboarding` and presented as a non-dismissible
+    /// fullscreen cover until the user finishes (or chooses the free plan).
+    @State private var showOnboarding: Bool = false
 
     #if os(macOS)
     @State private var selectedSidebar: SidebarItem? = .home
@@ -120,6 +124,47 @@ struct ContentView: View {
 
     private var settings: AppSettings? { settingsArray.first }
     private var activePageTheme: PageTheme { selectedTab.pageTheme ?? lastContentTab.pageTheme ?? .home }
+
+    /// Mirrors `AppSettings.hasCompletedOnboarding` into `showOnboarding` so
+    /// the fullscreen cover binding stays in sync. Also runs the one-shot
+    /// migration that auto-completes onboarding for installs that already
+    /// have user data (so the new flow only shows up for fresh installs).
+    private func syncOnboardingFlag() {
+        guard let settings else {
+            // No settings row yet (very fresh launch). Don't decide here —
+            // wait until the seeder creates one and SwiftData re-feeds the
+            // query, then this method runs again via `.onChange`.
+            return
+        }
+
+        if !settings.hasCompletedOnboarding {
+            // Existing-user migration: if there is any pre-existing data,
+            // assume the user already onboarded in a previous app version
+            // and just flip the flag silently.
+            if hasExistingUserData {
+                settings.hasCompletedOnboarding = true
+                try? modelContext.save()
+                showOnboarding = false
+                return
+            }
+            showOnboarding = true
+        } else {
+            showOnboarding = false
+        }
+    }
+
+    /// Returns true when the database already has any user-created content,
+    /// indicating this isn't a brand-new install.
+    private var hasExistingUserData: Bool {
+        var fd = FetchDescriptor<UnifiedItem>()
+        fd.fetchLimit = 1
+        if let items = try? modelContext.fetch(fd), !items.isEmpty { return true }
+        var rd = FetchDescriptor<Recipe>()
+        rd.fetchLimit = 1
+        if let recipes = try? modelContext.fetch(rd), !recipes.isEmpty { return true }
+        return false
+    }
+
     private var assistantOverlayTitle: String {
         searchBarState.mode == .aiChat ? String(localized: "Modo IA") : String(localized: "Assistente")
     }
@@ -183,6 +228,16 @@ struct ContentView: View {
         .environment(\.backgroundTheme, displayedBgTheme)
         .environment(\.visiblePageTheme, activePageTheme)
         #if os(iOS)
+        .fullScreenCover(isPresented: $showOnboarding) {
+            OnboardingFlowView {
+                showOnboarding = false
+            }
+            .interactiveDismissDisabled(true)
+        }
+        .onAppear { syncOnboardingFlag() }
+        .onChange(of: settings?.hasCompletedOnboarding ?? true) { _, _ in
+            syncOnboardingFlag()
+        }
         .fullScreenCover(item: fullscreenNutritionEntrySheetBinding) { sheet in
             nutritionEntrySheetContent(for: sheet)
         }

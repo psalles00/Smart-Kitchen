@@ -56,7 +56,7 @@ struct PlanCardView: View {
         }
         .buttonStyle(.plain)
         .sheet(isPresented: $showPaywall) {
-            PaywallPlaceholderSheet()
+            PaywallSheet(reason: .manual)
         }
     }
 }

@@ -1,0 +1,93 @@
+{
+  "identifier" : "F71B3CB1-7E3C-4F1A-9D24-9A0E0B0E5C12",
+  "nonRenewingSubscriptions" : [],
+  "products" : [],
+  "settings" : {
+    "_compatibilityTimeRate" : 1,
+    "_failTransactionsEnabled" : false,
+    "_locale" : "pt_BR",
+    "_storefront" : "BRA",
+    "_storeKitErrors" : [],
+    "_disableDialogs" : false
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "21484567",
+      "localizations" : [
+        {
+          "description" : "Acesso completo ao Savoria",
+          "displayName" : "Savoria Premium",
+          "locale" : "pt_BR"
+        },
+        {
+          "description" : "Full access to Savoria",
+          "displayName" : "Savoria Premium",
+          "locale" : "en_US"
+        }
+      ],
+      "name" : "Savoria Premium",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "39.99",
+          "familyShareable" : true,
+          "groupNumber" : 1,
+          "internalID" : "21484568",
+          "introductoryOffer" : {
+            "internalID" : "21484569",
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P1W"
+          },
+          "localizations" : [
+            {
+              "description" : "Plano anual com 7 dias grátis",
+              "displayName" : "Anual",
+              "locale" : "pt_BR"
+            },
+            {
+              "description" : "Annual plan with 7-day free trial",
+              "displayName" : "Annual",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.pedrosalles.smartkitchen.sync.premium.annual",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Annual Premium",
+          "subscriptionGroupID" : "21484567",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "6.99",
+          "familyShareable" : true,
+          "groupNumber" : 2,
+          "internalID" : "21484570",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Plano mensal",
+              "displayName" : "Mensal",
+              "locale" : "pt_BR"
+            },
+            {
+              "description" : "Monthly plan",
+              "displayName" : "Monthly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.pedrosalles.smartkitchen.sync.premium.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Monthly Premium",
+          "subscriptionGroupID" : "21484567",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}
