@@ -17,6 +17,8 @@ struct PaywallStepView: View {
     @State private var showingErrorAlert = false
     @State private var errorMessage = ""
 
+    private let theme = PageTheme.lists
+
     var body: some View {
         ZStack {
             backgroundLayer.ignoresSafeArea()
@@ -43,21 +45,28 @@ struct PaywallStepView: View {
         } message: {
             Text(errorMessage)
         }
-        .preferredColorScheme(nil)
+        .environment(\.colorScheme, .dark)
+        .preferredColorScheme(.dark)
     }
 
     // MARK: - Background
 
     private var backgroundLayer: some View {
-        LinearGradient(
-            colors: [
-                Color(red: 0.98, green: 0.92, blue: 0.78),
-                Color(red: 0.95, green: 0.78, blue: 0.62),
-                Color(red: 0.92, green: 0.65, blue: 0.50),
-            ],
-            startPoint: .top,
-            endPoint: .bottom
-        )
+        ZStack {
+            NebulaShaderView(theme: .lists, progress: 1.0)
+                .ignoresSafeArea()
+
+            LinearGradient(
+                colors: [
+                    Color.black.opacity(0.06),
+                    Color.black.opacity(0.24),
+                    Color.black.opacity(0.60)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
+        }
     }
 
     // MARK: - Header
@@ -68,18 +77,23 @@ struct PaywallStepView: View {
                 .resizable()
                 .scaledToFit()
                 .frame(width: 96, height: 96)
-                .shadow(color: .black.opacity(0.18), radius: 18, y: 8)
+                .shadow(color: .black.opacity(0.30), radius: 24, y: 10)
 
             Text(String(localized: "Desbloqueie tudo no Savoria"))
                 .font(.system(size: 30, weight: .bold))
+                .foregroundStyle(.white)
                 .multilineTextAlignment(.center)
                 .padding(.top, 4)
 
             Text(String(localized: "Comece com 7 dias grátis no plano anual."))
                 .font(.system(size: 15, weight: .medium))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.white.opacity(0.78))
                 .multilineTextAlignment(.center)
         }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 22)
+        .glassEffect(.regular.tint(darkGlassTint).interactive(), in: .rect(cornerRadius: 28))
+        .overlay(surfaceBorder(cornerRadius: 28, emphasis: true))
     }
 
     // MARK: - Benefits
@@ -93,7 +107,8 @@ struct PaywallStepView: View {
         }
         .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .glassEffect(.regular, in: .rect(cornerRadius: 24))
+        .glassEffect(.regular.tint(darkGlassTint).interactive(), in: .rect(cornerRadius: 24))
+        .overlay(surfaceBorder(cornerRadius: 24))
     }
 
     // MARK: - Plans
@@ -152,35 +167,39 @@ struct PaywallStepView: View {
                             .font(.system(size: 11, weight: .bold))
                             .padding(.horizontal, 10)
                             .padding(.vertical, 5)
-                            .background(Capsule().fill(Color(red: 1.0, green: 0.55, blue: 0.20)))
+                            .background(Capsule().fill(theme.secondaryAccentColor))
                             .foregroundStyle(.white)
                     }
                 }
+                .foregroundStyle(.white)
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     Text(priceString)
                         .font(.system(size: 26, weight: .bold, design: .rounded))
                     Text(period)
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.white.opacity(0.72))
                     Spacer()
                 }
                 if let pricePerMonth {
                     Text(pricePerMonth)
                         .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.white.opacity(0.72))
                 }
             }
             .padding(18)
             .frame(maxWidth: .infinity, alignment: .leading)
             .glassEffect(
                 isSelected
-                    ? .regular.tint(Color.white.opacity(0.45)).interactive()
-                    : .regular.interactive(),
+                    ? .regular.tint(selectedGlassTint).interactive()
+                    : .regular.tint(darkCardTint).interactive(),
                 in: .rect(cornerRadius: 22)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .strokeBorder(isSelected ? Color.primary : Color.black.opacity(0.10), lineWidth: isSelected ? 2.5 : 1)
+                    .strokeBorder(
+                        isSelected ? Color.white.opacity(0.92) : Color.white.opacity(0.16),
+                        lineWidth: isSelected ? 2.5 : 1
+                    )
             )
             .scaleEffect(isSelected ? 1.01 : 1.0)
         }
@@ -204,7 +223,7 @@ struct PaywallStepView: View {
                 .padding(.vertical, 6)
             }
             .buttonStyle(.glassProminent)
-            .tint(Color(red: 0.96, green: 0.40, blue: 0.18))
+            .tint(theme.accentColor)
             .controlSize(.extraLarge)
             .disabled(manager.products.isEmpty)
             .opacity(manager.products.isEmpty ? 0.6 : 1)
@@ -216,6 +235,10 @@ struct PaywallStepView: View {
             .buttonStyle(.glass)
             .controlSize(.regular)
         }
+        .padding(18)
+        .frame(maxWidth: .infinity)
+        .glassEffect(.regular.tint(darkGlassTint).interactive(), in: .rect(cornerRadius: 26))
+        .overlay(surfaceBorder(cornerRadius: 26))
     }
 
     private var ctaLabel: String {
@@ -256,7 +279,11 @@ struct PaywallStepView: View {
             }
         }
         .font(.system(size: 12, weight: .medium))
-        .foregroundStyle(.secondary)
+        .foregroundStyle(.white.opacity(0.72))
+        .padding(.vertical, 12)
+        .padding(.horizontal, 18)
+        .glassEffect(.regular.tint(darkGlassTint), in: .capsule)
+        .overlay(surfaceBorder(cornerRadius: 999))
         .padding(.top, 4)
     }
 
@@ -275,6 +302,27 @@ struct PaywallStepView: View {
         }
         return nil
     }
+
+    private var darkGlassTint: Color {
+        Color(red: 0.05, green: 0.09, blue: 0.16).opacity(0.78)
+    }
+
+    private var darkCardTint: Color {
+        Color(red: 0.06, green: 0.10, blue: 0.18).opacity(0.72)
+    }
+
+    private var selectedGlassTint: Color {
+        theme.accentColor.opacity(0.28)
+    }
+
+    @ViewBuilder
+    private func surfaceBorder(cornerRadius: CGFloat, emphasis: Bool = false) -> some View {
+        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+            .strokeBorder(
+                Color.white.opacity(emphasis ? 0.22 : 0.14),
+                lineWidth: emphasis ? 1.2 : 1
+            )
+    }
 }
 
 // MARK: - Benefit row
@@ -288,12 +336,14 @@ private struct BenefitRow: View {
         HStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.system(size: 18, weight: .bold))
-                .foregroundStyle(Color(red: 1.0, green: 0.45, blue: 0.15))
+                .foregroundStyle(PageTheme.lists.secondaryAccentColor)
                 .frame(width: 32)
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.system(size: 14, weight: .bold))
+                Text(title)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(.white)
                 Text(subtitle).font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.white.opacity(0.72))
             }
             Spacer()
         }
