@@ -62,7 +62,7 @@ struct WelcomeStepView: View {
 
                 VStack(spacing: 12) {
                     localizedTitle
-                        .textRenderer(WelcomeTitleUnderlineRenderer(gradientColors: titleGradientColors))
+                        .textRenderer(WelcomeTitleUnderlineRenderer(color: .gray.opacity(0.85)))
                         .multilineTextAlignment(.center)
                         .lineLimit(3)
                         .lineSpacing(2)
@@ -279,13 +279,13 @@ private struct TitleSegment {
 }
 
 private struct WelcomeTitleUnderlineRenderer: TextRenderer {
-    let gradientColors: [Color]
+    let color: Color
 
     private let lineWidth: CGFloat = 1.4
     private let amplitude: CGFloat = 1.6
     private let wavelength: CGFloat = 14
     private let step: CGFloat = 1.5
-    private let baselineOffset: CGFloat = 4.5
+    private let baselineOffset: CGFloat = 1.9
 
     func draw(layout: Text.Layout, in context: inout GraphicsContext) {
         for line in layout {
@@ -324,13 +324,24 @@ private struct WelcomeTitleUnderlineRenderer: TextRenderer {
 
         context.stroke(
             path,
-            with: .linearGradient(
-                Gradient(colors: gradientColors),
-                startPoint: CGPoint(x: startX, y: baseY),
-                endPoint: CGPoint(x: endX, y: baseY)
-            ),
+            with: .color(color),
             lineWidth: lineWidth
         )
+    }
+}
+
+private struct CoreMotionModifier: ViewModifier {
+    let isAnimating: Bool
+
+    func body(content: Content) -> some View {
+        content
+            .offset(y: isAnimating ? -5 : 0)
+            .scaleEffect(isAnimating ? 1.032 : 1)
+            .rotationEffect(.degrees(isAnimating ? 2.6 : 0))
+            .animation(
+                .easeInOut(duration: 3.2).repeatForever(autoreverses: true),
+                value: isAnimating
+            )
     }
 }
 
@@ -417,6 +428,7 @@ private struct OrbitalSearchHero: View {
                 }
 
                 SearchUniverseCore(size: centerSize, isVisible: showCore)
+                    .modifier(CoreMotionModifier(isAnimating: animateOrbits && showCore))
             }
             .frame(width: orbitCanvasSize, height: orbitCanvasSize)
             .position(x: orbitCenterX, y: orbitCenterY)
