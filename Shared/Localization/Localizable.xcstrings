@@ -12926,6 +12926,88 @@
         }
       }
     },
+    "Boas-vindas ao Savoria" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Willkommen bei Savoria"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Welcome to Savoria"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Te damos la bienvenida a Savoria"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bienvenue sur Savoria"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ti diamo il benvenuto su Savoria"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Savoriaへようこそ"
+          }
+        }
+      }
+    },
+    "Organizar sua cozinha e comer bem não precisa ser difícil" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "*Deine Küche zu organisieren* und *gut zu essen* muss nicht schwierig sein."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "*Organizing your kitchen* and *eating well* doesn't have to be hard."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "*Organizar tu cocina* y *comer bien* no tiene por qué ser difícil."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "*Organiser votre cuisine* et *bien manger* n'a pas besoin d'être compliqué."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "*Organizzare la tua cucina* e *mangiare bene* non deve essere difficile."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "*キッチンを整えて*、*きちんと食べること*は難しくありません。"
+          }
+        }
+      }
+    },
     "Começar a cozinhar" : {
       "extractionState" : "manual",
       "localizations" : {
