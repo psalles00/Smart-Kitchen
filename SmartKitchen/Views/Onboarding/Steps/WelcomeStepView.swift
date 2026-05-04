@@ -61,9 +61,8 @@ struct WelcomeStepView: View {
                     .animation(.spring(response: 0.95, dampingFraction: 0.8), value: showHeroScene)
 
                 VStack(spacing: 12) {
-                    Text(localizedTitle)
-                        .font(.custom("Bricolage Grotesque", size: 34, relativeTo: .largeTitle).weight(.bold))
-                        .foregroundStyle(.white)
+                    localizedTitle
+                        .textRenderer(WelcomeTitleUnderlineRenderer(gradientColors: titleGradientColors))
                         .multilineTextAlignment(.center)
                         .lineLimit(3)
                         .lineSpacing(2)
@@ -107,16 +106,74 @@ struct WelcomeStepView: View {
         .preferredColorScheme(.dark)
     }
 
-    private var localizedTitle: AttributedString {
+    private var titleFont: Font {
+        .custom("Bricolage Grotesque", size: 34, relativeTo: .largeTitle).weight(.bold)
+    }
+
+    private var titleGradientColors: [Color] {
+        [
+            Color(red: 0.98, green: 0.83, blue: 0.43),
+            Color(red: 1.00, green: 0.53, blue: 0.62),
+            Color(red: 0.82, green: 0.60, blue: 1.00)
+        ]
+    }
+
+    private var localizedTitle: Text {
         let localized = String(localized: "Organizar sua cozinha e comer bem não precisa ser difícil")
-        if let attributed = try? AttributedString(
-            markdown: localized,
-            options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace)
-        ) {
-            return attributed
+
+        let segments = markdownTitleSegments(from: localized)
+        if segments.isEmpty {
+            return Text(localized)
+                .font(titleFont)
+                .foregroundColor(.white)
         }
 
-        return AttributedString(localized)
+        return segments.reduce(Text("")) { partial, segment in
+            let baseText = Text(segment.content).font(titleFont)
+
+            let styledText: Text
+            if segment.isEmphasized {
+                styledText = baseText
+                    .italic()
+                    .foregroundColor(.white)
+                    .customAttribute(WelcomeTitleUnderlineAttribute())
+            } else {
+                styledText = baseText.foregroundColor(.white)
+            }
+
+            return partial + styledText
+        }
+    }
+
+    private func markdownTitleSegments(from localized: String) -> [TitleSegment] {
+        var segments: [TitleSegment] = []
+        var buffer = ""
+        var isEmphasized = false
+        var index = localized.startIndex
+
+        while index < localized.endIndex {
+            if localized[index] == "*" {
+                if !buffer.isEmpty {
+                    segments.append(TitleSegment(content: buffer, isEmphasized: isEmphasized))
+                    buffer = ""
+                }
+
+                while index < localized.endIndex, localized[index] == "*" {
+                    index = localized.index(after: index)
+                }
+                isEmphasized.toggle()
+                continue
+            }
+
+            buffer.append(localized[index])
+            index = localized.index(after: index)
+        }
+
+        if !buffer.isEmpty {
+            segments.append(TitleSegment(content: buffer, isEmphasized: isEmphasized))
+        }
+
+        return segments
     }
 
     private var localizedSubtitle: Text {
@@ -211,6 +268,69 @@ struct WelcomeStepView: View {
 
     private func wait(milliseconds: UInt64) async {
         try? await Task.sleep(nanoseconds: milliseconds * 1_000_000)
+    }
+}
+
+private struct WelcomeTitleUnderlineAttribute: TextAttribute {}
+
+private struct TitleSegment {
+    let content: String
+    let isEmphasized: Bool
+}
+
+private struct WelcomeTitleUnderlineRenderer: TextRenderer {
+    let gradientColors: [Color]
+
+    private let lineWidth: CGFloat = 1.4
+    private let amplitude: CGFloat = 1.6
+    private let wavelength: CGFloat = 14
+    private let step: CGFloat = 1.5
+    private let baselineOffset: CGFloat = 4.5
+
+    func draw(layout: Text.Layout, in context: inout GraphicsContext) {
+        for line in layout {
+            for run in line {
+                context.draw(run)
+
+                if run[WelcomeTitleUnderlineAttribute.self] != nil {
+                    drawUnderline(for: run, in: &context)
+                }
+            }
+        }
+    }
+
+    private func drawUnderline(for run: Text.Layout.Run, in context: inout GraphicsContext) {
+        let rect = run.typographicBounds.rect
+        guard rect.width > 2 else { return }
+
+        let startX = rect.minX + 0.5
+        let endX = rect.maxX - 0.5
+        let baseY = rect.maxY + baselineOffset
+
+        var path = Path()
+        path.move(to: CGPoint(x: startX, y: baseY))
+
+        var x = startX
+        while x <= endX {
+            let phase = ((x - startX) / wavelength) * 2 * .pi
+            let y = baseY + sin(phase) * amplitude
+            path.addLine(to: CGPoint(x: x, y: y))
+            x += step
+        }
+
+        if x - step < endX {
+            path.addLine(to: CGPoint(x: endX, y: baseY))
+        }
+
+        context.stroke(
+            path,
+            with: .linearGradient(
+                Gradient(colors: gradientColors),
+                startPoint: CGPoint(x: startX, y: baseY),
+                endPoint: CGPoint(x: endX, y: baseY)
+            ),
+            lineWidth: lineWidth
+        )
     }
 }
 
