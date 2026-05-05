@@ -1,19 +1,18 @@
 import Foundation
 
 /// Ordered list of every screen in the first-launch onboarding flow.
-/// The numbering matches the plan in `/memories/session/plan.md`.
+/// The intro section now follows the redesigned 7-page presentation that
+/// mirrors the app's pillars and main differentiators.
 enum OnboardingStep: Int, CaseIterable, Identifiable {
-    // Phase 1+3 — Apresentação intercalada com tutoriais (intro → como usar)
+    // Phase 1 — Apresentação (welcome + 7 telas de diferenciais)
     case welcome = 0
-    // Receitas: intro + tutorial (compartilhar das redes)
-    case recipes
-    case tutorialShareAndPin
-    // Despensa/Mercado: intro + dois tutoriais (ida e volta)
-    case pantryShopping
-    case tutorialPantryToGrocery
-    case tutorialGroceryToPantry
-    // Nutrition / IA — a própria tela já é a demo, sem tutorial extra
-    case nutritionAndAI
+    case overview                 // 1. Tudo num só lugar
+    case recipeIdeas              // 2. Chega de travar — busca/sugestões
+    case saveRecipes              // 3. Salve receitas em segundos
+    case smartCount               // 4. Pulou um dia? sem drama (média inteligente)
+    case multimodalLogging        // 5. Registre como quiser (foto/voz/texto)
+    case pantryGrocerySync        // 6. Despensa ⇄ Mercado
+    case nutritionCoach           // 7. Nutrition Coach (IA)
 
     // Phase 2 — Captura mínima
     case selectPantry
@@ -28,8 +27,7 @@ enum OnboardingStep: Int, CaseIterable, Identifiable {
     case activity
     case rate
     case preparing
-
-    // Phase 5 — Paywall
+    case discoverySource
     case paywall
 
     var id: Int { rawValue }
@@ -39,13 +37,13 @@ enum OnboardingStep: Int, CaseIterable, Identifiable {
     /// Section label shown at the top progress bar.
     var section: OnboardingSection {
         switch self {
-        case .welcome, .recipes, .tutorialShareAndPin,
-             .pantryShopping, .tutorialPantryToGrocery, .tutorialGroceryToPantry,
-             .nutritionAndAI:
+        case .welcome,
+             .overview, .recipeIdeas, .saveRecipes, .smartCount,
+             .multimodalLogging, .pantryGrocerySync, .nutritionCoach:
             return .intro
         case .selectPantry, .selectGrocery, .selectRecipes:
             return .capture
-        case .goal, .sex, .birthday, .body, .activity, .rate, .preparing:
+        case .goal, .sex, .birthday, .body, .activity, .rate, .discoverySource, .preparing:
             return .goals
         case .paywall:
             return .paywall

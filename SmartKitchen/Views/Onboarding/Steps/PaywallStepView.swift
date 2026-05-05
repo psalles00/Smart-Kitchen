@@ -20,23 +20,54 @@ struct PaywallStepView: View {
     private let theme = PageTheme.lists
 
     var body: some View {
-        ZStack {
-            backgroundLayer.ignoresSafeArea()
+        GeometryReader { proxy in
+            ZStack {
+                backgroundLayer.ignoresSafeArea()
 
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: 24) {
-                    header
-                    benefits
-                    plans
-                    purchaseSection
-                    legalLinks
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 24) {
+                        header
+                        benefits
+                        plans
+                        legalLinks
+                    }
+                    .padding(.horizontal, 22)
+                    .padding(.top, max(24, proxy.safeAreaInsets.top + 36))
+                    .padding(.bottom, 180)
                 }
-                .padding(.horizontal, 22)
-                .padding(.top, 28)
-                .padding(.bottom, 40)
+            }
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                purchaseSection
+                    .padding(.horizontal, 22)
+                    .padding(.top, 20)
+                    .padding(.bottom, 20)
+                    .background(
+                        LinearGradient(
+                            colors: [.clear, .black.opacity(0.4), .black.opacity(0.8)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                        .ignoresSafeArea()
+                    )
+            }
+            .overlay(alignment: .topLeading) {
+                Button {
+                    onFinish(false)
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.9))
+                        .frame(width: 44, height: 44)
+                        .background(Circle().fill(Color.white.opacity(0.18)))
+                }
+                .buttonStyle(.plain)
+                .contentShape(Rectangle())
+                .accessibilityLabel(String(localized: "Fechar"))
+                .padding(.top, proxy.safeAreaInsets.top + 8)
+                .padding(.leading, 16)
+                .zIndex(10)
             }
         }
-        .ignoresSafeArea(edges: .top)
         .task {
             await manager.loadProducts()
         }
@@ -92,8 +123,6 @@ struct PaywallStepView: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 22)
-        .glassEffect(.regular.tint(darkGlassTint).interactive(), in: .rect(cornerRadius: 28))
-        .overlay(surfaceBorder(cornerRadius: 28, emphasis: true))
     }
 
     // MARK: - Benefits
@@ -209,7 +238,7 @@ struct PaywallStepView: View {
     // MARK: - CTA
 
     private var purchaseSection: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 14) {
             Button(action: handleBuy) {
                 HStack {
                     if case .purchasing = manager.purchaseState {
@@ -228,17 +257,16 @@ struct PaywallStepView: View {
             .disabled(manager.products.isEmpty)
             .opacity(manager.products.isEmpty ? 0.6 : 1)
 
+            // Discreet text-only fallback. No background, no chrome.
             Button(action: { onFinish(false) }) {
                 Text(String(localized: "Continuar com plano grátis"))
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.55))
+                    .underline()
             }
-            .buttonStyle(.glass)
-            .controlSize(.regular)
+            .buttonStyle(.plain)
         }
-        .padding(18)
         .frame(maxWidth: .infinity)
-        .glassEffect(.regular.tint(darkGlassTint).interactive(), in: .rect(cornerRadius: 26))
-        .overlay(surfaceBorder(cornerRadius: 26))
     }
 
     private var ctaLabel: String {

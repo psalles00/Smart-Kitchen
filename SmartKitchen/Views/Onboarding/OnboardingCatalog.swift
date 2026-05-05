@@ -38,6 +38,14 @@ enum OnboardingCatalog {
         .init(id: "onion",      displayName: String(localized: "Cebola"),       iconFileName: "onion.png",        category: "Verduras e Legumes"),
         .init(id: "potato",     displayName: String(localized: "Batata"),       iconFileName: "potato.png",       category: "Verduras e Legumes"),
         .init(id: "honey",      displayName: String(localized: "Mel"),          iconFileName: "honey.png",        category: "Doces e Sobremesas"),
+        .init(id: "tea",        displayName: String(localized: "Chá"),          iconFileName: "tea.png",          category: "Bebidas"),
+        .init(id: "lentils",    displayName: String(localized: "Lentilha"),     iconFileName: "lentils.png",      category: "Grãos, Massas e Cereais"),
+        .init(id: "beans",      displayName: String(localized: "Feijão"),       iconFileName: "soya-beans.png",   category: "Grãos, Massas e Cereais"),
+        .init(id: "quinoa",     displayName: String(localized: "Quinoa"),       iconFileName: "quinoa.png",       category: "Grãos, Massas e Cereais"),
+        .init(id: "tofu",       displayName: String(localized: "Tofu"),         iconFileName: "tofu.png",         category: "Outros"),
+        .init(id: "ketchup",    displayName: String(localized: "Ketchup"),      iconFileName: "ketchup.png",      category: "Temperos e Condimentos"),
+        .init(id: "mustard",    displayName: String(localized: "Mostarda"),     iconFileName: "mustard.png",      category: "Temperos e Condimentos"),
+        .init(id: "mayonnaise", displayName: String(localized: "Maionese"),     iconFileName: "mayonnaise.png",   category: "Temperos e Condimentos"),
     ]
 
     // MARK: - Grocery catalog (different staples for the first shopping list)
@@ -61,6 +69,18 @@ enum OnboardingCatalog {
         .init(id: "chocolate",  displayName: String(localized: "Chocolate"),    iconFileName: "chocolate.png",    category: "Doces e Sobremesas"),
         .init(id: "chips",      displayName: String(localized: "Salgadinho"),   iconFileName: "chips.png",        category: "Snacks e Petiscos"),
         .init(id: "toothpaste", displayName: String(localized: "Pasta de dente"), iconFileName: "toothpaste.png", category: "Limpeza e Higiene"),
+        .init(id: "cucumber",   displayName: String(localized: "Pepino"),       iconFileName: "cucumber.png",     category: "Verduras e Legumes"),
+        .init(id: "spinach",    displayName: String(localized: "Espinafre"),    iconFileName: "spinach.png",      category: "Verduras e Legumes"),
+        .init(id: "eggplant",   displayName: String(localized: "Berinjela"),    iconFileName: "eggplant.png",     category: "Verduras e Legumes"),
+        .init(id: "pineapple",  displayName: String(localized: "Abacaxi"),      iconFileName: "pineapple.png",    category: "Frutas"),
+        .init(id: "watermelon", displayName: String(localized: "Melancia"),     iconFileName: "watermelon.png",   category: "Frutas"),
+        .init(id: "grape",      displayName: String(localized: "Uva"),          iconFileName: "grape.png",        category: "Frutas"),
+        .init(id: "blueberry",  displayName: String(localized: "Mirtilo"),      iconFileName: "blueberry.png",    category: "Frutas"),
+        .init(id: "mango",      displayName: String(localized: "Manga"),        iconFileName: "mango.png",        category: "Frutas"),
+        .init(id: "shrimp",     displayName: String(localized: "Camarão"),      iconFileName: "shrimp.png",       category: "Peixes e Frutos do Mar"),
+        .init(id: "sausage",    displayName: String(localized: "Linguiça"),     iconFileName: "sausage.png",      category: "Carnes e Aves"),
+        .init(id: "ham",        displayName: String(localized: "Presunto"),     iconFileName: "ham.png",          category: "Carnes e Aves"),
+        .init(id: "bacon",      displayName: String(localized: "Bacon"),        iconFileName: "bacon.png",        category: "Carnes e Aves"),
     ]
 
     // MARK: - Recipe templates (full recipes inserted on commit)

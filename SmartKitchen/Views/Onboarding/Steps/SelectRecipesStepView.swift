@@ -13,7 +13,7 @@ struct SelectRecipesStepView: View {
         VStack(spacing: 18) {
             OnboardingHeader(
                 title: String(localized: "O que você gosta de cozinhar?"),
-                subtitle: String(localized: "Escolha pelo menos 3 receitas para começar sua coleção.")
+                subtitle: String(localized: "Escolha pelo menos 2 receitas para começar sua coleção.")
             )
             .padding(.top, 8)
 
@@ -60,9 +60,9 @@ struct SelectRecipesStepView: View {
 
     private var counterLabel: String {
         let count = state.selectedRecipeTemplateIDs.count
-        return count >= 3
+        return count >= 2
             ? String(localized: "\(count) selecionadas")
-            : String(localized: "Selecione mais \(3 - count) para continuar")
+            : String(localized: "Selecione mais \(2 - count) para continuar")
     }
 }
 

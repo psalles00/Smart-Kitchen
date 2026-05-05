@@ -43,3 +43,41 @@ struct OnboardingHeader: View {
         }
     }
 }
+
+// MARK: - Feature chip
+
+/// Pequeno chip exibido acima do título nas páginas de apresentação para
+/// dar contexto sobre qual área do app está sendo apresentada (ex.: "Diário
+/// de calorias", "Receitas", "Despensa & Mercado"). Mantém o usuário
+/// orientado quando as páginas mudam de função.
+struct OnboardingFeatureChip: View {
+    let icon: String
+    let title: String
+    let tint: Color
+
+    init(icon: String, title: String, tint: Color = .accentColor) {
+        self.icon = icon
+        self.title = title
+        self.tint = tint
+    }
+
+    var body: some View {
+        HStack(spacing: 5) {
+            Image(systemName: icon)
+                .font(.system(size: 10, weight: .bold))
+            Text(title)
+                .font(.system(size: 11, weight: .bold))
+                .textCase(.uppercase)
+                .tracking(0.6)
+        }
+        .foregroundStyle(tint)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
+        .background(
+            Capsule().fill(tint.opacity(0.12))
+        )
+        .overlay(
+            Capsule().strokeBorder(tint.opacity(0.22), lineWidth: 0.5)
+        )
+    }
+}

@@ -18,14 +18,6 @@ final class OnboardingState {
     /// Identifiers of recipe templates chosen on the recipe interests screen.
     var selectedRecipeTemplateIDs: Set<String> = []
 
-    // MARK: - Phase 3 tutorial gates
-    /// Set to true after the user actually toggles the demo checkbox in the
-    /// pantry → grocery tutorial.
-    var didCompletePantryToGroceryTutorial: Bool = false
-    /// Set to true after the user actually toggles the demo checkbox in the
-    /// grocery → pantry tutorial.
-    var didCompleteGroceryToPantryTutorial: Bool = false
-
     // MARK: - Phase 4 nutrition
     /// Mirrors `NutritionProfile` fields. Only persisted on the preparing step.
     var nutritionGoalRaw: String? = nil       // WeightGoal raw value
@@ -46,6 +38,11 @@ final class OnboardingState {
     /// Number of months to reach the target weight.
     var nutritionTargetMonths: Int = 3
 
+    // MARK: - Phase 4.5 discovery
+    /// Optional source that tells us where the user first heard about Savoria.
+    /// Kept in-memory during onboarding and later mirrored to UserDefaults.
+    var discoverySourceID: String? = nil
+
     // MARK: - Phase 5 paywall
     /// Tracks the plan the user previewed in the paywall (annual/monthly).
     var selectedPlanID: String? = nil
@@ -53,7 +50,8 @@ final class OnboardingState {
     // MARK: - Computed gates
     var canAdvancePantrySelection: Bool { selectedPantryItemIDs.count >= 3 }
     var canAdvanceGrocerySelection: Bool { selectedGroceryItemIDs.count >= 3 }
-    var canAdvanceRecipeSelection: Bool { selectedRecipeTemplateIDs.count >= 3 }
+    var canAdvanceRecipeSelection: Bool { selectedRecipeTemplateIDs.count >= 2 }
+    var canAdvanceDiscoverySource: Bool { discoverySourceID != nil }
 }
 
 /// Goal-rate input mode for `RateStepView`.

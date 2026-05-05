@@ -67,24 +67,26 @@ struct OnboardingFlowView: View {
         switch step {
         case .welcome:
             WelcomeStepView(onContinue: advance)
-        case .recipes:
-            RecipesIntroStepView(onContinue: advance)
-        case .pantryShopping:
-            PantryShoppingIntroStepView(onContinue: advance)
-        case .nutritionAndAI:
-            NutritionAIIntroStepView(onContinue: advance)
+        case .overview:
+            OverviewStepView(onContinue: advance)
+        case .recipeIdeas:
+            RecipeIdeasStepView(onContinue: advance)
+        case .saveRecipes:
+            SaveRecipesStepView(onContinue: advance)
+        case .smartCount:
+            SmartCountStepView(onContinue: advance)
+        case .multimodalLogging:
+            MultimodalLoggingStepView(onContinue: advance)
+        case .pantryGrocerySync:
+            PantryGrocerySyncStepView(onContinue: advance)
+        case .nutritionCoach:
+            NutritionCoachStepView(onContinue: advance)
         case .selectPantry:
             SelectPantryStepView(state: state, onContinue: advance)
         case .selectGrocery:
             SelectGroceryStepView(state: state, onContinue: advance)
         case .selectRecipes:
             SelectRecipesStepView(state: state, onContinue: advance)
-        case .tutorialPantryToGrocery:
-            TutorialPantryToGroceryStepView(state: state, onContinue: advance)
-        case .tutorialGroceryToPantry:
-            TutorialGroceryToPantryStepView(state: state, onContinue: advance)
-        case .tutorialShareAndPin:
-            TutorialShareAndPinStepView(onContinue: advance)
         case .goal:
             GoalStepView(state: state, onContinue: advance)
         case .sex:
@@ -99,10 +101,12 @@ struct OnboardingFlowView: View {
             RateStepView(state: state, onContinue: advance)
         case .preparing:
             PreparingStepView(onFinished: {
-                // Commit data while the animation plays out, then advance to paywall.
+                // Commit data while the animation plays out, then advance.
                 commitOnboardingChoices(subscribed: false)
                 advance()
             })
+        case .discoverySource:
+            DiscoverySourceStepView(state: state, onContinue: advance)
         case .paywall:
             PaywallStepView(state: state, onFinish: { subscribed in
                 finishOnboarding(subscribed: subscribed)
@@ -155,6 +159,9 @@ struct OnboardingFlowView: View {
     /// the DB yet); later phases will fill `commitOnboardingChoices` in.
     private func finishOnboarding(subscribed: Bool) {
         commitOnboardingChoices(subscribed: subscribed)
+        if let discoverySourceID = state.discoverySourceID {
+            UserDefaults.standard.set(discoverySourceID, forKey: "onboarding.discoverySourceID")
+        }
         markOnboardingComplete()
         onFinish()
     }
@@ -340,21 +347,23 @@ private struct OnboardingPlaceholderStepView: View {
     private var stepTitle: String {
         switch step {
         case .welcome: return "Bem-vindo ao Smart Kitchen"
-        case .recipes: return "Suas receitas, organizadas"
-        case .pantryShopping: return "Despensa e mercado conectados"
-        case .nutritionAndAI: return "Calorias sem culpa, com IA"
+        case .overview: return "Tudo num só lugar"
+        case .recipeIdeas: return "Ideias para cozinhar"
+        case .saveRecipes: return "Salve qualquer receita"
+        case .smartCount: return "Contagem inteligente"
+        case .multimodalLogging: return "Registre como quiser"
+        case .pantryGrocerySync: return "Despensa ⇄ Mercado"
+        case .nutritionCoach: return "Nutrition Coach"
         case .selectPantry: return "Escolha sua despensa inicial"
         case .selectGrocery: return "Sua primeira lista de compras"
         case .selectRecipes: return "O que você gosta de cozinhar?"
-        case .tutorialPantryToGrocery: return "Mover para o mercado"
-        case .tutorialGroceryToPantry: return "Comprou? Vai pra despensa"
-        case .tutorialShareAndPin: return "Importe das redes sociais"
         case .goal: return "Qual o seu objetivo?"
         case .sex: return "Sobre você"
         case .birthday: return "Quando você nasceu?"
         case .body: return "Altura e peso"
         case .activity: return "Nível de atividade"
         case .rate: return "Ritmo da mudança"
+        case .discoverySource: return "Como você conheceu o Savoria?"
         case .preparing: return "Preparando seu app…"
         case .paywall: return "Smart Kitchen Premium"
         }
@@ -362,5 +371,143 @@ private struct OnboardingPlaceholderStepView: View {
 
     private var stepSubtitle: String? {
         step == .welcome ? "Esta é uma visualização de desenvolvimento. As telas finais virão nas próximas fases." : nil
+    }
+}
+
+// MARK: - Discovery source step
+
+private struct DiscoverySourceStepView: View {
+    @Bindable var state: OnboardingState
+    let onContinue: () -> Void
+
+    var body: some View {
+        VStack(spacing: 16) {
+            OnboardingHeader(
+                title: String(localized: "Como você conheceu o Savoria?"),
+                subtitle: String(localized: "Isso nos ajuda a entender o que fez sentido pra você.")
+            )
+            .padding(.top, 8)
+
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 12) {
+                    ForEach(DiscoverySourceOption.allCases) { option in
+                        OnboardingChoiceCard(
+                            title: option.title,
+                            subtitle: option.subtitle,
+                            isSelected: state.discoverySourceID == option.id,
+                            icon: {
+                                Image(systemName: option.iconName)
+                                    .font(.system(size: 18, weight: .semibold))
+                                    .foregroundStyle(option.tint)
+                                    .frame(width: 40, height: 40)
+                                    .background(
+                                        Circle().fill(option.tint.opacity(0.14))
+                                    )
+                            },
+                            action: {
+                                withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+                                    state.discoverySourceID = option.id
+                                }
+                            }
+                        )
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 12)
+            }
+
+            VStack(spacing: 8) {
+                Text(String(localized: "Você pode alterar isso depois nas configurações."))
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(.secondary)
+
+                OnboardingPrimaryButton(
+                    title: String(localized: "Continuar"),
+                    isEnabled: state.canAdvanceDiscoverySource,
+                    action: onContinue
+                )
+                .padding(.horizontal, 24)
+            }
+            .padding(.bottom, 24)
+        }
+    }
+}
+
+private enum DiscoverySourceOption: String, CaseIterable, Identifiable {
+    case tiktok
+    case instagram
+    case youtube
+    case appStore
+    case friend
+    case other
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .tiktok:
+            return String(localized: "TikTok")
+        case .instagram:
+            return String(localized: "Instagram")
+        case .youtube:
+            return String(localized: "YouTube")
+        case .appStore:
+            return String(localized: "App Store")
+        case .friend:
+            return String(localized: "Indicação")
+        case .other:
+            return String(localized: "Outro")
+        }
+    }
+
+    var subtitle: String {
+        switch self {
+        case .tiktok:
+            return String(localized: "Vi um vídeo curto mostrando o app.")
+        case .instagram:
+            return String(localized: "Vi um post, story ou reels.")
+        case .youtube:
+            return String(localized: "Vi um vídeo ou review mais completo.")
+        case .appStore:
+            return String(localized: "Encontrei pesquisando por apps.")
+        case .friend:
+            return String(localized: "Alguém me recomendou o Savoria.")
+        case .other:
+            return String(localized: "Cheguei por outro caminho.")
+        }
+    }
+
+    var iconName: String {
+        switch self {
+        case .tiktok:
+            return "music.note.tv"
+        case .instagram:
+            return "camera.aperture"
+        case .youtube:
+            return "play.rectangle.fill"
+        case .appStore:
+            return "magnifyingglass"
+        case .friend:
+            return "person.2.fill"
+        case .other:
+            return "sparkles"
+        }
+    }
+
+    var tint: Color {
+        switch self {
+        case .tiktok:
+            return Color(red: 0.28, green: 0.81, blue: 0.73)
+        case .instagram:
+            return Color(red: 0.92, green: 0.39, blue: 0.62)
+        case .youtube:
+            return Color(red: 0.93, green: 0.27, blue: 0.25)
+        case .appStore:
+            return Color(red: 0.35, green: 0.58, blue: 0.98)
+        case .friend:
+            return Color(red: 0.98, green: 0.72, blue: 0.34)
+        case .other:
+            return Color(red: 0.57, green: 0.52, blue: 0.96)
+        }
     }
 }
