@@ -185,17 +185,14 @@ struct MultimodalLoggingStepView: View {
             modeHeader(icon: "camera.fill", title: String(localized: "Foto"), tint: Color(red: 0.96, green: 0.55, blue: 0.40))
 
             ZStack {
-                LinearGradient(
-                    colors: [Color(red: 0.96, green: 0.55, blue: 0.40), Color(red: 0.99, green: 0.75, blue: 0.50)],
-                    startPoint: .topLeading, endPoint: .bottomTrailing
-                )
+                BundledOnboardingImage(filename: "onboarding-pizza-slices.png")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                // mock plate
-                Circle().fill(Color.white.opacity(0.95)).frame(width: 130, height: 130)
-                Circle().fill(Color(red: 0.93, green: 0.55, blue: 0.30)).frame(width: 96, height: 96)
-                Image(systemName: "fork.knife")
-                    .font(.system(size: 26, weight: .bold))
-                    .foregroundStyle(.white.opacity(0.9))
+                LinearGradient(
+                    colors: [Color.black.opacity(0.02), Color.black.opacity(0.12)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
 
                 // scan line
                 ScanLine()

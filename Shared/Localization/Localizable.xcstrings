@@ -4317,9 +4317,6 @@
         }
       }
     },
-    "Abacate" : {
-
-    },
     "Abacaxi" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6329,6 +6326,47 @@
         }
       }
     },
+    "Adicione frango, tomate e alface no centro." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hähnchen, Tomate und Salat in die Mitte geben."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add chicken, tomato and lettuce in the center."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añade pollo, tomate y lechuga en el centro."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajoutez le poulet, la tomate et la laitue au centre."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiungi pollo, pomodoro e lattuga al centro."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "中央にチキン、トマト、レタスをのせる。"
+          }
+        }
+      }
+    },
     "Adicione itens à lista de mercado para suas próximas compras." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6694,6 +6732,47 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "いつでも手元にあるように、お気に入りのレシピを追加してください。"
+          }
+        }
+      }
+    },
+    "Adicione todos os ingredientes ao liquidificador." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle Zutaten in den Mixer geben."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add all ingredients to the blender."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añade todos los ingredientes a la licuadora."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajoutez tous les ingrédients au blender."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiungi tutti gli ingredienti al frullatore."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "すべての材料をブレンダーに入れる。"
           }
         }
       }
@@ -7350,6 +7429,47 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "保存した食品"
+          }
+        }
+      }
+    },
+    "almoço" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mittagessen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "lunch"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "almuerzo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "déjeuner"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "pranzo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "昼食"
           }
         }
       }
@@ -9233,6 +9353,47 @@
         }
       }
     },
+    "Aqueça os wraps rapidamente na frigideira." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Wraps kurz in der Pfanne erwärmen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warm the wraps quickly in a skillet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calienta los wraps rápidamente en una sartén."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réchauffez rapidement les wraps à la poêle."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scalda rapidamente i wraps in padella."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "フライパンでラップを手早く温める。"
+          }
+        }
+      }
+    },
     "Aqueça uma frigideira antiaderente em fogo médio." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9967,6 +10128,47 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ノートの名前を更新します。リンクされたレシピも変更に従います。"
+          }
+        }
+      }
+    },
+    "Atum" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thunfisch"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tuna"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atún"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thon"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tonno"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ツナ"
           }
         }
       }
@@ -10753,6 +10955,47 @@
         }
       }
     },
+    "Bata até ficar liso e cremoso." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mixen, bis alles glatt und cremig ist."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blend until smooth and creamy."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Licúa hasta que quede suave y cremoso."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mixez jusqu'à obtenir une texture lisse et crémeuse."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frulla fino a ottenere una consistenza liscia e cremosa."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "なめらかでクリーミーになるまで混ぜる。"
+          }
+        }
+      }
+    },
     "Bata banana, frutas e iogurte no liquidificador." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -10995,6 +11238,47 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ツナとキヌアのボウル"
+          }
+        }
+      }
+    },
+    "Bowl fresco com proteína, fibras e muita saciedade." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frische Bowl mit Protein, Ballaststoffen und viel Sättigung."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fresh bowl with protein, fiber and plenty of satiety."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bowl fresco con proteína, fibra y mucha saciedad."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bol frais avec protéines, fibres et beaucoup de satiété."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bowl fresco con proteine, fibre e tanta sazietà."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "たんぱく質と食物繊維でしっかり満足できるフレッシュボウル。"
           }
         }
       }
@@ -12476,7 +12760,45 @@
       }
     },
     "Carne bovina" : {
-
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rindfleisch"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beef"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Carne de res"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bœuf"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manzo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "牛肉"
+          }
+        }
+      }
     },
     "Carne moída" : {
       "extractionState" : "manual",
@@ -17770,6 +18092,47 @@
         }
       }
     },
+    "Cubra com atum, pepino e tomate." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit Thunfisch, Gurke und Tomate belegen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Top with tuna, cucumber and tomato."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cubre con atún, pepino y tomate."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajoutez le thon, le concombre et la tomate par-dessus."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completa con tonno, cetriolo e pomodoro."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ツナ、きゅうり、トマトをのせる。"
+          }
+        }
+      }
+    },
     "da meta. Continue assim." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -20599,6 +20962,47 @@
         }
       }
     },
+    "Distribua a quinoa em duas tigelas." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Quinoa auf zwei Schalen verteilen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Divide the quinoa between two bowls."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reparte la quinoa en dos bowls."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Répartissez le quinoa dans deux bols."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Distribuisci la quinoa in due ciotole."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "キヌアを2つのボウルに分ける。"
+          }
+        }
+      }
+    },
     "Ditado" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -21747,6 +22151,47 @@
         }
       }
     },
+    "Enrole firme e sirva em seguida." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fest einrollen und sofort servieren."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Roll tightly and serve right away."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enrolla bien y sirve enseguida."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Roulez bien et servez aussitôt."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrotola bene e servi subito."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "しっかり巻いてすぐに出す。"
+          }
+        }
+      }
+    },
     "Enter" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -22764,6 +23209,47 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "フムスを塗り、チキンと組み合わせる。"
+          }
+        }
+      }
+    },
+    "Espalhe o homus por toda a superfície." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Den Hummus auf der ganzen Fläche verstreichen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spread the hummus all over the surface."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unta el hummus por toda la superficie."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Étalez le houmous sur toute la surface."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spalma l'hummus su tutta la superficie."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "表面全体にフムスを塗る。"
           }
         }
       }
@@ -25925,6 +26411,47 @@
         }
       }
     },
+    "Finalize com azeite, sal e pimenta." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit Olivenöl, Salz und Pfeffer abschließen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finish with olive oil, salt and pepper."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Termina con aceite de oliva, sal y pimienta."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminez avec de l'huile d'olive, du sel et du poivre."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completa con olio d'oliva, sale e pepe."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オリーブオイル、塩、こしょうで仕上げる。"
+          }
+        }
+      }
+    },
     "Fit" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -26003,6 +26530,47 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "フィットネス"
+          }
+        }
+      }
+    },
+    "folhas" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blätter"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "leaves"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "hojas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "feuilles"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "foglie"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "枚"
           }
         }
       }
@@ -27725,6 +28293,47 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "今日、%@"
+          }
+        }
+      }
+    },
+    "Homus" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hummus"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hummus"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hummus"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Houmous"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hummus"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "フムス"
           }
         }
       }
@@ -30664,13 +31273,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Merienda"
+            "value" : "Snack"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Goûter"
+            "value" : "Snack"
           }
         },
         "it" : {
@@ -34743,7 +35352,45 @@
       }
     },
     "Morango" : {
-
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erdbeere"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strawberry"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fresa"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fraise"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fragola"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "いちご"
+          }
+        }
+      }
     },
     "Mostarda" : {
       "extractionState" : "manual",
@@ -44824,6 +45471,47 @@
         }
       }
     },
+    "Quinoa cozida" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gekochte Quinoa"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cooked quinoa"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quinoa cocida"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quinoa cuit"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quinoa cotta"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "調理済みキヌア"
+          }
+        }
+      }
+    },
     "quintas-feiras" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -49417,7 +50105,45 @@
       }
     },
     "Salmão" : {
-
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lachs"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salmon"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salmón"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saumon"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salmone"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サーモン"
+          }
+        }
+      }
     },
     "Salteie os legumes no azeite." : {
       "extractionState" : "manual",
@@ -51718,6 +52444,47 @@
         }
       }
     },
+    "Sirva gelado imediatamente." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gut gekühlt sofort servieren."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serve chilled right away."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sirve bien frío enseguida."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Servez bien frais immédiatement."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Servi subito ben freddo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "冷たいまますぐに出す。"
+          }
+        }
+      }
+    },
     "Sirva o frango ao lado dos legumes." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -51878,6 +52645,47 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "イチゴとオートミールのスムージー"
+          }
+        }
+      }
+    },
+    "Smoothie rápido e cremoso para manhãs corridas." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schneller cremiger Smoothie für hektische Morgen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quick creamy smoothie for busy mornings."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Smoothie rápido y cremoso para mañanas agitadas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Smoothie rapide et crémeux pour les matins pressés."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Smoothie veloce e cremoso per le mattine di corsa."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "忙しい朝にぴったりの手早いクリーミースムージー。"
           }
         }
       }
@@ -58605,6 +59413,88 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "チキンとフムスのラップ"
+          }
+        }
+      }
+    },
+    "Wrap integral" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vollkorn-Wrap"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Whole wheat wrap"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wrap integral"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wrap complet"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wrap integrale"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全粒粉ラップ"
+          }
+        }
+      }
+    },
+    "Wrap leve com frango grelhado e homus cremoso." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leichter Wrap mit gegrilltem Hähnchen und cremigem Hummus."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Light wrap with grilled chicken and creamy hummus."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wrap ligero con pollo a la plancha y hummus cremoso."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wrap léger au poulet grillé et houmous crémeux."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wrap leggero con pollo grigliato e hummus cremoso."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "グリルチキンとクリーミーなフムスの軽いラップ。"
           }
         }
       }

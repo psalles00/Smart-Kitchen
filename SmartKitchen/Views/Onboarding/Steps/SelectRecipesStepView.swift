@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Phase 2 — Step 7. Recipe interests: each card has a custom gradient
-/// cover (no asset weight) plus name + meta. Pick ≥3 to seed the recipe
+/// cover (or real photo) plus name + meta. Pick ≥2 to seed the recipe
 /// library with full templates (ingredients + steps).
 struct SelectRecipesStepView: View {
     @Bindable var state: OnboardingState
@@ -71,26 +71,35 @@ private struct RecipeTemplateCard: View {
     let isSelected: Bool
     let action: () -> Void
 
+    private let cardAspectRatio: CGFloat = 0.76
+    private let coverHeightRatio: CGFloat = 0.62
+
     var body: some View {
         Button(action: action) {
-            VStack(alignment: .leading, spacing: 0) {
-                gradientCover
-                    .aspectRatio(16.0/11.0, contentMode: .fit)
+            GeometryReader { proxy in
+                let coverHeight = proxy.size.height * coverHeightRatio
 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(template.name)
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(.primary)
-                        .lineLimit(2)
-                        .multilineTextAlignment(.leading)
+                VStack(alignment: .leading, spacing: 0) {
+                    gradientCover
+                        .frame(height: coverHeight)
 
-                    Text("\(template.prepMinutes + template.cookMinutes) min · \(template.calories) kcal")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(.secondary)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(template.name)
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(.primary)
+                            .lineLimit(2)
+                            .multilineTextAlignment(.leading)
+                            .frame(maxWidth: .infinity, minHeight: 36, maxHeight: 36, alignment: .topLeading)
+
+                        Text("\(template.prepMinutes + template.cookMinutes) min · \(template.calories) kcal")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                    .padding(12)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(12)
             }
+            .aspectRatio(cardAspectRatio, contentMode: .fit)
             .background(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
                     .fill(neutralSurfaceColor)
@@ -109,15 +118,20 @@ private struct RecipeTemplateCard: View {
 
     private var gradientCover: some View {
         ZStack(alignment: .topTrailing) {
-            LinearGradient(
-                colors: template.gradientColors.map { Color(hex: $0) },
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+            if let photoFileName = template.photoFileName {
+                BundledOnboardingImage(filename: photoFileName)
+                    .clipped()
+            } else {
+                LinearGradient(
+                    colors: template.gradientColors.map { Color(hex: $0) },
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            }
 
             // Subtle radial highlight to add depth
             RadialGradient(
-                colors: [Color.white.opacity(0.35), Color.white.opacity(0)],
+                colors: [Color.white.opacity(0.18), Color.white.opacity(0)],
                 center: .topLeading,
                 startRadius: 0,
                 endRadius: 140
@@ -141,7 +155,7 @@ private struct RecipeTemplateCard: View {
                             .font(.system(size: 10, weight: .semibold))
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
-                            .background(Capsule().fill(Color.black.opacity(0.32)))
+                            .background(Capsule().fill(Color.black.opacity(0.48)))
                             .foregroundStyle(.white)
                     }
                     Spacer()

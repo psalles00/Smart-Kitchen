@@ -81,3 +81,26 @@ struct OnboardingFeatureChip: View {
         )
     }
 }
+
+// MARK: - Bundled onboarding image
+
+struct BundledOnboardingImage: View {
+    let filename: String
+    var contentMode: ContentMode = .fill
+
+    var body: some View {
+        Group {
+            if let image = IconResolver.image(forFilename: filename) {
+                Image(platformImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: contentMode)
+            } else {
+                LinearGradient(
+                    colors: [Color.primary.opacity(0.12), Color.primary.opacity(0.05)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            }
+        }
+    }
+}

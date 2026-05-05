@@ -18,9 +18,9 @@ struct RecipeIdeasStepView: View {
     private let queryText = String(localized: "Lanche fit, sem glúten")
 
     private let suggestions: [RecipeSuggestionMock] = [
-        .init(id: "wrap",      title: String(localized: "Wrap de frango com homus"),       minutes: 15, badge: String(localized: "Compatível com sua despensa"), badgeIsMatch: true,  iconColor: Color(red: 0.96, green: 0.55, blue: 0.40)),
-        .init(id: "smoothie",  title: String(localized: "Smoothie de morango e aveia"),    minutes: 5,  badge: String(localized: "Sem glúten"), badgeIsMatch: false, iconColor: Color(red: 0.86, green: 0.40, blue: 0.86)),
-        .init(id: "tuna-bowl", title: String(localized: "Bowl de atum com quinoa"),        minutes: 12, badge: String(localized: "Alta proteína"), badgeIsMatch: false, iconColor: Color(red: 0.55, green: 0.50, blue: 0.96)),
+        .init(id: "wrap",      title: String(localized: "Wrap de frango com homus"),       minutes: 15, badge: String(localized: "Compatível com sua despensa"), badgeIsMatch: true,  iconColor: Color(red: 0.96, green: 0.55, blue: 0.40), imageFileName: "onboarding-chicken-wrap-hummus.jpg"),
+        .init(id: "smoothie",  title: String(localized: "Smoothie de morango e aveia"),    minutes: 5,  badge: String(localized: "Sem glúten"), badgeIsMatch: false, iconColor: Color(red: 0.86, green: 0.40, blue: 0.86), imageFileName: "onboarding-strawberry-oat-smoothie.jpg"),
+        .init(id: "tuna-bowl", title: String(localized: "Bowl de atum com quinoa"),        minutes: 12, badge: String(localized: "Alta proteína"), badgeIsMatch: false, iconColor: Color(red: 0.55, green: 0.50, blue: 0.96), imageFileName: "onboarding-tuna-quinoa-bowl.jpg"),
     ]
 
     var body: some View {
@@ -226,6 +226,7 @@ private struct RecipeSuggestionMock: Identifiable {
     let badge: String
     let badgeIsMatch: Bool
     let iconColor: Color
+    let imageFileName: String
 }
 
 // MARK: - Subviews
@@ -236,17 +237,9 @@ private struct SuggestionRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(LinearGradient(
-                        colors: [suggestion.iconColor.opacity(0.95), suggestion.iconColor.opacity(0.6)],
-                        startPoint: .topLeading, endPoint: .bottomTrailing
-                    ))
-                    .frame(width: 38, height: 38)
-                Image(systemName: "fork.knife")
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundStyle(.white)
-            }
+            BundledOnboardingImage(filename: suggestion.imageFileName)
+                .frame(width: 46, height: 46)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(suggestion.title)
@@ -305,18 +298,12 @@ private struct RecipeDetailMock: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
+            BundledOnboardingImage(filename: suggestion.imageFileName)
+                .frame(height: 118)
+                .frame(maxWidth: .infinity)
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+
             HStack(spacing: 10) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(LinearGradient(
-                            colors: [suggestion.iconColor.opacity(0.95), suggestion.iconColor.opacity(0.6)],
-                            startPoint: .topLeading, endPoint: .bottomTrailing
-                        ))
-                        .frame(width: 40, height: 40)
-                    Image(systemName: "fork.knife")
-                        .font(.system(size: 15, weight: .bold))
-                        .foregroundStyle(.white)
-                }
                 VStack(alignment: .leading, spacing: 2) {
                     Text(suggestion.title)
                         .font(.system(size: 14, weight: .bold))

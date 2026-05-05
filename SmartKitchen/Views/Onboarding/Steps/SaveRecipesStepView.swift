@@ -456,13 +456,14 @@ struct SaveRecipesStepView: View {
     private var recipeDoneView: some View {
         VStack(alignment: .leading, spacing: 8) {
             ZStack {
+                BundledOnboardingImage(filename: "onboarding-spaghetti-carbonara.jpg")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+
                 LinearGradient(
-                    colors: [Color(red: 0.96, green: 0.55, blue: 0.40), Color(red: 0.86, green: 0.40, blue: 0.86)],
-                    startPoint: .topLeading, endPoint: .bottomTrailing
+                    colors: [Color.black.opacity(0.04), Color.black.opacity(0.18)],
+                    startPoint: .top,
+                    endPoint: .bottom
                 )
-                Image(systemName: "fork.knife")
-                    .font(.system(size: 26, weight: .bold))
-                    .foregroundStyle(.white.opacity(0.9))
                 VStack {
                     HStack {
                         Spacer()

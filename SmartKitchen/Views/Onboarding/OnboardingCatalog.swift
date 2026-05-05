@@ -55,12 +55,12 @@ enum OnboardingCatalog {
         .init(id: "lettuce",    displayName: String(localized: "Alface"),       iconFileName: "lettuce.png",      category: "Verduras e Legumes"),
         .init(id: "carrot",     displayName: String(localized: "Cenoura"),      iconFileName: "carrot.png",       category: "Verduras e Legumes"),
         .init(id: "broccoli",   displayName: String(localized: "Brócolis"),     iconFileName: "broccoli.png",     category: "Verduras e Legumes"),
-        .init(id: "avocado",    displayName: String(localized: "Abacate"),      iconFileName: "avocado.png",      category: "Frutas"),
+        .init(id: "bread",      displayName: String(localized: "Pão"),          iconFileName: "bread-white.png",  category: "Padaria"),
         .init(id: "banana",     displayName: String(localized: "Banana"),       iconFileName: "banana.png",       category: "Frutas"),
         .init(id: "apple",      displayName: String(localized: "Maçã"),         iconFileName: "apple.png",        category: "Frutas"),
-        .init(id: "lemon",      displayName: String(localized: "Limão"),        iconFileName: "lemon.png",        category: "Frutas"),
-        .init(id: "orange",     displayName: String(localized: "Laranja"),      iconFileName: "orange.png",       category: "Frutas"),
-        .init(id: "strawberry", displayName: String(localized: "Morango"),      iconFileName: "strawberry.png",   category: "Frutas"),
+        .init(id: "egg",        displayName: String(localized: "Ovos"),         iconFileName: "egg.png",          category: "Laticínios e Ovos"),
+        .init(id: "milk",       displayName: String(localized: "Leite"),        iconFileName: "milk.png",         category: "Laticínios e Ovos"),
+        .init(id: "rice",       displayName: String(localized: "Arroz"),        iconFileName: "rice.png",         category: "Grãos, Massas e Cereais"),
         .init(id: "chicken",    displayName: String(localized: "Frango"),       iconFileName: "chicken-raw.png",  category: "Carnes e Aves"),
         .init(id: "beef",       displayName: String(localized: "Carne bovina"), iconFileName: "beef.png",         category: "Carnes e Aves"),
         .init(id: "salmon",     displayName: String(localized: "Salmão"),       iconFileName: "salmon.png",       category: "Peixes e Frutos do Mar"),
@@ -70,13 +70,13 @@ enum OnboardingCatalog {
         .init(id: "chips",      displayName: String(localized: "Salgadinho"),   iconFileName: "chips.png",        category: "Snacks e Petiscos"),
         .init(id: "toothpaste", displayName: String(localized: "Pasta de dente"), iconFileName: "toothpaste.png", category: "Limpeza e Higiene"),
         .init(id: "cucumber",   displayName: String(localized: "Pepino"),       iconFileName: "cucumber.png",     category: "Verduras e Legumes"),
-        .init(id: "spinach",    displayName: String(localized: "Espinafre"),    iconFileName: "spinach.png",      category: "Verduras e Legumes"),
-        .init(id: "eggplant",   displayName: String(localized: "Berinjela"),    iconFileName: "eggplant.png",     category: "Verduras e Legumes"),
-        .init(id: "pineapple",  displayName: String(localized: "Abacaxi"),      iconFileName: "pineapple.png",    category: "Frutas"),
-        .init(id: "watermelon", displayName: String(localized: "Melancia"),     iconFileName: "watermelon.png",   category: "Frutas"),
+        .init(id: "pasta",      displayName: String(localized: "Macarrão"),     iconFileName: "pasta.png",        category: "Grãos, Massas e Cereais"),
+        .init(id: "cheese",     displayName: String(localized: "Queijo"),       iconFileName: "cheese.png",       category: "Laticínios e Ovos"),
+        .init(id: "onion",      displayName: String(localized: "Cebola"),       iconFileName: "onion.png",        category: "Verduras e Legumes"),
+        .init(id: "potato",     displayName: String(localized: "Batata"),       iconFileName: "potato.png",       category: "Verduras e Legumes"),
         .init(id: "grape",      displayName: String(localized: "Uva"),          iconFileName: "grape.png",        category: "Frutas"),
-        .init(id: "blueberry",  displayName: String(localized: "Mirtilo"),      iconFileName: "blueberry.png",    category: "Frutas"),
-        .init(id: "mango",      displayName: String(localized: "Manga"),        iconFileName: "mango.png",        category: "Frutas"),
+        .init(id: "butter",     displayName: String(localized: "Manteiga"),     iconFileName: "butter.png",       category: "Laticínios e Ovos"),
+        .init(id: "beans",      displayName: String(localized: "Feijão"),       iconFileName: "soya-beans.png",   category: "Grãos, Massas e Cereais"),
         .init(id: "shrimp",     displayName: String(localized: "Camarão"),      iconFileName: "shrimp.png",       category: "Peixes e Frutos do Mar"),
         .init(id: "sausage",    displayName: String(localized: "Linguiça"),     iconFileName: "sausage.png",      category: "Carnes e Aves"),
         .init(id: "ham",        displayName: String(localized: "Presunto"),     iconFileName: "ham.png",          category: "Carnes e Aves"),
@@ -96,6 +96,7 @@ enum OnboardingCatalog {
         let calories: Int
         /// Two color hex strings for the placeholder cover gradient.
         let gradientColors: [UInt32]
+        let photoFileName: String?
         /// Tuples of (name, qty, unit, iconFileName).
         let ingredients: [(String, Double?, String, String?)]
         /// Plain-text steps in order.
@@ -105,12 +106,79 @@ enum OnboardingCatalog {
 
     static let recipeTemplates: [RecipeTemplate] = [
         .init(
+            id: "chicken-wrap-hummus",
+            name: String(localized: "Wrap de frango com homus"),
+            summary: String(localized: "Wrap leve com frango grelhado e homus cremoso."),
+            category: "Lanche",
+            prepMinutes: 10, cookMinutes: 5, servings: 2, calories: 410,
+            gradientColors: [0xF28E52, 0xB55239],
+            photoFileName: "onboarding-chicken-wrap-hummus.jpg",
+            ingredients: [
+                (String(localized: "Wrap integral"), 2, "", "bread-white.png"),
+                (String(localized: "Peito de frango grelhado"), 180, "g", "chicken-raw.png"),
+                (String(localized: "Homus"), 4, String(localized: "colheres de sopa"), nil),
+                (String(localized: "Tomate"), 1, "", "tomato.png"),
+                (String(localized: "Alface"), 4, String(localized: "folhas"), "lettuce.png"),
+            ],
+            steps: [
+                String(localized: "Aqueça os wraps rapidamente na frigideira."),
+                String(localized: "Espalhe o homus por toda a superfície."),
+                String(localized: "Adicione frango, tomate e alface no centro."),
+                String(localized: "Enrole firme e sirva em seguida."),
+            ],
+            tags: [String(localized: "saudável"), String(localized: "Fácil")]
+        ),
+        .init(
+            id: "strawberry-oat-smoothie",
+            name: String(localized: "Smoothie de morango e aveia"),
+            summary: String(localized: "Smoothie rápido e cremoso para manhãs corridas."),
+            category: "Café da manhã",
+            prepMinutes: 5, cookMinutes: 0, servings: 1, calories: 290,
+            gradientColors: [0xD95D8A, 0x6A3DE8],
+            photoFileName: "onboarding-strawberry-oat-smoothie.jpg",
+            ingredients: [
+                (String(localized: "Morango"), 1, String(localized: "xícara"), "strawberry.png"),
+                (String(localized: "Aveia"), 3, String(localized: "colheres de sopa"), "oats.png"),
+                (String(localized: "Iogurte natural"), 0.75, String(localized: "xícara"), "yogurt.png"),
+                (String(localized: "Banana"), 1, "", "banana.png"),
+            ],
+            steps: [
+                String(localized: "Adicione todos os ingredientes ao liquidificador."),
+                String(localized: "Bata até ficar liso e cremoso."),
+                String(localized: "Sirva gelado imediatamente."),
+            ],
+            tags: [String(localized: "café da manhã"), String(localized: "Fácil")]
+        ),
+        .init(
+            id: "tuna-quinoa-bowl",
+            name: String(localized: "Bowl de atum com quinoa"),
+            summary: String(localized: "Bowl fresco com proteína, fibras e muita saciedade."),
+            category: "Almoço",
+            prepMinutes: 12, cookMinutes: 0, servings: 2, calories: 430,
+            gradientColors: [0x6A89CC, 0x3A4A72],
+            photoFileName: "onboarding-tuna-quinoa-bowl.jpg",
+            ingredients: [
+                (String(localized: "Quinoa cozida"), 1.5, String(localized: "xícaras"), "quinoa.png"),
+                (String(localized: "Atum"), 1, String(localized: "lata"), "tuna.png"),
+                (String(localized: "Pepino"), 0.5, "", "cucumber.png"),
+                (String(localized: "Tomate"), 1, "", "tomato.png"),
+                (String(localized: "Azeite"), 1, String(localized: "colher de sopa"), "olive-oil.png"),
+            ],
+            steps: [
+                String(localized: "Distribua a quinoa em duas tigelas."),
+                String(localized: "Cubra com atum, pepino e tomate."),
+                String(localized: "Finalize com azeite, sal e pimenta."),
+            ],
+            tags: [String(localized: "saudável"), String(localized: "almoço")]
+        ),
+        .init(
             id: "pancake",
             name: String(localized: "Panqueca Americana"),
             summary: String(localized: "Café da manhã fofinho e dourado em 25 minutos."),
             category: "Café da manhã",
             prepMinutes: 10, cookMinutes: 15, servings: 4, calories: 320,
             gradientColors: [0xFFC371, 0xFF5F6D],
+            photoFileName: "onboarding-american-pancakes.jpg",
             ingredients: [
                 (String(localized: "Farinha de trigo"), 2, String(localized: "xícaras"), "flour.png"),
                 (String(localized: "Leite"), 1.5, String(localized: "xícaras"), "milk.png"),
@@ -134,6 +202,7 @@ enum OnboardingCatalog {
             category: "Almoço",
             prepMinutes: 15, cookMinutes: 0, servings: 2, calories: 280,
             gradientColors: [0x7FB069, 0x2D6A4F],
+            photoFileName: "onboarding-caesar-salad.jpg",
             ingredients: [
                 (String(localized: "Alface romana"), 1, String(localized: "pé"), "lettuce.png"),
                 (String(localized: "Croutons"), 1, String(localized: "xícara"), "bread-white.png"),
@@ -149,31 +218,13 @@ enum OnboardingCatalog {
             tags: [String(localized: "saudável"), String(localized: "salada")]
         ),
         .init(
-            id: "brigadeiro",
-            name: String(localized: "Brigadeiro"),
-            summary: String(localized: "O doce brasileiro que ninguém recusa."),
-            category: "Sobremesa",
-            prepMinutes: 5, cookMinutes: 15, servings: 20, calories: 45,
-            gradientColors: [0x6B4226, 0x2C0F0F],
-            ingredients: [
-                (String(localized: "Leite condensado"), 1, String(localized: "lata"), "milk.png"),
-                (String(localized: "Chocolate em pó"), 3, String(localized: "colheres de sopa"), "chocolate-bar.png"),
-                (String(localized: "Manteiga"), 1, String(localized: "colher de sopa"), "butter.png"),
-            ],
-            steps: [
-                String(localized: "Misture todos os ingredientes em uma panela."),
-                String(localized: "Cozinhe em fogo baixo mexendo até desgrudar do fundo."),
-                String(localized: "Espere esfriar, faça bolinhas e passe no granulado."),
-            ],
-            tags: [String(localized: "doce"), String(localized: "brasileiro")]
-        ),
-        .init(
             id: "carbonara",
             name: String(localized: "Espaguete à Carbonara"),
             summary: String(localized: "Italiano cremoso, sem creme de leite, em 20 min."),
             category: "Jantar",
             prepMinutes: 5, cookMinutes: 15, servings: 2, calories: 580,
             gradientColors: [0xF6C453, 0xC78400],
+            photoFileName: "onboarding-spaghetti-carbonara.jpg",
             ingredients: [
                 (String(localized: "Espaguete"), 200, "g", "pasta.png"),
                 (String(localized: "Bacon"), 100, "g", "bacon.png"),
@@ -195,6 +246,7 @@ enum OnboardingCatalog {
             category: "Café da manhã",
             prepMinutes: 10, cookMinutes: 0, servings: 1, calories: 380,
             gradientColors: [0xB983FF, 0x4361EE],
+            photoFileName: "onboarding-smoothie-bowl.jpg",
             ingredients: [
                 (String(localized: "Banana congelada"), 1, "", "banana.png"),
                 (String(localized: "Frutas vermelhas"), 1, String(localized: "xícara"), "strawberry.png"),
@@ -215,6 +267,7 @@ enum OnboardingCatalog {
             category: "Almoço",
             prepMinutes: 10, cookMinutes: 20, servings: 2, calories: 420,
             gradientColors: [0xFF7B54, 0xCC2936],
+            photoFileName: "onboarding-grilled-chicken-veggies.jpg",
             ingredients: [
                 (String(localized: "Peito de frango"), 400, "g", "chicken-raw.png"),
                 (String(localized: "Brócolis"), 1, String(localized: "xícara"), "broccoli.png"),
@@ -229,6 +282,26 @@ enum OnboardingCatalog {
                 String(localized: "Sirva o frango ao lado dos legumes."),
             ],
             tags: [String(localized: "saudável"), String(localized: "fitness")]
+        ),
+        .init(
+            id: "brigadeiro",
+            name: String(localized: "Brigadeiro"),
+            summary: String(localized: "O doce brasileiro que ninguém recusa."),
+            category: "Sobremesa",
+            prepMinutes: 5, cookMinutes: 15, servings: 20, calories: 45,
+            gradientColors: [0x6B4226, 0x2C0F0F],
+            photoFileName: "onboarding-brigadeiro.jpg",
+            ingredients: [
+                (String(localized: "Leite condensado"), 1, String(localized: "lata"), "milk.png"),
+                (String(localized: "Chocolate em pó"), 3, String(localized: "colheres de sopa"), "chocolate-bar.png"),
+                (String(localized: "Manteiga"), 1, String(localized: "colher de sopa"), "butter.png"),
+            ],
+            steps: [
+                String(localized: "Misture todos os ingredientes em uma panela."),
+                String(localized: "Cozinhe em fogo baixo mexendo até desgrudar do fundo."),
+                String(localized: "Espere esfriar, faça bolinhas e passe no granulado."),
+            ],
+            tags: [String(localized: "doce"), String(localized: "brasileiro")]
         ),
     ]
 }
