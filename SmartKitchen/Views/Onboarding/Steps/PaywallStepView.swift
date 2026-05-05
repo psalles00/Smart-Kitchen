@@ -32,7 +32,7 @@ struct PaywallStepView: View {
                         legalLinks
                     }
                     .padding(.horizontal, 22)
-                    .padding(.top, proxy.safeAreaInsets.top + 2)
+                    .padding(.top, max(0, proxy.safeAreaInsets.top - 4))
                     .padding(.bottom, 180)
                 }
             }
@@ -123,8 +123,8 @@ struct PaywallStepView: View {
                 .multilineTextAlignment(.center)
         }
         .padding(.horizontal, 20)
-        .padding(.top, 6)
-        .padding(.bottom, 16)
+        .padding(.top, 0)
+        .padding(.bottom, 12)
     }
 
     // MARK: - Benefits

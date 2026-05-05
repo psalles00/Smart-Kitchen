@@ -20,7 +20,8 @@ struct SelectPantryStepView: View {
                 labelFor: { $0.displayName },
                 iconFileFor: { $0.iconFileName },
                 isSelected: { state.selectedPantryItemIDs.contains($0.id) },
-                toggle: { toggle($0.id) }
+                toggle: { toggle($0.id) },
+                layoutSeed: 0
             )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 

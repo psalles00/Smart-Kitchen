@@ -399,53 +399,58 @@ struct SaveRecipesStepView: View {
     }
 
     private var processingView: some View {
-        VStack(spacing: 8) {
-            ZStack {
-                Circle()
-                    .stroke(Color.accentColor.opacity(0.18), lineWidth: 4)
-                    .frame(width: 52, height: 52)
-                Circle()
-                    .trim(from: 0, to: CGFloat(processingStepIndex + 1) / CGFloat(processingSteps.count))
-                    .stroke(Color.accentColor, style: StrokeStyle(lineWidth: 4, lineCap: .round))
-                    .frame(width: 52, height: 52)
-                    .rotationEffect(.degrees(-90))
-                    .animation(.spring(response: 0.5, dampingFraction: 0.85), value: processingStepIndex)
-                Image("AppLogoB")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 28, height: 28)
-            }
+        VStack {
+            Spacer(minLength: 0)
 
-            VStack(alignment: .leading, spacing: 4) {
-                ForEach(Array(processingSteps.enumerated()), id: \.offset) { index, step in
-                    HStack(spacing: 6) {
-                        Group {
-                            if index < processingStepIndex {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .foregroundStyle(.green)
-                            } else if index == processingStepIndex {
-                                Image(systemName: "circle.dotted")
-                                    .foregroundStyle(Color.accentColor)
-                                    .symbolEffect(.pulse)
-                            } else {
-                                Image(systemName: "circle")
-                                    .foregroundStyle(.secondary.opacity(0.4))
+            VStack(spacing: 8) {
+                ZStack {
+                    Circle()
+                        .stroke(Color.accentColor.opacity(0.18), lineWidth: 4)
+                        .frame(width: 52, height: 52)
+                    Circle()
+                        .trim(from: 0, to: CGFloat(processingStepIndex + 1) / CGFloat(processingSteps.count))
+                        .stroke(Color.accentColor, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                        .frame(width: 52, height: 52)
+                        .rotationEffect(.degrees(-90))
+                        .animation(.spring(response: 0.5, dampingFraction: 0.85), value: processingStepIndex)
+                    Image("AppLogoB")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 28, height: 28)
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    ForEach(Array(processingSteps.enumerated()), id: \.offset) { index, step in
+                        HStack(spacing: 6) {
+                            Group {
+                                if index < processingStepIndex {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundStyle(.green)
+                                } else if index == processingStepIndex {
+                                    Image(systemName: "circle.dotted")
+                                        .foregroundStyle(Color.accentColor)
+                                        .symbolEffect(.pulse)
+                                } else {
+                                    Image(systemName: "circle")
+                                        .foregroundStyle(.secondary.opacity(0.4))
+                                }
                             }
+                            .font(.system(size: 11))
+                            Text(step)
+                                .font(.system(size: 9, weight: index == processingStepIndex ? .semibold : .medium))
+                                .foregroundStyle(index <= processingStepIndex ? .primary : .secondary)
+                                .lineLimit(1)
                         }
-                        .font(.system(size: 11))
-                        Text(step)
-                            .font(.system(size: 9, weight: index == processingStepIndex ? .semibold : .medium))
-                            .foregroundStyle(index <= processingStepIndex ? .primary : .secondary)
-                            .lineLimit(1)
                     }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 10)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 10)
+
+            Spacer(minLength: 0)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .padding(.top, 16)
-        .padding(.bottom, 10)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.vertical, 8)
     }
 
     private var recipeDoneView: some View {

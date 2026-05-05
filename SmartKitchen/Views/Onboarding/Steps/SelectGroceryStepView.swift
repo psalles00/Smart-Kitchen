@@ -19,7 +19,8 @@ struct SelectGroceryStepView: View {
                 labelFor: { $0.displayName },
                 iconFileFor: { $0.iconFileName },
                 isSelected: { state.selectedGroceryItemIDs.contains($0.id) },
-                toggle: { toggle($0.id) }
+                toggle: { toggle($0.id) },
+                layoutSeed: 101
             )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
