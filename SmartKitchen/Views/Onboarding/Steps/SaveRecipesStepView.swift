@@ -5,6 +5,9 @@ import SwiftUI
 /// Organizando · Pronto" e finaliza com a receita estruturada.
 struct SaveRecipesStepView: View {
     let onContinue: () -> Void
+    private let phoneShellCornerRadius: CGFloat = 32
+    private let phoneScreenCornerRadius: CGFloat = 27
+    private let phoneScreenInset: CGFloat = 4
 
     enum Stage: Int, CaseIterable {
         case feed
@@ -98,19 +101,21 @@ struct SaveRecipesStepView: View {
 
     private var phoneFrame: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 32, style: .continuous)
+            RoundedRectangle(cornerRadius: phoneShellCornerRadius, style: .continuous)
                 .fill(Color.black)
                 .shadow(color: .black.opacity(0.18), radius: 18, y: 10)
 
-            RoundedRectangle(cornerRadius: 28, style: .continuous)
+            RoundedRectangle(cornerRadius: phoneScreenCornerRadius, style: .continuous)
                 .fill(Color.white)
-                .padding(4)
+                .padding(phoneScreenInset)
 
             screenContent
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .padding(4)
-                .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+                .mask(
+                    RoundedRectangle(cornerRadius: phoneScreenCornerRadius, style: .continuous)
+                        .padding(phoneScreenInset)
+                )
         }
+        .clipShape(RoundedRectangle(cornerRadius: phoneShellCornerRadius, style: .continuous))
         .aspectRatio(9.0/19.5, contentMode: .fit)
     }
 
@@ -143,22 +148,14 @@ struct SaveRecipesStepView: View {
                 )
 
                 LinearGradient(
-                    colors: [Color.black.opacity(0.05), Color.black.opacity(0.22)],
+                    colors: [Color.black.opacity(0.08), Color.black.opacity(0.28)],
                     startPoint: .top,
                     endPoint: .bottom
                 )
 
-                VStack(spacing: 6) {
-                    Image(systemName: "fork.knife")
-                        .font(.system(size: 42, weight: .bold))
-                        .foregroundStyle(.white.opacity(0.85))
-                    Text(String(localized: "Massa cremosa em 15 min"))
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundStyle(.white.opacity(0.92))
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 4)
-                        .background(Capsule().fill(.black.opacity(0.25)))
-                }
+                CookingShortVideoPreview()
+                    .frame(width: proxy.size.width * 0.72, height: proxy.size.height * 0.46)
+                    .offset(y: -proxy.size.height * 0.04)
 
                 VStack(spacing: 14) {
                     Spacer()
@@ -188,13 +185,8 @@ struct SaveRecipesStepView: View {
                         Text("chef.savoria")
                             .font(.system(size: 11, weight: .bold))
                             .foregroundStyle(.white)
-                        Text(String(localized: "Seguir"))
-                            .font(.system(size: 9, weight: .bold))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .overlay(Capsule().strokeBorder(.white, lineWidth: 1))
                     }
+                    .lineLimit(1)
                     Text("\u{1F525} " + String(localized: "Massa cremosa em 15 minutos…"))
                         .font(.system(size: 10, weight: .semibold))
                         .foregroundStyle(.white.opacity(0.95))
@@ -210,7 +202,7 @@ struct SaveRecipesStepView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
                 .padding(.leading, 10)
                 .padding(.bottom, 16)
-                .padding(.trailing, 62)
+                .padding(.trailing, 72)
             }
             .frame(width: proxy.size.width, height: proxy.size.height)
             .clipped()
@@ -229,6 +221,114 @@ struct SaveRecipesStepView: View {
                 .font(.system(size: 9, weight: .bold))
                 .foregroundStyle(.white)
                 .shadow(color: .black.opacity(0.4), radius: 2, y: 1)
+        }
+    }
+
+    private struct CookingShortVideoPreview: View {
+        var body: some View {
+            TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { context in
+                let time = context.date.timeIntervalSinceReferenceDate
+                let simmer = CGFloat((sin(time * 0.80) + 1) / 2)
+                let toss = CGFloat((sin(time * 0.62 + 1.4) + 1) / 2)
+
+                ZStack {
+                    skilletShadow
+                    steamLayer(time: time)
+                    fallingIngredients(toss: toss)
+                    skillet(simmer: simmer)
+                    panHandle
+                }
+            }
+        }
+
+        private var skilletShadow: some View {
+            Ellipse()
+                .fill(.black.opacity(0.18))
+                .frame(width: 120, height: 20)
+                .offset(y: 62)
+        }
+
+        @ViewBuilder
+        private func steamLayer(time: TimeInterval) -> some View {
+            ForEach(0..<3, id: \.self) { index in
+                steamPlume(index: index, time: time)
+            }
+        }
+
+        private func steamPlume(index: Int, time: TimeInterval) -> some View {
+            let delayed = CGFloat((sin(time * 0.72 - Double(index) * 0.58) + 1) / 2)
+            return Capsule()
+                .fill(.white.opacity(0.32 - Double(index) * 0.05))
+                .frame(width: 6, height: 28)
+                .scaleEffect(x: 1 - delayed * 0.35, y: 1)
+                .offset(
+                    x: CGFloat(index - 1) * 16 + delayed * 6 - 3,
+                    y: -18 - delayed * 38
+                )
+                .opacity(1 - delayed)
+                .blur(radius: 0.5)
+        }
+
+        @ViewBuilder
+        private func fallingIngredients(toss: CGFloat) -> some View {
+            Circle()
+                .fill(Color(red: 1.00, green: 0.47, blue: 0.33))
+                .frame(width: 10, height: 10)
+                .offset(x: -26 + toss * 40, y: -34 + toss * 24)
+
+            Ellipse()
+                .fill(Color(red: 0.48, green: 0.79, blue: 0.44))
+                .frame(width: 15, height: 8)
+                .rotationEffect(.degrees(Double(-24 + toss * 82)))
+                .offset(x: 18 - toss * 10, y: -38 + toss * 24)
+        }
+
+        private func skillet(simmer: CGFloat) -> some View {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color(red: 0.14, green: 0.14, blue: 0.18),
+                            Color(red: 0.28, green: 0.28, blue: 0.34)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .frame(width: 116, height: 46)
+                .overlay {
+                    skilletContents(simmer: simmer)
+                        .padding(.horizontal, 12)
+                }
+        }
+
+        private func skilletContents(simmer: CGFloat) -> some View {
+            ZStack {
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(Color(red: 0.97, green: 0.76, blue: 0.29))
+                    .frame(width: 82, height: 18)
+                    .rotationEffect(.degrees(Double(-7 + simmer * 14)))
+                    .offset(x: -4, y: -1)
+
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(Color(red: 0.99, green: 0.84, blue: 0.44))
+                    .frame(width: 78, height: 14)
+                    .rotationEffect(.degrees(Double(11 - simmer * 16)))
+                    .offset(x: 5, y: 4)
+
+                Circle()
+                    .fill(.white.opacity(0.26))
+                    .frame(width: 14, height: 14)
+                    .offset(x: 24, y: -6 + simmer * 5)
+            }
+        }
+
+        private var panHandle: some View {
+            Capsule()
+                .fill(Color.white.opacity(0.78))
+                .frame(width: 40, height: 10)
+                .rotationEffect(.degrees(18))
+                .offset(x: 56, y: 14)
         }
     }
 
@@ -434,18 +534,18 @@ struct SaveRecipesStepView: View {
     private func runLoop() async {
         while !Task.isCancelled {
             withAnimation(.easeOut(duration: 0.3)) { stage = .feed }
-            await wait(900)
+            await wait(1300)
 
             HapticManager.impact(style: .light)
-            withAnimation(.spring(response: 0.55, dampingFraction: 0.78)) { stage = .shareSheet }
-            await wait(1100)
+            withAnimation(.spring(response: 0.7, dampingFraction: 0.82)) { stage = .shareSheet }
+            await wait(1450)
 
             HapticManager.impact(style: .medium)
-            withAnimation(.easeInOut(duration: 0.35)) {
+            withAnimation(.easeInOut(duration: 0.45)) {
                 stage = .processing
                 processingStepIndex = 0
             }
-            await wait(420)
+            await wait(520)
 
             for index in 0..<processingSteps.count {
                 if Task.isCancelled { return }
@@ -455,12 +555,12 @@ struct SaveRecipesStepView: View {
                 if index < processingSteps.count - 1 {
                     HapticManager.impact(style: .light)
                 }
-                await wait(550)
+                await wait(680)
             }
 
             HapticManager.impact(style: .medium)
             withAnimation(.spring(response: 0.65, dampingFraction: 0.84)) { stage = .done }
-            await wait(1800)
+            await wait(2100)
         }
     }
 

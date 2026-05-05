@@ -96,6 +96,24 @@ final class SupabaseClient {
         return try JSONDecoder.supabase.decode(T.self, from: data)
     }
 
+    /// PostgREST insert (`POST /rest/v1/<table>` with a JSON body).
+    func restPOST<Body: Encodable>(table: String, body: Body) async throws {
+        guard let baseURL else { throw SupabaseError.notConfigured }
+        let url = baseURL.appendingPathComponent("/rest/v1/\(table)")
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        applyAuth(&request)
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue("return=minimal", forHTTPHeaderField: "Prefer")
+        request.timeoutInterval = 15
+        request.httpBody = try JSONEncoder().encode(body)
+
+        let (data, resp) = try await URLSession.shared.data(for: request)
+        try validate(resp: resp, data: data)
+    }
+
     // MARK: - Internal
 
     private func applyAuth(_ request: inout URLRequest) {

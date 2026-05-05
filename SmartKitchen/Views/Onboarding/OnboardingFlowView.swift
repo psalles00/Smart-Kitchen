@@ -87,6 +87,8 @@ struct OnboardingFlowView: View {
             SelectGroceryStepView(state: state, onContinue: advance)
         case .selectRecipes:
             SelectRecipesStepView(state: state, onContinue: advance)
+        case .discoverySource:
+            DiscoverySourceStepView(state: state, onContinue: advance)
         case .goal:
             GoalStepView(state: state, onContinue: advance)
         case .sex:
@@ -105,8 +107,6 @@ struct OnboardingFlowView: View {
                 commitOnboardingChoices(subscribed: false)
                 advance()
             })
-        case .discoverySource:
-            DiscoverySourceStepView(state: state, onContinue: advance)
         case .paywall:
             PaywallStepView(state: state, onFinish: { subscribed in
                 finishOnboarding(subscribed: subscribed)
@@ -158,9 +158,13 @@ struct OnboardingFlowView: View {
     /// Phase 0 ships with a no-op commit (the placeholder steps don't touch
     /// the DB yet); later phases will fill `commitOnboardingChoices` in.
     private func finishOnboarding(subscribed: Bool) {
+        let submission = OnboardingSubmissionPayload(state: state, subscribed: subscribed)
         commitOnboardingChoices(subscribed: subscribed)
         if let discoverySourceID = state.discoverySourceID {
             UserDefaults.standard.set(discoverySourceID, forKey: "onboarding.discoverySourceID")
+        }
+        Task {
+            await OnboardingSubmissionUploader.upload(submission)
         }
         markOnboardingComplete()
         onFinish()
@@ -297,6 +301,97 @@ struct OnboardingFlowView: View {
         let normalized = UnifiedItem.normalizedName(name)
         guard !normalized.isEmpty else { return false }
         return recipes.contains { UnifiedItem.normalizedName($0.name) == normalized }
+    }
+}
+
+// MARK: - Remote onboarding capture
+
+private struct OnboardingSubmissionPayload: Encodable {
+    let submissionID: String
+    let submittedAt: String
+    let localeIdentifier: String
+    let preferredLanguage: String
+    let regionCode: String?
+    let discoverySourceID: String?
+    let discoverySourceTitle: String?
+    let nutritionGoal: String?
+    let nutritionSex: String?
+    let nutritionActivity: String?
+    let nutritionRateMode: String
+    let ageYears: Int?
+    let heightCm: Double
+    let weightKg: Double
+    let weeklyChangeKg: Double
+    let targetWeightKg: Double
+    let targetMonths: Int
+    let selectedPlanID: String?
+    let subscribed: Bool
+    let pantryItemIDs: [String]
+    let groceryItemIDs: [String]
+    let recipeTemplateIDs: [String]
+    let pantryItemNames: [String]
+    let groceryItemNames: [String]
+    let recipeTemplateNames: [String]
+
+    init(state: OnboardingState, subscribed: Bool) {
+        let locale = Locale.current
+        let discovery = state.discoverySourceID.flatMap { DiscoverySourceOption(rawValue: $0) }
+
+        submissionID = UUID().uuidString.lowercased()
+        submittedAt = ISO8601DateFormatter().string(from: .now)
+        localeIdentifier = locale.identifier
+        preferredLanguage = Locale.preferredLanguages.first ?? locale.identifier
+        regionCode = locale.region?.identifier
+        discoverySourceID = state.discoverySourceID
+        discoverySourceTitle = discovery?.title
+        nutritionGoal = state.nutritionGoalRaw
+        nutritionSex = state.nutritionSexRaw
+        nutritionActivity = state.nutritionActivityRaw
+        nutritionRateMode = state.nutritionRateMode.rawValue
+        ageYears = Self.ageYears(from: state.nutritionBirthday)
+        heightCm = state.nutritionHeightCm
+        weightKg = state.nutritionWeightKg
+        weeklyChangeKg = state.nutritionWeeklyChangeKg
+        targetWeightKg = state.nutritionTargetWeightKg
+        targetMonths = state.nutritionTargetMonths
+        selectedPlanID = state.selectedPlanID
+        self.subscribed = subscribed
+        pantryItemIDs = state.selectedPantryItemIDs.sorted()
+        groceryItemIDs = state.selectedGroceryItemIDs.sorted()
+        recipeTemplateIDs = state.selectedRecipeTemplateIDs.sorted()
+        pantryItemNames = Self.names(for: state.selectedPantryItemIDs, in: OnboardingCatalog.pantryItems)
+        groceryItemNames = Self.names(for: state.selectedGroceryItemIDs, in: OnboardingCatalog.groceryItems)
+        recipeTemplateNames = state.selectedRecipeTemplateIDs.sorted().compactMap { id in
+            OnboardingCatalog.recipeTemplates.first(where: { $0.id == id })?.name
+        }
+    }
+
+    private static func names(
+        for ids: Set<String>,
+        in templates: [OnboardingCatalog.ItemTemplate]
+    ) -> [String] {
+        ids.sorted().compactMap { id in
+            templates.first(where: { $0.id == id })?.displayName
+        }
+    }
+
+    private static func ageYears(from birthday: Date?) -> Int? {
+        guard let birthday else { return nil }
+        return Calendar.current.dateComponents([.year], from: birthday, to: .now).year
+    }
+}
+
+@MainActor
+private enum OnboardingSubmissionUploader {
+    static func upload(_ submission: OnboardingSubmissionPayload) async {
+        let client = SupabaseClient()
+        guard client.isConfigured else { return }
+
+        do {
+            try await client.restPOST(table: "onboarding_submissions", body: submission)
+        } catch {
+            print("Onboarding submission upload failed: \(error)")
+        }
     }
 }
 

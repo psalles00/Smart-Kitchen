@@ -19,6 +19,8 @@ enum OnboardingStep: Int, CaseIterable, Identifiable {
     case selectGrocery
     case selectRecipes
 
+    case discoverySource
+
     // Phase 4 — Objetivos / Nutrition
     case goal
     case sex
@@ -27,7 +29,6 @@ enum OnboardingStep: Int, CaseIterable, Identifiable {
     case activity
     case rate
     case preparing
-    case discoverySource
     case paywall
 
     var id: Int { rawValue }

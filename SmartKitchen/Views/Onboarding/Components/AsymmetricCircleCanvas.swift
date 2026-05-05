@@ -12,7 +12,7 @@ struct AsymmetricCircleCanvas<Item: Identifiable & Hashable>: View {
     let toggle: (Item) -> Void
 
     private let diameter: CGFloat = 116
-    private let minimumGap: CGFloat = 1.5
+    private let minimumGap: CGFloat = 0.75
 
     var body: some View {
         let positions = layoutPositions(count: items.count)
@@ -42,25 +42,25 @@ struct AsymmetricCircleCanvas<Item: Identifiable & Hashable>: View {
         .defaultScrollAnchor(.center)
     }
 
-    private let gapPattern: [CGFloat] = [0, 0, 10, 4, 14, 0, 8, 0, 12]
+    private let gapPattern: [CGFloat] = [0, 0, 4, 2, 6, 0, 3, 0, 5]
 
     private func layoutPositions(count: Int) -> [CGPoint] {
         guard count > 0 else { return [] }
 
         var positions: [CGPoint] = []
-        let spiralStep = diameter * 0.58
+        let spiralStep = diameter * 0.54
 
         for index in 0..<count {
             let preferredGap = gapPattern[index % gapPattern.count]
-            var radius = CGFloat(sqrt(Double(index) + 0.6)) * spiralStep + preferredGap * 1.3
+            var radius = CGFloat(sqrt(Double(index) + 0.6)) * spiralStep + preferredGap
             var angle = CGFloat(index) * 2.23 + noise(index, salt: 1) * 0.9
             var candidate = CGPoint.zero
             var placed = false
 
             for attempt in 0..<120 {
                 candidate = CGPoint(
-                    x: cos(angle) * radius * 1.20 + noise(index + attempt, salt: 2) * 10,
-                    y: sin(angle) * radius * 0.86 + noise(index + attempt, salt: 3) * 10
+                    x: cos(angle) * radius * 1.18 + noise(index + attempt, salt: 2) * 8,
+                    y: sin(angle) * radius * 0.84 + noise(index + attempt, salt: 3) * 8
                 )
 
                 if positions.allSatisfy({ existing in
@@ -70,7 +70,7 @@ struct AsymmetricCircleCanvas<Item: Identifiable & Hashable>: View {
                     break
                 }
 
-                radius += 12 + CGFloat(attempt % 3) * 3
+                radius += 9 + CGFloat(attempt % 3) * 2
                 angle += 0.42 + noise(index + attempt, salt: 4) * 0.18
             }
 
@@ -89,7 +89,7 @@ struct AsymmetricCircleCanvas<Item: Identifiable & Hashable>: View {
                                                              minX: CGFloat,
                                                              minY: CGFloat) {
         guard !positions.isEmpty else { return (820, 520, -410, -260) }
-        let pad = diameter / 2 + 12
+        let pad = diameter / 2 + 10
         let minX = (positions.map(\.x).min() ?? 0) - pad
         let maxX = (positions.map(\.x).max() ?? 0) + pad
         let minY = (positions.map(\.y).min() ?? 0) - pad

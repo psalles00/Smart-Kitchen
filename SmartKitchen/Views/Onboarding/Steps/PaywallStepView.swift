@@ -39,36 +39,37 @@ struct PaywallStepView: View {
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 purchaseSection
                     .padding(.horizontal, 22)
-                    .padding(.top, 20)
-                    .padding(.bottom, 20)
+                    .padding(.top, 18)
+                    .padding(.bottom, 18)
                     .background(
-                        LinearGradient(
-                            colors: [.clear, .black.opacity(0.4), .black.opacity(0.8)],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
+                        ZStack {
+                            Rectangle()
+                                .fill(.ultraThinMaterial)
+
+                            LinearGradient(
+                                colors: [
+                                    Color.clear,
+                                    Color.black.opacity(0.18),
+                                    Color.black.opacity(0.62)
+                                ],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        }
+                        .overlay(alignment: .top) {
+                            LinearGradient(
+                                colors: [Color.white.opacity(0.10), Color.clear],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                            .frame(height: 14)
+                        }
                         .ignoresSafeArea()
                     )
             }
-            .overlay(alignment: .topLeading) {
-                Button {
-                    onFinish(false)
-                } label: {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(.white.opacity(0.9))
-                        .frame(width: 44, height: 44)
-                        .background(Circle().fill(Color.white.opacity(0.18)))
-                }
-                .buttonStyle(.plain)
-                .contentShape(Rectangle())
-                .accessibilityLabel(String(localized: "Fechar"))
-                .padding(.top, proxy.safeAreaInsets.top + 8)
-                .padding(.leading, 16)
-                .zIndex(10)
-            }
         }
         .task {
+            state.selectedPlanID = selectedID
             await manager.loadProducts()
         }
         .alert("Erro na compra", isPresented: $showingErrorAlert) {
@@ -184,6 +185,7 @@ struct PaywallStepView: View {
         Button {
             withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
                 selectedID = productID
+                state.selectedPlanID = productID
             }
         } label: {
             VStack(alignment: .leading, spacing: 8) {
@@ -260,9 +262,8 @@ struct PaywallStepView: View {
             // Discreet text-only fallback. No background, no chrome.
             Button(action: { onFinish(false) }) {
                 Text(String(localized: "Continuar com plano grátis"))
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.55))
-                    .underline()
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.42))
             }
             .buttonStyle(.plain)
         }
