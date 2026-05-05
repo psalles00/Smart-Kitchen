@@ -399,24 +399,24 @@ struct SaveRecipesStepView: View {
     }
 
     private var processingView: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 8) {
             ZStack {
                 Circle()
                     .stroke(Color.accentColor.opacity(0.18), lineWidth: 4)
-                    .frame(width: 56, height: 56)
+                    .frame(width: 52, height: 52)
                 Circle()
                     .trim(from: 0, to: CGFloat(processingStepIndex + 1) / CGFloat(processingSteps.count))
                     .stroke(Color.accentColor, style: StrokeStyle(lineWidth: 4, lineCap: .round))
-                    .frame(width: 56, height: 56)
+                    .frame(width: 52, height: 52)
                     .rotationEffect(.degrees(-90))
                     .animation(.spring(response: 0.5, dampingFraction: 0.85), value: processingStepIndex)
                 Image("AppLogoB")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 30, height: 30)
+                    .frame(width: 28, height: 28)
             }
 
-            VStack(alignment: .leading, spacing: 5) {
+            VStack(alignment: .leading, spacing: 4) {
                 ForEach(Array(processingSteps.enumerated()), id: \.offset) { index, step in
                     HStack(spacing: 6) {
                         Group {
@@ -434,15 +434,18 @@ struct SaveRecipesStepView: View {
                         }
                         .font(.system(size: 11))
                         Text(step)
-                            .font(.system(size: 10, weight: index == processingStepIndex ? .semibold : .medium))
+                            .font(.system(size: 9, weight: index == processingStepIndex ? .semibold : .medium))
                             .foregroundStyle(index <= processingStepIndex ? .primary : .secondary)
+                            .lineLimit(1)
                     }
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 10)
         }
-        .padding(.top, 24)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .padding(.top, 16)
+        .padding(.bottom, 10)
     }
 
     private var recipeDoneView: some View {
