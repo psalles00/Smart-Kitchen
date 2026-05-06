@@ -177,11 +177,15 @@ struct SmartKitchenApp: App {
                     _ = SharedImportInbox.shared.claimPendingFromBridge()
                     FeatureGate.shared.subscriptionManager = subscriptionManager
                     await subscriptionManager.loadProducts()
+                    await subscriptionManager.refreshEntitlements()
                     await runPostLaunchBootstrapIfNeeded()
                 }
                 .onChange(of: scenePhase) { oldValue, newValue in
                     if newValue == .active {
                         _ = SharedImportInbox.shared.claimPendingFromBridge()
+                        // Refresh subscription state on every foreground so
+                        // expirations / external upgrades land promptly.
+                        Task { await subscriptionManager.refreshEntitlements() }
                         // Throttle: avoid running sync + notification reschedule
                         // every time the user briefly leaves and returns. The
                         // previous unconditional behaviour caused noticeable

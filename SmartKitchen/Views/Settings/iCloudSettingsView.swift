@@ -9,6 +9,8 @@ struct iCloudSettingsView: View {
     @State private var showDisableConfirm = false
     @State private var showError = false
     @State private var errorMessage = ""
+    @State private var pendingPaywallReason: PaywallSheet.Reason?
+    @State private var gate = FeatureGate.shared
 
     private var settings: AppSettings? { settingsArray.first }
 
@@ -19,13 +21,26 @@ struct iCloudSettingsView: View {
                     get: { cloudSync.syncEnabled },
                     set: { newValue in
                         if newValue {
+                            // DATA SAFETY: hard gate aplica-se apenas ao
+                            // toggle ON inicial. Se sync já está ON
+                            // (premium expirado), nunca desliga.
+                            if !gate.canAccess(.iCloudSync) {
+                                pendingPaywallReason = .hardGate(FeatureGate.HardFeature.iCloudSync.displayName)
+                                return
+                            }
                             enableSync()
                         } else {
                             showDisableConfirm = true
                         }
                     }
                 )) {
-                    Label("Sincronizar com iCloud", systemImage: "icloud")
+                    HStack {
+                        Label("Sincronizar com iCloud", systemImage: "icloud")
+                        if !gate.canAccess(.iCloudSync) && !cloudSync.syncEnabled {
+                            Spacer(minLength: 8)
+                            premiumBadge
+                        }
+                    }
                 }
                 .disabled(isTransitioning)
 
@@ -165,6 +180,9 @@ struct iCloudSettingsView: View {
         } message: {
             Text(errorMessage)
         }
+        .sheet(item: $pendingPaywallReason) { reason in
+            PaywallSheet(reason: reason)
+        }
     }
 
     // MARK: - Actions
@@ -206,5 +224,29 @@ struct iCloudSettingsView: View {
                 .foregroundStyle(.green)
                 .font(.subheadline)
         }
+    }
+
+    private var premiumBadge: some View {
+        HStack(spacing: 3) {
+            Image(systemName: "sparkles")
+                .font(.system(size: 9, weight: .bold))
+            Text("Premium")
+                .font(.system(size: 10, weight: .bold))
+        }
+        .padding(.horizontal, 7)
+        .padding(.vertical, 3)
+        .foregroundStyle(.white)
+        .background(
+            Capsule().fill(
+                LinearGradient(
+                    colors: [
+                        Color(red: 0.98, green: 0.83, blue: 0.43),
+                        Color(red: 0.82, green: 0.60, blue: 1.00)
+                    ],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+        )
     }
 }

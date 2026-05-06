@@ -36,6 +36,9 @@ struct FoodEntryFormView: View {
     @State private var voiceTranscriptBaseline: String = ""
     @State private var aiService = NutritionAIService()
     @State private var speech = NutritionSpeechRecognizer()
+    /// Drives the in-app paywall sheet when the daily Nutrition AI quota
+    /// is reached on free tier.
+    @State private var pendingPaywallReason: PaywallSheet.Reason?
 
     @FocusState private var focused: Field?
 
@@ -117,6 +120,9 @@ struct FoodEntryFormView: View {
             .presentationDetents([.medium, .large])
             .presentationDragIndicator(.visible)
             #endif
+        }
+        .sheet(item: $pendingPaywallReason) { reason in
+            PaywallSheet(reason: reason)
         }
     }
 
@@ -212,12 +218,18 @@ struct FoodEntryFormView: View {
     private func runAI() async {
         let trimmed = aiPrompt.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
+        // Free-tier daily Nutrition AI gate.
+        guard FeatureGate.shared.canUse(.nutritionAI) else {
+            pendingPaywallReason = .limitReached(.nutritionAI)
+            return
+        }
         if speech.state == .recording { speech.stop() }
         isAnalyzing = true
         aiError = nil
         defer { isAnalyzing = false }
         do {
             let analysis = try await aiService.analyzeText(description: trimmed)
+            FeatureGate.shared.consume(.nutritionAI)
             apply(analysis)
         } catch {
             aiError = error.localizedDescription

@@ -22,6 +22,10 @@ final class RecipeImportCoordinator {
     }
     var isPresented: Bool = true
 
+    /// When set, the host view should present `PaywallSheet` for this reason
+    /// (e.g. daily import quota exhausted on free tier).
+    var pendingPaywallReason: PaywallSheet.Reason?
+
     /// Pre-filled source (when the caller already has content — e.g. from share extension).
     var prefilledSource: RecipeImportSource?
 
@@ -89,6 +93,17 @@ final class RecipeImportCoordinator {
                     HapticManager.impact(style: .medium)
                 } catch is CancellationError {
                     RecipeImportLogger.info("import cancelled by CancellationError", sessionID: sessionID)
+                } catch let error as RecipeImportError {
+                    if case .dailyLimitReached = error {
+                        RecipeImportLogger.info("import blocked by daily limit — routing to paywall", sessionID: sessionID)
+                        self.phase = .pickingSource
+                        self.pendingPaywallReason = .limitReached(.imports)
+                        HapticManager.impact(style: .heavy)
+                    } else {
+                        self.phase = .failed(message: error.localizedDescription)
+                        RecipeImportLogger.error("import failed error=\(error.localizedDescription)", sessionID: sessionID)
+                        HapticManager.impact(style: .heavy)
+                    }
                 } catch {
                     self.phase = .failed(message: error.localizedDescription)
                     RecipeImportLogger.error("import failed error=\(error.localizedDescription)", sessionID: sessionID)

@@ -42,6 +42,9 @@ struct FoodCaptureHostView: View {
     @State private var hasTriggeredInitialInput = false
     @State private var hasTriggeredPreloadedAnalysis = false
     @State private var hasTriggeredAutomaticTextAnalysis = false
+    /// Drives the in-app paywall sheet when the daily Nutrition AI quota
+    /// is reached on free tier.
+    @State private var pendingPaywallReason: PaywallSheet.Reason?
     @FocusState private var isTextEditorFocused: Bool
 
     #if os(iOS)
@@ -136,6 +139,9 @@ struct FoodCaptureHostView: View {
             triggerInitialInputIfNeeded()
             triggerPreloadedAnalysisIfNeeded()
             triggerAutomaticTextAnalysisIfNeeded()
+        }
+        .sheet(item: $pendingPaywallReason) { reason in
+            PaywallSheet(reason: reason)
         }
     }
 
@@ -646,6 +652,12 @@ struct FoodCaptureHostView: View {
 
     private func startImageAnalysis() {
         guard let image = capturedImage else { return }
+        // Free-tier daily Nutrition AI gate.
+        guard FeatureGate.shared.canUse(.nutritionAI) else {
+            pendingPaywallReason = .limitReached(.nutritionAI)
+            setStage(.gathering)
+            return
+        }
         setStage(.analyzing)
         Task {
             do {
@@ -665,12 +677,18 @@ struct FoodCaptureHostView: View {
                 switch mode {
                 case .photo:
                     let analysis = try await ai.analyzeFoodImage(imageData: data)
-                    await MainActor.run { setStage(.result(analysis)) }
+                    await MainActor.run {
+                        FeatureGate.shared.consume(.nutritionAI)
+                        setStage(.result(analysis))
+                    }
                 case .nutritionLabel:
                     let label = try await ai.analyzeNutritionLabel(imageData: data)
                     let serving = label.servingSizeGrams ?? 100
                     let analysis = label.scaled(to: serving)
-                    await MainActor.run { setStage(.result(analysis)) }
+                    await MainActor.run {
+                        FeatureGate.shared.consume(.nutritionAI)
+                        setStage(.result(analysis))
+                    }
                 case .text, .voice:
                     break
                 }
@@ -684,11 +702,19 @@ struct FoodCaptureHostView: View {
     private func startTextAnalysis() {
         let text = typedText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return }
+        // Free-tier daily Nutrition AI gate.
+        guard FeatureGate.shared.canUse(.nutritionAI) else {
+            pendingPaywallReason = .limitReached(.nutritionAI)
+            return
+        }
         setStage(.analyzing)
         Task {
             do {
                 let analysis = try await ai.analyzeText(description: text)
-                await MainActor.run { setStage(.result(analysis)) }
+                await MainActor.run {
+                    FeatureGate.shared.consume(.nutritionAI)
+                    setStage(.result(analysis))
+                }
             } catch {
                 let msg = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
                 await MainActor.run { setStage(.error(msg)) }

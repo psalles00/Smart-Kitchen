@@ -372,6 +372,8 @@ enum RecipeImportError: LocalizedError {
     case insufficientContent(suggestion: String)
     case aiFailed(String)
     case cancelled
+    /// Free-tier diário esgotado.
+    case dailyLimitReached(usage: Int, limit: Int)
 
     var errorDescription: String? {
         switch self {
@@ -391,6 +393,8 @@ enum RecipeImportError: LocalizedError {
             return String(localized: "Falha ao estruturar a receita: \(msg)")
         case .cancelled:
             return String(localized: "Importação cancelada.")
+        case .dailyLimitReached(let usage, let limit):
+            return String(format: String(localized: "Você atingiu o limite diário de importações (%d/%d). Assine Premium para importar receitas ilimitadas."), usage, limit)
         }
     }
 }

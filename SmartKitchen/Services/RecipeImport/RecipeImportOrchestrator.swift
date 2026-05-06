@@ -34,6 +34,15 @@ final class RecipeImportOrchestrator {
         onStage: @MainActor @escaping (RecipeImportStage) -> Void
     ) async throws -> RecipeDraft {
         RecipeImportLogger.info("orchestrator import started \(RecipeImportLogger.sourceSummary(source))")
+        // Free-tier daily import gate. Premium users skip this entirely.
+        // The counter is consumed only after a successful import (see end).
+        let gate = FeatureGate.shared
+        if !gate.canUse(.imports) {
+            let usage = gate.usage(of: .imports)
+            let limit = FeatureGate.Feature.imports.freeLimit
+            RecipeImportLogger.info("orchestrator blocked by daily import limit usage=\(usage) limit=\(limit)")
+            throw RecipeImportError.dailyLimitReached(usage: usage, limit: limit)
+        }
         guard let pipeline = pipelines.first(where: { $0.canHandle(source) }) else {
             RecipeImportLogger.error("no pipeline found for source")
             throw RecipeImportError.unsupportedSource("Nenhum pipeline disponível.")
@@ -49,6 +58,8 @@ final class RecipeImportOrchestrator {
         RecipeImportLogger.info("normalized output \(RecipeImportLogger.draftSummary(normalized))")
         onStage(.finalizing)
         RecipeImportLogger.debug("stage=\(RecipeImportStage.finalizing.title)")
+        // Conta o consumo apenas após sucesso completo do pipeline.
+        gate.consume(.imports)
         return normalized
     }
 }

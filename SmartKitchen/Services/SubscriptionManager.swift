@@ -33,6 +33,12 @@ final class SubscriptionManager {
     private(set) var isSubscribed: Bool = false
     /// Identifier of the active product, if any.
     private(set) var activeProductID: String? = nil
+    /// Expiration date of the active subscription, if any.
+    private(set) var expirationDate: Date? = nil
+    /// True while a `restore()` call is in progress.
+    private(set) var isRestoring: Bool = false
+    /// Last restore feedback (humanised), nil until a restore happens.
+    private(set) var lastRestoreMessage: String? = nil
 
     nonisolated(unsafe) private var updatesTask: Task<Void, Never>? = nil
 
@@ -81,6 +87,7 @@ final class SubscriptionManager {
     func refreshEntitlements() async {
         var subscribed = false
         var activeID: String? = nil
+        var expiry: Date? = nil
         for await result in Transaction.currentEntitlements {
             if case .verified(let tx) = result,
                tx.productType == .autoRenewable,
@@ -88,11 +95,17 @@ final class SubscriptionManager {
                (tx.expirationDate ?? .distantFuture) > .now {
                 subscribed = true
                 activeID = tx.productID
+                expiry = tx.expirationDate
                 break
             }
         }
+        let changed = (self.isSubscribed != subscribed) || (self.activeProductID != activeID)
         self.isSubscribed = subscribed
         self.activeProductID = activeID
+        self.expirationDate = expiry
+        if changed {
+            NotificationCenter.default.post(name: .subscriptionStateChanged, object: nil)
+        }
     }
 
     // MARK: - Purchase / Restore
@@ -133,12 +146,24 @@ final class SubscriptionManager {
     /// Restores prior purchases by syncing transactions and re-evaluating
     /// entitlements. Calling `AppStore.sync()` requires user authentication.
     func restore() async {
+        isRestoring = true
+        let wasSubscribed = isSubscribed
         do {
             try await AppStore.sync()
         } catch {
-            // Surfaced silently — `refreshEntitlements` still runs.
+            isRestoring = false
+            lastRestoreMessage = String(localized: "Não foi possível restaurar agora. Tente novamente.")
+            return
         }
         await refreshEntitlements()
+        isRestoring = false
+        if isSubscribed && !wasSubscribed {
+            lastRestoreMessage = String(localized: "Assinatura restaurada com sucesso.")
+        } else if isSubscribed {
+            lastRestoreMessage = String(localized: "Sua assinatura já estava ativa.")
+        } else {
+            lastRestoreMessage = String(localized: "Nenhuma compra anterior encontrada.")
+        }
     }
 
     // MARK: - Private
@@ -146,4 +171,10 @@ final class SubscriptionManager {
     private func handle(transaction: Transaction) async {
         await refreshEntitlements()
     }
+}
+
+extension Notification.Name {
+    /// Posted whenever the user's subscription state transitions
+    /// (subscribed ↔ not subscribed, plan switch).
+    static let subscriptionStateChanged = Notification.Name("savoria.subscriptionStateChanged")
 }

@@ -14,6 +14,8 @@ struct InlineChatView: View {
     @State private var inputText = ""
     @State private var errorMessage: String?
     @State private var pendingToolExecution: PendingToolExecution?
+    /// Drives the in-app paywall sheet when free-tier limits are reached.
+    @State private var pendingPaywallReason: PaywallSheet.Reason?
     @FocusState private var isInputFocused: Bool
 
     // Cached RAG context
@@ -323,6 +325,9 @@ struct InlineChatView: View {
         }
         .navigationDestination(for: UUID.self) { id in
             RecipeDetailContainer(recipeID: id)
+        }
+        .sheet(item: $pendingPaywallReason) { reason in
+            PaywallSheet(reason: reason)
         }
     }
 
@@ -675,6 +680,13 @@ struct InlineChatView: View {
         inputText = ""
         errorMessage = nil
 
+        // Free-tier daily AI gate. `.recipeIdeas` and the standard chat both
+        // count against the same `.ai` bucket. Counter consumed on success.
+        guard FeatureGate.shared.canUse(.ai) else {
+            pendingPaywallReason = .limitReached(.ai)
+            return
+        }
+
         if aiChatPreset == .recipeIdeas {
             // Texto livre vira customQuery direto na EXA.
             Task {
@@ -785,6 +797,8 @@ struct InlineChatView: View {
                     latestUserText: latestUserText
                 )
             )
+            // Count this AI exchange against the daily quota only on success.
+            FeatureGate.shared.consume(.ai)
         } catch {
             errorMessage = error.localizedDescription
             let convId = ensureConversation()
@@ -1718,6 +1732,12 @@ struct InlineChatView: View {
         customQuery: String?,
         conversationId: UUID
     ) async {
+        // Free-tier daily AI gate (Recipe Ideas counts as `.ai`).
+        guard FeatureGate.shared.canUse(.ai) else {
+            pendingPaywallReason = .limitReached(.ai)
+            return
+        }
+        FeatureGate.shared.consume(.ai)
         isLoadingExaIdeas = true
         defer { isLoadingExaIdeas = false }
 

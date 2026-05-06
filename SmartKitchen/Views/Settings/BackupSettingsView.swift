@@ -52,6 +52,8 @@ struct BackupSettingsView: View {
 
     @State private var isExporting = false
     @State private var exportDocument = BackupZipDocument(data: Data())
+    @State private var pendingPaywallReason: PaywallSheet.Reason?
+    @State private var gate = FeatureGate.shared
 
     #if os(iOS)
     @State private var activeDocumentPicker: BackupDocumentPickerRequest?
@@ -103,11 +105,18 @@ struct BackupSettingsView: View {
                 }
 
                 Button {
+                    guard ensurePremiumBackupAccess() else { return }
                     Task {
                         await backupManager.createBackup(context: modelContext)
                     }
                 } label: {
-                    Label("Fazer backup agora", systemImage: "arrow.clockwise.icloud")
+                    HStack {
+                        Label("Fazer backup agora", systemImage: "arrow.clockwise.icloud")
+                        if !gate.canAccess(.externalBackup) {
+                            Spacer()
+                            premiumBadge
+                        }
+                    }
                 }
                 .disabled(backupManager.isWorking)
             } header: {
@@ -122,13 +131,24 @@ struct BackupSettingsView: View {
                     Toggle(isOn: Binding(
                         get: { settings.autoDailyBackupEnabled },
                         set: { newValue in
-                            settings.autoDailyBackupEnabled = newValue
-                            if newValue && settings.autoBackupBookmarkData == nil {
-                                presentFolderPicker()
+                            if newValue {
+                                guard ensurePremiumBackupAccess() else { return }
+                                settings.autoDailyBackupEnabled = true
+                                if settings.autoBackupBookmarkData == nil {
+                                    presentFolderPicker()
+                                }
+                            } else {
+                                settings.autoDailyBackupEnabled = false
                             }
                         }
                     )) {
-                        Label("Backup automático diário", systemImage: "calendar.badge.clock")
+                        HStack {
+                            Label("Backup automático diário", systemImage: "calendar.badge.clock")
+                            if !gate.canAccess(.externalBackup) {
+                                Spacer()
+                                premiumBadge
+                            }
+                        }
                     }
 
                     if settings.autoDailyBackupEnabled {
@@ -136,12 +156,16 @@ struct BackupSettingsView: View {
                             HStack {
                                 Label(folder, systemImage: "folder")
                                 Spacer()
-                                Button("Trocar") { presentFolderPicker() }
+                                Button("Trocar") {
+                                    guard ensurePremiumBackupAccess() else { return }
+                                    presentFolderPicker()
+                                }
                                     .buttonStyle(.bordered)
                                     .controlSize(.small)
                             }
                         } else {
                             Button {
+                                guard ensurePremiumBackupAccess() else { return }
                                 presentFolderPicker()
                             } label: {
                                 Label("Escolher pasta de destino…", systemImage: "folder.badge.plus")
@@ -157,11 +181,20 @@ struct BackupSettingsView: View {
 
             // MARK: - Exportar/Importar
             Section {
-                Button("Exportar backup (.zip)", systemImage: "square.and.arrow.up") {
+                Button {
+                    guard ensurePremiumBackupAccess() else { return }
                     exportBackup()
+                } label: {
+                    HStack {
+                        Label("Exportar backup", systemImage: "square.and.arrow.up")
+                        if !gate.canAccess(.externalBackup) {
+                            Spacer()
+                            premiumBadge
+                        }
+                    }
                 }
 
-                Button("Importar backup (.zip)", systemImage: "square.and.arrow.down") {
+                Button("Importar backup", systemImage: "square.and.arrow.down") {
                     presentImportPicker()
                 }
             } header: {
@@ -254,6 +287,9 @@ struct BackupSettingsView: View {
         } message: {
             Text(alertMessage)
         }
+        .sheet(item: $pendingPaywallReason) { reason in
+            PaywallSheet(reason: reason)
+        }
     }
 
     // MARK: - Subviews
@@ -292,6 +328,38 @@ struct BackupSettingsView: View {
         } catch {
             presentAlert(title: String(localized: "Falha ao exportar"), message: error.localizedDescription)
         }
+    }
+
+    private func ensurePremiumBackupAccess() -> Bool {
+        guard gate.canAccess(.externalBackup) else {
+            pendingPaywallReason = .hardGate(FeatureGate.HardFeature.externalBackup.displayName)
+            return false
+        }
+        return true
+    }
+
+    private var premiumBadge: some View {
+        HStack(spacing: 3) {
+            Image(systemName: "sparkles")
+                .font(.system(size: 9, weight: .bold))
+            Text("Premium")
+                .font(.system(size: 10, weight: .bold))
+        }
+        .padding(.horizontal, 7)
+        .padding(.vertical, 3)
+        .foregroundStyle(.white)
+        .background(
+            Capsule().fill(
+                LinearGradient(
+                    colors: [
+                        Color(red: 0.98, green: 0.83, blue: 0.43),
+                        Color(red: 0.82, green: 0.60, blue: 1.00)
+                    ],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+        )
     }
 
     private func presentImportPicker() {

@@ -199,6 +199,12 @@ struct RecipeImportHostView: View {
         .onDisappear {
             RecipeImportLogger.info("import host disappeared phase=\(phaseDescription(coordinator.phase))")
         }
+        .sheet(item: Binding(
+            get: { coordinator.pendingPaywallReason },
+            set: { coordinator.pendingPaywallReason = $0 }
+        )) { reason in
+            PaywallSheet(reason: reason)
+        }
     }
 
     private func phaseDescription(_ phase: RecipeImportCoordinator.Phase) -> String {

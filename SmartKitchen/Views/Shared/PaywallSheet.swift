@@ -12,15 +12,23 @@ import SwiftUI
 struct PaywallSheet: View {
     @Environment(\.dismiss) private var dismiss
 
-    enum Reason {
+    enum Reason: Identifiable {
         case limitReached(FeatureGate.Feature)
         case hardGate(String)
         case manual
 
+        var id: String {
+            switch self {
+            case .limitReached(let f): return "limit-\(f.rawValue)"
+            case .hardGate(let s):     return "hard-\(s)"
+            case .manual:              return "manual"
+            }
+        }
+
         var title: String {
             switch self {
             case .limitReached(let f):
-                return String(format: String(localized: "Você atingiu o limite mensal de %@."), f.displayName)
+                return String(format: String(localized: "Você atingiu o limite diário de %@."), f.displayName)
             case .hardGate(let label):
                 return label
             case .manual:

@@ -11,6 +11,8 @@ struct AssistantView: View {
     @State private var inputText = ""
     @State private var errorMessage: String?
     @State private var pendingToolExecution: PendingToolExecution?
+    /// Drives the in-app paywall sheet when free-tier limits are reached.
+    @State private var pendingPaywallReason: PaywallSheet.Reason?
     @FocusState private var isInputFocused: Bool
 
     // Cached RAG context to avoid rebuilding on every message
@@ -106,6 +108,9 @@ struct AssistantView: View {
         }
         .navigationDestination(for: UUID.self) { id in
             RecipeDetailContainer(recipeID: id)
+        }
+        .sheet(item: $pendingPaywallReason) { reason in
+            PaywallSheet(reason: reason)
         }
     }
 
@@ -258,6 +263,13 @@ struct AssistantView: View {
             return
         }
 
+        // Free-tier daily AI gate. Counter is consumed only after the AI
+        // request actually goes out (see performAIChat).
+        guard FeatureGate.shared.canUse(.ai) else {
+            pendingPaywallReason = .limitReached(.ai)
+            return
+        }
+
         Task {
             await performAIChat(latestUserMessageID: userMessage.id, latestUserText: text)
         }
@@ -280,6 +292,9 @@ struct AssistantView: View {
                     latestUserText: latestUserText
                 )
             )
+            // Count this AI exchange against the free-tier daily quota only
+            // after a successful round-trip.
+            FeatureGate.shared.consume(.ai)
         } catch {
             errorMessage = error.localizedDescription
             let errorMsg = ChatMessage(

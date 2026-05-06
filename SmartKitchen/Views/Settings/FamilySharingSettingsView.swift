@@ -12,6 +12,8 @@ struct FamilySharingSettingsView: View {
     @State private var showError = false
     @State private var errorMessage = ""
     @State private var shareForController: CKShare?
+    @State private var pendingPaywallReason: PaywallSheet.Reason?
+    @State private var gate = FeatureGate.shared
 
     var body: some View {
         Form {
@@ -67,13 +69,23 @@ struct FamilySharingSettingsView: View {
                     .disabled(sharingService.isLoading)
                 } else {
                     Button {
+                        if !gate.canAccess(.familyShare) {
+                            pendingPaywallReason = .hardGate(FeatureGate.HardFeature.familyShare.displayName)
+                            return
+                        }
                         startSharing()
                     } label: {
-                        Label {
-                            Text("Iniciar Compartilhamento")
-                        } icon: {
-                            Image(systemName: "person.2.fill")
-                                .foregroundStyle(.purple)
+                        HStack {
+                            Label {
+                                Text("Iniciar Compartilhamento")
+                            } icon: {
+                                Image(systemName: "person.2.fill")
+                                    .foregroundStyle(.purple)
+                            }
+                            if !gate.canAccess(.familyShare) {
+                                Spacer()
+                                premiumBadge
+                            }
                         }
                     }
                     .disabled(!cloudSync.syncEnabled || sharingService.isLoading)
@@ -185,6 +197,9 @@ struct FamilySharingSettingsView: View {
                 )
             }
         }
+        .sheet(item: $pendingPaywallReason) { reason in
+            PaywallSheet(reason: reason)
+        }
     }
 
     // MARK: - Actions
@@ -253,6 +268,30 @@ struct FamilySharingSettingsView: View {
                 .foregroundStyle(.secondary)
                 .font(.footnote)
         }
+    }
+
+    private var premiumBadge: some View {
+        HStack(spacing: 3) {
+            Image(systemName: "sparkles")
+                .font(.system(size: 9, weight: .bold))
+            Text("Premium")
+                .font(.system(size: 10, weight: .bold))
+        }
+        .padding(.horizontal, 7)
+        .padding(.vertical, 3)
+        .foregroundStyle(.white)
+        .background(
+            Capsule().fill(
+                LinearGradient(
+                    colors: [
+                        Color(red: 0.98, green: 0.83, blue: 0.43),
+                        Color(red: 0.82, green: 0.60, blue: 1.00)
+                    ],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+        )
     }
 }
 

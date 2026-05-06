@@ -1,16 +1,29 @@
 import SwiftUI
 
-/// Placeholder de gate de assinatura para funcionalidades premium de Nutrição.
-/// Hoje está inerte — toda a experiência continua gratuita. Quando/se formos
-/// monetizar, basta trocar `isSubscribed` para respeitar `PurchaseManager`.
+/// Façade fina sobre `FeatureGate` para call sites legados na stack de
+/// Nutrição. Em código novo prefira `FeatureGate.shared.canUse(.nutritionAI)`
+/// e apresente `PaywallSheet(reason: .limitReached(.nutritionAI))` pela view.
+@MainActor
 enum NutritionPaywallGate {
-    /// Retorna `true` enquanto não houver paywall ativa. Mantém a API pronta
-    /// para chamadores como `FoodCaptureHostView` ou `NutritionAIService` sem
-    /// tocar em nenhuma UI de compras.
-    static var isSubscribed: Bool { true }
+    /// True se o usuário pode realizar mais uma análise nutricional via IA
+    /// (premium ilimitado, free 2/dia).
+    static var canUseNutritionAI: Bool {
+        FeatureGate.shared.canUse(.nutritionAI)
+    }
 
-    /// Apresenta o fluxo premium. Inerte por enquanto.
+    /// True se o usuário tem assinatura premium ativa.
+    static var isSubscribed: Bool {
+        FeatureGate.shared.isPremium
+    }
+
+    /// Conta o consumo de uma análise nutricional. Chamar APÓS sucesso.
+    static func consume() {
+        FeatureGate.shared.consume(.nutritionAI)
+    }
+
+    /// Mantido para compatibilidade — call sites devem migrar para
+    /// apresentar `PaywallSheet` diretamente da view.
     static func presentIfNeeded() {
-        // no-op até integrarmos com StoreKit / PurchaseManager.
+        // no-op — apresentação do paywall é responsabilidade da view.
     }
 }

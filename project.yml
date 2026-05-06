@@ -104,6 +104,7 @@ targets:
     scheme:
       testTargets: []
       gatherCoverageData: false
+      storeKitConfiguration: SmartKitchen/Resources/Configuration.storekit
 
   SavoriaShareExtension:
     type: app-extension
