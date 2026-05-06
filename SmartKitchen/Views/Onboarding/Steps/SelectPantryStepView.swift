@@ -55,7 +55,15 @@ struct SelectPantryStepView: View {
     private var counterLabel: String {
         let count = state.selectedPantryItemIDs.count
         return count >= 3
-            ? String(localized: "\(count) selecionados")
-            : String(localized: "Selecione mais \(3 - count) para continuar")
+            ? String(
+                format: String(localized: "%lld selecionados"),
+                locale: Locale.current,
+                count
+            )
+            : String(
+                format: String(localized: "Selecione mais %lld para continuar"),
+                locale: Locale.current,
+                3 - count
+            )
     }
 }

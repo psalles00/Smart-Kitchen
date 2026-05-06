@@ -121,7 +121,7 @@ struct WelcomeStepView: View {
     private var localizedTitle: Text {
         let localized = String(localized: "Organizar sua cozinha e comer bem não precisa ser difícil")
 
-        let segments = markdownTitleSegments(from: localized)
+        let segments = titleSegments(from: localized)
         if segments.isEmpty {
             return Text(localized)
                 .font(titleFont)
@@ -145,7 +145,21 @@ struct WelcomeStepView: View {
         }
     }
 
-    private func markdownTitleSegments(from localized: String) -> [TitleSegment] {
+    private func titleSegments(from localized: String) -> [TitleSegment] {
+        if let attributed = try? AttributedString(markdown: localized) {
+            let segments = attributed.runs.reduce(into: [TitleSegment]()) { partial, run in
+                let content = String(attributed[run.range].characters)
+                guard !content.isEmpty else { return }
+
+                let isEmphasized = run.inlinePresentationIntent?.contains(.emphasized) == true
+                partial.append(TitleSegment(content: content, isEmphasized: isEmphasized))
+            }
+
+            if !segments.isEmpty {
+                return segments
+            }
+        }
+
         var segments: [TitleSegment] = []
         var buffer = ""
         var isEmphasized = false

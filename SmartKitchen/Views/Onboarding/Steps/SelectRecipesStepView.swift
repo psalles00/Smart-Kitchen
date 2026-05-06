@@ -61,8 +61,16 @@ struct SelectRecipesStepView: View {
     private var counterLabel: String {
         let count = state.selectedRecipeTemplateIDs.count
         return count >= 2
-            ? String(localized: "\(count) selecionadas")
-            : String(localized: "Selecione mais \(2 - count) para continuar")
+            ? String(
+                format: String(localized: "%lld selecionadas"),
+                locale: Locale.current,
+                count
+            )
+            : String(
+                format: String(localized: "Selecione mais %lld para continuar"),
+                locale: Locale.current,
+                2 - count
+            )
     }
 }
 
@@ -81,7 +89,9 @@ private struct RecipeTemplateCard: View {
 
                 VStack(alignment: .leading, spacing: 0) {
                     gradientCover
+                        .frame(maxWidth: .infinity)
                         .frame(height: coverHeight)
+                        .clipped()
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text(template.name)
@@ -120,6 +130,7 @@ private struct RecipeTemplateCard: View {
         ZStack(alignment: .topTrailing) {
             if let photoFileName = template.photoFileName {
                 BundledOnboardingImage(filename: photoFileName)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .clipped()
             } else {
                 LinearGradient(
