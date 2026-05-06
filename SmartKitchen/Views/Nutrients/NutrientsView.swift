@@ -167,8 +167,7 @@ struct NutrientsView: View {
             }
         }
         .sheet(isPresented: $showOnboarding) {
-            NutritionOnboardingView()
-                .interactiveDismissDisabled()
+            NutritionOnboardingHostView()
         }
         #if os(iOS)
         .fullScreenCover(item: fullscreenEntrySheetBinding) { sheet in

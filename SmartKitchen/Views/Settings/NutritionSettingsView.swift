@@ -32,8 +32,7 @@ struct NutritionSettingsView: View {
         #endif
         .tint(PageTheme.nutrients.accentColor)
         .sheet(isPresented: $showRedoOnboarding) {
-            NutritionOnboardingView()
-                .interactiveDismissDisabled()
+            NutritionOnboardingHostView()
         }
         .alert("Redefinir perfil de nutrição?", isPresented: $showResetConfirmation) {
             Button("Cancelar", role: .cancel) {}

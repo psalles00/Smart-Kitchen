@@ -492,6 +492,26 @@ struct NutritionOnboardingView: View {
     }
 }
 
+/// Routes nutrition setup through the platform-appropriate onboarding flow.
+/// macOS uses the new first-launch onboarding instead of the legacy green
+/// nutrition-only flow, while iOS keeps the existing short setup sheet.
+struct NutritionOnboardingHostView: View {
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        #if os(macOS)
+        OnboardingFlowView {
+            dismiss()
+        }
+        .frame(minWidth: 980, minHeight: 720)
+        .interactiveDismissDisabled(true)
+        #else
+        NutritionOnboardingView()
+            .interactiveDismissDisabled()
+        #endif
+    }
+}
+
 #Preview {
     NutritionOnboardingView()
         .modelContainer(for: [NutritionProfile.self, WeightEntry.self, FoodEntry.self, NutritionDayLog.self], inMemory: true)

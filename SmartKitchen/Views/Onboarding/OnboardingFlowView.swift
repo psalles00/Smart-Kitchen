@@ -25,6 +25,10 @@ struct OnboardingFlowView: View {
 
     let onFinish: () -> Void
 
+    init(onFinish: @escaping () -> Void) {
+        self.onFinish = onFinish
+    }
+
     var body: some View {
         ZStack {
             // Soft adaptive backdrop. Specific steps may overlay their own
