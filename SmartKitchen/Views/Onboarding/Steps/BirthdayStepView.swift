@@ -26,7 +26,11 @@ struct BirthdayStepView: View {
                 in: ...Date.now,
                 displayedComponents: .date
             )
+#if os(iOS)
             .datePickerStyle(.wheel)
+#else
+            .datePickerStyle(.graphical)
+#endif
             .labelsHidden()
             .padding(.horizontal, 20)
 
@@ -47,3 +51,4 @@ struct BirthdayStepView: View {
         }
     }
 }
+

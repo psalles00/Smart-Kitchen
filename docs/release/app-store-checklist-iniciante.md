@@ -1,10 +1,18 @@
-# Checklist Manual Obrigatório — Publicação do Savoria na App Store
+# Checklist Manual Obrigatório — TestFlight e Publicação do Savoria
 
-Este documento transforma a checklist manual de publicação em um passo a passo para quem nunca publicou um app antes.
+Este documento transforma a checklist manual de lançamento em um passo a passo para quem nunca publicou um app antes.
 
-Objetivo: sair de um app funcionando localmente para um app enviado corretamente para a App Store com assinaturas, páginas legais, testes e build de produção.
+Objetivo: sair de um app funcionando localmente para um app testado no TestFlight e depois enviado corretamente para a App Store com assinaturas, páginas legais, testes e build de produção.
 
 Importante: faça os passos na ordem. Se você pular etapas, o App Store Connect normalmente bloqueia o envio depois.
+
+Fluxo recomendado para este projeto:
+
+1. Compilar e testar localmente.
+2. Enviar uma build para o App Store Connect.
+3. Liberar primeiro no TestFlight para algumas pessoas testarem.
+4. Corrigir o que aparecer.
+5. Só depois enviar para revisão da App Store.
 
 ## 1. O que você precisa antes de começar
 
@@ -421,6 +429,8 @@ Resultado esperado:
 
 ## 13. Envie a build para o App Store Connect
 
+Esta mesma build serve tanto para TestFlight quanto para a App Store. O caminho se separa só depois do upload.
+
 No Organizer:
 
 1. Selecione o archive recém-criado.
@@ -435,28 +445,162 @@ Resultado esperado:
 
 - A build aparece no App Store Connect após o processamento.
 
-## 14. Monte a versão que será enviada para revisão
+## 14. Publique primeiro no TestFlight
+
+Se você quer que algumas pessoas testem antes do lançamento oficial, este é o próximo passo.
+
+O TestFlight é a plataforma da Apple para distribuir versões beta do app.
+
+Existem dois tipos de teste:
+
+1. `Internal Testing`: para pessoas da sua equipe dentro do App Store Connect.
+2. `External Testing`: para usuários convidados fora da equipe.
+
+Se você quer testar com alguns usuários reais, normalmente o que você quer é `External Testing`.
+
+### Passo 14.1 — Entenda a diferença entre teste interno e externo
+
+Use esta regra simples:
+
+1. Se a pessoa já faz parte da equipe no App Store Connect, use `Internal Testing`.
+2. Se a pessoa é um usuário convidado comum, use `External Testing`.
+
+Diferença prática importante:
+
+1. Teste interno não precisa de Beta App Review da Apple.
+2. Teste externo precisa de aprovação de beta da Apple antes de liberar a build.
+
+### Passo 14.2 — Liberar para teste interno
+
+No App Store Connect:
+
+1. Abra o app `Savoria`.
+2. Abra a aba `TestFlight`.
+3. Espere a build enviada aparecer e terminar de processar.
+4. Vá para a área de `Internal Testing`.
+5. Adicione os usuários internos que vão testar.
+6. Associe a build mais recente a esses testers.
+
+No iPhone de cada tester interno:
+
+1. Instale o app `TestFlight` pela App Store.
+2. Aceite o convite.
+3. Instale a build beta do Savoria.
+
+Resultado esperado:
+
+- Os membros da equipe conseguem instalar o app beta sem esperar revisão beta da Apple.
+
+### Passo 14.3 — Liberar para teste externo
+
+Se você quer chamar alguns usuários reais, faça isso.
+
+No App Store Connect:
+
+1. Abra o app `Savoria`.
+2. Abra a aba `TestFlight`.
+3. Crie um grupo de testers externos, por exemplo `Beta Inicial`.
+4. Adicione os e-mails dos testers ou prepare um link público.
+5. Selecione a build que será testada.
+
+### Passo 14.4 — Preencha os dados exigidos para Beta App Review
+
+Para `External Testing`, a Apple normalmente pede algumas informações antes de aprovar a build beta.
+
+Preencha com cuidado:
+
+1. Nome da pessoa de contato.
+2. E-mail.
+3. Telefone.
+4. O que deve ser testado.
+5. Instruções para usar o app.
+6. Se necessário, credenciais ou observações para testar assinatura.
+
+Exemplo de texto útil em `What to Test`:
+
+`Testar onboarding, paywall, compra via TestFlight, limites do plano Free, importação de receitas e tela de backup.`
+
+Observação importante:
+
+1. Compras feitas em build do TestFlight usam ambiente de teste.
+2. O usuário não é cobrado de verdade.
+3. Isso é ideal para validar o fluxo de assinatura antes do lançamento oficial.
+
+### Passo 14.5 — Envie a build para Beta App Review
+
+Ainda no TestFlight:
+
+1. Clique para enviar a build para revisão beta.
+2. Aguarde a Apple aprovar a build para testers externos.
+
+Resultado esperado:
+
+- A build fica disponível para os usuários externos convidados.
+
+### Passo 14.6 — Convide os testers e acompanhe o uso
+
+Depois que a build beta for aprovada:
+
+1. Envie os convites por e-mail ou compartilhe o link público.
+2. Peça para os testers instalarem o app `TestFlight`.
+3. Peça que instalem a build do Savoria.
+4. Reúna feedback por mensagem, formulário ou e-mail.
+
+Peça que eles testem pelo menos:
+
+1. Fluxo de onboarding.
+2. Compra e restore de assinatura.
+3. Limites do modo Free.
+4. Importação de receitas.
+5. IA e IA Nutricional.
+6. iCloud Sync e backup.
+
+### Passo 14.7 — Saiba quando subir outra build
+
+Se algum problema importante aparecer:
+
+1. Corrija no código.
+2. Aumente o build/versionamento se necessário.
+3. Gere novo archive.
+4. Faça novo upload.
+5. Troque a build do grupo no TestFlight.
+
+Observações úteis:
+
+1. Builds do TestFlight expiram em 90 dias.
+2. Você pode repetir esse ciclo quantas vezes precisar antes da App Store.
+
+### Passo 14.8 — Decida quando sair do TestFlight e ir para a App Store
+
+Você deve avançar para a App Store apenas quando:
+
+1. O app estiver estável.
+2. O paywall e as assinaturas estiverem funcionando.
+3. Os testers não estiverem mais encontrando bugs críticos.
+4. Os textos e metadados finais estiverem prontos.
+
+## 15. Monte a versão que será enviada para revisão na App Store
 
 Agora você vai associar a build e as assinaturas à versão do app.
 
-### Passo 14.1 — Crie ou abra a versão
+### Passo 15.1 — Crie ou abra a versão
 
 Dentro do app no App Store Connect:
 
 1. Abra a aba da versão iOS.
 2. Crie uma nova versão, se necessário.
 
-### Passo 14.2 — Selecione a build processada
+### Passo 15.2 — Selecione a build processada
 
 Escolha a build que acabou de ser enviada.
 
-### Passo 14.3 — Associe as assinaturas
+### Passo 15.3 — Associe as assinaturas
 
 Na mesma tela da versão, adicione as IAPs/subscriptions relacionadas para revisão junto com o app.
 
 Se você esquecer isso, a Apple pode revisar o app sem revisar as assinaturas.
 
-### Passo 14.4 — Preencha App Review Information
+### Passo 15.4 — Preencha App Review Information
 
 Inclua:
 
@@ -474,7 +618,7 @@ Resultado esperado:
 
 - A versão não mostra campos obrigatórios faltando.
 
-## 15. Envie para revisão
+## 16. Envie para revisão da App Store
 
 Quando tudo estiver verde:
 
@@ -486,7 +630,7 @@ Resultado esperado:
 
 - A versão fica com status semelhante a `Waiting For Review` ou equivalente.
 
-## 16. Checklist final de confirmação
+## 17. Checklist final de confirmação
 
 Antes de considerar a tarefa concluída, confirme item por item:
 
@@ -501,14 +645,17 @@ Antes de considerar a tarefa concluída, confirme item por item:
 9. Existe um sandbox tester funcional.
 10. O paywall foi testado no simulador.
 11. A compra foi testada em sandbox.
-12. `project.yml` foi atualizado com a nova versão.
-13. Os entitlements foram conferidos após `xcodegen generate`.
-14. A build foi arquivada e enviada.
-15. A build correta foi anexada à versão.
-16. As assinaturas foram anexadas à revisão.
-17. A versão foi enviada para review.
+12. Pelo menos uma build foi distribuída no TestFlight.
+13. Testers internos ou externos conseguiram instalar a build.
+14. O feedback do TestFlight foi revisado.
+15. `project.yml` foi atualizado com a nova versão.
+16. Os entitlements foram conferidos após `xcodegen generate`.
+17. A build foi arquivada e enviada.
+18. A build correta foi anexada à versão.
+19. As assinaturas foram anexadas à revisão.
+20. A versão foi enviada para review.
 
-## 17. Problemas comuns e como reconhecer
+## 18. Problemas comuns e como reconhecer
 
 ### Problema: não consigo criar assinatura
 
@@ -545,7 +692,24 @@ Causas comuns:
 2. A conta sandbox não está configurada corretamente.
 3. A IAP ainda não está pronta no App Store Connect.
 
-## 18. Resultado final esperado
+### Problema: a build aparece no App Store Connect, mas não no TestFlight
+
+Causas comuns:
+
+1. A build ainda está processando.
+2. Faltam respostas de compliance no App Store Connect.
+3. A build ainda não foi associada a testers ou a um grupo de teste.
+
+### Problema: testers externos não conseguem instalar
+
+Causas comuns:
+
+1. A build ainda não foi aprovada no Beta App Review.
+2. O convite não foi aceito.
+3. O usuário não instalou o app `TestFlight`.
+4. O limite do grupo ou do link público foi atingido.
+
+## 19. Resultado final esperado
 
 Quando este documento estiver concluído do começo ao fim, você terá:
 
@@ -553,5 +717,6 @@ Quando este documento estiver concluído do começo ao fim, você terá:
 2. As assinaturas criadas corretamente.
 3. Páginas legais públicas.
 4. Testes locais e sandbox concluídos.
-5. Uma build enviada para a Apple.
-6. Uma versão pronta para revisão.
+5. Uma build validada no TestFlight com usuários reais ou equipe interna.
+6. Uma build enviada para a Apple.
+7. Uma versão pronta para revisão.

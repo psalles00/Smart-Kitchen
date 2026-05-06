@@ -39,7 +39,16 @@ struct NutritionProgressView: View {
             .padding(.top, 12)
         }
         .scrollIndicators(.hidden)
-        .background(Color(.systemGroupedBackground).ignoresSafeArea())
+        .background(
+            Group {
+                #if os(iOS)
+                Color(.systemGroupedBackground)
+                #else
+                Color(.windowBackgroundColor)
+                #endif
+            }
+            .ignoresSafeArea()
+        )
         .navigationTitle(String(localized: "Progresso"))
         #if os(iOS)
         .navigationBarTitleDisplayMode(.large)

@@ -154,7 +154,11 @@ struct NutritionOnboardingView: View {
                     in: ...(.now),
                     displayedComponents: .date
                 )
+                #if os(iOS)
                 .datePickerStyle(.wheel)
+                #else
+                .datePickerStyle(.graphical)
+                #endif
                 .labelsHidden()
                 .padding(.horizontal, 20)
                 .padding(.vertical, 12)
