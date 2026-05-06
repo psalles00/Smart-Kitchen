@@ -107,6 +107,8 @@ struct OnboardingFlowView: View {
                 commitOnboardingChoices(subscribed: false)
                 advance()
             })
+        case .goalProjection:
+            GoalProjectionStepView(state: state, onContinue: advance)
         case .paywall:
             PaywallStepView(state: state, onFinish: { subscribed in
                 finishOnboarding(subscribed: subscribed)
@@ -123,10 +125,11 @@ struct OnboardingFlowView: View {
 
     /// Hide the progress bar on the very first hero/welcome step (Nebula
     /// shader takes the whole screen) and on the final paywall step (which
-    /// renders its own full-bleed chrome).
+    /// renders its own full-bleed chrome). Also hidden on the goal projection
+    /// reveal so the result animation can take the whole screen.
     private var showsProgressBar: Bool {
         let step = OnboardingStep(rawValue: state.stepIndex) ?? .welcome
-        return step != .welcome && step != .paywall
+        return step != .welcome && step != .paywall && step != .goalProjection
     }
 
     private var stepTransition: AnyTransition {
@@ -460,6 +463,7 @@ private struct OnboardingPlaceholderStepView: View {
         case .rate: return "Ritmo da mudança"
         case .discoverySource: return "Como você conheceu o Savoria?"
         case .preparing: return "Preparando seu app…"
+        case .goalProjection: return "Sua trajetória"
         case .paywall: return "Smart Kitchen Premium"
         }
     }

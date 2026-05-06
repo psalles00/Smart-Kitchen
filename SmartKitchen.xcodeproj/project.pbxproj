@@ -240,6 +240,7 @@
 		E09B942D1E5D17E612EF1921 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 3788BD683F7C5CAD5A294F19 /* Localizable.xcstrings */; };
 		E0E9EB1EED1FDA9262AE8E2E /* SaveRecipesStepView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED7B4393004AFB6765574FB6 /* SaveRecipesStepView.swift */; };
 		E24BB9EAC8DE23695A819DBD /* RecipesInfoContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 269243D37B6FC903CD8D17DE /* RecipesInfoContent.swift */; };
+		E26ABE8D4DC3EDD8BC652791 /* GoalProjectionStepView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BA580A271ADC72FDCA4CAFE /* GoalProjectionStepView.swift */; };
 		E26FED3783EE89329A414F84 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 3788BD683F7C5CAD5A294F19 /* Localizable.xcstrings */; };
 		E2D6C9413CB06B30E98ADF19 /* RecipeIngredientsEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 025B8D2CE9B972E1D778416B /* RecipeIngredientsEditor.swift */; };
 		E31287FB0E9370855B1FC8CF /* Boska-Italic.otf in Resources */ = {isa = PBXBuildFile; fileRef = 51B3504E5B6AEC4327A2CE73 /* Boska-Italic.otf */; };
@@ -403,6 +404,7 @@
 		678AFBB472665B3EF5D72032 /* meta-fr.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "meta-fr.json"; sourceTree = "<group>"; };
 		69DAED45966A299314A19A92 /* FoodCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodCache.swift; sourceTree = "<group>"; };
 		6A6AECCA37DCF985379A2794 /* WeightTrackerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeightTrackerView.swift; sourceTree = "<group>"; };
+		6BA580A271ADC72FDCA4CAFE /* GoalProjectionStepView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalProjectionStepView.swift; sourceTree = "<group>"; };
 		6BAF026839BBC04F2BB2A869 /* FoodEntryRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodEntryRow.swift; sourceTree = "<group>"; };
 		6CD351710E6E853F0407AB7E /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		6D3A8A7840E1C2C1529B3007 /* CommandBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandBarView.swift; sourceTree = "<group>"; };
@@ -1057,6 +1059,7 @@
 				24C5CAE1B8DE2B8989D16B4E /* ActivityStepView.swift */,
 				5E56594AE256C9CCF0CF4CC0 /* BirthdayStepView.swift */,
 				6EF316580075877B807A6F91 /* BodyStepView.swift */,
+				6BA580A271ADC72FDCA4CAFE /* GoalProjectionStepView.swift */,
 				D65FB6BABFB487D84E8E3FD0 /* GoalStepView.swift */,
 				90815C5DCB960EDFD6DE5B2A /* MultimodalLoggingStepView.swift */,
 				CB932350074B80D6E4AF6692 /* NutritionCoachStepView.swift */,
@@ -1387,6 +1390,7 @@
 				49CE636DC479BA7C276C104F /* FoodImageStore.swift in Sources */,
 				EABE4295D095EADD5EB10F6C /* FoodResultView.swift in Sources */,
 				351A05C944DBA61E25E96A35 /* FullscreenAssistantView.swift in Sources */,
+				E26ABE8D4DC3EDD8BC652791 /* GoalProjectionStepView.swift in Sources */,
 				E873D7ED6E9B2A30644D7EDE /* GoalStepView.swift in Sources */,
 				330AEBA52EB222073A871CAE /* GroceryItem.swift in Sources */,
 				C6AA8569985991973BBC0BA7 /* GroceryListView.swift in Sources */,

@@ -1,11 +1,12 @@
 import SwiftUI
 import StoreKit
 
-/// Phase 5 — Step 18. Final paywall. Two product cards (Anual com trial /
-/// Mensal), CTA grande, links Termos/Privacidade/Restaurar e botão "Continuar
-/// gratuitamente" abaixo (sem trial-paywall hostil).
+/// Phase 5 — Final paywall. Redesigned 2026-05 to follow a focused single-plan
+/// layout (annual w/ trial) with an expandable "show more plans" toggle that
+/// reveals the monthly option, a Free × Premium comparison table, and a
+/// floating CTA with restore / legal links beneath.
 ///
-/// O onboarding **conclui** ao chamar `onFinish(subscribed:)` — independente
+/// The onboarding **conclui** ao chamar `onFinish(subscribed:)` — independente
 /// de o usuário comprar ou pular. Os dados (NutritionProfile, pantry, grocery,
 /// recipes) já foram gravados na tela `preparing`.
 struct PaywallStepView: View {
@@ -16,69 +17,56 @@ struct PaywallStepView: View {
     @State private var selectedID: String = SubscriptionManager.annualProductID
     @State private var showingErrorAlert = false
     @State private var errorMessage = ""
+    @State private var showAllPlans = false
 
-    private let theme = PageTheme.lists
+
+
+    private let primaryGradient = LinearGradient(
+        colors: [
+            Color(red: 0.98, green: 0.83, blue: 0.43),
+            Color(red: 1.00, green: 0.53, blue: 0.62),
+            Color(red: 0.82, green: 0.60, blue: 1.00)
+        ],
+        startPoint: .leading,
+        endPoint: .trailing
+    )
 
     var body: some View {
-        GeometryReader { proxy in
-            ZStack {
-                backgroundLayer.ignoresSafeArea()
+        ZStack(alignment: .topLeading) {
+            backgroundLayer.ignoresSafeArea()
 
-                ScrollView(showsIndicators: false) {
-                    VStack(spacing: 24) {
-                        header
-                        benefits
-                        plans
-                        legalLinks
-                    }
-                    .padding(.horizontal, 22)
-                    .padding(.top, max(0, proxy.safeAreaInsets.top - 4))
-                    .padding(.bottom, 180)
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 22) {
+                    heroSection
+                        .padding(.top, 12)
+                    titleBlock
+                    plansSection
+                    benefitsTable
                 }
+                .padding(.horizontal, 22)
+                .padding(.top, 56)
+                .padding(.bottom, 220)
             }
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                purchaseSection
-                    .padding(.horizontal, 22)
-                    .padding(.top, 18)
-                    .padding(.bottom, 18)
-                    .background(
-                        ZStack {
-                            Rectangle()
-                                .fill(.ultraThinMaterial)
 
-                            LinearGradient(
-                                colors: [
-                                    Color.clear,
-                                    Color.black.opacity(0.18),
-                                    Color.black.opacity(0.62)
-                                ],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        }
-                        .overlay(alignment: .top) {
-                            LinearGradient(
-                                colors: [Color.white.opacity(0.10), Color.clear],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                            .frame(height: 14)
-                        }
-                        .ignoresSafeArea()
-                    )
-            }
+            // Discreet close button — top-left.
+            closeButton
+                .padding(.leading, 14)
+                .padding(.top, 8)
         }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            purchaseSection
+        }
+        .environment(\.colorScheme, .dark)
+        .preferredColorScheme(.dark)
         .task {
             state.selectedPlanID = selectedID
             await manager.loadProducts()
         }
-        .alert("Erro na compra", isPresented: $showingErrorAlert) {
+        .alert(String(localized: "Erro na compra"), isPresented: $showingErrorAlert) {
             Button("OK", role: .cancel) {}
         } message: {
             Text(errorMessage)
         }
-        .environment(\.colorScheme, .dark)
-        .preferredColorScheme(.dark)
     }
 
     // MARK: - Background
@@ -101,72 +89,147 @@ struct PaywallStepView: View {
         }
     }
 
-    // MARK: - Header
+    // MARK: - Close
 
-    private var header: some View {
-        VStack(spacing: 12) {
-            Image("AppLogoB")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 96, height: 96)
-                .shadow(color: .black.opacity(0.30), radius: 24, y: 10)
-
-            Text(String(localized: "Desbloqueie tudo no Savoria"))
-                .font(.system(size: 30, weight: .bold))
-                .foregroundStyle(.white)
-                .multilineTextAlignment(.center)
-                .padding(.top, 4)
-
-            Text(String(localized: "Comece com 7 dias grátis no plano anual."))
-                .font(.system(size: 15, weight: .medium))
-                .foregroundStyle(.white.opacity(0.78))
-                .multilineTextAlignment(.center)
+    private var closeButton: some View {
+        Button(action: { onFinish(false) }) {
+            Image(systemName: "xmark")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.75))
+                .frame(width: 32, height: 32)
+                .background(
+                    Circle().fill(Color.white.opacity(0.10))
+                )
         }
-        .padding(.horizontal, 20)
-        .padding(.top, 0)
-        .padding(.bottom, 12)
+        .buttonStyle(.plain)
+        .accessibilityLabel(String(localized: "Fechar"))
     }
 
-    // MARK: - Benefits
+    // MARK: - Hero
 
-    private var benefits: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            BenefitRow(icon: "wand.and.stars", title: String(localized: "IA ilimitada"), subtitle: String(localized: "Sugestões, importações e nutrição sem limites."))
-            BenefitRow(icon: "icloud.fill", title: String(localized: "iCloud + backup"), subtitle: String(localized: "Sincronização entre dispositivos com restauração."))
-            BenefitRow(icon: "person.2.fill", title: String(localized: "Compartilhamento familiar"), subtitle: String(localized: "Despensa e listas em tempo real com a família."))
-            BenefitRow(icon: "bolt.fill", title: String(localized: "Recursos novos primeiro"), subtitle: String(localized: "Acesso antecipado a tudo que lançamos."))
+    private var heroSection: some View {
+        Image("AppLogoB")
+            .resizable()
+            .scaledToFit()
+            .frame(width: 96, height: 96)
+            .shadow(color: Color.black.opacity(0.30), radius: 24, y: 10)
+            .frame(maxWidth: .infinity)
+    }
+
+    // MARK: - Title
+
+    private var titleBlock: some View {
+        VStack(spacing: 12) {
+            // "Savoria PREMIUM" — PREMIUM emphasized with gradient.
+            (Text("Savoria ").foregroundStyle(.white)
+                + Text("PREMIUM").foregroundStyle(primaryGradient))
+                .font(.system(size: 18, weight: .bold))
+                .tracking(0.6)
+
+            // "Achieve your goals 4.3x faster" — 4.3x with gradient.
+            achieveHeadline
+                .font(.custom("Bricolage Grotesque", size: 36, relativeTo: .largeTitle).weight(.heavy))
+                .tracking(-0.5)
+                .multilineTextAlignment(.center)
+                .lineLimit(3)
+                .minimumScaleFactor(0.7)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 8)
         }
-        .padding(18)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .glassEffect(.regular.tint(darkGlassTint).interactive(), in: .rect(cornerRadius: 24))
-        .overlay(surfaceBorder(cornerRadius: 24))
+    }
+
+    private var achieveHeadline: Text {
+        let prefix = String(localized: "Alcance seus objetivos ")
+        let highlight = String(localized: "4.3x")
+        let suffix = String(localized: " mais rápido")
+        return Text(prefix).foregroundStyle(.white)
+            + Text(highlight).foregroundStyle(primaryGradient)
+            + Text(suffix).foregroundStyle(.white)
     }
 
     // MARK: - Plans
 
-    private var plans: some View {
+    private var plansSection: some View {
         VStack(spacing: 12) {
+            // Annual plan — always visible, highlighted.
             planCard(
                 product: manager.annualProduct,
                 productID: SubscriptionManager.annualProductID,
-                title: String(localized: "Anual"),
-                badge: String(localized: "7 dias grátis"),
-                fallbackPrice: "$39.99",
-                period: String(localized: "/ano"),
-                pricePerMonth: pricePerMonthLabel(for: manager.annualProduct, dividedBy: 12),
-                isBestValue: true
+                title: String(localized: "7 dias grátis"),
+                badge: String(localized: "Mais popular"),
+                fallbackPrice: "$3.34",
+                period: String(localized: "por mê​s"),
+                subtitle: annualSubtitle,
+                isAnnual: true
             )
-            planCard(
-                product: manager.monthlyProduct,
-                productID: SubscriptionManager.monthlyProductID,
-                title: String(localized: "Mensal"),
-                badge: nil,
-                fallbackPrice: "$6.99",
-                period: String(localized: "/mês"),
-                pricePerMonth: nil,
-                isBestValue: false
-            )
+
+            if showAllPlans {
+                planCard(
+                    product: manager.monthlyProduct,
+                    productID: SubscriptionManager.monthlyProductID,
+                    title: String(localized: "Mensal"),
+                    badge: nil,
+                    fallbackPrice: "$6.99",
+                    period: String(localized: "por mê​s"),
+                    subtitle: nil,
+                    isAnnual: false
+                )
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+
+            Button {
+                withAnimation(.spring(response: 0.45, dampingFraction: 0.82)) {
+                    showAllPlans.toggle()
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Text(showAllPlans
+                         ? String(localized: "Ocultar planos")
+                         : String(localized: "Mostrar mais planos"))
+                    Image(systemName: showAllPlans ? "chevron.up" : "chevron.down")
+                }
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.75))
+                .padding(.vertical, 8)
+                .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.plain)
         }
+    }
+
+    /// "then $79.98 → $39.98/yr" subtitle for the annual card.
+    private var annualSubtitle: AttributedString? {
+        guard let annual = manager.annualProduct else { return nil }
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.locale = annual.priceFormatStyle.locale
+        let annualPriceStr = annual.displayPrice
+        let referenceStr: String? = {
+            guard let monthly = manager.monthlyProduct else { return nil }
+            let reference = monthly.price * 12
+            return formatter.string(from: reference as NSDecimalNumber)
+        }()
+
+        // Compose: "depois  $79.98  →  $39.98/ano"
+        let prefix = String(localized: "depois ")
+        let arrow = "  →  "
+        let yrSuffix = String(localized: "/ano")
+
+        var attr = AttributedString(prefix)
+        attr.foregroundColor = UIColor.white.withAlphaComponent(0.55)
+        if let referenceStr {
+            var ref = AttributedString(referenceStr)
+            ref.foregroundColor = UIColor.white.withAlphaComponent(0.55)
+            ref.strikethroughStyle = .single
+            attr.append(ref)
+            var arrowAttr = AttributedString(arrow)
+            arrowAttr.foregroundColor = UIColor.white.withAlphaComponent(0.55)
+            attr.append(arrowAttr)
+        }
+        var price = AttributedString(annualPriceStr + yrSuffix)
+        price.foregroundColor = UIColor.white.withAlphaComponent(0.85)
+        attr.append(price)
+        return attr
     }
 
     @ViewBuilder
@@ -177,11 +240,20 @@ struct PaywallStepView: View {
         badge: String?,
         fallbackPrice: String,
         period: String,
-        pricePerMonth: String?,
-        isBestValue: Bool
+        subtitle: AttributedString?,
+        isAnnual: Bool
     ) -> some View {
         let isSelected = selectedID == productID
-        let priceString = product?.displayPrice ?? fallbackPrice
+        let priceString: String = {
+            if isAnnual, let p = product {
+                let perMonth = p.price / Decimal(12)
+                let formatter = NumberFormatter()
+                formatter.numberStyle = .currency
+                formatter.locale = p.priceFormatStyle.locale
+                return formatter.string(from: perMonth as NSDecimalNumber) ?? fallbackPrice
+            }
+            return product?.displayPrice ?? fallbackPrice
+        }()
 
         Button {
             withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
@@ -189,86 +261,238 @@ struct PaywallStepView: View {
                 state.selectedPlanID = productID
             }
         } label: {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text(title)
-                        .font(.system(size: 18, weight: .bold))
-                    Spacer()
-                    if let badge {
-                        Text(badge)
-                            .font(.system(size: 11, weight: .bold))
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 5)
-                            .background(Capsule().fill(theme.secondaryAccentColor))
+            VStack(alignment: .leading, spacing: 10) {
+                if let badge {
+                    Text(badge)
+                        .font(.system(size: 11, weight: .bold))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(
+                            Capsule().fill(primaryGradient)
+                        )
+                        .foregroundStyle(.white)
+                }
+
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(title)
+                            .font(.custom("Bricolage Grotesque", size: 22, relativeTo: .title2).weight(.bold))
                             .foregroundStyle(.white)
+                        if let subtitle {
+                            Text(subtitle)
+                                .font(.system(size: 12, weight: .medium))
+                        }
                     }
-                }
-                .foregroundStyle(.white)
-                HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(priceString)
-                        .font(.system(size: 26, weight: .bold, design: .rounded))
-                    Text(period)
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.72))
+
                     Spacer()
-                }
-                if let pricePerMonth {
-                    Text(pricePerMonth)
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.72))
+
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Text(priceString)
+                            .font(.custom("Bricolage Grotesque", size: 24, relativeTo: .title2).weight(.bold))
+                            .foregroundStyle(.white)
+                        Text(period)
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(.white.opacity(0.65))
+                    }
                 }
             }
             .padding(18)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .glassEffect(
-                isSelected
-                    ? .regular.tint(selectedGlassTint).interactive()
-                    : .regular.tint(darkCardTint).interactive(),
-                in: .rect(cornerRadius: 22)
+            .background(
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .fill(Color.white.opacity(0.08))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 22, style: .continuous)
                     .strokeBorder(
-                        isSelected ? Color.white.opacity(0.92) : Color.white.opacity(0.16),
-                        lineWidth: isSelected ? 2.5 : 1
+                        isSelected
+                            ? AnyShapeStyle(primaryGradient)
+                            : AnyShapeStyle(Color.white.opacity(0.12)),
+                        lineWidth: isSelected ? 2.0 : 1
                     )
             )
-            .scaleEffect(isSelected ? 1.01 : 1.0)
         }
         .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
-    // MARK: - CTA
+    // MARK: - Benefits comparison table
+
+    private var benefitsTable: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text(String(localized: "O que você ganha"))
+                .font(.custom("Bricolage Grotesque", size: 20, relativeTo: .title3).weight(.bold))
+                .foregroundStyle(.white)
+
+            VStack(spacing: 0) {
+                tableHeader
+
+                Divider().background(Color.white.opacity(0.18)).opacity(0.6)
+
+                ForEach(comparisonRows.indices, id: \.self) { idx in
+                    let row = comparisonRows[idx]
+                    benefitRow(icon: row.icon, title: row.title, freeIncluded: row.free, premiumIncluded: row.premium)
+                    if idx < comparisonRows.count - 1 {
+                        Divider().background(Color.white.opacity(0.10))
+                    }
+                }
+            }
+            .padding(14)
+            .background(
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .fill(Color.white.opacity(0.06))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .strokeBorder(Color.white.opacity(0.10), lineWidth: 1)
+            )
+        }
+    }
+
+    private var tableHeader: some View {
+        HStack(spacing: 8) {
+            Spacer()
+            Text(String(localized: "Grátis"))
+                .font(.system(size: 12, weight: .bold))
+                .foregroundStyle(.white.opacity(0.65))
+                .frame(width: 60, alignment: .center)
+            Text(String(localized: "Premium"))
+                .font(.system(size: 12, weight: .bold))
+                .foregroundStyle(primaryGradient)
+                .frame(width: 60, alignment: .center)
+        }
+        .padding(.bottom, 8)
+    }
+
+    private struct ComparisonRow {
+        let icon: String
+        let title: String
+        let free: Bool
+        let premium: Bool
+    }
+
+    private var comparisonRows: [ComparisonRow] {
+        [
+            .init(icon: "wand.and.stars",
+                  title: String(localized: "IA ilimitada"),
+                  free: false, premium: true),
+            .init(icon: "square.and.arrow.down",
+                  title: String(localized: "Importação ilimitada de receitas"),
+                  free: false, premium: true),
+            .init(icon: "icloud.fill",
+                  title: String(localized: "iCloud + backup"),
+                  free: true, premium: true),
+            .init(icon: "person.2.fill",
+                  title: String(localized: "Compartilhamento familiar"),
+                  free: false, premium: true),
+            .init(icon: "chart.pie.fill",
+                  title: String(localized: "Nutrição IA sem limites"),
+                  free: false, premium: true),
+            .init(icon: "bolt.fill",
+                  title: String(localized: "Recursos novos primeiro"),
+                  free: false, premium: true)
+        ]
+    }
+
+    private func benefitRow(icon: String, title: String, freeIncluded: Bool, premiumIncluded: Bool) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon)
+                .font(.system(size: 14, weight: .bold))
+                .foregroundStyle(primaryGradient)
+                .frame(width: 22)
+            Text(title)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.92))
+                .frame(maxWidth: .infinity, alignment: .leading)
+            includedMark(included: freeIncluded, premium: false)
+                .frame(width: 60, alignment: .center)
+            includedMark(included: premiumIncluded, premium: true)
+                .frame(width: 60, alignment: .center)
+        }
+        .padding(.vertical, 10)
+    }
+
+    @ViewBuilder
+    private func includedMark(included: Bool, premium: Bool) -> some View {
+        if included {
+            if premium {
+                Image(systemName: "checkmark")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(primaryGradient)
+            } else {
+                Image(systemName: "checkmark")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(.white.opacity(0.55))
+            }
+        } else {
+            Image(systemName: "minus")
+                .font(.system(size: 14, weight: .bold))
+                .foregroundStyle(.white.opacity(0.30))
+        }
+    }
+
+    // MARK: - Purchase section (floating bottom)
 
     private var purchaseSection: some View {
-        VStack(spacing: 14) {
+        VStack(spacing: 12) {
             Button(action: handleBuy) {
                 HStack {
                     if case .purchasing = manager.purchaseState {
-                        ProgressView().tint(.white)
+                        ProgressView()
+                            .tint(.white)
                     } else {
                         Text(ctaLabel)
                             .font(.system(size: 17, weight: .bold))
+                            .foregroundStyle(.white)
                     }
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 6)
-            }
-            .buttonStyle(.glassProminent)
-            .tint(theme.accentColor)
-            .controlSize(.extraLarge)
-            .disabled(manager.products.isEmpty)
-            .opacity(manager.products.isEmpty ? 0.6 : 1)
-
-            // Discreet text-only fallback. No background, no chrome.
-            Button(action: { onFinish(false) }) {
-                Text(String(localized: "Continuar com plano grátis"))
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.42))
+                .frame(height: 56)
+                .background(
+                    Capsule(style: .continuous)
+                        .fill(primaryGradient)
+                )
+                .shadow(color: Color.pink.opacity(0.35), radius: 22, y: 10)
+                .contentShape(Capsule(style: .continuous))
             }
             .buttonStyle(.plain)
+            .disabled(manager.products.isEmpty)
+            .opacity(manager.products.isEmpty ? 0.6 : 1)
+            .sensoryFeedback(.impact(weight: .medium), trigger: manager.purchaseState.isSuccess)
+
+            HStack {
+                Button(String(localized: "Restaurar compras"), action: handleRestore)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.75))
+                Spacer()
+                Text(String(localized: "Sem cobrança agora. Cancele quando quiser."))
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.65))
+                    .multilineTextAlignment(.trailing)
+            }
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
         }
+        .padding(.horizontal, 22)
+        .padding(.top, 22)
+        .padding(.bottom, 12)
         .frame(maxWidth: .infinity)
+        .background(
+            // Dark gradient backdrop — transitions from transparent at the top
+            // (so content above can blend) to fully opaque dark at the bottom
+            // for crisp legibility behind the CTA.
+            LinearGradient(
+                colors: [
+                    Color.black.opacity(0.0),
+                    Color.black.opacity(0.55),
+                    Color.black.opacity(0.92),
+                    Color.black
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
+        )
     }
 
     private var ctaLabel: String {
@@ -291,91 +515,17 @@ struct PaywallStepView: View {
         }
     }
 
-    // MARK: - Legal
-
-    private var legalLinks: some View {
-        HStack(spacing: 18) {
-            Button(String(localized: "Restaurar")) {
-                Task {
-                    await manager.restore()
-                    if manager.isSubscribed { onFinish(true) }
-                }
-            }
-            Button(String(localized: "Termos")) {
-                if let url = URL(string: "https://savoria.app/terms") { openURL(url) }
-            }
-            Button(String(localized: "Privacidade")) {
-                if let url = URL(string: "https://savoria.app/privacy") { openURL(url) }
-            }
+    private func handleRestore() {
+        Task {
+            await manager.restore()
+            if manager.isSubscribed { onFinish(true) }
         }
-        .font(.system(size: 12, weight: .medium))
-        .foregroundStyle(.white.opacity(0.72))
-        .padding(.vertical, 12)
-        .padding(.horizontal, 18)
-        .glassEffect(.regular.tint(darkGlassTint), in: .capsule)
-        .overlay(surfaceBorder(cornerRadius: 999))
-        .padding(.top, 4)
-    }
-
-    @Environment(\.openURL) private var openURL
-
-    // MARK: - Helpers
-
-    private func pricePerMonthLabel(for product: Product?, dividedBy months: Int) -> String? {
-        guard let product else { return nil }
-        let perMonth = product.price / Decimal(months)
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.locale = product.priceFormatStyle.locale
-        if let str = formatter.string(from: perMonth as NSDecimalNumber) {
-            return String(format: String(localized: "Equivale a %@/mês"), str)
-        }
-        return nil
-    }
-
-    private var darkGlassTint: Color {
-        Color(red: 0.05, green: 0.09, blue: 0.16).opacity(0.78)
-    }
-
-    private var darkCardTint: Color {
-        Color(red: 0.06, green: 0.10, blue: 0.18).opacity(0.72)
-    }
-
-    private var selectedGlassTint: Color {
-        theme.accentColor.opacity(0.28)
-    }
-
-    @ViewBuilder
-    private func surfaceBorder(cornerRadius: CGFloat, emphasis: Bool = false) -> some View {
-        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-            .strokeBorder(
-                Color.white.opacity(emphasis ? 0.22 : 0.14),
-                lineWidth: emphasis ? 1.2 : 1
-            )
     }
 }
 
-// MARK: - Benefit row
-
-private struct BenefitRow: View {
-    let icon: String
-    let title: String
-    let subtitle: String
-
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.system(size: 18, weight: .bold))
-                .foregroundStyle(PageTheme.lists.secondaryAccentColor)
-                .frame(width: 32)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundStyle(.white)
-                Text(subtitle).font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.72))
-            }
-            Spacer()
-        }
+private extension SubscriptionManager.PurchaseState {
+    var isSuccess: Bool {
+        if case .success = self { return true }
+        return false
     }
 }

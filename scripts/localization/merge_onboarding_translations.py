@@ -452,6 +452,42 @@ T = {
     "Finalize com azeite, sal e pimenta.": {"en": "Finish with olive oil, salt and pepper.", "es": "Termina con aceite de oliva, sal y pimienta.", "fr": "Terminez avec de l'huile d'olive, du sel et du poivre.", "it": "Completa con olio d'oliva, sale e pepe.", "de": "Mit Olivenöl, Salz und Pfeffer abschließen.", "ja": "オリーブオイル、塩、こしょうで仕上げる。"},
     "almoço": {"en": "lunch", "es": "almuerzo", "fr": "déjeuner", "it": "pranzo", "de": "Mittagessen", "ja": "昼食"},
     "Lanche": {"en": "Snack", "es": "Snack", "fr": "Snack", "it": "Spuntino", "de": "Snack", "ja": "軽食"},
+
+    # ---- Goal projection step (2026-05) ----
+    "Com o Savoria, em %lld mês": {"en": "With Savoria, in %lld month", "es": "Con Savoria, en %lld mes", "fr": "Avec Savoria, dans %lld mois", "it": "Con Savoria, in %lld mese", "de": "Mit Savoria, in %lld Monat", "ja": "Savoriaなら、%lldヶ月で"},
+    "Com o Savoria, em %lld meses": {"en": "With Savoria, in %lld months", "es": "Con Savoria, en %lld meses", "fr": "Avec Savoria, dans %lld mois", "it": "Con Savoria, in %lld mesi", "de": "Mit Savoria, in %lld Monaten", "ja": "Savoriaなら、%lldヶ月で"},
+    "Com o Savoria, daqui a alguns meses": {"en": "With Savoria, a few months from now", "es": "Con Savoria, dentro de unos meses", "fr": "Avec Savoria, dans quelques mois", "it": "Con Savoria, tra qualche mese", "de": "Mit Savoria, in ein paar Monaten", "ja": "Savoriaなら、数ヶ月後には"},
+    "você terá conquistado seu objetivo de ": {"en": "you'll reach your goal of ", "es": "habrás alcanzado tu objetivo de ", "fr": "vous aurez atteint votre objectif de ", "it": "avrai raggiunto il tuo obiettivo di ", "de": "wirst du dein Ziel von ", "ja": "目標の"},
+    "você estará ": {"en": "you'll be ", "es": "estarás ", "fr": "vous serez ", "it": "sarai ", "de": "wirst du ", "ja": "あなたは"},
+    "no controle": {"en": "in control", "es": "en control", "fr": "aux commandes", "it": "in controllo", "de": "in Kontrolle", "ja": "コントロール下に"},
+    ", com hábitos consistentes.": {"en": ", with consistent habits.", "es": ", con hábitos consistentes.", "fr": ", avec des habitudes constantes.", "it": ", con abitudini costanti.", "de": ", mit konsequenten Gewohnheiten.", "ja": "、安定した習慣とともに。"},
+    "Sem o Savoria": {"en": "Without Savoria", "es": "Sin Savoria", "fr": "Sans Savoria", "it": "Senza Savoria", "de": "Ohne Savoria", "ja": "Savoriaなし"},
+    "Com o Savoria": {"en": "With Savoria", "es": "Con Savoria", "fr": "Avec Savoria", "it": "Con Savoria", "de": "Mit Savoria", "ja": "Savoriaあり"},
+    "Hoje": {"en": "Today", "es": "Hoy", "fr": "Aujourd'hui", "it": "Oggi", "de": "Heute", "ja": "今日"},
+    "Prazo": {"en": "Timeframe", "es": "Plazo", "fr": "Délai", "it": "Tempo", "de": "Zeitraum", "ja": "期間"},
+    "Meta": {"en": "Goal", "es": "Meta", "fr": "Objectif", "it": "Obiettivo", "de": "Ziel", "ja": "目標"},
+    "Manter": {"en": "Maintain", "es": "Mantener", "fr": "Maintenir", "it": "Mantenere", "de": "Halten", "ja": "維持"},
+
+    # ---- Paywall redesign (2026-05) ----
+    "Alcance seus objetivos ": {"en": "Achieve your goals ", "es": "Alcanza tus objetivos ", "fr": "Atteignez vos objectifs ", "it": "Raggiungi i tuoi obiettivi ", "de": "Erreiche deine Ziele ", "ja": "目標達成を"},
+    "4.3x": {"en": "4.3x", "es": "4.3x", "fr": "4.3x", "it": "4.3x", "de": "4.3x", "ja": "4.3倍"},
+    " mais rápido": {"en": " faster", "es": " más rápido", "fr": " plus rapide", "it": " più veloce", "de": " schneller", "ja": "速く"},
+    "Mais popular": {"en": "Most popular", "es": "Más popular", "fr": "Plus populaire", "it": "Più popolare", "de": "Beliebteste", "ja": "人気No.1"},
+    "Mostrar mais planos": {"en": "Show more plans", "es": "Mostrar más planes", "fr": "Afficher plus de plans", "it": "Mostra più piani", "de": "Mehr Pläne anzeigen", "ja": "他のプランを見る"},
+    "Ocultar planos": {"en": "Hide plans", "es": "Ocultar planes", "fr": "Masquer les plans", "it": "Nascondi piani", "de": "Pläne ausblenden", "ja": "プランを非表示"},
+    "O que você ganha": {"en": "What you get", "es": "Lo que obtienes", "fr": "Ce que vous obtenez", "it": "Cosa ottieni", "de": "Was du bekommst", "ja": "得られるもの"},
+    "Grátis": {"en": "Free", "es": "Gratis", "fr": "Gratuit", "it": "Gratis", "de": "Gratis", "ja": "無料"},
+    "Premium": {"en": "Premium", "es": "Premium", "fr": "Premium", "it": "Premium", "de": "Premium", "ja": "プレミアム"},
+    "Importação ilimitada de receitas": {"en": "Unlimited recipe imports", "es": "Importación ilimitada de recetas", "fr": "Imports de recettes illimités", "it": "Importazioni di ricette illimitate", "de": "Unbegrenzte Rezeptimporte", "ja": "レシピのインポート無制限"},
+    "Nutrição IA sem limites": {"en": "Unlimited Nutrition AI", "es": "Nutrición IA sin límites", "fr": "IA Nutrition illimitée", "it": "IA Nutrizione illimitata", "de": "Unbegrenzte Ernährungs-KI", "ja": "栄養AI無制限"},
+    "Sem cobrança agora. Cancele quando quiser.": {"en": "No charges yet. Cancel anytime.", "es": "Sin cargos ahora. Cancela cuando quieras.", "fr": "Aucun frais pour l'instant. Annulez à tout moment.", "it": "Nessun addebito ora. Annulla quando vuoi.", "de": "Noch keine Abbuchung. Jederzeit kündbar.", "ja": "今は請求されません。いつでもキャンセル可能。"},
+    "Restaurar compras": {"en": "Restore Purchases", "es": "Restaurar compras", "fr": "Restaurer les achats", "it": "Ripristina acquisti", "de": "Käufe wiederherstellen", "ja": "購入を復元"},
+    "Política de privacidade": {"en": "Privacy Policy", "es": "Política de privacidad", "fr": "Politique de confidentialité", "it": "Informativa sulla privacy", "de": "Datenschutzrichtlinie", "ja": "プライバシーポリシー"},
+    "Termos de uso": {"en": "Terms of Use", "es": "Términos de uso", "fr": "Conditions d'utilisation", "it": "Termini d'uso", "de": "Nutzungsbedingungen", "ja": "利用規約"},
+    "Erro na compra": {"en": "Purchase Error", "es": "Error en la compra", "fr": "Erreur d'achat", "it": "Errore d'acquisto", "de": "Kauffehler", "ja": "購入エラー"},
+    "depois ": {"en": "then ", "es": "luego ", "fr": "puis ", "it": "poi ", "de": "danach ", "ja": "その後 "},
+    "/ano": {"en": "/yr", "es": "/año", "fr": "/an", "it": "/anno", "de": "/Jahr", "ja": "/年"},
+    "por mês": {"en": "per month", "es": "por mes", "fr": "par mois", "it": "al mese", "de": "pro Monat", "ja": "月あたり"},
 }
 
 
