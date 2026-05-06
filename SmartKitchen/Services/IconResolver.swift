@@ -34,6 +34,12 @@ enum IconResolver {
         loadBundledIcon(filename)
     }
 
+    /// Returns the raw bundled bytes for a given image filename.
+    static func imageData(forFilename filename: String) -> Data? {
+        guard let url = bundledResourceURL(forFilename: filename) else { return nil }
+        return try? Data(contentsOf: url, options: [.mappedIfSafe])
+    }
+
     /// Returns the filename (without path) for a given item name.
     static func resolve(_ name: String) -> String? {
         let lower = name.lowercased()
@@ -104,10 +110,8 @@ enum IconResolver {
         }
 
         let image: PlatformImage?
-        if let path = Bundle.main.path(forResource: filename, ofType: nil, inDirectory: "images-128") {
-            image = PlatformImage(contentsOfFile: path)
-        } else if let path2 = Bundle.main.path(forResource: filename, ofType: nil) {
-            image = PlatformImage(contentsOfFile: path2)
+        if let url = bundledResourceURL(forFilename: filename) {
+            image = PlatformImage(contentsOfFile: url.path)
         } else {
             image = nil
         }
@@ -116,6 +120,13 @@ enum IconResolver {
             imageCache.setObject(image, forKey: cacheKey)
         }
         return image
+    }
+
+    private static func bundledResourceURL(forFilename filename: String) -> URL? {
+        if let url = Bundle.main.url(forResource: filename, withExtension: nil, subdirectory: "images-128") {
+            return url
+        }
+        return Bundle.main.url(forResource: filename, withExtension: nil)
     }
 
     // MARK: - Legacy Keyword Map

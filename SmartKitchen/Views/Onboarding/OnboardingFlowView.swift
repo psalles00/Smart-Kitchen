@@ -342,9 +342,12 @@ struct OnboardingFlowView: View {
             guard let template = OnboardingCatalog.recipeTemplates.first(where: { $0.id == id }) else { continue }
             guard !hasExistingRecipe(named: template.name, in: existingRecipes) else { continue }
 
+            let coverImageData = template.photoFileName.flatMap(IconResolver.imageData(forFilename:))
+
             let recipe = Recipe(
                 name: template.name,
                 descriptionText: template.summary,
+                imageData: coverImageData,
                 category: template.category,
                 tags: template.tags,
                 prepTime: template.prepMinutes,

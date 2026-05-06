@@ -28,14 +28,6 @@ enum RecipeSortOption: String, CaseIterable {
     }
 }
 
-private struct RecipesGalleryWidthPreferenceKey: PreferenceKey {
-    static let defaultValue: CGFloat = 0
-
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = nextValue()
-    }
-}
-
 // MARK: - View
 
 struct RecipesView: View {
@@ -192,14 +184,22 @@ struct RecipesView: View {
     private func galleryColumnCount(forAvailableWidth availableWidth: CGFloat) -> Int {
         let pageHorizontalPadding: CGFloat = 32
         let contentWidth = max(availableWidth - pageHorizontalPadding, 0)
-        let minimumCardWidth: CGFloat = 210
+        let minimumColumns = 3
+        let preferredCardWidth: CGFloat = 190
+        let minimumReasonableCardWidth: CGFloat = 180
         let spacing: CGFloat = 1
-        let maxColumns = 6
+        let maxColumns = 7
 
-        guard contentWidth > 0 else { return 3 }
+        guard contentWidth > 0 else { return minimumColumns }
 
-        let estimatedCount = Int((contentWidth + spacing) / (minimumCardWidth + spacing))
-        return min(max(estimatedCount, 2), maxColumns)
+        // macOS: 3 cards por linha como base. Conforme a janela cresce,
+        // adicionamos colunas só quando a largura total ainda sustenta
+        // cards visualmente confortáveis.
+        let preferredCount = Int((contentWidth + spacing) / (preferredCardWidth + spacing))
+        let maximumAllowedCount = Int((contentWidth + spacing) / (minimumReasonableCardWidth + spacing))
+        let clampedMaximum = min(max(maximumAllowedCount, minimumColumns), maxColumns)
+
+        return min(max(preferredCount, minimumColumns), clampedMaximum)
     }
     #endif
 
@@ -712,6 +712,31 @@ struct RecipesView: View {
             categoryFilter
 
             ScrollViewReader { proxy in
+                #if os(macOS)
+                GeometryReader { geometry in
+                    ScrollView {
+                        if viewMode == .gallery {
+                            galleryView
+                                .frame(width: geometry.size.width, alignment: .leading)
+                        } else {
+                            listView
+                                .frame(width: geometry.size.width, alignment: .leading)
+                        }
+                    }
+                    .onAppear {
+                        updateMacGalleryAvailableWidth(geometry.size.width)
+                    }
+                    .onChange(of: geometry.size.width) { _, width in
+                        updateMacGalleryAvailableWidth(width)
+                    }
+                    .onAppear {
+                        scrollToPendingRecipeIfNeeded(with: proxy)
+                    }
+                    .onChange(of: pendingRecipeScrollID) { _, _ in
+                        scrollToPendingRecipeIfNeeded(with: proxy)
+                    }
+                }
+                #else
                 ScrollView {
                     if viewMode == .gallery {
                         galleryView
@@ -725,6 +750,7 @@ struct RecipesView: View {
                 .onChange(of: pendingRecipeScrollID) { _, _ in
                     scrollToPendingRecipeIfNeeded(with: proxy)
                 }
+                #endif
             }
         }
     }
@@ -858,18 +884,8 @@ struct RecipesView: View {
         .padding(.horizontal, 16)
         .padding(.top, 0)
         .padding(.bottom, 20)
-        #if os(macOS)
-        .background {
-            GeometryReader { proxy in
-                Color.clear
-                    .preference(key: RecipesGalleryWidthPreferenceKey.self, value: proxy.size.width)
-            }
-        }
-        .onPreferenceChange(RecipesGalleryWidthPreferenceKey.self) { width in
-            guard abs(width - macGalleryAvailableWidth) > 1 else { return }
-            macGalleryAvailableWidth = width
-        }
-        #else
+        .frame(maxWidth: .infinity, alignment: .leading)
+        #if !os(macOS)
         .gesture(
             MagnificationGesture()
                 .onEnded { scale in
@@ -889,6 +905,13 @@ struct RecipesView: View {
         .onScrollOffsetChange(perform: updateInlineTitle)
     }
 
+    #if os(macOS)
+    private func updateMacGalleryAvailableWidth(_ width: CGFloat) {
+        guard width.isFinite, abs(width - macGalleryAvailableWidth) > 1 else { return }
+        macGalleryAvailableWidth = width
+    }
+    #endif
+
     // MARK: - List
 
     private var listView: some View {
@@ -906,6 +929,7 @@ struct RecipesView: View {
         .padding(.horizontal, 16)
         .padding(.top, 0)
         .padding(.bottom, 20)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .onScrollOffsetChange(perform: updateInlineTitle)
     }
 
