@@ -36,7 +36,7 @@ struct PaywallSheet: View {
     @State private var dummyState = OnboardingState()
 
     var body: some View {
-        ZStack(alignment: .topTrailing) {
+        ZStack {
             PaywallStepView(state: dummyState, onFinish: { _ in
                 dismiss()
             })
@@ -50,16 +50,6 @@ struct PaywallSheet: View {
                         .padding(.top, 8)
                 }
             }
-
-            Button(action: { dismiss() }) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundStyle(.primary)
-                    .frame(width: 32, height: 32)
-                    .background(Circle().fill(.ultraThinMaterial))
-            }
-            .padding(.top, 12)
-            .padding(.trailing, 14)
         }
     }
 }

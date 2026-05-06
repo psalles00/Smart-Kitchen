@@ -488,6 +488,7 @@ T = {
     "depois ": {"en": "then ", "es": "luego ", "fr": "puis ", "it": "poi ", "de": "danach ", "ja": "その後 "},
     "/ano": {"en": "/yr", "es": "/año", "fr": "/an", "it": "/anno", "de": "/Jahr", "ja": "/年"},
     "por mês": {"en": "per month", "es": "por mes", "fr": "par mois", "it": "al mese", "de": "pro Monat", "ja": "月あたり"},
+    "Cancele quando quiser.": {"en": "Cancel anytime.", "es": "Cancela cuando quieras.", "fr": "Annulez à tout moment.", "it": "Annulla quando vuoi.", "de": "Jederzeit kündbar.", "ja": "いつでもキャンセル可能。"},
 }
 
 

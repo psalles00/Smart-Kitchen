@@ -23,9 +23,9 @@ struct PaywallStepView: View {
 
     private let primaryGradient = LinearGradient(
         colors: [
-            Color(red: 0.98, green: 0.83, blue: 0.43),
-            Color(red: 1.00, green: 0.53, blue: 0.62),
-            Color(red: 0.82, green: 0.60, blue: 1.00)
+            Color(red: 0.73, green: 0.89, blue: 1.00),
+            Color(red: 0.49, green: 0.70, blue: 1.00),
+            Color(red: 0.38, green: 0.86, blue: 0.98)
         ],
         startPoint: .leading,
         endPoint: .trailing
@@ -38,14 +38,14 @@ struct PaywallStepView: View {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 22) {
                     heroSection
-                        .padding(.top, 12)
+                        .padding(.top, 2)
                     titleBlock
                     plansSection
                     benefitsTable
                 }
                 .padding(.horizontal, 22)
                 .padding(.top, 56)
-                .padding(.bottom, 220)
+                .padding(.bottom, 260)
             }
 
             // Discreet close button — top-left.
@@ -111,8 +111,9 @@ struct PaywallStepView: View {
         Image("AppLogoB")
             .resizable()
             .scaledToFit()
-            .frame(width: 96, height: 96)
-            .shadow(color: Color.black.opacity(0.30), radius: 24, y: 10)
+            .frame(width: 118, height: 118)
+            .shadow(color: Color.black.opacity(0.30), radius: 26, y: 10)
+            .offset(y: -10)
             .frame(maxWidth: .infinity)
     }
 
@@ -120,15 +121,30 @@ struct PaywallStepView: View {
 
     private var titleBlock: some View {
         VStack(spacing: 12) {
-            // "Savoria PREMIUM" — PREMIUM emphasized with gradient.
-            (Text("Savoria ").foregroundStyle(.white)
-                + Text("PREMIUM").foregroundStyle(primaryGradient))
-                .font(.system(size: 18, weight: .bold))
-                .tracking(0.6)
+            HStack(spacing: 10) {
+                Text("Savoria")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundStyle(.white)
+
+                Text("PREMIUM")
+                    .font(.system(size: 12, weight: .heavy))
+                    .foregroundStyle(primaryGradient)
+                    .padding(.horizontal, 11)
+                    .padding(.vertical, 6)
+                    .background(
+                        Capsule(style: .continuous)
+                            .fill(Color.white.opacity(0.08))
+                    )
+                    .overlay(
+                        Capsule(style: .continuous)
+                            .strokeBorder(Color.white.opacity(0.14), lineWidth: 1)
+                    )
+            }
+            .tracking(0.6)
 
             // "Achieve your goals 4.3x faster" — 4.3x with gradient.
             achieveHeadline
-                .font(.custom("Bricolage Grotesque", size: 36, relativeTo: .largeTitle).weight(.heavy))
+                .font(.custom("Bricolage Grotesque", size: 40, relativeTo: .largeTitle).weight(.heavy))
                 .tracking(-0.5)
                 .multilineTextAlignment(.center)
                 .lineLimit(3)
@@ -158,7 +174,7 @@ struct PaywallStepView: View {
                 title: String(localized: "7 dias grátis"),
                 badge: String(localized: "Mais popular"),
                 fallbackPrice: "$3.34",
-                period: String(localized: "por mê​s"),
+                period: String(localized: "por mês"),
                 subtitle: annualSubtitle,
                 isAnnual: true
             )
@@ -170,7 +186,7 @@ struct PaywallStepView: View {
                     title: String(localized: "Mensal"),
                     badge: nil,
                     fallbackPrice: "$6.99",
-                    period: String(localized: "por mê​s"),
+                    period: String(localized: "por mês"),
                     subtitle: nil,
                     isAnnual: false
                 )
@@ -199,33 +215,30 @@ struct PaywallStepView: View {
 
     /// "then $79.98 → $39.98/yr" subtitle for the annual card.
     private var annualSubtitle: AttributedString? {
-        guard let annual = manager.annualProduct else { return nil }
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
-        formatter.locale = annual.priceFormatStyle.locale
-        let annualPriceStr = annual.displayPrice
-        let referenceStr: String? = {
+        formatter.locale = manager.annualProduct?.priceFormatStyle.locale ?? Locale.current
+        let annualPriceStr = manager.annualProduct?.displayPrice ?? "$39.98"
+        let referenceStr: String = {
             guard let monthly = manager.monthlyProduct else { return nil }
             let reference = monthly.price * 12
             return formatter.string(from: reference as NSDecimalNumber)
-        }()
+        }() ?? "$79.98"
 
-        // Compose: "depois  $79.98  →  $39.98/ano"
+        // Compose: "then $79.98 → $39.98/yr"
         let prefix = String(localized: "depois ")
         let arrow = "  →  "
         let yrSuffix = String(localized: "/ano")
 
         var attr = AttributedString(prefix)
         attr.foregroundColor = UIColor.white.withAlphaComponent(0.55)
-        if let referenceStr {
-            var ref = AttributedString(referenceStr)
-            ref.foregroundColor = UIColor.white.withAlphaComponent(0.55)
-            ref.strikethroughStyle = .single
-            attr.append(ref)
-            var arrowAttr = AttributedString(arrow)
-            arrowAttr.foregroundColor = UIColor.white.withAlphaComponent(0.55)
-            attr.append(arrowAttr)
-        }
+        var ref = AttributedString(referenceStr)
+        ref.foregroundColor = UIColor.white.withAlphaComponent(0.55)
+        ref.strikethroughStyle = NSUnderlineStyle.single
+        attr.append(ref)
+        var arrowAttr = AttributedString(arrow)
+        arrowAttr.foregroundColor = UIColor.white.withAlphaComponent(0.55)
+        attr.append(arrowAttr)
         var price = AttributedString(annualPriceStr + yrSuffix)
         price.foregroundColor = UIColor.white.withAlphaComponent(0.85)
         attr.append(price)
@@ -381,7 +394,7 @@ struct PaywallStepView: View {
                   free: false, premium: true),
             .init(icon: "icloud.fill",
                   title: String(localized: "iCloud + backup"),
-                  free: true, premium: true),
+                free: false, premium: true),
             .init(icon: "person.2.fill",
                   title: String(localized: "Compartilhamento familiar"),
                   free: false, premium: true),
@@ -452,7 +465,7 @@ struct PaywallStepView: View {
                     Capsule(style: .continuous)
                         .fill(primaryGradient)
                 )
-                .shadow(color: Color.pink.opacity(0.35), radius: 22, y: 10)
+                .shadow(color: Color(red: 0.38, green: 0.86, blue: 0.98).opacity(0.30), radius: 22, y: 10)
                 .contentShape(Capsule(style: .continuous))
             }
             .buttonStyle(.plain)
@@ -465,7 +478,7 @@ struct PaywallStepView: View {
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(.white.opacity(0.75))
                 Spacer()
-                Text(String(localized: "Sem cobrança agora. Cancele quando quiser."))
+                Text(footerDisclaimer)
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(.white.opacity(0.65))
                     .multilineTextAlignment(.trailing)
@@ -474,8 +487,8 @@ struct PaywallStepView: View {
             .minimumScaleFactor(0.7)
         }
         .padding(.horizontal, 22)
-        .padding(.top, 22)
-        .padding(.bottom, 12)
+        .padding(.top, 72)
+        .padding(.bottom, 16)
         .frame(maxWidth: .infinity)
         .background(
             // Dark gradient backdrop — transitions from transparent at the top
@@ -484,6 +497,8 @@ struct PaywallStepView: View {
             LinearGradient(
                 colors: [
                     Color.black.opacity(0.0),
+                    Color.black.opacity(0.16),
+                    Color.black.opacity(0.34),
                     Color.black.opacity(0.55),
                     Color.black.opacity(0.92),
                     Color.black
@@ -493,6 +508,13 @@ struct PaywallStepView: View {
             )
             .ignoresSafeArea()
         )
+    }
+
+    private var footerDisclaimer: String {
+        if selectedID == SubscriptionManager.monthlyProductID {
+            return String(localized: "Cancele quando quiser.")
+        }
+        return String(localized: "Sem cobrança agora. Cancele quando quiser.")
     }
 
     private var ctaLabel: String {
