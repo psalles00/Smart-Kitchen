@@ -28,6 +28,14 @@ enum RecipeSortOption: String, CaseIterable {
     }
 }
 
+private struct RecipesGalleryWidthPreferenceKey: PreferenceKey {
+    static let defaultValue: CGFloat = 0
+
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
+    }
+}
+
 // MARK: - View
 
 struct RecipesView: View {
@@ -59,6 +67,9 @@ struct RecipesView: View {
     @State private var pendingRecipeScrollID: UUID?
     @State private var selectedRecipeID: UUID?
     @State private var categoryBarCenterToken: Int = 0
+    #if os(macOS)
+    @State private var macGalleryAvailableWidth: CGFloat = 0
+    #endif
 
     // Cached expensive computations
     @State private var cachedPantryNames: [String] = []
@@ -165,11 +176,38 @@ struct RecipesView: View {
         .linear(duration: 0)
     }
 
-    private var galleryColumns: [GridItem] {
+    private var galleryColumnCount: Int {
         #if os(macOS)
-        [GridItem(.adaptive(minimum: 150, maximum: 200), spacing: 1)]
+        galleryColumnCount(forAvailableWidth: macGalleryAvailableWidth)
         #else
-        Array(repeating: GridItem(.flexible(), spacing: 1), count: settings?.recipeGalleryColumns ?? 3)
+        settings?.recipeGalleryColumns ?? 3
+        #endif
+    }
+
+    private var galleryColumns: [GridItem] {
+        Array(repeating: GridItem(.flexible(), spacing: 1), count: galleryColumnCount)
+    }
+
+    #if os(macOS)
+    private func galleryColumnCount(forAvailableWidth availableWidth: CGFloat) -> Int {
+        let pageHorizontalPadding: CGFloat = 32
+        let contentWidth = max(availableWidth - pageHorizontalPadding, 0)
+        let minimumCardWidth: CGFloat = 210
+        let spacing: CGFloat = 1
+        let maxColumns = 6
+
+        guard contentWidth > 0 else { return 3 }
+
+        let estimatedCount = Int((contentWidth + spacing) / (minimumCardWidth + spacing))
+        return min(max(estimatedCount, 2), maxColumns)
+    }
+    #endif
+
+    private var galleryPrefetchColumnCount: Int {
+        #if os(macOS)
+        max(galleryColumnCount, 3)
+        #else
+        galleryColumnCount
         #endif
     }
 
@@ -809,7 +847,7 @@ struct RecipesView: View {
                     }
 
                     LazyVGrid(columns: galleryColumns, spacing: 1) {
-                        let cols = settings?.recipeGalleryColumns ?? 3
+                        let cols = galleryColumnCount
                         ForEach(Array(group.recipes.enumerated()), id: \.element.id) { index, recipe in
                             recipeGalleryCard(recipe, cornerRadii: galleryCornerRadii(index: index, total: group.recipes.count, columns: cols))
                         }
@@ -820,6 +858,18 @@ struct RecipesView: View {
         .padding(.horizontal, 16)
         .padding(.top, 0)
         .padding(.bottom, 20)
+        #if os(macOS)
+        .background {
+            GeometryReader { proxy in
+                Color.clear
+                    .preference(key: RecipesGalleryWidthPreferenceKey.self, value: proxy.size.width)
+            }
+        }
+        .onPreferenceChange(RecipesGalleryWidthPreferenceKey.self) { width in
+            guard abs(width - macGalleryAvailableWidth) > 1 else { return }
+            macGalleryAvailableWidth = width
+        }
+        #else
         .gesture(
             MagnificationGesture()
                 .onEnded { scale in
@@ -835,6 +885,7 @@ struct RecipesView: View {
                     }
                 }
         )
+        #endif
         .onScrollOffsetChange(perform: updateInlineTitle)
     }
 
@@ -865,7 +916,7 @@ struct RecipesView: View {
         let card = RecipeCardView(
             recipe: recipe,
             compatibility: compatibilities[recipe.id],
-            columns: settings?.recipeGalleryColumns ?? 3,
+            columns: galleryColumnCount,
             cornerRadii: cornerRadii
         )
         .equatable()
@@ -1286,7 +1337,7 @@ struct RecipesView: View {
     /// hit the persistent disk cache, so visible cards render instantly
     /// without the expensive original-image decode on a cold start.
     private func prefetchGalleryThumbnails() {
-        let cols = settings?.recipeGalleryColumns ?? 3
+        let cols = galleryPrefetchColumnCount
         let maxPixel: CGFloat = {
             switch cols {
             case 1: return 960

@@ -1601,7 +1601,7 @@ private struct HomeView: View {
             let trailingColumnWidth = min(max(width * 0.36, 250), 330)
             let featuredHeight: CGFloat = 232
             let stackedHeight: CGFloat = (featuredHeight - spacing) / 2
-            let quickTileHeight: CGFloat = 108
+            let quickTileHeight: CGFloat = 76
 
             VStack(alignment: .leading, spacing: spacing) {
                 HStack(alignment: .top, spacing: spacing) {
@@ -1646,19 +1646,19 @@ private struct HomeView: View {
                 }
 
                 HStack(alignment: .top, spacing: spacing) {
-                    macShortcutAddTile(title: String(localized: "Despensa"), imageName: "despensa", imageSize: 50) {
+                    macShortcutAddTile(title: String(localized: "Despensa"), imageName: "despensa", imageSize: 64, tileHeight: quickTileHeight) {
                         showAddPantry = true
                     }
 
-                    macShortcutAddTile(title: String(localized: "Mercado"), imageName: "mercado", imageSize: 58) {
+                    macShortcutAddTile(title: String(localized: "Mercado"), imageName: "mercado", imageSize: 72, tileHeight: quickTileHeight) {
                         showAddGrocery = true
                     }
 
-                    macShortcutAddTileMenu(title: String(localized: "Receitas"), imageName: "receitas", imageSize: 56) {
+                    macShortcutAddTileMenu(title: String(localized: "Receitas"), imageName: "receitas", imageSize: 68, tileHeight: quickTileHeight) {
                         recipeShortcutMenuContent
                     }
 
-                    macShortcutAddTileMenu(title: String(localized: "Alimento"), imageName: "nutrientes", imageSize: 58) {
+                    macShortcutAddTileMenu(title: String(localized: "Alimento"), imageName: "nutrientes", imageSize: 64, tileHeight: quickTileHeight) {
                         foodShortcutMenuContent
                     }
                 }
@@ -1667,7 +1667,7 @@ private struct HomeView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
         .frame(maxWidth: .infinity)
-        .frame(height: 370)
+        .frame(height: 338)
         .padding(.bottom, 12)
     }
 
@@ -1675,12 +1675,13 @@ private struct HomeView: View {
         title: String,
         imageName: String,
         imageSize: CGFloat? = nil,
+        tileHeight: CGFloat = 76,
         action: @escaping () -> Void
     ) -> some View {
         VStack(spacing: 8) {
             homeShortcutAddTile(imageName: imageName, imageSize: imageSize, action: action)
                 .frame(maxWidth: .infinity)
-                .frame(height: 108)
+                .frame(height: tileHeight)
 
             Text(title)
                 .font(.caption.weight(.bold))
@@ -1695,12 +1696,13 @@ private struct HomeView: View {
         title: String,
         imageName: String,
         imageSize: CGFloat? = nil,
+        tileHeight: CGFloat = 76,
         @ViewBuilder content: () -> Content
     ) -> some View {
         VStack(spacing: 8) {
             homeShortcutAddTileMenu(imageName: imageName, imageSize: imageSize, content: content)
                 .frame(maxWidth: .infinity)
-                .frame(height: 108)
+                .frame(height: tileHeight)
 
             Text(title)
                 .font(.caption.weight(.bold))

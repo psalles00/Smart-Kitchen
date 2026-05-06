@@ -51,6 +51,7 @@ struct AppearanceSettingsView: View {
                 Text("O que muda")
             }
         }
+        .formStyle(.grouped)
         .macSettingsContainer()
         .modalNavigationTitle(String(localized: "Aparência e Performance"))
         #if os(iOS)

@@ -91,11 +91,8 @@ struct RecipeCardView: View, Equatable {
             }
             .padding(columns >= 3 ? 8 : 12)
         }
-        #if os(macOS)
-        .frame(width: 150, height: 150)
-        #else
+        .frame(maxWidth: .infinity)
         .aspectRatio(1, contentMode: .fit)
-        #endif
         .background(Color(.secondarySystemBackground))
         .clipShape(.rect(cornerRadii: cornerRadii))
         .overlay {

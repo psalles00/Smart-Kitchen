@@ -159,6 +159,12 @@ struct NutritionDashboardView: View {
     /// Indicador de pontos abaixo, padrão de paging do iOS.
     @ViewBuilder
     private var macrosPager: some View {
+        #if os(macOS)
+        // No macOS, o "paging" por swipe não existe e o indicador de pontos
+        // ficava sem propósito. Mostramos apenas a página principal (macros)
+        // — micros aparecem nas seções inferiores quando aplicável.
+        macroPageMain
+        #else
         VStack(spacing: 10) {
             TabView(selection: $macroPageIndex) {
                 macroPageMain
@@ -173,9 +179,7 @@ struct NutritionDashboardView: View {
                     .padding(.horizontal, 0)
                     .tag(2)
             }
-            #if os(iOS)
             .tabViewStyle(.page(indexDisplayMode: .never))
-            #endif
             .frame(height: 86)
 
             // Indicador customizado para garantir aparência neutra.
@@ -191,6 +195,7 @@ struct NutritionDashboardView: View {
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("Página \(macroPageIndex + 1) de 3")
         }
+        #endif
     }
 
     @ViewBuilder
