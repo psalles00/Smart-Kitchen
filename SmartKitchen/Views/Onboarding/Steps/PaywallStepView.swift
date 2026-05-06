@@ -56,8 +56,6 @@ struct PaywallStepView: View {
         .safeAreaInset(edge: .bottom, spacing: 0) {
             purchaseSection
         }
-        .environment(\.colorScheme, .dark)
-        .preferredColorScheme(.dark)
         .task {
             state.selectedPlanID = selectedID
             await manager.loadProducts()
