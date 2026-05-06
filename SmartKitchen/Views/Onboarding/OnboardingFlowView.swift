@@ -15,6 +15,13 @@ struct OnboardingFlowView: View {
     /// Guards against running the SwiftData commit twice (preparing screen
     /// kicks it off, paywall completion would otherwise repeat it).
     @State private var didCommitChoices: Bool = false
+    @State private var subscriptionManager = SubscriptionManager()
+    @State private var restorePromptTitle = ""
+    @State private var showRestorePrompt = false
+    @State private var restoreFeedbackMessage = ""
+    @State private var showRestoreFeedbackAlert = false
+
+    private var cloudSync = CloudSyncService.shared
 
     let onFinish: () -> Void
 
@@ -42,6 +49,23 @@ struct OnboardingFlowView: View {
         }
         .preferredColorScheme(nil) // follow system
         .animation(.spring(response: 0.55, dampingFraction: 0.82), value: state.stepIndex)
+        .alert(restorePromptTitle, isPresented: $showRestorePrompt) {
+            Button(String(localized: "Continuar"), role: .cancel) {}
+            Button(restorePromptButtonTitle) {
+                finishOnboarding(
+                    subscribed: true,
+                    skippingSetup: true,
+                    enableICloudAfterDismiss: !cloudSync.syncEnabled
+                )
+            }
+        } message: {
+            Text(restorePromptMessage)
+        }
+        .alert(String(localized: "Restaurar compras"), isPresented: $showRestoreFeedbackAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(restoreFeedbackMessage)
+        }
     }
 
     // MARK: - Background
@@ -66,7 +90,11 @@ struct OnboardingFlowView: View {
         let step = OnboardingStep(rawValue: state.stepIndex) ?? .welcome
         switch step {
         case .welcome:
-            WelcomeStepView(onContinue: advance)
+            WelcomeStepView(
+                onContinue: advance,
+                onRestore: restorePurchasesFromWelcome,
+                isRestoring: subscriptionManager.isRestoring
+            )
         case .overview:
             OverviewStepView(onContinue: advance)
         case .recipeIdeas:
@@ -139,6 +167,18 @@ struct OnboardingFlowView: View {
         )
     }
 
+    private var restorePromptButtonTitle: String {
+        cloudSync.syncEnabled
+            ? String(localized: "Pular onboarding")
+            : String(localized: "Configurar iCloud e pular")
+    }
+
+    private var restorePromptMessage: String {
+        cloudSync.syncEnabled
+            ? String(localized: "Sua assinatura Premium já está ativa. Você pode pular o restante do onboarding agora.")
+            : String(localized: "Sua assinatura Premium já está ativa. Você pode configurar o iCloud agora e pular o restante do onboarding.")
+    }
+
     private func advance() {
         let next = state.stepIndex + 1
         guard next < OnboardingStep.allCases.count else {
@@ -157,12 +197,43 @@ struct OnboardingFlowView: View {
         }
     }
 
+    private func restorePurchasesFromWelcome() {
+        guard !subscriptionManager.isRestoring else { return }
+
+        Task { @MainActor in
+            await subscriptionManager.restore()
+
+            let message = subscriptionManager.lastRestoreMessage
+                ?? String(localized: "Nenhuma compra anterior encontrada.")
+
+            if subscriptionManager.isSubscribed {
+                restorePromptTitle = message
+                showRestorePrompt = true
+            } else {
+                restoreFeedbackMessage = message
+                showRestoreFeedbackAlert = true
+            }
+        }
+    }
+
     /// Commits everything to the database and dismisses the flow.
     /// Phase 0 ships with a no-op commit (the placeholder steps don't touch
     /// the DB yet); later phases will fill `commitOnboardingChoices` in.
-    private func finishOnboarding(subscribed: Bool) {
+    private func finishOnboarding(
+        subscribed: Bool,
+        skippingSetup: Bool = false,
+        enableICloudAfterDismiss: Bool = false
+    ) {
+        if subscribed && state.selectedPlanID == nil {
+            state.selectedPlanID = subscriptionManager.activeProductID
+        }
+
         let submission = OnboardingSubmissionPayload(state: state, subscribed: subscribed)
-        commitOnboardingChoices(subscribed: subscribed)
+        if skippingSetup {
+            markSelectionlessOnboardingComplete()
+        } else {
+            commitOnboardingChoices(subscribed: subscribed)
+        }
         if let discoverySourceID = state.discoverySourceID {
             UserDefaults.standard.set(discoverySourceID, forKey: "onboarding.discoverySourceID")
         }
@@ -171,6 +242,21 @@ struct OnboardingFlowView: View {
         }
         markOnboardingComplete()
         onFinish()
+
+        if enableICloudAfterDismiss && !cloudSync.syncEnabled {
+            Task { @MainActor in
+                do {
+                    try await cloudSync.enableCloudSync()
+                } catch {
+                    cloudSync.syncError = error.localizedDescription
+                }
+            }
+        }
+    }
+
+    private func markSelectionlessOnboardingComplete() {
+        didCommitChoices = true
+        NutritionProfileStore.markOnboardingComplete(in: modelContext)
     }
 
     private func commitOnboardingChoices(subscribed: Bool) {

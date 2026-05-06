@@ -664,14 +664,13 @@ struct FullscreenAssistantView: View {
     }
 }
 
-// MARK: - Search-Tab Hosting
-
-#if os(iOS)
 /// Identifies the AI page pushed onto the search tab navigation stack.
 struct AssistantTabAIDestination: Hashable {
     let preset: AIChatPreset
     var prefill: String? = nil
 }
+
+// MARK: - Search-Tab Hosting
 
 /// Tab content used by the new "Buscar" (search) tab. Hosts the assistant in
 /// `.tab` presentation mode (no close/dismiss affordances) and routes the
@@ -709,7 +708,9 @@ struct AssistantSearchTabContent: View {
                     path.append(AssistantTabAIDestination(preset: preset, prefill: prefill))
                 }
             )
+            #if os(iOS)
             .toolbar(.hidden, for: .navigationBar)
+            #endif
             .navigationDestination(for: AssistantTabAIDestination.self) { destination in
                 AssistantSearchTabAIPage(
                     destination: destination,
@@ -760,7 +761,9 @@ private struct AssistantSearchTabAIPage: View {
             onRequestAIMode: nil,
             showsBackButton: true
         )
+        #if os(iOS)
         .toolbar(.hidden, for: .navigationBar)
+        #endif
         .onAppear {
             searchBarState.aiChatPreset = destination.preset
             searchBarState.mode = .aiChat
@@ -781,6 +784,5 @@ private struct AssistantSearchTabAIPage: View {
         }
     }
 }
-#endif
 
 

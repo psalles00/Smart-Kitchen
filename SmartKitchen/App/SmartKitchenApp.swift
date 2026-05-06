@@ -280,7 +280,9 @@ struct SmartKitchenApp: App {
         ])
         return UIFont(descriptor: descriptor, size: size)
     }
-    
+
+    #endif
+
     private static func logBuildConfiguration() {
         #if DEBUG
         print("SmartKitchen build configuration: DEBUG")
@@ -288,5 +290,4 @@ struct SmartKitchenApp: App {
         print("SmartKitchen build configuration: RELEASE")
         #endif
     }
-    #endif
 }

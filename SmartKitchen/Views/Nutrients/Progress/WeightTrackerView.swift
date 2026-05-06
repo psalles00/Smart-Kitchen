@@ -78,7 +78,7 @@ struct WeightTrackerView: View {
             .padding(.top, 12)
         }
         .scrollIndicators(.hidden)
-        .background(Color(.systemGroupedBackground).ignoresSafeArea())
+        .background(Color(PlatformColor.systemBackground).ignoresSafeArea())
         .navigationTitle(String(localized: "Rastreio de peso"))
         #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
@@ -410,7 +410,11 @@ private struct EditWeightSheet: View {
                                 Text("\(num)").tag(num)
                             }
                         }
+                        #if os(iOS)
                         .pickerStyle(.wheel)
+                        #else
+                        .pickerStyle(.menu)
+                        #endif
                         .frame(maxWidth: .infinity)
                         .clipped()
 
@@ -422,7 +426,11 @@ private struct EditWeightSheet: View {
                                 Text("\(num)").tag(num)
                             }
                         }
+                        #if os(iOS)
                         .pickerStyle(.wheel)
+                        #else
+                        .pickerStyle(.menu)
+                        #endif
                         .frame(maxWidth: .infinity)
                         .clipped()
 

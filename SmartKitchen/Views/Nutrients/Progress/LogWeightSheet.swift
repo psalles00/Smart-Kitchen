@@ -53,7 +53,11 @@ struct LogWeightSheet: View {
                                 .font(.system(.title2, design: .rounded, weight: .medium))
                         }
                     }
+                    #if os(iOS)
                     .pickerStyle(.wheel)
+                    #else
+                    .pickerStyle(.menu)
+                    #endif
                     .frame(width: 110)
                     .clipped()
 
@@ -67,7 +71,11 @@ struct LogWeightSheet: View {
                                 .font(.system(.title2, design: .rounded, weight: .medium))
                         }
                     }
+                    #if os(iOS)
                     .pickerStyle(.wheel)
+                    #else
+                    .pickerStyle(.menu)
+                    #endif
                     .frame(width: 80)
                     .clipped()
 

@@ -173,7 +173,9 @@ struct NutritionDashboardView: View {
                     .padding(.horizontal, 0)
                     .tag(2)
             }
+            #if os(iOS)
             .tabViewStyle(.page(indexDisplayMode: .never))
+            #endif
             .frame(height: 86)
 
             // Indicador customizado para garantir aparência neutra.

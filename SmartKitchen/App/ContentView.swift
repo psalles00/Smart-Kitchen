@@ -221,7 +221,23 @@ struct ContentView: View {
     }
 
     var body: some View {
-        mainTabView
+        ZStack {
+            mainTabView
+                #if os(macOS)
+                .allowsHitTesting(!showOnboarding)
+                #endif
+
+            #if os(macOS)
+            if showOnboarding {
+                OnboardingFlowView {
+                    showOnboarding = false
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .transition(.opacity)
+                .zIndex(1)
+            }
+            #endif
+        }
         .environmentObject(searchBarState)
         .environment(\.scrollToItem, scrollToItemRequest)
         .environment(\.openRecipeInRecipesTab, openRecipeInRecipesTab)
@@ -234,10 +250,6 @@ struct ContentView: View {
             }
             .interactiveDismissDisabled(true)
         }
-        .onAppear { syncOnboardingFlag() }
-        .onChange(of: settings?.hasCompletedOnboarding ?? true) { _, _ in
-            syncOnboardingFlag()
-        }
         .fullScreenCover(item: fullscreenNutritionEntrySheetBinding) { sheet in
             nutritionEntrySheetContent(for: sheet)
         }
@@ -249,6 +261,10 @@ struct ContentView: View {
             nutritionEntrySheetContent(for: sheet)
         }
         #endif
+        .onAppear { syncOnboardingFlag() }
+        .onChange(of: settings?.hasCompletedOnboarding ?? true) { _, _ in
+            syncOnboardingFlag()
+        }
         .sheet(isPresented: $showQuickRecipeImport, onDismiss: handleQuickRecipeImportDismissed) {
             RecipeImportHostView(launchMode: quickRecipeImportLaunchMode) { recipeID in
                 pendingQuickImportedRecipeID = recipeID

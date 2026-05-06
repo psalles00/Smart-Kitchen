@@ -146,7 +146,7 @@ struct RecentsView: View {
                         favoriteRow(entry)
                     }
                 }
-                .listStyle(.insetGrouped)
+                .savedFoodsListStyle()
                 .scrollContentBackground(.hidden)
             }
         case .recents:
@@ -158,7 +158,7 @@ struct RecentsView: View {
                         favoriteRow(entry)
                     }
                 }
-                .listStyle(.insetGrouped)
+                .savedFoodsListStyle()
                 .scrollContentBackground(.hidden)
             }
         case .frequent:
@@ -170,7 +170,7 @@ struct RecentsView: View {
                         favoriteRow(group.template, subtitle: "\(group.count)× registrado")
                     }
                 }
-                .listStyle(.insetGrouped)
+                .savedFoodsListStyle()
                 .scrollContentBackground(.hidden)
             }
         case .registered:
@@ -182,7 +182,7 @@ struct RecentsView: View {
                         favoriteRow(entry, subtitle: Self.dateSubtitle(entry.timestamp))
                     }
                 }
-                .listStyle(.insetGrouped)
+                .savedFoodsListStyle()
                 .scrollContentBackground(.hidden)
             }
         }
@@ -266,6 +266,17 @@ struct RecentsView: View {
         modelContext.insert(copy)
         try? modelContext.save()
         dismiss()
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func savedFoodsListStyle() -> some View {
+        #if os(macOS)
+        self.listStyle(.automatic)
+        #else
+        self.listStyle(.insetGrouped)
+        #endif
     }
 }
 

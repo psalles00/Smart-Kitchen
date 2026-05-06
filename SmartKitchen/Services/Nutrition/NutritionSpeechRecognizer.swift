@@ -190,4 +190,39 @@ final class NutritionSpeechRecognizer {
         }
     }
 }
+#elseif os(macOS)
+import Foundation
+
+@Observable
+@MainActor
+final class NutritionSpeechRecognizer {
+    enum State: Equatable {
+        case idle
+        case recording
+        case finished
+        case error(String)
+    }
+
+    private(set) var transcript: String = ""
+    private(set) var state: State = .idle
+
+    init(locale: Locale = AppLocalization.current().speechRecognizerLocale) {
+        _ = locale
+    }
+
+    func start() {
+        state = .error(String(localized: "Reconhecimento de voz ainda não está disponível no macOS."))
+    }
+
+    func stop() {
+        if state == .recording {
+            state = .finished
+        }
+    }
+
+    func reset() {
+        transcript = ""
+        state = .idle
+    }
+}
 #endif

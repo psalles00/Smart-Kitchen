@@ -235,12 +235,21 @@ struct DataSettingsView: View {
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
+        #if os(macOS)
+        .sheet(isPresented: $showRedoOnboarding) {
+            OnboardingFlowView {
+                showRedoOnboarding = false
+            }
+            .interactiveDismissDisabled(true)
+        }
+        #else
         .fullScreenCover(isPresented: $showRedoOnboarding) {
             OnboardingFlowView {
                 showRedoOnboarding = false
             }
             .interactiveDismissDisabled(true)
         }
+        #endif
         .alert("Apagar todos os dados?", isPresented: $showFullResetConfirmation) {
             Button("Cancelar", role: .cancel) {}
             Button("Apagar tudo", role: .destructive) {

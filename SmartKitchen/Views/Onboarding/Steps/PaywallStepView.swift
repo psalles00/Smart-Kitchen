@@ -229,16 +229,16 @@ struct PaywallStepView: View {
         let yrSuffix = String(localized: "/ano")
 
         var attr = AttributedString(prefix)
-        attr.foregroundColor = UIColor.white.withAlphaComponent(0.55)
+        attr.foregroundColor = PlatformColor.white.withAlphaComponent(0.55)
         var ref = AttributedString(referenceStr)
-        ref.foregroundColor = UIColor.white.withAlphaComponent(0.55)
+        ref.foregroundColor = PlatformColor.white.withAlphaComponent(0.55)
         ref.strikethroughStyle = NSUnderlineStyle.single
         attr.append(ref)
         var arrowAttr = AttributedString(arrow)
-        arrowAttr.foregroundColor = UIColor.white.withAlphaComponent(0.55)
+        arrowAttr.foregroundColor = PlatformColor.white.withAlphaComponent(0.55)
         attr.append(arrowAttr)
         var price = AttributedString(annualPriceStr + yrSuffix)
-        price.foregroundColor = UIColor.white.withAlphaComponent(0.85)
+        price.foregroundColor = PlatformColor.white.withAlphaComponent(0.85)
         attr.append(price)
         return attr
     }

@@ -1,4 +1,3 @@
-#if os(iOS)
 import SwiftUI
 
 /// Botão inline de ditado usado na barra unificada do Modo IA.
@@ -87,4 +86,3 @@ struct DictationButton: View {
         }
     }
 }
-#endif

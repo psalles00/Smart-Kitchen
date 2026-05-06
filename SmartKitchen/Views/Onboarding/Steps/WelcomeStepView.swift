@@ -4,6 +4,8 @@ import SwiftUI
 /// and an orbital search motif rendered around the new Liquid Glass center.
 struct WelcomeStepView: View {
     let onContinue: () -> Void
+    let onRestore: () -> Void
+    var isRestoring: Bool = false
 
     @State private var showHeroScene = false
     @State private var showHeroGlow = false
@@ -84,10 +86,31 @@ struct WelcomeStepView: View {
                 .offset(y: showTitle ? -8 : 10)
                 .animation(.spring(response: 0.7, dampingFraction: 0.86), value: showTitle)
 
-                WelcomeLiquidGlassButton(
-                    title: String(localized: "Começar"),
-                    action: onContinue
-                )
+                VStack(spacing: 12) {
+                    WelcomeLiquidGlassButton(
+                        title: String(localized: "Começar"),
+                        action: onContinue
+                    )
+
+                    Button(action: onRestore) {
+                        HStack(spacing: 8) {
+                            if isRestoring {
+                                ProgressView()
+                                    .controlSize(.small)
+                                    .tint(.white.opacity(0.82))
+                            }
+
+                            Text(String(localized: "Restaurar compras"))
+                                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        }
+                        .foregroundStyle(.white.opacity(isRestoring ? 0.7 : 0.82))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 24)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(isRestoring)
+                }
                 .padding(.top, 10)
                 .padding(.horizontal, 24)
                 .padding(.bottom, 32)
