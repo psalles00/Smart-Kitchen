@@ -456,6 +456,10 @@ struct SettingsView: View {
                 .frame(height: 1)
 
             macSettingsDetailContent
+                .padding(.horizontal, 28)
+                .padding(.top, 18)
+                .padding(.bottom, 28)
+                .frame(maxWidth: 860, maxHeight: .infinity, alignment: .topLeading)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
         .macSettingsPaneStyle()
@@ -648,7 +652,7 @@ extension View {
     }
 
     func settingsFormStyle() -> some View {
-        self
+        formStyle(.grouped)
     }
 }
 #else
