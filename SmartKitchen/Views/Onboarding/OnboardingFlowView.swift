@@ -594,6 +594,31 @@ private struct AppReviewStepView: View {
         endPoint: .trailing
     )
 
+    // Small subview extracted to help the type checker with the gradient vs. color overloads
+    private struct StarRow: View {
+        let show: Bool
+        let gradient: LinearGradient
+
+        var body: some View {
+            HStack(spacing: 7) {
+                ForEach(0..<5, id: \.self) { index in
+                    // Use AnyShapeStyle to erase the concrete style type (Color vs. LinearGradient)
+                    let style: AnyShapeStyle = show ? AnyShapeStyle(gradient) : AnyShapeStyle(Color.secondary.opacity(0.22))
+                    Image(systemName: "star.fill")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundStyle(style)
+                        .scaleEffect(show ? 1 : 0.6)
+                        .opacity(show ? 1 : 0.15)
+                        .animation(
+                            .spring(response: 0.45, dampingFraction: 0.72)
+                                .delay(Double(index) * 0.05),
+                            value: show
+                        )
+                }
+            }
+        }
+    }
+
     private var appName: String {
         if let displayName = Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String,
            !displayName.isEmpty {
@@ -604,6 +629,16 @@ private struct AppReviewStepView: View {
     }
 
     var body: some View {
+        bodyContent
+            .background(bodyBackground)
+            .onAppear { startExperience() }
+            .onDisappear {
+                promptTask?.cancel()
+                promptTask = nil
+            }
+    }
+
+    private var bodyContent: some View {
         VStack(spacing: 0) {
             Spacer(minLength: 20)
 
@@ -650,12 +685,15 @@ private struct AppReviewStepView: View {
             .padding(.bottom, 24)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(backgroundLayer.ignoresSafeArea())
-        .onAppear { startExperience() }
-        .onDisappear {
-            promptTask?.cancel()
-            promptTask = nil
-        }
+    }
+
+    @ViewBuilder
+    private var bodyBackground: some View {
+#if os(macOS)
+        AnyView(backgroundLayer.ignoresSafeArea())
+#else
+        backgroundLayer.ignoresSafeArea()
+#endif
     }
 
     private var backgroundLayer: some View {
@@ -675,7 +713,15 @@ private struct AppReviewStepView: View {
     }
 
     private var reviewCard: some View {
-        HStack(spacing: 16) {
+        // Precompute styles to simplify nested ternaries for the type checker
+        let cardFill: Color = colorScheme == .dark
+            ? Color.white.opacity(0.06)
+            : Color.white.opacity(0.88)
+        let cardBorder: Color = colorScheme == .dark
+            ? Color.white.opacity(0.08)
+            : chipTint.opacity(0.18)
+
+        return HStack(spacing: 16) {
             Image("AppLogoB")
                 .resizable()
                 .scaledToFit()
@@ -699,20 +745,7 @@ private struct AppReviewStepView: View {
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(.secondary)
 
-                HStack(spacing: 7) {
-                    ForEach(0..<5, id: \.self) { index in
-                        Image(systemName: "star.fill")
-                            .font(.system(size: 18, weight: .bold))
-                            .foregroundStyle(showStars ? starGradient : Color.secondary.opacity(0.22))
-                            .scaleEffect(showStars ? 1 : 0.6)
-                            .opacity(showStars ? 1 : 0.15)
-                            .animation(
-                                .spring(response: 0.45, dampingFraction: 0.72)
-                                    .delay(Double(index) * 0.05),
-                                value: showStars
-                            )
-                    }
-                }
+                StarRow(show: showStars, gradient: starGradient)
             }
 
             Spacer(minLength: 0)
@@ -721,20 +754,11 @@ private struct AppReviewStepView: View {
         .frame(maxWidth: .infinity)
         .background(
             RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .fill(
-                    colorScheme == .dark
-                        ? Color.white.opacity(0.06)
-                        : Color.white.opacity(0.88)
-                )
+                .fill(cardFill)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .strokeBorder(
-                    colorScheme == .dark
-                        ? Color.white.opacity(0.08)
-                        : chipTint.opacity(0.18),
-                    lineWidth: 1
-                )
+                .strokeBorder(cardBorder, lineWidth: 1)
         )
         .shadow(
             color: colorScheme == .dark

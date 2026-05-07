@@ -120,6 +120,53 @@ struct ContentView: View {
         case .settings: return .home
         }
     }
+
+    @ViewBuilder
+    private var macSidebarDetailContent: some View {
+        switch selectedSidebar ?? .home {
+        case .home:
+            NavigationStack {
+                HomeView(
+                    onSettingsTap: { selectedSidebar = .settings },
+                    onOpenChat: {
+                        openAIMode()
+                        macSearchFieldFocused = true
+                    },
+                    onOpenRecipeIdeas: {
+                        openAIMode(preset: .recipeIdeas)
+                        macSearchFieldFocused = true
+                    },
+                    onOpenSearch: {
+                        macSearchFieldFocused = true
+                    },
+                    onOpenRecipeImport: openQuickRecipeImport,
+                    onOpenFoodCameraDirect: openDirectFoodCamera,
+                    onOpenFoodGalleryDirect: openDirectFoodGallery
+                )
+            }
+            .background(Color.clear)
+            .environment(\.colorScheme, .light)
+
+        case .lists:
+            NavigationStack { ListsTabView() }
+                .background(Color.clear)
+                .environment(\.colorScheme, .light)
+
+        case .recipes:
+            NavigationStack { RecipesView() }
+                .background(Color.clear)
+                .environment(\.colorScheme, .light)
+
+        case .nutrients:
+            NavigationStack { NutrientsView() }
+                .background(Color.clear)
+                .environment(\.colorScheme, .light)
+
+        case .settings:
+            NavigationStack { SettingsView() }
+                .background(Color.clear)
+        }
+    }
     #endif
 
     private var settings: AppSettings? { settingsArray.first }
@@ -885,53 +932,7 @@ struct ContentView: View {
             }
         } detail: {
             ZStack {
-                NavigationStack {
-                    HomeView(
-                        onSettingsTap: { selectedSidebar = .settings },
-                        onOpenChat: {
-                            openAIMode()
-                            macSearchFieldFocused = true
-                        },
-                        onOpenRecipeIdeas: {
-                            openAIMode(preset: .recipeIdeas)
-                            macSearchFieldFocused = true
-                        },
-                        onOpenSearch: {
-                            macSearchFieldFocused = true
-                        },
-                        onOpenRecipeImport: openQuickRecipeImport,
-                        onOpenFoodCameraDirect: openDirectFoodCamera,
-                        onOpenFoodGalleryDirect: openDirectFoodGallery
-                    )
-                }
-                .background(Color.clear)
-                .environment(\.colorScheme, .light)
-                .opacity(selectedSidebar == .home || selectedSidebar == nil ? 1 : 0)
-                .allowsHitTesting(selectedSidebar == .home || selectedSidebar == nil)
-
-                NavigationStack { ListsTabView() }
-                    .background(Color.clear)
-                    .environment(\.colorScheme, .light)
-                    .opacity(selectedSidebar == .lists ? 1 : 0)
-                    .allowsHitTesting(selectedSidebar == .lists)
-
-                NavigationStack { RecipesView() }
-                    .background(Color.clear)
-                    .environment(\.colorScheme, .light)
-                    .opacity(selectedSidebar == .recipes ? 1 : 0)
-                    .allowsHitTesting(selectedSidebar == .recipes)
-
-                NavigationStack { NutrientsView() }
-                    .background(Color.clear)
-                    .environment(\.colorScheme, .light)
-                    .opacity(selectedSidebar == .nutrients ? 1 : 0)
-                    .allowsHitTesting(selectedSidebar == .nutrients)
-
-                NavigationStack { SettingsView() }
-                    .background(Color.clear)
-                    .environment(\.colorScheme, .light)
-                    .opacity(selectedSidebar == .settings ? 1 : 0)
-                    .allowsHitTesting(selectedSidebar == .settings)
+                macSidebarDetailContent
             }
             .overlay {
                 if macHasSearchContent {

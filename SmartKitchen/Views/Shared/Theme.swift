@@ -166,7 +166,7 @@ extension View {
 #if os(iOS)
         modalNavigationTitle(title)
 #else
-        navigationTitle(title)
+        self
 #endif
     }
 }

@@ -7,6 +7,7 @@
 - NUNCA remova ou altere o "Team" em Signing & Capabilities dos Targets.
 - NUNCA remova ou altere a Capability "App Groups" em SmartKitchenShareExtension.
 - Se for necessário passar por cima de alguma das regras deste documento, o agente deve perguntar ao usuário e obter confirmação explícita ANTES de executar a ação. Isso é inegociável.
+- Sempre que editar a versão de um app pra macOS, se restrinja a editar apenas essa versão. Não altere absolutamente nada da versão original do app, a menos que seja solicitado especificamente por isso.
 
 # Procedimento e Build
 - Antes de editar: Leia containers, schemas e fluxos de bootstrap.

@@ -3,6 +3,7 @@ import CloudKit
 
 struct FamilySharingSettingsView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.openSettingsDestination) private var openSettingsDestination
     private var cloudSync = CloudSyncService.shared
     private var sharingService = SharingService.shared
 
@@ -33,11 +34,20 @@ struct FamilySharingSettingsView: View {
                             .foregroundStyle(.orange)
                     }
 
+                    #if os(macOS)
+                    Button {
+                        openSettingsDestination?(.iCloud)
+                    } label: {
+                        Label("Configurar iCloud", systemImage: "icloud")
+                    }
+                    .buttonStyle(.plain)
+                    #else
                     NavigationLink {
                         iCloudSettingsView()
                     } label: {
                         Label("Configurar iCloud", systemImage: "icloud")
                     }
+                    #endif
                 }
             }
 

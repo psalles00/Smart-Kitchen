@@ -331,16 +331,20 @@ struct TexturedGradientView: View {
     }
 
     var body: some View {
-        if progress > 0 {
-            TexturedGradientSceneView(
-                color1: preset.color1,
-                color2: preset.color2,
-                color3: preset.color3,
-                grainIntensity: preset.grainIntensity,
-                shapeType: preset.shapeType
-            )
-            .ignoresSafeArea()
-            .opacity(progress)
+        Group {
+            if progress > 0 {
+                TexturedGradientSceneView(
+                    color1: preset.color1,
+                    color2: preset.color2,
+                    color3: preset.color3,
+                    grainIntensity: preset.grainIntensity,
+                    shapeType: preset.shapeType
+                )
+                .ignoresSafeArea()
+                .opacity(progress)
+            } else {
+                EmptyView()
+            }
         }
     }
 }
@@ -475,3 +479,4 @@ enum TexturedGradientPreset: String, CaseIterable, Identifiable, Codable {
         .padding()
     }
 }
+

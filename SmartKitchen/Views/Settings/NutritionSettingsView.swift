@@ -25,8 +25,8 @@ struct NutritionSettingsView: View {
                 emptyOnboardingSection
             }
         }
-        .formStyle(.grouped)
-        .navigationTitle("Nutrição")
+        .settingsFormStyle()
+        .settingsNavigationTitle(String(localized: "Nutrição"))
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif

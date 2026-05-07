@@ -18,7 +18,7 @@ struct NotificationSettingsView: View {
                 expirySection(settings)
             }
         }
-        .formStyle(.grouped)
+        .settingsFormStyle()
         .settingsNavigationTitle(String(localized: "Notificações"))
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
