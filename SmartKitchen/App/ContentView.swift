@@ -4,6 +4,9 @@ import PhotosUI
 #if os(iOS)
 import UIKit
 #endif
+#if os(macOS)
+import AppKit
+#endif
 
 enum SidebarItem: String, CaseIterable, Identifiable {
     case home
@@ -145,22 +148,18 @@ struct ContentView: View {
                 )
             }
             .background(Color.clear)
-            .environment(\.colorScheme, .light)
 
         case .lists:
             NavigationStack { ListsTabView() }
                 .background(Color.clear)
-                .environment(\.colorScheme, .light)
 
         case .recipes:
             NavigationStack { RecipesView() }
                 .background(Color.clear)
-                .environment(\.colorScheme, .light)
 
         case .nutrients:
             NavigationStack { NutrientsView() }
                 .background(Color.clear)
-                .environment(\.colorScheme, .light)
 
         case .settings:
             NavigationStack { SettingsView() }
@@ -443,11 +442,7 @@ struct ContentView: View {
             #endif
         })
         .environment(\.scrollToTopTrigger, scrollToTopTrigger)
-        #if os(macOS)
-        .preferredColorScheme(.dark)
-        #else
         .preferredColorScheme(settings?.appearanceMode.colorScheme)
-        #endif
         #if os(macOS)
         .tint(macActivePageTheme.accentColor)
         #else
@@ -871,8 +866,11 @@ struct ContentView: View {
                 }
             }
             .listStyle(.sidebar)
+            .scrollContentBackground(.hidden)
+            .background(MacDarkSidebarBackground().ignoresSafeArea())
             .navigationTitle("")
             .tint(macActivePageTheme.accentColor)
+            .environment(\.colorScheme, .dark)
             .safeAreaInset(edge: .bottom) {
                 VStack(spacing: 0) {
                     HStack(spacing: 8) {
@@ -1048,11 +1046,9 @@ struct ContentView: View {
         .background {
             RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .fill(.regularMaterial)
-                .environment(\.colorScheme, .light)
         }
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .padding(16)
-        .environment(\.colorScheme, .light)
     }
 
     @ViewBuilder
@@ -1355,6 +1351,64 @@ private struct MacDetailCard<Content: View>: View {
     var body: some View {
         content
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+}
+
+/// Forces the macOS NavigationSplitView sidebar to render with dark
+/// `NSAppearance`, regardless of the window's effective appearance.
+///
+/// SwiftUI's `.environment(\.colorScheme, .dark)` only changes how SwiftUI
+/// resolves dynamic colors in descendant views — it does NOT touch the
+/// AppKit-rendered sidebar material (NSVisualEffectView with .sidebar
+/// material), which always follows the window's `effectiveAppearance`.
+///
+/// To force the sidebar dark we install a transparent NSView as background
+/// and walk up the responder chain to the enclosing sidebar host view
+/// (the NSView that hosts the SwiftUI sidebar inside the NSSplitView).
+/// We override its `appearance` to `.darkAqua`, which AppKit propagates to
+/// the sidebar material and built-in selection highlights without affecting
+/// the rest of the window.
+struct MacDarkSidebarBackground: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView {
+        AppearanceForcingView()
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        (nsView as? AppearanceForcingView)?.applyDarkAppearance()
+    }
+
+    private final class AppearanceForcingView: NSView {
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            applyDarkAppearance()
+        }
+
+        override func viewDidMoveToSuperview() {
+            super.viewDidMoveToSuperview()
+            applyDarkAppearance()
+        }
+
+        func applyDarkAppearance() {
+            let dark = NSAppearance(named: .darkAqua)
+            // Walk up to the nearest NSHostingView (or any ancestor that
+            // sits at the root of the sidebar split item) and force dark
+            // appearance there. This catches the SwiftUI hosting view that
+            // contains the entire sidebar List, so the background material
+            // and List selection highlight both render in dark mode while
+            // the rest of the window stays in the user's chosen scheme.
+            var current: NSView? = self.superview
+            while let view = current {
+                let className = NSStringFromClass(type(of: view))
+                // Stop BEFORE we hit the NSSplitView or window — we only
+                // want to dark the sidebar's host subtree, not the whole
+                // split view (which would dark the divider/detail too).
+                if className.contains("NSSplitView") || className.contains("Window") {
+                    break
+                }
+                view.appearance = dark
+                current = view.superview
+            }
+        }
     }
 }
 #endif

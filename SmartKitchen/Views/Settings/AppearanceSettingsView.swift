@@ -16,7 +16,6 @@ struct AppearanceSettingsView: View {
 
     var body: some View {
         Form {
-            #if os(iOS)
             Section {
                 if let settings {
                     Picker("Aparência", selection: Binding(
@@ -33,7 +32,6 @@ struct AppearanceSettingsView: View {
             } footer: {
                 Text("Define se o app segue a aparência do sistema ou força um modo claro ou escuro.")
             }
-            #endif
 
             Section {
                 Toggle("Fundos animados", isOn: $backgroundShadersEnabled)

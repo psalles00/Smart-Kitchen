@@ -187,12 +187,6 @@ private struct ModalNavigationTitleModifier: ViewModifier {
                         .minimumScaleFactor(0.8)
                 }
             }
-#elseif os(macOS)
-            // O app força aparência escura por preferência estética. Sheets
-            // no macOS não herdam `preferredColorScheme` do host, então
-            // garantimos aqui que todo modal que usa `modalNavigationTitle`
-            // siga o mesmo tema escuro do restante da interface.
-            .preferredColorScheme(.dark)
 #endif
     }
 }

@@ -330,7 +330,7 @@ struct SettingsView: View {
                     .padding(.horizontal, 14)
                     .padding(.vertical, 12)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
             .buttonStyle(.plain)
 
@@ -341,7 +341,7 @@ struct SettingsView: View {
                     .padding(.horizontal, 14)
                     .padding(.vertical, 12)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
             .buttonStyle(.plain)
 
@@ -352,7 +352,7 @@ struct SettingsView: View {
                     .padding(.horizontal, 14)
                     .padding(.vertical, 12)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
             .buttonStyle(.plain)
 
@@ -361,7 +361,7 @@ struct SettingsView: View {
                     .padding(.horizontal, 14)
                     .padding(.vertical, 12)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
             .buttonStyle(.plain)
         }
@@ -397,7 +397,7 @@ struct SettingsView: View {
                     .foregroundStyle(isSelected ? Color.black.opacity(0.78) : Color.secondary)
                     .frame(width: 32, height: 32)
                     .background(
-                        isSelected ? Color.white : Color.white.opacity(0.06),
+                        isSelected ? Color.white : Color.primary.opacity(0.06),
                         in: RoundedRectangle(cornerRadius: 11, style: .continuous)
                     )
 
@@ -426,12 +426,12 @@ struct SettingsView: View {
                                     endPoint: .bottomTrailing
                                 )
                             )
-                            : AnyShapeStyle(Color.white.opacity(0.04))
+                            : AnyShapeStyle(Color.primary.opacity(0.04))
                     )
             }
             .overlay(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .strokeBorder(Color.white.opacity(isSelected ? 0.10 : 0.05), lineWidth: 1)
+                    .strokeBorder(Color.primary.opacity(isSelected ? 0.10 : 0.05), lineWidth: 1)
             )
         }
         .buttonStyle(.plain)
@@ -452,7 +452,7 @@ struct SettingsView: View {
             .padding(.bottom, 18)
 
             Rectangle()
-                .fill(Color.white.opacity(0.06))
+                .fill(Color.primary.opacity(0.06))
                 .frame(height: 1)
 
             macSettingsDetailContent
@@ -618,7 +618,7 @@ private struct MacSettingsPaneModifier: ViewModifier {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 30, style: .continuous)
-                    .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+                    .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
             )
             .shadow(color: .black.opacity(0.18), radius: 24, y: 14)
     }
@@ -629,11 +629,11 @@ private struct MacSettingsInsetCardModifier: ViewModifier {
         content
             .background(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .fill(Color.white.opacity(0.04))
+                    .fill(Color.primary.opacity(0.04))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .strokeBorder(Color.white.opacity(0.06), lineWidth: 1)
+                    .strokeBorder(Color.primary.opacity(0.06), lineWidth: 1)
             )
     }
 }
