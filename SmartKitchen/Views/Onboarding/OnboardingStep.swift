@@ -30,6 +30,7 @@ enum OnboardingStep: Int, CaseIterable, Identifiable {
     case rate
     case preparing
     case goalProjection
+    case appReview
     case paywall
 
     var id: Int { rawValue }
@@ -47,7 +48,7 @@ enum OnboardingStep: Int, CaseIterable, Identifiable {
             return .capture
         case .goal, .sex, .birthday, .body, .activity, .rate, .discoverySource, .preparing, .goalProjection:
             return .goals
-        case .paywall:
+        case .appReview, .paywall:
             return .paywall
         }
     }

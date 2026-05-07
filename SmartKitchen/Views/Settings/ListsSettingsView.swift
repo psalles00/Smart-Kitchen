@@ -72,7 +72,7 @@ struct ListsSettingsView: View {
             }
         }
         .macSettingsContainer()
-        .modalNavigationTitle(String(localized: "Listas e Receitas"))
+        .settingsNavigationTitle(String(localized: "Listas e Receitas"))
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif

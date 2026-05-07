@@ -19,7 +19,7 @@ struct NotificationSettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .modalNavigationTitle(String(localized: "Notificações"))
+        .settingsNavigationTitle(String(localized: "Notificações"))
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif

@@ -472,6 +472,10 @@ T = {
     "Meta": {"en": "Goal", "es": "Meta", "fr": "Objectif", "it": "Obiettivo", "de": "Ziel", "ja": "目標"},
     "Manter": {"en": "Maintain", "es": "Mantener", "fr": "Maintenir", "it": "Mantenere", "de": "Halten", "ja": "維持"},
 
+    # ---- App review step (2026-05) ----
+    "Sua opinião ajuda outras pessoas a descobrirem o app.": {"en": "Your opinion helps other people discover the app.", "es": "Tu opinión ayuda a otras personas a descubrir la app.", "fr": "Votre avis aide d'autres personnes à découvrir l'app.", "it": "La tua opinione aiuta altre persone a scoprire l'app.", "de": "Deine Bewertung hilft anderen Menschen, die App zu entdecken.", "ja": "あなたの評価が、ほかの人にこのアプリを見つけてもらう助けになります。"},
+    "Se o sistema permitir, o pedido aparece agora. Se não, você pode avaliar depois em Configurações.": {"en": "If the system allows it, the prompt appears now. If not, you can rate later in Settings.", "es": "Si el sistema lo permite, la solicitud aparece ahora. Si no, puedes valorar más tarde en Ajustes.", "fr": "Si le système le permet, la demande apparaît maintenant. Sinon, vous pourrez noter plus tard dans Réglages.", "it": "Se il sistema lo consente, la richiesta appare ora. Altrimenti potrai valutare più tardi nelle Impostazioni.", "de": "Wenn das System es zulässt, erscheint die Anfrage jetzt. Wenn nicht, kannst du später in den Einstellungen bewerten.", "ja": "システムが許可すれば、評価の案内が今表示されます。表示されなくても、あとで設定から評価できます。"},
+
     # ---- Paywall redesign (2026-05) ----
     "Alcance seus objetivos ": {"en": "Achieve your goals ", "es": "Alcanza tus objetivos ", "fr": "Atteignez vos objectifs ", "it": "Raggiungi i tuoi obiettivi ", "de": "Erreiche deine Ziele ", "ja": "目標達成を"},
     "4.3x": {"en": "4.3x", "es": "4.3x", "fr": "4.3x", "it": "4.3x", "de": "4.3x", "ja": "4.3倍"},

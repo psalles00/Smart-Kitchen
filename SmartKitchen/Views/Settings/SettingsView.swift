@@ -38,7 +38,7 @@ struct SettingsView: View {
 
     var body: some View {
         settingsForm
-            .modalNavigationTitle(String(localized: "Configurações"))
+            .settingsNavigationTitle(String(localized: "Configurações"))
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -231,7 +231,7 @@ struct DataSettingsView: View {
         }
         .formStyle(.grouped)
         .macSettingsContainer()
-        .modalNavigationTitle(String(localized: "Dados"))
+        .settingsNavigationTitle(String(localized: "Dados"))
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif

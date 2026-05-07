@@ -158,6 +158,17 @@ extension View {
     func modalNavigationTitle(_ title: String) -> some View {
         modifier(ModalNavigationTitleModifier(title: title))
     }
+
+    /// Settings screens are pushed inside the macOS settings navigation stack,
+    /// not shown as standalone modals. Avoid forcing a separate color-scheme
+    /// preference there during the push transition.
+    func settingsNavigationTitle(_ title: String) -> some View {
+#if os(iOS)
+        modalNavigationTitle(title)
+#else
+        navigationTitle(title)
+#endif
+    }
 }
 
 private struct ModalNavigationTitleModifier: ViewModifier {

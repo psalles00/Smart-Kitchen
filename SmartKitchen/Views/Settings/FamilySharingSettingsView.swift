@@ -169,7 +169,7 @@ struct FamilySharingSettingsView: View {
             }
         }
         .macSettingsContainer()
-        .modalNavigationTitle(String(localized: "Compartilhamento Familiar"))
+        .settingsNavigationTitle(String(localized: "Compartilhamento Familiar"))
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif

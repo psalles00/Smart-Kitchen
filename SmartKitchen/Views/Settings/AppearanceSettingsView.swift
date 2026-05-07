@@ -53,7 +53,7 @@ struct AppearanceSettingsView: View {
         }
         .formStyle(.grouped)
         .macSettingsContainer()
-        .modalNavigationTitle(String(localized: "Aparência e Performance"))
+        .settingsNavigationTitle(String(localized: "Aparência e Performance"))
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif

@@ -1,3 +1,4 @@
+import StoreKit
 import SwiftUI
 import SwiftData
 
@@ -141,6 +142,8 @@ struct OnboardingFlowView: View {
             })
         case .goalProjection:
             GoalProjectionStepView(state: state, onContinue: advance)
+        case .appReview:
+            AppReviewStepView(state: state, onContinue: advance)
         case .paywall:
             PaywallStepView(state: state, onFinish: { subscribed in
                 finishOnboarding(subscribed: subscribed)
@@ -557,6 +560,7 @@ private struct OnboardingPlaceholderStepView: View {
         case .discoverySource: return "Como você conheceu o Savoria?"
         case .preparing: return "Preparando seu app…"
         case .goalProjection: return "Sua trajetória"
+        case .appReview: return "Avaliação na App Store"
         case .paywall: return "Smart Kitchen Premium"
         }
     }
@@ -567,6 +571,214 @@ private struct OnboardingPlaceholderStepView: View {
 }
 
 // MARK: - Discovery source step
+
+private struct AppReviewStepView: View {
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.requestReview) private var requestReview
+
+    @Bindable var state: OnboardingState
+    let onContinue: () -> Void
+
+    @State private var showContent = false
+    @State private var showStars = false
+    @State private var showFootnote = false
+    @State private var promptTask: Task<Void, Never>? = nil
+
+    private let chipTint = Color(red: 0.98, green: 0.66, blue: 0.22)
+    private let starGradient = LinearGradient(
+        colors: [
+            Color(red: 1.00, green: 0.79, blue: 0.30),
+            Color(red: 1.00, green: 0.61, blue: 0.33)
+        ],
+        startPoint: .leading,
+        endPoint: .trailing
+    )
+
+    private var appName: String {
+        if let displayName = Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String,
+           !displayName.isEmpty {
+            return displayName
+        }
+
+        return Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String ?? "Savoria"
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Spacer(minLength: 20)
+
+            OnboardingFeatureChip(
+                icon: "star.fill",
+                title: String(localized: "App Store"),
+                tint: chipTint
+            )
+            .padding(.bottom, 18)
+            .opacity(showContent ? 1 : 0)
+            .offset(y: showContent ? 0 : 8)
+            .animation(.spring(response: 0.55, dampingFraction: 0.82), value: showContent)
+
+            OnboardingHeader(
+                title: String(localized: "Avaliar na App Store"),
+                subtitle: String(localized: "Sua opinião ajuda outras pessoas a descobrirem o app.")
+            )
+            .opacity(showContent ? 1 : 0)
+            .offset(y: showContent ? 0 : 10)
+            .animation(.spring(response: 0.6, dampingFraction: 0.84), value: showContent)
+
+            reviewCard
+                .padding(.horizontal, 24)
+                .padding(.top, 28)
+
+            Text(String(localized: "Se o sistema permitir, o pedido aparece agora. Se não, você pode avaliar depois em Configurações."))
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
+                .padding(.top, 18)
+                .opacity(showFootnote ? 1 : 0)
+                .offset(y: showFootnote ? 0 : 6)
+                .animation(.easeOut(duration: 0.28), value: showFootnote)
+
+            Spacer(minLength: 16)
+
+            OnboardingPrimaryButton(
+                title: String(localized: "Continuar"),
+                isEnabled: true,
+                action: onContinue
+            )
+            .padding(.horizontal, 24)
+            .padding(.bottom, 24)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(backgroundLayer.ignoresSafeArea())
+        .onAppear { startExperience() }
+        .onDisappear {
+            promptTask?.cancel()
+            promptTask = nil
+        }
+    }
+
+    private var backgroundLayer: some View {
+        LinearGradient(
+            colors: colorScheme == .dark
+                ? [
+                    Color(red: 0.09, green: 0.08, blue: 0.07),
+                    Color(red: 0.13, green: 0.11, blue: 0.15)
+                ]
+                : [
+                    Color(red: 1.00, green: 0.98, blue: 0.95),
+                    Color(red: 0.97, green: 0.95, blue: 1.00)
+                ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+
+    private var reviewCard: some View {
+        HStack(spacing: 16) {
+            Image("AppLogoB")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 72, height: 72)
+                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                .shadow(
+                    color: colorScheme == .dark
+                        ? Color.black.opacity(0.22)
+                        : chipTint.opacity(0.18),
+                    radius: 16,
+                    y: 8
+                )
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text(appName)
+                    .font(.system(size: 24, weight: .bold))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+
+                Text(String(localized: "Avaliar na App Store"))
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.secondary)
+
+                HStack(spacing: 7) {
+                    ForEach(0..<5, id: \.self) { index in
+                        Image(systemName: "star.fill")
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundStyle(showStars ? starGradient : Color.secondary.opacity(0.22))
+                            .scaleEffect(showStars ? 1 : 0.6)
+                            .opacity(showStars ? 1 : 0.15)
+                            .animation(
+                                .spring(response: 0.45, dampingFraction: 0.72)
+                                    .delay(Double(index) * 0.05),
+                                value: showStars
+                            )
+                    }
+                }
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(22)
+        .frame(maxWidth: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .fill(
+                    colorScheme == .dark
+                        ? Color.white.opacity(0.06)
+                        : Color.white.opacity(0.88)
+                )
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .strokeBorder(
+                    colorScheme == .dark
+                        ? Color.white.opacity(0.08)
+                        : chipTint.opacity(0.18),
+                    lineWidth: 1
+                )
+        )
+        .shadow(
+            color: colorScheme == .dark
+                ? Color.black.opacity(0.18)
+                : chipTint.opacity(0.12),
+            radius: 24,
+            y: 12
+        )
+        .opacity(showContent ? 1 : 0)
+        .scaleEffect(showContent ? 1 : 0.94)
+        .animation(.spring(response: 0.6, dampingFraction: 0.84), value: showContent)
+    }
+
+    private func startExperience() {
+        promptTask?.cancel()
+
+        withAnimation(.spring(response: 0.55, dampingFraction: 0.82)) {
+            showContent = true
+        }
+
+        promptTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 250_000_000)
+            guard !Task.isCancelled else { return }
+
+            withAnimation(.spring(response: 0.45, dampingFraction: 0.74)) {
+                showStars = true
+            }
+
+            try? await Task.sleep(nanoseconds: 350_000_000)
+            guard !Task.isCancelled else { return }
+
+            withAnimation(.easeOut(duration: 0.28)) {
+                showFootnote = true
+            }
+
+            guard !state.didRequestAppStoreReview else { return }
+            state.didRequestAppStoreReview = true
+
+            try? await Task.sleep(nanoseconds: 450_000_000)
+            guard !Task.isCancelled else { return }
+            requestReview()
+        }
+    }
+}
 
 private struct DiscoverySourceStepView: View {
     @Bindable var state: OnboardingState

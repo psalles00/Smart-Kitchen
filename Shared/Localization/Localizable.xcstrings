@@ -61794,6 +61794,88 @@
           }
         }
       }
+    },
+    "Sua opinião ajuda outras pessoas a descobrirem o app.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your opinion helps other people discover the app."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu opinión ayuda a otras personas a descubrir la app."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre avis aide d'autres personnes à découvrir l'app."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La tua opinione aiuta altre persone a scoprire l'app."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deine Bewertung hilft anderen Menschen, die App zu entdecken."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "あなたの評価が、ほかの人にこのアプリを見つけてもらう助けになります。"
+          }
+        }
+      }
+    },
+    "Se o sistema permitir, o pedido aparece agora. Se não, você pode avaliar depois em Configurações.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If the system allows it, the prompt appears now. If not, you can rate later in Settings."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si el sistema lo permite, la solicitud aparece ahora. Si no, puedes valorar más tarde en Ajustes."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si le système le permet, la demande apparaît maintenant. Sinon, vous pourrez noter plus tard dans Réglages."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se il sistema lo consente, la richiesta appare ora. Altrimenti potrai valutare più tardi nelle Impostazioni."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wenn das System es zulässt, erscheint die Anfrage jetzt. Wenn nicht, kannst du später in den Einstellungen bewerten."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "システムが許可すれば、評価の案内が今表示されます。表示されなくても、あとで設定から評価できます。"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

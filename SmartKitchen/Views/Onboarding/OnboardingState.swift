@@ -46,6 +46,9 @@ final class OnboardingState {
     // MARK: - Phase 5 paywall
     /// Tracks the plan the user previewed in the paywall (annual/monthly).
     var selectedPlanID: String? = nil
+    /// Prevents requesting the App Store review more than once per onboarding
+    /// run if the user navigates back and forth near the end.
+    var didRequestAppStoreReview: Bool = false
 
     // MARK: - Computed gates
     var canAdvancePantrySelection: Bool { selectedPantryItemIDs.count >= 3 }
