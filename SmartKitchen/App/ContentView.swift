@@ -151,6 +151,7 @@ struct ContentView: View {
 
     @State private var selectedSidebar: SidebarItem? = .home
     @State private var macAssistantShortcutIntent: MacAssistantShortcutIntent?
+    @State private var macAssistantBarFrame: CGRect = .zero
     @FocusState private var macSearchFieldFocused: Bool
 
     private var resolvedSelectedSidebar: SidebarItem {
@@ -290,6 +291,26 @@ struct ContentView: View {
         } else {
             submitSearchAction()
         }
+    }
+
+    private func dismissMacAssistantInteraction() {
+        if macSearchFieldFocused {
+            searchBarState.defocusTrigger += 1
+        } else if macAssistantBarIsCentered {
+            restoreMacAssistantDockIfNeeded()
+        }
+    }
+
+    private func handleMacAssistantOutsideTap(at location: CGPoint) {
+        guard macAssistantBarFrame != .zero else { return }
+        guard !macAssistantBarFrame.contains(location) else { return }
+
+        dismissMacAssistantInteraction()
+    }
+
+    private func handleMacAssistantEscape() {
+        guard macAssistantBarIsCentered || macSearchFieldFocused else { return }
+        dismissMacAssistantInteraction()
     }
 
     @ViewBuilder
@@ -1075,6 +1096,19 @@ struct ContentView: View {
             macAssistantBarOverlay
                 .zIndex(1)
         }
+        .coordinateSpace(name: "MacAssistantRoot")
+        .simultaneousGesture(
+            SpatialTapGesture()
+                .onEnded { value in
+                    handleMacAssistantOutsideTap(at: value.location)
+                }
+        )
+        .onExitCommand {
+            handleMacAssistantEscape()
+        }
+        .onPreferenceChange(MacAssistantBarFramePreferenceKey.self) { frame in
+            macAssistantBarFrame = frame
+        }
         .onChange(of: searchBarState.searchText) { _, newValue in
             if !newValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 applyMacAssistantShortcutIntentIfNeeded()
@@ -1139,6 +1173,10 @@ struct ContentView: View {
                 .position(x: x, y: y)
                 .shadow(color: .black.opacity(isCentered ? 0.34 : 0.16), radius: isCentered ? 44 : 16, y: isCentered ? 18 : 10)
                 .shadow(color: .black.opacity(isCentered ? 0.20 : 0.08), radius: isCentered ? 14 : 6, y: isCentered ? 6 : 3)
+                .preference(
+                    key: MacAssistantBarFramePreferenceKey.self,
+                    value: CGRect(x: x - width / 2, y: y - height / 2, width: width, height: height)
+                )
         }
         .allowsHitTesting(true)
     }
@@ -1760,6 +1798,14 @@ struct ContentView: View {
         moveGroceryItemToPantry(id: item.id)
     }
 
+}
+
+private struct MacAssistantBarFramePreferenceKey: PreferenceKey {
+    static let defaultValue: CGRect = .zero
+
+    static func reduce(value: inout CGRect, nextValue: () -> CGRect) {
+        value = nextValue()
+    }
 }
 
 #if os(macOS)
