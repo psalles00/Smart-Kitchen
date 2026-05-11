@@ -1086,7 +1086,7 @@ struct ContentView: View {
                 ZStack {
                     macSidebarDetailContent
                 }
-                .overlay {
+                .overlay(alignment: .top) {
                     if macHasSearchContent {
                         macSearchResultsOverlay
                             .transition(.opacity)
@@ -1462,6 +1462,8 @@ struct ContentView: View {
 
     @ViewBuilder
     private var macSearchResultsOverlay: some View {
+        let topOverlap: CGFloat = 78
+
         VStack(spacing: 0) {
             // Header
             HStack(alignment: .bottom) {
@@ -1521,13 +1523,20 @@ struct ContentView: View {
                 Spacer(minLength: 0)
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background {
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(.regularMaterial)
+                .fill(appPrimaryBackground.opacity(0.985))
         }
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .padding(16)
+        .overlay(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .strokeBorder(Color.primary.opacity(0.06), lineWidth: 1)
+        )
+        .padding(.horizontal, 16)
+        .padding(.top, 4)
+        .padding(.bottom, 16)
+        .offset(y: -topOverlap)
     }
 
     #endif
