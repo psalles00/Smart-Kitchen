@@ -2,7 +2,7 @@ import StoreKit
 import SwiftUI
 import SwiftData
 
-enum SettingsDestination: String, CaseIterable, Identifiable {
+enum SettingsDestination: String, CaseIterable, Identifiable, Hashable {
     case iCloud
     case familySharing
     case notifications
@@ -92,10 +92,9 @@ extension EnvironmentValues {
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.requestReview) private var requestReview
-    @Environment(\.colorScheme) private var colorScheme
     @State private var placeholderAction: AboutPlaceholderAction?
     #if os(macOS)
-    @State private var selectedMacDestination: SettingsDestination = .iCloud
+    @State private var selectedMacDestination: SettingsDestination? = .iCloud
     #endif
 
     private enum AboutPlaceholderAction: Identifiable {
@@ -126,6 +125,12 @@ struct SettingsView: View {
     private var appVersion: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "3.2.6"
     }
+
+    #if os(macOS)
+    private var resolvedSelectedMacDestination: SettingsDestination {
+        selectedMacDestination ?? .iCloud
+    }
+    #endif
 
     var body: some View {
         Group {
@@ -266,204 +271,99 @@ struct SettingsView: View {
 
     #if os(macOS)
     private var macSettingsLayout: some View {
-        HStack(alignment: .top, spacing: 20) {
+        NavigationSplitView {
             macSettingsSidebar
-                .frame(width: 320)
-                .frame(maxHeight: .infinity, alignment: .top)
-
+                .navigationSplitViewColumnWidth(min: 260, ideal: 300, max: 340)
+        } detail: {
             macSettingsDetailPane
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 18)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .navigationSplitViewStyle(.balanced)
+        .frame(minWidth: 1240, minHeight: 860)
     }
 
     private var macSettingsSidebar: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(String(localized: "Configurações"))
-                        .font(.pageTitle)
-
-                    Text(verbatim: "\(appName) \(appVersion)")
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
-                }
-
+        List(selection: $selectedMacDestination) {
+            Section {
                 PlanCardView()
-                    .padding(18)
-                    .macSettingsInsetCardStyle()
-
-                macSettingsSection(
-                    title: "Conta e Sincronização",
-                    destinations: [.iCloud, .familySharing, .notifications, .backup]
-                )
-
-                macSettingsSection(
-                    title: "Preferências",
-                    destinations: [.appearance, .lists, .nutrition]
-                )
-
-                macSettingsSection(
-                    title: "Dados",
-                    destinations: [.data]
-                )
-
-                macAboutSection
+                    .padding(.vertical, 4)
+                    .listRowInsets(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
+                    .listRowBackground(Color.clear)
             }
-            .padding(20)
-        }
-        .scrollIndicators(.never)
-        .macSettingsPaneStyle()
-    }
 
-    private var macAboutSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Sobre")
-                .font(.caption.weight(.semibold))
+            macSettingsSection(
+                title: "Conta e Sincronização",
+                destinations: [.iCloud, .familySharing, .notifications, .backup]
+            )
+
+            macSettingsSection(
+                title: "Preferências",
+                destinations: [.appearance, .lists, .nutrition]
+            )
+
+            macSettingsSection(
+                title: "Dados",
+                destinations: [.data]
+            )
+
+            Section("Sobre") {
+                Button {
+                    placeholderAction = .restorePurchases
+                } label: {
+                    SettingsRowLabel("Restaurar compras", systemImage: "arrow.clockwise")
+                }
+                .buttonStyle(.plain)
+
+                Button {
+                    placeholderAction = .feedbackSupport
+                } label: {
+                    SettingsRowLabel("Feedback e suporte", systemImage: "questionmark.circle")
+                }
+                .buttonStyle(.plain)
+
+                Button {
+                    requestReview()
+                } label: {
+                    SettingsRowLabel("Avaliar na App Store", systemImage: "star")
+                }
+                .buttonStyle(.plain)
+
+                ShareLink(item: appName, subject: Text(verbatim: appName)) {
+                    SettingsRowLabel("Compartilhar app", systemImage: "square.and.arrow.up")
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .listStyle(.sidebar)
+        .navigationTitle(String(localized: "Configurações"))
+        .safeAreaInset(edge: .bottom) {
+            Text(verbatim: "\(appName) \(appVersion)")
+                .font(.caption2)
                 .foregroundStyle(.secondary)
-
-            Button {
-                placeholderAction = .restorePurchases
-            } label: {
-                SettingsRowLabel("Restaurar compras", systemImage: "arrow.clockwise")
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 12)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.primary.opacity(colorScheme == .light ? 0.025 : 0.04), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-            }
-            .buttonStyle(.plain)
-
-            Button {
-                placeholderAction = .feedbackSupport
-            } label: {
-                SettingsRowLabel("Feedback e suporte", systemImage: "questionmark.circle")
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 12)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.primary.opacity(colorScheme == .light ? 0.025 : 0.04), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-            }
-            .buttonStyle(.plain)
-
-            Button {
-                requestReview()
-            } label: {
-                SettingsRowLabel("Avaliar na App Store", systemImage: "star")
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 12)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.primary.opacity(colorScheme == .light ? 0.025 : 0.04), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-            }
-            .buttonStyle(.plain)
-
-            ShareLink(item: appName, subject: Text(verbatim: appName)) {
-                SettingsRowLabel("Compartilhar app", systemImage: "square.and.arrow.up")
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 12)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.primary.opacity(colorScheme == .light ? 0.025 : 0.04), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-            }
-            .buttonStyle(.plain)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .background(.bar)
         }
-        .padding(18)
-        .macSettingsInsetCardStyle()
     }
 
     private func macSettingsSection(title: LocalizedStringKey, destinations: [SettingsDestination]) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(title)
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
-
-            VStack(alignment: .leading, spacing: 8) {
-                ForEach(destinations) { destination in
-                    macSettingsDestinationButton(destination)
-                }
+        Section(title) {
+            ForEach(destinations) { destination in
+                Label(destination.titleKey, systemImage: destination.systemImage)
+                    .tag(destination)
+                    .contentShape(Rectangle())
             }
         }
-        .padding(18)
-        .macSettingsInsetCardStyle()
-    }
-
-    private func macSettingsDestinationButton(_ destination: SettingsDestination) -> some View {
-        let isSelected = selectedMacDestination == destination
-        let selectionTint = Color.accentColor
-
-        return Button {
-            selectedMacDestination = destination
-        } label: {
-            HStack(spacing: 12) {
-                Image(systemName: destination.systemImage)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(isSelected ? selectionTint : Color.secondary)
-                    .frame(width: 32, height: 32)
-                    .background(
-                        isSelected ? selectionTint.opacity(colorScheme == .light ? 0.12 : 0.18) : Color.primary.opacity(0.04),
-                        in: RoundedRectangle(cornerRadius: 11, style: .continuous)
-                    )
-
-                Text(destination.titleKey)
-                    .font(.body.weight(.semibold))
-                    .foregroundStyle(.primary)
-                    .lineLimit(2)
-
-                Spacer(minLength: 12)
-
-                Image(systemName: "arrow.right")
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(isSelected ? selectionTint : Color.secondary)
-            }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(
-                        isSelected
-                            ? AnyShapeStyle(selectionTint.opacity(colorScheme == .light ? 0.08 : 0.16))
-                            : AnyShapeStyle(Color.clear)
-                    )
-            }
-            .overlay(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .strokeBorder(isSelected ? selectionTint.opacity(colorScheme == .light ? 0.18 : 0.24) : Color.clear, lineWidth: 1)
-            )
-        }
-        .buttonStyle(.plain)
     }
 
     private var macSettingsDetailPane: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(selectedMacDestination.titleKey)
-                    .font(.sectionTitle)
-
-                Text(String(localized: "Configurações"))
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
-            }
-            .padding(.horizontal, 24)
-            .padding(.top, 24)
-            .padding(.bottom, 18)
-
-            Rectangle()
-                .fill(Color.primary.opacity(0.06))
-                .frame(height: 1)
-
-            macSettingsDetailContent
-                .padding(.horizontal, 28)
-                .padding(.top, 18)
-                .padding(.bottom, 28)
-                .frame(maxWidth: 860, maxHeight: .infinity, alignment: .topLeading)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        }
-        .macSettingsPaneStyle()
+        macSettingsDetailContent
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
     @ViewBuilder
     private var macSettingsDetailContent: some View {
-        switch selectedMacDestination {
+        switch resolvedSelectedMacDestination {
         case .iCloud:
             iCloudSettingsView()
         case .familySharing:
@@ -605,50 +505,13 @@ struct MacSettingsContainerModifier: ViewModifier {
     }
 }
 
-private struct MacSettingsPaneModifier: ViewModifier {
-    @Environment(\.colorScheme) private var colorScheme
-
-    func body(content: Content) -> some View {
-        content
-            .background(
-                RoundedRectangle(cornerRadius: 30, style: .continuous)
-                    .fill(colorScheme == .light ? Color.white : Color(nsColor: .controlBackgroundColor).opacity(0.94))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 30, style: .continuous)
-                    .strokeBorder(Color.primary.opacity(colorScheme == .light ? 0.05 : 0.08), lineWidth: 1)
-            )
-    }
-}
-
-private struct MacSettingsInsetCardModifier: ViewModifier {
-    @Environment(\.colorScheme) private var colorScheme
-
-    func body(content: Content) -> some View {
-        content
-            .background(
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .fill(Color.primary.opacity(colorScheme == .light ? 0.018 : 0.04))
-            )
-    }
-}
-
 extension View {
     func macSettingsContainer() -> some View {
         modifier(MacSettingsContainerModifier())
     }
 
-    func macSettingsPaneStyle() -> some View {
-        modifier(MacSettingsPaneModifier())
-    }
-
-    func macSettingsInsetCardStyle() -> some View {
-        modifier(MacSettingsInsetCardModifier())
-    }
-
     func settingsFormStyle() -> some View {
         formStyle(.grouped)
-            .scrollContentBackground(.hidden)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 }

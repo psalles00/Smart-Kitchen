@@ -98,6 +98,7 @@ struct MacNewItemCommands: Commands {
 struct SmartKitchenApp: App {
     #if os(macOS)
     private static let macMinimumWindowSize = CGSize(width: 1100, height: 750)
+    private static let macSettingsWindowSize = CGSize(width: 1240, height: 860)
     #endif
 
     #if os(iOS)
@@ -236,13 +237,23 @@ struct SmartKitchenApp: App {
         .windowResizability(.contentMinSize)
         .commands {
             MacNewItemCommands()
-            CommandGroup(replacing: .appSettings) {
-                Button(String(localized: "Configurações…")) {
-                    NotificationCenter.default.post(name: .openSettings, object: nil)
-                }
-                .keyboardShortcut(",", modifiers: .command)
-            }
         }
+        #endif
+
+        #if os(macOS)
+        Settings {
+            SettingsView()
+                .modelContainer(cloudSync.container)
+                .environment(subscriptionManager)
+                .frame(
+                    minWidth: Self.macSettingsWindowSize.width,
+                    minHeight: Self.macSettingsWindowSize.height
+                )
+        }
+        .defaultSize(
+            width: Self.macSettingsWindowSize.width,
+            height: Self.macSettingsWindowSize.height
+        )
         #endif
     }
 

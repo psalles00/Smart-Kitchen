@@ -89,8 +89,13 @@ final class SearchBarState: ObservableObject {
         }
         focusTrigger += 1
 
-        // One quick retry is enough to catch the field after the morph finishes.
+        // Retry after the morph and once more after any tab/navigation switch
+        // triggered by opening the assistant from another page.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) { [weak self] in
+            guard let self, self.isVisible else { return }
+            self.focusTrigger += 1
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.28) { [weak self] in
             guard let self, self.isVisible else { return }
             self.focusTrigger += 1
         }

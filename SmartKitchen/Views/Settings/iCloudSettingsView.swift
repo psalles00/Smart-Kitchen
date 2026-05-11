@@ -162,6 +162,7 @@ struct iCloudSettingsView: View {
                 Text("Informações")
             }
         }
+        .settingsFormStyle()
         .macSettingsContainer()
         .settingsNavigationTitle(String(localized: "iCloud"))
         #if os(iOS)

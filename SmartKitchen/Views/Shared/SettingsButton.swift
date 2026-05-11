@@ -1,15 +1,15 @@
 import SwiftUI
 
-// MARK: - Environment key for opening settings from any page
+// MARK: - Environment key for presenting app settings from any page
 
-private struct OpenSettingsActionKey: EnvironmentKey {
+private struct PresentAppSettingsActionKey: EnvironmentKey {
     nonisolated(unsafe) static let defaultValue: () -> Void = {}
 }
 
 extension EnvironmentValues {
-    var openSettings: () -> Void {
-        get { self[OpenSettingsActionKey.self] }
-        set { self[OpenSettingsActionKey.self] = newValue }
+    var presentAppSettings: () -> Void {
+        get { self[PresentAppSettingsActionKey.self] }
+        set { self[PresentAppSettingsActionKey.self] = newValue }
     }
 }
 
@@ -98,7 +98,7 @@ extension EnvironmentValues {
 /// Reusable toolbar button that triggers an external action when tapped.
 struct SettingsButton: View {
     var onTap: (() -> Void)? = nil
-    @Environment(\.openSettings) private var openSettings
+    @Environment(\.presentAppSettings) private var presentAppSettings
 
     var body: some View {
         GlassButtonGroup {
@@ -106,7 +106,7 @@ struct SettingsButton: View {
                 if let onTap {
                     onTap()
                 } else {
-                    openSettings()
+                    presentAppSettings()
                 }
             }
         }

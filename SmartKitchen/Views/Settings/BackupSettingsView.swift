@@ -203,6 +203,7 @@ struct BackupSettingsView: View {
                 Text("O backup exportado é um arquivo .zip que contém o conteúdo em CSV e Markdown legíveis sem o aplicativo, além das mídias originais. Pode ser importado neste mesmo formato ou no formato anterior.")
             }
         }
+        .settingsFormStyle()
         .macSettingsContainer()
         .settingsNavigationTitle(String(localized: "Backup"))
         #if os(iOS)

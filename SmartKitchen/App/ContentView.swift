@@ -108,7 +108,49 @@ struct ContentView: View {
     @State private var showOnboarding: Bool = false
 
     #if os(macOS)
+    @Environment(\.openSettings) private var openSettingsScene
+
+    private enum MacAssistantShortcutIntent: Equatable {
+        case assistant
+        case aiMode
+        case recipeIdeas
+
+        var title: String {
+            switch self {
+            case .assistant:
+                return String(localized: "Assistente")
+            case .aiMode:
+                return String(localized: "Modo IA")
+            case .recipeIdeas:
+                return String(localized: "Ideias de receitas")
+            }
+        }
+
+        var symbolName: String {
+            switch self {
+            case .assistant:
+                return "sparkle.magnifyingglass"
+            case .aiMode:
+                return "sparkles"
+            case .recipeIdeas:
+                return "lightbulb"
+            }
+        }
+
+        var prompt: String {
+            switch self {
+            case .assistant:
+                return String(localized: "Adicione, busque, ou pergunte…")
+            case .aiMode:
+                return AIChatPreset.nutritionCoach.searchPlaceholder
+            case .recipeIdeas:
+                return AIChatPreset.recipeIdeas.searchPlaceholder
+            }
+        }
+    }
+
     @State private var selectedSidebar: SidebarItem? = .home
+    @State private var macAssistantShortcutIntent: MacAssistantShortcutIntent?
     @FocusState private var macSearchFieldFocused: Bool
 
     private var resolvedSelectedSidebar: SidebarItem {
@@ -119,23 +161,152 @@ struct ContentView: View {
         pageTheme(for: resolvedSelectedSidebar)
     }
 
+    private var macAssistantBarAnimation: Animation {
+        .spring(response: 0.44, dampingFraction: 0.86, blendDuration: 0.08)
+    }
+
+    private var macAssistantSearchTextIsEmpty: Bool {
+        searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    private var macAssistantBarIsCentered: Bool {
+        macAssistantShortcutIntent != nil && macAssistantSearchTextIsEmpty
+    }
+
+    private var macAssistantBarPrompt: String {
+        if let macAssistantShortcutIntent {
+            return macAssistantShortcutIntent.prompt
+        }
+
+        return searchBarState.mode == .aiChat
+            ? searchBarState.aiChatPreset.searchPlaceholder
+            : String(localized: "Adicione, busque, ou pergunte…")
+    }
+
+    private var macAssistantDockIconName: String {
+        searchBarState.mode == .aiChat ? "paperplane.fill" : "sparkle.magnifyingglass"
+    }
+
+    private var macAssistantHighlightIntent: MacAssistantShortcutIntent {
+        if let macAssistantShortcutIntent {
+            return macAssistantShortcutIntent
+        }
+
+        if searchBarState.mode == .aiChat {
+            return searchBarState.aiChatPreset == .recipeIdeas ? .recipeIdeas : .aiMode
+        }
+
+        return .assistant
+    }
+
+    private var macAssistantCurrentPageContext: SearchPageContext {
+        switch resolvedSelectedSidebar {
+        case .home:
+            .home
+        case .lists:
+            .lists
+        case .recipes:
+            .recipes
+        case .nutrients:
+            .nutrients
+        case .settings:
+            .home
+        }
+    }
+
+    private func openNativeSettingsWindow() {
+        openSettingsScene()
+    }
+
+    private func beginMacAssistantShortcut(_ intent: MacAssistantShortcutIntent) {
+        pendingShowHistory = false
+        pendingNewConversation = false
+        pendingOpenChat = false
+        pendingChatQuery = nil
+        searchBarState.pendingChatMessage = nil
+        searchBarState.searchText = ""
+        searchBarState.mode = .idle
+        searchBarState.pageContext = macAssistantCurrentPageContext
+
+        withAnimation(macAssistantBarAnimation) {
+            macAssistantShortcutIntent = intent
+        }
+
+        searchBarState.reveal()
+    }
+
+    private func focusMacAssistantDock() {
+        searchBarState.pageContext = macAssistantCurrentPageContext
+
+        withAnimation(macAssistantBarAnimation) {
+            macAssistantShortcutIntent = nil
+        }
+
+        searchBarState.reveal()
+    }
+
+    private func applyMacAssistantShortcutIntentIfNeeded() {
+        guard let macAssistantShortcutIntent else { return }
+
+        searchBarState.pageContext = macAssistantCurrentPageContext
+
+        switch macAssistantShortcutIntent {
+        case .assistant:
+            searchBarState.mode = .idle
+            searchBarState.aiChatPreset = .nutritionCoach
+        case .aiMode:
+            searchBarState.mode = .aiChat
+            searchBarState.aiChatPreset = .nutritionCoach
+        case .recipeIdeas:
+            searchBarState.mode = .aiChat
+            searchBarState.aiChatPreset = .recipeIdeas
+        }
+
+        withAnimation(macAssistantBarAnimation) {
+            self.macAssistantShortcutIntent = nil
+        }
+    }
+
+    private func restoreMacAssistantDockIfNeeded() {
+        guard macAssistantShortcutIntent != nil else { return }
+
+        withAnimation(macAssistantBarAnimation) {
+            macAssistantShortcutIntent = nil
+        }
+    }
+
+    private func submitMacAssistantText() {
+        let trimmed = searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            restoreMacAssistantDockIfNeeded()
+            return
+        }
+
+        applyMacAssistantShortcutIntentIfNeeded()
+
+        if searchBarState.mode == .aiChat {
+            searchBarState.pendingChatMessage = trimmed
+            searchBarState.searchText = ""
+        } else {
+            submitSearchAction()
+        }
+    }
+
     @ViewBuilder
     private var macSidebarDetailContent: some View {
         switch resolvedSelectedSidebar {
         case .home:
             NavigationStack {
                 HomeView(
-                    onSettingsTap: { selectedSidebar = .settings },
+                    onSettingsTap: { openNativeSettingsWindow() },
                     onOpenChat: {
-                        openAIMode()
-                        macSearchFieldFocused = true
+                        beginMacAssistantShortcut(.aiMode)
                     },
                     onOpenRecipeIdeas: {
-                        openAIMode(preset: .recipeIdeas)
-                        macSearchFieldFocused = true
+                        beginMacAssistantShortcut(.recipeIdeas)
                     },
                     onOpenSearch: {
-                        macSearchFieldFocused = true
+                        beginMacAssistantShortcut(.assistant)
                     },
                     onOpenRecipeImport: openQuickRecipeImport,
                     onOpenFoodCameraDirect: openDirectFoodCamera,
@@ -429,9 +600,9 @@ struct ContentView: View {
             }
             .forceLightStatusBar()
         }
-        .environment(\.openSettings, {
+        .environment(\.presentAppSettings, {
             #if os(macOS)
-            selectedSidebar = .settings
+            openNativeSettingsWindow()
             #else
             showSettings = true
             #endif
@@ -454,7 +625,11 @@ struct ContentView: View {
             // BackupManager.shared.performDailyBackupIfNeeded(context: modelContext)
         }
         .onReceive(NotificationCenter.default.publisher(for: .openSettings)) { _ in
+            #if os(macOS)
+            openNativeSettingsWindow()
+            #else
             showSettings = true
+            #endif
         }
         .onReceive(NotificationCenter.default.publisher(for: .openAssistantFromWidget)) { _ in
             #if os(iOS)
@@ -601,6 +776,9 @@ struct ContentView: View {
             // user sees the assistant content above the bar.
             if newValue && selectedTab != .commandBar {
                 selectedTab = .commandBar
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
+                    searchBarState.focusTrigger += 1
+                }
             }
         }
     }
@@ -847,100 +1025,73 @@ struct ContentView: View {
 
     #if os(macOS)
     private var macSidebarView: some View {
-        NavigationSplitView {
-            VStack(spacing: 0) {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 20) {
-                        macSidebarNavigationSection
-                        macSidebarShortcutsSection
-                        macSidebarPreferencesSection
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.top, 14)
-                    .padding(.bottom, 12)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .scrollIndicators(.hidden)
-            }
-            .background(MacDarkSidebarBackground().ignoresSafeArea())
-            .navigationTitle("")
-            .navigationSplitViewColumnWidth(min: 260, ideal: 280, max: 340)
-            .environment(\.colorScheme, .dark)
-            .safeAreaInset(edge: .bottom) {
+        ZStack {
+            NavigationSplitView {
                 VStack(spacing: 0) {
-                    HStack(spacing: 8) {
-                        Image(systemName: searchBarState.mode == .aiChat ? "paperplane.fill" : "sparkle.magnifyingglass")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(.secondary)
-                        TextField(
-                            "",
-                            text: $searchBarState.searchText
-                        )
-                        .textFieldStyle(.plain)
-                        .font(.subheadline)
-                        .overlay(alignment: .leading) {
-                            if searchBarState.searchText.isEmpty {
-                                Text(searchBarState.mode == .aiChat ? searchBarState.aiChatPreset.searchPlaceholder : String(localized: "Adicione, busque, ou pergunte…"))
-                                    .foregroundStyle(.white)
-                                    .allowsHitTesting(false)
-                            }
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 20) {
+                            macSidebarNavigationSection
+                            macSidebarShortcutsSection
+                            macSidebarPreferencesSection
                         }
-                        .focused($macSearchFieldFocused)
-                        .onSubmit {
-                            let trimmed = searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-                            guard !trimmed.isEmpty else { return }
-                            if searchBarState.mode == .aiChat {
-                                searchBarState.pendingChatMessage = trimmed
-                                searchBarState.searchText = ""
-                            } else {
-                                submitSearchAction()
-                            }
-                        }
-
-                        if !searchBarState.searchText.isEmpty {
-                            Button {
-                                searchBarState.searchText = ""
-                            } label: {
-                                Image(systemName: "xmark.circle.fill")
-                                    .font(.system(size: 14))
-                                    .foregroundStyle(.tertiary)
-                            }
-                            .buttonStyle(.plain)
-                        }
-
-                        Text("⌘K")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.tertiary)
+                        .padding(.horizontal, 12)
+                        .padding(.top, 14)
+                        .padding(.bottom, 12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
-                    .foregroundStyle(.white, .white.opacity(0.82), .white.opacity(0.58))
-                    .tint(.white)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 10)
-                    .background(.white.opacity(0.08), in: .rect(cornerRadius: 10))
-                    .contentShape(.rect)
+                    .scrollIndicators(.hidden)
                 }
-                .padding(.horizontal, 12)
-                .padding(.bottom, 8)
-            }
-            .toolbar {
-                ToolbarItem(placement: .automatic) {
-                    Button {
-                        macSearchFieldFocused = true
-                    } label: {
-                        Label("Buscar", systemImage: "sparkle.magnifyingglass")
+                .background(MacDarkSidebarBackground().ignoresSafeArea())
+                .navigationTitle("")
+                .navigationSplitViewColumnWidth(min: 260, ideal: 280, max: 340)
+                .environment(\.colorScheme, .dark)
+                .safeAreaInset(edge: .bottom) {
+                    Color.clear
+                        .frame(height: 60)
+                        .padding(.horizontal, 12)
+                        .padding(.bottom, 8)
+                }
+                .toolbar {
+                    ToolbarItem(placement: .automatic) {
+                        Button {
+                            focusMacAssistantDock()
+                        } label: {
+                            Label("Buscar", systemImage: "sparkle.magnifyingglass")
+                        }
+                        .keyboardShortcut("k", modifiers: .command)
                     }
-                    .keyboardShortcut("k", modifiers: .command)
+                }
+            } detail: {
+                ZStack {
+                    macSidebarDetailContent
+                }
+                .overlay {
+                    if macHasSearchContent {
+                        macSearchResultsOverlay
+                            .transition(.opacity)
+                    }
                 }
             }
-        } detail: {
-            ZStack {
-                macSidebarDetailContent
+            macAssistantBarOverlay
+                .zIndex(1)
+        }
+        .onChange(of: searchBarState.searchText) { _, newValue in
+            if !newValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                applyMacAssistantShortcutIntentIfNeeded()
             }
-            .overlay {
-                if macHasSearchContent {
-                    macSearchResultsOverlay
-                        .transition(.opacity)
-                }
+        }
+        .onChange(of: searchBarState.focusTrigger) { _, _ in
+            macSearchFieldFocused = true
+        }
+        .onChange(of: searchBarState.defocusTrigger) { _, _ in
+            macSearchFieldFocused = false
+            if macAssistantSearchTextIsEmpty {
+                restoreMacAssistantDockIfNeeded()
+            }
+        }
+        .onChange(of: macSearchFieldFocused) { _, newValue in
+            if !newValue && macAssistantSearchTextIsEmpty {
+                restoreMacAssistantDockIfNeeded()
             }
         }
         .onChange(of: searchBarState.debouncedSearchText) { _, newValue in
@@ -949,7 +1100,7 @@ struct ContentView: View {
         }
         .toolbarBackground(.hidden, for: .windowToolbar)
         .toolbarColorScheme(.dark, for: .windowToolbar)
-        .focusedSceneValue(\.openCommandBarAction, { searchBarState.reveal(mode: .idle) })
+        .focusedSceneValue(\.openCommandBarAction, { focusMacAssistantDock() })
         .onChange(of: selectedSidebar) { _, newValue in
             let newTheme: PageTheme = {
                 switch newValue ?? .home {
@@ -969,6 +1120,110 @@ struct ContentView: View {
     private var macHasSearchContent: Bool {
         let hasText = !searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         return hasText || searchBarState.mode == .aiChat || pendingOpenChat || pendingChatQuery != nil
+    }
+
+    private var macAssistantBarOverlay: some View {
+        GeometryReader { proxy in
+            let isCentered = macAssistantBarIsCentered
+            let dockWidth = min(max(proxy.size.width * 0.22, 252), 292)
+            let centeredWidth = min(max(proxy.size.width * 0.50, 540), 760)
+            let width = isCentered ? centeredWidth : dockWidth
+            let height: CGFloat = isCentered ? 74 : 52
+            let x = isCentered ? proxy.size.width / 2 : 16 + width / 2
+            let y = isCentered
+                ? proxy.size.height / 2
+                : proxy.size.height - proxy.safeAreaInsets.bottom - 18 - height / 2
+
+            macAssistantBarChrome(isCentered: isCentered)
+                .frame(width: width)
+                .position(x: x, y: y)
+                .shadow(color: .black.opacity(isCentered ? 0.34 : 0.16), radius: isCentered ? 44 : 16, y: isCentered ? 18 : 10)
+                .shadow(color: .black.opacity(isCentered ? 0.20 : 0.08), radius: isCentered ? 14 : 6, y: isCentered ? 6 : 3)
+        }
+        .allowsHitTesting(true)
+    }
+
+    private func macAssistantBarChrome(isCentered: Bool) -> some View {
+        HStack(spacing: isCentered ? 14 : 8) {
+            if isCentered {
+                HStack(spacing: 8) {
+                    Image(systemName: macAssistantHighlightIntent.symbolName)
+                    Text(macAssistantHighlightIntent.title)
+                        .lineLimit(1)
+                }
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.white.opacity(0.92))
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(.white.opacity(0.10), in: Capsule())
+            } else {
+                Image(systemName: macAssistantDockIconName)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.82))
+            }
+
+            TextField(
+                "",
+                text: $searchBarState.searchText
+            )
+            .textFieldStyle(.plain)
+            .font(isCentered ? .title3.weight(.medium) : .subheadline)
+            .overlay(alignment: .leading) {
+                if macAssistantSearchTextIsEmpty {
+                    Text(macAssistantBarPrompt)
+                        .foregroundStyle(.white.opacity(isCentered ? 0.74 : 1))
+                        .allowsHitTesting(false)
+                        .lineLimit(1)
+                }
+            }
+            .focused($macSearchFieldFocused)
+            .onSubmit {
+                submitMacAssistantText()
+            }
+
+            if !macAssistantSearchTextIsEmpty {
+                Button {
+                    searchBarState.searchText = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: isCentered ? 16 : 14, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.58))
+                }
+                .buttonStyle(.plain)
+            } else if !isCentered {
+                Text("⌘K")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.white.opacity(0.58))
+            }
+        }
+        .foregroundStyle(.white, .white.opacity(0.82), .white.opacity(0.58))
+        .tint(.white)
+        .padding(.horizontal, isCentered ? 18 : 14)
+        .padding(.vertical, isCentered ? 16 : 10)
+        .frame(maxWidth: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: isCentered ? 24 : 14, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color(red: 0.19, green: 0.20, blue: 0.24).opacity(isCentered ? 0.97 : 0.95),
+                            Color(red: 0.11, green: 0.12, blue: 0.15).opacity(isCentered ? 0.94 : 0.92)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: isCentered ? 24 : 14, style: .continuous)
+                .strokeBorder(.white.opacity(isCentered ? 0.18 : 0.10), lineWidth: 1)
+        )
+        .contentShape(.rect)
+        .onTapGesture {
+            searchBarState.isVisible = true
+            macSearchFieldFocused = true
+        }
+        .animation(macAssistantBarAnimation, value: isCentered)
     }
 
     // MARK: - macOS sidebar row helpers
@@ -1000,17 +1255,15 @@ struct ContentView: View {
             VStack(alignment: .leading, spacing: 4) {
                 macSidebarShortcutRow(title: String(localized: "Assistente"), systemImage: "sparkle.magnifyingglass") {
                     selectedSidebar = .home
-                    macSearchFieldFocused = true
+                    beginMacAssistantShortcut(.assistant)
                 }
                 macSidebarShortcutRow(title: String(localized: "Modo IA"), systemImage: "sparkles") {
                     selectedSidebar = .home
-                    openAIMode()
-                    macSearchFieldFocused = true
+                    beginMacAssistantShortcut(.aiMode)
                 }
                 macSidebarShortcutRow(title: String(localized: "Ideias de receitas"), systemImage: "lightbulb") {
                     selectedSidebar = .home
-                    openAIMode(preset: .recipeIdeas)
-                    macSearchFieldFocused = true
+                    beginMacAssistantShortcut(.recipeIdeas)
                 }
                 macSidebarShortcutRow(title: String(localized: "Adicionar à Despensa"), systemImage: "cabinet") {
                     showAddPantry = true
@@ -1021,7 +1274,7 @@ struct ContentView: View {
                 Menu {
                     macSidebarRecipeMenu
                 } label: {
-                    macSidebarShortcutLabel(title: String(localized: "Receitas"), systemImage: "book")
+                    macSidebarShortcutLabel(title: String(localized: "Adicionar Receita"), systemImage: "book")
                 }
                 .menuOrder(.fixed)
                 .buttonStyle(.plain)
@@ -1029,7 +1282,7 @@ struct ContentView: View {
                 Menu {
                     macSidebarFoodMenu
                 } label: {
-                    macSidebarShortcutLabel(title: String(localized: "Alimento"), systemImage: "fork.knife")
+                    macSidebarShortcutLabel(title: String(localized: "Registrar Alimento"), systemImage: "fork.knife")
                 }
                 .menuOrder(.fixed)
                 .buttonStyle(.plain)
@@ -1119,7 +1372,11 @@ struct ContentView: View {
         let accent = pageTheme(for: item).accentColor
 
         Button {
-            selectedSidebar = item
+            if item == .settings {
+                openNativeSettingsWindow()
+            } else {
+                selectedSidebar = item
+            }
         } label: {
             macSidebarLabel(title: item.title, systemImage: item.systemImage, foregroundStyle: isSelected ? Color.white : Color.white.opacity(0.82))
                 .padding(.horizontal, 10)
@@ -1394,6 +1651,7 @@ struct ContentView: View {
         if selectedTab != .commandBar {
             selectedTab = .commandBar
         }
+        searchBarState.reveal(mode: destination == nil ? .idle : nil)
     }
 
     private func handleQuickRecipeImportDismissed() {
@@ -1879,11 +2137,11 @@ private struct HomeView: View {
                         showAddGrocery = true
                     }
 
-                    macShortcutAddTileMenu(title: String(localized: "Receitas"), imageName: "receitas", imageSize: 68, tileHeight: quickTileHeight) {
+                    macShortcutAddTileMenu(title: String(localized: "Adicionar Receita"), imageName: "receitas", imageSize: 68, tileHeight: quickTileHeight) {
                         recipeShortcutMenuContent
                     }
 
-                    macShortcutAddTileMenu(title: String(localized: "Alimento"), imageName: "nutrientes", imageSize: 68, tileHeight: quickTileHeight) {
+                    macShortcutAddTileMenu(title: String(localized: "Registrar Alimento"), imageName: "nutrientes", imageSize: 68, tileHeight: quickTileHeight) {
                         foodShortcutMenuContent
                     }
                 }
@@ -1912,6 +2170,8 @@ private struct HomeView: View {
                 .font(.caption.weight(.bold))
                 .foregroundStyle(.primary)
                 .lineLimit(1)
+                .minimumScaleFactor(0.72)
+                .allowsTightening(true)
                 .frame(maxWidth: .infinity)
         }
         .frame(maxWidth: .infinity, alignment: .top)
@@ -1933,6 +2193,8 @@ private struct HomeView: View {
                 .font(.caption.weight(.bold))
                 .foregroundStyle(.primary)
                 .lineLimit(1)
+                .minimumScaleFactor(0.72)
+                .allowsTightening(true)
                 .frame(maxWidth: .infinity)
         }
         .frame(maxWidth: .infinity, alignment: .top)
@@ -2016,9 +2278,12 @@ private struct HomeView: View {
                             recipeShortcutMenuContent
                         }
                         .frame(height: smallSide)
-                        Text(String(localized: "Receitas"))
+                        Text(String(localized: "Adicionar Receita"))
                             .font(.caption.weight(.bold))
                             .foregroundStyle(.primary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.72)
+                            .allowsTightening(true)
                     }
 
                     VStack(spacing: 6) {
@@ -2026,9 +2291,12 @@ private struct HomeView: View {
                             foodShortcutMenuContent
                         }
                         .frame(height: smallSide)
-                        Text(String(localized: "Alimento"))
+                        Text(String(localized: "Registrar Alimento"))
                             .font(.caption.weight(.bold))
                             .foregroundStyle(.primary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.72)
+                            .allowsTightening(true)
                     }
                 }
             }

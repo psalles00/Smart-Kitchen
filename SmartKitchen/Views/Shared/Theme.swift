@@ -190,6 +190,7 @@ extension View {
         modalNavigationTitle(title)
 #else
         self
+            .navigationTitle(title)
 #endif
     }
 }
