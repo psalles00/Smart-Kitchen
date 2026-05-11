@@ -71,6 +71,7 @@ struct ListsSettingsView: View {
                 Text("Define como receitas aparecem inicialmente, o limite mínimo para considerar uma receita compatível e se sugestões usam apenas o que já está na despensa.")
             }
         }
+        .settingsFormStyle()
         .macSettingsContainer()
         .settingsNavigationTitle(String(localized: "Listas e Receitas"))
         #if os(iOS)

@@ -11,6 +11,9 @@ struct UnifiedSearchBar: View {
     let onOpenFoodCameraDirect: () -> Void
     let onOpenFoodGalleryDirect: () -> Void
     private let chromeHeight: CGFloat = 46
+    private let primaryForegroundColor = Color.white
+    private let secondaryForegroundColor = Color.white.opacity(0.82)
+    private let tertiaryForegroundColor = Color.white.opacity(0.58)
 
     @FocusState private var isFocused: Bool
 
@@ -60,7 +63,12 @@ struct UnifiedSearchBar: View {
                     .symbolRenderingMode(.monochrome)
                     .foregroundStyle(.secondary)
 
-                TextField(state.mode == .aiChat ? state.aiChatPreset.searchPlaceholder : String(localized: "Assistente"), text: $state.searchText)
+                TextField(
+                    "",
+                    text: $state.searchText,
+                    prompt: Text(state.mode == .aiChat ? state.aiChatPreset.searchPlaceholder : String(localized: "Assistente"))
+                        .foregroundStyle(tertiaryForegroundColor)
+                )
                     .foregroundStyle(.primary)
                     #if os(iOS)
                     .textInputAutocapitalization(.never)
@@ -93,6 +101,8 @@ struct UnifiedSearchBar: View {
                 requestFocus()
             }
         }
+        .foregroundStyle(primaryForegroundColor, secondaryForegroundColor, tertiaryForegroundColor)
+        .tint(primaryForegroundColor)
     }
 
     @ViewBuilder
@@ -156,12 +166,12 @@ struct UnifiedSearchBar: View {
             Image(systemName: "plus.circle.fill")
                 .font(.system(size: 16, weight: .medium))
                 .symbolRenderingMode(.monochrome)
-                .foregroundStyle(Color.secondary)
+                .foregroundStyle(.secondary)
                 .frame(width: 40, height: 40)
                 .contentShape(Rectangle())
         }
         .menuOrder(.fixed)
-        .tint(Color.secondary)
+        .tint(secondaryForegroundColor)
         .buttonStyle(.plain)
         .menuIndicator(.hidden)
     }
@@ -198,7 +208,7 @@ struct UnifiedSearchBar: View {
                 .contentShape(Rectangle())
         }
         .menuOrder(.fixed)
-        .tint(Color.secondary)
+        .tint(secondaryForegroundColor)
         .buttonStyle(.plain)
         .menuIndicator(.hidden)
     }

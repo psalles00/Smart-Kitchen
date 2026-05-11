@@ -30,7 +30,7 @@ struct DictationButton: View {
                 }
                 Image(systemName: isRecording ? "mic.fill" : "mic")
                     .font(.system(size: 16, weight: .medium))
-                    .foregroundStyle(isRecording ? Color.red : Color.secondary)
+                    .foregroundStyle(isRecording ? AnyShapeStyle(Color.red) : AnyShapeStyle(.secondary))
             }
             .frame(width: 40, height: 40)
             .contentShape(Rectangle())

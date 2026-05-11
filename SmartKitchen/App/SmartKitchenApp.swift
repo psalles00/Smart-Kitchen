@@ -96,6 +96,10 @@ struct MacNewItemCommands: Commands {
 
 @main
 struct SmartKitchenApp: App {
+    #if os(macOS)
+    private static let macMinimumWindowSize = CGSize(width: 1100, height: 750)
+    #endif
+
     #if os(iOS)
     @UIApplicationDelegateAdaptor(SmartKitchenAppDelegate.self) var appDelegate
     #elseif os(macOS)
@@ -148,6 +152,12 @@ struct SmartKitchenApp: App {
                 }
             }
             .animation(.easeOut(duration: 0.25), value: isAppReady)
+            #if os(macOS)
+            .frame(
+                minWidth: Self.macMinimumWindowSize.width,
+                minHeight: Self.macMinimumWindowSize.height
+            )
+            #endif
             .environment(\.sharedImportPresentationEnabled, isAppReady && scenePhase == .active)
                 // Sheets hosted OUTSIDE `.id(cloudSync.containerID)` survive
                 // the ContentView teardown that happens when CloudKit
@@ -218,7 +228,10 @@ struct SmartKitchenApp: App {
                 }
         }
         #if os(macOS)
-        .defaultSize(width: 1100, height: 750)
+        .defaultSize(
+            width: Self.macMinimumWindowSize.width,
+            height: Self.macMinimumWindowSize.height
+        )
         .windowStyle(.hiddenTitleBar)
         .windowResizability(.contentMinSize)
         .commands {

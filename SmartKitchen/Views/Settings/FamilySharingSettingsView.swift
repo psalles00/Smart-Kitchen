@@ -178,6 +178,7 @@ struct FamilySharingSettingsView: View {
                 Text("Informações")
             }
         }
+        .settingsFormStyle()
         .macSettingsContainer()
         .settingsNavigationTitle(String(localized: "Compartilhamento Familiar"))
         #if os(iOS)

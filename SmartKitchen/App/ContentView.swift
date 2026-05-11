@@ -869,6 +869,7 @@ struct ContentView: View {
             .scrollContentBackground(.hidden)
             .background(MacDarkSidebarBackground().ignoresSafeArea())
             .navigationTitle("")
+            .navigationSplitViewColumnWidth(min: 260, ideal: 280, max: 340)
             .tint(macActivePageTheme.accentColor)
             .environment(\.colorScheme, .dark)
             .safeAreaInset(edge: .bottom) {
@@ -878,11 +879,18 @@ struct ContentView: View {
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundStyle(.secondary)
                         TextField(
-                            searchBarState.mode == .aiChat ? searchBarState.aiChatPreset.searchPlaceholder : String(localized: "Adicione, busque, ou pergunte…"),
+                            "",
                             text: $searchBarState.searchText
                         )
                         .textFieldStyle(.plain)
                         .font(.subheadline)
+                        .overlay(alignment: .leading) {
+                            if searchBarState.searchText.isEmpty {
+                                Text(searchBarState.mode == .aiChat ? searchBarState.aiChatPreset.searchPlaceholder : String(localized: "Adicione, busque, ou pergunte…"))
+                                    .foregroundStyle(.white)
+                                    .allowsHitTesting(false)
+                            }
+                        }
                         .focused($macSearchFieldFocused)
                         .onSubmit {
                             let trimmed = searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -910,6 +918,8 @@ struct ContentView: View {
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(.tertiary)
                     }
+                    .foregroundStyle(.white, .white.opacity(0.82), .white.opacity(0.58))
+                    .tint(.white)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 10)
                     .background(.white.opacity(0.08), in: .rect(cornerRadius: 10))
@@ -1665,8 +1675,8 @@ private struct HomeView: View {
                         subtitle: String(localized: "Adicione, busque ou pergunte..."),
                         imageName: "assistente",
                         style: .featured,
-                        imageSize: 124,
-                        imageOffset: CGSize(width: 18, height: 24)
+                        imageSize: 182,
+                        imageOffset: CGSize(width: 10, height: 28)
                     ) {
                         onOpenSearch()
                     }
@@ -1678,8 +1688,9 @@ private struct HomeView: View {
                             subtitle: String(localized: "Inteligência"),
                             imageName: "modo ia",
                             style: .wide,
-                            imageSize: 86,
-                            imageOffset: CGSize(width: 54, height: 22)
+                            imageSize: 126,
+                            imageOffset: CGSize(width: -12, height: 18),
+                            imageAlignment: .bottomTrailing
                         ) {
                             onOpenChat()
                         }
@@ -1690,8 +1701,9 @@ private struct HomeView: View {
                             subtitle: String(localized: "de receitas"),
                             imageName: "ideis",
                             style: .wide,
-                            imageSize: 70,
-                            imageOffset: CGSize(width: 54, height: 10)
+                            imageSize: 110,
+                            imageOffset: CGSize(width: -14, height: 14),
+                            imageAlignment: .bottomTrailing
                         ) {
                             onOpenRecipeIdeas()
                         }
@@ -2052,16 +2064,44 @@ private struct HomeView: View {
     }
 
     private func filterChip(label: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
+        let backgroundColor: Color = {
+            if colorScheme == .dark {
+                return isSelected ? PageTheme.home.accentColor.opacity(0.16) : Color(.tertiarySystemBackground)
+            }
+
+            return isSelected
+                ? Color(red: 1.0, green: 0.93, blue: 0.84)
+                : Color.white
+        }()
+
+        let foregroundColor: Color = {
+            if colorScheme == .dark {
+                return isSelected ? PageTheme.home.accentColor : .primary
+            }
+
+            return isSelected
+                ? Color(red: 0.53, green: 0.31, blue: 0.03)
+                : Color(red: 0.42, green: 0.27, blue: 0.06)
+        }()
+
+        let borderColor: Color = {
+            guard colorScheme == .light else { return .clear }
+            return isSelected
+                ? Color(red: 0.92, green: 0.76, blue: 0.52)
+                : Color.black.opacity(0.06)
+        }()
+
+        return Button(action: action) {
             Text(label)
                 .font(.caption.weight(.semibold))
                 .padding(.horizontal, 12)
                 .padding(.vertical, 7)
-                .background(
-                    isSelected ? PageTheme.home.accentColor.opacity(0.16) : Color(.tertiarySystemBackground),
-                    in: .capsule
-                )
-                .foregroundStyle(isSelected ? PageTheme.home.accentColor : .primary)
+                .background(backgroundColor, in: .capsule)
+                .overlay {
+                    Capsule()
+                        .stroke(borderColor, lineWidth: borderColor == .clear ? 0 : 1)
+                }
+                .foregroundStyle(foregroundColor)
         }
         .buttonStyle(.plain)
     }
@@ -2087,6 +2127,7 @@ private struct HomeView: View {
         style: HomeShortcutTileStyle,
         imageSize: CGFloat? = nil,
         imageOffset: CGSize? = nil,
+        imageAlignment: Alignment? = nil,
         action: @escaping () -> Void
     ) -> some View {
         Button {
@@ -2099,7 +2140,8 @@ private struct HomeView: View {
                 imageName: imageName,
                 style: style,
                 customSize: imageSize,
-                customOffset: imageOffset
+                customOffset: imageOffset,
+                customAlignment: imageAlignment
             )
         }
         .buttonStyle(HomeShortcutButtonStyle())
@@ -2136,7 +2178,8 @@ private struct HomeView: View {
         imageName: String,
         style: HomeShortcutTileStyle,
         customSize: CGFloat? = nil,
-        customOffset: CGSize? = nil
+        customOffset: CGSize? = nil,
+        customAlignment: Alignment? = nil
     ) -> some View {
         ZStack {
             homeShortcutBackgroundColor
@@ -2175,7 +2218,7 @@ private struct HomeView: View {
                 Color.clear
             }
         }
-        .overlay(alignment: homeShortcutImageAlignment(for: style)) {
+        .overlay(alignment: customAlignment ?? homeShortcutImageAlignment(for: style)) {
             homeShortcutTileImage(
                 imageName: imageName,
                 style: style,

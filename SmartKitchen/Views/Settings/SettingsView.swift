@@ -92,6 +92,7 @@ extension EnvironmentValues {
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.requestReview) private var requestReview
+    @Environment(\.colorScheme) private var colorScheme
     @State private var placeholderAction: AboutPlaceholderAction?
     #if os(macOS)
     @State private var selectedMacDestination: SettingsDestination = .iCloud
@@ -330,7 +331,7 @@ struct SettingsView: View {
                     .padding(.horizontal, 14)
                     .padding(.vertical, 12)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .background(Color.primary.opacity(colorScheme == .light ? 0.025 : 0.04), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             }
             .buttonStyle(.plain)
 
@@ -341,7 +342,7 @@ struct SettingsView: View {
                     .padding(.horizontal, 14)
                     .padding(.vertical, 12)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .background(Color.primary.opacity(colorScheme == .light ? 0.025 : 0.04), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             }
             .buttonStyle(.plain)
 
@@ -352,7 +353,7 @@ struct SettingsView: View {
                     .padding(.horizontal, 14)
                     .padding(.vertical, 12)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .background(Color.primary.opacity(colorScheme == .light ? 0.025 : 0.04), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             }
             .buttonStyle(.plain)
 
@@ -361,7 +362,7 @@ struct SettingsView: View {
                     .padding(.horizontal, 14)
                     .padding(.vertical, 12)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .background(Color.primary.opacity(colorScheme == .light ? 0.025 : 0.04), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             }
             .buttonStyle(.plain)
         }
@@ -387,6 +388,7 @@ struct SettingsView: View {
 
     private func macSettingsDestinationButton(_ destination: SettingsDestination) -> some View {
         let isSelected = selectedMacDestination == destination
+        let selectionTint = Color.accentColor
 
         return Button {
             selectedMacDestination = destination
@@ -394,10 +396,10 @@ struct SettingsView: View {
             HStack(spacing: 12) {
                 Image(systemName: destination.systemImage)
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(isSelected ? Color.black.opacity(0.78) : Color.secondary)
+                    .foregroundStyle(isSelected ? selectionTint : Color.secondary)
                     .frame(width: 32, height: 32)
                     .background(
-                        isSelected ? Color.white : Color.primary.opacity(0.06),
+                        isSelected ? selectionTint.opacity(colorScheme == .light ? 0.12 : 0.18) : Color.primary.opacity(0.04),
                         in: RoundedRectangle(cornerRadius: 11, style: .continuous)
                     )
 
@@ -410,7 +412,7 @@ struct SettingsView: View {
 
                 Image(systemName: "arrow.right")
                     .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(isSelected ? Color.white : Color.secondary)
+                    .foregroundStyle(isSelected ? selectionTint : Color.secondary)
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
@@ -419,19 +421,13 @@ struct SettingsView: View {
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
                     .fill(
                         isSelected
-                            ? AnyShapeStyle(
-                                LinearGradient(
-                                    colors: [Color(red: 0.16, green: 0.56, blue: 0.98), Color(red: 0.26, green: 0.77, blue: 0.68)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            : AnyShapeStyle(Color.primary.opacity(0.04))
+                            ? AnyShapeStyle(selectionTint.opacity(colorScheme == .light ? 0.08 : 0.16))
+                            : AnyShapeStyle(Color.clear)
                     )
             }
             .overlay(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .strokeBorder(Color.primary.opacity(isSelected ? 0.10 : 0.05), lineWidth: 1)
+                    .strokeBorder(isSelected ? selectionTint.opacity(colorScheme == .light ? 0.18 : 0.24) : Color.clear, lineWidth: 1)
             )
         }
         .buttonStyle(.plain)
@@ -610,30 +606,29 @@ struct MacSettingsContainerModifier: ViewModifier {
 }
 
 private struct MacSettingsPaneModifier: ViewModifier {
+    @Environment(\.colorScheme) private var colorScheme
+
     func body(content: Content) -> some View {
         content
             .background(
                 RoundedRectangle(cornerRadius: 30, style: .continuous)
-                    .fill(Color(nsColor: .controlBackgroundColor).opacity(0.94))
+                    .fill(colorScheme == .light ? Color.white : Color(nsColor: .controlBackgroundColor).opacity(0.94))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 30, style: .continuous)
-                    .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
+                    .strokeBorder(Color.primary.opacity(colorScheme == .light ? 0.05 : 0.08), lineWidth: 1)
             )
-            .shadow(color: .black.opacity(0.18), radius: 24, y: 14)
     }
 }
 
 private struct MacSettingsInsetCardModifier: ViewModifier {
+    @Environment(\.colorScheme) private var colorScheme
+
     func body(content: Content) -> some View {
         content
             .background(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .fill(Color.primary.opacity(0.04))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .strokeBorder(Color.primary.opacity(0.06), lineWidth: 1)
+                    .fill(Color.primary.opacity(colorScheme == .light ? 0.018 : 0.04))
             )
     }
 }
@@ -653,6 +648,8 @@ extension View {
 
     func settingsFormStyle() -> some View {
         formStyle(.grouped)
+            .scrollContentBackground(.hidden)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 }
 #else
