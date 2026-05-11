@@ -25,6 +25,7 @@ struct FullscreenAssistantView: View {
     ///   suppressed (tap, drag, close button) and the AI chat mode is reached
     ///   through a navigation push instead of a global mode toggle.
     enum Presentation { case overlay, tab }
+    enum ChromeStyle { case fullscreen, embeddedPanel }
 
     @ObservedObject var searchBarState: SearchBarState
     @ObservedObject var searchService: UniversalSearchService
@@ -43,6 +44,7 @@ struct FullscreenAssistantView: View {
     @Binding var pendingShowHistory: Bool
 
     var presentation: Presentation = .overlay
+    var chromeStyle: ChromeStyle = .fullscreen
     var usesDarkShaderBackground: Bool = false
     /// When set, the idle "Perguntar à IA" / "Ideias de receitas" buttons call
     /// this closure (with the desired preset) instead of mutating the global
@@ -65,9 +67,16 @@ struct FullscreenAssistantView: View {
     @State private var showImportRecipe = false
     @State private var recipeImportLaunchMode: RecipeImportLaunchMode = .picker
     @State private var pendingImportedRecipeID: UUID? = nil
-    private let topPinnedInset: CGFloat = 72
+    private let fullscreenTopPinnedInset: CGFloat = 72
+    private let embeddedPanelTopInset: CGFloat = 16
 
     private var settings: AppSettings? { settingsArray.first }
+    private var topPinnedInset: CGFloat {
+        chromeStyle == .fullscreen ? fullscreenTopPinnedInset : embeddedPanelTopInset
+    }
+    private var showsPinnedHeader: Bool {
+        chromeStyle == .fullscreen
+    }
     private var idleScrollTopThreshold: CGFloat {
         AssistantScrollMetrics.topThreshold(forTopPadding: topPinnedInset)
     }
@@ -101,14 +110,17 @@ struct FullscreenAssistantView: View {
 
     var body: some View {
         ZStack {
-            // Background — only dismiss on tap when presented as overlay.
-            if presentation == .overlay {
-                pageBackground
-                    .ignoresSafeArea()
-                    .onTapGesture { searchBarState.dismiss() }
+            if chromeStyle == .fullscreen {
+                if presentation == .overlay {
+                    pageBackground
+                        .ignoresSafeArea()
+                        .onTapGesture { searchBarState.dismiss() }
+                } else {
+                    pageBackground
+                        .ignoresSafeArea()
+                }
             } else {
-                pageBackground
-                    .ignoresSafeArea()
+                Color.clear
             }
 
             contentArea
@@ -121,7 +133,9 @@ struct FullscreenAssistantView: View {
                     )
                 )
                 .overlay(alignment: .top) {
-                    pinnedHeader
+                    if showsPinnedHeader {
+                        pinnedHeader
+                    }
                 }
             .offset(y: max(dragOffset, 0))
             .opacity(contentOpacity)
@@ -792,6 +806,90 @@ private struct AssistantModeShaderBackground: View {
         }
     }
 }
+
+#if os(macOS)
+struct MacAssistantExpandedPage: View {
+    enum Mode {
+        case assistant
+        case aiMode
+
+        var title: String {
+            switch self {
+            case .assistant:
+                return String(localized: "Assistente")
+            case .aiMode:
+                return String(localized: "Modo IA")
+            }
+        }
+    }
+
+    let mode: Mode
+    @ObservedObject var searchBarState: SearchBarState
+    @ObservedObject var searchService: UniversalSearchService
+
+    let onAction: (CommandBarAction) -> Void
+    let onOpenFoodCameraDirect: () -> Void
+    let onOpenFoodGalleryDirect: () -> Void
+    let onRequestAIMode: ((AIChatPreset, String?) -> Void)?
+
+    @Binding var pendingChatQuery: String?
+    @Binding var pendingOpenChat: Bool
+    @Binding var pendingNewConversation: Bool
+    @Binding var pendingShowHistory: Bool
+
+    var body: some View {
+        ExpandedPageLayout(
+            pageTheme: .home,
+            backgroundOverride: AnyView(AssistantModeShaderBackground()),
+            header: { isInverted in
+                PageHeader(title: mode.title, isInverted: isInverted) {
+                    if mode == .aiMode {
+                        GlassButtonGroup {
+                            GlassGroupMenu(systemImage: "ellipsis.circle") {
+                                Button {
+                                    pendingShowHistory = true
+                                } label: {
+                                    Label("Histórico", systemImage: "clock.arrow.circlepath")
+                                }
+
+                                Button {
+                                    pendingNewConversation = true
+                                } label: {
+                                    Label("Nova conversa", systemImage: "square.and.pencil")
+                                }
+                            }
+                        }
+                    } else {
+                        EmptyView()
+                    }
+                }
+            },
+            content: {
+                FullscreenAssistantView(
+                    searchBarState: searchBarState,
+                    searchService: searchService,
+                    onAction: onAction,
+                    onOpenFoodCameraDirect: onOpenFoodCameraDirect,
+                    onOpenFoodGalleryDirect: onOpenFoodGalleryDirect,
+                    pendingChatQuery: $pendingChatQuery,
+                    pendingOpenChat: $pendingOpenChat,
+                    pendingNewConversation: $pendingNewConversation,
+                    pendingShowHistory: $pendingShowHistory,
+                    presentation: .tab,
+                    chromeStyle: .embeddedPanel,
+                    usesDarkShaderBackground: false,
+                    onRequestAIMode: mode == .assistant ? onRequestAIMode : nil,
+                    showsBackButton: false
+                )
+            },
+            infoContent: {
+                EmptyView()
+            }
+        )
+        .tint(PageTheme.home.accentColor)
+    }
+}
+#endif
 
 /// Identifies the AI page pushed onto the search tab navigation stack.
 struct AssistantTabAIDestination: Hashable {

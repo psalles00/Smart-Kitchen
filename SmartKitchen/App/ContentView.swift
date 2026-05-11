@@ -234,6 +234,8 @@ struct ContentView: View {
         searchBarState.pendingChatMessage = nil
         searchBarState.searchText = ""
         searchBarState.debouncedSearchText = ""
+        searchBarState.mode = .idle
+        searchBarState.aiChatPreset = .nutritionCoach
 
         withAnimation(macAssistantBarAnimation) {
             macAssistantShortcutIntent = nil
@@ -254,6 +256,13 @@ struct ContentView: View {
         assistantTabPath = [AssistantTabAIDestination(preset: preset, prefill: prefill)]
         searchBarState.pageContext = .home
         searchBarState.aiChatPreset = preset
+        if let prefill, !prefill.isEmpty {
+            pendingOpenChat = false
+            pendingChatQuery = prefill
+        } else {
+            pendingChatQuery = nil
+            pendingOpenChat = true
+        }
         selectedSidebar = .aiMode
         searchBarState.reveal(mode: .aiChat)
     }
@@ -375,22 +384,38 @@ struct ContentView: View {
             }
             .background(Color.clear)
 
-        case .assistant, .aiMode:
-            AssistantSearchTabContent(
+        case .assistant:
+            MacAssistantExpandedPage(
+                mode: .assistant,
                 searchBarState: searchBarState,
                 searchService: searchService,
                 onAction: { handleCommandBarAction($0) },
                 onOpenFoodCameraDirect: openDirectFoodCamera,
                 onOpenFoodGalleryDirect: openDirectFoodGallery,
+                onRequestAIMode: { preset, prefill in
+                    openAIMode(preset: preset, prefill: prefill)
+                },
                 pendingChatQuery: $pendingChatQuery,
                 pendingOpenChat: $pendingOpenChat,
                 pendingNewConversation: $pendingNewConversation,
-                pendingShowHistory: $pendingShowHistory,
-                path: $assistantTabPath,
-                usesDarkShaderBackground: true,
-                aiPageShowsBackButton: false
+                pendingShowHistory: $pendingShowHistory
             )
-            .environment(\.colorScheme, .dark)
+            .background(Color.clear)
+
+        case .aiMode:
+            MacAssistantExpandedPage(
+                mode: .aiMode,
+                searchBarState: searchBarState,
+                searchService: searchService,
+                onAction: { handleCommandBarAction($0) },
+                onOpenFoodCameraDirect: openDirectFoodCamera,
+                onOpenFoodGalleryDirect: openDirectFoodGallery,
+                onRequestAIMode: nil,
+                pendingChatQuery: $pendingChatQuery,
+                pendingOpenChat: $pendingOpenChat,
+                pendingNewConversation: $pendingNewConversation,
+                pendingShowHistory: $pendingShowHistory
+            )
             .background(Color.clear)
 
         case .lists:
@@ -1477,12 +1502,18 @@ struct ContentView: View {
 
         Button {
             if item == .settings {
+                if resolvedSelectedSidebar == .assistant || resolvedSelectedSidebar == .aiMode {
+                    resetMacAssistantNavigationState()
+                }
                 openNativeSettingsWindow()
             } else if item == .assistant {
                 openAssistantTab()
             } else if item == .aiMode {
                 openAIMode()
             } else {
+                if resolvedSelectedSidebar == .assistant || resolvedSelectedSidebar == .aiMode {
+                    resetMacAssistantNavigationState()
+                }
                 selectedSidebar = item
             }
         } label: {

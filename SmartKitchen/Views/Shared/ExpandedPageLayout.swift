@@ -45,6 +45,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
     let content: () -> Content
     let infoContent: () -> InfoContent
     let startsWithInfoCollapsed: Bool
+    let backgroundOverride: AnyView?
 
     private var backgroundManager = BackgroundManager.shared
 
@@ -105,12 +106,14 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
     init(
         pageTheme: PageTheme,
         startsWithInfoCollapsed: Bool = false,
+        backgroundOverride: AnyView? = nil,
         @ViewBuilder header: @escaping (_ isInverted: Bool) -> Header,
         @ViewBuilder content: @escaping () -> Content,
         @ViewBuilder infoContent: @escaping () -> InfoContent
     ) {
         self.pageTheme = pageTheme
         self.startsWithInfoCollapsed = startsWithInfoCollapsed
+        self.backgroundOverride = backgroundOverride
         self.header = header
         self.content = content
         self.infoContent = infoContent
@@ -299,32 +302,36 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
 
     @ViewBuilder
     private var backgroundLayer: some View {
-        ZStack {
-            Color.black
-            if backgroundTransitionProgress < 0.999 {
-                themedBackground(for: backgroundFromTheme)
-                    .opacity(1.0 - backgroundTransitionProgress)
+        if let backgroundOverride {
+            backgroundOverride
+        } else {
+            ZStack {
+                Color.black
+                if backgroundTransitionProgress < 0.999 {
+                    themedBackground(for: backgroundFromTheme)
+                        .opacity(1.0 - backgroundTransitionProgress)
+                }
+                themedBackground(for: backgroundToTheme)
+                    .opacity(backgroundTransitionProgress)
             }
-            themedBackground(for: backgroundToTheme)
-                .opacity(backgroundTransitionProgress)
-        }
-        .onAppear {
-            backgroundFromTheme = effectiveBgTheme
-            backgroundToTheme = effectiveBgTheme
-            backgroundTransitionProgress = 1.0
-        }
-        .onChange(of: effectiveBgTheme) { _, newTheme in
-            guard newTheme != backgroundToTheme else { return }
-            backgroundFromTheme = backgroundToTheme
-            backgroundToTheme = newTheme
-            #if os(macOS)
-            backgroundTransitionProgress = 1.0
-            #else
-            backgroundTransitionProgress = 0.0
-            withAnimation(.easeInOut(duration: 0.35)) {
+            .onAppear {
+                backgroundFromTheme = effectiveBgTheme
+                backgroundToTheme = effectiveBgTheme
                 backgroundTransitionProgress = 1.0
             }
-            #endif
+            .onChange(of: effectiveBgTheme) { _, newTheme in
+                guard newTheme != backgroundToTheme else { return }
+                backgroundFromTheme = backgroundToTheme
+                backgroundToTheme = newTheme
+                #if os(macOS)
+                backgroundTransitionProgress = 1.0
+                #else
+                backgroundTransitionProgress = 0.0
+                withAnimation(.easeInOut(duration: 0.35)) {
+                    backgroundTransitionProgress = 1.0
+                }
+                #endif
+            }
         }
     }
 
