@@ -386,8 +386,11 @@ struct ContentView: View {
                 pendingOpenChat: $pendingOpenChat,
                 pendingNewConversation: $pendingNewConversation,
                 pendingShowHistory: $pendingShowHistory,
-                path: $assistantTabPath
+                path: $assistantTabPath,
+                usesDarkShaderBackground: true,
+                aiPageShowsBackButton: false
             )
+            .environment(\.colorScheme, .dark)
             .background(Color.clear)
 
         case .lists:

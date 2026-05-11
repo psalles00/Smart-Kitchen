@@ -43,6 +43,7 @@ struct FullscreenAssistantView: View {
     @Binding var pendingShowHistory: Bool
 
     var presentation: Presentation = .overlay
+    var usesDarkShaderBackground: Bool = false
     /// When set, the idle "Perguntar à IA" / "Ideias de receitas" buttons call
     /// this closure (with the desired preset) instead of mutating the global
     /// `searchBarState.mode`. Used by the search-tab to push the AI page.
@@ -80,6 +81,22 @@ struct FullscreenAssistantView: View {
             GridItem(.flexible(), spacing: 6),
             GridItem(.flexible(), spacing: 6)
         ]
+    }
+    private var headerBackgroundStyle: AnyShapeStyle {
+        if usesDarkShaderBackground {
+            return AnyShapeStyle(
+                LinearGradient(
+                    colors: [
+                        Color.black.opacity(0.72),
+                        Color(red: 0.10, green: 0.11, blue: 0.13).opacity(0.82)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
+        }
+
+        return AnyShapeStyle(appPrimaryBackground)
     }
 
     var body: some View {
@@ -217,6 +234,50 @@ struct FullscreenAssistantView: View {
             Spacer()
 
             if searchBarState.mode == .aiChat {
+                #if os(macOS)
+                if usesDarkShaderBackground {
+                    Menu {
+                        Button {
+                            pendingShowHistory = true
+                        } label: {
+                            Label("Histórico", systemImage: "clock.arrow.circlepath")
+                        }
+
+                        Button {
+                            pendingNewConversation = true
+                        } label: {
+                            Label("Nova conversa", systemImage: "square.and.pencil")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                            .font(.system(size: 17, weight: .medium))
+                            .foregroundStyle(.secondary)
+                            .frame(width: 32, height: 32)
+                    }
+                    .menuOrder(.fixed)
+                    .buttonStyle(.plain)
+                } else {
+                    Button {
+                        pendingNewConversation = true
+                    } label: {
+                        Image(systemName: "square.and.pencil")
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundStyle(.secondary)
+                            .frame(width: 32, height: 32)
+                    }
+                    .buttonStyle(.plain)
+
+                    Button {
+                        pendingShowHistory = true
+                    } label: {
+                        Image(systemName: "clock.arrow.circlepath")
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundStyle(.secondary)
+                            .frame(width: 32, height: 32)
+                    }
+                    .buttonStyle(.plain)
+                }
+                #else
                 Button {
                     pendingNewConversation = true
                 } label: {
@@ -236,6 +297,7 @@ struct FullscreenAssistantView: View {
                         .frame(width: 32, height: 32)
                 }
                 .buttonStyle(.plain)
+                    #endif
             }
 
             Button {
@@ -635,7 +697,7 @@ struct FullscreenAssistantView: View {
                         gesture: dismissDragGesture
                     )
                 )
-                .background(appPrimaryBackground, ignoresSafeAreaEdges: .top)
+                .background(headerBackgroundStyle, ignoresSafeAreaEdges: .top)
 
             Rectangle()
                 .fill(.bar)
@@ -659,8 +721,75 @@ struct FullscreenAssistantView: View {
 
     @ViewBuilder
     private var pageBackground: some View {
-        Rectangle()
-            .fill(appPrimaryBackground)
+        if usesDarkShaderBackground {
+            AssistantModeShaderBackground()
+        } else {
+            Rectangle()
+                .fill(appPrimaryBackground)
+        }
+    }
+}
+
+private struct AssistantModeShaderBackground: View {
+    @AppStorage(PerformancePreferences.backgroundShadersEnabledKey)
+    private var backgroundShadersEnabled = true
+
+    var body: some View {
+        ZStack {
+            Color(red: 0.06, green: 0.065, blue: 0.075)
+
+            if backgroundShadersEnabled {
+                TexturedGradientSceneView(
+                    color1: Color(red: 0.30, green: 0.31, blue: 0.34),
+                    color2: Color(red: 0.18, green: 0.19, blue: 0.21),
+                    color3: Color(red: 0.09, green: 0.10, blue: 0.12),
+                    grainIntensity: 0.10,
+                    shapeType: 5
+                )
+                .opacity(0.94)
+            } else {
+                MeshGradient(
+                    width: 3,
+                    height: 3,
+                    points: [
+                        [0.0, 0.0], [0.5, 0.0], [1.0, 0.0],
+                        [0.0, 0.5], [0.5, 0.5], [1.0, 0.5],
+                        [0.0, 1.0], [0.5, 1.0], [1.0, 1.0]
+                    ],
+                    colors: [
+                        Color(red: 0.25, green: 0.26, blue: 0.29),
+                        Color(red: 0.19, green: 0.20, blue: 0.22),
+                        Color(red: 0.15, green: 0.16, blue: 0.18),
+                        Color(red: 0.14, green: 0.15, blue: 0.17),
+                        Color(red: 0.10, green: 0.11, blue: 0.13),
+                        Color(red: 0.08, green: 0.09, blue: 0.10),
+                        Color(red: 0.07, green: 0.08, blue: 0.09),
+                        Color(red: 0.05, green: 0.055, blue: 0.065),
+                        Color.black
+                    ]
+                )
+            }
+
+            LinearGradient(
+                colors: [
+                    Color.black.opacity(0.26),
+                    Color.black.opacity(0.12),
+                    Color.black.opacity(0.42)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+
+            LinearGradient(
+                colors: [
+                    Color.white.opacity(0.04),
+                    Color.clear,
+                    Color.black.opacity(0.28)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        }
     }
 }
 
@@ -691,6 +820,9 @@ struct AssistantSearchTabContent: View {
 
     @Binding var path: [AssistantTabAIDestination]
 
+    var usesDarkShaderBackground: Bool = false
+    var aiPageShowsBackButton: Bool = true
+
     var body: some View {
         NavigationStack(path: $path) {
             FullscreenAssistantView(
@@ -704,6 +836,7 @@ struct AssistantSearchTabContent: View {
                 pendingNewConversation: $pendingNewConversation,
                 pendingShowHistory: $pendingShowHistory,
                 presentation: .tab,
+                usesDarkShaderBackground: usesDarkShaderBackground,
                 onRequestAIMode: { preset, prefill in
                     path.append(AssistantTabAIDestination(preset: preset, prefill: prefill))
                 }
@@ -722,7 +855,9 @@ struct AssistantSearchTabContent: View {
                     pendingChatQuery: $pendingChatQuery,
                     pendingOpenChat: $pendingOpenChat,
                     pendingNewConversation: $pendingNewConversation,
-                    pendingShowHistory: $pendingShowHistory
+                    pendingShowHistory: $pendingShowHistory,
+                    usesDarkShaderBackground: usesDarkShaderBackground,
+                    showsBackButton: aiPageShowsBackButton
                 )
             }
         }
@@ -746,6 +881,9 @@ private struct AssistantSearchTabAIPage: View {
     @Binding var pendingNewConversation: Bool
     @Binding var pendingShowHistory: Bool
 
+    var usesDarkShaderBackground: Bool = false
+    var showsBackButton: Bool = true
+
     var body: some View {
         FullscreenAssistantView(
             searchBarState: searchBarState,
@@ -758,8 +896,9 @@ private struct AssistantSearchTabAIPage: View {
             pendingNewConversation: $pendingNewConversation,
             pendingShowHistory: $pendingShowHistory,
             presentation: .tab,
+            usesDarkShaderBackground: usesDarkShaderBackground,
             onRequestAIMode: nil,
-            showsBackButton: true
+            showsBackButton: showsBackButton
         )
         #if os(iOS)
         .toolbar(.hidden, for: .navigationBar)
