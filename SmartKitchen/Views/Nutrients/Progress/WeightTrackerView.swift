@@ -9,7 +9,10 @@ import Charts
 /// - Lista o histórico agrupado por ano (data + peso) com edição/exclusão por entrada.
 /// - Acessível via botão na header da Nutrição e via atalho na home do Assistente.
 struct WeightTrackerView: View {
+    @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+
+    var showsDismissButton = false
 
     @Query(sort: \NutritionProfile.createdAt, order: .forward) private var profiles: [NutritionProfile]
     @Query(sort: \WeightEntry.date, order: .reverse) private var allEntries: [WeightEntry]
@@ -85,6 +88,11 @@ struct WeightTrackerView: View {
         #endif
         .tint(accent)
         .toolbar {
+            if showsDismissButton {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Fechar") { dismiss() }
+                }
+            }
             ToolbarItem(placement: .primaryAction) {
                 Button {
                     showLogSheet = true
@@ -460,6 +468,7 @@ private struct EditWeightSheet: View {
                     }
                 }
             }
+            .macModalFormStyle(minWidth: 520, minHeight: 420)
             .modalNavigationTitle(String(localized: "Editar registro"))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

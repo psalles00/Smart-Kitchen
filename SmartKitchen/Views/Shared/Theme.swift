@@ -161,6 +161,22 @@ extension View {
         background(.ultraThinMaterial, in: .rect(cornerRadius: cornerRadius))
     }
 
+    /// Normalizes modal forms on macOS so sheets don't fall back to AppKit's
+    /// split label/control layout inside compact dialogs.
+    func macModalFormStyle(minWidth: CGFloat = 520, minHeight: CGFloat = 520) -> some View {
+#if os(macOS)
+        return self
+            .formStyle(.grouped)
+            .padding(.horizontal, 20)
+            .padding(.top, 10)
+            .padding(.bottom, 20)
+            .frame(minWidth: minWidth, minHeight: minHeight)
+#else
+        return self
+            .formStyle(.grouped)
+#endif
+    }
+
     /// Applies the shared branded title style used in modal navigation bars.
     func modalNavigationTitle(_ title: String) -> some View {
         modifier(ModalNavigationTitleModifier(title: title))

@@ -5,7 +5,10 @@ import Charts
 /// Tela de progresso nutricional — gráficos de peso, calorias, médias de macros e estatísticas.
 /// Push a partir do botão de gráfico no header da aba Nutrição.
 struct NutritionProgressView: View {
+    @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+
+    var showsDismissButton = false
 
     @Query(sort: \NutritionProfile.createdAt) private var profiles: [NutritionProfile]
     @Query(sort: \WeightEntry.date, order: .reverse) private var allWeightEntries: [WeightEntry]
@@ -54,6 +57,13 @@ struct NutritionProgressView: View {
         .navigationBarTitleDisplayMode(.large)
         #endif
         .tint(PageTheme.nutrients.accentColor)
+        .toolbar {
+            if showsDismissButton {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Fechar") { dismiss() }
+                }
+            }
+        }
         .sheet(isPresented: $showLogWeight) {
             if let profile {
                 LogWeightSheet(

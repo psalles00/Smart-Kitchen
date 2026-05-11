@@ -109,24 +109,19 @@ struct ContentView: View {
 
     #if os(macOS)
     @State private var selectedSidebar: SidebarItem? = .home
-    @State private var macBackgroundFromTheme: PageTheme = .home
-    @State private var macBackgroundToTheme: PageTheme = .home
-    @State private var macBackgroundTransitionProgress: Double = 1.0
     @FocusState private var macSearchFieldFocused: Bool
 
+    private var resolvedSelectedSidebar: SidebarItem {
+        selectedSidebar ?? .home
+    }
+
     private var macActivePageTheme: PageTheme {
-        switch selectedSidebar ?? .home {
-        case .home: return .home
-        case .lists: return .lists
-        case .recipes: return .recipes
-        case .nutrients: return .nutrients
-        case .settings: return .home
-        }
+        pageTheme(for: resolvedSelectedSidebar)
     }
 
     @ViewBuilder
     private var macSidebarDetailContent: some View {
-        switch selectedSidebar ?? .home {
+        switch resolvedSelectedSidebar {
         case .home:
             NavigationStack {
                 HomeView(
@@ -424,7 +419,7 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showWeightTracker) {
             NavigationStack {
-                WeightTrackerView()
+                WeightTrackerView(showsDismissButton: true)
             }
             .forceLightStatusBar()
         }
@@ -853,17 +848,23 @@ struct ContentView: View {
     #if os(macOS)
     private var macSidebarView: some View {
         NavigationSplitView {
-            List {
-                macSidebarNavigationSection
-                macSidebarShortcutsSection
-                macSidebarPreferencesSection
+            VStack(spacing: 0) {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 20) {
+                        macSidebarNavigationSection
+                        macSidebarShortcutsSection
+                        macSidebarPreferencesSection
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.top, 14)
+                    .padding(.bottom, 12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .scrollIndicators(.hidden)
             }
-            .listStyle(.sidebar)
-            .scrollContentBackground(.hidden)
             .background(MacDarkSidebarBackground().ignoresSafeArea())
             .navigationTitle("")
             .navigationSplitViewColumnWidth(min: 260, ideal: 280, max: 340)
-            .tint(.clear)
             .environment(\.colorScheme, .dark)
             .safeAreaInset(edge: .bottom) {
                 VStack(spacing: 0) {
@@ -949,15 +950,6 @@ struct ContentView: View {
         .toolbarBackground(.hidden, for: .windowToolbar)
         .toolbarColorScheme(.dark, for: .windowToolbar)
         .focusedSceneValue(\.openCommandBarAction, { searchBarState.reveal(mode: .idle) })
-        .background {
-            macAppBackground
-                .ignoresSafeArea()
-        }
-        .onAppear {
-            macBackgroundFromTheme = macActivePageTheme
-            macBackgroundToTheme = macActivePageTheme
-            macBackgroundTransitionProgress = 1.0
-        }
         .onChange(of: selectedSidebar) { _, newValue in
             let newTheme: PageTheme = {
                 switch newValue ?? .home {
@@ -970,11 +962,6 @@ struct ContentView: View {
             }()
             if newTheme != displayedBgTheme {
                 displayedBgTheme = newTheme
-            }
-            if newTheme != macBackgroundToTheme {
-                macBackgroundFromTheme = macBackgroundToTheme
-                macBackgroundToTheme = newTheme
-                macBackgroundTransitionProgress = 1.0
             }
         }
     }
@@ -998,59 +985,76 @@ struct ContentView: View {
 
     @ViewBuilder
     private var macSidebarNavigationSection: some View {
-        Section("Navegação") {
-            ForEach(SidebarItem.allCases.filter { $0 != .settings }) { item in
-                macSidebarRow(item: item)
+        macSidebarSection(title: "Navegação") {
+            VStack(alignment: .leading, spacing: 4) {
+                ForEach(SidebarItem.allCases.filter { $0 != .settings }) { item in
+                    macSidebarRow(item: item)
+                }
             }
         }
     }
 
     @ViewBuilder
     private var macSidebarShortcutsSection: some View {
-        Section("Atalhos") {
-            macSidebarShortcutRow(title: String(localized: "Assistente"), systemImage: "sparkle.magnifyingglass") {
-                selectedSidebar = .home
-                macSearchFieldFocused = true
+        macSidebarSection(title: "Atalhos") {
+            VStack(alignment: .leading, spacing: 4) {
+                macSidebarShortcutRow(title: String(localized: "Assistente"), systemImage: "sparkle.magnifyingglass") {
+                    selectedSidebar = .home
+                    macSearchFieldFocused = true
+                }
+                macSidebarShortcutRow(title: String(localized: "Modo IA"), systemImage: "sparkles") {
+                    selectedSidebar = .home
+                    openAIMode()
+                    macSearchFieldFocused = true
+                }
+                macSidebarShortcutRow(title: String(localized: "Ideias de receitas"), systemImage: "lightbulb") {
+                    selectedSidebar = .home
+                    openAIMode(preset: .recipeIdeas)
+                    macSearchFieldFocused = true
+                }
+                macSidebarShortcutRow(title: String(localized: "Adicionar à Despensa"), systemImage: "cabinet") {
+                    showAddPantry = true
+                }
+                macSidebarShortcutRow(title: String(localized: "Adicionar ao Mercado"), systemImage: "cart") {
+                    showAddGrocery = true
+                }
+                Menu {
+                    macSidebarRecipeMenu
+                } label: {
+                    macSidebarShortcutLabel(title: String(localized: "Receitas"), systemImage: "book")
+                }
+                .menuOrder(.fixed)
+                .buttonStyle(.plain)
+
+                Menu {
+                    macSidebarFoodMenu
+                } label: {
+                    macSidebarShortcutLabel(title: String(localized: "Alimento"), systemImage: "fork.knife")
+                }
+                .menuOrder(.fixed)
+                .buttonStyle(.plain)
             }
-            macSidebarShortcutRow(title: String(localized: "Modo IA"), systemImage: "sparkles") {
-                selectedSidebar = .home
-                openAIMode()
-                macSearchFieldFocused = true
-            }
-            macSidebarShortcutRow(title: String(localized: "Ideias de receitas"), systemImage: "lightbulb") {
-                selectedSidebar = .home
-                openAIMode(preset: .recipeIdeas)
-                macSearchFieldFocused = true
-            }
-            macSidebarShortcutRow(title: String(localized: "Adicionar à Despensa"), systemImage: "cabinet") {
-                showAddPantry = true
-            }
-            macSidebarShortcutRow(title: String(localized: "Adicionar ao Mercado"), systemImage: "cart") {
-                showAddGrocery = true
-            }
-            Menu {
-                macSidebarRecipeMenu
-            } label: {
-                macSidebarShortcutLabel(title: String(localized: "Receitas"), systemImage: "book")
-            }
-            .menuOrder(.fixed)
-            .buttonStyle(.plain)
-            .listRowBackground(Color.clear)
-            Menu {
-                macSidebarFoodMenu
-            } label: {
-                macSidebarShortcutLabel(title: String(localized: "Alimento"), systemImage: "fork.knife")
-            }
-            .menuOrder(.fixed)
-            .buttonStyle(.plain)
-            .listRowBackground(Color.clear)
         }
     }
 
     @ViewBuilder
     private var macSidebarPreferencesSection: some View {
-        Section("Preferências") {
-            macSidebarRow(item: .settings)
+        macSidebarSection(title: "Preferências") {
+            VStack(alignment: .leading, spacing: 4) {
+                macSidebarRow(item: .settings)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func macSidebarSection<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.headline.weight(.semibold))
+                .foregroundStyle(.white.opacity(0.35))
+                .padding(.horizontal, 10)
+
+            content()
         }
     }
 
@@ -1111,24 +1115,21 @@ struct ContentView: View {
     /// background tinted with the destination's page theme accent color.
     @ViewBuilder
     private func macSidebarRow(item: SidebarItem) -> some View {
-        let isSelected = (selectedSidebar ?? .home) == item
+        let isSelected = resolvedSelectedSidebar == item
         let accent = pageTheme(for: item).accentColor
+
         Button {
             selectedSidebar = item
         } label: {
-            Label(item.title, systemImage: item.systemImage)
-                .labelStyle(.titleAndIcon)
-                .foregroundStyle(isSelected ? Color.white : Color.white.opacity(0.82))
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .contentShape(.rect)
+            macSidebarLabel(title: item.title, systemImage: item.systemImage, foregroundStyle: isSelected ? Color.white : Color.white.opacity(0.82))
+                .padding(.horizontal, 10)
+                .padding(.vertical, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(isSelected ? AnyShapeStyle(accent.opacity(0.85)) : AnyShapeStyle(Color.clear))
+                )
         }
         .buttonStyle(.plain)
-        .listRowBackground(
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .fill(isSelected ? AnyShapeStyle(accent.opacity(0.85)) : AnyShapeStyle(Color.clear))
-                .padding(.horizontal, 6)
-                .padding(.vertical, 1)
-        )
     }
 
     /// Plain sidebar shortcut row (no selection state).
@@ -1138,14 +1139,28 @@ struct ContentView: View {
             macSidebarShortcutLabel(title: title, systemImage: systemImage)
         }
         .buttonStyle(.plain)
-        .listRowBackground(Color.clear)
     }
 
     @ViewBuilder
     private func macSidebarShortcutLabel(title: String, systemImage: String) -> some View {
-        Label(title, systemImage: systemImage)
-            .labelStyle(.titleAndIcon)
-            .foregroundStyle(Color.white.opacity(0.82))
+        macSidebarLabel(title: title, systemImage: systemImage, foregroundStyle: Color.white.opacity(0.82))
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+    }
+
+    @ViewBuilder
+    private func macSidebarLabel(title: String, systemImage: String, foregroundStyle: Color) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: systemImage)
+                .font(.system(size: 16, weight: .semibold))
+                .frame(width: 22, alignment: .center)
+
+            Text(title)
+                .lineLimit(1)
+
+            Spacer(minLength: 0)
+        }
+        .foregroundStyle(foregroundStyle)
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(.rect)
     }
@@ -1218,26 +1233,6 @@ struct ContentView: View {
         }
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .padding(16)
-    }
-
-    @ViewBuilder
-    private var macAppBackground: some View {
-        ZStack {
-            Color.black
-            macThemedBackground(for: macBackgroundFromTheme)
-                .opacity(1.0 - macBackgroundTransitionProgress)
-            macThemedBackground(for: macBackgroundToTheme)
-                .opacity(macBackgroundTransitionProgress)
-        }
-    }
-
-    @ViewBuilder
-    private func macThemedBackground(for theme: PageTheme) -> some View {
-        ThemedBackgroundView(
-            theme: theme,
-            selection: BackgroundManager.shared.background(for: theme),
-            progress: 1.0
-        )
     }
 
     #endif
@@ -1838,8 +1833,8 @@ private struct HomeView: View {
                         subtitle: String(localized: "Adicione, busque ou pergunte..."),
                         imageName: "assistente",
                         style: .featured,
-                        imageSize: 182,
-                        imageOffset: CGSize(width: 10, height: 28)
+                        imageSize: 222,
+                        imageOffset: CGSize(width: -2, height: 28)
                     ) {
                         onOpenSearch()
                     }
@@ -1851,7 +1846,7 @@ private struct HomeView: View {
                             subtitle: String(localized: "Inteligência"),
                             imageName: "modo ia",
                             style: .wide,
-                            imageSize: 126,
+                            imageSize: 144,
                             imageOffset: CGSize(width: -12, height: 18),
                             imageAlignment: .bottomTrailing
                         ) {
@@ -1864,7 +1859,7 @@ private struct HomeView: View {
                             subtitle: String(localized: "de receitas"),
                             imageName: "ideis",
                             style: .wide,
-                            imageSize: 110,
+                            imageSize: 126,
                             imageOffset: CGSize(width: -14, height: 14),
                             imageAlignment: .bottomTrailing
                         ) {
@@ -1880,7 +1875,7 @@ private struct HomeView: View {
                         showAddPantry = true
                     }
 
-                    macShortcutAddTile(title: String(localized: "Mercado"), imageName: "mercado", imageSize: 72, tileHeight: quickTileHeight) {
+                    macShortcutAddTile(title: String(localized: "Mercado"), imageName: "mercado", imageSize: 78, tileHeight: quickTileHeight) {
                         showAddGrocery = true
                     }
 
@@ -1888,7 +1883,7 @@ private struct HomeView: View {
                         recipeShortcutMenuContent
                     }
 
-                    macShortcutAddTileMenu(title: String(localized: "Alimento"), imageName: "nutrientes", imageSize: 64, tileHeight: quickTileHeight) {
+                    macShortcutAddTileMenu(title: String(localized: "Alimento"), imageName: "nutrientes", imageSize: 68, tileHeight: quickTileHeight) {
                         foodShortcutMenuContent
                     }
                 }

@@ -154,9 +154,11 @@ struct ItemDetailView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
+                closeButtonRow
+
                 // Icon area
                 iconHeader
-                    .padding(.top, 20)
+                    .padding(.top, isCreateMode ? 20 : 10)
 
                 // Name field
                 nameSection
@@ -279,9 +281,37 @@ struct ItemDetailView: View {
         name
     }
 
+    private var currentNameBinding: Binding<String> {
+        isCreateMode ? $name : editNameBinding
+    }
+
+    private var currentNameValue: String {
+        currentNameBinding.wrappedValue
+    }
+
     private var resolvedImageData: Data? {
         if isCreateMode { return imageData }
         return editingItem?.imageData ?? imageData
+    }
+
+    @ViewBuilder
+    private var closeButtonRow: some View {
+        if !isCreateMode {
+            HStack {
+                Spacer()
+
+                Button {
+                    closeEditor()
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 32, height: 32)
+                        .background(neutralSurfaceColor, in: Circle())
+                }
+                .buttonStyle(.plain)
+            }
+        }
     }
 
     @ViewBuilder
@@ -319,17 +349,28 @@ struct ItemDetailView: View {
     private var nameSection: some View {
         ZStack(alignment: .trailing) {
             // Centered title - takes full width, padded to avoid sparkle overlap
-            TextField("Nome do item", text: isCreateMode ? $name : editNameBinding)
+            TextField("", text: currentNameBinding)
                 .font(.pageTitle)
                 .minimumScaleFactor(0.5)
                 .multilineTextAlignment(.center)
                 .lineLimit(1)
                 .padding(.horizontal, 40)
                 .focused($nameFieldFocused)
+                .overlay {
+                    if currentNameValue.isEmpty {
+                        Text("Nome do item")
+                            .font(.pageTitle)
+                            .foregroundStyle(.secondary)
+                            .allowsHitTesting(false)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.5)
+                            .padding(.horizontal, 40)
+                    }
+                }
                 #if os(iOS)
                 .textInputAutocapitalization(.words)
                 #endif
-                .onChange(of: isCreateMode ? name : editNameBinding.wrappedValue) { _, newValue in
+                .onChange(of: currentNameValue) { _, newValue in
                     updateSuggestions(for: newValue)
                     if !isCreateMode {
                         name = newValue
@@ -1213,6 +1254,13 @@ struct ItemDetailView: View {
 
     private func openExistingItem(_ item: UnifiedItem) {
         onExistingItemRequested?(item)
+        dismiss()
+    }
+
+    private func closeEditor() {
+        if !isCreateMode {
+            try? modelContext.save()
+        }
         dismiss()
     }
 

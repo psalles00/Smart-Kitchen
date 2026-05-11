@@ -93,6 +93,7 @@ struct FoodEntryFormView: View {
                     DatePicker("Horário", selection: $timestamp)
                 }
             }
+            .macModalFormStyle(minWidth: 680, minHeight: 620)
             .scrollDismissesKeyboard(.interactively)
             .modalNavigationTitle(isEdit ? String(localized: "Editar registro") : String(localized: "Salvar Alimento"))
             .toolbar {
