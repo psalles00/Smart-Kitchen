@@ -10,6 +10,8 @@ import AppKit
 
 enum SidebarItem: String, CaseIterable, Identifiable {
     case home
+    case assistant
+    case aiMode
     case lists
     case recipes
     case nutrients
@@ -20,6 +22,8 @@ enum SidebarItem: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .home: return "Savoria"
+        case .assistant: return String(localized: "Assistente")
+        case .aiMode: return String(localized: "Modo IA")
         case .lists: return String(localized: "Listas")
         case .recipes: return String(localized: "Receitas")
         case .nutrients: return String(localized: "Nutrição")
@@ -30,6 +34,8 @@ enum SidebarItem: String, CaseIterable, Identifiable {
     var systemImage: String {
         switch self {
         case .home: return "house"
+        case .assistant: return "sparkle.magnifyingglass"
+        case .aiMode: return "sparkles"
         case .lists: return "list.bullet.clipboard"
         case .recipes: return "book"
         case .nutrients: return "fork.knife"
@@ -62,9 +68,8 @@ struct ContentView: View {
     @StateObject private var searchService = UniversalSearchService()
     @StateObject private var searchBarState = SearchBarState()
 
-    // Navigation stack for the search/assistant tab. Owned here so that the
-    // home view's "Perguntar à IA" / "Ideias de receitas" / "Assistente"
-    // shortcuts can both switch to the search tab AND push the AI page.
+    // Navigation stack for the dedicated assistant experience. On iOS this
+    // powers the search tab; on macOS it powers the assistant detail pages.
     @State private var assistantTabPath: [AssistantTabAIDestination] = []
     /// Tracks whether the on-screen keyboard is visible so we can hide the tab
     /// bar only while the user is actively typing. Driven by UIKit keyboard
@@ -204,6 +209,8 @@ struct ContentView: View {
         switch resolvedSelectedSidebar {
         case .home:
             .home
+        case .assistant, .aiMode:
+            .home
         case .lists:
             .lists
         case .recipes:
@@ -217,6 +224,38 @@ struct ContentView: View {
 
     private func openNativeSettingsWindow() {
         openSettingsScene()
+    }
+
+    private func resetMacAssistantNavigationState() {
+        pendingShowHistory = false
+        pendingNewConversation = false
+        pendingOpenChat = false
+        pendingChatQuery = nil
+        searchBarState.pendingChatMessage = nil
+        searchBarState.searchText = ""
+        searchBarState.debouncedSearchText = ""
+
+        withAnimation(macAssistantBarAnimation) {
+            macAssistantShortcutIntent = nil
+        }
+    }
+
+    private func openMacAssistantPage() {
+        resetMacAssistantNavigationState()
+        assistantTabPath = []
+        searchBarState.pageContext = .home
+        searchBarState.aiChatPreset = .nutritionCoach
+        selectedSidebar = .assistant
+        searchBarState.reveal(mode: .idle)
+    }
+
+    private func openMacAIModePage(preset: AIChatPreset = .nutritionCoach, prefill: String? = nil) {
+        resetMacAssistantNavigationState()
+        assistantTabPath = [AssistantTabAIDestination(preset: preset, prefill: prefill)]
+        searchBarState.pageContext = .home
+        searchBarState.aiChatPreset = preset
+        selectedSidebar = .aiMode
+        searchBarState.reveal(mode: .aiChat)
     }
 
     private func beginMacAssistantShortcut(_ intent: MacAssistantShortcutIntent) {
@@ -321,19 +360,34 @@ struct ContentView: View {
                 HomeView(
                     onSettingsTap: { openNativeSettingsWindow() },
                     onOpenChat: {
-                        beginMacAssistantShortcut(.aiMode)
+                        openAIMode()
                     },
                     onOpenRecipeIdeas: {
-                        beginMacAssistantShortcut(.recipeIdeas)
+                        openAIMode(preset: .recipeIdeas)
                     },
                     onOpenSearch: {
-                        beginMacAssistantShortcut(.assistant)
+                        openAssistantTab()
                     },
                     onOpenRecipeImport: openQuickRecipeImport,
                     onOpenFoodCameraDirect: openDirectFoodCamera,
                     onOpenFoodGalleryDirect: openDirectFoodGallery
                 )
             }
+            .background(Color.clear)
+
+        case .assistant, .aiMode:
+            AssistantSearchTabContent(
+                searchBarState: searchBarState,
+                searchService: searchService,
+                onAction: { handleCommandBarAction($0) },
+                onOpenFoodCameraDirect: openDirectFoodCamera,
+                onOpenFoodGalleryDirect: openDirectFoodGallery,
+                pendingChatQuery: $pendingChatQuery,
+                pendingOpenChat: $pendingOpenChat,
+                pendingNewConversation: $pendingNewConversation,
+                pendingShowHistory: $pendingShowHistory,
+                path: $assistantTabPath
+            )
             .background(Color.clear)
 
         case .lists:
@@ -653,11 +707,7 @@ struct ContentView: View {
             #endif
         }
         .onReceive(NotificationCenter.default.publisher(for: .openAssistantFromWidget)) { _ in
-            #if os(iOS)
             openAssistantTab()
-            #else
-            searchBarState.reveal(mode: .idle)
-            #endif
         }
         .onReceive(NotificationCenter.default.publisher(for: .openAIChatFromWidget)) { _ in
             // Open AI chat mode (handles iOS tab switch + push internally).
@@ -1052,6 +1102,7 @@ struct ContentView: View {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 20) {
                             macSidebarNavigationSection
+                            macSidebarAssistantSection
                             macSidebarShortcutsSection
                             macSidebarPreferencesSection
                         }
@@ -1083,10 +1134,11 @@ struct ContentView: View {
                     }
                 }
             } detail: {
-                ZStack {
+                ZStack(alignment: .top) {
                     macSidebarDetailContent
-                }
-                .overlay(alignment: .top) {
+                        .opacity(macHasSearchContent ? 0 : 1)
+                        .allowsHitTesting(!macHasSearchContent)
+
                     if macHasSearchContent {
                         macSearchResultsOverlay
                             .transition(.opacity)
@@ -1135,10 +1187,15 @@ struct ContentView: View {
         .toolbarBackground(.hidden, for: .windowToolbar)
         .toolbarColorScheme(.dark, for: .windowToolbar)
         .focusedSceneValue(\.openCommandBarAction, { focusMacAssistantDock() })
+        .onChange(of: assistantTabPath) { _, newValue in
+            guard resolvedSelectedSidebar == .assistant || resolvedSelectedSidebar == .aiMode else { return }
+            selectedSidebar = newValue.isEmpty ? .assistant : .aiMode
+        }
         .onChange(of: selectedSidebar) { _, newValue in
             let newTheme: PageTheme = {
                 switch newValue ?? .home {
                 case .home: return .home
+                case .assistant, .aiMode: return .home
                 case .lists: return .lists
                 case .recipes: return .recipes
                 case .nutrients: return .nutrients
@@ -1152,6 +1209,10 @@ struct ContentView: View {
     }
 
     private var macHasSearchContent: Bool {
+        if resolvedSelectedSidebar == .assistant || resolvedSelectedSidebar == .aiMode {
+            return false
+        }
+
         let hasText = !searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         return hasText || searchBarState.mode == .aiChat || pendingOpenChat || pendingChatQuery != nil
     }
@@ -1269,6 +1330,7 @@ struct ContentView: View {
     private func pageTheme(for item: SidebarItem) -> PageTheme {
         switch item {
         case .home: return .home
+        case .assistant, .aiMode: return .home
         case .lists: return .lists
         case .recipes: return .recipes
         case .nutrients: return .nutrients
@@ -1280,9 +1342,19 @@ struct ContentView: View {
     private var macSidebarNavigationSection: some View {
         macSidebarSection(title: "Navegação") {
             VStack(alignment: .leading, spacing: 4) {
-                ForEach(SidebarItem.allCases.filter { $0 != .settings }) { item in
+                ForEach([SidebarItem.home, .lists, .recipes, .nutrients]) { item in
                     macSidebarRow(item: item)
                 }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var macSidebarAssistantSection: some View {
+        macSidebarSection(title: String(localized: "Assistente")) {
+            VStack(alignment: .leading, spacing: 4) {
+                macSidebarRow(item: .assistant)
+                macSidebarRow(item: .aiMode)
             }
         }
     }
@@ -1291,17 +1363,8 @@ struct ContentView: View {
     private var macSidebarShortcutsSection: some View {
         macSidebarSection(title: "Atalhos") {
             VStack(alignment: .leading, spacing: 4) {
-                macSidebarShortcutRow(title: String(localized: "Assistente"), systemImage: "sparkle.magnifyingglass") {
-                    selectedSidebar = .home
-                    beginMacAssistantShortcut(.assistant)
-                }
-                macSidebarShortcutRow(title: String(localized: "Modo IA"), systemImage: "sparkles") {
-                    selectedSidebar = .home
-                    beginMacAssistantShortcut(.aiMode)
-                }
                 macSidebarShortcutRow(title: String(localized: "Ideias de receitas"), systemImage: "lightbulb") {
-                    selectedSidebar = .home
-                    beginMacAssistantShortcut(.recipeIdeas)
+                    openAIMode(preset: .recipeIdeas)
                 }
                 macSidebarShortcutRow(title: String(localized: "Adicionar à Despensa"), systemImage: "cabinet") {
                     showAddPantry = true
@@ -1412,6 +1475,10 @@ struct ContentView: View {
         Button {
             if item == .settings {
                 openNativeSettingsWindow()
+            } else if item == .assistant {
+                openAssistantTab()
+            } else if item == .aiMode {
+                openAIMode()
             } else {
                 selectedSidebar = item
             }
@@ -1462,81 +1529,68 @@ struct ContentView: View {
 
     @ViewBuilder
     private var macSearchResultsOverlay: some View {
-        let topOverlap: CGFloat = 78
+        ZStack(alignment: .top) {
+            appPrimaryBackground
 
-        VStack(spacing: 0) {
-            // Header
-            HStack(alignment: .bottom) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(assistantOverlayTitle)
-                        .font(.pageTitle)
-                    if searchBarState.mode != .aiChat {
-                        Text(assistantOverlaySubtitle)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+            VStack(spacing: 0) {
+                HStack(alignment: .bottom) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(assistantOverlayTitle)
+                            .font(.pageTitle)
+                        if searchBarState.mode != .aiChat {
+                            Text(assistantOverlaySubtitle)
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
                     }
-                }
-                Spacer()
-                if searchBarState.mode == .aiChat {
+                    Spacer()
+                    if searchBarState.mode == .aiChat {
+                        Button {
+                            pendingNewConversation = true
+                        } label: {
+                            Image(systemName: "square.and.pencil")
+                                .font(.system(size: 15, weight: .medium))
+                                .foregroundStyle(.secondary)
+                                .frame(width: 32, height: 32)
+                        }
+                        .buttonStyle(.plain)
+
+                        Button {
+                            pendingShowHistory = true
+                        } label: {
+                            Image(systemName: "clock.arrow.circlepath")
+                                .font(.system(size: 15, weight: .medium))
+                                .foregroundStyle(.secondary)
+                                .frame(width: 32, height: 32)
+                        }
+                        .buttonStyle(.plain)
+                    }
                     Button {
-                        pendingNewConversation = true
+                        searchBarState.searchText = ""
+                        searchBarState.debouncedSearchText = ""
+                        searchBarState.mode = .idle
                     } label: {
-                        Image(systemName: "square.and.pencil")
+                        Image(systemName: "xmark.circle.fill")
                             .font(.system(size: 15, weight: .medium))
+                            .symbolRenderingMode(.hierarchical)
                             .foregroundStyle(.secondary)
                             .frame(width: 32, height: 32)
                     }
                     .buttonStyle(.plain)
-
-                    Button {
-                        pendingShowHistory = true
-                    } label: {
-                        Image(systemName: "clock.arrow.circlepath")
-                            .font(.system(size: 15, weight: .medium))
-                            .foregroundStyle(.secondary)
-                            .frame(width: 32, height: 32)
-                    }
-                    .buttonStyle(.plain)
                 }
-                Button {
-                    searchBarState.searchText = ""
-                    searchBarState.debouncedSearchText = ""
-                    searchBarState.mode = .idle
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 15, weight: .medium))
-                        .symbolRenderingMode(.hierarchical)
-                        .foregroundStyle(.secondary)
-                        .frame(width: 32, height: 32)
-                }
-                .buttonStyle(.plain)
-            }
-            .padding(.horizontal, 20)
-            .padding(.top, 16)
-            .padding(.bottom, 10)
+                .padding(.horizontal, 24)
+                .padding(.top, 18)
+                .padding(.bottom, 10)
 
-            // Results
-            if let overlay = searchOverlayView {
-                overlay
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                Spacer(minLength: 0)
+                if let overlay = searchOverlayView {
+                    overlay
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    Spacer(minLength: 0)
+                }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .background {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(appPrimaryBackground.opacity(0.985))
-        }
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .strokeBorder(Color.primary.opacity(0.06), lineWidth: 1)
-        )
-        .padding(.horizontal, 16)
-        .padding(.top, 4)
-        .padding(.bottom, 16)
-        .offset(y: -topOverlap)
     }
 
     #endif
@@ -1677,10 +1731,14 @@ struct ContentView: View {
     private func openAIMode(preset: AIChatPreset = .nutritionCoach, prefill: String? = nil) {
         pendingShowHistory = false
         pendingNewConversation = false
+        #if os(macOS)
+        openMacAIModePage(preset: preset, prefill: prefill)
+        #else
         // Switch to the assistant (search) tab and push the AI page. The page
         // itself sets `searchBarState.mode = .aiChat` and routes the prefill
         // through `pendingChatQuery` / `pendingOpenChat` on appear.
         openAssistantTab(push: AssistantTabAIDestination(preset: preset, prefill: prefill))
+        #endif
     }
 
     /// Switches the active tab to the assistant (search) tab. If `push` is
@@ -1688,6 +1746,13 @@ struct ContentView: View {
     /// navigation stack. Use `openAssistantTab()` (no argument) to land on
     /// the idle assistant page (action grid / search results).
     private func openAssistantTab(push destination: AssistantTabAIDestination? = nil) {
+        #if os(macOS)
+        if let destination {
+            openMacAIModePage(preset: destination.preset, prefill: destination.prefill)
+        } else {
+            openMacAssistantPage()
+        }
+        #else
         if let destination {
             // Replace the stack with just this destination so repeated taps
             // don't accumulate duplicate pages.
@@ -1699,6 +1764,7 @@ struct ContentView: View {
             selectedTab = .commandBar
         }
         searchBarState.reveal(mode: destination == nil ? .idle : nil)
+        #endif
     }
 
     private func handleQuickRecipeImportDismissed() {
