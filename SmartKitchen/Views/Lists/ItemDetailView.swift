@@ -296,6 +296,7 @@ struct ItemDetailView: View {
 
     @ViewBuilder
     private var closeButtonRow: some View {
+#if os(macOS)
         if !isCreateMode {
             HStack {
                 Spacer()
@@ -312,6 +313,7 @@ struct ItemDetailView: View {
                 .buttonStyle(.plain)
             }
         }
+#endif
     }
 
     @ViewBuilder

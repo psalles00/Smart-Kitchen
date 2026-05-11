@@ -44,8 +44,15 @@ final class SearchBarState: ObservableObject {
     @Published var pageContext: SearchPageContext = .home
 
     /// Debounced version of searchText for expensive operations (search, filtering).
-    /// Updates 250ms after the user stops typing.
+    /// Updates 1000ms after the user stops typing — heavy work (filters,
+    /// compatibility scoring, global search) must observe THIS instead of
+    /// `searchText` to avoid stalling the main thread on every keystroke.
     @Published var debouncedSearchText: String = ""
+
+    /// `true` while the user is actively typing and `debouncedSearchText` has
+    /// not caught up to `searchText` yet. Consumers can use this to display a
+    /// "Buscando resultados…" indicator while the debounce window runs.
+    var isDebouncing: Bool { searchText != debouncedSearchText }
 
     /// Triggers defocus on the TextField (incremented each time we dismiss).
     @Published var defocusTrigger: Int = 0
@@ -63,12 +70,26 @@ final class SearchBarState: ObservableObject {
     @Published var pendingNutritionSheet: NutritionEntrySheet? = nil
 
     private var debounceCancellable: AnyCancellable?
+    private var emptyResetCancellable: AnyCancellable?
 
     init() {
+        // PERF: Debounce typing by 1000ms so heavy consumers (recipe filter,
+        // global search, compatibility recomputes) stay off the typing
+        // critical path. Empty-string updates are flushed immediately below
+        // so clearing the field instantly restores the "all results" view.
         debounceCancellable = $searchText
-            .debounce(for: .milliseconds(250), scheduler: RunLoop.main)
+            .debounce(for: .milliseconds(1000), scheduler: RunLoop.main)
             .sink { [weak self] value in
                 self?.debouncedSearchText = value
+            }
+
+        // When the field becomes empty, bypass the debounce and reset the
+        // debounced value right away.
+        emptyResetCancellable = $searchText
+            .filter { $0.isEmpty }
+            .removeDuplicates()
+            .sink { [weak self] _ in
+                self?.debouncedSearchText = ""
             }
     }
 

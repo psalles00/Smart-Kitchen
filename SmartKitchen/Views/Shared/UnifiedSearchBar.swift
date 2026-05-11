@@ -11,9 +11,6 @@ struct UnifiedSearchBar: View {
     let onOpenFoodCameraDirect: () -> Void
     let onOpenFoodGalleryDirect: () -> Void
     private let chromeHeight: CGFloat = 46
-    private let primaryForegroundColor = Color.white
-    private let secondaryForegroundColor = Color.white.opacity(0.82)
-    private let tertiaryForegroundColor = Color.white.opacity(0.58)
 
     @FocusState private var isFocused: Bool
 
@@ -37,6 +34,32 @@ struct UnifiedSearchBar: View {
         }
     }
 
+    @ViewBuilder
+    private func applyMacAssistantForegroundOverride<Content: View>(to content: Content) -> some View {
+#if os(macOS)
+        content
+            .foregroundStyle(.white, .white.opacity(0.82), .white.opacity(0.58))
+            .tint(.white)
+#else
+        content
+#endif
+    }
+
+    @ViewBuilder
+    private func applyMacAssistantSecondaryTint<Content: View>(to content: Content) -> some View {
+#if os(macOS)
+        content
+            .tint(.white.opacity(0.82))
+#else
+        content
+#endif
+    }
+
+    private var searchPrompt: Text {
+        let prompt = Text(state.mode == .aiChat ? state.aiChatPreset.searchPlaceholder : String(localized: "Assistente"))
+        return prompt.foregroundStyle(.secondary)
+    }
+
     var body: some View {
         controlsRow
             .padding(.vertical, 4)
@@ -56,53 +79,52 @@ struct UnifiedSearchBar: View {
     }
 
     private var controlsRow: some View {
-        HStack(spacing: 10) {
-            HStack(spacing: 10) {
-                Image(systemName: state.mode == .aiChat ? "sparkles" : "sparkle.magnifyingglass")
-                    .font(.system(size: 16, weight: .medium))
-                    .symbolRenderingMode(.monochrome)
-                    .foregroundStyle(.secondary)
+        applyMacAssistantForegroundOverride(
+            to: HStack(spacing: 10) {
+                HStack(spacing: 10) {
+                    Image(systemName: state.mode == .aiChat ? "sparkles" : "sparkle.magnifyingglass")
+                        .font(.system(size: 16, weight: .medium))
+                        .symbolRenderingMode(.monochrome)
+                        .foregroundStyle(.secondary)
 
-                TextField(
-                    "",
-                    text: $state.searchText,
-                    prompt: Text(state.mode == .aiChat ? state.aiChatPreset.searchPlaceholder : String(localized: "Assistente"))
-                        .foregroundStyle(tertiaryForegroundColor)
-                )
-                    .foregroundStyle(.primary)
-                    #if os(iOS)
-                    .textInputAutocapitalization(.never)
-                    #endif
-                    .disableAutocorrection(true)
-                    .focused($isFocused)
-                    .submitLabel(isFocused && isEmpty && state.mode != .aiChat ? .done : (state.mode == .aiChat ? .send : .search))
-                    .onSubmit {
-                        let trimmed = state.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-                        if trimmed.isEmpty {
-                            state.dismiss()
-                            return
+                    TextField(
+                        "",
+                        text: $state.searchText,
+                        prompt: searchPrompt
+                    )
+                        .foregroundStyle(.primary)
+                        #if os(iOS)
+                        .textInputAutocapitalization(.never)
+                        #endif
+                        .disableAutocorrection(true)
+                        .focused($isFocused)
+                        .submitLabel(isFocused && isEmpty && state.mode != .aiChat ? .done : (state.mode == .aiChat ? .send : .search))
+                        .onSubmit {
+                            let trimmed = state.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+                            if trimmed.isEmpty {
+                                state.dismiss()
+                                return
+                            }
+                            if state.mode == .aiChat {
+                                state.pendingChatMessage = trimmed
+                                state.searchText = ""
+                            } else {
+                                state.submitTrigger += 1
+                            }
                         }
-                        if state.mode == .aiChat {
-                            state.pendingChatMessage = trimmed
-                            state.searchText = ""
-                        } else {
-                            state.submitTrigger += 1
-                        }
-                    }
 
-                accessoryActions
+                    accessoryActions
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .frame(height: chromeHeight)
+                .background(searchBarBackground)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    requestFocus()
+                }
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 8)
-            .frame(height: chromeHeight)
-            .background(searchBarBackground)
-            .contentShape(Rectangle())
-            .onTapGesture {
-                requestFocus()
-            }
-        }
-        .foregroundStyle(primaryForegroundColor, secondaryForegroundColor, tertiaryForegroundColor)
-        .tint(primaryForegroundColor)
+        )
     }
 
     @ViewBuilder
@@ -158,22 +180,23 @@ struct UnifiedSearchBar: View {
     }
 
     private var collapsedAccessoryMenu: some View {
-        Menu {
-            listsQuickSection
-            recipesQuickSection
-            nutritionCollapsedQuickSection
-        } label: {
-            Image(systemName: "plus.circle.fill")
-                .font(.system(size: 16, weight: .medium))
-                .symbolRenderingMode(.monochrome)
-                .foregroundStyle(.secondary)
-                .frame(width: 40, height: 40)
-                .contentShape(Rectangle())
-        }
-        .menuOrder(.fixed)
-        .tint(secondaryForegroundColor)
-        .buttonStyle(.plain)
-        .menuIndicator(.hidden)
+        applyMacAssistantSecondaryTint(
+            to: Menu {
+                listsQuickSection
+                recipesQuickSection
+                nutritionCollapsedQuickSection
+            } label: {
+                Image(systemName: "plus.circle.fill")
+                    .font(.system(size: 16, weight: .medium))
+                    .symbolRenderingMode(.monochrome)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 40, height: 40)
+                    .contentShape(Rectangle())
+            }
+            .menuOrder(.fixed)
+            .buttonStyle(.plain)
+            .menuIndicator(.hidden)
+        )
     }
 
     @ViewBuilder
@@ -197,20 +220,21 @@ struct UnifiedSearchBar: View {
         icon: String,
         @ViewBuilder content: () -> MenuContent
     ) -> some View {
-        Menu {
-            content()
-        } label: {
-            Image(systemName: icon)
-                .font(.system(size: 16, weight: .medium))
-                .symbolRenderingMode(.monochrome)
-                .foregroundStyle(.secondary)
-                .frame(width: 40, height: 40)
-                .contentShape(Rectangle())
-        }
-        .menuOrder(.fixed)
-        .tint(secondaryForegroundColor)
-        .buttonStyle(.plain)
-        .menuIndicator(.hidden)
+        applyMacAssistantSecondaryTint(
+            to: Menu {
+                content()
+            } label: {
+                Image(systemName: icon)
+                    .font(.system(size: 16, weight: .medium))
+                    .symbolRenderingMode(.monochrome)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 40, height: 40)
+                    .contentShape(Rectangle())
+            }
+            .menuOrder(.fixed)
+            .buttonStyle(.plain)
+            .menuIndicator(.hidden)
+        )
     }
 
     @ViewBuilder
