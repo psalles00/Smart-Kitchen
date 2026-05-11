@@ -19,6 +19,13 @@ let neutralSurfaceColor: Color = {
             ? UIColor(red: 0x2C / 255.0, green: 0x2C / 255.0, blue: 0x2E / 255.0, alpha: 1)
             : UIColor(red: 248 / 255.0, green: 248 / 255.0, blue: 250 / 255.0, alpha: 1)
     })
+    #elseif canImport(AppKit)
+    return Color(nsColor: NSColor(name: nil) { appearance in
+        let isDark = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        return isDark
+            ? NSColor(srgbRed: 0x2C / 255.0, green: 0x2C / 255.0, blue: 0x2E / 255.0, alpha: 1)
+            : NSColor(srgbRed: 248 / 255.0, green: 248 / 255.0, blue: 250 / 255.0, alpha: 1)
+    } ?? NSColor(srgbRed: 248 / 255.0, green: 248 / 255.0, blue: 250 / 255.0, alpha: 1))
     #else
     return Color(red: 248 / 255, green: 248 / 255, blue: 250 / 255)
     #endif

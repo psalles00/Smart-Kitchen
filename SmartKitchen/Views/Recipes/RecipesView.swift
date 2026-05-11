@@ -424,7 +424,9 @@ struct RecipesView: View {
                     }
                 }
 
+                #if !os(macOS)
                 SettingsButton()
+                #endif
             }
         }
     }
@@ -481,8 +483,6 @@ struct RecipesView: View {
                         }
                     }
                 }
-
-                SettingsButton()
             }
         }
         .padding(.horizontal)

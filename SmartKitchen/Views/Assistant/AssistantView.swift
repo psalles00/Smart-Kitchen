@@ -102,7 +102,9 @@ struct AssistantView: View {
                         }
                         .tint(.secondary)
                     }
+                    #if !os(macOS)
                     SettingsButton()
+                    #endif
                 }
             }
         }

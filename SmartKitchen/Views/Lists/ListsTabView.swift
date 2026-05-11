@@ -139,7 +139,9 @@ struct ListsTabView: View {
                             optionsMenu
                         }
 
+                        #if !os(macOS)
                         SettingsButton()
+                        #endif
                     }
                 }
             },

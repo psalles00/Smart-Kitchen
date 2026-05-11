@@ -10,7 +10,11 @@ struct NutrientsPlaceholderView: View {
             pageTheme: .nutrients,
             header: { isInverted in
                 PageHeader(title: String(localized: "Nutrição"), isInverted: isInverted) {
+                    #if !os(macOS)
                     SettingsButton()
+                    #else
+                    EmptyView()
+                    #endif
                 }
             },
             content: {
