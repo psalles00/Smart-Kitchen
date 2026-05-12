@@ -2433,7 +2433,13 @@ private struct HomeView: View {
                             recipeShortcutMenuContent
                         }
                         .frame(height: smallSide)
-                        Text(String(localized: "Adicionar Receita"))
+                        Text(String(localized: {
+                            #if os(macOS)
+                            "Adicionar Receita"
+                            #else
+                            "Receita"
+                            #endif
+                        }()))
                             .font(.caption.weight(.bold))
                             .foregroundStyle(.primary)
                             .lineLimit(1)
@@ -2446,7 +2452,13 @@ private struct HomeView: View {
                             foodShortcutMenuContent
                         }
                         .frame(height: smallSide)
-                        Text(String(localized: "Registrar Alimento"))
+                        Text(String(localized: {
+                            #if os(macOS)
+                            "Registrar Alimento"
+                            #else
+                            "Alimento"
+                            #endif
+                        }()))
                             .font(.caption.weight(.bold))
                             .foregroundStyle(.primary)
                             .lineLimit(1)
