@@ -106,7 +106,7 @@ struct UnifiedSearchBar: View {
                                 return
                             }
                             if state.mode == .aiChat {
-                                state.pendingChatMessage = trimmed
+                                state.requestAIChatSend(trimmed, source: "UnifiedSearchBar.onSubmit")
                                 state.searchText = ""
                             } else {
                                 state.submitTrigger += 1
@@ -161,7 +161,7 @@ struct UnifiedSearchBar: View {
                 let trimmed = state.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !trimmed.isEmpty else { return }
                 if state.mode == .aiChat {
-                    state.pendingChatMessage = trimmed
+                    state.requestAIChatSend(trimmed, source: "UnifiedSearchBar.sendButton")
                     state.searchText = ""
                 } else {
                     state.submitTrigger += 1

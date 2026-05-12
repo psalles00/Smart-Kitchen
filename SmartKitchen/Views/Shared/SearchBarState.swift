@@ -32,6 +32,18 @@ enum SearchPageContext: Equatable {
     case nutrients
 }
 
+struct PendingChatMessageRequest: Equatable, Identifiable {
+    let id: UUID
+    let text: String
+    let source: String
+
+    init(text: String, source: String) {
+        self.id = UUID()
+        self.text = text
+        self.source = source
+    }
+}
+
 // MARK: - Search Bar State
 
 /// Observable state shared across all pages for the unified search bar.
@@ -63,8 +75,9 @@ final class SearchBarState: ObservableObject {
     /// Triggers "execute top result" when user presses Enter (incremented each submit).
     @Published var submitTrigger: Int = 0
 
-    /// Message to send to the AI chat (populated by the search bar in AI mode).
-    @Published var pendingChatMessage: String? = nil
+    /// Event-like chat send request emitted by the unified search bar in AI mode.
+    /// A unique ID is required so repeated sends with the same text are never lost.
+    @Published var pendingChatMessageRequest: PendingChatMessageRequest? = nil
 
     /// Incrementing event tokens for AI Mode header actions. Tokens are more
     /// reliable than transient booleans because repeated taps cannot be lost
@@ -161,5 +174,12 @@ final class SearchBarState: ObservableObject {
     func requestAIHistory(source: String) {
         aiHistoryRequestToken += 1
         print("[AIModeUI] History tapped from \(source). token=\(aiHistoryRequestToken)")
+    }
+
+    func requestAIChatSend(_ text: String, source: String) {
+        let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedText.isEmpty else { return }
+        pendingChatMessageRequest = PendingChatMessageRequest(text: trimmedText, source: source)
+        print("[AIModeUI] Chat send requested from \(source). requestId=\(pendingChatMessageRequest?.id.uuidString ?? "nil")")
     }
 }

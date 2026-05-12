@@ -48,7 +48,7 @@ struct InlineChatView: View {
     var searchBarState: SearchBarState? = nil
     @Binding var isScrollAtTop: Bool
     /// External message to send (received from the unified search bar).
-    @Binding var pendingExternalMessage: String?
+    @Binding var pendingExternalMessage: PendingChatMessageRequest?
     /// External trigger to start a new conversation (set by the parent header button).
     @Binding var pendingNewConversationTrigger: Bool
     /// Called when a new conversation is created, so the parent can track the active ID.
@@ -68,12 +68,6 @@ struct InlineChatView: View {
     @State private var showScrollToBottom: Bool = false
     @State private var chatAreaHeight: CGFloat = 0
     @State private var pinnedUserMessageID: UUID?
-    @State private var lastProgrammaticDispatch: ProgrammaticDispatch?
-
-    private struct ProgrammaticDispatch: Equatable {
-        let text: String
-        let timestamp: Date
-    }
 
     init(
         initialQuery: String? = nil,
@@ -83,7 +77,7 @@ struct InlineChatView: View {
         topPinnedInset: CGFloat = 0,
         searchBarState: SearchBarState? = nil,
         isScrollAtTop: Binding<Bool> = .constant(true),
-        pendingExternalMessage: Binding<String?> = .constant(nil),
+        pendingExternalMessage: Binding<PendingChatMessageRequest?> = .constant(nil),
         pendingNewConversationTrigger: Binding<Bool> = .constant(false),
         onConversationCreated: ((UUID) -> Void)? = nil,
         dismissOnEmptyTap: Bool = true
@@ -181,12 +175,19 @@ struct InlineChatView: View {
                                                 }
                                             }
                                         } else if !message.attachedRecipeIds.isEmpty {
-                                            ChatBubbleView(
-                                                message: message,
-                                                onQuickAction: { _ in },
-                                                hideQuickActions: true,
-                                                contentFont: aiModeContentFont
-                                            )
+                                            if let companionText = AssistantRecipeCardTextSanitizer.companionText(for: message.content) {
+                                                ChatBubbleView(
+                                                    message: ChatMessage(
+                                                        role: message.role,
+                                                        content: companionText,
+                                                        quickActions: [],
+                                                        conversationId: message.conversationId
+                                                    ),
+                                                    onQuickAction: { _ in },
+                                                    hideQuickActions: true,
+                                                    contentFont: aiModeContentFont
+                                                )
+                                            }
                                             RecipeCardMessage(recipeIds: message.attachedRecipeIds)
                                             if !isAIMode {
                                                 ForEach(message.quickActions) { action in
@@ -312,9 +313,9 @@ struct InlineChatView: View {
             }
         }
         .onChange(of: pendingExternalMessage) { _, newValue in
-            if let message = newValue {
+            if let request = newValue {
                 pendingExternalMessage = nil
-                sendMessage(message, origin: .programmatic)
+                sendMessage(request.text)
             }
         }
         .onChange(of: pendingNewConversationTrigger) { _, newValue in
@@ -329,11 +330,17 @@ struct InlineChatView: View {
             }
             reloadMessages()
 
+            if let pendingExternalMessage {
+                let request = pendingExternalMessage
+                self.pendingExternalMessage = nil
+                sendMessage(request.text)
+            }
+
             // Auto-send initial query
             if let initialQuery, !initialQuery.isEmpty, !hasSentInitialQuery {
                 hasSentInitialQuery = true
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    sendMessage(initialQuery, origin: .programmatic)
+                    sendMessage(initialQuery)
                 }
             }
         }
@@ -665,25 +672,9 @@ struct InlineChatView: View {
         sendMessage(text)
     }
 
-    private enum SendOrigin {
-        case standard
-        case programmatic
-    }
-
-    private func sendMessage(_ text: String, origin: SendOrigin = .standard) {
+    private func sendMessage(_ text: String) {
         let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedText.isEmpty else { return }
-
-        if origin == .programmatic,
-           let lastProgrammaticDispatch,
-           lastProgrammaticDispatch.text == trimmedText,
-           Date().timeIntervalSince(lastProgrammaticDispatch.timestamp) < 1.0 {
-            return
-        }
-
-        if origin == .programmatic {
-            lastProgrammaticDispatch = ProgrammaticDispatch(text: trimmedText, timestamp: .now)
-        }
 
         if trimmedText == confirmPrompt {
             Task { await confirmPendingToolExecution() }

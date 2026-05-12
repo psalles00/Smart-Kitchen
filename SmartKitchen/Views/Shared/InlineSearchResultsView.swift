@@ -17,8 +17,9 @@ struct InlineSearchResultsView: View {
     @State private var chatInitialQuery: String? = nil
     @State private var chatExistingConversationId: UUID? = nil
     @State private var showConversationHistory = false
-    /// Relay for pending external messages — @State Binding fires .onChange reliably.
-    @State private var pendingExternalChatMessage: String? = nil
+    /// Relay for pending external messages — each request carries a unique ID so
+    /// repeated sends with equal text are still delivered exactly once.
+    @State private var pendingExternalChatRequest: PendingChatMessageRequest? = nil
     /// Relay for triggering a new conversation reset on the InlineChatView when
     /// it is already presented (the global `pendingNewConversation` only opens
     /// the chat or resets state at this layer).
@@ -105,15 +106,15 @@ struct InlineSearchResultsView: View {
                 pendingOpenChat = false
             }
         }
-        .onChange(of: searchBarState.pendingChatMessage) { _, newValue in
-            if let query = newValue {
-                searchBarState.pendingChatMessage = nil
+        .onChange(of: searchBarState.pendingChatMessageRequest) { _, newValue in
+            if let request = newValue {
+                searchBarState.pendingChatMessageRequest = nil
                 if showInlineChat {
                     // Chat already open — relay via @State Binding
-                    pendingExternalChatMessage = query
+                    pendingExternalChatRequest = request
                 } else {
                     // Open the inline chat when the unified search bar sends a pending chat message
-                    chatInitialQuery = query
+                    chatInitialQuery = request.text
                     chatExistingConversationId = nil
                     showConversationHistory = false
                     showInlineChat = true
@@ -205,7 +206,7 @@ struct InlineSearchResultsView: View {
             topPinnedInset: topPinnedInset,
             searchBarState: searchBarState,
             isScrollAtTop: $isScrollAtTop,
-            pendingExternalMessage: $pendingExternalChatMessage,
+            pendingExternalMessage: $pendingExternalChatRequest,
             pendingNewConversationTrigger: $newConversationRelay,
             onConversationCreated: { id in
                 chatExistingConversationId = id

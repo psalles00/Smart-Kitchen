@@ -1,5 +1,38 @@
+import Foundation
 import SwiftUI
 import SwiftData
+
+enum AssistantRecipeCardTextSanitizer {
+    private static let optionPattern = #"^\s*(?:[-*•]\s*)?\*\*(.+?)\*\*\s*[—–\-]\s*(.+)$"#
+
+    static func companionText(for content: String) -> String? {
+        let trimmed = content.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        guard let regex = try? NSRegularExpression(pattern: optionPattern) else {
+            return trimmed
+        }
+
+        let filteredLines = trimmed
+            .components(separatedBy: .newlines)
+            .filter { line in
+                let range = NSRange(location: 0, length: (line as NSString).length)
+                return regex.firstMatch(in: line, range: range) == nil
+            }
+
+        let sanitized = collapseBlankLines(in: filteredLines.joined(separator: "\n"))
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        return sanitized.isEmpty ? nil : sanitized
+    }
+
+    private static func collapseBlankLines(in text: String) -> String {
+        var collapsed = text
+        while collapsed.contains("\n\n\n") {
+            collapsed = collapsed.replacingOccurrences(of: "\n\n\n", with: "\n\n")
+        }
+        return collapsed
+    }
+}
 
 /// Inline recipe card shown in the chat when the assistant references recipes.
 /// Uses the same gradient-overlay aesthetic as the main Recipes tab, with pantry compatibility info.
@@ -8,6 +41,8 @@ struct RecipeCardMessage: View {
     let recipeIds: [UUID]
     @Query(sort: \Recipe.name) private var allRecipes: [Recipe]
     @Query(filter: #Predicate<UnifiedItem> { $0.isPantry }) private var pantryItems: [UnifiedItem]
+
+    private let cardSize: CGFloat = 160
 
     private var pantryNames: [String] {
         pantryItems.map {
@@ -40,24 +75,22 @@ struct RecipeCardMessage: View {
 
     private func recipeCard(_ recipe: Recipe) -> some View {
         let compat = recipe.compatibility(against: pantryNames)
+        let hasStoredImageData = (recipe.imageData?.isEmpty == false)
 
         return ZStack(alignment: .bottomLeading) {
             // Image / placeholder
-            if let data = recipe.imageData, let image = PlatformImage(data: data) {
-                Image(platformImage: image)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 160, height: 160)
-                    .clipped()
-            } else {
-                ZStack {
-                    Color(.tertiarySystemBackground)
-                    Image(systemName: "book.closed")
-                        .font(.system(size: 32))
-                        .foregroundStyle(.quaternary)
+            RecipeThumbnail(recipe: recipe, maxPixel: 420) {
+                if hasStoredImageData {
+                    RecipeImageLoadingPlaceholder(darkenOverlay: true, iconSize: 24)
+                } else {
+                    RecipeImagePlaceholderCompact(
+                        ingredients: (recipe.ingredients ?? []).sorted { $0.sortOrder < $1.sortOrder },
+                        darkenOverlay: true
+                    )
                 }
-                .frame(width: 160, height: 160)
             }
+            .frame(width: cardSize, height: cardSize)
+            .clipped()
 
             // Gradient overlay
             LinearGradient(
@@ -103,7 +136,7 @@ struct RecipeCardMessage: View {
             }
             .padding(10)
         }
-        .frame(width: 160, height: 160)
+        .frame(width: cardSize, height: cardSize)
         .clipShape(.rect(cornerRadius: 14))
     }
 }

@@ -917,7 +917,7 @@ struct ContentView: View {
                             let trimmed = searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
                             guard !trimmed.isEmpty else { return }
                             if searchBarState.mode == .aiChat {
-                                searchBarState.pendingChatMessage = trimmed
+                                searchBarState.requestAIChatSend(trimmed, source: "ContentView.macSidebarSubmit")
                                 searchBarState.searchText = ""
                             } else {
                                 submitSearchAction()

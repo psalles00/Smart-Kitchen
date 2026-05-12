@@ -44,8 +44,20 @@ struct AssistantView: View {
 
                         ForEach(messages) { message in
                             VStack(spacing: 6) {
-                                if message.role != .system {
+                                if message.role != .system, message.attachedRecipeIds.isEmpty {
                                     ChatBubbleView(message: message) { action in
+                                        sendMessage(action.prompt)
+                                    }
+                                } else if message.role != .system,
+                                          let companionText = AssistantRecipeCardTextSanitizer.companionText(for: message.content) {
+                                    ChatBubbleView(
+                                        message: ChatMessage(
+                                            role: message.role,
+                                            content: companionText,
+                                            quickActions: message.quickActions,
+                                            conversationId: message.conversationId
+                                        )
+                                    ) { action in
                                         sendMessage(action.prompt)
                                     }
                                 }
