@@ -1429,9 +1429,11 @@ struct InlineChatView: View {
         let hasOccasionCue = detectedOccasion != nil
         let hasFoodContextCue = recipeIdeaFoodContextCues.contains(where: normalizedPrompt.contains)
         let hasRefinementCue = detectedRefinement != nil
+        let hasIngredientCompositionCue = recipeIdeaIngredientCompositionCues.contains(where: normalizedPrompt.contains)
         let isShortDescriptorPrompt = !searchTokens.isEmpty && searchTokens.count <= 6
         let hasImplicitRecipeDescriptor = isShortDescriptorPrompt && (
             (hasOccasionCue && (hasRefinementCue || searchTokens.count <= 4)) ||
+            (hasOccasionCue && hasIngredientCompositionCue) ||
             (hasOccasionCue && hasFoodContextCue) ||
             (hasRefinementCue && hasFoodContextCue)
         )
@@ -1588,6 +1590,13 @@ struct InlineChatView: View {
             "essen", "gericht", "gerichte", "kochen", "zubereiten",
             "pasto", "piatto", "piatti", "cucinare", "preparare", "mangiare",
             "食事", "料理", "作る"
+        ]
+    }
+
+    private var recipeIdeaIngredientCompositionCues: [String] {
+        [
+            " com ", " usando ", " feito com ", " feita com ", " made with ", " with ",
+            " con ", " avec ", " mit ", " a base de "
         ]
     }
 
@@ -2382,10 +2391,15 @@ struct InlineChatView: View {
     private func recipeIdeasResultsView(for message: ChatMessage) -> some View {
         let payload = ResultsPayload.decode(message.content)
         VStack(alignment: .leading, spacing: 14) {
+            if let noLocalMatchMessage = recipeIdeasNoLocalMatchMessage(for: payload) {
+                assistantTextBubble(noLocalMatchMessage)
+            }
+
             if !payload.localRecipeIDs.isEmpty {
                 recipeIdeasSection(title: String(localized: "Suas Receitas"), icon: "books.vertical.fill") {
                     RecipeCardMessage(recipeIds: payload.localRecipeIDs)
                 }
+                .padding(.bottom, 12)
             }
 
             if !payload.quickIdeas.isEmpty {
@@ -2402,6 +2416,7 @@ struct InlineChatView: View {
                     }
                     .padding(.horizontal, 16)
                 }
+                .padding(.bottom, 12)
             }
 
             if !payload.ideas.isEmpty {
@@ -2448,6 +2463,17 @@ struct InlineChatView: View {
         }
     }
 
+    private func recipeIdeasNoLocalMatchMessage(for payload: ResultsPayload) -> String? {
+        guard payload.localRecipeIDs.isEmpty,
+              !payload.quickIdeas.isEmpty || !payload.ideas.isEmpty,
+              let customQuery = payload.customQuery?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !customQuery.isEmpty else {
+            return nil
+        }
+
+        return String(localized: "Não encontrei nenhuma receita salva que corresponda ao seu pedido, mas separei ideias novas e receitas da web para você.")
+    }
+
     /// Cabeçalho compacto reutilizado pelas três seções de resultado.
     @ViewBuilder
     private func recipeIdeasSection<Content: View>(
@@ -2476,21 +2502,21 @@ struct InlineChatView: View {
                 Image(platformImage: image)
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 22, height: 22)
+                    .frame(width: 20, height: 20)
             } else {
                 Image(systemName: "fork.knife")
-                    .font(.caption.weight(.medium))
+                    .font(.caption2.weight(.medium))
                     .foregroundStyle(.secondary)
-                    .frame(width: 22, height: 22)
+                    .frame(width: 20, height: 20)
             }
 
             Text(idea.title)
-                .font(.subheadline.weight(.medium))
+                .font(.footnote.weight(.medium))
                 .foregroundStyle(.primary)
                 .lineLimit(1)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 9)
+        .padding(.horizontal, 11)
+        .padding(.vertical, 8)
         .background(
             Capsule()
                 .fill(Color(.secondarySystemBackground))

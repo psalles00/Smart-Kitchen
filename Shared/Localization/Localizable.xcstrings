@@ -37381,6 +37381,47 @@
         }
       }
     },
+    "Não encontrei nenhuma receita salva que corresponda ao seu pedido, mas separei ideias novas e receitas da web para você.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ich habe kein gespeichertes Rezept gefunden, das zu Ihrer Anfrage passt, aber ich habe neue Ideen und Web-Rezepte für Sie zusammengestellt."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I couldn't find any saved recipe matching your request, but I gathered fresh ideas and web recipes for you."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No encontré ninguna receta guardada que coincida con tu pedido, pero separé ideas nuevas y recetas de la web para ti."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je n'ai trouvé aucune recette enregistrée correspondant à votre demande, mais j'ai préparé de nouvelles idées et des recettes du web pour vous."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non ho trovato alcuna ricetta salvata che corrisponda alla tua richiesta, ma ho raccolto nuove idee e ricette dal web per te."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ご要望に一致する保存済みレシピは見つかりませんでしたが、新しいアイデアとWebレシピを用意しました。"
+          }
+        }
+      }
+    },
     "Não encontrei receitas com compatibilidade ideal, mas estas são as melhores opções com o que você tem:": {
       "extractionState": "manual",
       "localizations": {
