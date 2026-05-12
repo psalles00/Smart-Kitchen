@@ -23,6 +23,8 @@ struct InlineSearchResultsView: View {
     /// it is already presented (the global `pendingNewConversation` only opens
     /// the chat or resets state at this layer).
     @State private var newConversationRelay: Bool = false
+    @State private var lastHandledNewConversationToken: Int
+    @State private var lastHandledHistoryToken: Int
 
     /// External trigger to open chat.
     @Binding var pendingChatQuery: String?
@@ -69,6 +71,8 @@ struct InlineSearchResultsView: View {
         _showConversationHistory = State(initialValue: shouldShowHistory)
         _showInlineChat = State(initialValue: shouldOpenChat && !shouldShowHistory)
         _chatInitialQuery = State(initialValue: pendingChatQuery.wrappedValue)
+        _lastHandledNewConversationToken = State(initialValue: searchBarState.aiNewConversationRequestToken)
+        _lastHandledHistoryToken = State(initialValue: searchBarState.aiHistoryRequestToken)
     }
 
     var body: some View {
@@ -85,6 +89,7 @@ struct InlineSearchResultsView: View {
             if let query = newValue {
                 chatInitialQuery = query
                 chatExistingConversationId = nil
+                showConversationHistory = false
                 showInlineChat = true
                 searchBarState.mode = .aiChat
                 pendingChatQuery = nil
@@ -94,6 +99,7 @@ struct InlineSearchResultsView: View {
             if newValue {
                 chatInitialQuery = nil
                 chatExistingConversationId = nil
+                showConversationHistory = false
                 showInlineChat = true
                 searchBarState.mode = .aiChat
                 pendingOpenChat = false
@@ -109,6 +115,7 @@ struct InlineSearchResultsView: View {
                     // Open the inline chat when the unified search bar sends a pending chat message
                     chatInitialQuery = query
                     chatExistingConversationId = nil
+                    showConversationHistory = false
                     showInlineChat = true
                     searchBarState.mode = .aiChat
                 }
@@ -116,6 +123,16 @@ struct InlineSearchResultsView: View {
         }
         .onChange(of: searchBarState.submitTrigger) { _, _ in
             executeTopResult()
+        }
+        .onChange(of: searchBarState.aiNewConversationRequestToken) { _, newValue in
+            guard newValue != lastHandledNewConversationToken else { return }
+            lastHandledNewConversationToken = newValue
+            handleNewConversationRequest(source: "searchBarState token \(newValue)")
+        }
+        .onChange(of: searchBarState.aiHistoryRequestToken) { _, newValue in
+            guard newValue != lastHandledHistoryToken else { return }
+            lastHandledHistoryToken = newValue
+            handleHistoryRequest(source: "searchBarState token \(newValue)")
         }
         .onChange(of: searchBarState.mode) { _, newMode in
             if newMode == .aiChat && !showInlineChat && !showConversationHistory {
@@ -130,28 +147,13 @@ struct InlineSearchResultsView: View {
         .onChange(of: pendingNewConversation) { _, newValue in
             if newValue {
                 pendingNewConversation = false
-                if showInlineChat {
-                    // Chat already presented — forward to InlineChatView so it
-                    // can clear the active conversation and start fresh.
-                    chatExistingConversationId = nil
-                    newConversationRelay = true
-                    searchBarState.searchText = ""
-                } else {
-                    chatInitialQuery = nil
-                    chatExistingConversationId = nil
-                    showInlineChat = true
-                    searchBarState.mode = .aiChat
-                    searchBarState.searchText = ""
-                }
+                handleNewConversationRequest(source: "legacy pendingNewConversation")
             }
         }
         .onChange(of: pendingShowHistory) { _, newValue in
             if newValue {
                 pendingShowHistory = false
-                showConversationHistory.toggle()
-                if showConversationHistory {
-                    showInlineChat = false
-                }
+                handleHistoryRequest(source: "legacy pendingShowHistory")
             }
         }
         .onAppear {
@@ -161,6 +163,7 @@ struct InlineSearchResultsView: View {
                 pendingOpenChat = false
                 chatInitialQuery = nil
                 chatExistingConversationId = nil
+                showConversationHistory = false
                 showInlineChat = true
                 searchBarState.mode = .aiChat
             }
@@ -168,21 +171,17 @@ struct InlineSearchResultsView: View {
                 pendingChatQuery = nil
                 chatInitialQuery = query
                 chatExistingConversationId = nil
+                showConversationHistory = false
                 showInlineChat = true
                 searchBarState.mode = .aiChat
             }
             if pendingNewConversation {
                 pendingNewConversation = false
-                chatInitialQuery = nil
-                chatExistingConversationId = nil
-                showInlineChat = true
-                searchBarState.mode = .aiChat
-                searchBarState.searchText = ""
+                handleNewConversationRequest(source: "onAppear legacy pendingNewConversation")
             }
             if pendingShowHistory {
                 pendingShowHistory = false
-                showConversationHistory = true
-                showInlineChat = false
+                handleHistoryRequest(source: "onAppear legacy pendingShowHistory")
             }
         }
     }
@@ -193,7 +192,7 @@ struct InlineSearchResultsView: View {
             topPinnedInset: topPinnedInset,
             isScrollAtTop: $isScrollAtTop,
             onSelect: handleConversationSelection,
-            onDismiss: { showConversationHistory = false }
+            onDismiss: closeConversationHistory
         )
     }
 
@@ -202,7 +201,7 @@ struct InlineSearchResultsView: View {
             initialQuery: chatInitialQuery,
             existingConversationId: chatExistingConversationId,
             onDismiss: dismissInlineChat,
-            onShowHistory: { showConversationHistory = true },
+            onShowHistory: presentConversationHistory,
             topPinnedInset: topPinnedInset,
             searchBarState: searchBarState,
             isScrollAtTop: $isScrollAtTop,
@@ -372,10 +371,46 @@ struct InlineSearchResultsView: View {
     private func openChat(initialQuery: String? = nil) {
         chatInitialQuery = initialQuery
         chatExistingConversationId = nil
+        showConversationHistory = false
         showInlineChat = true
         searchBarState.aiChatPreset = .nutritionCoach
         searchBarState.mode = .aiChat
         searchBarState.searchText = ""
+    }
+
+    private func presentConversationHistory() {
+        print("[AIModeUI] Presenting conversation history. showInlineChat=\(showInlineChat)")
+        showConversationHistory = true
+        showInlineChat = false
+    }
+
+    private func closeConversationHistory() {
+        print("[AIModeUI] Closing conversation history. mode=\(searchBarState.mode)")
+        showConversationHistory = false
+        if searchBarState.mode == .aiChat {
+            showInlineChat = true
+        }
+    }
+
+    private func handleNewConversationRequest(source: String) {
+        print("[AIModeUI] Handling new conversation request from \(source). showInlineChat=\(showInlineChat) showConversationHistory=\(showConversationHistory)")
+        chatInitialQuery = nil
+        chatExistingConversationId = nil
+        searchBarState.mode = .aiChat
+        searchBarState.searchText = ""
+        showConversationHistory = false
+
+        if showInlineChat {
+            newConversationRelay = true
+        } else {
+            showInlineChat = true
+        }
+    }
+
+    private func handleHistoryRequest(source: String) {
+        print("[AIModeUI] Handling history request from \(source). showInlineChat=\(showInlineChat) showConversationHistory=\(showConversationHistory)")
+        searchBarState.mode = .aiChat
+        presentConversationHistory()
     }
 
     private func handleConversationSelection(_ conversationId: UUID) {
@@ -384,6 +419,7 @@ struct InlineSearchResultsView: View {
         showConversationHistory = false
         showInlineChat = true
         searchBarState.aiChatPreset = .nutritionCoach
+        searchBarState.mode = .aiChat
     }
 
     private func dismissInlineChat() {

@@ -75,7 +75,6 @@ struct RecipesView: View {
     // (CloudKit remote changes, scroll-induced re-evaluations, etc.).
     @State private var lastCompatibilityInputsKey: String = ""
     @State private var pendingCompatibilityRecomputeWork: DispatchWorkItem?
-    @State private var pendingCompatibilityTask: Task<Void, Never>?
     @State private var pendingGalleryPrefetchTask: Task<Void, Never>?
     @State private var lastRecipeProjectionInputsKey: Int = 0
     @State private var lastNotebookSummaryInputsKey: Int = 0
@@ -130,10 +129,7 @@ struct RecipesView: View {
                 hasher.combine(tag)
             }
         }
-        // PERF: use the debounced search text so this signature only changes
-        // after the user stops typing (1s), preventing per-keystroke recomputes
-        // through `.onChange(of: recipeProjectionInputsKey)`.
-        hasher.combine(searchBarState.debouncedSearchText)
+        hasher.combine(searchBarState.searchText)
         hasher.combine(selectedCategory ?? "")
         hasher.combine(showCompatibleOnly)
         hasher.combine(sortOption.rawValue)
@@ -156,8 +152,7 @@ struct RecipesView: View {
                 hasher.combine(tag)
             }
         }
-        // PERF: same reasoning as `recipeProjectionInputsKey` above.
-        hasher.combine(searchBarState.debouncedSearchText.trimmingCharacters(in: .whitespacesAndNewlines))
+        hasher.combine(searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines))
         hasher.combine(lastCompatibilityInputsKey)
         hasher.combine(recipeCategoriesDisplaySignature)
         return hasher.finalize()
@@ -306,10 +301,6 @@ struct RecipesView: View {
         .onDisappear {
             pendingGalleryPrefetchTask?.cancel()
             pendingGalleryPrefetchTask = nil
-            pendingCompatibilityTask?.cancel()
-            pendingCompatibilityTask = nil
-            pendingCompatibilityRecomputeWork?.cancel()
-            pendingCompatibilityRecomputeWork = nil
         }
         // PERF: previously these used `.onChange(of: pantryItems)` /
         // `.onChange(of: allRecipes)` which fire on EVERY SwiftData @Query
@@ -339,11 +330,7 @@ struct RecipesView: View {
             refreshRecipeProjectionsIfNeeded()
             refreshNotebookSummariesIfNeeded()
         }
-        // PERF: observe the DEBOUNCED text (1s) for heavy refresh work so
-        // typing stays responsive. The raw `searchText` is still used by
-        // the empty-state UI strings further below — that's only a Text
-        // render and is cheap.
-        .onChange(of: searchBarState.debouncedSearchText) { _, _ in
+        .onChange(of: searchBarState.searchText) { _, _ in
             refreshRecipeProjectionsIfNeeded()
             refreshNotebookSummariesIfNeeded()
         }
@@ -437,9 +424,7 @@ struct RecipesView: View {
                     }
                 }
 
-                #if !os(macOS)
                 SettingsButton()
-                #endif
             }
         }
     }
@@ -496,6 +481,8 @@ struct RecipesView: View {
                         }
                     }
                 }
+
+                SettingsButton()
             }
         }
         .padding(.horizontal)
@@ -555,65 +542,19 @@ struct RecipesView: View {
             return
         }
 
-        // PERF: SwiftData relationship access (faulting `recipe.ingredients`)
-        // must happen on the main actor that owns the model context. We do
-        // the absolute minimum here — pull out raw ingredient names as plain
-        // strings — and hand the heavy folding + matching to a background
-        // task so the main thread stays free for UI work.
-        let pantryRawNames = pantryItems.map(\.name)
-        let recipeSnapshots: [(UUID, [String])] = allRecipes.map { recipe in
-            let names = (recipe.ingredients ?? [])
-                .sorted { $0.sortOrder < $1.sortOrder }
-                .map(\.name)
-            return (recipe.id, names)
+        let names = pantryItems.map {
+            $0.name
+                .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
+                .lowercased()
         }
-
-        pendingCompatibilityTask?.cancel()
-        pendingCompatibilityTask = Task { [pantryRawNames, recipeSnapshots, inputsKey] in
-            let computed = await Task.detached(priority: .userInitiated) {
-                () -> (pantry: [String], dict: [UUID: RecipeCompatibility])? in
-                func normalize(_ s: String) -> String {
-                    s.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
-                        .lowercased()
-                }
-                let normalizedPantry = pantryRawNames.map(normalize)
-                // Inverted set for O(1) exact-match short-circuit. The
-                // substring fallback still loops the pantry list, but most
-                // ingredients hit the exact set first.
-                let pantrySet = Set(normalizedPantry)
-
-                var dict: [UUID: RecipeCompatibility] = [:]
-                dict.reserveCapacity(recipeSnapshots.count)
-                for (id, rawNames) in recipeSnapshots {
-                    if Task.isCancelled { return nil }
-                    let normalized = rawNames.map(normalize)
-                    guard !normalized.isEmpty else { continue }
-                    var matched = 0
-                    for ing in normalized {
-                        if pantrySet.contains(ing) {
-                            matched += 1
-                            continue
-                        }
-                        if normalizedPantry.contains(where: { pantry in
-                            pantry.contains(ing) || ing.contains(pantry)
-                        }) {
-                            matched += 1
-                        }
-                    }
-                    dict[id] = RecipeCompatibility(
-                        matchedIngredients: matched,
-                        totalIngredients: normalized.count
-                    )
-                }
-                return (normalizedPantry, dict)
-            }.value
-
-            guard let computed, !Task.isCancelled else { return }
-
-            cachedPantryNames = computed.pantry
-            cachedCompatibilities = computed.dict
-            lastCompatibilityInputsKey = inputsKey
-        }
+        cachedPantryNames = names
+        cachedCompatibilities = Dictionary(
+            uniqueKeysWithValues: allRecipes.compactMap { recipe in
+                guard let compatibility = recipe.compatibility(against: names) else { return nil }
+                return (recipe.id, compatibility)
+            }
+        )
+        lastCompatibilityInputsKey = inputsKey
     }
 
     private func refreshRecipeProjectionsIfNeeded(force: Bool = false) {
@@ -622,14 +563,12 @@ struct RecipesView: View {
 
         var result = allRecipes
 
-        // PERF: use the debounced text so this expensive pipeline only runs
-        // 1s after the user stops typing (see SearchBarState).
-        let activeSearchText = searchBarState.debouncedSearchText
-        if !activeSearchText.isEmpty {
+        if !searchBarState.searchText.isEmpty {
+            let searchText = searchBarState.searchText
             result = result.filter {
-                $0.name.localizedCaseInsensitiveContains(activeSearchText) ||
-                $0.tags.contains(where: { $0.localizedCaseInsensitiveContains(activeSearchText) }) ||
-                $0.category.localizedCaseInsensitiveContains(activeSearchText)
+                $0.name.localizedCaseInsensitiveContains(searchText) ||
+                $0.tags.contains(where: { $0.localizedCaseInsensitiveContains(searchText) }) ||
+                $0.category.localizedCaseInsensitiveContains(searchText)
             }
         }
 
@@ -680,8 +619,7 @@ struct RecipesView: View {
         let inputsKey = notebookSummaryInputsKey
         guard force || inputsKey != lastNotebookSummaryInputsKey else { return }
 
-        // PERF: debounced text — see refreshRecipeProjectionsIfNeeded().
-        let searchText = searchBarState.debouncedSearchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let searchText = searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         var recipesByCategory: [String: [Recipe]] = [:]
 
         for recipe in allRecipes {
@@ -773,11 +711,6 @@ struct RecipesView: View {
             // Category filter chips
             categoryFilter
 
-            // PERF: while the user is typing we don't refresh the heavy
-            // projections until the 1s debounce in SearchBarState fires.
-            // This thin row gives feedback that results are about to update.
-            searchDebounceIndicator
-
             ScrollViewReader { proxy in
                 #if os(macOS)
                 GeometryReader { geometry in
@@ -819,24 +752,6 @@ struct RecipesView: View {
                 }
                 #endif
             }
-        }
-    }
-
-    @ViewBuilder
-    private var searchDebounceIndicator: some View {
-        let trimmed = searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        if searchBarState.isDebouncing && !trimmed.isEmpty {
-            HStack(spacing: 8) {
-                ProgressView()
-                    .controlSize(.small)
-                Text("Buscando resultados…")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Spacer(minLength: 0)
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 6)
-            .transition(.opacity)
         }
     }
 
@@ -1457,21 +1372,7 @@ struct RecipesView: View {
         }()
         // Two screens worth of cards is plenty without flooding the queue.
         let visibleBatch = max(cols * 6, 12)
-        let candidates = Array(recipes.prefix(visibleBatch))
-
-        // PERF: snapshot bytes on main (SwiftData property access) and hand
-        // them to a bounded TaskGroup. Previously each candidate spawned its
-        // own detached task immediately, which on a cold scroll could fire
-        // 20+ simultaneous ImageIO decodes and saturate the CPU just as the
-        // grid was trying to lay out. Capping concurrency at 4 keeps the
-        // decode pipeline busy without competing with UI rendering.
-        struct Pending {
-            let key: String
-            let data: Data
-            let maxPixel: CGFloat
-        }
-        var work: [Pending] = []
-        work.reserveCapacity(candidates.count)
+        let candidates = recipes.prefix(visibleBatch)
         for recipe in candidates {
             guard let data = recipe.imageData, !data.isEmpty else { continue }
             let key = RecipeImageCache.key(
@@ -1479,31 +1380,7 @@ struct RecipesView: View {
                 dataCount: data.count,
                 maxPixel: maxPixel
             )
-            if RecipeImageCache.shared.cachedThumbnail(key: key) != nil { continue }
-            work.append(Pending(key: key, data: data, maxPixel: maxPixel))
-        }
-        guard !work.isEmpty else { return }
-
-        Task.detached(priority: .userInitiated) {
-            await withTaskGroup(of: Void.self) { group in
-                let maxConcurrent = 4
-                var inflight = 0
-                var iterator = work.makeIterator()
-                while let next = iterator.next() {
-                    if inflight >= maxConcurrent {
-                        await group.next()
-                        inflight -= 1
-                    }
-                    group.addTask {
-                        _ = await RecipeImageCache.shared.thumbnail(
-                            key: next.key,
-                            data: next.data,
-                            maxPixel: next.maxPixel
-                        )
-                    }
-                    inflight += 1
-                }
-            }
+            RecipeImageCache.shared.prewarm(key: key, data: data, maxPixel: maxPixel)
         }
     }
 

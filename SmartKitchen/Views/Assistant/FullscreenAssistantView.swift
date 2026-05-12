@@ -85,6 +85,13 @@ struct FullscreenAssistantView: View {
     private var assistantRecipesAccent: Color { PageTheme.recipes.accentColor }
     private var assistantNutrientsAccent: Color { PageTheme.nutrients.accentColor }
     private var assistantActionButtonBaseHeight: CGFloat { 62 }
+    private var assistantHeaderTitleFont: Font {
+        if searchBarState.mode == .aiChat {
+            return .custom("Bricolage Grotesque", size: 31, relativeTo: .title).bold()
+        }
+
+        return .pageTitle
+    }
     private var assistantActionColumns: [GridItem] {
         [
             GridItem(.flexible(), spacing: 6),
@@ -220,7 +227,7 @@ struct FullscreenAssistantView: View {
 
     @ViewBuilder
     private var header: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 10) {
+        HStack(alignment: .center, spacing: 12) {
             if showsBackButton {
                 Button {
                     // Reset AI state BEFORE popping so the parent view re-renders
@@ -233,17 +240,27 @@ struct FullscreenAssistantView: View {
                     environmentDismiss()
                 } label: {
                     Image(systemName: "chevron.left")
-                        .font(.pageTitle)
-                        .foregroundStyle(.secondary)
-                        .frame(minWidth: 32, minHeight: 32, alignment: .leading)
-                        .contentShape(Rectangle())
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(.primary)
+                        .frame(width: 34, height: 34)
+                        .background(
+                            Circle()
+                                .fill(.ultraThinMaterial)
+                                .overlay(
+                                    Circle()
+                                        .strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.5)
+                                )
+                        )
+                        .contentShape(Circle())
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(Text(String(localized: "Voltar")))
             }
 
-            Text(searchBarState.mode == .aiChat ? "Modo IA" : "Assistente")
-                .font(.pageTitle)
+            Text(searchBarState.mode == .aiChat ? String(localized: "Modo IA") : String(localized: "Assistente"))
+                .font(assistantHeaderTitleFont)
                 .foregroundStyle(Color.primary)
+                .lineLimit(1)
 
             Spacer()
 
@@ -252,13 +269,13 @@ struct FullscreenAssistantView: View {
                 if usesDarkShaderBackground {
                     Menu {
                         Button {
-                            pendingShowHistory = true
+                            searchBarState.requestAIHistory(source: "macOS dark header menu")
                         } label: {
                             Label("Histórico", systemImage: "clock.arrow.circlepath")
                         }
 
                         Button {
-                            pendingNewConversation = true
+                            searchBarState.requestAINewConversation(source: "macOS dark header menu")
                         } label: {
                             Label("Nova conversa", systemImage: "square.and.pencil")
                         }
@@ -272,7 +289,7 @@ struct FullscreenAssistantView: View {
                     .buttonStyle(.plain)
                 } else {
                     Button {
-                        pendingNewConversation = true
+                        searchBarState.requestAINewConversation(source: "macOS header button")
                     } label: {
                         Image(systemName: "square.and.pencil")
                             .font(.system(size: 15, weight: .medium))
@@ -282,7 +299,7 @@ struct FullscreenAssistantView: View {
                     .buttonStyle(.plain)
 
                     Button {
-                        pendingShowHistory = true
+                        searchBarState.requestAIHistory(source: "macOS header button")
                     } label: {
                         Image(systemName: "clock.arrow.circlepath")
                             .font(.system(size: 15, weight: .medium))
@@ -293,7 +310,7 @@ struct FullscreenAssistantView: View {
                 }
                 #else
                 Button {
-                    pendingNewConversation = true
+                    searchBarState.requestAINewConversation(source: "iOS AI header")
                 } label: {
                     Image(systemName: "square.and.pencil")
                         .font(.system(size: 15, weight: .medium))
@@ -303,7 +320,7 @@ struct FullscreenAssistantView: View {
                 .buttonStyle(.plain)
 
                 Button {
-                    pendingShowHistory = true
+                    searchBarState.requestAIHistory(source: "iOS AI header")
                 } label: {
                     Image(systemName: "clock.arrow.circlepath")
                         .font(.system(size: 15, weight: .medium))
@@ -847,13 +864,13 @@ struct MacAssistantExpandedPage: View {
                         GlassButtonGroup {
                             GlassGroupMenu(systemImage: "ellipsis.circle") {
                                 Button {
-                                    pendingShowHistory = true
+                                    searchBarState.requestAIHistory(source: "macOS expanded AI menu")
                                 } label: {
                                     Label("Histórico", systemImage: "clock.arrow.circlepath")
                                 }
 
                                 Button {
-                                    pendingNewConversation = true
+                                    searchBarState.requestAINewConversation(source: "macOS expanded AI menu")
                                 } label: {
                                     Label("Nova conversa", systemImage: "square.and.pencil")
                                 }
@@ -982,6 +999,12 @@ private struct AssistantSearchTabAIPage: View {
     var usesDarkShaderBackground: Bool = false
     var showsBackButton: Bool = true
 
+    /// Tracks whether the initial AI-mode configuration has been applied.
+    /// Without this, every tab switch re-fires `.onAppear` which would
+    /// reset `pendingOpenChat = true`, clobbering the active conversation
+    /// (the chat would be reloaded fresh and the messages would disappear).
+    @State private var didConfigureOnce = false
+
     var body: some View {
         FullscreenAssistantView(
             searchBarState: searchBarState,
@@ -1002,8 +1025,15 @@ private struct AssistantSearchTabAIPage: View {
         .toolbar(.hidden, for: .navigationBar)
         #endif
         .onAppear {
+            // Always make sure the AI chat mode is active when this page is on
+            // screen — but only configure prefill/openChat ONCE so subsequent
+            // tab returns preserve the existing conversation.
             searchBarState.aiChatPreset = destination.preset
             searchBarState.mode = .aiChat
+
+            guard !didConfigureOnce else { return }
+            didConfigureOnce = true
+
             if let prefill = destination.prefill, !prefill.isEmpty {
                 pendingOpenChat = false
                 pendingChatQuery = prefill
@@ -1012,13 +1042,9 @@ private struct AssistantSearchTabAIPage: View {
                 pendingOpenChat = true
             }
         }
-        .onDisappear {
-            // Reset to idle so the persistent search bar / other entry points
-            // don't stay stuck in AI mode after popping back.
-            pendingOpenChat = false
-            searchBarState.mode = .idle
-            searchBarState.aiChatPreset = .nutritionCoach
-        }
+        // Note: no `.onDisappear` reset. Tab switches must NOT clear chat
+        // state — the user explicitly leaves the AI page only by tapping the
+        // back button, which performs its own cleanup before popping.
     }
 }
 

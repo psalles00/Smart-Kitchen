@@ -17,8 +17,8 @@ struct NutrientsView: View {
     @State private var showOnboarding = false
     @State private var activeEntrySheet: NutritionEntrySheet?
     @State private var editingEntry: FoodEntry?
-    @State private var showProgressSheet = false
-    @State private var showWeightTrackerSheet = false
+    @State private var pushProgress = false
+    @State private var pushWeightTracker = false
 
     private var profile: NutritionProfile? { profiles.first }
 
@@ -110,17 +110,15 @@ struct NutrientsView: View {
                         }
                         GlassButtonGroup {
                             GlassGroupButton(systemImage: "chart.line.uptrend.xyaxis") {
-                                showProgressSheet = true
+                                pushProgress = true
                             }
                         }
                         GlassButtonGroup {
                             GlassGroupButton(systemImage: "scalemass") {
-                                showWeightTrackerSheet = true
+                                pushWeightTracker = true
                             }
                         }
-                        #if !os(macOS)
                         SettingsButton()
-                        #endif
                     }
                 }
             },
@@ -138,7 +136,7 @@ struct NutrientsView: View {
                         onPickEntry: { sheet in
                             activeEntrySheet = sheet
                         },
-                        onOpenProgress: { showProgressSheet = true }
+                        onOpenProgress: { pushProgress = true }
                     )
                 } else {
                     emptyState
@@ -150,7 +148,7 @@ struct NutrientsView: View {
                     selectedDate: selectedDate,
                     selectedDayState: selectedDayState,
                     caloriesConsumed: caloriesForSelectedDate,
-                    onTapScore: { showProgressSheet = true }
+                    onTapScore: { pushProgress = true }
                 )
             }
         )
@@ -186,15 +184,11 @@ struct NutrientsView: View {
         .sheet(item: $editingEntry) { entry in
             FoodEntryFormView(mode: .edit(entry: entry))
         }
-        .sheet(isPresented: $showProgressSheet) {
-            NavigationStack {
-                NutritionProgressView(showsDismissButton: true)
-            }
+        .navigationDestination(isPresented: $pushProgress) {
+            NutritionProgressView()
         }
-        .sheet(isPresented: $showWeightTrackerSheet) {
-            NavigationStack {
-                WeightTrackerView(showsDismissButton: true)
-            }
+        .navigationDestination(isPresented: $pushWeightTracker) {
+            WeightTrackerView()
         }
     }
 

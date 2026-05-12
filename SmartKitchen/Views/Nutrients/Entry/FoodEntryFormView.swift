@@ -94,7 +94,7 @@ struct FoodEntryFormView: View {
                 }
             }
             .macModalFormStyle(minWidth: 680, minHeight: 620)
-            .scrollDismissesKeyboard(.interactively)
+            .platformScrollDismissesKeyboardInteractively()
             .modalNavigationTitle(isEdit ? String(localized: "Editar registro") : String(localized: "Salvar Alimento"))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -117,10 +117,8 @@ struct FoodEntryFormView: View {
                     .trimmingCharacters(in: .whitespaces)
                 aiPrompt = combined
             }
-            #if os(iOS)
-            .presentationDetents([.medium, .large])
-            .presentationDragIndicator(.visible)
-            #endif
+            .platformPresentationDetentsMediumLarge()
+            .platformPresentationDragIndicatorVisible()
         }
         .sheet(item: $pendingPaywallReason) { reason in
             PaywallSheet(reason: reason)

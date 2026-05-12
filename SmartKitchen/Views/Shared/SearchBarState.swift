@@ -66,6 +66,12 @@ final class SearchBarState: ObservableObject {
     /// Message to send to the AI chat (populated by the search bar in AI mode).
     @Published var pendingChatMessage: String? = nil
 
+    /// Incrementing event tokens for AI Mode header actions. Tokens are more
+    /// reliable than transient booleans because repeated taps cannot be lost
+    /// in a true/false race across multiple view layers.
+    @Published var aiNewConversationRequestToken: Int = 0
+    @Published var aiHistoryRequestToken: Int = 0
+
     /// Quando não-nil, a raiz do app apresenta a sheet de registro de refeição correspondente.
     @Published var pendingNutritionSheet: NutritionEntrySheet? = nil
 
@@ -145,5 +151,15 @@ final class SearchBarState: ObservableObject {
         debouncedSearchText = ""
         mode = .idle
         aiChatPreset = .nutritionCoach
+    }
+
+    func requestAINewConversation(source: String) {
+        aiNewConversationRequestToken += 1
+        print("[AIModeUI] New conversation tapped from \(source). token=\(aiNewConversationRequestToken)")
+    }
+
+    func requestAIHistory(source: String) {
+        aiHistoryRequestToken += 1
+        print("[AIModeUI] History tapped from \(source). token=\(aiHistoryRequestToken)")
     }
 }

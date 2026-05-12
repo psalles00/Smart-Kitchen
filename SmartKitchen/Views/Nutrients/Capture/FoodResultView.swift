@@ -109,7 +109,7 @@ struct FoodResultView: View {
                 }
             }
             .macModalFormStyle(minWidth: 760, minHeight: 700)
-            .scrollDismissesKeyboard(.interactively)
+            .platformScrollDismissesKeyboardInteractively()
             .modalNavigationTitle(String(localized: "Revisar refeição"))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

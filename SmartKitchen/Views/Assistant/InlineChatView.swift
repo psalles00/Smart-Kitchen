@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import NaturalLanguage
 
 /// Chat view embedded inline in the Assistente search tab.
 /// Manages a single conversation with the AI, including tool execution, recipe discovery, and confirmation flows.
@@ -67,6 +68,12 @@ struct InlineChatView: View {
     @State private var showScrollToBottom: Bool = false
     @State private var chatAreaHeight: CGFloat = 0
     @State private var pinnedUserMessageID: UUID?
+    @State private var lastProgrammaticDispatch: ProgrammaticDispatch?
+
+    private struct ProgrammaticDispatch: Equatable {
+        let text: String
+        let timestamp: Date
+    }
 
     init(
         initialQuery: String? = nil,
@@ -121,6 +128,10 @@ struct InlineChatView: View {
         isAIMode ? topPinnedInset : 0
     }
 
+    private var aiModeContentFont: Font {
+        isAIMode ? .callout : .body
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             // Hide own header when the parent panel provides one
@@ -173,7 +184,8 @@ struct InlineChatView: View {
                                             ChatBubbleView(
                                                 message: message,
                                                 onQuickAction: { _ in },
-                                                hideQuickActions: true
+                                                hideQuickActions: true,
+                                                contentFont: aiModeContentFont
                                             )
                                             RecipeCardMessage(recipeIds: message.attachedRecipeIds)
                                             if !isAIMode {
@@ -197,7 +209,8 @@ struct InlineChatView: View {
                                                 onQuickAction: { action in
                                                     sendMessage(action.prompt)
                                                 },
-                                                hideQuickActions: isAIMode
+                                                hideQuickActions: isAIMode,
+                                                contentFont: aiModeContentFont
                                             )
                                         }
                                     }
@@ -301,11 +314,12 @@ struct InlineChatView: View {
         .onChange(of: pendingExternalMessage) { _, newValue in
             if let message = newValue {
                 pendingExternalMessage = nil
-                sendMessage(message)
+                sendMessage(message, origin: .programmatic)
             }
         }
         .onChange(of: pendingNewConversationTrigger) { _, newValue in
             guard newValue else { return }
+            print("[AIModeUI] InlineChatView received newConversationRelay=true")
             pendingNewConversationTrigger = false
             startNewConversation()
         }
@@ -319,7 +333,7 @@ struct InlineChatView: View {
             if let initialQuery, !initialQuery.isEmpty, !hasSentInitialQuery {
                 hasSentInitialQuery = true
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    sendMessage(initialQuery)
+                    sendMessage(initialQuery, origin: .programmatic)
                 }
             }
         }
@@ -598,6 +612,7 @@ struct InlineChatView: View {
     }
 
     private func startNewConversation() {
+        print("[AIModeUI] Starting new conversation. currentConversationId=\(conversationId?.uuidString ?? "nil") messages=\(messages.count)")
         conversationId = nil
         messages = []
         pinnedUserMessageID = nil
@@ -605,6 +620,7 @@ struct InlineChatView: View {
         errorMessage = nil
         cachedInventoryContext = nil
         cachedInventoryDate = nil
+        print("[AIModeUI] New conversation state cleared")
     }
 
     private func reloadMessages() {
@@ -649,12 +665,31 @@ struct InlineChatView: View {
         sendMessage(text)
     }
 
-    private func sendMessage(_ text: String) {
-        if text == confirmPrompt {
+    private enum SendOrigin {
+        case standard
+        case programmatic
+    }
+
+    private func sendMessage(_ text: String, origin: SendOrigin = .standard) {
+        let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedText.isEmpty else { return }
+
+        if origin == .programmatic,
+           let lastProgrammaticDispatch,
+           lastProgrammaticDispatch.text == trimmedText,
+           Date().timeIntervalSince(lastProgrammaticDispatch.timestamp) < 1.0 {
+            return
+        }
+
+        if origin == .programmatic {
+            lastProgrammaticDispatch = ProgrammaticDispatch(text: trimmedText, timestamp: .now)
+        }
+
+        if trimmedText == confirmPrompt {
             Task { await confirmPendingToolExecution() }
             return
         }
-        if text == cancelPrompt {
+        if trimmedText == cancelPrompt {
             cancelPendingToolExecution()
             return
         }
@@ -674,7 +709,7 @@ struct InlineChatView: View {
         }
 
         let convId = ensureConversation()
-        let userMessage = ChatMessage(role: .user, content: text, conversationId: convId)
+        let userMessage = ChatMessage(role: .user, content: trimmedText, conversationId: convId)
         insertMessage(userMessage)
         pinnedUserMessageID = userMessage.id
         inputText = ""
@@ -693,7 +728,7 @@ struct InlineChatView: View {
                 await runRecipeIdeasSearch(
                     occasion: nil,
                     refinement: nil,
-                    customQuery: text,
+                    customQuery: trimmedText,
                     conversationId: convId
                 )
             }
@@ -701,7 +736,7 @@ struct InlineChatView: View {
         }
 
         if aiChatPreset != .recipeIdeas,
-           let recipeDiscoveryResponse = makeRecipeDiscoveryResponse(for: text) {
+           let recipeDiscoveryResponse = makeRecipeDiscoveryResponse(for: trimmedText) {
             let assistantMessage = ChatMessage(
                 role: .assistant,
                 content: recipeDiscoveryResponse.content,
@@ -714,7 +749,7 @@ struct InlineChatView: View {
         }
 
         Task {
-            await performAIChat(latestUserMessageID: userMessage.id, latestUserText: text)
+            await performAIChat(latestUserMessageID: userMessage.id, latestUserText: trimmedText)
         }
     }
 
@@ -759,6 +794,7 @@ struct InlineChatView: View {
         var msgs = [[String: Any]]()
         let systemPrompt = buildSystemPrompt(includeInventoryContext: true)
         msgs.append(["role": "system", "content": systemPrompt])
+        msgs.append(["role": "system", "content": responseLanguageSystemMessage(for: latestConversationUserText())])
 
         let history = Array(messages.suffix(20))
         for msg in history {
@@ -817,6 +853,7 @@ struct InlineChatView: View {
 
         let systemPrompt = buildSystemPrompt(includeInventoryContext: !isRecipeManagementRequest)
         msgs.append(["role": "system", "content": systemPrompt])
+        msgs.append(["role": "system", "content": responseLanguageSystemMessage(for: latestUserText)])
 
         if aiChatPreset == .recipeIdeas {
             msgs.append([
@@ -959,8 +996,20 @@ struct InlineChatView: View {
         var parts = [String]()
 
         parts.append("""
-        Você é o "Savoria", um assistente de cozinha inteligente e pessoal. \
-        Responda SEMPRE em português brasileiro, de forma amigável, concisa e útil.
+        Você é o "Savoria", um assistente de cozinha inteligente e pessoal.
+
+        ## Idioma da resposta (regra crítica)
+        - Detecte o idioma da MENSAGEM MAIS RECENTE do usuário (a última pergunta).
+        - Responda SEMPRE EXATAMENTE no mesmo idioma que o usuário usou.
+        - Se o usuário escrever em inglês, responda em inglês. Em espanhol, responda em espanhol. Em francês, em francês. E assim por diante.
+        - NÃO traduza ou troque de idioma no meio da conversa: se o usuário mudar de idioma, mude também.
+        - Mantenha o tom amigável, conciso e útil.
+
+        ## Formatação da resposta (regra crítica)
+        - Use SEMPRE formatação Markdown para deixar a resposta organizada visualmente.
+        - Use **negrito** para destacar nomes, totais e seções; _itálico_ para descrições; listas com `-` para enumerar; títulos com `**Título**` quando fizer sentido.
+        - Separe ideias diferentes em parágrafos curtos (linha em branco entre eles). Evite parágrafos longos demais.
+        - Se a resposta for longa, divida-a em vários parágrafos curtos separados por linha em branco. NÃO devolva um único bloco gigante de texto.
 
         ## Suas capacidades
         Você gerencia a despensa, lista de compras e receitas do usuário. \
@@ -1293,6 +1342,71 @@ struct InlineChatView: View {
 
     private func normalized(_ text: String) -> String {
         text.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current).lowercased()
+    }
+
+    private func latestConversationUserText() -> String? {
+        messages.last(where: { $0.role == .user })?.content
+    }
+
+    private func responseLanguageSystemMessage(for text: String?) -> String {
+        let language = detectedResponseLanguage(for: text)
+        return """
+        CRITICAL LANGUAGE RULE FOR THIS TURN:
+        - Reply only in \(language.replyName).
+        - The user's latest message for this turn is in \(language.readableName) (\(language.code)).
+        - Do not answer in Portuguese unless the latest user message is in Portuguese.
+        - Keep the answer fully in \(language.replyName), including headings, bullets, and the closing sentence.
+        """
+    }
+
+    private func detectedResponseLanguage(for text: String?) -> (code: String, readableName: String, replyName: String) {
+        let sample = text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+        if !sample.isEmpty {
+            let recognizer = NLLanguageRecognizer()
+            recognizer.processString(sample)
+            if let detectedLanguage = recognizer.dominantLanguage {
+                return responseLanguageDescriptor(for: detectedLanguage.rawValue)
+            }
+        }
+
+        if let preferred = Locale.preferredLanguages.first {
+            let locale = Locale(identifier: preferred)
+            let code = locale.language.languageCode?.identifier ?? "en"
+            return responseLanguageDescriptor(for: code)
+        }
+
+        return responseLanguageDescriptor(for: "en")
+    }
+
+    private func responseLanguageDescriptor(for rawCode: String) -> (code: String, readableName: String, replyName: String) {
+        let normalizedCode = rawCode.lowercased()
+
+        if normalizedCode.hasPrefix("pt") {
+            return ("pt", "Portuguese", "Portuguese")
+        }
+        if normalizedCode.hasPrefix("en") {
+            return ("en", "English", "English")
+        }
+        if normalizedCode.hasPrefix("es") {
+            return ("es", "Spanish", "Spanish")
+        }
+        if normalizedCode.hasPrefix("fr") {
+            return ("fr", "French", "French")
+        }
+        if normalizedCode.hasPrefix("de") {
+            return ("de", "German", "German")
+        }
+        if normalizedCode.hasPrefix("it") {
+            return ("it", "Italian", "Italian")
+        }
+        if normalizedCode.hasPrefix("ja") {
+            return ("ja", "Japanese", "Japanese")
+        }
+
+        let englishLocale = Locale(identifier: "en")
+        let readableName = englishLocale.localizedString(forLanguageCode: normalizedCode)?.capitalized ?? "the user's language"
+        return (normalizedCode, readableName, readableName)
     }
 
     private func pinnedMessageAnchorID(for messageID: UUID) -> String {

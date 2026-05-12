@@ -482,7 +482,7 @@ private struct EditWeightSheet: View {
                     .fontWeight(.semibold)
                 }
             }
-            .confirmationDialog("Excluir este registro?", isPresented: $showDeleteConfirm, titleVisibility: .visible) {
+            .confirmationDialog("Excluir este registro?", isPresented: $showDeleteConfirm, titleVisibility: Visibility.visible) {
                 Button("Excluir", role: .destructive) {
                     onDelete()
                     dismiss()
@@ -490,7 +490,7 @@ private struct EditWeightSheet: View {
                 Button("Cancelar", role: .cancel) { }
             }
         }
-        .presentationDetents([.medium, .large])
-        .presentationDragIndicator(.visible)
+        .platformPresentationDetentsMediumLarge()
+        .platformPresentationDragIndicatorVisible()
     }
 }

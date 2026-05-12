@@ -127,8 +127,19 @@ final class FeatureGate {
     // MARK: - Hard gates
 
     /// Tied to active StoreKit entitlement.
+    ///
+    /// DEBUG / Simulator override: when running in the iOS Simulator, the
+    /// StoreKit "Sign in with Apple Account" prompt cannot be completed
+    /// (pressing OK is a no-op), so `AppStore.sync()` never returns a valid
+    /// transaction. To unblock manual testing of premium-gated features in
+    /// the simulator, we treat the user as subscribed by default. Real
+    /// devices and Release builds always go through StoreKit.
     var isPremium: Bool {
-        subscriptionManager?.isSubscribed ?? false
+        #if targetEnvironment(simulator)
+        return true
+        #else
+        return subscriptionManager?.isSubscribed ?? false
+        #endif
     }
 
     /// Generic hard-feature accessor.

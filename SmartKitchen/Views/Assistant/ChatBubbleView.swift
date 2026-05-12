@@ -4,21 +4,55 @@ struct ChatBubbleView: View {
     let message: ChatMessage
     let onQuickAction: (QuickAction) -> Void
     var hideQuickActions: Bool = false
+    var contentFont: Font = .body
 
     private var isUser: Bool { message.role == .user }
+
+    /// Splits long assistant messages into separate bubbles per paragraph for
+    /// better visual organization. User messages are never split.
+    private var paragraphs: [String] {
+        let raw = message.content
+        guard !isUser else { return [raw] }
+
+        // Split on blank lines (one or more empty lines).
+        let chunks = raw
+            .components(separatedBy: "\n\n")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+
+        // Only split when we actually have multiple paragraphs AND the
+        // message is long enough that splitting visually helps.
+        if chunks.count >= 2, raw.count > 280 {
+            return chunks
+        }
+        return [raw]
+    }
 
     var body: some View {
         HStack(alignment: .bottom, spacing: 8) {
             if isUser { Spacer(minLength: 48) }
 
-            VStack(alignment: isUser ? .trailing : .leading, spacing: 8) {
-                Text(message.content)
-                    .font(.body)
-                    .textSelection(.enabled)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 10)
-                    .background(isUser ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(Color(.secondarySystemBackground)), in: bubbleShape)
-                    .foregroundStyle(isUser ? .white : .primary)
+            VStack(alignment: isUser ? .trailing : .leading, spacing: 6) {
+                ForEach(Array(paragraphs.enumerated()), id: \.offset) { _, chunk in
+                    if isAssistantRule(chunk) {
+                        Rectangle()
+                            .fill(Color.secondary.opacity(0.24))
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 1)
+                            .padding(.vertical, 18)
+                    } else {
+                        bubbleText(chunk)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 10)
+                            .background(
+                                isUser
+                                    ? AnyShapeStyle(Color.accentColor)
+                                    : AnyShapeStyle(Color(.secondarySystemBackground)),
+                                in: bubbleShape
+                            )
+                            .foregroundStyle(isUser ? .white : .primary)
+                    }
+                }
 
                 // Quick actions
                 if !hideQuickActions, !message.quickActions.isEmpty {
@@ -42,6 +76,26 @@ struct ChatBubbleView: View {
             if !isUser { Spacer(minLength: 48) }
         }
         .padding(.horizontal, 16)
+    }
+
+    private func isAssistantRule(_ content: String) -> Bool {
+        !isUser && content.trimmingCharacters(in: .whitespacesAndNewlines) == "---"
+    }
+
+    /// User messages stay as plain text (no markdown rendering, so anything
+    /// the user wrote is preserved verbatim). Assistant messages render
+    /// markdown via the `LocalizedStringKey` initializer.
+    @ViewBuilder
+    private func bubbleText(_ content: String) -> some View {
+        if isUser {
+            Text(content)
+                .font(contentFont)
+                .textSelection(.enabled)
+        } else {
+            Text(LocalizedStringKey(content))
+                .font(contentFont)
+                .textSelection(.enabled)
+        }
     }
 
     private var bubbleShape: UnevenRoundedRectangle {

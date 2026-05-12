@@ -19,13 +19,6 @@ let neutralSurfaceColor: Color = {
             ? UIColor(red: 0x2C / 255.0, green: 0x2C / 255.0, blue: 0x2E / 255.0, alpha: 1)
             : UIColor(red: 248 / 255.0, green: 248 / 255.0, blue: 250 / 255.0, alpha: 1)
     })
-    #elseif canImport(AppKit)
-    return Color(nsColor: NSColor(name: nil) { appearance in
-        let isDark = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-        return isDark
-            ? NSColor(srgbRed: 0x2C / 255.0, green: 0x2C / 255.0, blue: 0x2E / 255.0, alpha: 1)
-            : NSColor(srgbRed: 248 / 255.0, green: 248 / 255.0, blue: 250 / 255.0, alpha: 1)
-    } ?? NSColor(srgbRed: 248 / 255.0, green: 248 / 255.0, blue: 250 / 255.0, alpha: 1))
     #else
     return Color(red: 248 / 255, green: 248 / 255, blue: 250 / 255)
     #endif
@@ -161,19 +154,47 @@ extension View {
         background(.ultraThinMaterial, in: .rect(cornerRadius: cornerRadius))
     }
 
-    /// Normalizes modal forms on macOS so sheets don't fall back to AppKit's
-    /// split label/control layout inside compact dialogs.
-    func macModalFormStyle(minWidth: CGFloat = 520, minHeight: CGFloat = 520) -> some View {
-#if os(macOS)
-        return self
-            .formStyle(.grouped)
-            .padding(.horizontal, 20)
-            .padding(.top, 10)
-            .padding(.bottom, 20)
-            .frame(minWidth: minWidth, minHeight: minHeight)
+    /// Shared grouped-form styling for modal editors. On macOS/Catalyst we
+    /// also enforce a minimum content size so the form doesn't collapse into
+    /// an unreadable sheet.
+    @ViewBuilder
+    func macModalFormStyle(minWidth: CGFloat, minHeight: CGFloat) -> some View {
+#if os(macOS) || targetEnvironment(macCatalyst)
+        formStyle(.grouped)
+            .frame(minWidth: minWidth, minHeight: minHeight, alignment: .topLeading)
 #else
-        return self
-            .formStyle(.grouped)
+        formStyle(.grouped)
+#endif
+    }
+
+    /// `scrollDismissesKeyboard` is not consistently available across every
+    /// Apple platform target we compile. Use this wrapper at shared call sites.
+    @ViewBuilder
+    func platformScrollDismissesKeyboardInteractively() -> some View {
+#if os(iOS) && !targetEnvironment(macCatalyst)
+        scrollDismissesKeyboard(.interactively)
+#else
+        self
+#endif
+    }
+
+    /// Shared sheet sizing for modal editors on iPhone/iPad only.
+    @ViewBuilder
+    func platformPresentationDetentsMediumLarge() -> some View {
+#if os(iOS) && !targetEnvironment(macCatalyst)
+        presentationDetents([PresentationDetent.medium, PresentationDetent.large])
+#else
+        self
+#endif
+    }
+
+    /// Shared drag-indicator setup for resizable iOS sheets.
+    @ViewBuilder
+    func platformPresentationDragIndicatorVisible() -> some View {
+#if os(iOS) && !targetEnvironment(macCatalyst)
+        presentationDragIndicator(Visibility.visible)
+#else
+        self
 #endif
     }
 
@@ -190,7 +211,6 @@ extension View {
         modalNavigationTitle(title)
 #else
         self
-            .navigationTitle(title)
 #endif
     }
 }

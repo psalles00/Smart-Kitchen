@@ -4,7 +4,7 @@ import SwiftData
 /// Shows a list of past AI conversations, sorted by most recent.
 struct ConversationHistoryView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query(sort: \ChatConversation.updatedAt, order: .reverse) private var conversations: [ChatConversation]
+    @Query private var conversations: [ChatConversation]
     @State private var activeSwipeConversationID: UUID?
 
     let showsHeader: Bool
@@ -12,6 +12,7 @@ struct ConversationHistoryView: View {
     @Binding var isScrollAtTop: Bool
     let onSelect: (UUID) -> Void
     let onDismiss: () -> Void
+    private let historyWindowDays: Int
 
     private var scrollTopThreshold: CGFloat {
         let topPadding = showsHeader ? 8 : topPinnedInset + 2
@@ -21,15 +22,24 @@ struct ConversationHistoryView: View {
     init(
         showsHeader: Bool = true,
         topPinnedInset: CGFloat = 0,
+        historyWindowDays: Int = 30,
         isScrollAtTop: Binding<Bool> = .constant(true),
         onSelect: @escaping (UUID) -> Void,
         onDismiss: @escaping () -> Void
     ) {
+        let cutoffDate = Calendar.current.date(byAdding: .day, value: -historyWindowDays, to: .now) ?? .distantPast
+
+        self.historyWindowDays = historyWindowDays
         self.showsHeader = showsHeader
         self.topPinnedInset = topPinnedInset
         self._isScrollAtTop = isScrollAtTop
         self.onSelect = onSelect
         self.onDismiss = onDismiss
+        self._conversations = Query(
+            filter: #Predicate<ChatConversation> { $0.updatedAt >= cutoffDate },
+            sort: \.updatedAt,
+            order: .reverse
+        )
     }
 
     var body: some View {
@@ -126,7 +136,7 @@ struct ConversationHistoryView: View {
                 .font(.system(size: 44))
                 .foregroundStyle(.quaternary)
 
-            Text("Nenhuma conversa ainda")
+            Text("Nenhuma conversa nos últimos \(historyWindowDays) dias")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
 

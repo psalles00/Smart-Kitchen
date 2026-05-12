@@ -10176,9 +10176,6 @@
         }
       }
     },
-    "Atalhos" : {
-
-    },
     "Ative a sincronização iCloud antes de usar o compartilhamento familiar." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -38808,6 +38805,9 @@
           }
         }
       }
+    },
+    "Nenhuma conversa nos últimos %lld dias" : {
+
     },
     "Nenhuma ideia encontrada agora. Tente novamente." : {
       "extractionState" : "manual",
