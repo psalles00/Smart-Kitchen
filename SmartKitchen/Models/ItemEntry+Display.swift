@@ -1,15 +1,33 @@
 import Foundation
 
-private final class ItemLocalizationRegistry: Sendable {
+/// Loads per-language alias dictionaries from the bundled `meta-*.json`
+/// resources. Each file is ~550 KB and decoding all 7 of them at boot was
+/// adding hundreds of ms to the first user interaction on a real device.
+///
+/// PERF: only the languages that are actually queried are loaded — and each
+/// is loaded **at most once**, lazily. The current UI language (and English
+/// as the universal fallback) get touched on the first call to
+/// `rankedAliases`; other languages stay on disk until the user explicitly
+/// switches locales mid-session.
+private final class ItemLocalizationRegistry: @unchecked Sendable {
     static let shared = ItemLocalizationRegistry()
 
-    private let aliasesByFilename: [String: [AppLanguage: [String]]]
+    private let lock = NSLock()
+    private var aliasesByFilename: [String: [AppLanguage: [String]]] = [:]
+    private var loadedLanguages: Set<AppLanguage> = []
 
-    private init() {
-        self.aliasesByFilename = Self.loadAliasesByFilename()
-    }
+    private init() {}
 
     func rankedAliases(for entry: ItemEntry, localization: AppLocalization = .current()) -> [(title: String, sourceRank: Int)] {
+        ensureLoaded(language: localization.language)
+        if localization.language != .en {
+            ensureLoaded(language: .en)
+        }
+
+        lock.lock()
+        let aliases = aliasesByFilename[entry.nomeDoArquivo] ?? [:]
+        lock.unlock()
+
         var ranked: [(title: String, sourceRank: Int)] = []
         var seen = Set<String>()
 
@@ -21,7 +39,6 @@ private final class ItemLocalizationRegistry: Sendable {
             }
         }
 
-        let aliases = aliasesByFilename[entry.nomeDoArquivo] ?? [:]
         append(aliases[localization.language] ?? [], rank: 0)
 
         if localization.language != .en {
@@ -32,32 +49,45 @@ private final class ItemLocalizationRegistry: Sendable {
         return ranked
     }
 
-    private static func loadAliasesByFilename() -> [String: [AppLanguage: [String]]] {
-        var byFilename: [String: [AppLanguage: [String]]] = [:]
+    /// Loads the alias file for `language` if it hasn't been loaded yet.
+    /// Safe to call from any thread / actor; protected by an internal lock.
+    func ensureLoaded(language: AppLanguage) {
+        lock.lock()
+        let alreadyLoaded = loadedLanguages.contains(language)
+        if !alreadyLoaded {
+            loadedLanguages.insert(language)
+        }
+        lock.unlock()
 
-        for language in AppLanguage.allCases {
-            guard let url = Bundle.main.url(forResource: language.itemMetadataResourceName, withExtension: "json"),
-                  let data = try? Data(contentsOf: url),
-                  let document = try? JSONDecoder().decode(BundledItemLocaleDocument.self, from: data) else {
-                continue
-            }
+        guard !alreadyLoaded else { return }
 
-            for record in document.records {
-                let title = record.title.trimmingCharacters(in: .whitespacesAndNewlines)
-                let filename = record.fileName.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !title.isEmpty, !filename.isEmpty else { continue }
-
-                var aliases = byFilename[filename] ?? [:]
-                var localizedTitles = aliases[language] ?? []
-                if !localizedTitles.contains(title) {
-                    localizedTitles.append(title)
-                }
-                aliases[language] = localizedTitles
-                byFilename[filename] = aliases
-            }
+        guard let url = Bundle.main.url(forResource: language.itemMetadataResourceName, withExtension: "json"),
+              let data = try? Data(contentsOf: url),
+              let document = try? JSONDecoder().decode(BundledItemLocaleDocument.self, from: data) else {
+            return
         }
 
-        return byFilename
+        // Build the per-file delta outside the lock, then merge under the
+        // lock to minimise contention.
+        var delta: [String: [String]] = [:]
+        for record in document.records {
+            let title = record.title.trimmingCharacters(in: .whitespacesAndNewlines)
+            let filename = record.fileName.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !title.isEmpty, !filename.isEmpty else { continue }
+            var titles = delta[filename] ?? []
+            if !titles.contains(title) {
+                titles.append(title)
+            }
+            delta[filename] = titles
+        }
+
+        lock.lock()
+        for (filename, titles) in delta {
+            var aliases = aliasesByFilename[filename] ?? [:]
+            aliases[language] = titles
+            aliasesByFilename[filename] = aliases
+        }
+        lock.unlock()
     }
 }
 

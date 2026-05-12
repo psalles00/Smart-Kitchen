@@ -124,12 +124,31 @@ struct DataSeeder {
         }
     }
 
+    /// One-shot flag: ensures the legacy category-name remappings (which
+    /// rewrite a handful of pre-2025 categories to their new canonical
+    /// names) only run once per install. The previous behaviour was to
+    /// fetch every `UnifiedItem` from SwiftData three times on EVERY launch
+    /// — fine on a fresh DB, but on a CloudKit-backed store with hundreds
+    /// of items it triggered three full faulting passes during the
+    /// post-launch bootstrap, contributing to the "lag for a few seconds
+    /// when opening the app" report.
+    private static let legacyCategoryMigrationKey = "SmartKitchen.legacyCategoryMigrationCompleted"
+
     private static func synchronizeCategories(context: ModelContext) {
         synchronizeCategoryDefinitions(pantryCategoryDefinitions, type: .pantry, context: context)
         synchronizeCategoryDefinitions(recipeCategoryDefinitions, type: .recipe, context: context)
         synchronizeCategoryDefinitions(utensilCategoryDefinitions, type: .utensil, context: context)
-        migrateLegacyItemCategories(context: context)
-        removeLegacyUtensilCategories(context: context)
+
+        // Legacy category-rename migrations only need to run once. The
+        // mappings rewrite outdated category strings (e.g. "Vegetais" ->
+        // "Verduras e Legumes") and there's no way new data can re-introduce
+        // those obsolete names — both the seed list and every UI surface
+        // only emit the new names.
+        if !UserDefaults.standard.bool(forKey: legacyCategoryMigrationKey) {
+            migrateLegacyItemCategories(context: context)
+            removeLegacyUtensilCategories(context: context)
+            UserDefaults.standard.set(true, forKey: legacyCategoryMigrationKey)
+        }
     }
 
     private static func synchronizeCategoryDefinitions(

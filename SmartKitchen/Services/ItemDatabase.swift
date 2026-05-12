@@ -2,7 +2,18 @@ import Foundation
 
 /// Pre-loaded database of known items with icons and categories.
 /// Provides fast prefix search and exact matching for autocomplete.
-final class ItemDatabase: Sendable {
+///
+/// PERF: locale-keyed search indexes are built lazily, one language at a
+/// time. The original implementation built indexes for all 7 supported
+/// languages eagerly inside `init`, which decoded ~340 KB of JSON and
+/// iterated 16k+ entries × 7 locales on the main thread the first time
+/// any caller touched `ItemDatabase.shared`. That was the single biggest
+/// contributor to the "app feels stuck for a few seconds after launch /
+/// foreground" report.
+///
+/// Thread-safety: the mutable language cache is guarded by `indexLock`,
+/// so this class is safe to call from any actor or background queue.
+final class ItemDatabase: @unchecked Sendable {
 
     static let shared = ItemDatabase()
 
@@ -32,9 +43,10 @@ final class ItemDatabase: Sendable {
         "with", "y"
     ]
 
-    /// Locale-aware flattened indexes: active locale aliases first, English
-    /// second, and the legacy mixed `titulos` array last for compatibility.
-    private let localizedIndexes: [AppLanguage: [IndexedTitle]]
+    /// Lock guarding `localizedIndexes`. Indexes are built lazily on first
+    /// access per language and reused thereafter.
+    private let indexLock = NSLock()
+    private var localizedIndexes: [AppLanguage: [IndexedTitle]] = [:]
 
     /// All entries keyed by filename for direct lookup.
     private let byFilename: [String: ItemEntry]
@@ -44,36 +56,61 @@ final class ItemDatabase: Sendable {
         let entries = Self.loadEntries()
         var byFile: [String: ItemEntry] = [:]
         byFile.reserveCapacity(entries.count)
-        var indexes: [AppLanguage: [IndexedTitle]] = [:]
-        for language in AppLanguage.allCases {
-            indexes[language] = []
-        }
-
         for entry in entries {
             byFile[entry.nomeDoArquivo] = entry
-
-            for language in AppLanguage.allCases {
-                let localization = AppLocalization(language: language)
-                let titles = entry.searchableTitles(localization: localization)
-                var languageIndexes = indexes[language] ?? []
-                languageIndexes.reserveCapacity(languageIndexes.count + titles.count)
-                for title in titles {
-                    languageIndexes.append(
-                        IndexedTitle(
-                            normalized: Self.normalize(title.title),
-                            entry: entry,
-                            sourceRank: title.sourceRank
-                        )
-                    )
-                }
-                indexes[language] = languageIndexes
-            }
         }
 
-        self.localizedIndexes = indexes
         self.byFilename = byFile
         self.entries = entries
         self.allCategories = Array(Set(byFile.values.map(\.categoria))).sorted()
+
+        // Eagerly build the index for the current UI language only — that's
+        // the one users will actually search against immediately. Other
+        // languages remain on disk until requested.
+        _ = index(for: AppLocalization.current().language)
+    }
+
+    /// Pre-builds search indexes for the current language. Cheap to call
+    /// multiple times; subsequent calls are no-ops. Intended to be invoked
+    /// from a background task during app bootstrap so the first user
+    /// interaction never pays the index-building cost.
+    func prewarm() {
+        _ = index(for: AppLocalization.current().language)
+    }
+
+    private func index(for language: AppLanguage) -> [IndexedTitle] {
+        indexLock.lock()
+        if let cached = localizedIndexes[language] {
+            indexLock.unlock()
+            return cached
+        }
+        indexLock.unlock()
+
+        // Build outside the lock — `searchableTitles` itself acquires
+        // a different lock (in `ItemLocalizationRegistry`) and we want to
+        // avoid holding two locks at once.
+        let localization = AppLocalization(language: language)
+        var built: [IndexedTitle] = []
+        built.reserveCapacity(entries.count * 2)
+        for entry in entries {
+            let titles = entry.searchableTitles(localization: localization)
+            for title in titles {
+                built.append(
+                    IndexedTitle(
+                        normalized: Self.normalize(title.title),
+                        entry: entry,
+                        sourceRank: title.sourceRank
+                    )
+                )
+            }
+        }
+
+        indexLock.lock()
+        // Another caller might have populated it while we were building;
+        // last write wins — the result is identical regardless.
+        localizedIndexes[language] = built
+        indexLock.unlock()
+        return built
     }
 
     // MARK: - Public
@@ -89,7 +126,7 @@ final class ItemDatabase: Sendable {
         var seen = Set<String>()
         var results: [ItemEntry] = []
         var bestSourceRanks: [String: Int] = [:]
-        let index = localizedIndexes[localization.language] ?? []
+        let index = index(for: localization.language)
 
         // Gather candidates – always use word-prefix matching to avoid
         // noise (e.g. "Pera" matching "Paciente Pré-Operatório" via
@@ -151,7 +188,7 @@ final class ItemDatabase: Sendable {
     /// Returns an entry if any of its titles match the given name exactly
     /// (case-insensitive, diacritics-insensitive).
     func exactMatch(for name: String) -> ItemEntry? {
-        let index = localizedIndexes[AppLocalization.current().language] ?? []
+        let index = index(for: AppLocalization.current().language)
         let q = Self.normalize(name)
         guard !q.isEmpty else { return nil }
         for candidate in index where candidate.normalized == q {
@@ -167,7 +204,7 @@ final class ItemDatabase: Sendable {
             return exact
         }
 
-        let index = localizedIndexes[AppLocalization.current().language] ?? []
+        let index = index(for: AppLocalization.current().language)
         let normalizedQuery = Self.normalizeForInheritedMatching(name)
         guard !normalizedQuery.isEmpty else { return nil }
 

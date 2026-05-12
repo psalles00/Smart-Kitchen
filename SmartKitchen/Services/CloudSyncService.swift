@@ -239,16 +239,16 @@ final class CloudSyncService: @unchecked Sendable {
         syncError = nil
         checkiCloudAvailability()
 
-        // Trigger a save on the default context to push pending changes
-        let context = ModelContext(container)
-        do {
-            if context.hasChanges {
-                try context.save()
-            }
-            lastSyncDate = Date()
-        } catch {
-            syncError = String(localized: "Erro ao sincronizar: \(error.localizedDescription)")
-        }
+        // PERF: previously this created a brand-new `ModelContext(container)`
+        // just to call `context.hasChanges` (which is always false for a
+        // fresh context) and then `try context.save()`. That work was
+        // pointless and added measurable latency on every foreground
+        // (CloudKit-backed containers do non-trivial setup when a new
+        // context is materialised). The main context is saved explicitly
+        // at every mutation site and again on scene transitions, so all
+        // we need here is to record the sync timestamp and schedule
+        // deduplication.
+        lastSyncDate = Date()
         isSyncing = false
 
         // Deduplicate after every foreground sync

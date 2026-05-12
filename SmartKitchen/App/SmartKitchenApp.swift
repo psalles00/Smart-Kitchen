@@ -123,6 +123,13 @@ struct SmartKitchenApp: App {
     /// real devices shows up as a stutter the first time the user
     /// interacts after returning to the app.
     @State private var lastForegroundMaintenance: Date = .distantPast
+    /// Last time we refreshed StoreKit entitlements on foreground. StoreKit
+    /// calls go through `Transaction.currentEntitlements`, which can take
+    /// several hundred ms on real devices the first time after a long
+    /// suspension. Throttling stops short foreground hops from re-running
+    /// the entire entitlement check (and the implicit JIT setup that
+    /// follows) which contributes to the post-resume jank.
+    @State private var lastEntitlementRefresh: Date = .distantPast
 
     init() {
         // Must be called after all stored properties are initialized
@@ -194,14 +201,21 @@ struct SmartKitchenApp: App {
                 .onChange(of: scenePhase) { oldValue, newValue in
                     if newValue == .active {
                         _ = SharedImportInbox.shared.claimPendingFromBridge()
-                        // Refresh subscription state on every foreground so
+                        // Refresh subscription state on foreground so
                         // expirations / external upgrades land promptly.
-                        Task { await subscriptionManager.refreshEntitlements() }
+                        // Throttle to once per 5 min — StoreKit calls are
+                        // not free on real devices and the user's
+                        // entitlement doesn't realistically change every
+                        // 30 s of background.
+                        let now = Date()
+                        if now.timeIntervalSince(lastEntitlementRefresh) >= 300 {
+                            lastEntitlementRefresh = now
+                            Task { await subscriptionManager.refreshEntitlements() }
+                        }
                         // Throttle: avoid running sync + notification reschedule
                         // every time the user briefly leaves and returns. The
                         // previous unconditional behaviour caused noticeable
                         // jank on the first interaction after foregrounding.
-                        let now = Date()
                         if now.timeIntervalSince(lastForegroundMaintenance) >= 60 {
                             lastForegroundMaintenance = now
                             cloudSync.syncNow()
@@ -265,12 +279,30 @@ struct SmartKitchenApp: App {
         // Let the splash render its first frame before doing heavy work.
         try? await Task.sleep(for: .milliseconds(50))
 
+        // PERF: warm up the bundled item / category databases on a
+        // background queue, in parallel with the SwiftData bootstrap work
+        // that runs on the main actor below. These caches are touched
+        // synchronously by the very first list / search / icon resolver
+        // call on the UI; warming them off-main here means the first user
+        // interaction never has to pay their build cost.
+        let warmupTask = Task.detached(priority: .userInitiated) {
+            _ = CategoryDatabase.shared
+            ItemDatabase.shared.prewarm()
+        }
+
         let context = ModelContext(cloudSync.container)
         DataSeeder.seedIfNeeded(context: context)
         UnifiedItemMigration.migrateIfNeeded(context: context)
         _ = BackupManager.shared.restoreLatestBackupIfCurrentStoreNeedsRecovery(context: context)
 
         cloudSync.activateCloudSyncIfNeededOnLaunch()
+
+        // Wait for the prewarm to finish before lifting the splash so the
+        // first frame of ContentView already sees populated caches. This is
+        // bounded — building one language index over 16k entries takes a
+        // handful of ms on modern hardware and runs concurrently with the
+        // seeder above.
+        await warmupTask.value
 
         // Lift the splash now that the data layer is ready and ContentView
         // can render with all SwiftData stores fully prepared.
