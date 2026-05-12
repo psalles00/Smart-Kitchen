@@ -849,6 +849,11 @@ struct ContentView: View {
         let showChat = searchBarState.mode == .aiChat
         guard hasText || showChat || pendingOpenChat || pendingChatQuery != nil else { return nil }
         #else
+        // When the dedicated assistant/search tab is active, that tab already
+        // hosts its own InlineSearchResultsView. Returning a second overlay
+        // here mounts a hidden duplicate listener that can consume AI send
+        // events before the visible chat receives them.
+        guard selectedTab != .commandBar else { return nil }
         guard searchBarState.isVisible else { return nil }
         let hasText = !searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         let showChat = searchBarState.mode == .aiChat

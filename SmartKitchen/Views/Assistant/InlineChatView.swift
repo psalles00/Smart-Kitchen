@@ -68,6 +68,7 @@ struct InlineChatView: View {
     @State private var showScrollToBottom: Bool = false
     @State private var chatAreaHeight: CGFloat = 0
     @State private var pinnedUserMessageID: UUID?
+    @State private var autoActivatedRecipeIdeasMode = false
 
     init(
         initialQuery: String? = nil,
@@ -620,6 +621,10 @@ struct InlineChatView: View {
 
     private func startNewConversation() {
         print("[AIModeUI] Starting new conversation. currentConversationId=\(conversationId?.uuidString ?? "nil") messages=\(messages.count)")
+        if autoActivatedRecipeIdeasMode {
+            searchBarState?.aiChatPreset = .nutritionCoach
+            autoActivatedRecipeIdeasMode = false
+        }
         conversationId = nil
         messages = []
         pinnedUserMessageID = nil
@@ -699,6 +704,23 @@ struct InlineChatView: View {
             return
         }
 
+        let normalizedPrompt = normalized(trimmedText)
+        let hasRecipeIdeasContext = isAIMode && (autoActivatedRecipeIdeasMode || aiChatPreset == .recipeIdeas)
+        let shouldAutoRouteToRecipeIdeas = isAIMode && shouldAutoActivateRecipeIdeas(forNormalizedText: normalizedPrompt)
+        let shouldContinueRecipeIdeas = hasRecipeIdeasContext && shouldContinueRecipeIdeasConversation(for: normalizedPrompt)
+        let priorRecipeIdeasPayload = shouldContinueRecipeIdeas ? lastRecipeIdeasResultsPayload() : nil
+
+        if autoActivatedRecipeIdeasMode && !shouldAutoRouteToRecipeIdeas && !shouldContinueRecipeIdeas {
+            autoActivatedRecipeIdeasMode = false
+            searchBarState?.aiChatPreset = .nutritionCoach
+        }
+
+        let recipeIdeasContext = resolvedRecipeIdeasSearchContext(
+            for: trimmedText,
+            normalizedText: normalizedPrompt,
+            fallbackPayload: priorRecipeIdeasPayload
+        )
+
         let convId = ensureConversation()
         let userMessage = ChatMessage(role: .user, content: trimmedText, conversationId: convId)
         insertMessage(userMessage)
@@ -713,13 +735,35 @@ struct InlineChatView: View {
             return
         }
 
-        if aiChatPreset == .recipeIdeas {
+        let shouldHandleWithRecipeIdeasFlow: Bool = {
+            if aiChatPreset == .recipeIdeas {
+                return !autoActivatedRecipeIdeasMode || shouldAutoRouteToRecipeIdeas || shouldContinueRecipeIdeas
+            }
+            return shouldAutoRouteToRecipeIdeas || shouldContinueRecipeIdeas
+        }()
+
+        if shouldHandleWithRecipeIdeasFlow {
+            if shouldAutoRouteToRecipeIdeas {
+                autoActivatedRecipeIdeasMode = true
+                searchBarState?.aiChatPreset = .recipeIdeas
+            } else if shouldContinueRecipeIdeas && autoActivatedRecipeIdeasMode {
+                searchBarState?.aiChatPreset = .recipeIdeas
+            }
+            let shouldGenerateMoreIdeas = priorRecipeIdeasPayload != nil && isRecipeIdeasGenerateMorePrompt(normalizedPrompt)
+            if shouldAutoRouteToRecipeIdeas && !shouldContinueRecipeIdeas {
+                wizardPantryFilterOverride = nil
+            }
+            if shouldGenerateMoreIdeas {
+                exaSearchSeed += 1
+            } else {
+                exaSearchSeed = 0
+            }
             // Texto livre vira customQuery direto na EXA.
             Task {
                 await runRecipeIdeasSearch(
-                    occasion: nil,
-                    refinement: nil,
-                    customQuery: trimmedText,
+                    occasion: recipeIdeasContext.occasion,
+                    refinement: recipeIdeasContext.refinement,
+                    customQuery: recipeIdeasContext.customQuery,
                     conversationId: convId
                 )
             }
@@ -990,10 +1034,11 @@ struct InlineChatView: View {
         Você é o "Savoria", um assistente de cozinha inteligente e pessoal.
 
         ## Idioma da resposta (regra crítica)
-        - Detecte o idioma da MENSAGEM MAIS RECENTE do usuário (a última pergunta).
-        - Responda SEMPRE EXATAMENTE no mesmo idioma que o usuário usou.
-        - Se o usuário escrever em inglês, responda em inglês. Em espanhol, responda em espanhol. Em francês, em francês. E assim por diante.
-        - NÃO traduza ou troque de idioma no meio da conversa: se o usuário mudar de idioma, mude também.
+        - Use o idioma da mensagem mais recente do usuário quando ele estiver claro.
+        - Se a mensagem mais recente for curta ou ambígua, preserve o idioma usado no contexto recente da conversa.
+        - Use o idioma preferido e a região do iOS do usuário apenas como desempate quando a mensagem for ambígua.
+        - Responda SEMPRE no idioma resolvido para a conversa atual.
+        - NÃO traduza ou troque de idioma no meio da conversa, a menos que o usuário mude claramente de idioma.
         - Mantenha o tom amigável, conciso e útil.
 
         ## Formatação da resposta (regra crítica)
@@ -1335,39 +1380,303 @@ struct InlineChatView: View {
         text.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current).lowercased()
     }
 
+    private struct RecipeIdeasSearchContext {
+        let occasion: RecipeIdeaOccasion?
+        let refinement: String?
+        let customQuery: String?
+    }
+
+    private func shouldAutoActivateRecipeIdeas(for text: String) -> Bool {
+        shouldAutoActivateRecipeIdeas(forNormalizedText: normalized(text))
+    }
+
+    private func shouldAutoActivateRecipeIdeas(forNormalizedText normalizedPrompt: String) -> Bool {
+        guard !isRecipeManagementPrompt(normalizedPrompt) else { return false }
+
+        let hasExplicitRecipeCue = recipeIdeaExplicitCues.contains(where: normalizedPrompt.contains)
+        let hasExplorationCue = recipeIdeaExplorationCues.contains(where: normalizedPrompt.contains)
+        let hasRequestCue = recipeIdeaRequestCues.contains(where: normalizedPrompt.contains)
+        let hasHowToCue = recipeIdeaHowToCues.contains(where: normalizedPrompt.contains)
+        let hasOccasionCue = detectRecipeIdeaOccasion(in: normalizedPrompt) != nil
+        let hasFoodContextCue = recipeIdeaFoodContextCues.contains(where: normalizedPrompt.contains)
+
+        return hasExplicitRecipeCue ||
+            hasHowToCue ||
+            (hasRequestCue && (hasOccasionCue || hasFoodContextCue)) ||
+            (hasExplorationCue && (hasOccasionCue || hasFoodContextCue))
+    }
+
+    private func shouldContinueRecipeIdeasConversation(for normalizedText: String) -> Bool {
+        guard !isRecipeManagementPrompt(normalizedText),
+              lastRecipeIdeasResultsPayload() != nil else { return false }
+
+        if shouldAutoActivateRecipeIdeas(forNormalizedText: normalizedText) { return true }
+
+        let searchTokens = recipeIdeaSearchKeywords(from: normalizedText)
+        let isShortFollowUp = searchTokens.count <= 4
+        let hasFollowUpCue = recipeIdeaFollowUpCues.contains(where: normalizedText.contains)
+
+        return isShortFollowUp && hasFollowUpCue
+    }
+
+    private func resolvedRecipeIdeasSearchContext(
+        for text: String,
+        normalizedText: String? = nil,
+        fallbackPayload: ResultsPayload? = nil
+    ) -> RecipeIdeasSearchContext {
+        let normalizedPrompt = normalizedText ?? normalized(text)
+        let fallbackOccasion = fallbackPayload?.occasionRaw.flatMap(RecipeIdeaOccasion.init(rawValue:))
+        let occasion = detectRecipeIdeaOccasion(in: normalizedPrompt) ?? fallbackOccasion
+        let refinement = detectRecipeIdeaRefinement(in: normalizedPrompt, occasion: occasion) ?? fallbackPayload?.refinement
+        let customQuery: String?
+
+        if isRecipeIdeasGenerateMorePrompt(normalizedPrompt) {
+            let fallbackQuery = fallbackPayload?.customQuery?.trimmingCharacters(in: .whitespacesAndNewlines)
+            customQuery = fallbackQuery?.isEmpty == false ? fallbackQuery : nil
+        } else {
+            customQuery = text
+        }
+
+        return RecipeIdeasSearchContext(
+            occasion: occasion,
+            refinement: refinement,
+            customQuery: customQuery
+        )
+    }
+
+    private func detectRecipeIdeaOccasion(in normalizedText: String) -> RecipeIdeaOccasion? {
+        let occasionKeywords: [(RecipeIdeaOccasion, [String])] = [
+            (.cafeDaManha, ["cafe da manha", "breakfast", "brunch", "matinal"]),
+            (.almoco, ["almoco", "lunch", "prato principal"]),
+            (.jantar, ["jantar", "dinner", "supper"]),
+            (.lancheRapido, ["lanche", "lanchar", "snack"]),
+            (.drinks, ["drink", "drinks", "coquetel", "cocktail", "cocktails"]),
+            (.bebidas, ["bebida", "bebidas", "suco", "sucos", "smoothie", "smoothies", "vitamina", "vitaminas", "shake", "shakes", "cha", "cafe gelado"]),
+            (.sobremesa, ["sobremesa", "sobremesas", "doce", "doces", "dessert", "desserts", "bolo", "bolos"])
+        ]
+
+        for (occasion, keywords) in occasionKeywords {
+            if keywords.contains(where: normalizedText.contains) {
+                return occasion
+            }
+        }
+
+        return nil
+    }
+
+    private func detectRecipeIdeaRefinement(in normalizedText: String, occasion: RecipeIdeaOccasion?) -> String? {
+        let candidateLabels: [String]
+        if let occasion {
+            candidateLabels = occasion.refinements.filter { normalized($0) != "outro" }
+        } else {
+            candidateLabels = Array(
+                Set(
+                    RecipeIdeaOccasion.allCases
+                        .filter { $0 != .outro }
+                        .flatMap { $0.refinements }
+                        .filter { normalized($0) != "outro" }
+                )
+            )
+        }
+
+        let sortedCandidates = candidateLabels.sorted { normalized($0).count > normalized($1).count }
+        return sortedCandidates.first { label in
+            normalizedText.contains(normalized(label))
+        }
+    }
+
+    private func recipeIdeaSearchKeywords(from query: String) -> [String] {
+        let stopWords: Set<String> = [
+            "a", "as", "o", "os", "um", "uma", "uns", "umas", "de", "da", "do", "das", "dos", "e", "ou", "que", "com", "sem", "para", "pra", "por", "na", "no", "nas", "nos", "em", "me", "eu", "voce", "voces", "algo", "seja", "the", "and", "for", "with", "what", "can", "you", "que", "con", "sin", "para", "una", "uno", "las", "los", "les", "des", "pour", "avec", "mit", "und", "per", "che"
+        ]
+
+        return query
+            .components(separatedBy: CharacterSet.alphanumerics.inverted)
+            .map(normalized)
+            .filter { token in
+                token.count >= 3 && !stopWords.contains(token)
+            }
+    }
+
+    private var recipeIdeaExplicitCues: [String] {
+        [
+            "receita", "receitas",
+            "recipe", "recipes",
+            "receta", "recetas", "recette", "recettes", "rezept", "rezepte", "ricetta", "ricette",
+            "おすすめ", "提案", "レシピ"
+        ]
+    }
+
+    private var recipeIdeaExplorationCues: [String] {
+        [
+            "ideia", "ideias", "opcao", "opcoes", "sugestao", "sugestoes", "alternativa", "alternativas",
+            "idea", "ideas", "option", "options", "suggestion", "suggestions", "alternative", "alternatives",
+            "opcion", "opciones", "sugerencia", "sugerencias",
+            "idee", "idees",
+            "アイデア"
+        ]
+    }
+
+    private var recipeIdeaRequestCues: [String] {
+        [
+            "o que posso", "posso fazer", "posso cozinhar", "me sugira", "sugira", "me mostra", "me mostre", "quero um", "quero uma", "quero algo", "quero comer", "preciso de", "me de", "me passe", "me da", "me de ideias",
+            "what can", "can i make", "can i cook", "suggest", "show me", "i want a", "i want an", "i want something", "give me", "ideas for",
+            "que puedo", "puedo hacer", "sugiere", "muestrame", "quiero una", "quiero un", "ideas de",
+            "que puis-je", "suggere", "montre-moi", "je veux un", "je veux une", "idees de",
+            "was kann", "schlag", "zeig mir", "ich mochte", "ideen fur",
+            "cosa posso", "suggerisci", "mostrami", "voglio una", "voglio un", "idee per",
+            "何を", "おすすめ"
+        ]
+    }
+
+    private var recipeIdeaFoodContextCues: [String] {
+        [
+            "comer", "cozinhar", "preparar", "prato", "pratos", "refeicao", "refeicoes", "menu", "cardapio",
+            "meal", "meals", "dish", "dishes", "cook", "prepare", "menu",
+            "comida", "cocinar", "preparar", "plato", "platos",
+            "repas", "plat", "plats", "cuisiner", "preparer", "manger",
+            "essen", "gericht", "gerichte", "kochen", "zubereiten",
+            "pasto", "piatto", "piatti", "cucinare", "preparare", "mangiare",
+            "食事", "料理", "作る"
+        ]
+    }
+
+    private var recipeIdeaFollowUpCues: [String] {
+        [
+            "diferente", "diferentes", "outra", "outras", "mais", "mais ideias", "mais opcoes", "mais sugestoes", "alternativas", "outras ideias", "outras opcoes", "mais receitas",
+            "different", "different ones", "another", "others", "more", "more ideas", "more options", "alternatives", "other recipes",
+            "otra", "otras", "mas ideas", "mas opciones",
+            "autre", "autres", "plus d'idees", "plus d'options",
+            "andere", "mehr ideen", "mehr optionen", "alternativen",
+            "altra", "altre", "piu idee", "piu opzioni",
+            "別", "他", "もっと"
+        ]
+    }
+
+    private func isRecipeIdeasGenerateMorePrompt(_ normalizedText: String) -> Bool {
+        recipeIdeaFollowUpCues.contains(where: normalizedText.contains)
+    }
+
+    private var recipeIdeaHowToCues: [String] {
+        [
+            "como fazer", "como preparar", "how to make", "how to prepare",
+            "como hacer", "comment faire", "wie macht", "come fare", "作り方"
+        ]
+    }
+
     private func latestConversationUserText() -> String? {
         messages.last(where: { $0.role == .user })?.content
     }
 
+    private func lastRecipeIdeasResultsPayload() -> ResultsPayload? {
+        for message in messages.reversed() {
+            guard let kind = wizardSentinelKind(for: message) else { continue }
+            if case .results = kind {
+                return ResultsPayload.decode(message.content)
+            }
+        }
+        return nil
+    }
+
     private func responseLanguageSystemMessage(for text: String?) -> String {
         let language = detectedResponseLanguage(for: text)
+        let preferredLanguage = Locale.preferredLanguages.first ?? Locale.current.identifier
+        let regionCode = Locale.current.region?.identifier ?? "unknown"
         return """
         CRITICAL LANGUAGE RULE FOR THIS TURN:
         - Reply only in \(language.replyName).
-        - The user's latest message for this turn is in \(language.readableName) (\(language.code)).
-        - Do not answer in Portuguese unless the latest user message is in Portuguese.
+        - The resolved language for this turn is \(language.readableName) (\(language.code)).
+        - If the latest user message is short or ambiguous, keep the language already established in the recent conversation.
+        - The user's iOS preferred language is \(preferredLanguage) and the iOS region is \(regionCode).
+        - Only switch languages when the user clearly switched languages.
         - Keep the answer fully in \(language.replyName), including headings, bullets, and the closing sentence.
         """
     }
 
     private func detectedResponseLanguage(for text: String?) -> (code: String, readableName: String, replyName: String) {
         let sample = text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let conversationLanguage = conversationContextLanguage(excludingCurrentSample: sample)
+        let deviceLanguage = preferredDeviceResponseLanguage()
 
-        if !sample.isEmpty {
-            let recognizer = NLLanguageRecognizer()
-            recognizer.processString(sample)
-            if let detectedLanguage = recognizer.dominantLanguage {
-                return responseLanguageDescriptor(for: detectedLanguage.rawValue)
+        if let signal = detectedLanguageSignal(for: sample) {
+            let directLanguage = responseLanguageDescriptor(for: signal.code)
+            let tokenCount = sample.split(whereSeparator: { $0.isWhitespace || $0.isNewline }).count
+            let isShortOrAmbiguous = sample.count < 18 || tokenCount <= 2 || signal.confidence < 0.78
+
+            if !isShortOrAmbiguous {
+                return directLanguage
+            }
+
+            if let conversationLanguage {
+                return conversationLanguage
+            }
+
+            return deviceLanguage
+        }
+
+        if let conversationLanguage {
+            return conversationLanguage
+        }
+
+        return deviceLanguage
+    }
+
+    private func detectedLanguageSignal(for text: String) -> (code: String, confidence: Double)? {
+        let sample = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !sample.isEmpty else { return nil }
+
+        let recognizer = NLLanguageRecognizer()
+        recognizer.processString(sample)
+        let hypotheses = recognizer.languageHypotheses(withMaximum: 3)
+
+        if let best = hypotheses.max(by: { $0.value < $1.value }) {
+            return (best.key.rawValue, best.value)
+        }
+        if let dominantLanguage = recognizer.dominantLanguage {
+            return (dominantLanguage.rawValue, 0.5)
+        }
+        return nil
+    }
+
+    private func conversationContextLanguage(excludingCurrentSample currentSample: String) -> (code: String, readableName: String, replyName: String)? {
+        let normalizedCurrentSample = currentSample.trimmingCharacters(in: .whitespacesAndNewlines)
+        var scores: [String: Double] = [:]
+        var analyzedCount = 0
+
+        for message in messages.reversed() where message.role == .user {
+            let sample = message.content.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !sample.isEmpty else { continue }
+            if !normalizedCurrentSample.isEmpty && sample == normalizedCurrentSample {
+                continue
+            }
+            guard let signal = detectedLanguageSignal(for: sample) else { continue }
+
+            let tokenCount = sample.split(whereSeparator: { $0.isWhitespace || $0.isNewline }).count
+            let isUsefulContext = sample.count >= 12 || tokenCount >= 2 || signal.confidence >= 0.82
+            guard isUsefulContext else { continue }
+
+            let recencyWeight = max(1.0, 3.0 - Double(analyzedCount) * 0.5)
+            scores[signal.code, default: 0] += signal.confidence * recencyWeight
+            analyzedCount += 1
+
+            if analyzedCount >= 4 {
+                break
             }
         }
 
+        guard let best = scores.max(by: { $0.value < $1.value }) else { return nil }
+        return responseLanguageDescriptor(for: best.key)
+    }
+
+    private func preferredDeviceResponseLanguage() -> (code: String, readableName: String, replyName: String) {
         if let preferred = Locale.preferredLanguages.first {
             let locale = Locale(identifier: preferred)
             let code = locale.language.languageCode?.identifier ?? "en"
             return responseLanguageDescriptor(for: code)
         }
 
-        return responseLanguageDescriptor(for: "en")
+        let fallbackCode = Locale.current.language.languageCode?.identifier ?? "en"
+        return responseLanguageDescriptor(for: fallbackCode)
     }
 
     private func responseLanguageDescriptor(for rawCode: String) -> (code: String, readableName: String, replyName: String) {
@@ -1925,8 +2234,9 @@ struct InlineChatView: View {
         }
         if let refinement { keywords.append(normalized(refinement)) }
         if let customQuery {
-            customQuery.split(separator: " ").forEach { keywords.append(normalized(String($0))) }
+            keywords.append(contentsOf: recipeIdeaSearchKeywords(from: customQuery))
         }
+        keywords = Array(Set(keywords.filter { $0.count >= 3 }))
 
         let thresholdPercent = Double(settings?.recipeCompatibilityThresholdPercentValue ?? 80) / 100.0
 
