@@ -69,6 +69,7 @@
 		423C5938476CD36AE2C1D4D4 /* ItemDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D23D5730AFF637BAC6DCE1E /* ItemDatabase.swift */; };
 		427EC4BE15BDB470633438E8 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CD351710E6E853F0407AB7E /* SettingsView.swift */; };
 		430732A8C4F98B184B3BCE9A /* ItemEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A2B9A25959E9E24FA72DBF7 /* ItemEntry.swift */; };
+		434FE08CB7A24350448FF935 /* RecipeQuickIdeasGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 474577FFD4BE788DA550BB18 /* RecipeQuickIdeasGenerator.swift */; };
 		4605805727E8A059896FD4B4 /* ImageDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88F448E79C9A14ECE7D06604 /* ImageDownloader.swift */; };
 		464EEDE4D3E04A589F109ED3 /* UnifiedSearchBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFD9669D9EEC7E8ED456843E /* UnifiedSearchBar.swift */; };
 		46E5366F262E4FB7E1643E76 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 8563DC5FB3F28A03B91FEE4C /* PrivacyInfo.xcprivacy */; };
@@ -367,6 +368,7 @@
 		431593D600C41201D213FA71 /* FoodCameraPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodCameraPicker.swift; sourceTree = "<group>"; };
 		45656677AD3714E163ED9011 /* Telma-Bold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Telma-Bold.otf"; sourceTree = "<group>"; };
 		45890FB81F05FADA6EF03881 /* RecipeImportOrchestrator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeImportOrchestrator.swift; sourceTree = "<group>"; };
+		474577FFD4BE788DA550BB18 /* RecipeQuickIdeasGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeQuickIdeasGenerator.swift; sourceTree = "<group>"; };
 		4998806E0D06C1D40F262CA5 /* meta-ptbr.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "meta-ptbr.json"; sourceTree = "<group>"; };
 		4BBA1CA5A04B774EAAD63D2E /* BackupSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupSettingsView.swift; sourceTree = "<group>"; };
 		4C5880CFC6DCD2F43D3FA289 /* Boska-BlackItalic.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Boska-BlackItalic.otf"; sourceTree = "<group>"; };
@@ -806,6 +808,7 @@
 				5C5C9039EE1788895E60F468 /* EXARecipeIdeasService.swift */,
 				9F2EA589C249BEA8EA6153BF /* LLMProvider.swift */,
 				9356E8DED49AB482579FA115 /* OpenRouterClient.swift */,
+				474577FFD4BE788DA550BB18 /* RecipeQuickIdeasGenerator.swift */,
 				75AD97696B4183C30DFFE782 /* SupabaseClient.swift */,
 			);
 			path = AI;
@@ -1502,6 +1505,7 @@
 				A58212437C3440AE1B3DE672 /* RecipeImportSourcePicker.swift in Sources */,
 				E2D6C9413CB06B30E98ADF19 /* RecipeIngredientsEditor.swift in Sources */,
 				6C304E1EF911DF0758EFE27A /* RecipeOptionButtonsView.swift in Sources */,
+				434FE08CB7A24350448FF935 /* RecipeQuickIdeasGenerator.swift in Sources */,
 				09817140A56D70511D6D5226 /* RecipeRowView.swift in Sources */,
 				FB0E21FD1F256A5C68D4A542 /* RecipeStructurer+FoundationModels.swift in Sources */,
 				6250675CEA4E7D4A8CD09D48 /* RecipeStructurer.swift in Sources */,

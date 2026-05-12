@@ -8,6 +8,10 @@ struct RecipeDetailCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
+            // Hero (opcional) — usa heroImageURL quando disponível, senão tenta
+            // resolver um ícone do banco a partir do ingrediente principal.
+            heroSection
+
             // Header
             VStack(alignment: .leading, spacing: 4) {
                 Text(recipe.title)
@@ -126,5 +130,63 @@ struct RecipeDetailCard: View {
                 .strokeBorder(Color.accentColor.opacity(0.12), lineWidth: 1)
         }
         .padding(.horizontal, 16)
+    }
+
+    // MARK: - Hero
+
+    @ViewBuilder
+    private var heroSection: some View {
+        if let urlString = recipe.heroImageURL, let url = URL(string: urlString) {
+            AsyncImage(url: url) { phase in
+                switch phase {
+                case .success(let image):
+                    image.resizable().scaledToFill()
+                case .failure:
+                    heroFallback
+                case .empty:
+                    Color(.tertiarySystemBackground)
+                @unknown default:
+                    heroFallback
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 140)
+            .clipped()
+            .clipShape(.rect(topLeadingRadius: 16, topTrailingRadius: 16))
+        } else if let main = recipe.mainIngredient,
+                  !main.isEmpty,
+                  let icon = IconResolver.image(for: main) {
+            ZStack {
+                LinearGradient(
+                    colors: [Color.purple.opacity(0.18), Color.blue.opacity(0.18)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                Image(platformImage: icon)
+                    .resizable()
+                    .scaledToFit()
+                    .padding(20)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 120)
+            .clipShape(.rect(topLeadingRadius: 16, topTrailingRadius: 16))
+        }
+    }
+
+    private var heroFallback: some View {
+        ZStack {
+            LinearGradient(
+                colors: [Color.purple.opacity(0.18), Color.blue.opacity(0.18)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            Image(systemName: "sparkles")
+                .font(.title)
+                .foregroundStyle(.linearGradient(
+                    colors: [.purple, .blue],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                ))
+        }
     }
 }
