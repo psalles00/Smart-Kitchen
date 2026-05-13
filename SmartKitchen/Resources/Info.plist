@@ -24,6 +24,10 @@
 	<string>O Smart Kitchen usa a câmera para tirar fotos das suas receitas.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>O Smart Kitchen acessa a galeria para anexar fotos às suas receitas.</string>
+	<key>SUPABASE_ANON_KEY</key>
+	<string>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmY212ZGlqdmdlYWlodnd5c3NiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4ODAwMjEsImV4cCI6MjA5MjQ1NjAyMX0.Ffpszze5umpURnzNL_Fl3u7SFmjb_opQmWVPdpUjhiI</string>
+	<key>SUPABASE_URL</key>
+	<string>https://yfcmvdijvgeaihvwyssb.supabase.co</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>PlayfairDisplay.ttf</string>

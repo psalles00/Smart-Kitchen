@@ -850,7 +850,7 @@ struct InlineChatView: View {
 
     /// Sends an AI request without creating a visible user message.
     private func performInternalAIChat(instruction: String, conversationId: UUID, skipTools: Bool = false) async {
-        guard !apiKey.isEmpty else { return }
+        guard APIConfig.aiFeaturesAvailable else { return }
 
         var msgs = [[String: Any]]()
         let systemPrompt = buildSystemPrompt(includeInventoryContext: true)
@@ -877,7 +877,7 @@ struct InlineChatView: View {
     }
 
     private func performAIChat(latestUserMessageID: UUID, latestUserText: String) async {
-        guard !apiKey.isEmpty else {
+        guard APIConfig.aiFeaturesAvailable else {
             let convId = ensureConversation()
             insertMessage(ChatMessage(
                 role: .assistant,
@@ -2734,7 +2734,7 @@ struct InlineChatView: View {
         loadingId: UUID,
         conversationId: UUID
     ) async {
-        guard !apiKey.isEmpty else {
+        guard APIConfig.aiFeaturesAvailable else {
             await replaceLoadingWithError(loadingId: loadingId, conversationId: conversationId)
             return
         }

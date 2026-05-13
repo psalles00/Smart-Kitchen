@@ -1,12 +1,13 @@
 import Foundation
 import SwiftData
 
-/// Lightweight OpenAI Chat-Completions client with streaming & function-calling support.
+/// Lightweight chat client that prefers the Supabase Edge Function proxy and
+/// falls back to direct OpenAI only for local debug usage.
 @MainActor
 final class AIService: ObservableObject {
     @Published var isLoading = false
 
-    private let endpoint = URL(string: "https://api.openai.com/v1/chat/completions")!
+    private let directEndpoint = URL(string: "https://api.openai.com/v1/chat/completions")!
     private let model = "gpt-4.1-mini"
 
     // MARK: - Public
@@ -18,25 +19,66 @@ final class AIService: ObservableObject {
         tools: [[String: Any]]? = nil,
         apiKey: String
     ) async throws -> ChatCompletionResponse {
+        if let proxyURL = APIConfig.secureAIProxyURL, !APIConfig.supabaseAnonKey.isEmpty {
+            let proxyBody = try requestBodyData(messages: messages, tools: tools, includeModel: false)
+            return try await performRequest(
+                url: proxyURL,
+                headers: [
+                    "Content-Type": "application/json",
+                    "apikey": APIConfig.supabaseAnonKey,
+                    "Authorization": "Bearer \(APIConfig.supabaseAnonKey)"
+                ],
+                bodyData: proxyBody
+            )
+        }
+
         guard !apiKey.isEmpty else { throw AIError.missingAPIKey }
 
+        let directBody = try requestBodyData(messages: messages, tools: tools, includeModel: true)
+        return try await performRequest(
+            url: directEndpoint,
+            headers: [
+                "Content-Type": "application/json",
+                "Authorization": "Bearer \(apiKey)"
+            ],
+            bodyData: directBody
+        )
+    }
+
+    private func requestBodyData(
+        messages: [[String: Any]],
+        tools: [[String: Any]]?,
+        includeModel: Bool
+    ) throws -> Data {
         var body: [String: Any] = [
-            "model": model,
             "messages": messages
         ]
+
+        if includeModel {
+            body["model"] = model
+        }
+
         if let tools, !tools.isEmpty {
             body["tools"] = tools
             body["tool_choice"] = "auto"
         }
 
-        let data = try JSONSerialization.data(withJSONObject: body)
+        return try JSONSerialization.data(withJSONObject: body)
+    }
 
-        var request = URLRequest(url: endpoint)
+    private func performRequest(
+        url: URL,
+        headers: [String: String],
+        bodyData: Data
+    ) async throws -> ChatCompletionResponse {
+        var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-        request.httpBody = data
+        request.httpBody = bodyData
         request.timeoutInterval = 60
+
+        for (header, value) in headers {
+            request.setValue(value, forHTTPHeaderField: header)
+        }
 
         isLoading = true
         defer { isLoading = false }
@@ -51,6 +93,10 @@ final class AIService: ObservableObject {
             throw AIError.apiError(statusCode: http.statusCode, message: errorBody)
         }
 
+        return try parseChatCompletionResponse(from: responseData)
+    }
+
+    private func parseChatCompletionResponse(from responseData: Data) throws -> ChatCompletionResponse {
         guard let json = try JSONSerialization.jsonObject(with: responseData) as? [String: Any],
               let choices = json["choices"] as? [[String: Any]],
               let firstChoice = choices.first,

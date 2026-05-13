@@ -28,6 +28,8 @@ targets:
         UILaunchScreen: {}
         NSCameraUsageDescription: O Smart Kitchen usa a câmera para tirar fotos das suas receitas.
         NSPhotoLibraryUsageDescription: O Smart Kitchen acessa a galeria para anexar fotos às suas receitas.
+        SUPABASE_URL: https://yfcmvdijvgeaihvwyssb.supabase.co
+          SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmY212ZGlqdmdlYWlodnd5c3NiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4ODAwMjEsImV4cCI6MjA5MjQ1NjAyMX0.Ffpszze5umpURnzNL_Fl3u7SFmjb_opQmWVPdpUjhiI"
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
         ITSAppUsesNonExemptEncryption: false

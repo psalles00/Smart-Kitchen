@@ -259,7 +259,7 @@ struct AssistantView: View {
     }
 
     private func performAIChat(latestUserMessageID: UUID, latestUserText: String) async {
-        guard !apiKey.isEmpty else {
+        guard APIConfig.aiFeaturesAvailable else {
             let errorMsg = ChatMessage(
                 role: .assistant,
                 content: "⚠️ \(APIConfig.missingSecureConfigurationMessage)"
