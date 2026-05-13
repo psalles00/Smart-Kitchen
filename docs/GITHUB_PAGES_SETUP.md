@@ -9,8 +9,6 @@ Por que faz sentido aqui:
 - As URLs podem ser usadas direto no App Store Connect.
 
 ## Opção mais simples
-git checkout main
-git pull origin main
 1. Suba este repositório para o GitHub.
 2. Abra o repositório no GitHub.
 3. Vá em **Settings** > **Pages**.
@@ -26,6 +24,21 @@ Depois disso, as URLs padrão ficam no formato:
 - `https://SEU-USUARIO.github.io/NOME-DO-REPO/terms/`
 
 Essas duas URLs já podem ser colocadas no App Store Connect.
+
+## Status atual deste repositório
+
+- Repositório: `https://github.com/psalles00/Smart-Kitchen`
+- Site base do Pages: `https://psalles00.github.io/Smart-Kitchen/`
+- Privacy Policy: `https://psalles00.github.io/Smart-Kitchen/privacy/`
+- Terms of Use: `https://psalles00.github.io/Smart-Kitchen/terms/`
+
+Comandos úteis para conferir o deploy:
+
+```bash
+gh api /repos/psalles00/Smart-Kitchen/pages/builds
+curl -I -L --max-time 20 https://psalles00.github.io/Smart-Kitchen/privacy/
+curl -I -L --max-time 20 https://psalles00.github.io/Smart-Kitchen/terms/
+```
 
 ## Se o repositório for privado
 
