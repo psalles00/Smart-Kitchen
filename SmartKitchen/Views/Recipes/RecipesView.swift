@@ -52,6 +52,7 @@ struct RecipesView: View {
     @State private var showsInlineTitle = false
     @State private var editingRecipe: RecipeSelection?
     @State private var showCompatibleOnly = false
+    @State private var showFavoritesOnly = false
     @State private var isShowingCadernos = false
     @State private var showNotebookManager = false
     @State private var contentResetToken: Int = 0
@@ -124,6 +125,7 @@ struct RecipesView: View {
             hasher.combine(recipe.prepTime)
             hasher.combine(recipe.cookTime)
             hasher.combine(recipe.difficulty.rawValue)
+            hasher.combine(recipe.isFavorite)
             hasher.combine(recipe.tags.count)
             for tag in recipe.tags {
                 hasher.combine(tag)
@@ -132,6 +134,7 @@ struct RecipesView: View {
         hasher.combine(searchBarState.searchText)
         hasher.combine(selectedCategory ?? "")
         hasher.combine(showCompatibleOnly)
+        hasher.combine(showFavoritesOnly)
         hasher.combine(sortOption.rawValue)
         hasher.combine(lastCompatibilityInputsKey)
         hasher.combine(recipeCategoriesDisplaySignature)
@@ -338,6 +341,9 @@ struct RecipesView: View {
             refreshRecipeProjectionsIfNeeded()
         }
         .onChange(of: showCompatibleOnly) { _, _ in
+            refreshRecipeProjectionsIfNeeded()
+        }
+        .onChange(of: showFavoritesOnly) { _, _ in
             refreshRecipeProjectionsIfNeeded()
         }
         .onChange(of: sortOption) { _, _ in
@@ -580,6 +586,10 @@ struct RecipesView: View {
 
         if showCompatibleOnly {
             result = result.filter { (compatibilities[$0.id]?.matchedIngredients ?? 0) > 0 }
+        }
+
+        if showFavoritesOnly {
+            result = result.filter(\.isFavorite)
         }
 
         let sortedRecipes = sortRecipes(result)
@@ -1100,6 +1110,12 @@ struct RecipesView: View {
                     showCompatibleOnly.toggle()
                 } label: {
                     Label("Mostrar só compatíveis", systemImage: showCompatibleOnly ? "checkmark.circle.fill" : "circle")
+                }
+
+                Button {
+                    showFavoritesOnly.toggle()
+                } label: {
+                    Label("Mostrar só favoritas", systemImage: showFavoritesOnly ? "checkmark.circle.fill" : "circle")
                 }
             }
         }
