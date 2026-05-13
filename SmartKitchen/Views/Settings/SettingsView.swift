@@ -21,6 +21,11 @@ struct SettingsView: View {
         return "SmartKitchen-Backup-\(formatter.string(from: .now))"
     }
 
+    private enum LegalDocumentLinks {
+        static let privacyPolicy = URL(string: "https://psalles00.github.io/Smart-Kitchen/privacy/")
+        static let termsOfUse = URL(string: "https://psalles00.github.io/Smart-Kitchen/terms/")
+    }
+
     var body: some View {
         Form {
             // MARK: - Geral
@@ -123,6 +128,33 @@ struct SettingsView: View {
                 }
             }
 
+            // MARK: - Legal
+            Section {
+                if let privacyPolicyURL = LegalDocumentLinks.privacyPolicy {
+                    Link(destination: privacyPolicyURL) {
+                        settingsLinkRow(
+                            title: "Política de Privacidade",
+                            subtitle: "Como seus dados são usados e compartilhados",
+                            systemImage: "hand.raised.fill"
+                        )
+                    }
+                }
+
+                if let termsOfUseURL = LegalDocumentLinks.termsOfUse {
+                    Link(destination: termsOfUseURL) {
+                        settingsLinkRow(
+                            title: "Termos de Uso",
+                            subtitle: "Assinatura, cobrança e regras do app",
+                            systemImage: "doc.text.fill"
+                        )
+                    }
+                }
+            } header: {
+                Text("Legal")
+            } footer: {
+                Text("Os documentos legais abrem no navegador padrão.")
+            }
+
             // MARK: - Sobre
             Section("Sobre") {
                 LabeledContent("Versão") {
@@ -213,6 +245,26 @@ struct SettingsView: View {
         alertTitle = title
         alertMessage = message
         showAlert = true
+    }
+
+    private func settingsLinkRow(title: String, subtitle: String, systemImage: String) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: systemImage)
+                .foregroundStyle(Color.accentColor)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .foregroundStyle(.primary)
+                Text(subtitle)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer(minLength: 12)
+
+            Image(systemName: "arrow.up.right.square")
+                .foregroundStyle(.secondary)
+        }
     }
 }
 
