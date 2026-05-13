@@ -36,6 +36,12 @@ O `project_id` em `supabase/config.toml` já foi ajustado para `yfcmvdijvgeaihvw
 supabase secrets set OPENAI_API_KEY=sua_chave_aqui OPENAI_MODEL=gpt-4.1-mini
 ```
 
+Ou use o script local que pede a chave sem ecoar no terminal:
+
+```bash
+./scripts/supabase/set_openai_secret.sh
+```
+
 4. Publique a função.
 
 ```bash
