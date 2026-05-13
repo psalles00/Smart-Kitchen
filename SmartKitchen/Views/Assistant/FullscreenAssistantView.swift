@@ -262,7 +262,7 @@ struct FullscreenAssistantView: View {
                 .foregroundStyle(Color.primary)
                 .lineLimit(1)
 
-            Spacer()
+            Spacer(minLength: 0)
 
             if searchBarState.mode == .aiChat {
                 #if os(macOS)
@@ -331,18 +331,17 @@ struct FullscreenAssistantView: View {
                     #endif
             }
 
-            Button {
-                searchBarState.dismiss()
-            } label: {
-                Image(systemName: "xmark.circle.fill")
-                    .font(.system(size: 22))
-                    .symbolRenderingMode(.hierarchical)
-                    .foregroundStyle(.secondary)
+            if presentation != .tab {
+                Button {
+                    searchBarState.dismiss()
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 22))
+                        .symbolRenderingMode(.hierarchical)
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
-            .opacity(presentation == .tab ? 0 : 1)
-            .allowsHitTesting(presentation != .tab)
-            .frame(width: presentation == .tab ? 0 : nil)
         }
     }
 

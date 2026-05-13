@@ -55,9 +55,17 @@ struct UnifiedSearchBar: View {
 #endif
     }
 
+    private var searchPromptColor: Color {
+#if os(macOS)
+        .white.opacity(0.84)
+#else
+        Color.primary.opacity(0.74)
+#endif
+    }
+
     private var searchPrompt: Text {
         let prompt = Text(state.mode == .aiChat ? state.aiChatPreset.searchPlaceholder : String(localized: "Assistente"))
-        return prompt.foregroundStyle(.secondary)
+        return prompt.foregroundStyle(searchPromptColor)
     }
 
     var body: some View {

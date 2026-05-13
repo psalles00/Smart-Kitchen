@@ -2989,21 +2989,25 @@ private struct RecipeCreationProgressField: View {
                     .tint(Color.accentColor)
             }
 
-            HStack(spacing: 8) {
-                ForEach(0..<3, id: \.self) { index in
+            ZStack(alignment: .leading) {
+                Capsule()
+                    .fill(Color.accentColor.opacity(0.12))
+                    .frame(height: 7)
+
+                GeometryReader { proxy in
+                    let fillWidth = max(proxy.size.width * 0.34, 56)
+
                     Capsule()
-                        .fill(Color.accentColor.opacity(0.22))
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 7)
-                        .scaleEffect(x: animateBars ? 1 : 0.45, y: 1, anchor: .leading)
-                        .opacity(animateBars ? 1 : 0.55)
+                        .fill(Color.accentColor.opacity(0.28))
+                        .frame(width: fillWidth, height: 7)
+                        .offset(x: animateBars ? max(proxy.size.width - fillWidth, 0) : 0)
                         .animation(
-                            .easeInOut(duration: 0.8)
-                                .repeatForever(autoreverses: true)
-                                .delay(Double(index) * 0.12),
+                            .easeInOut(duration: 0.9)
+                                .repeatForever(autoreverses: true),
                             value: animateBars
                         )
                 }
+                .frame(height: 7)
             }
         }
         .padding(14)
