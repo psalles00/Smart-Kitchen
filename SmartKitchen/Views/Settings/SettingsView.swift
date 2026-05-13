@@ -26,6 +26,10 @@ struct SettingsView: View {
         static let termsOfUse = URL(string: "https://psalles00.github.io/Smart-Kitchen/terms/")
     }
 
+    private enum SupportLinks {
+        static let email = URL(string: "mailto:pedrosalles00@gmail.com")
+    }
+
     var body: some View {
         Form {
             // MARK: - Geral
@@ -129,6 +133,22 @@ struct SettingsView: View {
             }
 
             // MARK: - Legal
+            Section {
+                if let supportEmailURL = SupportLinks.email {
+                    Link(destination: supportEmailURL) {
+                        settingsLinkRow(
+                            title: "Contato e suporte",
+                            subtitle: "pedrosalles00@gmail.com",
+                            systemImage: "envelope.fill"
+                        )
+                    }
+                }
+            } header: {
+                Text("Suporte")
+            } footer: {
+                Text("Abre seu app de e-mail padrão para falar com o suporte.")
+            }
+
             Section {
                 if let privacyPolicyURL = LegalDocumentLinks.privacyPolicy {
                     Link(destination: privacyPolicyURL) {

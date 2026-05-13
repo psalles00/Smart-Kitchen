@@ -80,5 +80,5 @@ Depois disso, as URLs finais podem ficar assim:
 
 Antes de publicar, confirme estes dois pontos:
 
-1. O e-mail `support@savoria.app` existe e recebe mensagens.
+1. O e-mail `pedrosalles00@gmail.com` existe e recebe mensagens.
 2. O domínio final que você vai usar no App Store Connect já abre sem erro.
