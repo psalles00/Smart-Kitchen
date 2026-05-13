@@ -78,18 +78,6 @@ final class EXARecipeIdeasService {
         }
     }
 
-    /// Domínios brasileiros de receita que normalmente trazem boas estruturas e imagens.
-    private let preferredDomains: [String] = [
-        "tudogostoso.com.br",
-        "panelinha.com.br",
-        "receitas.globo.com",
-        "cybercook.com.br",
-        "receiteria.com.br",
-        "guiadacozinha.com.br",
-        "comidasebebidas.uol.com.br",
-        "anamariabraga.globo.com"
-    ]
-
     // MARK: Public
 
     /// Busca novas ideias de receitas.
@@ -99,6 +87,7 @@ final class EXARecipeIdeasService {
         customQuery: String?,
         pantryItems: [String],
         filterByPantry: Bool,
+        language: AppLanguage,
         limit: Int = 6,
         seed: Int = 0
     ) async throws -> [RecipeIdeaResult] {
@@ -108,6 +97,7 @@ final class EXARecipeIdeasService {
             customQuery: customQuery,
             pantryItems: pantryItems,
             filterByPantry: filterByPantry,
+            language: language,
             seed: seed
         )
 
@@ -124,6 +114,7 @@ final class EXARecipeIdeasService {
             customQuery: customQuery,
             pantryItems: pantryItems,
             filterByPantry: filterByPantry,
+            language: language,
             seed: seed
         )
 
@@ -138,6 +129,7 @@ final class EXARecipeIdeasService {
             limit: limit,
             apiKey: apiKey,
             preferDomains: true,
+                language: language,
             mainIngredientHint: hint
         )
 
@@ -148,18 +140,25 @@ final class EXARecipeIdeasService {
                 limit: limit,
                 apiKey: apiKey,
                 preferDomains: false,
+                language: language,
                 mainIngredientHint: hint
             )
         }
 
         // Fallback 2: query mais simples (apenas ocasião/refinamento).
         if results.isEmpty {
-            let simple = buildSimpleQuery(occasion: occasion, refinement: refinement, customQuery: customQuery)
+            let simple = buildSimpleQuery(
+                occasion: occasion,
+                refinement: refinement,
+                customQuery: customQuery,
+                language: language
+            )
             results = try await performSearch(
                 query: simple,
                 limit: limit,
                 apiKey: apiKey,
                 preferDomains: false,
+                language: language,
                 mainIngredientHint: nil
             )
         }
@@ -177,16 +176,16 @@ final class EXARecipeIdeasService {
         limit: Int,
         apiKey: String,
         preferDomains: Bool,
+        language: AppLanguage,
         mainIngredientHint: String?
     ) async throws -> [RecipeIdeaResult] {
         var body: [String: Any] = [
             "query": query,
             "type": "auto",
             "numResults": max(limit, 6),
-            "userLocation": "BR",
             "contents": [
                 "summary": [
-                    "query": "Resuma esta receita em até 90 caracteres em português, focando no prato e seu estilo."
+                    "query": "Summarize this recipe in up to 90 characters in \(language.aiModelLanguageName), focusing on the dish and its style."
                 ],
                 "text": [
                     "maxCharacters": 6000,
@@ -194,14 +193,18 @@ final class EXARecipeIdeasService {
                 ]
             ]
         ]
-        if preferDomains {
-            body["includeDomains"] = preferredDomains
+        if let userLocation = language.exaUserLocationCode {
+            body["userLocation"] = userLocation
+        }
+        if preferDomains, !language.exaPreferredDomains.isEmpty {
+            body["includeDomains"] = language.exaPreferredDomains
         }
 
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
+        request.setValue(AppLocalization(language: language).acceptLanguageHeader, forHTTPHeaderField: "Accept-Language")
         request.timeoutInterval = 30
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
@@ -254,9 +257,10 @@ final class EXARecipeIdeasService {
         customQuery: String?,
         pantryItems: [String],
         filterByPantry: Bool,
+        language: AppLanguage,
         seed: Int
     ) -> String {
-        var parts: [String] = ["receita"]
+        var parts: [String] = [language.recipeSearchKeyword]
         if let occasion, occasion != .outro {
             parts.append(occasion.label.lowercased())
         }
@@ -268,7 +272,7 @@ final class EXARecipeIdeasService {
         }
         if filterByPantry, !pantryItems.isEmpty {
             let topItems = Array(pantryItems.prefix(6)).joined(separator: ", ")
-            parts.append("com \(topItems)")
+            parts.append("\(language.recipeIngredientJoiner) \(topItems)")
         }
         if seed > 0 {
             parts.append("v\(seed + 1)")
@@ -279,9 +283,10 @@ final class EXARecipeIdeasService {
     private func buildSimpleQuery(
         occasion: RecipeIdeaOccasion?,
         refinement: String?,
-        customQuery: String?
+        customQuery: String?,
+        language: AppLanguage
     ) -> String {
-        var parts: [String] = ["receita"]
+        var parts: [String] = [language.recipeSearchKeyword]
         if let occasion, occasion != .outro {
             parts.append(occasion.label.lowercased())
         }
@@ -334,6 +339,7 @@ final class EXARecipeIdeasService {
         customQuery: String?,
         pantryItems: [String],
         filterByPantry: Bool,
+        language: AppLanguage,
         seed: Int
     ) -> String {
         let pantryHash = pantryItems
@@ -342,6 +348,7 @@ final class EXARecipeIdeasService {
             .joined(separator: "|")
         return [
             "v2",
+            language.rawValue,
             occasion?.rawValue ?? "-",
             refinement ?? "-",
             customQuery ?? "-",

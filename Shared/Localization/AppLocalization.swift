@@ -74,6 +74,96 @@ enum AppLanguage: String, CaseIterable, Sendable {
         }
     }
 
+    var aiModelLanguageName: String {
+        switch self {
+        case .ptBR:
+            return "Brazilian Portuguese"
+        case .en:
+            return "English"
+        case .es:
+            return "Spanish"
+        case .fr:
+            return "French"
+        case .de:
+            return "German"
+        case .it:
+            return "Italian"
+        case .ja:
+            return "Japanese"
+        }
+    }
+
+    var recipeSearchKeyword: String {
+        switch self {
+        case .ptBR:
+            return "receita"
+        case .en:
+            return "recipe"
+        case .es:
+            return "receta"
+        case .fr:
+            return "recette"
+        case .de:
+            return "rezept"
+        case .it:
+            return "ricetta"
+        case .ja:
+            return "レシピ"
+        }
+    }
+
+    var recipeIngredientJoiner: String {
+        switch self {
+        case .ptBR:
+            return "com"
+        case .en:
+            return "with"
+        case .es:
+            return "con"
+        case .fr:
+            return "avec"
+        case .de:
+            return "mit"
+        case .it:
+            return "con"
+        case .ja:
+            return "with"
+        }
+    }
+
+    var exaPreferredDomains: [String] {
+        switch self {
+        case .ptBR:
+            return [
+                "tudogostoso.com.br",
+                "panelinha.com.br",
+                "receitas.globo.com",
+                "cybercook.com.br",
+                "receiteria.com.br",
+                "guiadacozinha.com.br",
+                "comidasebebidas.uol.com.br",
+                "anamariabraga.globo.com"
+            ]
+        case .en:
+            return [
+                "allrecipes.com",
+                "simplyrecipes.com",
+                "foodnetwork.com",
+                "delish.com",
+                "tasteofhome.com",
+                "bbcgoodfood.com",
+                "seriouseats.com",
+                "thekitchn.com"
+            ]
+        case .es, .fr, .de, .it, .ja:
+            return []
+        }
+    }
+
+    var exaUserLocationCode: String? {
+        locale.region?.identifier
+    }
+
     static func resolve(identifier: String) -> AppLanguage? {
         let normalized = identifier
             .replacingOccurrences(of: "_", with: "-")
@@ -143,8 +233,13 @@ struct AppLocalization: Sendable {
         }.joined(separator: ",")
     }
 
-    static func current(preferredLanguages: [String] = Locale.preferredLanguages) -> AppLocalization {
-        for identifier in preferredLanguages {
+    static func current(
+        preferredLanguages: [String] = Locale.preferredLanguages,
+        bundlePreferredLanguages: [String] = Bundle.main.preferredLocalizations
+    ) -> AppLocalization {
+        let candidates = (bundlePreferredLanguages + preferredLanguages).uniquePreservingOrder()
+
+        for identifier in candidates {
             if let language = AppLanguage.resolve(identifier: identifier) {
                 return AppLocalization(language: language)
             }

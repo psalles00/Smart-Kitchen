@@ -1115,7 +1115,7 @@ struct ContentView: View {
         // the AI page navigation state inside the assistant tab must survive
         // tab switches so the user can come back to where they were.
         if newValue != .commandBar && searchBarState.isVisible {
-            searchBarState.defocusTrigger += 1
+            searchBarState.resignFocus()
             searchBarState.isVisible = false
         }
 

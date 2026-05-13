@@ -42,7 +42,8 @@ struct RecipeCardMessage: View {
     @Query(sort: \Recipe.name) private var allRecipes: [Recipe]
     @Query(filter: #Predicate<UnifiedItem> { $0.isPantry }) private var pantryItems: [UnifiedItem]
 
-    private let cardSize: CGFloat = 160
+    private let cardWidth: CGFloat = 160
+    private let cardHeight: CGFloat = 154
 
     private var pantryNames: [String] {
         pantryItems.map {
@@ -89,7 +90,7 @@ struct RecipeCardMessage: View {
                     )
                 }
             }
-            .frame(width: cardSize, height: cardSize)
+            .frame(width: cardWidth, height: cardHeight)
             .clipped()
 
             // Gradient overlay
@@ -113,9 +114,6 @@ struct RecipeCardMessage: View {
                         Label("\(recipe.totalTime) min", systemImage: "clock")
                     }
                     Label(recipe.difficulty.displayName, systemImage: recipe.difficulty.icon)
-                    if let kcal = recipe.calories {
-                        Label("\(kcal) kcal", systemImage: "flame")
-                    }
                 }
                 .font(.caption2)
                 .foregroundStyle(.white.opacity(0.85))
@@ -136,7 +134,7 @@ struct RecipeCardMessage: View {
             }
             .padding(10)
         }
-        .frame(width: cardSize, height: cardSize)
+        .frame(width: cardWidth, height: cardHeight)
         .clipShape(.rect(cornerRadius: 14))
     }
 }

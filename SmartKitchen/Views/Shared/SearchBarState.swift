@@ -90,6 +90,7 @@ final class SearchBarState: ObservableObject {
 
     private var debounceCancellable: AnyCancellable?
     private var emptyResetCancellable: AnyCancellable?
+    private var focusRequestSession: Int = 0
 
     init() {
         // PERF: Debounce typing by 1000ms so heavy consumers (recipe filter,
@@ -118,6 +119,9 @@ final class SearchBarState: ObservableObject {
             mode = requestedMode
         }
 
+        focusRequestSession += 1
+        let currentFocusSession = focusRequestSession
+
         guard !isVisible else {
             focusTrigger += 1
             return
@@ -131,19 +135,19 @@ final class SearchBarState: ObservableObject {
 
         // Retry after the morph and once more after any tab/navigation switch
         // triggered by opening the assistant from another page.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) { [weak self] in
-            guard let self, self.isVisible else { return }
-            self.focusTrigger += 1
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.28) { [weak self] in
-            guard let self, self.isVisible else { return }
-            self.focusTrigger += 1
-        }
+        scheduleFocusRetry(after: 0.12, session: currentFocusSession)
+        scheduleFocusRetry(after: 0.28, session: currentFocusSession)
+    }
+
+    /// Removes focus from the search field without dismissing the assistant.
+    func resignFocus() {
+        focusRequestSession += 1
+        defocusTrigger += 1
     }
 
     /// Dismiss the search bar, clear text, and reset mode.
     func dismiss() {
-        defocusTrigger += 1
+        resignFocus()
         withAnimation(.snappy(duration: 0.18, extraBounce: 0)) {
             isVisible = false
         }
@@ -158,7 +162,7 @@ final class SearchBarState: ObservableObject {
 
     /// Called when user selects a search result — immediate dismiss.
     func selectResult() {
-        defocusTrigger += 1
+        resignFocus()
         isVisible = false
         searchText = ""
         debouncedSearchText = ""
@@ -181,5 +185,12 @@ final class SearchBarState: ObservableObject {
         guard !trimmedText.isEmpty else { return }
         pendingChatMessageRequest = PendingChatMessageRequest(text: trimmedText, source: source)
         print("[AIModeUI] Chat send requested from \(source). requestId=\(pendingChatMessageRequest?.id.uuidString ?? "nil")")
+    }
+
+    private func scheduleFocusRetry(after delay: TimeInterval, session: Int) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+            guard let self, self.isVisible, self.focusRequestSession == session else { return }
+            self.focusTrigger += 1
+        }
     }
 }

@@ -230,6 +230,22 @@ struct RecipeIdeaSuggestionCard: View {
     let mainIngredient: String?
     let onTap: () -> Void
 
+    private var metadataLine: String? {
+        let trimmedSummary = summary?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedSourceHost = sourceHost?.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        switch (trimmedSummary, trimmedSourceHost) {
+        case let (summary?, source?) where !summary.isEmpty && !source.isEmpty:
+            return "\(summary) · \(source)"
+        case let (summary?, _) where !summary.isEmpty:
+            return summary
+        case let (_, source?) where !source.isEmpty:
+            return source
+        default:
+            return nil
+        }
+    }
+
     var body: some View {
         Button(action: onTap) {
             HStack(alignment: .center, spacing: 10) {
@@ -239,43 +255,32 @@ struct RecipeIdeaSuggestionCard: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
-                        .font(.callout.weight(.semibold))
+                        .font(.footnote.weight(.medium))
                         .foregroundStyle(.primary)
                         .lineLimit(1)
                         .multilineTextAlignment(.leading)
-                    if let summary, !summary.isEmpty {
-                        Text(summary)
+                    if let metadataLine {
+                        Text(metadataLine)
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
                             .multilineTextAlignment(.leading)
                     }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
 
                 Spacer(minLength: 0)
 
-                HStack(spacing: 6) {
-                    if let sourceHost, !sourceHost.isEmpty {
-                        Text(sourceHost)
-                            .font(.caption2.weight(.medium))
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                    }
-
-                    Image(systemName: "chevron.right")
-                        .font(.caption2.weight(.bold))
-                        .foregroundStyle(.tertiary)
-                }
+                Image(systemName: "chevron.right")
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(.tertiary)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
             .background(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(Color(.tertiarySystemBackground))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .strokeBorder(Color.primary.opacity(0.05), lineWidth: 1)
+                    .fill(Color(.secondarySystemBackground))
             )
         }
         .buttonStyle(.plain)

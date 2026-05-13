@@ -28,6 +28,7 @@ final class RecipeQuickIdeasGenerator {
         occasion: RecipeIdeaOccasion?,
         refinement: String?,
         customQuery: String?,
+        language: AppLanguage,
         limit: Int = 10
     ) async -> [RecipeQuickIdea] {
         let apiKey = APIConfig.openAIAPIKey
@@ -38,21 +39,22 @@ final class RecipeQuickIdeasGenerator {
 
         var contextLines: [String] = []
         if let occasion {
-            contextLines.append("Ocasião: \(occasion.label)")
+            contextLines.append("Occasion: \(occasion.label)")
         }
         if let refinement, !refinement.isEmpty {
-            contextLines.append("Refinamento: \(refinement)")
+            contextLines.append("Refinement: \(refinement)")
         }
         if let customQuery, !customQuery.isEmpty {
-            contextLines.append("Pedido do usuário: \(customQuery)")
+            contextLines.append("User request: \(customQuery)")
         }
-        let context = contextLines.isEmpty ? "" : "\n\nContexto:\n" + contextLines.joined(separator: "\n")
+        let context = contextLines.isEmpty ? "" : "\n\nContext:\n" + contextLines.joined(separator: "\n")
 
         let system = buildSystemPrompt(
             generationLimit: generationLimit,
             occasion: occasion,
             refinement: refinement,
-            customQuery: customQuery
+            customQuery: customQuery,
+            language: language
         )
 
         let user = """
@@ -65,7 +67,7 @@ final class RecipeQuickIdeasGenerator {
         ]
 
         do {
-            let response = try await sendJSONChat(messages: messages, apiKey: apiKey)
+            let response = try await sendJSONChat(messages: messages, apiKey: apiKey, language: language)
             guard let content = response.content,
                   let data = content.data(using: .utf8),
                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
@@ -110,7 +112,8 @@ final class RecipeQuickIdeasGenerator {
         generationLimit: Int,
         occasion: RecipeIdeaOccasion?,
         refinement: String?,
-        customQuery: String?
+        customQuery: String?,
+        language: AppLanguage
     ) -> String {
         var rules: [String] = [
             "You generate quick recipe ideas. Reply ONLY with a JSON object of the form:",
@@ -119,7 +122,8 @@ final class RecipeQuickIdeasGenerator {
             "- Generate up to \(generationLimit) ideas. Prefer a diverse set.",
             "- Every recipe must use ONLY ingredients from the user's pantry. Never include any ingredient outside the pantry.",
             "- Match the user's requested dish type and eating occasion, not just pantry popularity.",
-            "- Keep titles short (max 4 words) in the user's language.",
+            "- The target language for every title is \(language.aiModelLanguageName).",
+            "- Keep titles short (max 4 words) and write them only in \(language.aiModelLanguageName).",
             "- Pick simple, fast recipes.",
             "- \"mainIngredient\" must be a single pantry item name from the list (used to render an icon).",
             "- No extra commentary, no markdown, no code fences."
@@ -380,7 +384,8 @@ final class RecipeQuickIdeasGenerator {
     /// Chamada dedicada que pede `response_format: json_object` à OpenAI.
     private func sendJSONChat(
         messages: [[String: Any]],
-        apiKey: String
+        apiKey: String,
+        language: AppLanguage
     ) async throws -> ChatCompletionResponse {
         let endpoint = URL(string: "https://api.openai.com/v1/chat/completions")!
         let body: [String: Any] = [
@@ -395,6 +400,7 @@ final class RecipeQuickIdeasGenerator {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue(AppLocalization(language: language).acceptLanguageHeader, forHTTPHeaderField: "Accept-Language")
         request.httpBody = data
         request.timeoutInterval = 30
 

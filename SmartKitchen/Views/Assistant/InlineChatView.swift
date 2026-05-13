@@ -1697,6 +1697,24 @@ struct InlineChatView: View {
         return nil
     }
 
+    private func recipeIdeasTargetLanguage(for text: String?) -> AppLanguage {
+        let appLanguage = AppLocalization.current().language
+        let sample = text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        guard !sample.isEmpty,
+              let signal = detectedLanguageSignal(for: sample),
+              let promptLanguage = AppLanguage.resolve(identifier: signal.code) else {
+            return appLanguage
+        }
+
+        if promptLanguage == appLanguage {
+            return promptLanguage
+        }
+
+        let tokenCount = sample.split(whereSeparator: { $0.isWhitespace || $0.isNewline }).count
+        let hasReliablePromptSignal = signal.confidence >= 0.9 || tokenCount >= 2 || sample.count >= 12
+        return hasReliablePromptSignal ? promptLanguage : appLanguage
+    }
+
     private func conversationContextLanguage(excludingCurrentSample currentSample: String) -> (code: String, readableName: String, replyName: String)? {
         let normalizedCurrentSample = currentSample.trimmingCharacters(in: .whitespacesAndNewlines)
         var scores: [String: Double] = [:]
@@ -2261,6 +2279,7 @@ struct InlineChatView: View {
         let pantryItems = (try? modelContext.fetch(FetchDescriptor<UnifiedItem>())) ?? []
         let pantryNames = pantryItems.filter { $0.isPantry }.map { $0.name }
         let filterEnabled = currentPantryFilterEnabled
+        let targetLanguage = recipeIdeasTargetLanguage(for: customQuery)
 
         // EXA (web) + Quick Ideas (LLM) em paralelo.
         async let exaTask: [RecipeIdeaResult] = (try? EXARecipeIdeasService.shared.search(
@@ -2269,6 +2288,7 @@ struct InlineChatView: View {
             customQuery: customQuery,
             pantryItems: pantryNames,
             filterByPantry: filterEnabled,
+            language: targetLanguage,
             limit: 6,
             seed: exaSearchSeed
         )) ?? []
@@ -2278,6 +2298,7 @@ struct InlineChatView: View {
             occasion: occasion,
             refinement: refinement,
             customQuery: customQuery,
+            language: targetLanguage,
             limit: 10
         )
 
@@ -2404,7 +2425,7 @@ struct InlineChatView: View {
 
             if !payload.quickIdeas.isEmpty {
                 recipeIdeasSection(title: String(localized: "Ideias Rápidas"), icon: "bolt.fill") {
-                    FlowLayout(spacing: 8) {
+                    ExpandingFlowLayout(spacing: 8) {
                         ForEach(payload.quickIdeas) { idea in
                             Button {
                                 handleQuickIdeaTap(idea)
@@ -2442,13 +2463,17 @@ struct InlineChatView: View {
                 } label: {
                     HStack(spacing: 8) {
                         Image(systemName: "sparkles")
+                            .font(.footnote)
                         Text("Gerar mais ideias")
-                            .font(.callout.weight(.semibold))
+                            .font(.footnote.weight(.semibold))
                     }
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
-                    .background(Color.accentColor.gradient, in: .rect(cornerRadius: 11))
+                    .background(
+                        Color(red: 0.16, green: 0.16, blue: 0.18),
+                        in: .rect(cornerRadius: 11)
+                    )
                 }
                 .buttonStyle(.plain)
                 .padding(.horizontal, 16)
@@ -2498,32 +2523,30 @@ struct InlineChatView: View {
     /// Chip compacto para uma Ideia Rápida — ícone do banco + nome.
     private func quickIdeaChip(_ idea: RecipeQuickIdea) -> some View {
         HStack(spacing: 8) {
-            if let image = quickIdeaIcon(for: idea) {
-                Image(platformImage: image)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 20, height: 20)
-            } else {
-                Image(systemName: "fork.knife")
-                    .font(.caption2.weight(.medium))
-                    .foregroundStyle(.secondary)
-                    .frame(width: 20, height: 20)
+            Group {
+                if let image = quickIdeaIcon(for: idea) {
+                    Image(platformImage: image)
+                        .resizable()
+                        .scaledToFit()
+                } else {
+                    Image(systemName: "fork.knife")
+                        .font(.caption2.weight(.medium))
+                        .foregroundStyle(.secondary)
+                }
             }
+            .frame(width: 20, height: 20)
 
             Text(idea.title)
                 .font(.footnote.weight(.medium))
                 .foregroundStyle(.primary)
                 .lineLimit(1)
         }
+        .frame(maxWidth: .infinity, alignment: .center)
         .padding(.horizontal, 11)
         .padding(.vertical, 8)
         .background(
             Capsule()
                 .fill(Color(.secondarySystemBackground))
-        )
-        .overlay(
-            Capsule()
-                .strokeBorder(Color.primary.opacity(0.06), lineWidth: 1)
         )
     }
 

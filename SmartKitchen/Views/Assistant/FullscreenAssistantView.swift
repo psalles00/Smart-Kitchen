@@ -394,6 +394,7 @@ struct FullscreenAssistantView: View {
                             imageHeight: 82,
                             imageOffset: CGSize(width: 8, height: 12)
                         ) {
+                            searchBarState.resignFocus()
                             if let onRequestAIMode {
                                 onRequestAIMode(.nutritionCoach, nil)
                             } else {
@@ -412,6 +413,7 @@ struct FullscreenAssistantView: View {
                             imageHeight: 74,
                             imageOffset: CGSize(width: 6, height: 12)
                         ) {
+                            searchBarState.resignFocus()
                             if let onRequestAIMode {
                                 onRequestAIMode(.recipeIdeas, nil)
                             } else {
@@ -649,6 +651,7 @@ struct FullscreenAssistantView: View {
     /// Opens the AI chat (overlay or pushed tab) and pre-fills it with the
     /// suggestion prompt so it is auto-sent.
     private func openAIChat(with prompt: String) {
+        searchBarState.resignFocus()
         if let onRequestAIMode {
             // Tab presentation: push the AI page with prefill so it auto-sends.
             onRequestAIMode(.nutritionCoach, prompt)

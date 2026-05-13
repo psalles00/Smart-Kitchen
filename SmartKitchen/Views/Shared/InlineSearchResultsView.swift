@@ -370,6 +370,7 @@ struct InlineSearchResultsView: View {
     }
 
     private func openChat(initialQuery: String? = nil) {
+        searchBarState.resignFocus()
         chatInitialQuery = initialQuery
         chatExistingConversationId = nil
         showConversationHistory = false
