@@ -376,7 +376,6 @@ private struct AppBackupSnapshot: Codable {
             settings.recipeViewMode = record.recipeViewMode
             settings.expiringItemsLeadDays = record.expiringItemsLeadDays
             settings.recipeCompatibilityThresholdPercentValue = record.recipeCompatibilityThresholdPercent
-            settings.openAIAPIKey = record.openAIAPIKey
             settings.hasCompletedOnboarding = record.hasCompletedOnboarding
             context.insert(settings)
         }
@@ -507,7 +506,6 @@ private struct AppSettingsRecord: Codable {
     let recipeViewMode: RecipeViewMode
     let expiringItemsLeadDays: Int
     let recipeCompatibilityThresholdPercent: Int
-    let openAIAPIKey: String
     let hasCompletedOnboarding: Bool
 
     init(_ settings: AppSettings) {
@@ -518,7 +516,6 @@ private struct AppSettingsRecord: Codable {
         recipeViewMode = settings.recipeViewMode
         expiringItemsLeadDays = settings.expiringItemsLeadDays
         recipeCompatibilityThresholdPercent = settings.recipeCompatibilityThresholdPercent
-        openAIAPIKey = settings.openAIAPIKey
         hasCompletedOnboarding = settings.hasCompletedOnboarding
     }
 
@@ -531,7 +528,6 @@ private struct AppSettingsRecord: Codable {
         recipeViewMode = try container.decode(RecipeViewMode.self, forKey: .recipeViewMode)
         expiringItemsLeadDays = try container.decodeIfPresent(Int.self, forKey: .expiringItemsLeadDays) ?? 30
         recipeCompatibilityThresholdPercent = try container.decodeIfPresent(Int.self, forKey: .recipeCompatibilityThresholdPercent) ?? 80
-        openAIAPIKey = try container.decode(String.self, forKey: .openAIAPIKey)
         hasCompletedOnboarding = try container.decode(Bool.self, forKey: .hasCompletedOnboarding)
     }
 }

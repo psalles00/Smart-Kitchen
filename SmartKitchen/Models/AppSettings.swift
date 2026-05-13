@@ -93,7 +93,7 @@ final class AppSettings {
     var recipeViewMode: RecipeViewMode
     var expiringItemsLeadDays: Int
     var recipeCompatibilityThresholdPercentValue: Int?
-    /// Embedded API key for OpenAI.
+    /// Legacy field kept only so old installs can be scrubbed safely.
     var openAIAPIKey: String
     var hasCompletedOnboarding: Bool
 

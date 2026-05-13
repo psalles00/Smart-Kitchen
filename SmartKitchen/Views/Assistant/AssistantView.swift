@@ -262,7 +262,7 @@ struct AssistantView: View {
         guard !apiKey.isEmpty else {
             let errorMsg = ChatMessage(
                 role: .assistant,
-                content: "⚠️ Chave de API não configurada. Vá em Ajustes para adicionar sua chave OpenAI."
+                content: "⚠️ \(APIConfig.missingSecureConfigurationMessage)"
             )
             modelContext.insert(errorMsg)
             return

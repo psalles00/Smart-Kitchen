@@ -28,6 +28,7 @@ struct SmartKitchenApp: App {
         // Seed demo data on first launch
         let context = ModelContext(modelContainer)
         DataSeeder.seedIfNeeded(context: context)
+        AppSecuritySanitizer.scrubPersistedSecrets(context: context)
 
         // Must be called after all stored properties are initialized
         Self.configureNavigationAppearance()
@@ -66,5 +67,22 @@ struct SmartKitchenApp: App {
 
         UINavigationBar.appearance().largeTitleTextAttributes = [.font: largeTitleFont]
         UINavigationBar.appearance().titleTextAttributes = [.font: titleFont]
+    }
+}
+
+@MainActor
+private enum AppSecuritySanitizer {
+    static func scrubPersistedSecrets(context: ModelContext) {
+        let descriptor = FetchDescriptor<AppSettings>()
+        guard let allSettings = try? context.fetch(descriptor) else { return }
+
+        var didMutate = false
+        for settings in allSettings where !settings.openAIAPIKey.isEmpty {
+            settings.openAIAPIKey = ""
+            didMutate = true
+        }
+
+        guard didMutate else { return }
+        try? context.save()
     }
 }
