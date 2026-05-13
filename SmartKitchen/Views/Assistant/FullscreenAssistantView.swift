@@ -90,7 +90,7 @@ struct FullscreenAssistantView: View {
             return .custom("Bricolage Grotesque", size: 31, relativeTo: .title).bold()
         }
 
-        return .pageTitle
+        return .custom("Bricolage Grotesque", size: 25, relativeTo: .title2).bold()
     }
     private var assistantActionColumns: [GridItem] {
         [

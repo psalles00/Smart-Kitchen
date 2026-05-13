@@ -57,9 +57,9 @@ struct UnifiedSearchBar: View {
 
     private var searchPromptColor: Color {
 #if os(macOS)
-        .white.opacity(0.84)
+        .white.opacity(0.7)
 #else
-        Color.primary.opacity(0.74)
+        Color.primary.opacity(0.58)
 #endif
     }
 
