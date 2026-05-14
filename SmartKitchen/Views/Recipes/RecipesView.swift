@@ -430,7 +430,9 @@ struct RecipesView: View {
                     }
                 }
 
+                #if !os(macOS)
                 SettingsButton()
+                #endif
             }
         }
     }
@@ -488,7 +490,8 @@ struct RecipesView: View {
                     }
                 }
 
-                SettingsButton()
+                // SettingsButton removed on macOS — Settings is reached via
+                // the sidebar's dedicated "Configurações" item.
             }
         }
         .padding(.horizontal)

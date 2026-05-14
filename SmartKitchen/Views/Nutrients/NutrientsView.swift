@@ -118,7 +118,9 @@ struct NutrientsView: View {
                                 pushWeightTracker = true
                             }
                         }
+                        #if !os(macOS)
                         SettingsButton()
+                        #endif
                     }
                 }
             },

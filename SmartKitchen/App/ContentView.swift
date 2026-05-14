@@ -119,6 +119,7 @@ struct ContentView: View {
     @State private var macBackgroundToTheme: PageTheme = .home
     @State private var macBackgroundTransitionProgress: Double = 1.0
     @FocusState private var macSearchFieldFocused: Bool
+    @State private var macAssistantBarExpanded: Bool = false
 
     private var macActivePageTheme: PageTheme {
         switch selectedSidebar ?? .home {
@@ -1021,7 +1022,9 @@ struct ContentView: View {
 
     /// A non-selectable row used for assistant shortcuts that fire a
     /// `CommandBarAction` / open a sheet, rather than navigating to a page.
-    /// Visual style matches `macSidebarRow` so the sidebar stays cohesive.
+    /// Visual style matches `macSidebarRow` (transparent background, white
+    /// label) with a small colored dot on the right indicating the page the
+    /// action belongs to.
     @ViewBuilder
     private func macSidebarActionRow(
         title: String,
@@ -1034,23 +1037,23 @@ struct ContentView: View {
                 Image(systemName: systemImage)
                     .font(.system(size: 12, weight: .semibold))
                     .frame(width: 18, height: 18)
-                    .foregroundStyle(Color.white)
+                    .foregroundStyle(Color.white.opacity(0.86))
                 Text(title)
                     .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(Color.white)
+                    .foregroundStyle(Color.white.opacity(0.92))
                     .lineLimit(1)
                 Spacer(minLength: 0)
+                Circle()
+                    .fill(tint.accentColor)
+                    .frame(width: 6, height: 6)
+                    .overlay(
+                        Circle()
+                            .strokeBorder(Color.white.opacity(0.15), lineWidth: 0.5)
+                    )
+                    .padding(.trailing, 2)
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
-            .background {
-                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .fill(tint.accentColor.opacity(0.18))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 6, style: .continuous)
-                            .strokeBorder(tint.accentColor.opacity(0.30), lineWidth: 0.5)
-                    )
-            }
             .contentShape(.rect)
         }
         .buttonStyle(.plain)
@@ -1149,15 +1152,16 @@ struct ContentView: View {
             .navigationTitle("")
             .environment(\.colorScheme, .dark)
             .safeAreaInset(edge: .bottom) {
-                // The actual assistant bar is rendered by `macAssistantBar`
-                // (either docked here or floating over the detail pane). When
-                // floating, we keep an empty spacer so the sidebar layout does
-                // not jump.
+                // Sidebar shows a button-styled trigger that looks like a
+                // search bar. The real TextField lives in the floating bar
+                // mounted in the detail pane (single instance) so that
+                // typing never causes the TextField to be re-created / lose
+                // first responder.
                 Group {
                     if macAssistantBarFloating {
                         Color.clear.frame(height: 0)
                     } else {
-                        macAssistantBar(floating: false)
+                        macAssistantBarTrigger
                             .padding(.horizontal, 12)
                             .padding(.bottom, 8)
                     }
@@ -1166,7 +1170,7 @@ struct ContentView: View {
             .toolbar {
                 ToolbarItem(placement: .automatic) {
                     Button {
-                        macSearchFieldFocused = true
+                        expandAssistantBar()
                     } label: {
                         Label("Buscar", systemImage: "sparkle.magnifyingglass")
                     }
@@ -1174,32 +1178,43 @@ struct ContentView: View {
                 }
             }
         } detail: {
-            ZStack(alignment: .bottomTrailing) {
+            ZStack(alignment: .bottom) {
                 macSidebarDetailContent
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                if macHasSearchContent {
-                    macSearchResultsOverlay
-                        .transition(.opacity)
-                }
-
-                // Floating assistant bar — slides out from the docked sidebar
-                // position into a wide panel anchored to the bottom-right of
-                // the detail pane while focused / actively used. Closes back
-                // into the sidebar when defocused and empty.
-                if macAssistantBarFloating {
-                    macAssistantBar(floating: true)
-                        .frame(maxWidth: 760)
-                        .padding(.trailing, 20)
-                        .padding(.bottom, 20)
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
-                }
+                // Floating assistant bar — always mounted so the TextField
+                // keeps its identity (and focus) across docked ↔ floating
+                // transitions. Visibility / position is animated via opacity
+                // and an offset so SwiftUI never tears down the field.
+                macAssistantBar(floating: true)
+                    .frame(maxWidth: 760)
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 20)
+                    .opacity(macAssistantBarFloating ? 1 : 0)
+                    .offset(y: macAssistantBarFloating ? 0 : 30)
+                    .allowsHitTesting(macAssistantBarFloating)
             }
             .animation(.spring(response: 0.32, dampingFraction: 0.86), value: macAssistantBarFloating)
         }
         .onChange(of: searchBarState.debouncedSearchText) { _, newValue in
             guard searchBarState.mode != .aiChat else { return }
             searchService.search(query: newValue, context: modelContext, showUtensils: settings?.showUtensils == true)
+        }
+        // When the user starts typing in the floating assistant bar, route
+        // them to the dedicated Assistente sidebar page (or Modo IA when in
+        // AI chat mode) instead of stacking the legacy modal overlay on top
+        // of whatever page they were on.
+        .onChange(of: searchBarState.searchText) { _, newValue in
+            let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else { return }
+            let target: SidebarItem = searchBarState.mode == .aiChat ? .aiMode : .assistant
+            if selectedSidebar != target {
+                // Mark the bar as expanded so navigating doesn't collapse it,
+                // then move to the assistant page. Focus stays on the
+                // (always-mounted) floating TextField.
+                macAssistantBarExpanded = true
+                selectedSidebar = target
+            }
         }
         .toolbarBackground(.hidden, for: .windowToolbar)
         .toolbarColorScheme(.dark, for: .windowToolbar)
@@ -1236,57 +1251,136 @@ struct ContentView: View {
             }
             macBackgroundToTheme = newTheme
             macBackgroundFromTheme = newTheme
+
+            // When the user navigates away from the AI Mode page, collapse
+            // the legacy assistant bar back into idle so the previous chat
+            // doesn't keep showing as a floating modal over the new page.
+            // The AI conversation itself is preserved by the dedicated
+            // `Modo IA` page and resumes when the user returns to it.
+            if newValue != .aiMode && newValue != .assistant {
+                if searchBarState.mode == .aiChat {
+                    searchBarState.mode = .idle
+                }
+                searchBarState.searchText = ""
+                searchBarState.debouncedSearchText = ""
+                macAssistantBarExpanded = false
+                macSearchFieldFocused = false
+            } else if newValue == .aiMode {
+                if searchBarState.mode != .aiChat {
+                    searchBarState.mode = .aiChat
+                }
+            } else if newValue == .assistant {
+                if searchBarState.mode == .aiChat {
+                    searchBarState.mode = .idle
+                }
+            }
         }
     }
 
     private var macHasSearchContent: Bool {
-        // The dedicated Assistente / Modo IA sidebar pages already host the
-        // assistant chrome directly — don't double-cover them with the legacy
-        // floating overlay.
-        if selectedSidebar == .assistant || selectedSidebar == .aiMode {
-            return false
-        }
-        let hasText = !searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        return hasText || searchBarState.mode == .aiChat || pendingOpenChat || pendingChatQuery != nil
+        // Retained as a no-op to avoid touching unrelated call sites — the
+        // legacy modal search overlay was removed from the macOS layout; the
+        // dedicated Assistente / Modo IA sidebar pages now host the assistant
+        // chrome and search results directly.
+        false
     }
 
-    /// Whether the assistant bar should render as a floating panel anchored to
-    /// the bottom-right of the detail pane (rather than docked at the bottom
-    /// of the sidebar). It "expands" while the user is actively using it and
-    /// snaps back into the sidebar when defocused and empty.
+    /// Whether the assistant bar should render as a floating panel anchored
+    /// over the detail pane (rather than docked at the bottom of the sidebar).
+    /// Expansion is driven by an explicit user gesture (tap to expand /
+    /// chevron to collapse) so that clicking the bar always expands it,
+    /// even before the user starts typing.
     private var macAssistantBarFloating: Bool {
+        if macAssistantBarExpanded { return true }
         if macSearchFieldFocused { return true }
-        if searchBarState.mode == .aiChat { return true }
         if !searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             return true
         }
         return false
     }
 
+    /// Expand the floating assistant bar and put focus into the (always
+    /// mounted) TextField. Used by the docked trigger, ⌘K toolbar button, and
+    /// programmatic call sites.
+    private func expandAssistantBar() {
+        macAssistantBarExpanded = true
+        // Run on the next runloop tick so the floating bar's opacity / offset
+        // state has settled before we ask AppKit to make its TextField the
+        // first responder.
+        DispatchQueue.main.async {
+            macSearchFieldFocused = true
+        }
+    }
+
+    /// The "docked" representation in the sidebar. It is a plain button
+    /// styled like a search field — it does NOT contain a TextField, so the
+    /// real TextField (in the floating bar) keeps its first-responder state
+    /// when the user starts typing.
+    @ViewBuilder
+    private var macAssistantBarTrigger: some View {
+        Button {
+            expandAssistantBar()
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "sparkle.magnifyingglass")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(Color.white)
+                Text("Adicione, busque, ou pergunte…")
+                    .font(.subheadline)
+                    .foregroundStyle(Color.white.opacity(0.75))
+                    .lineLimit(1)
+                Spacer(minLength: 0)
+                Text("⌘K")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Color.white)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Color.white.opacity(0.08))
+            )
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+    }
+
     @ViewBuilder
     private func macAssistantBar(floating: Bool) -> some View {
         HStack(spacing: 8) {
             Image(systemName: searchBarState.mode == .aiChat ? "paperplane.fill" : "sparkle.magnifyingglass")
-                .font(.system(size: floating ? 16 : 14, weight: .semibold))
+                .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(Color.white)
-            TextField(
-                searchBarState.mode == .aiChat ? searchBarState.aiChatPreset.searchPlaceholder : String(localized: "Adicione, busque, ou pergunte…"),
-                text: $searchBarState.searchText
-            )
-            .textFieldStyle(.plain)
-            .font(floating ? .body : .subheadline)
-            .foregroundStyle(Color.white)
-            .tint(Color.white)
-            .focused($macSearchFieldFocused)
-            .onSubmit {
-                let trimmed = searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !trimmed.isEmpty else { return }
-                if searchBarState.mode == .aiChat {
-                    searchBarState.requestAIChatSend(trimmed, source: "ContentView.macSidebarSubmit")
-                    searchBarState.searchText = ""
-                } else {
-                    submitSearchAction()
+            ZStack(alignment: .leading) {
+                // Manual placeholder — SwiftUI's `TextField(prompt:)` does
+                // not honor a custom foreground color on macOS, so we paint
+                // the placeholder ourselves while the field is empty.
+                if searchBarState.searchText.isEmpty {
+                    Text(
+                        searchBarState.mode == .aiChat
+                            ? searchBarState.aiChatPreset.searchPlaceholder
+                            : String(localized: "Adicione, busque, ou pergunte…")
+                    )
+                    .font(.body)
+                    .foregroundStyle(Color.white.opacity(0.75))
+                    .allowsHitTesting(false)
                 }
+                TextField("", text: $searchBarState.searchText)
+                    .textFieldStyle(.plain)
+                    .font(.body)
+                    .foregroundStyle(Color.white)
+                    .tint(Color.white)
+                    .focused($macSearchFieldFocused)
+                    .onSubmit {
+                        let trimmed = searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+                        guard !trimmed.isEmpty else { return }
+                        if searchBarState.mode == .aiChat {
+                            searchBarState.requestAIChatSend(trimmed, source: "ContentView.macSidebarSubmit")
+                            searchBarState.searchText = ""
+                        } else {
+                            submitSearchAction()
+                        }
+                    }
             }
 
             if !searchBarState.searchText.isEmpty {
@@ -1294,61 +1388,48 @@ struct ContentView: View {
                     searchBarState.searchText = ""
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: floating ? 16 : 14))
+                        .font(.system(size: 16))
                         .foregroundStyle(Color.white.opacity(0.85))
                 }
                 .buttonStyle(.plain)
             }
 
-            if floating {
-                Button {
-                    // Snap back into the sidebar: defocus, clear text/mode.
-                    macSearchFieldFocused = false
-                    searchBarState.searchText = ""
-                    searchBarState.debouncedSearchText = ""
-                    if searchBarState.mode == .aiChat {
-                        searchBarState.mode = .idle
-                    }
-                } label: {
-                    Image(systemName: "chevron.down.circle.fill")
-                        .font(.system(size: 18))
-                        .foregroundStyle(Color.white.opacity(0.85))
+            Button {
+                // Snap back into the sidebar: defocus, clear text, and
+                // collapse. (AI Mode conversation state lives in the
+                // dedicated `Modo IA` page and is unaffected.)
+                macSearchFieldFocused = false
+                searchBarState.searchText = ""
+                searchBarState.debouncedSearchText = ""
+                if searchBarState.mode == .aiChat {
+                    searchBarState.mode = .idle
                 }
-                .buttonStyle(.plain)
-                .keyboardShortcut(.escape, modifiers: [])
-            } else {
-                Text("⌘K")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(Color.white)
+                macAssistantBarExpanded = false
+            } label: {
+                Image(systemName: "chevron.down.circle.fill")
+                    .font(.system(size: 18))
+                    .foregroundStyle(Color.white.opacity(0.85))
             }
+            .buttonStyle(.plain)
+            .keyboardShortcut(.escape, modifiers: [])
         }
-        .padding(.horizontal, floating ? 18 : 14)
-        .padding(.vertical, floating ? 14 : 10)
+        .padding(.horizontal, 18)
+        .padding(.vertical, 14)
         .background {
-            if floating {
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(.black.opacity(0.55))
-                    .background(
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .fill(.ultraThinMaterial)
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .strokeBorder(Color.white.opacity(0.16), lineWidth: 0.5)
-                    )
-                    .shadow(color: .black.opacity(0.35), radius: 20, x: 0, y: 8)
-                    .environment(\.colorScheme, .dark)
-            } else {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(Color.white.opacity(0.08))
-            }
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(.black.opacity(0.55))
+                .background(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(.ultraThinMaterial)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .strokeBorder(Color.white.opacity(0.16), lineWidth: 0.5)
+                )
+                .shadow(color: .black.opacity(0.35), radius: 20, x: 0, y: 8)
+                .environment(\.colorScheme, .dark)
         }
         .contentShape(.rect)
-        .onTapGesture {
-            if !floating {
-                macSearchFieldFocused = true
-            }
-        }
     }
 
     @ViewBuilder
@@ -1876,7 +1957,9 @@ private struct HomeView: View {
             pageTheme: .home,
             header: { isInverted in
                 PageHeader(title: "Savoria", isInverted: isInverted) {
+                    #if !os(macOS)
                     SettingsButton(onTap: onSettingsTap)
+                    #endif
                 }
             },
             content: {
@@ -2074,8 +2157,8 @@ private struct HomeView: View {
                         subtitle: String(localized: "Adicione, busque ou pergunte..."),
                         imageName: "assistente",
                         style: .featured,
-                        imageSize: 496,
-                        imageOffset: CGSize(width: 60, height: 90)
+                        imageSize: 600,
+                        imageOffset: CGSize(width: 110, height: 30)
                     ) {
                         onOpenSearch()
                     }
@@ -2087,8 +2170,8 @@ private struct HomeView: View {
                             subtitle: String(localized: "Inteligência"),
                             imageName: "modo ia",
                             style: .wide,
-                            imageSize: 215,
-                            imageOffset: CGSize(width: -8, height: 40),
+                            imageSize: 150,
+                            imageOffset: CGSize(width: 22, height: 26),
                             imageAlignment: .bottomTrailing
                         ) {
                             onOpenChat()
@@ -2100,8 +2183,8 @@ private struct HomeView: View {
                             subtitle: String(localized: "de receitas"),
                             imageName: "ideis",
                             style: .wide,
-                            imageSize: 175,
-                            imageOffset: CGSize(width: -10, height: 30),
+                            imageSize: 135,
+                            imageOffset: CGSize(width: 14, height: 22),
                             imageAlignment: .bottomTrailing
                         ) {
                             onOpenRecipeIdeas()
@@ -2469,7 +2552,7 @@ private struct HomeView: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 7)
                 .background(
-                    isSelected ? PageTheme.home.accentColor.opacity(0.16) : Color(.tertiarySystemBackground),
+                    isSelected ? PageTheme.home.accentColor.opacity(0.16) : neutralSurfaceColor,
                     in: .capsule
                 )
                 .foregroundStyle(isSelected ? PageTheme.home.accentColor : .primary)
