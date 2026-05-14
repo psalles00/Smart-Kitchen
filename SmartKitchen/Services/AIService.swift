@@ -34,7 +34,7 @@ final class AIService: ObservableObject {
         // 1. Try OpenAI (if a key is configured).
         if !apiKey.isEmpty {
             do {
-                return try await sendChatOpenAI(messages: messages, tools: tools, apiKey: apiKey)
+                return try await sendChatOpenAI(messages: messages, tools: tools, apiKey: apiKey, modelOverride: nil, temperature: nil, responseFormat: nil, acceptLanguage: nil, maxTokens: nil)
             } catch {
                 LLMLog.error("OpenAI chat failed, falling back to OpenRouter: \(error.localizedDescription)")
                 // fall through to OpenRouter
@@ -53,21 +53,104 @@ final class AIService: ObservableObject {
         return try await openRouter.sendChat(messages: messages, tools: tools, apiKey: orKey)
     }
 
+    /// Convenience overload that allows specifying model/temperature/response format/accept-language.
+    func sendChat(
+        messages: [[String: Any]],
+        apiKey: String,
+        model: String? = nil,
+        temperature: Double? = nil,
+        responseFormat: [String: Any]? = nil,
+        acceptLanguage: String? = nil
+    ) async throws -> ChatCompletionResponse {
+        isLoading = true
+        defer { isLoading = false }
+
+        // 1. Try OpenAI (if a key is configured).
+        if !apiKey.isEmpty {
+            do {
+                return try await sendChatOpenAI(
+                    messages: messages,
+                    tools: nil,
+                    apiKey: apiKey,
+                    modelOverride: model,
+                    temperature: temperature,
+                    responseFormat: responseFormat,
+                    acceptLanguage: acceptLanguage,
+                    maxTokens: nil
+                )
+            } catch {
+                LLMLog.error("OpenAI chat (overload) failed, falling back to OpenRouter: \(error.localizedDescription)")
+                // fall through to OpenRouter
+            }
+        } else {
+            LLMLog.info("OpenAI key empty; trying OpenRouter directly (overload)")
+        }
+
+        // 2. Try OpenRouter.
+        let orKey = APIConfig.openRouterAPIKey
+        guard !orKey.isEmpty else {
+            throw AIError.missingAPIKey
+        }
+        LLMLog.info("Routing chat to OpenRouter (overload) (\(OpenRouterModel.default))")
+        return try await openRouter.sendChat(messages: messages, tools: nil, apiKey: orKey)
+    }
+
+    /// Analyze an image with a text prompt using Chat Completions (vision-capable models like gpt-4o-mini).
+    func analyzeImage(
+        prompt: String,
+        imageData: Data,
+        apiKey: String,
+        model: String,
+        maxTokens: Int? = nil,
+        acceptLanguage: String? = nil
+    ) async throws -> String {
+        // Compose a multi-part content array: text + image_url (data URL)
+        let b64 = imageData.base64EncodedString()
+        let dataURL = "data:image/jpeg;base64,\(b64)"
+        let content: [[String: Any]] = [
+            ["type": "text", "text": prompt],
+            ["type": "image_url", "image_url": ["url": dataURL]]
+        ]
+        let messages: [[String: Any]] = [["role": "user", "content": content]]
+        let response = try await sendChatOpenAI(
+            messages: messages,
+            tools: nil,
+            apiKey: apiKey,
+            modelOverride: model,
+            temperature: nil,
+            responseFormat: nil,
+            acceptLanguage: acceptLanguage,
+            maxTokens: maxTokens
+        )
+        guard let contentText = response.content, !contentText.isEmpty else {
+            throw AIError.invalidResponse
+        }
+        return contentText
+    }
+
     // MARK: - OpenAI implementation
 
     private func sendChatOpenAI(
         messages: [[String: Any]],
         tools: [[String: Any]]?,
-        apiKey: String
+        apiKey: String,
+        modelOverride: String? = nil,
+        temperature: Double? = nil,
+        responseFormat: [String: Any]? = nil,
+        acceptLanguage: String? = nil,
+        maxTokens: Int? = nil
     ) async throws -> ChatCompletionResponse {
         var body: [String: Any] = [
-            "model": model,
+            "model": modelOverride ?? model,
             "messages": messages
         ]
         if let tools, !tools.isEmpty {
             body["tools"] = tools
             body["tool_choice"] = "auto"
         }
+        if let temperature { body["temperature"] = temperature }
+        if let responseFormat { body["response_format"] = responseFormat }
+        if let maxTokens { body["max_tokens"] = maxTokens }
 
         let data = try JSONSerialization.data(withJSONObject: body)
 
@@ -75,6 +158,7 @@ final class AIService: ObservableObject {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        if let acceptLanguage { request.setValue(acceptLanguage, forHTTPHeaderField: "Accept-Language") }
         request.httpBody = data
         request.timeoutInterval = 60
 
@@ -160,6 +244,78 @@ final class AIService: ObservableObject {
         }
 
         return response
+    }
+
+    /// Transcribe audio using OpenAI's Whisper endpoint.
+    func transcribeAudio(
+        fileURL: URL,
+        apiKey: String,
+        model: String = "whisper-1",
+        language: String? = nil,
+        responseFormat: String = "text"
+    ) async throws -> String {
+        let endpoint = URL(string: "https://api.openai.com/v1/audio/transcriptions")!
+        let boundary = "Boundary-\(UUID().uuidString)"
+
+        var request = URLRequest(url: endpoint)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 120
+
+        // Build multipart body
+        var body = Data()
+        func appendField(name: String, value: String) {
+            body.append("--\(boundary)\r\n".data(using: .utf8)!)
+            body.append("Content-Disposition: form-data; name=\"\(name)\"\r\n\r\n".data(using: .utf8)!)
+            body.append("\(value)\r\n".data(using: .utf8)!)
+        }
+        func appendFileField(name: String, filename: String, mimeType: String, fileData: Data) {
+            body.append("--\(boundary)\r\n".data(using: .utf8)!)
+            body.append("Content-Disposition: form-data; name=\"\(name)\"; filename=\"\(filename)\"\r\n".data(using: .utf8)!)
+            body.append("Content-Type: \(mimeType)\r\n\r\n".data(using: .utf8)!)
+            body.append(fileData)
+            body.append("\r\n".data(using: .utf8)!)
+        }
+
+        appendField(name: "model", value: model)
+        if let language { appendField(name: "language", value: language) }
+        appendField(name: "response_format", value: responseFormat)
+
+        let data = try Data(contentsOf: fileURL)
+        let filename = fileURL.lastPathComponent
+        let ext = fileURL.pathExtension.lowercased()
+        let mime: String = {
+            switch ext {
+            case "m4a": return "audio/m4a"
+            case "mp3": return "audio/mpeg"
+            case "wav": return "audio/wav"
+            case "webm": return "audio/webm"
+            case "ogg": return "audio/ogg"
+            default: return "application/octet-stream"
+            }
+        }()
+        appendFileField(name: "file", filename: filename.isEmpty ? "audio.m4a" : filename, mimeType: mime, fileData: data)
+        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+
+        request.httpBody = body
+
+        let (responseData, httpResponse) = try await URLSession.shared.data(for: request)
+        guard let http = httpResponse as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+            let errorBody = String(data: responseData, encoding: .utf8) ?? ""
+            throw AIError.apiError(statusCode: (httpResponse as? HTTPURLResponse)?.statusCode ?? -1, message: errorBody)
+        }
+
+        // For response_format == "text", the body is plain text.
+        if responseFormat == "text", let text = String(data: responseData, encoding: .utf8) {
+            return text
+        }
+        // Otherwise, try to decode as JSON and extract the text.
+        if let json = try? JSONSerialization.jsonObject(with: responseData) as? [String: Any] {
+            if let text = json["text"] as? String { return text }
+        }
+        // Fallback
+        return String(data: responseData, encoding: .utf8) ?? ""
     }
 }
 
