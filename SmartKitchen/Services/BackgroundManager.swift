@@ -59,6 +59,12 @@ class BackgroundManager {
     var nutrientsBackground: BackgroundSelection {
         didSet { save() }
     }
+    var settingsBackground: BackgroundSelection {
+        didSet { save() }
+    }
+    var assistantBackground: BackgroundSelection {
+        didSet { save() }
+    }
 
     private init() {
         if let data = UserDefaults.standard.data(forKey: userDefaultsKey),
@@ -67,11 +73,18 @@ class BackgroundManager {
             listsBackground = stored.lists
             recipesBackground = stored.recipes
             nutrientsBackground = stored.nutrients
+            // New fields are optional in storage so existing users' UserDefaults
+            // blobs (which predate `.settings` / `.assistant`) decode cleanly
+            // and we just default the new themes to the original shader.
+            settingsBackground = stored.settings ?? .original
+            assistantBackground = stored.assistant ?? .original
         } else {
             homeBackground = .original
             listsBackground = .original
             recipesBackground = .original
             nutrientsBackground = .original
+            settingsBackground = .original
+            assistantBackground = .original
         }
     }
 
@@ -81,6 +94,8 @@ class BackgroundManager {
         case .lists: return listsBackground
         case .recipes: return recipesBackground
         case .nutrients: return nutrientsBackground
+        case .settings: return settingsBackground
+        case .assistant: return assistantBackground
         }
     }
 
@@ -90,6 +105,8 @@ class BackgroundManager {
         case .lists: listsBackground = selection
         case .recipes: recipesBackground = selection
         case .nutrients: nutrientsBackground = selection
+        case .settings: settingsBackground = selection
+        case .assistant: assistantBackground = selection
         }
     }
 
@@ -98,7 +115,9 @@ class BackgroundManager {
             home: homeBackground,
             lists: listsBackground,
             recipes: recipesBackground,
-            nutrients: nutrientsBackground
+            nutrients: nutrientsBackground,
+            settings: settingsBackground,
+            assistant: assistantBackground
         )
         if let data = try? JSONEncoder().encode(stored) {
             UserDefaults.standard.set(data, forKey: userDefaultsKey)
@@ -113,4 +132,8 @@ private struct StoredBackgrounds: Codable {
     var lists: BackgroundSelection
     var recipes: BackgroundSelection
     var nutrients: BackgroundSelection
+    // Optional so previously-persisted blobs (without these keys) decode
+    // without errors. New users get `.original` by default in `init`.
+    var settings: BackgroundSelection?
+    var assistant: BackgroundSelection?
 }

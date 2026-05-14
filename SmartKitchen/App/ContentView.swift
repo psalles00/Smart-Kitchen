@@ -13,6 +13,8 @@ enum SidebarItem: String, CaseIterable, Identifiable {
     case lists
     case recipes
     case nutrients
+    case assistant
+    case aiMode
     case settings
 
     var id: String { rawValue }
@@ -23,6 +25,8 @@ enum SidebarItem: String, CaseIterable, Identifiable {
         case .lists: return String(localized: "Listas")
         case .recipes: return String(localized: "Receitas")
         case .nutrients: return String(localized: "Nutrição")
+        case .assistant: return String(localized: "Assistente")
+        case .aiMode: return String(localized: "Modo IA")
         case .settings: return String(localized: "Configurações")
         }
     }
@@ -33,6 +37,8 @@ enum SidebarItem: String, CaseIterable, Identifiable {
         case .lists: return "list.bullet.clipboard"
         case .recipes: return "book"
         case .nutrients: return "fork.knife"
+        case .assistant: return "sparkle.magnifyingglass"
+        case .aiMode: return "sparkles"
         case .settings: return "gearshape"
         }
     }
@@ -120,7 +126,8 @@ struct ContentView: View {
         case .lists: return .lists
         case .recipes: return .recipes
         case .nutrients: return .nutrients
-        case .settings: return .home
+        case .assistant, .aiMode: return .assistant
+        case .settings: return .settings
         }
     }
 
@@ -161,8 +168,46 @@ struct ContentView: View {
             NavigationStack { NutrientsView() }
                 .background(Color.clear)
 
+        case .assistant:
+            NavigationStack {
+                MacAssistantExpandedPage(
+                    mode: .assistant,
+                    searchBarState: searchBarState,
+                    searchService: searchService,
+                    onAction: { handleCommandBarAction($0) },
+                    onOpenFoodCameraDirect: openDirectFoodCamera,
+                    onOpenFoodGalleryDirect: openDirectFoodGallery,
+                    onRequestAIMode: { preset, prefill in
+                        openAIMode(preset: preset, prefill: prefill)
+                    },
+                    pendingChatQuery: $pendingChatQuery,
+                    pendingOpenChat: $pendingOpenChat,
+                    pendingNewConversation: $pendingNewConversation,
+                    pendingShowHistory: $pendingShowHistory
+                )
+            }
+            .background(Color.clear)
+
+        case .aiMode:
+            NavigationStack {
+                MacAssistantExpandedPage(
+                    mode: .aiMode,
+                    searchBarState: searchBarState,
+                    searchService: searchService,
+                    onAction: { handleCommandBarAction($0) },
+                    onOpenFoodCameraDirect: openDirectFoodCamera,
+                    onOpenFoodGalleryDirect: openDirectFoodGallery,
+                    onRequestAIMode: nil,
+                    pendingChatQuery: $pendingChatQuery,
+                    pendingOpenChat: $pendingOpenChat,
+                    pendingNewConversation: $pendingNewConversation,
+                    pendingShowHistory: $pendingShowHistory
+                )
+            }
+            .background(Color.clear)
+
         case .settings:
-            NavigationStack { SettingsView() }
+            NavigationStack { MacSettingsExpandedPage() }
                 .background(Color.clear)
         }
     }
@@ -896,7 +941,8 @@ struct ContentView: View {
         case .lists: return .lists
         case .recipes: return .recipes
         case .nutrients: return .nutrients
-        case .settings: return nil // neutral selection (no shader page)
+        case .assistant, .aiMode: return .assistant
+        case .settings: return .settings
         }
     }
 
@@ -973,11 +1019,124 @@ struct ContentView: View {
         }
     }
 
+    /// A non-selectable row used for assistant shortcuts that fire a
+    /// `CommandBarAction` / open a sheet, rather than navigating to a page.
+    /// Visual style matches `macSidebarRow` so the sidebar stays cohesive.
+    @ViewBuilder
+    private func macSidebarActionRow(
+        title: String,
+        systemImage: String,
+        tint: PageTheme,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 10) {
+                Image(systemName: systemImage)
+                    .font(.system(size: 12, weight: .semibold))
+                    .frame(width: 18, height: 18)
+                    .foregroundStyle(Color.white)
+                Text(title)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(Color.white)
+                    .lineLimit(1)
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background {
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(tint.accentColor.opacity(0.18))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .strokeBorder(tint.accentColor.opacity(0.30), lineWidth: 0.5)
+                    )
+            }
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+    }
+
+    @ViewBuilder
+    private var macSidebarAssistantShortcuts: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text("Atalhos")
+                .font(.system(size: 10, weight: .semibold))
+                .textCase(.uppercase)
+                .foregroundStyle(Color.white.opacity(0.45))
+                .padding(.horizontal, 12)
+                .padding(.bottom, 4)
+
+            // IA — accent .home
+            macSidebarActionRow(title: String(localized: "Perguntar à IA"),
+                                systemImage: "sparkles", tint: .home) {
+                openAIMode(preset: .nutritionCoach)
+            }
+            macSidebarActionRow(title: String(localized: "Ideias de receitas"),
+                                systemImage: "fork.knife.circle.fill", tint: .home) {
+                openAIMode(preset: .recipeIdeas)
+            }
+
+            // Listas — accent .lists
+            macSidebarActionRow(title: String(localized: "Adicionar à Despensa"),
+                                systemImage: "shippingbox.fill", tint: .lists) {
+                handleCommandBarAction(.addPantryItem(prefill: ""))
+            }
+            macSidebarActionRow(title: String(localized: "Adicionar ao Mercado"),
+                                systemImage: "cart.badge.plus", tint: .lists) {
+                handleCommandBarAction(.addGroceryItem(prefill: ""))
+            }
+            if settings?.showUtensils == true {
+                macSidebarActionRow(title: String(localized: "Adicionar Utensílio"),
+                                    systemImage: "fork.knife", tint: .lists) {
+                    handleCommandBarAction(.addUtensil(prefill: ""))
+                }
+            }
+
+            // Receitas — accent .recipes
+            macSidebarActionRow(title: String(localized: "Criar Receita"),
+                                systemImage: "book.badge.plus", tint: .recipes) {
+                handleCommandBarAction(.addRecipe(prefill: ""))
+            }
+            macSidebarActionRow(title: String(localized: "Importar da Galeria"),
+                                systemImage: "photo.on.rectangle.angled", tint: .recipes) {
+                openQuickRecipeImport(.gallery)
+            }
+            macSidebarActionRow(title: String(localized: "Ler Receita"),
+                                systemImage: "camera.viewfinder", tint: .recipes) {
+                openQuickRecipeImport(.camera)
+            }
+            macSidebarActionRow(title: String(localized: "Importar dos Arquivos"),
+                                systemImage: "folder.fill", tint: .recipes) {
+                openQuickRecipeImport(.files)
+            }
+
+            // Nutrição — accent .nutrients
+            macSidebarActionRow(title: String(localized: "Registrar Alimento"),
+                                systemImage: "fork.knife.circle.fill", tint: .nutrients) {
+                searchBarState.pendingNutritionSheet = .captureText(prefillText: nil, autoAnalyze: false)
+            }
+            macSidebarActionRow(title: String(localized: "Registrar com Áudio"),
+                                systemImage: "mic.fill", tint: .nutrients) {
+                searchBarState.pendingNutritionSheet = .captureVoice
+            }
+            macSidebarActionRow(title: String(localized: "Registrar com Galeria"),
+                                systemImage: "photo.on.rectangle.angled", tint: .nutrients) {
+                openDirectFoodGallery()
+            }
+            macSidebarActionRow(title: String(localized: "Rastreio de Peso"),
+                                systemImage: "scalemass.fill", tint: .nutrients) {
+                handleCommandBarAction(.openWeightTracker)
+            }
+        }
+    }
+
     private var macSidebarView: some View {
         NavigationSplitView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
-                    macSidebarSection("Navegação", items: SidebarItem.allCases.filter { $0 != .settings })
+                    macSidebarSection("Navegação", items: [.home, .lists, .recipes, .nutrients])
+                    macSidebarSection("Assistente", items: [.assistant, .aiMode])
+                    macSidebarAssistantShortcuts
                     macSidebarSection("Preferências", items: [.settings])
                 }
                 .padding(.horizontal, 8)
@@ -990,51 +1149,19 @@ struct ContentView: View {
             .navigationTitle("")
             .environment(\.colorScheme, .dark)
             .safeAreaInset(edge: .bottom) {
-                VStack(spacing: 0) {
-                    HStack(spacing: 8) {
-                        Image(systemName: searchBarState.mode == .aiChat ? "paperplane.fill" : "sparkle.magnifyingglass")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(.secondary)
-                        TextField(
-                            searchBarState.mode == .aiChat ? searchBarState.aiChatPreset.searchPlaceholder : String(localized: "Adicione, busque, ou pergunte…"),
-                            text: $searchBarState.searchText
-                        )
-                        .textFieldStyle(.plain)
-                        .font(.subheadline)
-                        .focused($macSearchFieldFocused)
-                        .onSubmit {
-                            let trimmed = searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-                            guard !trimmed.isEmpty else { return }
-                            if searchBarState.mode == .aiChat {
-                                searchBarState.requestAIChatSend(trimmed, source: "ContentView.macSidebarSubmit")
-                                searchBarState.searchText = ""
-                            } else {
-                                submitSearchAction()
-                            }
-                        }
-
-                        if !searchBarState.searchText.isEmpty {
-                            Button {
-                                searchBarState.searchText = ""
-                            } label: {
-                                Image(systemName: "xmark.circle.fill")
-                                    .font(.system(size: 14))
-                                    .foregroundStyle(.tertiary)
-                            }
-                            .buttonStyle(.plain)
-                        }
-
-                        Text("⌘K")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.tertiary)
+                // The actual assistant bar is rendered by `macAssistantBar`
+                // (either docked here or floating over the detail pane). When
+                // floating, we keep an empty spacer so the sidebar layout does
+                // not jump.
+                Group {
+                    if macAssistantBarFloating {
+                        Color.clear.frame(height: 0)
+                    } else {
+                        macAssistantBar(floating: false)
+                            .padding(.horizontal, 12)
+                            .padding(.bottom, 8)
                     }
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 10)
-                    .background(.white.opacity(0.08), in: .rect(cornerRadius: 10))
-                    .contentShape(.rect)
                 }
-                .padding(.horizontal, 12)
-                .padding(.bottom, 8)
             }
             .toolbar {
                 ToolbarItem(placement: .automatic) {
@@ -1047,15 +1174,28 @@ struct ContentView: View {
                 }
             }
         } detail: {
-            ZStack {
+            ZStack(alignment: .bottomTrailing) {
                 macSidebarDetailContent
-            }
-            .overlay {
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+
                 if macHasSearchContent {
                     macSearchResultsOverlay
                         .transition(.opacity)
                 }
+
+                // Floating assistant bar — slides out from the docked sidebar
+                // position into a wide panel anchored to the bottom-right of
+                // the detail pane while focused / actively used. Closes back
+                // into the sidebar when defocused and empty.
+                if macAssistantBarFloating {
+                    macAssistantBar(floating: true)
+                        .frame(maxWidth: 760)
+                        .padding(.trailing, 20)
+                        .padding(.bottom, 20)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
             }
+            .animation(.spring(response: 0.32, dampingFraction: 0.86), value: macAssistantBarFloating)
         }
         .onChange(of: searchBarState.debouncedSearchText) { _, newValue in
             guard searchBarState.mode != .aiChat else { return }
@@ -1084,7 +1224,8 @@ struct ContentView: View {
                 case .lists: return .lists
                 case .recipes: return .recipes
                 case .nutrients: return .nutrients
-                case .settings: return .home
+                case .assistant, .aiMode: return .assistant
+                case .settings: return .settings
                 }
             }()
             // Instant page switch: just publish the new active theme. The
@@ -1099,8 +1240,115 @@ struct ContentView: View {
     }
 
     private var macHasSearchContent: Bool {
+        // The dedicated Assistente / Modo IA sidebar pages already host the
+        // assistant chrome directly — don't double-cover them with the legacy
+        // floating overlay.
+        if selectedSidebar == .assistant || selectedSidebar == .aiMode {
+            return false
+        }
         let hasText = !searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         return hasText || searchBarState.mode == .aiChat || pendingOpenChat || pendingChatQuery != nil
+    }
+
+    /// Whether the assistant bar should render as a floating panel anchored to
+    /// the bottom-right of the detail pane (rather than docked at the bottom
+    /// of the sidebar). It "expands" while the user is actively using it and
+    /// snaps back into the sidebar when defocused and empty.
+    private var macAssistantBarFloating: Bool {
+        if macSearchFieldFocused { return true }
+        if searchBarState.mode == .aiChat { return true }
+        if !searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return true
+        }
+        return false
+    }
+
+    @ViewBuilder
+    private func macAssistantBar(floating: Bool) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: searchBarState.mode == .aiChat ? "paperplane.fill" : "sparkle.magnifyingglass")
+                .font(.system(size: floating ? 16 : 14, weight: .semibold))
+                .foregroundStyle(Color.white)
+            TextField(
+                searchBarState.mode == .aiChat ? searchBarState.aiChatPreset.searchPlaceholder : String(localized: "Adicione, busque, ou pergunte…"),
+                text: $searchBarState.searchText
+            )
+            .textFieldStyle(.plain)
+            .font(floating ? .body : .subheadline)
+            .foregroundStyle(Color.white)
+            .tint(Color.white)
+            .focused($macSearchFieldFocused)
+            .onSubmit {
+                let trimmed = searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !trimmed.isEmpty else { return }
+                if searchBarState.mode == .aiChat {
+                    searchBarState.requestAIChatSend(trimmed, source: "ContentView.macSidebarSubmit")
+                    searchBarState.searchText = ""
+                } else {
+                    submitSearchAction()
+                }
+            }
+
+            if !searchBarState.searchText.isEmpty {
+                Button {
+                    searchBarState.searchText = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: floating ? 16 : 14))
+                        .foregroundStyle(Color.white.opacity(0.85))
+                }
+                .buttonStyle(.plain)
+            }
+
+            if floating {
+                Button {
+                    // Snap back into the sidebar: defocus, clear text/mode.
+                    macSearchFieldFocused = false
+                    searchBarState.searchText = ""
+                    searchBarState.debouncedSearchText = ""
+                    if searchBarState.mode == .aiChat {
+                        searchBarState.mode = .idle
+                    }
+                } label: {
+                    Image(systemName: "chevron.down.circle.fill")
+                        .font(.system(size: 18))
+                        .foregroundStyle(Color.white.opacity(0.85))
+                }
+                .buttonStyle(.plain)
+                .keyboardShortcut(.escape, modifiers: [])
+            } else {
+                Text("⌘K")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Color.white)
+            }
+        }
+        .padding(.horizontal, floating ? 18 : 14)
+        .padding(.vertical, floating ? 14 : 10)
+        .background {
+            if floating {
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(.black.opacity(0.55))
+                    .background(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .fill(.ultraThinMaterial)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .strokeBorder(Color.white.opacity(0.16), lineWidth: 0.5)
+                    )
+                    .shadow(color: .black.opacity(0.35), radius: 20, x: 0, y: 8)
+                    .environment(\.colorScheme, .dark)
+            } else {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Color.white.opacity(0.08))
+            }
+        }
+        .contentShape(.rect)
+        .onTapGesture {
+            if !floating {
+                macSearchFieldFocused = true
+            }
+        }
     }
 
     @ViewBuilder
@@ -1337,10 +1585,25 @@ struct ContentView: View {
     private func openAIMode(preset: AIChatPreset = .nutritionCoach, prefill: String? = nil) {
         pendingShowHistory = false
         pendingNewConversation = false
+        #if os(macOS)
+        // On macOS the assistant lives as a dedicated sidebar page now —
+        // jump to it directly and bypass the legacy floating overlay.
+        searchBarState.searchText = ""
+        searchBarState.debouncedSearchText = ""
+        searchBarState.mode = .aiChat
+        if let prefill, !prefill.isEmpty {
+            pendingChatQuery = prefill
+            pendingOpenChat = true
+        }
+        if selectedSidebar != .aiMode {
+            selectedSidebar = .aiMode
+        }
+        #else
         // Switch to the assistant (search) tab and push the AI page. The page
         // itself sets `searchBarState.mode = .aiChat` and routes the prefill
         // through `pendingChatQuery` / `pendingOpenChat` on appear.
         openAssistantTab(push: AssistantTabAIDestination(preset: preset, prefill: prefill))
+        #endif
     }
 
     /// Switches the active tab to the assistant (search) tab. If `push` is
@@ -1348,6 +1611,23 @@ struct ContentView: View {
     /// navigation stack. Use `openAssistantTab()` (no argument) to land on
     /// the idle assistant page (action grid / search results).
     private func openAssistantTab(push destination: AssistantTabAIDestination? = nil) {
+        #if os(macOS)
+        if let destination, destination.preset != .nutritionCoach || destination.prefill != nil {
+            searchBarState.mode = .aiChat
+            if let prefill = destination.prefill, !prefill.isEmpty {
+                pendingChatQuery = prefill
+                pendingOpenChat = true
+            }
+            if selectedSidebar != .aiMode {
+                selectedSidebar = .aiMode
+            }
+        } else {
+            searchBarState.mode = .idle
+            if selectedSidebar != .assistant {
+                selectedSidebar = .assistant
+            }
+        }
+        #else
         if let destination {
             // Replace the stack with just this destination so repeated taps
             // don't accumulate duplicate pages.
@@ -1358,6 +1638,7 @@ struct ContentView: View {
         if selectedTab != .commandBar {
             selectedTab = .commandBar
         }
+        #endif
     }
 
     private func handleQuickRecipeImportDismissed() {

@@ -512,6 +512,8 @@ enum NebulaTheme: Int {
     case lists = 1
     case recipes = 2
     case nutrients = 3
+    case settings = 4
+    case assistant = 5
 }
 
 struct NebulaShaderView: View {
@@ -539,6 +541,14 @@ struct NebulaShaderView: View {
                             Color.white, 0.0)
                 case .nutrients:
                     return (Color(red: 0.1, green: 0.9, blue: 0.3), 1.0,
+                            Color.white, 0.0)
+                case .settings:
+                    // Cool slate gray — low strength keeps the shader neutral.
+                    return (Color(red: 0.50, green: 0.55, blue: 0.62), 0.75,
+                            Color.white, 0.0)
+                case .assistant:
+                    // Soft warm gray — low strength keeps the shader neutral.
+                    return (Color(red: 0.58, green: 0.58, blue: 0.62), 0.75,
                             Color.white, 0.0)
                 }
             }()

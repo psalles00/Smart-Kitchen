@@ -5,6 +5,10 @@ enum PageTheme: String, Codable, CaseIterable {
     case lists = "lists"
     case recipes = "recipes"
     case nutrients = "nutrients"
+    /// Neutral gray theme used by the macOS Settings sidebar page.
+    case settings = "settings"
+    /// Neutral gray theme used by the macOS Assistente / Modo IA pages.
+    case assistant = "assistant"
 
     var accentColor: Color {
         switch self {
@@ -16,6 +20,12 @@ enum PageTheme: String, Codable, CaseIterable {
             Color(red: 0.85, green: 0.58, blue: 0.12)
         case .nutrients:
             Color(red: 0.18, green: 0.66, blue: 0.36)
+        case .settings:
+            // Cool slate gray
+            Color(red: 0.42, green: 0.46, blue: 0.52)
+        case .assistant:
+            // Neutral warm gray
+            Color(red: 0.50, green: 0.50, blue: 0.54)
         }
     }
 
@@ -29,18 +39,16 @@ enum PageTheme: String, Codable, CaseIterable {
             Color(red: 0.95, green: 0.70, blue: 0.20)
         case .nutrients:
             Color(red: 0.42, green: 0.84, blue: 0.58)
+        case .settings:
+            Color(red: 0.62, green: 0.66, blue: 0.72)
+        case .assistant:
+            Color(red: 0.72, green: 0.72, blue: 0.76)
         }
     }
 
     var gradient: LinearGradient {
         switch self {
-        case .home:
-            LinearGradient(colors: [secondaryAccentColor, accentColor], startPoint: .topLeading, endPoint: .bottomTrailing)
-        case .lists:
-            LinearGradient(colors: [secondaryAccentColor, accentColor], startPoint: .topLeading, endPoint: .bottomTrailing)
-        case .recipes:
-            LinearGradient(colors: [secondaryAccentColor, accentColor], startPoint: .topLeading, endPoint: .bottomTrailing)
-        case .nutrients:
+        case .home, .lists, .recipes, .nutrients, .settings, .assistant:
             LinearGradient(colors: [secondaryAccentColor, accentColor], startPoint: .topLeading, endPoint: .bottomTrailing)
         }
     }
@@ -62,6 +70,8 @@ enum PageTheme: String, Codable, CaseIterable {
         case .lists: .lists
         case .recipes: .recipes
         case .nutrients: .nutrients
+        case .settings: .home
+        case .assistant: .home
         }
     }
 }

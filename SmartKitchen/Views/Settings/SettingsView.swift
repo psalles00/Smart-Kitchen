@@ -273,12 +273,11 @@ struct SettingsView: View {
     private var macSettingsLayout: some View {
         NavigationSplitView {
             macSettingsSidebar
-                .navigationSplitViewColumnWidth(min: 260, ideal: 300, max: 340)
+                .navigationSplitViewColumnWidth(min: 240, ideal: 280, max: 320)
         } detail: {
             macSettingsDetailPane
         }
         .navigationSplitViewStyle(.balanced)
-        .frame(minWidth: 1240, minHeight: 860)
     }
 
     private var macSettingsSidebar: some View {
@@ -515,6 +514,165 @@ extension View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 }
+
+// MARK: - MacSettingsExpandedPage
+
+/// Settings page used by the macOS sidebar. Wraps the settings UI inside
+/// `ExpandedPageLayout(pageTheme: .settings, ...)` — i.e. the same shell as
+/// Listas / Nutrição, with the gray-tinted nebula shader as background.
+///
+/// Unlike the sheet variant (`SettingsView`), this view does NOT embed a
+/// `NavigationSplitView` nor force a 1240pt minimum width — both of which
+/// previously caused content to be clipped/shifted when Settings was hosted
+/// inside the main sidebar's detail pane.
+struct MacSettingsExpandedPage: View {
+    @State private var selectedDestination: SettingsDestination = .iCloud
+    @Environment(\.requestReview) private var requestReview
+    @State private var placeholderAction: PlaceholderAction?
+
+    private enum PlaceholderAction: Identifiable {
+        case restorePurchases
+        case feedbackSupport
+
+        var id: String {
+            switch self {
+            case .restorePurchases: return "restore"
+            case .feedbackSupport: return "feedback"
+            }
+        }
+
+        var title: String {
+            switch self {
+            case .restorePurchases: return String(localized: "Restaurar compras")
+            case .feedbackSupport: return String(localized: "Feedback e suporte")
+            }
+        }
+    }
+
+    private var appName: String {
+        if let displayName = Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String,
+           !displayName.isEmpty {
+            return displayName
+        }
+        return Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String ?? "Savoria"
+    }
+
+    private var appVersion: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "3.2.6"
+    }
+
+    var body: some View {
+        ExpandedPageLayout(
+            pageTheme: .settings,
+            header: { isInverted in
+                PageHeader(title: String(localized: "Configurações"), isInverted: isInverted)
+            },
+            content: {
+                HStack(spacing: 0) {
+                    settingsListColumn
+                        .frame(minWidth: 240, idealWidth: 280, maxWidth: 320)
+                    Divider()
+                    settingsDetailColumn
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                }
+                .environment(\.openSettingsDestination) { destination in
+                    selectedDestination = destination
+                }
+                .alert(item: $placeholderAction) { action in
+                    Alert(
+                        title: Text(action.title),
+                        message: Text("Em breve"),
+                        dismissButton: .default(Text("OK"))
+                    )
+                }
+            },
+            infoContent: { EmptyView() }
+        )
+    }
+
+    @ViewBuilder
+    private var settingsListColumn: some View {
+        List(selection: $selectedDestination) {
+            Section {
+                PlanCardView()
+                    .padding(.vertical, 4)
+                    .listRowInsets(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
+                    .listRowBackground(Color.clear)
+            }
+
+            Section("Conta e Sincronização") {
+                ForEach([SettingsDestination.iCloud, .familySharing, .notifications, .backup]) { dest in
+                    Label(dest.titleKey, systemImage: dest.systemImage).tag(dest)
+                }
+            }
+
+            Section("Preferências") {
+                ForEach([SettingsDestination.appearance, .lists, .nutrition]) { dest in
+                    Label(dest.titleKey, systemImage: dest.systemImage).tag(dest)
+                }
+            }
+
+            Section("Dados") {
+                Label(SettingsDestination.data.titleKey, systemImage: SettingsDestination.data.systemImage)
+                    .tag(SettingsDestination.data)
+            }
+
+            Section("Sobre") {
+                Button {
+                    placeholderAction = .restorePurchases
+                } label: {
+                    Label("Restaurar compras", systemImage: "arrow.clockwise")
+                }
+                .buttonStyle(.plain)
+
+                Button {
+                    placeholderAction = .feedbackSupport
+                } label: {
+                    Label("Feedback e suporte", systemImage: "questionmark.circle")
+                }
+                .buttonStyle(.plain)
+
+                Button {
+                    requestReview()
+                } label: {
+                    Label("Avaliar na App Store", systemImage: "star")
+                }
+                .buttonStyle(.plain)
+
+                ShareLink(item: appName, subject: Text(verbatim: appName)) {
+                    Label("Compartilhar app", systemImage: "square.and.arrow.up")
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .listStyle(.sidebar)
+        .scrollContentBackground(.hidden)
+        .safeAreaInset(edge: .bottom) {
+            Text(verbatim: "\(appName) \(appVersion)")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .background(.bar)
+        }
+    }
+
+    @ViewBuilder
+    private var settingsDetailColumn: some View {
+        switch selectedDestination {
+        case .iCloud:        iCloudSettingsView()
+        case .familySharing: FamilySharingSettingsView()
+        case .notifications: NotificationSettingsView()
+        case .backup:        BackupSettingsView()
+        case .appearance:    AppearanceSettingsView()
+        case .lists:         ListsSettingsView()
+        case .nutrition:     NutritionSettingsView()
+        case .data:          DataSettingsView()
+        }
+    }
+}
+
 #else
 extension View {
     func macSettingsContainer() -> some View {

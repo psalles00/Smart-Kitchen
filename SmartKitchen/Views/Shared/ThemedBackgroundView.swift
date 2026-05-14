@@ -63,6 +63,8 @@ struct ThemedBackgroundView: View {
         case .lists: .lists
         case .recipes: .recipes
         case .nutrients: .nutrients
+        case .settings: .settings
+        case .assistant: .assistant
         }
     }
 }
@@ -113,6 +115,10 @@ private struct StaticNebulaBackground: View {
             Color(red: 0.90, green: 0.62, blue: 0.12)
         case .nutrients:
             Color(red: 0.10, green: 0.90, blue: 0.30)
+        case .settings:
+            Color(red: 0.50, green: 0.55, blue: 0.62)
+        case .assistant:
+            Color(red: 0.58, green: 0.58, blue: 0.62)
         }
     }
 
@@ -126,6 +132,10 @@ private struct StaticNebulaBackground: View {
             Color(red: 0.98, green: 0.76, blue: 0.26)
         case .nutrients:
             Color(red: 0.40, green: 0.96, blue: 0.58)
+        case .settings:
+            Color(red: 0.74, green: 0.78, blue: 0.84)
+        case .assistant:
+            Color(red: 0.80, green: 0.80, blue: 0.84)
         }
     }
 }
