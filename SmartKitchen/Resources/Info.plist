@@ -2,28 +2,59 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>ATSApplicationFontsPath</key>
+	<string>.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>Savoria</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>pt-BR</string>
+		<string>en</string>
+		<string>es</string>
+		<string>fr</string>
+		<string>de</string>
+		<string>it</string>
+		<string>ja</string>
+	</array>
 	<key>CFBundleName</key>
 	<string>$(PRODUCT_NAME)</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
 	<string>1.0</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>CFBundleURLName</key>
+			<string>com.pedrosalles.smartkitchen.import</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>smartkitchen</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleVersion</key>
 	<string>1</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>NSCameraUsageDescription</key>
-	<string>O Smart Kitchen usa a câmera para tirar fotos das suas receitas.</string>
+	<string>O Savoria usa a câmera para tirar fotos das suas receitas e refeições.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>O Savoria usa o microfone para registrar refeições por voz.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>O Smart Kitchen acessa a galeria para anexar fotos às suas receitas.</string>
+	<string>O Savoria acessa a galeria para anexar fotos às suas receitas.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>O Savoria usa reconhecimento de voz para transcrever o que você falou sobre sua refeição.</string>
 	<key>SupabaseAnonKey</key>
 	<string>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmY212ZGlqdmdlYWlodnd5c3NiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4ODAwMjEsImV4cCI6MjA5MjQ1NjAyMX0.Ffpszze5umpURnzNL_Fl3u7SFmjb_opQmWVPdpUjhiI</string>
 	<key>SupabaseURL</key>
@@ -32,6 +63,15 @@
 	<array>
 		<string>PlayfairDisplay.ttf</string>
 		<string>PlayfairDisplay-Italic.ttf</string>
+		<string>Boska-Black.otf</string>
+		<string>Boska-Medium.otf</string>
+		<string>Boska-Regular.otf</string>
+		<string>Boska-Light.otf</string>
+		<string>BricolageGrotesque-Variable.ttf</string>
+	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
 	</array>
 	<key>UILaunchScreen</key>
 	<dict/>

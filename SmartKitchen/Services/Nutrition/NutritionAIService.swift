@@ -27,6 +27,7 @@ final class NutritionAIService {
     }
 
     private let ai = AIService()
+    private let usda = USDANutritionLookup()
     private let exa = ExaNutritionLookup()
     private let parser = NutritionItemParser()
     private let cache = FoodCache.shared
@@ -37,7 +38,7 @@ final class NutritionAIService {
 
     /// Text-based nutrition analysis. Pipeline:
     /// 1. Parse `description` into discrete items (`{name, qty, unit}`).
-    /// 2. For each item: Supabase cache → Exa `/answer` → LLM fallback.
+    /// 2. For each item: Supabase cache → USDA FoodData Central → Exa → LLM fallback.
     /// 3. Cache hits/misses are written back to Supabase (write-through).
     /// 4. `NutritionCalculator` does the final scaling+sum in pure Swift.
     func analyzeText(description: String) async throws -> FoodAnalysis {
@@ -102,14 +103,14 @@ final class NutritionAIService {
 
     // MARK: - Networking primitives
 
-    /// Resolves per-100g data for each parsed item, going cache → Exa → LLM.
-    /// Successful Exa or LLM lookups are written back to Supabase and the
+    /// Resolves per-100g data for each parsed item, going cache → USDA → Exa → LLM.
+    /// Successful USDA, Exa, or LLM lookups are written back to Supabase and the
     /// returned IDs are surfaced so the UI can attach votes.
     private func resolvePer100g(
         for items: [NutritionItemParser.ParsedItem]
     ) async -> (resolved: [NutritionCalculator.Resolved], ids: [UUID]) {
         var slots: [Per100gNutrition?] = Array(repeating: nil, count: items.count)
-        var pendingExa: [(index: Int, name: String)] = []
+        var pendingUSDA: [(index: Int, name: String)] = []
 
         // 1. Cache lookup (sequential — Supabase REST is fast enough for small N).
         for (i, item) in items.enumerated() {
@@ -117,11 +118,37 @@ final class NutritionAIService {
             if let hit = await cache.lookup(canonicalName: canonical) {
                 slots[i] = hit
             } else {
-                pendingExa.append((i, item.name))
+                pendingUSDA.append((i, item.name))
             }
         }
 
-        // 2. Exa batch for the misses.
+        // 2. USDA batch for the misses.
+        if !pendingUSDA.isEmpty {
+            let names = pendingUSDA.map { $0.name }
+            let usdaResults = await usda.fetchPer100g(for: names)
+            for (offset, usdaItem) in usdaResults.enumerated() {
+                let slot = pendingUSDA[offset].index
+                if usdaItem.hasMacros {
+                    var copy = usdaItem
+                    if cache.isEnabled {
+                        do {
+                            let id = try await cache.upsert(usdaItem)
+                            copy.id = id
+                        } catch {
+                            LLMLog.error("FoodCache upsert (usda) failed: \(error.localizedDescription)")
+                        }
+                    }
+                    slots[slot] = copy
+                }
+            }
+        }
+
+        var pendingExa: [(index: Int, name: String)] = []
+        for pending in pendingUSDA where slots[pending.index]?.hasMacros != true {
+            pendingExa.append(pending)
+        }
+
+        // 3. Exa batch for the USDA misses.
         if !pendingExa.isEmpty {
             let names = pendingExa.map { $0.name }
             do {
@@ -146,7 +173,7 @@ final class NutritionAIService {
             }
         }
 
-        // 3. LLM fallback for any remaining empty/incomplete slots.
+        // 4. LLM fallback for any remaining empty/incomplete slots.
         for (i, item) in items.enumerated() where slots[i]?.hasMacros != true {
             if let llmEntry = await llmPer100gEstimate(for: item) {
                 var copy = llmEntry
