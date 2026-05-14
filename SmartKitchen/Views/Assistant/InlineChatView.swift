@@ -319,7 +319,8 @@ struct InlineChatView: View {
                     .font(.caption)
                     .foregroundStyle(.red)
                     .padding(.horizontal, 16)
-                    .padding(.vertical, 6)
+                    .padding(.top, 6)
+                    .padding(.bottom, searchBarState != nil ? 64 : 6)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(Color.red.opacity(0.1))
                     .onTapGesture { self.errorMessage = nil }
@@ -868,7 +869,7 @@ struct InlineChatView: View {
             errorMessage = error.localizedDescription
             insertMessage(ChatMessage(
                 role: .assistant,
-                content: "Desculpe, ocorreu um erro: \(error.localizedDescription)",
+                content: "\(String(localized: "Desculpe, ocorreu um erro:")) \(error.localizedDescription)",
                 conversationId: conversationId
             ))
         }
@@ -889,7 +890,7 @@ struct InlineChatView: View {
             let convId = ensureConversation()
             insertMessage(ChatMessage(
                 role: .assistant,
-                content: "Desculpe, ocorreu um erro: \(error.localizedDescription)",
+                content: "\(String(localized: "Desculpe, ocorreu um erro:")) \(error.localizedDescription)",
                 conversationId: convId
             ))
         }

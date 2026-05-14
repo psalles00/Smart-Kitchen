@@ -1,0 +1,15 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build Savoria (Fast)",
+            "type": "shell",
+            "command": "xcodebuild -workspace SmartKitchen.xcodeproj/project.xcworkspace -scheme Savoria -configuration Debug -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -derivedDataPath 'build-savoria-dev' COMPILER_INDEX_STORE_ENABLE=NO ONLY_ACTIVE_ARCH=YES",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}

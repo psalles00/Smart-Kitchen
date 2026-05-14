@@ -36,7 +36,7 @@ enum APIConfig {
     private static func bundleValue(infoKey: String, envKey: String) -> String {
         if let rawValue = Bundle.main.object(forInfoDictionaryKey: infoKey) as? String {
             let trimmed = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
-            if !trimmed.isEmpty {
+            if !trimmed.isEmpty && !trimmed.hasPrefix("$(") {
                 return trimmed
             }
         }

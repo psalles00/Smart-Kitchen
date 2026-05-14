@@ -304,7 +304,7 @@ struct AssistantView: View {
             errorMessage = error.localizedDescription
             let errorMsg = ChatMessage(
                 role: .assistant,
-                content: "Desculpe, ocorreu um erro: \(error.localizedDescription)"
+                content: "\(String(localized: "Desculpe, ocorreu um erro:")) \(error.localizedDescription)"
             )
             modelContext.insert(errorMsg)
         }

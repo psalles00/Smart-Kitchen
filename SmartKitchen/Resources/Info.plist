@@ -62,9 +62,9 @@
 	<key>OpenRouterAPIKey</key>
 	<string>$(OPENROUTER_API_KEY)</string>
 	<key>SupabaseAnonKey</key>
-	<string>$(SUPABASE_ANON_KEY)</string>
+	<string>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmY212ZGlqdmdlYWlodnd5c3NiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4ODAwMjEsImV4cCI6MjA5MjQ1NjAyMX0.Ffpszze5umpURnzNL_Fl3u7SFmjb_opQmWVPdpUjhiI</string>
 	<key>SupabaseURL</key>
-	<string>$(SUPABASE_URL)</string>
+	<string>https://yfcmvdijvgeaihvwyssb.supabase.co</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>PlayfairDisplay.ttf</string>

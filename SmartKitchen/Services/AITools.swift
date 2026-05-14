@@ -4,6 +4,7 @@ import SwiftData
 /// Defines the OpenAI function-calling tools and executes them against SwiftData.
 @MainActor
 struct AITools {
+    private static let maxDefinitionCount = 24
 
     // MARK: - Tool Definitions (sent to OpenAI)
 
@@ -287,22 +288,26 @@ struct AITools {
     ]
 
     static var definitions: [[String: Any]] {
-        allDefinitions
+        capped(allDefinitions)
     }
 
     static func definitions(excluding excludedToolNames: Set<String>) -> [[String: Any]] {
         guard !excludedToolNames.isEmpty else {
-            return allDefinitions
+            return capped(allDefinitions)
         }
 
-        return allDefinitions.filter { tool in
+        return capped(allDefinitions.filter { tool in
             guard let function = tool["function"] as? [String: Any],
                   let name = function["name"] as? String else {
                 return true
             }
 
             return !excludedToolNames.contains(name)
-        }
+        })
+    }
+
+    private static func capped(_ definitions: [[String: Any]]) -> [[String: Any]] {
+        Array(definitions.prefix(maxDefinitionCount))
     }
 
     // MARK: - Tool Execution
