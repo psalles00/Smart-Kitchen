@@ -885,25 +885,109 @@ struct ContentView: View {
     }
 
     #if os(macOS)
-    private var macSidebarView: some View {
-        NavigationSplitView {
-            List(selection: $selectedSidebar) {
-                Section("Navegação") {
-                    ForEach(SidebarItem.allCases.filter { $0 != .settings }) { item in
-                        Label(item.title, systemImage: item.systemImage)
-                            .tag(item)
-                    }
-                }
-                Section("Preferências") {
-                    Label(SidebarItem.settings.title, systemImage: SidebarItem.settings.systemImage)
-                        .tag(SidebarItem.settings)
+    /// Returns the `PageTheme` whose pre-defined accent colors should drive
+    /// the selection pill for a given sidebar item. These constants live in
+    /// `PageTheme.accentColor` / `PageTheme.secondaryAccentColor` and were
+    /// chosen to match the per-page shader tints — they are NOT sampled from
+    /// the shader at runtime.
+    private func macSidebarTheme(for item: SidebarItem) -> PageTheme? {
+        switch item {
+        case .home: return .home
+        case .lists: return .lists
+        case .recipes: return .recipes
+        case .nutrients: return .nutrients
+        case .settings: return nil // neutral selection (no shader page)
+        }
+    }
+
+    @ViewBuilder
+    private func macSidebarRow(_ item: SidebarItem) -> some View {
+        let isSelected = (selectedSidebar ?? .home) == item
+        let theme = macSidebarTheme(for: item)
+        Button {
+            if selectedSidebar != item {
+                selectedSidebar = item
+            }
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: item.systemImage)
+                    .font(.system(size: 13, weight: .medium))
+                    .frame(width: 18, height: 18)
+                    .foregroundStyle(isSelected ? Color.white : Color.white.opacity(0.72))
+                Text(item.title)
+                    .font(.system(size: 13, weight: isSelected ? .semibold : .medium))
+                    .foregroundStyle(isSelected ? Color.white : Color.white.opacity(0.86))
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background {
+                if isSelected {
+                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .fill(macSidebarSelectionFill(for: theme))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 7, style: .continuous)
+                                .strokeBorder(Color.white.opacity(0.14), lineWidth: 0.5)
+                        )
+                        .shadow(color: (theme?.accentColor ?? Color.white).opacity(0.28), radius: 6, x: 0, y: 2)
                 }
             }
-            .listStyle(.sidebar)
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+    }
+
+    /// Pre-computed selection fill per page. Uses `PageTheme.accentColor` /
+    /// `secondaryAccentColor` so the active row visually matches the page's
+    /// shader without sampling the shader.
+    private func macSidebarSelectionFill(for theme: PageTheme?) -> LinearGradient {
+        guard let theme else {
+            return LinearGradient(
+                colors: [Color.white.opacity(0.22), Color.white.opacity(0.12)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        }
+        return LinearGradient(
+            colors: [
+                theme.secondaryAccentColor.opacity(0.88),
+                theme.accentColor.opacity(0.92)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+
+    @ViewBuilder
+    private func macSidebarSection(_ title: LocalizedStringKey, items: [SidebarItem]) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title)
+                .font(.system(size: 10, weight: .semibold))
+                .textCase(.uppercase)
+                .foregroundStyle(Color.white.opacity(0.45))
+                .padding(.horizontal, 12)
+                .padding(.bottom, 4)
+            ForEach(items) { item in
+                macSidebarRow(item)
+            }
+        }
+    }
+
+    private var macSidebarView: some View {
+        NavigationSplitView {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    macSidebarSection("Navegação", items: SidebarItem.allCases.filter { $0 != .settings })
+                    macSidebarSection("Preferências", items: [.settings])
+                }
+                .padding(.horizontal, 8)
+                .padding(.top, 12)
+                .padding(.bottom, 4)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
             .scrollContentBackground(.hidden)
             .background(MacDarkSidebarBackground().ignoresSafeArea())
             .navigationTitle("")
-            .tint(macActivePageTheme.accentColor)
             .environment(\.colorScheme, .dark)
             .safeAreaInset(edge: .bottom) {
                 VStack(spacing: 0) {
@@ -985,9 +1069,13 @@ struct ContentView: View {
                 .ignoresSafeArea()
         }
         .onAppear {
+            // All themed backgrounds are mounted simultaneously in
+            // `macAppBackground` and gated by opacity — there is no longer a
+            // from/to crossfade, so we just sync the published theme.
             macBackgroundFromTheme = macActivePageTheme
             macBackgroundToTheme = macActivePageTheme
             macBackgroundTransitionProgress = 1.0
+            displayedBgTheme = macActivePageTheme
         }
         .onChange(of: selectedSidebar) { _, newValue in
             let newTheme: PageTheme = {
@@ -999,14 +1087,14 @@ struct ContentView: View {
                 case .settings: return .home
                 }
             }()
+            // Instant page switch: just publish the new active theme. The
+            // background ZStack toggles opacity between pre-mounted shader
+            // layers, so there is no SCNView re-instantiation flash.
             if newTheme != displayedBgTheme {
                 displayedBgTheme = newTheme
             }
-            if newTheme != macBackgroundToTheme {
-                macBackgroundFromTheme = macBackgroundToTheme
-                macBackgroundToTheme = newTheme
-                macBackgroundTransitionProgress = 1.0
-            }
+            macBackgroundToTheme = newTheme
+            macBackgroundFromTheme = newTheme
         }
     }
 
@@ -1087,12 +1175,18 @@ struct ContentView: View {
 
     @ViewBuilder
     private var macAppBackground: some View {
+        // Mount one themed background per page simultaneously and gate them
+        // by opacity. Each `ThemedBackgroundView` owns its own SCNView; by
+        // keeping all four mounted we never re-instantiate the Metal/SceneKit
+        // view on page switch, which previously caused a visible flash on the
+        // first frame after a sidebar selection change.
         ZStack {
             Color.black
-            macThemedBackground(for: macBackgroundFromTheme)
-                .opacity(1.0 - macBackgroundTransitionProgress)
-            macThemedBackground(for: macBackgroundToTheme)
-                .opacity(macBackgroundTransitionProgress)
+            ForEach(PageTheme.allCases, id: \.self) { theme in
+                macThemedBackground(for: theme)
+                    .opacity(theme == macActivePageTheme ? 1 : 0)
+                    .allowsHitTesting(false)
+            }
         }
     }
 
@@ -1699,8 +1793,8 @@ private struct HomeView: View {
                         subtitle: String(localized: "Adicione, busque ou pergunte..."),
                         imageName: "assistente",
                         style: .featured,
-                        imageSize: 124,
-                        imageOffset: CGSize(width: 18, height: 24)
+                        imageSize: 496,
+                        imageOffset: CGSize(width: 60, height: 90)
                     ) {
                         onOpenSearch()
                     }
@@ -1712,8 +1806,9 @@ private struct HomeView: View {
                             subtitle: String(localized: "Inteligência"),
                             imageName: "modo ia",
                             style: .wide,
-                            imageSize: 86,
-                            imageOffset: CGSize(width: 54, height: 22)
+                            imageSize: 215,
+                            imageOffset: CGSize(width: -8, height: 40),
+                            imageAlignment: .bottomTrailing
                         ) {
                             onOpenChat()
                         }
@@ -1724,8 +1819,9 @@ private struct HomeView: View {
                             subtitle: String(localized: "de receitas"),
                             imageName: "ideis",
                             style: .wide,
-                            imageSize: 70,
-                            imageOffset: CGSize(width: 54, height: 10)
+                            imageSize: 175,
+                            imageOffset: CGSize(width: -10, height: 30),
+                            imageAlignment: .bottomTrailing
                         ) {
                             onOpenRecipeIdeas()
                         }
@@ -2121,6 +2217,7 @@ private struct HomeView: View {
         style: HomeShortcutTileStyle,
         imageSize: CGFloat? = nil,
         imageOffset: CGSize? = nil,
+        imageAlignment: Alignment? = nil,
         action: @escaping () -> Void
     ) -> some View {
         Button {
@@ -2133,7 +2230,8 @@ private struct HomeView: View {
                 imageName: imageName,
                 style: style,
                 customSize: imageSize,
-                customOffset: imageOffset
+                customOffset: imageOffset,
+                customAlignment: imageAlignment
             )
         }
         .buttonStyle(HomeShortcutButtonStyle())
@@ -2170,7 +2268,8 @@ private struct HomeView: View {
         imageName: String,
         style: HomeShortcutTileStyle,
         customSize: CGFloat? = nil,
-        customOffset: CGSize? = nil
+        customOffset: CGSize? = nil,
+        customAlignment: Alignment? = nil
     ) -> some View {
         ZStack {
             homeShortcutBackgroundColor
@@ -2209,7 +2308,7 @@ private struct HomeView: View {
                 Color.clear
             }
         }
-        .overlay(alignment: homeShortcutImageAlignment(for: style)) {
+        .overlay(alignment: customAlignment ?? homeShortcutImageAlignment(for: style)) {
             homeShortcutTileImage(
                 imageName: imageName,
                 style: style,
@@ -2529,12 +2628,16 @@ extension View {
 }
 #else
 private struct ForceLightSheetModifier: ViewModifier {
+    // On macOS we honor the user's selected appearance — never force a hard
+    // white background on sheets, which previously made dark mode unreadable.
+    // The modifier still gives sheets a clean adaptive background so they
+    // don't fall through to the desktop / window chrome.
     func body(content: Content) -> some View {
         content
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .scrollContentBackground(.hidden)
-            .background(Color.white)
-            .presentationBackground(.white)
+            .background(appPrimaryBackground)
+            .presentationBackground(appPrimaryBackground)
     }
 }
 extension View {
