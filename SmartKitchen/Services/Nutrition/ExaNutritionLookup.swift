@@ -31,8 +31,7 @@ final class ExaNutritionLookup {
     /// orchestrator can fall back to the LLM for just those.
     func fetchPer100g(for names: [String], locale: String = AppLocalization.current().nutritionCacheLocaleIdentifier) async throws -> [Per100gNutrition] {
         guard !names.isEmpty else { return [] }
-        let apiKey = APIConfig.exaAPIKey
-        guard !apiKey.isEmpty else {
+        guard APIConfig.hasExaBackend else {
             // Exa not configured — return empty placeholders so the caller
             // falls straight through to the LLM path.
             return names.map { Self.emptyResult(name: $0, locale: locale) }
@@ -47,7 +46,7 @@ final class ExaNutritionLookup {
                 query: query,
                 outputSchema: schema,
                 includeDomains: domains,
-                apiKey: apiKey
+                apiKey: APIConfig.exaAPIKey
             )
         } catch {
             LLMLog.error("Exa lookup failed: \(error.localizedDescription)")

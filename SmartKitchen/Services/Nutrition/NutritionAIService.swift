@@ -27,7 +27,6 @@ final class NutritionAIService {
     }
 
     private let ai = AIService()
-    private let openRouter = OpenRouterClient()
     private let exa = ExaNutritionLookup()
     private let parser = NutritionItemParser()
     private let cache = FoodCache.shared
@@ -259,79 +258,31 @@ final class NutritionAIService {
     }
 
     private func callText(prompt: String) async throws -> String {
-        // AIService already routes OpenAI → OpenRouter on failure; just delegate.
         let apiKey = APIConfig.openAIAPIKey
         let messages: [[String: Any]] = [
             ["role": "user", "content": prompt]
         ]
-        let response = try await ai.sendChat(messages: messages, apiKey: apiKey)
+        let response = try await ai.sendChat(
+            messages: messages,
+            apiKey: apiKey,
+            model: textModel,
+            acceptLanguage: AppLocalization.current().acceptLanguageHeader
+        )
         guard let content = response.content, !content.isEmpty else {
             throw NutritionAIError.emptyResponse
         }
-        _ = textModel
         return content
     }
 
     private func callVision(prompt: String, imageData: Data) async throws -> String {
-        let openAIKey = APIConfig.openAIAPIKey
-
-        // 1. Try OpenAI vision (gpt-4o-mini).
-        if !openAIKey.isEmpty {
-            do {
-                return try await callVisionOpenAI(prompt: prompt, imageData: imageData, apiKey: openAIKey)
-            } catch {
-                LLMLog.error("OpenAI vision failed, falling back to OpenRouter: \(error.localizedDescription)")
-            }
-        } else {
-            LLMLog.info("OpenAI key empty; trying OpenRouter for vision directly")
-        }
-
-        // 2. Fallback: OpenRouter (multimodal model).
-        let orKey = APIConfig.openRouterAPIKey
-        guard !orKey.isEmpty else { throw NutritionAIError.missingAPIKey }
-        LLMLog.info("Routing vision to OpenRouter (\(OpenRouterModel.default))")
-        return try await openRouter.analyzeImage(prompt: prompt, imageData: imageData, apiKey: orKey)
-    }
-
-    private func callVisionOpenAI(prompt: String, imageData: Data, apiKey: String) async throws -> String {
-        let b64 = imageData.base64EncodedString()
-        let dataURL = "data:image/jpeg;base64,\(b64)"
-
-        let body: [String: Any] = [
-            "model": visionModel,
-            "messages": [[
-                "role": "user",
-                "content": [
-                    ["type": "image_url", "image_url": ["url": dataURL]],
-                    ["type": "text", "text": prompt]
-                ]
-            ]],
-            "max_tokens": 1024
-        ]
-
-        let url = URL(string: "https://api.openai.com/v1/chat/completions")!
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-        request.timeoutInterval = 60
-        request.httpBody = try JSONSerialization.data(withJSONObject: body)
-
-        let (data, resp) = try await URLSession.shared.data(for: request)
-        guard let http = resp as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
-            let msg = String(data: data, encoding: .utf8) ?? ""
-            throw AIError.apiError(statusCode: (resp as? HTTPURLResponse)?.statusCode ?? 0, message: msg)
-        }
-        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let choices = json["choices"] as? [[String: Any]],
-              let first = choices.first,
-              let message = first["message"] as? [String: Any],
-              let content = message["content"] as? String,
-              !content.isEmpty
-        else {
-            throw NutritionAIError.emptyResponse
-        }
-        return content
+        try await ai.analyzeImage(
+            prompt: prompt,
+            imageData: imageData,
+            apiKey: APIConfig.openAIAPIKey,
+            model: visionModel,
+            maxTokens: 1024,
+            acceptLanguage: AppLocalization.current().acceptLanguageHeader
+        )
     }
 
     // MARK: - JSON extraction + parsing

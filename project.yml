@@ -37,11 +37,8 @@ targets:
     info:
       path: SmartKitchen/Resources/Info.plist
       properties:
-        OpenAIAPIKey: $(OPENAI_API_KEY)
-        OpenRouterAPIKey: $(OPENROUTER_API_KEY)
-        ExaAPIKey: $(EXA_API_KEY)
-        SupabaseURL: $(SUPABASE_URL)
-        SupabaseAnonKey: $(SUPABASE_ANON_KEY)
+        SupabaseURL: https://yfcmvdijvgeaihvwyssb.supabase.co
+        SupabaseAnonKey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmY212ZGlqdmdlYWlodnd5c3NiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4ODAwMjEsImV4cCI6MjA5MjQ1NjAyMX0.Ffpszze5umpURnzNL_Fl3u7SFmjb_opQmWVPdpUjhiI
         UIAppFonts:
           - PlayfairDisplay.ttf
           - PlayfairDisplay-Italic.ttf

@@ -21,6 +21,7 @@ struct RecipeQuickIdea: Identifiable, Codable, Equatable {
 @MainActor
 final class RecipeQuickIdeasGenerator {
     static let shared = RecipeQuickIdeasGenerator()
+    private let aiService = AIService()
 
     /// Retorna até `limit` ideias rápidas. Lança erro silenciado se faltar API key.
     func generate(
@@ -31,8 +32,9 @@ final class RecipeQuickIdeasGenerator {
         language: AppLanguage,
         limit: Int = 10
     ) async -> [RecipeQuickIdea] {
+        guard !pantryItems.isEmpty else { return [] }
+
         let apiKey = APIConfig.openAIAPIKey
-        guard !apiKey.isEmpty, !pantryItems.isEmpty else { return [] }
         let generationLimit = max(limit + 6, limit)
 
         let pantryList = pantryItems.isEmpty ? "(despensa vazia)" : pantryItems.joined(separator: ", ")
@@ -387,34 +389,13 @@ final class RecipeQuickIdeasGenerator {
         apiKey: String,
         language: AppLanguage
     ) async throws -> ChatCompletionResponse {
-        let endpoint = URL(string: "https://api.openai.com/v1/chat/completions")!
-        let body: [String: Any] = [
-            "model": "gpt-4.1-mini",
-            "messages": messages,
-            "response_format": ["type": "json_object"],
-            "temperature": 0.35
-        ]
-        let data = try JSONSerialization.data(withJSONObject: body)
-
-        var request = URLRequest(url: endpoint)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-        request.setValue(AppLocalization(language: language).acceptLanguageHeader, forHTTPHeaderField: "Accept-Language")
-        request.httpBody = data
-        request.timeoutInterval = 30
-
-        let (responseData, httpResponse) = try await URLSession.shared.data(for: request)
-        guard let http = httpResponse as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
-            throw AIError.invalidResponse
-        }
-        guard let json = try JSONSerialization.jsonObject(with: responseData) as? [String: Any],
-              let choices = json["choices"] as? [[String: Any]],
-              let firstChoice = choices.first,
-              let message = firstChoice["message"] as? [String: Any] else {
-            throw AIError.invalidResponse
-        }
-        let content = message["content"] as? String
-        return ChatCompletionResponse(content: content, toolCalls: [])
+        try await aiService.sendChat(
+            messages: messages,
+            apiKey: apiKey,
+            model: "gpt-4.1-mini",
+            temperature: 0.35,
+            responseFormat: ["type": "json_object"],
+            acceptLanguage: AppLocalization(language: language).acceptLanguageHeader
+        )
     }
 }

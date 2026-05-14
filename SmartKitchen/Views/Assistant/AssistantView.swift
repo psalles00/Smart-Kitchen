@@ -290,15 +290,6 @@ struct AssistantView: View {
     }
 
     private func performAIChat(latestUserMessageID: UUID, latestUserText: String) async {
-        guard !apiKey.isEmpty else {
-            let errorMsg = ChatMessage(
-                role: .assistant,
-                content: "⚠️ Chave de API não configurada. Vá em Ajustes para adicionar sua chave OpenAI."
-            )
-            modelContext.insert(errorMsg)
-            return
-        }
-
         do {
             try await continueConversation(
                 with: buildAPIMessages(

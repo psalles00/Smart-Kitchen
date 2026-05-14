@@ -438,7 +438,7 @@ final class RecipeImportImprover {
         draft: RecipeDraft,
         onStage: @escaping @MainActor (RecipeImportImprovementStage) -> Void
     ) async throws -> RecipeDraft {
-        guard !apiKey.isEmpty else {
+        guard APIConfig.hasAIBackend || !apiKey.isEmpty else {
             throw RecipeImportError.aiFailed(String(localized: "Chave da OpenAI não configurada para melhorar a importação."))
         }
 
@@ -687,66 +687,17 @@ final class RecipeImportImprover {
     private func transcribeAudio(fileURL: URL) async throws -> String {
         RecipeImportLogger.debug("improver transcribe audio with whisper-1")
 
-        let boundary = "Boundary-\(UUID().uuidString)"
-        var request = URLRequest(url: URL(string: "https://api.openai.com/v1/audio/transcriptions")!)
-        request.httpMethod = "POST"
-        request.timeoutInterval = 120
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-
-        let audioData = try Data(contentsOf: fileURL)
-        var body = Data()
-
-        appendFormField(name: "model", value: "whisper-1", to: &body, boundary: boundary)
-        appendFormField(name: "language", value: "pt", to: &body, boundary: boundary)
-        appendFormField(name: "response_format", value: "text", to: &body, boundary: boundary)
-        appendFileField(
-            name: "file",
-            filename: fileURL.lastPathComponent,
-            mimeType: "audio/mp4",
-            fileData: audioData,
-            to: &body,
-            boundary: boundary
+        let transcript = try await aiService.transcribeAudio(
+            fileURL: fileURL,
+            apiKey: apiKey,
+            model: "whisper-1",
+            language: "pt",
+            responseFormat: "text"
         )
-
-        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
-        request.httpBody = body
-
-        let (data, response) = try await URLSession.shared.data(for: request)
-        guard let http = response as? HTTPURLResponse else {
-            throw RecipeImportError.aiFailed(String(localized: "Resposta inválida na transcrição de áudio."))
-        }
-        guard (200...299).contains(http.statusCode) else {
-            let payload = String(data: data, encoding: .utf8) ?? ""
-            throw RecipeImportError.aiFailed(String(localized: "Falha na transcrição (\(http.statusCode)): \(payload)"))
-        }
-
-        let transcript = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         guard transcript.count >= 20 else {
             throw RecipeImportError.insufficientContent(suggestion: String(localized: "A transcrição do vídeo retornou pouco conteúdo útil."))
         }
         return transcript
-    }
-
-    private func appendFormField(name: String, value: String, to body: inout Data, boundary: String) {
-        body.append("--\(boundary)\r\n".data(using: .utf8)!)
-        body.append("Content-Disposition: form-data; name=\"\(name)\"\r\n\r\n".data(using: .utf8)!)
-        body.append("\(value)\r\n".data(using: .utf8)!)
-    }
-
-    private func appendFileField(
-        name: String,
-        filename: String,
-        mimeType: String,
-        fileData: Data,
-        to body: inout Data,
-        boundary: String
-    ) {
-        body.append("--\(boundary)\r\n".data(using: .utf8)!)
-        body.append("Content-Disposition: form-data; name=\"\(name)\"; filename=\"\(filename)\"\r\n".data(using: .utf8)!)
-        body.append("Content-Type: \(mimeType)\r\n\r\n".data(using: .utf8)!)
-        body.append(fileData)
-        body.append("\r\n".data(using: .utf8)!)
     }
 
     private func directVideoURL(from rawExternalURL: String) -> URL? {

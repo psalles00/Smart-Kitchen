@@ -8,6 +8,7 @@ import Foundation
 @MainActor
 final class ExaClient {
     private let endpoint = URL(string: "https://api.exa.ai/answer")!
+    private let supabase = SupabaseClient()
 
     enum ExaError: LocalizedError {
         case missingAPIKey
@@ -49,20 +50,29 @@ final class ExaClient {
         includeDomains: [String] = [],
         apiKey: String
     ) async throws -> AnswerResult {
-        guard !apiKey.isEmpty else { throw ExaError.missingAPIKey }
-
         var body: [String: Any] = ["query": query]
         if let outputSchema { body["outputSchema"] = outputSchema }
         if !includeDomains.isEmpty { body["includeDomains"] = includeDomains }
 
-        var request = URLRequest(url: endpoint)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
-        request.timeoutInterval = 30
-        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let data: Data
+        let resp: URLResponse
+        if supabase.isConfigured {
+            data = try await supabase.invokeFunctionData(name: "exa-answer", body: body)
+            resp = HTTPURLResponse(url: endpoint, statusCode: 200, httpVersion: nil, headerFields: nil)!
+        } else {
+            guard !apiKey.isEmpty else { throw ExaError.missingAPIKey }
 
-        let (data, resp) = try await URLSession.shared.data(for: request)
+            var request = URLRequest(url: endpoint)
+            request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
+            request.timeoutInterval = 30
+            request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+            let result = try await URLSession.shared.data(for: request)
+            data = result.0
+            resp = result.1
+        }
 
         guard let http = resp as? HTTPURLResponse else { throw ExaError.invalidResponse }
         guard (200...299).contains(http.statusCode) else {

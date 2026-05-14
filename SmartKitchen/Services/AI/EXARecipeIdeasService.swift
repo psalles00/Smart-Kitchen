@@ -53,6 +53,7 @@ final class EXARecipeIdeasService {
     static let shared = EXARecipeIdeasService()
 
     private let endpoint = URL(string: "https://api.exa.ai/search")!
+    private let supabase = SupabaseClient()
 
     /// Cache em memória por sessão.
     private struct CacheEntry {
@@ -106,7 +107,6 @@ final class EXARecipeIdeasService {
         }
 
         let apiKey = APIConfig.exaAPIKey
-        guard !apiKey.isEmpty else { throw ServiceError.missingAPIKey }
 
         let query = buildQuery(
             occasion: occasion,
@@ -200,15 +200,32 @@ final class EXARecipeIdeasService {
             body["includeDomains"] = language.exaPreferredDomains
         }
 
-        var request = URLRequest(url: endpoint)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
-        request.setValue(AppLocalization(language: language).acceptLanguageHeader, forHTTPHeaderField: "Accept-Language")
-        request.timeoutInterval = 30
-        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let acceptLanguage = AppLocalization(language: language).acceptLanguageHeader
+        let data: Data
+        let resp: URLResponse
+        if supabase.isConfigured {
+            data = try await supabase.invokeFunctionData(
+                name: "exa-search",
+                body: body,
+                acceptLanguage: acceptLanguage
+            )
+            resp = HTTPURLResponse(url: endpoint, statusCode: 200, httpVersion: nil, headerFields: nil)!
+        } else {
+            guard !apiKey.isEmpty else { throw ServiceError.missingAPIKey }
 
-        let (data, resp) = try await URLSession.shared.data(for: request)
+            var request = URLRequest(url: endpoint)
+            request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
+            request.setValue(acceptLanguage, forHTTPHeaderField: "Accept-Language")
+            request.timeoutInterval = 30
+            request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+            let result = try await URLSession.shared.data(for: request)
+            data = result.0
+            resp = result.1
+        }
+
         guard let http = resp as? HTTPURLResponse else { throw ServiceError.invalidResponse }
         guard (200...299).contains(http.statusCode) else {
             let msg = String(data: data, encoding: .utf8) ?? ""

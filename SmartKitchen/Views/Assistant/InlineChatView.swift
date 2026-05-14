@@ -850,8 +850,6 @@ struct InlineChatView: View {
 
     /// Sends an AI request without creating a visible user message.
     private func performInternalAIChat(instruction: String, conversationId: UUID, skipTools: Bool = false) async {
-        guard !apiKey.isEmpty else { return }
-
         var msgs = [[String: Any]]()
         let systemPrompt = buildSystemPrompt(includeInventoryContext: true)
         msgs.append(["role": "system", "content": systemPrompt])
@@ -877,16 +875,6 @@ struct InlineChatView: View {
     }
 
     private func performAIChat(latestUserMessageID: UUID, latestUserText: String) async {
-        guard !apiKey.isEmpty else {
-            let convId = ensureConversation()
-            insertMessage(ChatMessage(
-                role: .assistant,
-                content: "⚠️ Chave de API não configurada. Vá em Ajustes para adicionar sua chave OpenAI.",
-                conversationId: convId
-            ))
-            return
-        }
-
         do {
             try await continueConversation(
                 with: buildAPIMessages(

@@ -43,6 +43,46 @@ final class SupabaseClient {
         self.anonKey = APIConfig.supabaseAnonKey
     }
 
+    // MARK: - Edge Functions
+
+    func invokeFunctionData(
+        name: String,
+        body: [String: Any],
+        acceptLanguage: String? = nil
+    ) async throws -> Data {
+        let data = try JSONSerialization.data(withJSONObject: body)
+        return try await invokeFunctionData(
+            name: name,
+            body: data,
+            contentType: "application/json",
+            acceptLanguage: acceptLanguage
+        )
+    }
+
+    func invokeFunctionData(
+        name: String,
+        body: Data,
+        contentType: String,
+        acceptLanguage: String? = nil
+    ) async throws -> Data {
+        guard let baseURL else { throw SupabaseError.notConfigured }
+        let url = baseURL.appendingPathComponent("functions/v1/\(name)")
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        applyAuth(&request)
+        request.setValue(contentType, forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 120
+        if let acceptLanguage, !acceptLanguage.isEmpty {
+            request.setValue(acceptLanguage, forHTTPHeaderField: "Accept-Language")
+        }
+        request.httpBody = body
+
+        let (data, resp) = try await URLSession.shared.data(for: request)
+        try validate(resp: resp, data: data)
+        return data
+    }
+
     // MARK: - Generic helpers
 
     /// PostgREST GET (`/rest/v1/<table>?...`).
