@@ -203,6 +203,7 @@ final class CloudSyncService: @unchecked Sendable {
             registerForRemoteNotifications()
             setupRemoteChangeObservation()
         }
+        PerformanceLogger.event(.cloudSync, "CloudSyncService.init end")
     }
 
     func checkiCloudAvailability() {

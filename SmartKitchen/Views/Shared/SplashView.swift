@@ -7,7 +7,8 @@ import SwiftUI
 /// dashboard while bootstrap work runs in the background.
 struct SplashView: View {
     var body: some View {
-        Group {
+        let _ = PerformanceLogger.event(.launch, "SplashView body evaluated")
+        return Group {
             #if os(iOS)
             LaunchSkeletonHomeView()
                 .forceLightStatusBar()
@@ -28,7 +29,8 @@ private struct LaunchSkeletonHomeView: View {
     private let cornerRadius: CGFloat = 24
 
     var body: some View {
-        ZStack(alignment: .top) {
+        let _ = PerformanceLogger.event(.launch, "LaunchSkeletonHomeView body evaluated")
+        return ZStack(alignment: .top) {
             NebulaShaderView(theme: .home)
                 .ignoresSafeArea()
                 .allowsHitTesting(false)

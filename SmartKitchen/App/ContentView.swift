@@ -533,7 +533,6 @@ struct ContentView: View {
                         .allowsHitTesting(false)
                 }
                 .environment(\.scrollToTopTrigger, scrollToTopTrigger)
-                .environment(\.suspendAnimatedPageBackground, suspendOffscreenTabs)
                 .environment(\.suspendActiveTabDataSubscriptions, suspendOffscreenTabs)
                 .preferredColorScheme(settingsSnapshot.appearanceMode.colorScheme)
                 .sheet(isPresented: $showSettings) {
@@ -2134,7 +2133,6 @@ private struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.openRecipeInRecipesTab) private var openRecipeInRecipesTab
-    @Environment(\.suspendActiveTabDataSubscriptions) private var suspendActiveTabDataSubscriptions
     @EnvironmentObject private var searchBarState: SearchBarState
     // Corrigido ciclo do AttributeGraph separando dependências reativas de SwiftData em @State com atualização manual para evitar travamentos no macOS.
 
@@ -2178,9 +2176,7 @@ private struct HomeView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 32) {
                         actionDeck
-                        if !shouldSuspendDataSubscriptions {
-                            PendingNutritionDaysCard()
-                        }
+                        PendingNutritionDaysCard()
                         if !expiringItemsState.isEmpty {
                             expiringSection
                         }
@@ -2198,20 +2194,18 @@ private struct HomeView: View {
             }
         )
         .background(alignment: .topLeading) {
-            if !shouldSuspendDataSubscriptions {
-                HomeLiveInputsObserver(
-                    store: liveInputs,
-                    settingsSnapshot: $settingsSnapshot,
-                    onInitialInputsReady: {
-                        hasLoadedInitialInputs = true
-                        refreshHomeDerivedState(logEvent: false)
-                    },
-                    onDebouncedInputsChanged: {
-                        refreshHomeDerivedState(logEvent: true)
-                    }
-                )
-                .allowsHitTesting(false)
-            }
+            HomeLiveInputsObserver(
+                store: liveInputs,
+                settingsSnapshot: $settingsSnapshot,
+                onInitialInputsReady: {
+                    hasLoadedInitialInputs = true
+                    refreshHomeDerivedState(logEvent: false)
+                },
+                onDebouncedInputsChanged: {
+                    refreshHomeDerivedState(logEvent: true)
+                }
+            )
+            .allowsHitTesting(false)
         }
         #if os(iOS)
         .toolbar(.hidden, for: .navigationBar)
@@ -2276,16 +2270,6 @@ private struct HomeView: View {
         updateRecipeCategories()
         updateCompatibleMatches()
         updateExpiringItems()
-    }
-
-    /// While the foreground-burst mitigation window is active AND we already
-    /// rendered a populated state once, stop mounting heavy `@Query`
-    /// subscribers so the CloudKit merge burst does not trigger dozens of
-    /// main-thread fetches per remote change. The observer remounts once the
-    /// window closes and performs a single fresh fetch via its initial-load
-    /// path.
-    private var shouldSuspendDataSubscriptions: Bool {
-        suspendActiveTabDataSubscriptions && hasLoadedInitialInputs
     }
 
     private func updateRecipeCategories() {

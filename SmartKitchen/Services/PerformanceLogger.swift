@@ -143,6 +143,37 @@ enum PerformanceLogger {
         }
     }()
 
+    // MARK: - CloudKit mirror observer
+    //
+    // Captures NSPersistentCloudKitContainer mirror events so we can see
+    // when CloudKit is doing import/export/setup work — which can run on
+    // background queues but still pin main-thread locks on the SwiftData
+    // model context.
+    static func installCloudKitMirrorObserver() {
+        _ = cloudKitMirrorInstallToken
+    }
+
+    private static let cloudKitMirrorInstallToken: Void = {
+        let name = Notification.Name("NSPersistentCloudKitContainer.eventChangedNotification")
+        NotificationCenter.default.addObserver(forName: name, object: nil, queue: nil) { note in
+            // We don't know the exact private API event payload, but we can
+            // log the userInfo keys + a stringified description for triage.
+            let info = note.userInfo ?? [:]
+            // The event object is under "event" in some iOS versions, under
+            // "NSPersistentCloudKitContainerEventKey" in others.
+            let eventDescription: String = {
+                if let evt = info["event"] {
+                    return String(describing: evt)
+                }
+                if let evt = info["NSPersistentCloudKitContainerEventKey"] {
+                    return String(describing: evt)
+                }
+                return info.keys.map { "\($0)" }.joined(separator: ",")
+            }()
+            event(.cloudSync, "ckmirror event", metadata: eventDescription.prefix(220).description)
+        }
+    }()
+
     // MARK: - Main-thread hang detector
     //
     // A small watchdog that periodically pings the main thread from a
@@ -157,6 +188,7 @@ enum PerformanceLogger {
     nonisolated(unsafe) private static var hangLastHeartbeat: TimeInterval = ProcessInfo.processInfo.systemUptime
     nonisolated(unsafe) private static var hangActive: Bool = false
     nonisolated(unsafe) private static var hangStartedAt: TimeInterval = 0
+    nonisolated(unsafe) private static var hangLastReportedAt: TimeInterval = 0
     nonisolated(unsafe) private static var hangDetectorTimer: DispatchSourceTimer?
 
     /// Installs a watchdog that logs whenever the main thread is unresponsive
@@ -198,13 +230,23 @@ enum PerformanceLogger {
             hangStateLock.lock()
             let lag = now - hangLastHeartbeat
             let shouldOpen = !hangActive && lag > threshold
+            var shouldReportOngoing = false
             if shouldOpen {
                 hangActive = true
                 hangStartedAt = hangLastHeartbeat
+                hangLastReportedAt = now
+            } else if hangActive && (now - hangLastReportedAt) >= 1.0 {
+                // Already hanging — emit a heartbeat every 1s so we can
+                // see in the log that the hang is ongoing (vs. a single
+                // hiccup) and approximately when it ends.
+                hangLastReportedAt = now
+                shouldReportOngoing = true
             }
             hangStateLock.unlock()
             if shouldOpen {
                 event(.scenePhase, "main thread hang detected", metadata: "lagMs=\(Int(lag * 1_000.0))")
+            } else if shouldReportOngoing {
+                event(.scenePhase, "main thread hang ongoing", metadata: "lagMs=\(Int(lag * 1_000.0))")
             }
         }
         timer.resume()

@@ -133,11 +133,15 @@ struct SmartKitchenApp: App {
 
     init() {
         // Must be called after all stored properties are initialized
+        PerformanceLogger.event(.launch, "SmartKitchenApp.init body begin")
         #if os(iOS)
         _ = StatusBarSwizzle.install
+        PerformanceLogger.event(.launch, "after StatusBarSwizzle.install")
         Self.configureNavigationAppearance()
+        PerformanceLogger.event(.launch, "after configureNavigationAppearance")
         #endif
         Self.logBuildConfiguration()
+        PerformanceLogger.event(.launch, "after logBuildConfiguration")
 
         // Wire the perf logger early so every subsequent UIApplication
         // lifecycle notification and CloudKit remote-change burst is
@@ -145,26 +149,33 @@ struct SmartKitchenApp: App {
         // diagnose post-foreground stutters.
         PerformanceLogger.installLifecycleObservers()
         PerformanceLogger.installMainThreadHangDetector()
-        PerformanceLogger.event(.launch, "SmartKitchenApp.init")
+        PerformanceLogger.installCloudKitMirrorObserver()
+        PerformanceLogger.event(.launch, "SmartKitchenApp.init body end")
     }
 
     var body: some Scene {
-        WindowGroup {
+        // PERF DIAG: log every time SwiftUI evaluates the scene body.
+        PerformanceLogger.event(.launch, "SmartKitchenApp.body evaluated")
+        return WindowGroup {
+            // PERF DIAG: log first window-group content build.
+            let _ = PerformanceLogger.event(.launch, "WindowGroup content building")
             ZStack {
-                ContentView()
-                    .modelContainer(cloudSync.container)
-                    .id(cloudSync.containerID)
-                    .environment(subscriptionManager)
-                    // Hide ContentView entirely while the splash is up so it
-                    // can't capture taps and so its first frame work happens
-                    // off the user's critical path.
-                    .opacity(isAppReady ? 1 : 0)
-                    .allowsHitTesting(isAppReady)
-
-                if !isAppReady {
+                if isAppReady {
+                    ContentView()
+                        .modelContainer(cloudSync.container)
+                        .id(cloudSync.containerID)
+                        .environment(subscriptionManager)
+                        .transition(.opacity)
+                        .onAppear {
+                            PerformanceLogger.event(.launch, "ContentView onAppear (first frame visible)")
+                        }
+                } else {
                     SplashView()
                         .transition(.opacity)
                         .zIndex(1)
+                        .onAppear {
+                            PerformanceLogger.event(.launch, "SplashView appeared (ContentView not mounted yet)")
+                        }
                 }
             }
             .animation(.easeOut(duration: 0.25), value: isAppReady)
@@ -245,7 +256,15 @@ struct SmartKitchenApp: App {
                         if now.timeIntervalSince(lastForegroundMaintenance) >= 300 {
                             lastForegroundMaintenance = now
                             PerformanceLogger.event(.cloudSync, "foreground maintenance running")
-                            cloudSync.syncNow()
+                            // Defer to next runloop tick: the scenePhase
+                            // active transition is happening NOW; running
+                            // `syncNow()` synchronously here can add tens of
+                            // ms to the first-frame budget.
+                            Task { @MainActor in
+                                PerformanceLogger.measure(.cloudSync, "syncNow (deferred foreground)") {
+                                    cloudSync.syncNow()
+                                }
+                            }
                             // Defer the notification reschedule one runloop tick
                             // so it never competes with the first frame the user
                             // sees after returning.
@@ -265,12 +284,31 @@ struct SmartKitchenApp: App {
                     // Autosave is disabled on the main context to avoid races
                     // with CloudKit remote-change notifications. Persist any
                     // pending edits whenever the scene leaves the foreground.
+                    //
+                    // Defer the save to a Task so the scenePhase transition
+                    // animation completes first. Saving the main context with
+                    // CloudKit-mirrored changes pending was producing ~480ms
+                    // main-thread hangs during the `active -> inactive ->
+                    // background` sequence. Running it async lets UIKit finish
+                    // the transition before we pay that cost.
                     if newValue == .inactive || newValue == .background {
                         let ctx = cloudSync.container.mainContext
-                        if ctx.hasChanges {
-                            PerformanceLogger.measure(.cloudSync, "saveOnSceneLeave") {
-                                try? ctx.save()
-                            }
+                        let hasChanges = ctx.hasChanges
+                        let inserted = ctx.insertedModelsArray.count
+                        let changed = ctx.changedModelsArray.count
+                        let deleted = ctx.deletedModelsArray.count
+                        PerformanceLogger.event(
+                            .cloudSync,
+                            "scene-leave save inspection",
+                            metadata: "hasChanges=\(hasChanges) inserted=\(inserted) changed=\(changed) deleted=\(deleted)"
+                        )
+                        // DIAGNOSTIC: temporarily skip save to confirm whether
+                        // the hang on background transition is caused by the
+                        // save itself. If the hang disappears, the save is
+                        // the culprit and we need to move it to a background
+                        // context.
+                        if hasChanges {
+                            PerformanceLogger.event(.cloudSync, "scene-leave save SKIPPED (diagnostic)")
                         }
                     }
                 }
