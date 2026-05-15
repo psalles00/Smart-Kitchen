@@ -70,6 +70,8 @@ struct InlineChatView: View {
     @State private var pinnedUserMessageID: UUID?
     @State private var autoActivatedRecipeIdeasMode = false
     @State private var activeRecipeCreation: RecipeCreationProgressState?
+    @State private var pendingChatScrollTarget: PendingChatScrollTarget?
+    @State private var pendingRecipeResultMessageID: UUID?
     /// Drafts ricos (com imageData/externalURL) associados a mensagens de card
     /// inline geradas a partir de Receitas da Web. Permite preservar a imagem
     /// hero ao tocar em "Criar receita no app".
@@ -277,18 +279,30 @@ struct InlineChatView: View {
                         }
                     )
                     .onChange(of: messages.count) { oldCount, newCount in
+                        if let pendingRecipeResultMessageID,
+                           messages.contains(where: { $0.id == pendingRecipeResultMessageID }) {
+                            pendingChatScrollTarget = .message(pendingRecipeResultMessageID)
+                            self.pendingRecipeResultMessageID = nil
+                            return
+                        }
+
                         guard newCount > oldCount,
                               let pinnedUserMessageID,
                               messages.contains(where: { $0.id == pinnedUserMessageID }) else { return }
 
-                        withAnimation(.snappy(duration: 0.28)) {
-                            proxy.scrollTo(pinnedMessageAnchorID(for: pinnedUserMessageID), anchor: .top)
-                        }
+                        pendingChatScrollTarget = .pinnedMessage(pinnedUserMessageID)
                     }
                     .onChange(of: activeRecipeCreation?.id) { _, newValue in
                         guard let newValue else { return }
-                        withAnimation(.snappy(duration: 0.28)) {
-                            proxy.scrollTo(recipeCreationAnchorID(for: newValue), anchor: .bottom)
+                        pendingChatScrollTarget = .recipeCreation(newValue)
+                    }
+                    .onChange(of: pendingChatScrollTarget) { _, newValue in
+                        guard let newValue else { return }
+                        performScroll(to: newValue, proxy: proxy)
+                        DispatchQueue.main.async {
+                            if pendingChatScrollTarget == newValue {
+                                pendingChatScrollTarget = nil
+                            }
                         }
                     }
 
@@ -1783,6 +1797,30 @@ struct InlineChatView: View {
         "assistant-recipe-creation-\(stateID.uuidString)"
     }
 
+    private func performScroll(to target: PendingChatScrollTarget, proxy: ScrollViewProxy) {
+        let animation = Animation.snappy(duration: 0.28)
+        let scrollAction = {
+            switch target {
+            case .pinnedMessage(let messageID):
+                proxy.scrollTo(pinnedMessageAnchorID(for: messageID), anchor: .top)
+            case .recipeCreation(let stateID):
+                proxy.scrollTo(recipeCreationAnchorID(for: stateID), anchor: .top)
+            case .message(let messageID):
+                proxy.scrollTo(messageID, anchor: .top)
+            }
+        }
+
+        withAnimation(animation) {
+            scrollAction()
+        }
+
+        DispatchQueue.main.async {
+            withAnimation(animation) {
+                scrollAction()
+            }
+        }
+    }
+
     private func scrollToBottom(proxy: ScrollViewProxy) {
         withAnimation { proxy.scrollTo("bottomAnchor", anchor: .bottom) }
     }
@@ -2643,11 +2681,13 @@ struct InlineChatView: View {
                 finishRecipeCreation(id: loadingId)
 
                 guard var draft = draftOpt, !draft.name.isEmpty else {
-                    insertMessage(ChatMessage(
+                    let message = ChatMessage(
                         role: .assistant,
                         content: String(localized: "Não consegui estruturar essa receita agora. Tente outra ideia."),
                         conversationId: convId
-                    ))
+                    )
+                    pendingRecipeResultMessageID = message.id
+                    insertMessage(message)
                     return
                 }
 
@@ -2748,18 +2788,22 @@ struct InlineChatView: View {
                 finishRecipeCreation(id: loadingId)
                 let content = response.content ?? ""
                 guard !content.isEmpty else {
-                    insertMessage(ChatMessage(
+                    let message = ChatMessage(
                         role: .assistant,
                         content: String(localized: "Não consegui montar essa receita agora. Tente outra ideia."),
                         conversationId: conversationId
-                    ))
+                    )
+                    pendingRecipeResultMessageID = message.id
+                    insertMessage(message)
                     return
                 }
-                insertMessage(ChatMessage(
+                let message = ChatMessage(
                     role: .assistant,
                     content: content,
                     conversationId: conversationId
-                ))
+                )
+                pendingRecipeResultMessageID = message.id
+                insertMessage(message)
             }
         } catch {
             await replaceLoadingWithError(loadingId: loadingId, conversationId: conversationId)
@@ -2780,11 +2824,13 @@ struct InlineChatView: View {
     private func replaceLoadingWithError(loadingId: UUID, conversationId: UUID) async {
         await MainActor.run {
             finishRecipeCreation(id: loadingId)
-            insertMessage(ChatMessage(
+            let message = ChatMessage(
                 role: .assistant,
                 content: String(localized: "Não consegui montar essa receita agora. Tente outra ideia."),
                 conversationId: conversationId
-            ))
+            )
+            pendingRecipeResultMessageID = message.id
+            insertMessage(message)
         }
     }
 
@@ -2838,6 +2884,7 @@ struct InlineChatView: View {
             content: content,
             conversationId: conversationId
         )
+        pendingRecipeResultMessageID = message.id
         insertMessage(message)
         // Cache do draft estruturado para preservar imagem/URL ao salvar.
         pendingInlineDrafts[message.id] = draft
@@ -2939,6 +2986,12 @@ private struct RecipeCreationProgressState: Identifiable, Equatable {
     let id: UUID
     let title: String
     let sourceLabel: String
+}
+
+private enum PendingChatScrollTarget: Equatable {
+    case pinnedMessage(UUID)
+    case recipeCreation(UUID)
+    case message(UUID)
 }
 
 private struct RecipeCreationProgressField: View {
