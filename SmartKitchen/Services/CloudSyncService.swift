@@ -23,6 +23,21 @@ final class CloudSyncService: @unchecked Sendable {
     private var deduplicationWorkItem: DispatchWorkItem?
     private var shouldActivateCloudOnLaunch = false
     private var hasAttemptedCloudActivationOnLaunch = false
+    /// Timestamp of the last `performDeduplication` (main-thread) pass. Used
+    /// to cool down dedup work so the bursts of `NSPersistentStoreRemoteChange`
+    /// notifications that CloudKit fires when the app returns to the
+    /// foreground don't repeatedly stall the main thread with 9 full-table
+    /// fetches. The background pre-scan still runs (cheap, off-main) so we
+    /// detect new duplicates promptly when they actually appear.
+    private var lastDeduplicationRun: Date = .distantPast
+    /// Minimum wall-clock interval between two consecutive main-thread
+    /// `performDeduplication` runs. Lower bound chosen empirically so we
+    /// remain responsive to duplicates created by simultaneous edits across
+    /// devices without paying the cost on every foreground.
+    private static let deduplicationCooldown: TimeInterval = 60
+    /// Debounce window for collapsing the burst of remote-change
+    /// notifications CloudKit emits when a sync cycle delivers many records.
+    private static let deduplicationDebounce: TimeInterval = 1.5
 
     private(set) var container: ModelContainer
     private(set) var containerID = UUID()
@@ -79,6 +94,7 @@ final class CloudSyncService: @unchecked Sendable {
 
     private init() {
         let syncPref = UserDefaults.standard.object(forKey: Self.syncEnabledKey) as? Bool ?? false
+        PerformanceLogger.event(.cloudSync, "CloudSyncService.init begin", metadata: "syncPref=\(syncPref)")
 
         #if DEBUG
         let skip = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
@@ -115,10 +131,14 @@ final class CloudSyncService: @unchecked Sendable {
 
         if localShouldActivate {
             do {
+                let openStart = DispatchTime.now()
                 initialContainer = try Self.makeContainer(usingCloudKit: true)
                 openedCloudKitEagerly = true
+                let ms = Double(DispatchTime.now().uptimeNanoseconds &- openStart.uptimeNanoseconds) / 1_000_000.0
+                PerformanceLogger.event(.cloudSync, "eager CloudKit container opened", metadata: String(format: "tookMs=%.1f", ms))
             } catch {
                 NSLog("[CloudSync] Eager CloudKit container failed; falling back to local: %@", String(describing: error))
+                PerformanceLogger.error(.cloudSync, "eager CloudKit container failed; falling back to local", metadata: String(describing: error))
                 do {
                     initialContainer = try Self.makeLocalContainerWithRecoveryIfNeeded()
                 } catch {
@@ -129,7 +149,10 @@ final class CloudSyncService: @unchecked Sendable {
             }
         } else {
             do {
+                let openStart = DispatchTime.now()
                 initialContainer = try Self.makeLocalContainerWithRecoveryIfNeeded()
+                let ms = Double(DispatchTime.now().uptimeNanoseconds &- openStart.uptimeNanoseconds) / 1_000_000.0
+                PerformanceLogger.event(.cloudSync, "local container opened", metadata: String(format: "tookMs=%.1f", ms))
             } catch {
                 NSLog("Local container failed, falling back to temporary store: %@", String(describing: error))
                 initialContainer = try! Self.makeEphemeralLocalContainer()
@@ -250,6 +273,7 @@ final class CloudSyncService: @unchecked Sendable {
         // deduplication.
         lastSyncDate = Date()
         isSyncing = false
+        PerformanceLogger.event(.cloudSync, "performSyncNow done; scheduling dedup pre-scan")
 
         // Deduplicate after every foreground sync
         scheduleDeduplication()
@@ -872,8 +896,10 @@ final class CloudSyncService: @unchecked Sendable {
             object: nil,
             queue: .main
         ) { [weak self] _ in
+            PerformanceLogger.event(.remoteChange, "remote change → scheduleDeduplication")
             self?.scheduleDeduplication()
         }
+        PerformanceLogger.event(.cloudSync, "registered NSPersistentStoreRemoteChange observer")
     }
 
     private func teardownRemoteChangeObservation() {
@@ -886,17 +912,93 @@ final class CloudSyncService: @unchecked Sendable {
     private func scheduleDeduplication() {
         deduplicationWorkItem?.cancel()
         let work = DispatchWorkItem { [weak self] in
-            guard let self else { return }
-            // `performDeduplication` is @MainActor; hop explicitly since a
-            // DispatchWorkItem executed on the main queue does NOT provide the
-            // MainActor isolation the compiler requires.
-            Task { @MainActor in
-                self.performDeduplication()
-            }
+            self?.runDeduplicationPrescanIfNeeded()
         }
         deduplicationWorkItem = work
-        // Debounce: CloudKit can fire many notifications in rapid succession
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: work)
+        // Debounce: CloudKit fires many notifications in rapid succession when
+        // a sync cycle delivers records. Collapse them into a single pre-scan
+        // so we don't bombard a background context.
+        DispatchQueue.main.asyncAfter(deadline: .now() + Self.deduplicationDebounce, execute: work)
+    }
+
+    /// Off-main pre-scan that decides whether a real main-thread
+    /// `performDeduplication` pass is justified. Reading on a background
+    /// `ModelContext` keeps the main thread responsive on foreground (which
+    /// was the primary cause of the post-resume stutter the user reported).
+    private func runDeduplicationPrescanIfNeeded() {
+        let now = Date()
+        let elapsed = now.timeIntervalSince(lastDeduplicationRun)
+        if elapsed < Self.deduplicationCooldown {
+            PerformanceLogger.event(.dedup, "skipped (cooldown)", metadata: "elapsed=\(Int(elapsed))s")
+            return
+        }
+
+        // Mark the attempt timestamp on main BEFORE detaching so concurrent
+        // remote-change bursts during the scan don't queue a second scan.
+        lastDeduplicationRun = now
+
+        let containerRef = self.container
+        Task.detached(priority: .utility) { [weak self] in
+            let hasDuplicates: Bool = PerformanceLogger.measure(PerformanceLogger.Category.dedup, "scanForDuplicates (background)") {
+                let bgContext = ModelContext(containerRef)
+                return Self.scanForDuplicates(context: bgContext)
+            }
+            guard hasDuplicates else {
+                PerformanceLogger.event(.dedup, "no duplicates found; skipping main-thread pass")
+                return
+            }
+            PerformanceLogger.event(.dedup, "duplicates detected; hopping to main to delete")
+            await self?.runDeduplicationOnMain()
+        }
+    }
+
+    @MainActor
+    private func runDeduplicationOnMain() {
+        PerformanceLogger.measure(.dedup, "performDeduplication (main)") {
+            self.performDeduplication()
+        }
+        self.lastDeduplicationRun = Date()
+    }
+
+    /// Lightweight scan that returns as soon as any duplicate is found.
+    /// Mirrors the keys used by `performDeduplication` so we never let real
+    /// duplicates slip past undetected. Safe to call on a background context.
+    nonisolated private static func scanForDuplicates(context: ModelContext) -> Bool {
+        func anyDuplicate<T: PersistentModel>(_ type: T.Type, idKeyPath: KeyPath<T, UUID>) -> Bool {
+            guard let all = try? context.fetch(FetchDescriptor<T>()) else { return false }
+            var seen = Set<UUID>()
+            seen.reserveCapacity(all.count)
+            for item in all where !seen.insert(item[keyPath: idKeyPath]).inserted {
+                return true
+            }
+            return false
+        }
+        if anyDuplicate(UnifiedItem.self, idKeyPath: \.id) { return true }
+        if anyDuplicate(PantryItem.self, idKeyPath: \.id) { return true }
+        if anyDuplicate(GroceryItem.self, idKeyPath: \.id) { return true }
+        if anyDuplicate(UtensilItem.self, idKeyPath: \.id) { return true }
+        if anyDuplicate(Recipe.self, idKeyPath: \.id) { return true }
+        if anyDuplicate(ChatMessage.self, idKeyPath: \.id) { return true }
+        if anyDuplicate(ChatConversation.self, idKeyPath: \.id) { return true }
+
+        // Categories may collide by (type, normalized name) even if UUIDs differ
+        if let cats = try? context.fetch(FetchDescriptor<Category>()) {
+            var seenIDs = Set<UUID>()
+            var seenKeys = Set<String>()
+            for c in cats {
+                if !seenIDs.insert(c.id).inserted { return true }
+                let normalized = c.name
+                    .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
+                    .lowercased()
+                if !seenKeys.insert("\(c.type.rawValue)|\(normalized)").inserted { return true }
+            }
+        }
+
+        var settingsFD = FetchDescriptor<AppSettings>()
+        settingsFD.fetchLimit = 2
+        if let settings = try? context.fetch(settingsFD), settings.count > 1 { return true }
+
+        return false
     }
 
     /// Removes duplicate records across all entity types.

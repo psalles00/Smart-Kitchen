@@ -19,6 +19,7 @@
 - Antes de editar: Leia containers, schemas e fluxos de bootstrap.
 - Após finalizar: Valide a integridade dos dados e garanta a capability iCloud (Documents, CloudKit e container iCloud.com.pedrosalles.smartkitchen.sync).
 - Build: Use o simulador iPhone 17 Pro. O app deve abrir automaticamente.
+- Cuidado com Bundle IDs ao rodar comandos no simulador: O Bundle ID CORRETO do app principal (Savoria) é `com.pedrosalles.smartkitchen.sync`. Existe uma versão antiga fantasma instalada com o bundle ID `com.pedrosalles.smartkitchen`. NUNCA use `com.pedrosalles.smartkitchen` nos comandos `xcrun simctl launch` ou `terminate`, pois isso abrirá a versão velha e estragará os testes do usuário!!
 - Não use `git` como mecanismo de recuperação de build, validação ou troubleshooting.
 - Nunca desinstale o app do simulador para “resolver” problemas sem minha confirmação explícita.
 - Testes: Forneça uma lista de etapas para teste manual após implementar funções.

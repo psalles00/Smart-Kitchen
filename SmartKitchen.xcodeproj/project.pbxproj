@@ -112,6 +112,7 @@
 		646C3DEB40EF46513EF4C4C1 /* UnifiedItemMigration.swift in Sources */ = {isa = PBXBuildFile; fileRef = E619E357CE0238103B4DA341 /* UnifiedItemMigration.swift */; };
 		64A71EF539425F7AC2F15047 /* OnboardingChoiceCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E65CAACE80062BD304B8804B /* OnboardingChoiceCard.swift */; };
 		68DA9C52B10B71567F3AD691 /* OnboardingFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E185859B24B37BF31A4DE2F6 /* OnboardingFlowView.swift */; };
+		693ECED402453FFD46AE1BC4 /* PerformanceLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4C121D07DB971471BBBE9A9 /* PerformanceLogger.swift */; };
 		6A0CF2CDBA12B31FDAA4B307 /* Boska-MediumItalic.otf in Resources */ = {isa = PBXBuildFile; fileRef = FA437725A0D6ADE89AD114C4 /* Boska-MediumItalic.otf */; };
 		6A1DFBCB86CAF0BACBE81C30 /* OnboardingState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8712B7297BD154DE6200893 /* OnboardingState.swift */; };
 		6A9653E75E65960CAD34B7FE /* SelectPantryStepView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A619F9A20D06A0ECB3BB94F0 /* SelectPantryStepView.swift */; };
@@ -498,6 +499,7 @@
 		C27ED3F5A2D10B25882F7C02 /* RecipeThumbnail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeThumbnail.swift; sourceTree = "<group>"; };
 		C474425B54A4537D3764DFEA /* Telma-Medium.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Telma-Medium.otf"; sourceTree = "<group>"; };
 		C4A7A2AF35925BD59A2361D2 /* OnboardingPrimaryButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingPrimaryButton.swift; sourceTree = "<group>"; };
+		C4C121D07DB971471BBBE9A9 /* PerformanceLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceLogger.swift; sourceTree = "<group>"; };
 		C54310018082C8F6F3CE3FE1 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		C6453D3D380C48889AB05076 /* NutritionDayTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionDayTile.swift; sourceTree = "<group>"; };
 		C758332A037C07A7DF37C53C /* FoodImageStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodImageStore.swift; sourceTree = "<group>"; };
@@ -1138,6 +1140,7 @@
 				9D23D5730AFF637BAC6DCE1E /* ItemDatabase.swift */,
 				F16FDC19C2F37E5FEE15E233 /* MultiFileZipArchive.swift */,
 				54E9C41052AFBFDE995CAA53 /* NotificationService.swift */,
+				C4C121D07DB971471BBBE9A9 /* PerformanceLogger.swift */,
 				DF1EEC2FCBBC5D58437FEA8D /* PerformancePreferences.swift */,
 				B0BA783D43E37794EE28298C /* PlatformImage.swift */,
 				80D2CBBBCC49CA560D36DA31 /* RecentActionsStore.swift */,
@@ -1478,6 +1481,7 @@
 				830777FBCD174436DB7B1753 /* PaywallSheet.swift in Sources */,
 				0EA4DFDE3610C34E70A00DF2 /* PaywallStepView.swift in Sources */,
 				987C89D93366639B490B5CC3 /* PendingNutritionDaysCard.swift in Sources */,
+				693ECED402453FFD46AE1BC4 /* PerformanceLogger.swift in Sources */,
 				52D0DCE4E2C55FEE3BE568B3 /* PerformancePreferences.swift in Sources */,
 				197DC838CB31BEFAD840CB9B /* PerformanceSettingsView.swift in Sources */,
 				E333E13B53381D761DE27CEA /* PlanCardView.swift in Sources */,

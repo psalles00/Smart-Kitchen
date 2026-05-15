@@ -138,6 +138,13 @@ struct SmartKitchenApp: App {
         Self.configureNavigationAppearance()
         #endif
         Self.logBuildConfiguration()
+
+        // Wire the perf logger early so every subsequent UIApplication
+        // lifecycle notification and CloudKit remote-change burst is
+        // recorded relative to launch. This is the source of truth used to
+        // diagnose post-foreground stutters.
+        PerformanceLogger.installLifecycleObservers()
+        PerformanceLogger.event(.launch, "SmartKitchenApp.init")
     }
 
     var body: some Scene {
@@ -194,11 +201,18 @@ struct SmartKitchenApp: App {
                 .task {
                     _ = SharedImportInbox.shared.claimPendingFromBridge()
                     FeatureGate.shared.subscriptionManager = subscriptionManager
+                    PerformanceLogger.event(.subscriptions, "subscriptionManager.loadProducts begin")
+                    let loadStart = Date()
                     await subscriptionManager.loadProducts()
+                    PerformanceLogger.event(.subscriptions, "subscriptionManager.loadProducts end", metadata: String(format: "tookMs=%.1f", Date().timeIntervalSince(loadStart) * 1000))
+                    PerformanceLogger.event(.subscriptions, "subscriptionManager.refreshEntitlements (launch) begin")
+                    let refreshStart = Date()
                     await subscriptionManager.refreshEntitlements()
+                    PerformanceLogger.event(.subscriptions, "subscriptionManager.refreshEntitlements (launch) end", metadata: String(format: "tookMs=%.1f", Date().timeIntervalSince(refreshStart) * 1000))
                     await runPostLaunchBootstrapIfNeeded()
                 }
                 .onChange(of: scenePhase) { oldValue, newValue in
+                    PerformanceLogger.event(.scenePhase, "scenePhase \(oldValue) -> \(newValue)")
                     if newValue == .active {
                         _ = SharedImportInbox.shared.claimPendingFromBridge()
                         // Refresh subscription state on foreground so
@@ -210,14 +224,26 @@ struct SmartKitchenApp: App {
                         let now = Date()
                         if now.timeIntervalSince(lastEntitlementRefresh) >= 300 {
                             lastEntitlementRefresh = now
-                            Task { await subscriptionManager.refreshEntitlements() }
+                            PerformanceLogger.event(.subscriptions, "refreshEntitlements scheduled (throttle 300s elapsed)")
+                            Task {
+                                let t0 = Date()
+                                await subscriptionManager.refreshEntitlements()
+                                PerformanceLogger.event(.subscriptions, "refreshEntitlements end", metadata: String(format: "tookMs=%.1f", Date().timeIntervalSince(t0) * 1000))
+                            }
+                        } else {
+                            PerformanceLogger.event(.subscriptions, "refreshEntitlements skipped (throttled)", metadata: "elapsed=\(Int(now.timeIntervalSince(lastEntitlementRefresh)))s")
                         }
                         // Throttle: avoid running sync + notification reschedule
                         // every time the user briefly leaves and returns. The
                         // previous unconditional behaviour caused noticeable
                         // jank on the first interaction after foregrounding.
-                        if now.timeIntervalSince(lastForegroundMaintenance) >= 60 {
+                        //
+                        // 5 min matches the entitlement refresh cooldown so the
+                        // user pays at most one heavy main-thread pass per
+                        // foreground burst.
+                        if now.timeIntervalSince(lastForegroundMaintenance) >= 300 {
                             lastForegroundMaintenance = now
+                            PerformanceLogger.event(.cloudSync, "foreground maintenance running")
                             cloudSync.syncNow()
                             // Defer the notification reschedule one runloop tick
                             // so it never competes with the first frame the user
@@ -225,10 +251,14 @@ struct SmartKitchenApp: App {
                             Task { @MainActor in
                                 let ctx = cloudSync.container.mainContext
                                 let descriptor = FetchDescriptor<AppSettings>()
-                                if let settings = try? ctx.fetch(descriptor).first {
-                                    NotificationService.shared.rescheduleExpiryNotifications(context: ctx, settings: settings)
+                                PerformanceLogger.measure(.notifications, "rescheduleExpiryNotifications") {
+                                    if let settings = try? ctx.fetch(descriptor).first {
+                                        NotificationService.shared.rescheduleExpiryNotifications(context: ctx, settings: settings)
+                                    }
                                 }
                             }
+                        } else {
+                            PerformanceLogger.event(.cloudSync, "foreground maintenance skipped (throttled)", metadata: "elapsed=\(Int(now.timeIntervalSince(lastForegroundMaintenance)))s")
                         }
                     }
                     // Autosave is disabled on the main context to avoid races
@@ -237,7 +267,9 @@ struct SmartKitchenApp: App {
                     if newValue == .inactive || newValue == .background {
                         let ctx = cloudSync.container.mainContext
                         if ctx.hasChanges {
-                            try? ctx.save()
+                            PerformanceLogger.measure(.cloudSync, "saveOnSceneLeave") {
+                                try? ctx.save()
+                            }
                         }
                     }
                 }
@@ -276,6 +308,9 @@ struct SmartKitchenApp: App {
         guard !didRunPostLaunchBootstrap else { return }
         didRunPostLaunchBootstrap = true
 
+        PerformanceLogger.event(.launch, "runPostLaunchBootstrap begin")
+        let bootstrapStart = Date()
+
         // Let the splash render its first frame before doing heavy work.
         try? await Task.sleep(for: .milliseconds(50))
 
@@ -286,16 +321,26 @@ struct SmartKitchenApp: App {
         // call on the UI; warming them off-main here means the first user
         // interaction never has to pay their build cost.
         let warmupTask = Task.detached(priority: .userInitiated) {
-            _ = CategoryDatabase.shared
-            ItemDatabase.shared.prewarm()
+            PerformanceLogger.measure(.launch, "warmupDatabases") {
+                _ = CategoryDatabase.shared
+                ItemDatabase.shared.prewarm()
+            }
         }
 
         let context = ModelContext(cloudSync.container)
-        DataSeeder.seedIfNeeded(context: context)
-        UnifiedItemMigration.migrateIfNeeded(context: context)
-        _ = BackupManager.shared.restoreLatestBackupIfCurrentStoreNeedsRecovery(context: context)
+        PerformanceLogger.measure(.dataSeeder, "DataSeeder.seedIfNeeded") {
+            DataSeeder.seedIfNeeded(context: context)
+        }
+        PerformanceLogger.measure(.migration, "UnifiedItemMigration.migrateIfNeeded") {
+            UnifiedItemMigration.migrateIfNeeded(context: context)
+        }
+        PerformanceLogger.measure(.backup, "BackupManager.restoreLatestBackupIfCurrentStoreNeedsRecovery") {
+            _ = BackupManager.shared.restoreLatestBackupIfCurrentStoreNeedsRecovery(context: context)
+        }
 
-        cloudSync.activateCloudSyncIfNeededOnLaunch()
+        PerformanceLogger.measure(.cloudSync, "activateCloudSyncIfNeededOnLaunch") {
+            cloudSync.activateCloudSyncIfNeededOnLaunch()
+        }
 
         // Wait for the prewarm to finish before lifting the splash so the
         // first frame of ContentView already sees populated caches. This is
@@ -307,6 +352,7 @@ struct SmartKitchenApp: App {
         // Lift the splash now that the data layer is ready and ContentView
         // can render with all SwiftData stores fully prepared.
         isAppReady = true
+        PerformanceLogger.event(.launch, "runPostLaunchBootstrap end (splash lifted)", metadata: String(format: "tookMs=%.1f", Date().timeIntervalSince(bootstrapStart) * 1000))
     }
 
     // MARK: - Appearance
