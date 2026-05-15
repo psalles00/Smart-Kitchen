@@ -1,3 +1,6 @@
+# Extremamente importante
+- Nunca, jamais, restaure uma versão antiga sem meu consentimento explícito. Se precisar restaurar, me avise e confirme comigo antes de executar a ação.
+
 # Importante
 - REGRA INEGOCIÁVEL: NUNCA realize mudanças que possam quebrar, sobrescrever, resetar ou tornar inacessíveis os dados do usuário. Proteção de dados > qualquer outro objetivo.
 - SwiftData/CloudKit: JAMAIS remova a capability iCloud ou altere o layout de ModelContainer/ModelConfiguration (nome, URL ou divisão de stores) sem migração validada e backup real. Trocar configurações de store com CloudKit ativo torna dados antigos inacessíveis.
