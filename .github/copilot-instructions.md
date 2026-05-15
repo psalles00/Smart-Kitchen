@@ -1,5 +1,8 @@
 # Extremamente importante
 - Nunca, jamais, restaure uma versão antiga sem meu consentimento explícito. Se precisar restaurar, me avise e confirme comigo antes de executar a ação.
+- NUNCA execute comandos destrutivos ou de reversão sem meu consentimento explícito no mesmo turno. Isso inclui `git reset --hard`, `git checkout --`, `git restore`, `git clean`, `git revert`, `rm -rf`, `xcrun simctl uninstall` e qualquer comando equivalente que descarte trabalho, reinstale uma versão antiga ou apague dados locais.
+- Build quebrado, diff inesperado, árvore suja ou falha de ferramenta NUNCA são motivo para restaurar, resetar ou limpar automaticamente. Primeiro diagnostique a causa; se a única saída parecer destrutiva, pare e peça confirmação explícita.
+- Se você aplicar uma mudança importante, deixe claro quando ela ainda estiver sem commit antes de qualquer validação que possa motivar rollback manual.
 
 # Importante
 - REGRA INEGOCIÁVEL: NUNCA realize mudanças que possam quebrar, sobrescrever, resetar ou tornar inacessíveis os dados do usuário. Proteção de dados > qualquer outro objetivo.
@@ -16,6 +19,8 @@
 - Antes de editar: Leia containers, schemas e fluxos de bootstrap.
 - Após finalizar: Valide a integridade dos dados e garanta a capability iCloud (Documents, CloudKit e container iCloud.com.pedrosalles.smartkitchen.sync).
 - Build: Use o simulador iPhone 17 Pro. O app deve abrir automaticamente.
+- Não use `git` como mecanismo de recuperação de build, validação ou troubleshooting.
+- Nunca desinstale o app do simulador para “resolver” problemas sem minha confirmação explícita.
 - Testes: Forneça uma lista de etapas para teste manual após implementar funções.
 
 # Proteção de Dados iCloud/CloudKit

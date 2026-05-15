@@ -1,0 +1,11 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "type": "command",
+        "command": "./scripts/hooks/block_destructive_commands.sh",
+        "timeout": 10
+      }
+    ]
+  }
+}

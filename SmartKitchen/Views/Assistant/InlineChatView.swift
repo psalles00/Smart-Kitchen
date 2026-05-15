@@ -2723,7 +2723,11 @@ struct InlineChatView: View {
         loadingId: UUID,
         conversationId: UUID
     ) async {
-        guard !apiKey.isEmpty else {
+        // Não exigir `apiKey` local: em Release a OpenAI key direta é vazia
+        // por design — o backend de IA roda via Supabase Edge Function
+        // (`openai-chat`). O `AIService` decide entre proxy e chamada direta;
+        // só falhamos se nenhum dos dois caminhos estiver configurado.
+        guard APIConfig.hasAIBackend else {
             await replaceLoadingWithError(loadingId: loadingId, conversationId: conversationId)
             return
         }
