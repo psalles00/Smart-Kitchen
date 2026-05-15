@@ -489,7 +489,9 @@ private enum OnboardingSubmissionUploader {
         do {
             try await client.restPOST(table: "onboarding_submissions", body: submission)
         } catch {
+            #if DEBUG
             print("Onboarding submission upload failed: \(error)")
+            #endif
         }
     }
 }

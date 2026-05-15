@@ -79,7 +79,9 @@ final class BackupManager {
             loadBackupList()
             return true
         } catch {
+            #if DEBUG
             print("[BackupManager] Failed to create backup: \(error)")
+            #endif
             return false
         }
     }
@@ -98,7 +100,9 @@ final class BackupManager {
             try snapshot.restore(into: context)
             return true
         } catch {
+            #if DEBUG
             print("[BackupManager] Failed to restore backup: \(error)")
+            #endif
             return false
         }
     }

@@ -121,7 +121,11 @@ struct MonthCalendarStrip: View {
         let today = calendar.startOfDay(for: .now)
         let currentComps = calendar.dateComponents([.year, .month], from: today)
         let dateComps = calendar.dateComponents([.year, .month], from: date)
-        let diff = (dateComps.year! - currentComps.year!) * 12 + (dateComps.month! - currentComps.month!)
+        guard let cy = currentComps.year, let cm = currentComps.month,
+              let dy = dateComps.year, let dm = dateComps.month else {
+            return Self.currentMonthIndex
+        }
+        let diff = (dy - cy) * 12 + (dm - cm)
         return Self.currentMonthIndex + diff
     }
 

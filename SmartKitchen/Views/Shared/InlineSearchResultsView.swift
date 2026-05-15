@@ -381,13 +381,17 @@ struct InlineSearchResultsView: View {
     }
 
     private func presentConversationHistory() {
+        #if DEBUG
         print("[AIModeUI] Presenting conversation history. showInlineChat=\(showInlineChat)")
+        #endif
         showConversationHistory = true
         showInlineChat = false
     }
 
     private func closeConversationHistory() {
+        #if DEBUG
         print("[AIModeUI] Closing conversation history. mode=\(searchBarState.mode)")
+        #endif
         showConversationHistory = false
         if searchBarState.mode == .aiChat {
             showInlineChat = true
@@ -395,7 +399,9 @@ struct InlineSearchResultsView: View {
     }
 
     private func handleNewConversationRequest(source: String) {
+        #if DEBUG
         print("[AIModeUI] Handling new conversation request from \(source). showInlineChat=\(showInlineChat) showConversationHistory=\(showConversationHistory)")
+        #endif
         chatInitialQuery = nil
         chatExistingConversationId = nil
         searchBarState.mode = .aiChat
@@ -410,7 +416,9 @@ struct InlineSearchResultsView: View {
     }
 
     private func handleHistoryRequest(source: String) {
+        #if DEBUG
         print("[AIModeUI] Handling history request from \(source). showInlineChat=\(showInlineChat) showConversationHistory=\(showConversationHistory)")
+        #endif
         searchBarState.mode = .aiChat
         presentConversationHistory()
     }

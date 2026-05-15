@@ -26,7 +26,6 @@ targets:
       - path: Shared
       - path: SmartKitchen
         excludes:
-          - App/BackupSettingsView.swift
           - App/StatusBarStyleView.swift
       - path: icons
         includes:

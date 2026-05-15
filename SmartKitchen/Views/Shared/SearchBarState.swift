@@ -172,19 +172,25 @@ final class SearchBarState: ObservableObject {
 
     func requestAINewConversation(source: String) {
         aiNewConversationRequestToken += 1
+        #if DEBUG
         print("[AIModeUI] New conversation tapped from \(source). token=\(aiNewConversationRequestToken)")
+        #endif
     }
 
     func requestAIHistory(source: String) {
         aiHistoryRequestToken += 1
+        #if DEBUG
         print("[AIModeUI] History tapped from \(source). token=\(aiHistoryRequestToken)")
+        #endif
     }
 
     func requestAIChatSend(_ text: String, source: String) {
         let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedText.isEmpty else { return }
         pendingChatMessageRequest = PendingChatMessageRequest(text: trimmedText, source: source)
+        #if DEBUG
         print("[AIModeUI] Chat send requested from \(source). requestId=\(pendingChatMessageRequest?.id.uuidString ?? "nil")")
+        #endif
     }
 
     private func scheduleFocusRetry(after delay: TimeInterval, session: Int) {

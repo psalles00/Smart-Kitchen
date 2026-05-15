@@ -131,7 +131,8 @@ final class SupabaseClient {
         try validate(resp: resp, data: data)
 
         if T.self == VoidResult.self {
-            return VoidResult() as! T
+            // Safe by construction: only reached when T == VoidResult.
+            return unsafeBitCast(VoidResult(), to: T.self)
         }
         return try JSONDecoder.supabase.decode(T.self, from: data)
     }

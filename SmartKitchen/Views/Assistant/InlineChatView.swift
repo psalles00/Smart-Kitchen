@@ -363,7 +363,9 @@ struct InlineChatView: View {
         }
         .onChange(of: pendingNewConversationTrigger) { _, newValue in
             guard newValue else { return }
+            #if DEBUG
             print("[AIModeUI] InlineChatView received newConversationRelay=true")
+            #endif
             pendingNewConversationTrigger = false
             startNewConversation()
         }
@@ -662,7 +664,9 @@ struct InlineChatView: View {
     }
 
     private func startNewConversation() {
+        #if DEBUG
         print("[AIModeUI] Starting new conversation. currentConversationId=\(conversationId?.uuidString ?? "nil") messages=\(messages.count)")
+        #endif
         if autoActivatedRecipeIdeasMode {
             searchBarState?.aiChatPreset = .nutritionCoach
             autoActivatedRecipeIdeasMode = false
@@ -676,7 +680,9 @@ struct InlineChatView: View {
         cachedInventoryDate = nil
         activeRecipeCreation = nil
         pendingInlineDrafts = [:]
+        #if DEBUG
         print("[AIModeUI] New conversation state cleared")
+        #endif
     }
 
     private func reloadMessages() {

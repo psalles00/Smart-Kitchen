@@ -427,8 +427,6 @@ struct SmartKitchenApp: App {
     private static func logBuildConfiguration() {
         #if DEBUG
         print("SmartKitchen build configuration: DEBUG")
-        #else
-        print("SmartKitchen build configuration: RELEASE")
         #endif
     }
 }

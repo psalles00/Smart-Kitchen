@@ -79,7 +79,9 @@ struct IngredientNormalizer {
         var s = raw.trimmingCharacters(in: .whitespacesAndNewlines)
 
         // Strip trailing punctuation.
-        while let last = s.last, CharacterSet.punctuationCharacters.contains(last.unicodeScalars.first!) {
+        while let last = s.last,
+              let scalar = last.unicodeScalars.first,
+              CharacterSet.punctuationCharacters.contains(scalar) {
             s.removeLast()
         }
 

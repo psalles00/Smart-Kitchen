@@ -2332,11 +2332,15 @@ private struct RecipeVideoPlayerSurface: UIViewRepresentable {
     final class PlayerView: UIView {
         override class var layerClass: AnyClass { AVPlayerLayer.self }
 
+        // `layerClass` guarantees the backing layer is an `AVPlayerLayer`,
+        // so the cast is safe by construction. In the impossible event of a
+        // mismatch we fall back to an empty layer instead of crashing.
         var playerLayer: AVPlayerLayer {
-            guard let layer = layer as? AVPlayerLayer else {
-                fatalError("Expected AVPlayerLayer backing layer")
+            if let layer = layer as? AVPlayerLayer {
+                return layer
             }
-            return layer
+            assertionFailure("Expected AVPlayerLayer backing layer")
+            return AVPlayerLayer()
         }
     }
 }
