@@ -1,6 +1,6 @@
 # Termos de Uso — Savoria
 
-_Última atualização: substituir pela data efetiva antes da publicação._
+_Última atualização: 15 de maio de 2026._
 
 Estes Termos regem o uso do aplicativo Savoria (o "App"), publicado por
 **Pedro Salles**. Ao instalar ou usar o App, você concorda com estes Termos.
@@ -102,4 +102,4 @@ aplicável.
 
 ## 10. Contato
 
-Dúvidas: `support@savoria.app`
+Dúvidas: `pedrosalles00@gmail.com`

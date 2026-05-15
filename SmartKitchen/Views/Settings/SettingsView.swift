@@ -91,27 +91,9 @@ extension EnvironmentValues {
 
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.requestReview) private var requestReview
-    @State private var placeholderAction: AboutPlaceholderAction?
     #if os(macOS)
     @State private var selectedMacDestination: SettingsDestination? = .iCloud
     #endif
-
-    private enum AboutPlaceholderAction: Identifiable {
-        case restorePurchases
-        case feedbackSupport
-
-        var id: String { title }
-
-        var title: String {
-            switch self {
-            case .restorePurchases:
-                String(localized: "Restaurar compras")
-            case .feedbackSupport:
-                String(localized: "Feedback e suporte")
-            }
-        }
-    }
 
     private var appName: String {
         if let displayName = Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String,
@@ -150,13 +132,6 @@ struct SettingsView: View {
                 }
             #endif
         }
-            .alert(item: $placeholderAction) { action in
-                Alert(
-                    title: Text(action.title),
-                    message: Text("Em breve"),
-                    dismissButton: .default(Text("OK"))
-                )
-            }
     }
 
     private var settingsForm: some View {
@@ -231,31 +206,7 @@ struct SettingsView: View {
 
             // MARK: - Sobre
             Section {
-                Button {
-                    placeholderAction = .restorePurchases
-                } label: {
-                    SettingsRowLabel("Restaurar compras", systemImage: "arrow.clockwise")
-                }
-                .buttonStyle(.plain)
-
-                Button {
-                    placeholderAction = .feedbackSupport
-                } label: {
-                    SettingsRowLabel("Feedback e suporte", systemImage: "questionmark.circle")
-                }
-                .buttonStyle(.plain)
-
-                Button {
-                    requestReview()
-                } label: {
-                    SettingsRowLabel("Avaliar na App Store", systemImage: "star")
-                }
-                .buttonStyle(.plain)
-
-                ShareLink(item: appName, subject: Text(verbatim: appName)) {
-                    SettingsRowLabel("Compartilhar app", systemImage: "square.and.arrow.up")
-                }
-                .buttonStyle(.plain)
+                AboutSettingsRows(appName: appName)
             } header: {
                 Text("Sobre")
             } footer: {
@@ -305,31 +256,7 @@ struct SettingsView: View {
             )
 
             Section("Sobre") {
-                Button {
-                    placeholderAction = .restorePurchases
-                } label: {
-                    SettingsRowLabel("Restaurar compras", systemImage: "arrow.clockwise")
-                }
-                .buttonStyle(.plain)
-
-                Button {
-                    placeholderAction = .feedbackSupport
-                } label: {
-                    SettingsRowLabel("Feedback e suporte", systemImage: "questionmark.circle")
-                }
-                .buttonStyle(.plain)
-
-                Button {
-                    requestReview()
-                } label: {
-                    SettingsRowLabel("Avaliar na App Store", systemImage: "star")
-                }
-                .buttonStyle(.plain)
-
-                ShareLink(item: appName, subject: Text(verbatim: appName)) {
-                    SettingsRowLabel("Compartilhar app", systemImage: "square.and.arrow.up")
-                }
-                .buttonStyle(.plain)
+                AboutSettingsRows(appName: appName)
             }
         }
         .listStyle(.sidebar)
@@ -527,27 +454,6 @@ extension View {
 /// inside the main sidebar's detail pane.
 struct MacSettingsExpandedPage: View {
     @State private var selectedDestination: SettingsDestination = .iCloud
-    @Environment(\.requestReview) private var requestReview
-    @State private var placeholderAction: PlaceholderAction?
-
-    private enum PlaceholderAction: Identifiable {
-        case restorePurchases
-        case feedbackSupport
-
-        var id: String {
-            switch self {
-            case .restorePurchases: return "restore"
-            case .feedbackSupport: return "feedback"
-            }
-        }
-
-        var title: String {
-            switch self {
-            case .restorePurchases: return String(localized: "Restaurar compras")
-            case .feedbackSupport: return String(localized: "Feedback e suporte")
-            }
-        }
-    }
 
     private var appName: String {
         if let displayName = Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String,
@@ -577,13 +483,6 @@ struct MacSettingsExpandedPage: View {
                 }
                 .environment(\.openSettingsDestination) { destination in
                     selectedDestination = destination
-                }
-                .alert(item: $placeholderAction) { action in
-                    Alert(
-                        title: Text(action.title),
-                        message: Text("Em breve"),
-                        dismissButton: .default(Text("OK"))
-                    )
                 }
             },
             infoContent: { EmptyView() }
@@ -618,31 +517,7 @@ struct MacSettingsExpandedPage: View {
             }
 
             Section("Sobre") {
-                Button {
-                    placeholderAction = .restorePurchases
-                } label: {
-                    Label("Restaurar compras", systemImage: "arrow.clockwise")
-                }
-                .buttonStyle(.plain)
-
-                Button {
-                    placeholderAction = .feedbackSupport
-                } label: {
-                    Label("Feedback e suporte", systemImage: "questionmark.circle")
-                }
-                .buttonStyle(.plain)
-
-                Button {
-                    requestReview()
-                } label: {
-                    Label("Avaliar na App Store", systemImage: "star")
-                }
-                .buttonStyle(.plain)
-
-                ShareLink(item: appName, subject: Text(verbatim: appName)) {
-                    Label("Compartilhar app", systemImage: "square.and.arrow.up")
-                }
-                .buttonStyle(.plain)
+                AboutSettingsRows(appName: appName)
             }
         }
         .listStyle(.sidebar)
@@ -684,3 +559,122 @@ extension View {
     }
 }
 #endif
+
+// MARK: - AboutSettingsRows
+
+/// Linhas da seção "Sobre" das Configurações: restaurar compras, contatar
+/// suporte, política de privacidade, termos de uso, avaliar na App Store e
+/// compartilhar o app. Componente único reutilizado nas três variantes da
+/// tela de Configurações (iOS form, sheet do macOS e página expandida do
+/// macOS) para manter o comportamento consistente.
+struct AboutSettingsRows: View {
+    let appName: String
+
+    @Environment(SubscriptionManager.self) private var subscriptionManager
+    @Environment(\.openURL) private var openURL
+    @Environment(\.requestReview) private var requestReview
+
+    @State private var isRestoring: Bool = false
+    @State private var restoreMessage: String? = nil
+    @State private var showRestoreAlert: Bool = false
+    @State private var showSupportFallback: Bool = false
+
+    static let supportEmail = "pedrosalles00@gmail.com"
+    static let supportEmailURL = URL(string: "mailto:\(supportEmail)?subject=Suporte%20Savoria")!
+    static let privacyPolicyURL = URL(string: "https://psalles00.github.io/Smart-Kitchen/privacy/")!
+    static let termsOfUseURL = URL(string: "https://psalles00.github.io/Smart-Kitchen/terms/")!
+
+    var body: some View {
+        Group {
+            Button {
+                Task { await runRestore() }
+            } label: {
+                HStack {
+                    SettingsRowLabel("Restaurar compras", systemImage: "arrow.clockwise")
+                    if isRestoring {
+                        ProgressView()
+                            .controlSize(.small)
+                    }
+                }
+            }
+            .buttonStyle(.plain)
+            .disabled(isRestoring)
+
+            Button {
+                openSupportEmail()
+            } label: {
+                SettingsRowLabel("Contatar suporte", systemImage: "envelope")
+            }
+            .buttonStyle(.plain)
+
+            Link(destination: Self.privacyPolicyURL) {
+                SettingsRowLabel("Política de privacidade", systemImage: "hand.raised")
+            }
+            .buttonStyle(.plain)
+
+            Link(destination: Self.termsOfUseURL) {
+                SettingsRowLabel("Termos de uso", systemImage: "doc.text")
+            }
+            .buttonStyle(.plain)
+
+            Button {
+                requestReview()
+            } label: {
+                SettingsRowLabel("Avaliar na App Store", systemImage: "star")
+            }
+            .buttonStyle(.plain)
+
+            ShareLink(item: appName, subject: Text(verbatim: appName)) {
+                SettingsRowLabel("Compartilhar app", systemImage: "square.and.arrow.up")
+            }
+            .buttonStyle(.plain)
+        }
+        .alert(String(localized: "Restaurar compras"), isPresented: $showRestoreAlert, presenting: restoreMessage) { _ in
+            Button("OK", role: .cancel) {}
+        } message: { message in
+            Text(verbatim: message)
+        }
+        .alert(String(localized: "Contatar suporte"), isPresented: $showSupportFallback) {
+            Button {
+                copySupportEmailToClipboard()
+            } label: {
+                Text("Copiar e-mail")
+            }
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(String(localized: "Envie um e-mail para \(Self.supportEmail). Nenhum app de e-mail está configurado neste dispositivo."))
+        }
+    }
+
+    // MARK: - Ações
+
+    @MainActor
+    private func runRestore() async {
+        guard !isRestoring else { return }
+        isRestoring = true
+        await subscriptionManager.restore()
+        restoreMessage = subscriptionManager.lastRestoreMessage
+            ?? String(localized: "Nenhuma compra anterior encontrada.")
+        showRestoreAlert = true
+        isRestoring = false
+    }
+
+    private func openSupportEmail() {
+        openURL(Self.supportEmailURL) { accepted in
+            if !accepted {
+                showSupportFallback = true
+            }
+        }
+    }
+
+    private func copySupportEmailToClipboard() {
+        #if os(iOS)
+        UIPasteboard.general.string = Self.supportEmail
+        #elseif os(macOS)
+        let pb = NSPasteboard.general
+        pb.clearContents()
+        pb.setString(Self.supportEmail, forType: .string)
+        #endif
+    }
+}
+

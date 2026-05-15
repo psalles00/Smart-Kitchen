@@ -1,6 +1,6 @@
 # Política de Privacidade — Savoria
 
-_Última atualização: substituir pela data efetiva antes da publicação._
+_Última atualização: 15 de maio de 2026._
 
 A Savoria ("nós", "nosso") respeita a sua privacidade. Esta política descreve
 quais dados o aplicativo Savoria (o "App") coleta, como são usados e quais
@@ -10,7 +10,7 @@ CCPA (Califórnia).
 ## 1. Quem somos
 
 - Controlador dos dados: **Pedro Salles** (desenvolvedor independente).
-- Contato: `support@savoria.app` (substitua antes de publicar).
+- Contato: `pedrosalles00@gmail.com`.
 
 ## 2. Dados que coletamos
 
@@ -71,7 +71,7 @@ Você pode, a qualquer momento:
 - Exportar todos os seus dados em formato `.zip` (requer Premium).
 - Apagar todos os dados locais reinstalando o app.
 - Desativar a sincronização iCloud sem perder dados locais.
-- Solicitar exclusão de dados ou correções: `support@savoria.app`.
+- Solicitar exclusão de dados ou correções: `pedrosalles00@gmail.com`.
 
 Sob LGPD e GDPR, você tem direito de acesso, retificação, portabilidade,
 oposição e revogação de consentimento.
@@ -83,9 +83,9 @@ O Savoria não é direcionado a menores de 13 anos.
 ## 8. Alterações
 
 Atualizações desta política serão publicadas em
-`https://savoria.app/privacy`. O uso continuado do app após mudanças
-materiais constitui aceitação.
+`https://psalles00.github.io/Smart-Kitchen/privacy/`. O uso continuado do
+app após mudanças materiais constitui aceitação.
 
 ## 9. Contato
 
-`support@savoria.app`
+`pedrosalles00@gmail.com`
