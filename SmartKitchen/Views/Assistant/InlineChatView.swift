@@ -123,11 +123,19 @@ struct InlineChatView: View {
     }
 
     private var scrollTopThreshold: CGFloat {
-        AssistantScrollMetrics.topThreshold(forTopPadding: isAIMode ? topPinnedInset : 12)
+        AssistantScrollMetrics.topThreshold(forTopPadding: scrollTopInsetForMetrics)
     }
 
     private var pinnedMessageRevealInset: CGFloat {
-        isAIMode ? topPinnedInset : 0
+        0
+    }
+
+    private var scrollContentTopPadding: CGFloat {
+        12
+    }
+
+    private var scrollTopInsetForMetrics: CGFloat {
+        scrollContentTopPadding + (isAIMode ? topPinnedInset : 0)
     }
 
     private var aiModeContentFont: Font {
@@ -261,9 +269,11 @@ struct InlineChatView: View {
                                     )
                                 )
                         }
-                        .padding(.top, isAIMode ? topPinnedInset : 12)
+                        .padding(.top, scrollContentTopPadding)
                         .padding(.bottom, 12)
                     }
+                    .contentMargins(.top, isAIMode ? topPinnedInset : 0, for: .scrollContent)
+                    .contentMargins(.top, isAIMode ? topPinnedInset : 0, for: .scrollIndicators)
                     .coordinateSpace(name: "AssistantInlineChatScroll")
                     .onScrollOffsetChange { offset in
                         isScrollAtTop = offset >= scrollTopThreshold
