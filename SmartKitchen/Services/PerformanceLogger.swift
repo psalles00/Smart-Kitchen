@@ -15,10 +15,9 @@ import AppKit
 /// foreground / cold-start jank.
 ///
 /// Use ``PerformanceLogger/event(_:_:metadata:)`` for one-shot events and
-/// ``PerformanceLogger/measure(_:_:metadata:_:)`` (sync) or
-/// ``PerformanceLogger/measureAsync(_:_:metadata:_:)`` (async) to wrap
-/// blocks of work. Each `measure*` call also prints the wall-clock duration
-/// so it is easy to grep the log for slow steps without opening Instruments.
+/// ``PerformanceLogger/measure(_:_:metadata:_:)`` to wrap synchronous blocks
+/// of work. Each measurement also prints the wall-clock duration so it is
+/// easy to grep the log for slow steps without opening Instruments.
 enum PerformanceLogger {
     static let subsystem = "com.pedrosalles.smartkitchen.perf"
 
@@ -93,19 +92,18 @@ enum PerformanceLogger {
     /// Set once when `SmartKitchenApp` is constructed so every subsequent log
     /// line carries a relative-to-launch timestamp. Useful to correlate
     /// CloudKit traffic with our own steps in a single timeline.
-    private static let launchAnchor: DispatchTime = .now()
+    private static let launchAnchorUptime = ProcessInfo.processInfo.systemUptime
     /// Returns milliseconds since the first time the launcher imported this
     /// file. Cheap (monotonic clock), safe to call on any thread.
     static func monotonicMillisSinceLaunch() -> Double {
-        Double(DispatchTime.now().uptimeNanoseconds &- launchAnchor.uptimeNanoseconds) / 1_000_000.0
+        max(0, (ProcessInfo.processInfo.systemUptime - launchAnchorUptime) * 1_000.0)
     }
 
     // MARK: - One-time configuration
 
     /// Wires up additional notification observers so we capture every
-    /// lifecycle event the OS posts at us (not just the SwiftUI scene phase),
-    /// plus the CloudKit `NSPersistentStoreRemoteChange` firehose. Call once
-    /// from `SmartKitchenApp.init` after the app is up.
+    /// lifecycle event the OS posts at us (not just the SwiftUI scene phase).
+    /// Call once from `SmartKitchenApp.init` after the app is up.
     static func installLifecycleObservers() {
         _ = lifecycleInstallToken
     }
@@ -143,16 +141,75 @@ enum PerformanceLogger {
                 event(.scenePhase, "lifecycle.\(label)")
             }
         }
+    }()
 
-        // CloudKit / SwiftData remote-change firehose. These notifications
-        // arrive in bursts after foreground and are the primary trigger for
-        // the deduplication pass that used to stall the main thread; logging
-        // them with a relative timestamp makes the cause obvious in Console.
-        center.addObserver(
-            forName: .NSPersistentStoreRemoteChange,
-            object: nil,
-            queue: nil
-        ) { _ in
-            event(.remoteChange, "NSPersistentStoreRemoteChange received")
-        }    }()
+    // MARK: - Main-thread hang detector
+    //
+    // A small watchdog that periodically pings the main thread from a
+    // background queue. If the main thread does not service the ping within
+    // `threshold` seconds we consider it hung and log a hang event. When the
+    // ping is finally serviced we log the total hang duration. This is the
+    // only reliable way to attribute the "freeze on resume" the user sees to
+    // an actual main-thread stall (CloudKit merge, SwiftData @Query refresh,
+    // SwiftUI body re-evaluation, etc.) versus a rendering pipeline issue.
+
+    private static let hangStateLock = NSLock()
+    nonisolated(unsafe) private static var hangLastHeartbeat: TimeInterval = ProcessInfo.processInfo.systemUptime
+    nonisolated(unsafe) private static var hangActive: Bool = false
+    nonisolated(unsafe) private static var hangStartedAt: TimeInterval = 0
+    nonisolated(unsafe) private static var hangDetectorTimer: DispatchSourceTimer?
+
+    /// Installs a watchdog that logs whenever the main thread is unresponsive
+    /// for more than `thresholdMs`. Safe to call multiple times — installs
+    /// only on the first call. Cheap (one async per `pollIntervalMs` to main
+    /// plus a timer tick on a utility queue).
+    static func installMainThreadHangDetector(thresholdMs: Int = 200, pollIntervalMs: Int = 100) {
+        hangStateLock.lock()
+        let already = hangDetectorTimer != nil
+        hangStateLock.unlock()
+        guard !already else { return }
+
+        let queue = DispatchQueue(label: "com.pedrosalles.smartkitchen.perf.hangdetector", qos: .userInitiated)
+        let timer = DispatchSource.makeTimerSource(queue: queue)
+        let interval = DispatchTimeInterval.milliseconds(pollIntervalMs)
+        let threshold = TimeInterval(thresholdMs) / 1_000.0
+        timer.schedule(deadline: .now() + interval, repeating: interval, leeway: .milliseconds(20))
+        timer.setEventHandler {
+            // Schedule a heartbeat update on main. When this block runs we
+            // know main was responsive at that instant.
+            DispatchQueue.main.async {
+                let now = ProcessInfo.processInfo.systemUptime
+                var endedHangDurationMs: Int? = nil
+                hangStateLock.lock()
+                let wasActive = hangActive
+                if wasActive {
+                    endedHangDurationMs = Int((now - hangStartedAt) * 1_000.0)
+                    hangActive = false
+                }
+                hangLastHeartbeat = now
+                hangStateLock.unlock()
+                if let durationMs = endedHangDurationMs {
+                    event(.scenePhase, "main thread hang ended", metadata: "durationMs=\(durationMs)")
+                }
+            }
+
+            // Then check from the background queue how stale main is.
+            let now = ProcessInfo.processInfo.systemUptime
+            hangStateLock.lock()
+            let lag = now - hangLastHeartbeat
+            let shouldOpen = !hangActive && lag > threshold
+            if shouldOpen {
+                hangActive = true
+                hangStartedAt = hangLastHeartbeat
+            }
+            hangStateLock.unlock()
+            if shouldOpen {
+                event(.scenePhase, "main thread hang detected", metadata: "lagMs=\(Int(lag * 1_000.0))")
+            }
+        }
+        timer.resume()
+        hangStateLock.lock()
+        hangDetectorTimer = timer
+        hangStateLock.unlock()
+    }
 }

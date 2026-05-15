@@ -47,7 +47,6 @@ enum SidebarItem: String, CaseIterable, Identifiable {
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var settingsArray: [AppSettings]
     @State private var selectedTab: AppTab = .assistant
     @State private var lastContentTab: AppTab = .assistant
     @State private var showSettings = false
@@ -76,6 +75,9 @@ struct ContentView: View {
     /// bar only while the user is actively typing. Driven by UIKit keyboard
     /// notifications on iOS.
     @State private var isKeyboardVisible: Bool = false
+    @State private var suspendOffscreenTabs = false
+    @State private var pendingOffscreenTabsResumeWork: DispatchWorkItem?
+    @State private var didScheduleInitialOffscreenTabSuspension = false
 
     // Search-triggered edit sheets
     @State private var searchEditItem: UnifiedItemSelection?
@@ -112,6 +114,9 @@ struct ContentView: View {
     /// `AppSettings.hasCompletedOnboarding` and presented as a non-dismissible
     /// fullscreen cover until the user finishes (or chooses the free plan).
     @State private var showOnboarding: Bool = false
+    @State private var settingsSnapshot = ContentSettingsSnapshot()
+
+    private let offscreenTabSuspensionDuration: TimeInterval = 8.0
 
     #if os(macOS)
     @State private var selectedSidebar: SidebarItem? = .home
@@ -214,7 +219,6 @@ struct ContentView: View {
     }
     #endif
 
-    private var settings: AppSettings? { settingsArray.first }
     private var activePageTheme: PageTheme { selectedTab.pageTheme ?? lastContentTab.pageTheme ?? .home }
 
     /// Mirrors `AppSettings.hasCompletedOnboarding` into `showOnboarding` so
@@ -222,7 +226,7 @@ struct ContentView: View {
     /// migration that auto-completes onboarding for installs that already
     /// have user data (so the new flow only shows up for fresh installs).
     private func syncOnboardingFlag() {
-        guard let settings else {
+        guard let settings = fetchSettingsModel() else {
             // No settings row yet (very fresh launch). Don't decide here —
             // wait until the seeder creates one and SwiftData re-feeds the
             // query, then this method runs again via `.onChange`.
@@ -243,6 +247,12 @@ struct ContentView: View {
         } else {
             showOnboarding = false
         }
+    }
+
+    private func fetchSettingsModel() -> AppSettings? {
+        var descriptor = FetchDescriptor<AppSettings>()
+        descriptor.fetchLimit = 1
+        return try? modelContext.fetch(descriptor).first
     }
 
     /// Returns true when the database already has any user-created content,
@@ -511,8 +521,14 @@ struct ContentView: View {
 
         let base = AnyView(
             tintedContent
+                .background(alignment: .topLeading) {
+                    ContentSettingsObserver(snapshot: $settingsSnapshot)
+                        .allowsHitTesting(false)
+                }
                 .environment(\.scrollToTopTrigger, scrollToTopTrigger)
-                .preferredColorScheme(settings?.appearanceMode.colorScheme)
+                .environment(\.suspendAnimatedPageBackground, suspendOffscreenTabs)
+                .environment(\.suspendActiveTabDataSubscriptions, suspendOffscreenTabs)
+                .preferredColorScheme(settingsSnapshot.appearanceMode.colorScheme)
                 .sheet(isPresented: $showSettings) {
                     NavigationStack {
                         SettingsView()
@@ -520,7 +536,7 @@ struct ContentView: View {
                     .forceLightStatusBar()
                 }
                 .onAppear { syncOnboardingFlag() }
-                .onChange(of: settings?.hasCompletedOnboarding ?? true) { _, _ in
+                .onChange(of: settingsSnapshot.hasCompletedOnboarding) { _, _ in
                     syncOnboardingFlag()
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .openSettings)) { _ in
@@ -591,64 +607,94 @@ struct ContentView: View {
         ZStack {
             TabView(selection: tabSelectionBinding) {
                 Tab(value: AppTab.assistant) {
-                    NavigationStack {
-                        HomeView(
-                            onSettingsTap: { showSettings = true },
-                            onOpenChat: {
-                                openAIMode()
-                            },
-                            onOpenRecipeIdeas: {
-                                openAIMode(preset: .recipeIdeas)
-                            },
-                            onOpenSearch: {
-                                openAssistantTab()
-                            },
-                            onOpenRecipeImport: openQuickRecipeImport,
-                            onOpenFoodCameraDirect: openDirectFoodCamera,
-                            onOpenFoodGalleryDirect: openDirectFoodGallery
-                        )
+                    Group {
+                        if shouldMountTab(.assistant) {
+                            NavigationStack {
+                                HomeView(
+                                    onSettingsTap: { showSettings = true },
+                                    onOpenChat: {
+                                        openAIMode()
+                                    },
+                                    onOpenRecipeIdeas: {
+                                        openAIMode(preset: .recipeIdeas)
+                                    },
+                                    onOpenSearch: {
+                                        openAssistantTab()
+                                    },
+                                    onOpenRecipeImport: openQuickRecipeImport,
+                                    onOpenFoodCameraDirect: openDirectFoodCamera,
+                                    onOpenFoodGalleryDirect: openDirectFoodGallery
+                                )
+                            }
+                        } else {
+                            inactiveTabPlaceholder
+                        }
                     }
                 } label: {
                     Label("Savoria", systemImage: AppTab.assistant.icon)
                 }
 
                 Tab(value: AppTab.lists) {
-                    NavigationStack {
-                        ListsTabView()
+                    Group {
+                        if shouldMountTab(.lists) {
+                            NavigationStack {
+                                ListsTabView()
+                            }
+                        } else {
+                            inactiveTabPlaceholder
+                        }
                     }
                 } label: {
                     Label("Listas", systemImage: AppTab.lists.icon)
                 }
 
                 Tab(value: AppTab.recipes) {
-                    NavigationStack(path: $recipeNavigationPath) {
-                        RecipesView()
+                    Group {
+                        if shouldMountTab(.recipes) {
+                            NavigationStack(path: $recipeNavigationPath) {
+                                RecipesView()
+                            }
+                        } else {
+                            inactiveTabPlaceholder
+                        }
                     }
                 } label: {
                     Label("Receitas", systemImage: AppTab.recipes.icon)
                 }
 
                 Tab(value: AppTab.nutrients) {
-                    NavigationStack {
-                        NutrientsView()
+                    Group {
+                        if shouldMountTab(.nutrients) {
+                            NavigationStack {
+                                NutrientsView()
+                            }
+                        } else {
+                            inactiveTabPlaceholder
+                        }
                     }
                 } label: {
                     Label("Nutrição", systemImage: AppTab.nutrients.icon)
                 }
 
                 Tab(value: AppTab.commandBar, role: .search) {
-                    AssistantSearchTabContent(
-                        searchBarState: searchBarState,
-                        searchService: searchService,
-                        onAction: { handleCommandBarAction($0) },
-                        onOpenFoodCameraDirect: openDirectFoodCamera,
-                        onOpenFoodGalleryDirect: openDirectFoodGallery,
-                        pendingChatQuery: $pendingChatQuery,
-                        pendingOpenChat: $pendingOpenChat,
-                        pendingNewConversation: $pendingNewConversation,
-                        pendingShowHistory: $pendingShowHistory,
-                        path: $assistantTabPath
-                    )
+                    Group {
+                        if shouldMountTab(.commandBar) {
+                            AssistantSearchTabContent(
+                                searchBarState: searchBarState,
+                                searchService: searchService,
+                                onAction: { handleCommandBarAction($0) },
+                                onOpenFoodCameraDirect: openDirectFoodCamera,
+                                onOpenFoodGalleryDirect: openDirectFoodGallery,
+                                pendingChatQuery: $pendingChatQuery,
+                                pendingOpenChat: $pendingOpenChat,
+                                pendingNewConversation: $pendingNewConversation,
+                                pendingShowHistory: $pendingShowHistory,
+                                path: $assistantTabPath
+                            )
+                        } else {
+                            inactiveTabPlaceholder
+                        }
+                    }
                 } label: {
                     Label("Buscar", systemImage: AppTab.commandBar.icon)
                 }
@@ -660,7 +706,7 @@ struct ContentView: View {
             #endif
             .onChange(of: searchBarState.debouncedSearchText) { _, newValue in
                 guard searchBarState.mode != .aiChat else { return }
-                searchService.search(query: newValue, context: modelContext, showUtensils: settings?.showUtensils == true)
+                searchService.search(query: newValue, context: modelContext, showUtensils: settingsSnapshot.showUtensils)
             }
             .environment(\.searchOverlay, searchOverlayView)
         }
@@ -668,11 +714,19 @@ struct ContentView: View {
             persistentAssistantBar
         }
         #if os(iOS)
+        .task {
+            guard !didScheduleInitialOffscreenTabSuspension else { return }
+            didScheduleInitialOffscreenTabSuspension = true
+            suspendOffscreenTabsTemporarily(reason: "initialLaunch")
+        }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
             isKeyboardVisible = true
         }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
             isKeyboardVisible = false
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
+            suspendOffscreenTabsTemporarily(reason: "willEnterForeground")
         }
         #endif
         .onChange(of: searchBarState.isVisible) { _, newValue in
@@ -686,6 +740,43 @@ struct ContentView: View {
     }
 
     // MARK: - Persistent Search Bar
+
+    @ViewBuilder
+    private var inactiveTabPlaceholder: some View {
+        Color.clear
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private func shouldMountTab(_ tab: AppTab) -> Bool {
+        !suspendOffscreenTabs || selectedTab == tab
+    }
+
+    private func suspendOffscreenTabsTemporarily(reason: String) {
+        pendingOffscreenTabsResumeWork?.cancel()
+
+        if !suspendOffscreenTabs {
+            suspendOffscreenTabs = true
+            PerformanceLogger.event(
+                .scenePhase,
+                "offscreen tab suspension enabled",
+                metadata: "reason=\(reason), durationMs=\(Int(offscreenTabSuspensionDuration * 1_000.0))"
+            )
+        } else {
+            PerformanceLogger.event(
+                .scenePhase,
+                "offscreen tab suspension extended",
+                metadata: "reason=\(reason), durationMs=\(Int(offscreenTabSuspensionDuration * 1_000.0))"
+            )
+        }
+
+        let workItem = DispatchWorkItem {
+            suspendOffscreenTabs = false
+            pendingOffscreenTabsResumeWork = nil
+            PerformanceLogger.event(.scenePhase, "offscreen tab suspension ended")
+        }
+        pendingOffscreenTabsResumeWork = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + offscreenTabSuspensionDuration, execute: workItem)
+    }
 
     private var persistentAssistantBar: some View {
         UnifiedSearchBar(
@@ -1088,7 +1179,7 @@ struct ContentView: View {
                                 systemImage: "cart.badge.plus", tint: .lists) {
                 handleCommandBarAction(.addGroceryItem(prefill: ""))
             }
-            if settings?.showUtensils == true {
+            if settingsSnapshot.showUtensils {
                 macSidebarActionRow(title: String(localized: "Adicionar Utensílio"),
                                     systemImage: "fork.knife", tint: .lists) {
                     handleCommandBarAction(.addUtensil(prefill: ""))
@@ -1198,7 +1289,7 @@ struct ContentView: View {
         }
         .onChange(of: searchBarState.debouncedSearchText) { _, newValue in
             guard searchBarState.mode != .aiChat else { return }
-            searchService.search(query: newValue, context: modelContext, showUtensils: settings?.showUtensils == true)
+            searchService.search(query: newValue, context: modelContext, showUtensils: settingsSnapshot.showUtensils)
         }
         // When the user starts typing in the floating assistant bar, route
         // them to the dedicated Assistente sidebar page (or Modo IA when in
@@ -1776,7 +1867,7 @@ struct ContentView: View {
 
     private func refreshSearchAfterMove() {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            searchService.search(query: searchBarState.searchText, context: modelContext, showUtensils: settings?.showUtensils == true)
+            searchService.search(query: searchBarState.searchText, context: modelContext, showUtensils: settingsSnapshot.showUtensils)
         }
     }
 
@@ -1914,18 +2005,124 @@ struct ContentView_Previews: PreviewProvider {
 }
 #endif
 
+private struct ContentSettingsSnapshot: Equatable {
+    var appearanceMode: AppearanceMode = .system
+    var hasCompletedOnboarding = true
+    var showUtensils = false
+
+    init(settings: AppSettings? = nil) {
+        appearanceMode = settings?.appearanceMode ?? .system
+        hasCompletedOnboarding = settings?.hasCompletedOnboarding ?? true
+        showUtensils = settings?.showUtensils == true
+    }
+}
+
+private struct ContentSettingsObserver: View {
+    @Query private var settingsArray: [AppSettings]
+
+    @Binding var snapshot: ContentSettingsSnapshot
+
+    var body: some View {
+        Color.clear
+            .frame(width: 0, height: 0)
+            .onAppear { syncSnapshot() }
+            .onChange(of: settingsArray) { _, _ in
+                syncSnapshot()
+            }
+    }
+
+    private func syncSnapshot() {
+        let newSnapshot = ContentSettingsSnapshot(settings: settingsArray.first)
+        guard snapshot != newSnapshot else { return }
+        snapshot = newSnapshot
+    }
+}
+
+private final class HomeLiveInputsStore: ObservableObject {
+    var pantryItems: [UnifiedItem] = []
+    var recipes: [Recipe] = []
+    var categories: [Category] = []
+}
+
+private struct HomeSettingsSnapshot: Equatable {
+    var recipeCompatibilityThresholdPercent = 80
+    var expiringItemsLeadDays = 30
+
+    init(settings: AppSettings? = nil) {
+        recipeCompatibilityThresholdPercent = settings?.recipeCompatibilityThresholdPercent ?? 80
+        expiringItemsLeadDays = settings?.expiringItemsLeadDays ?? 30
+    }
+}
+
+private struct HomeLiveInputsObserver: View {
+    @Query(filter: #Predicate<UnifiedItem> { $0.isPantry }, sort: \UnifiedItem.name) private var pantryItems: [UnifiedItem]
+    @Query(sort: \Recipe.name) private var recipes: [Recipe]
+    @Query(sort: \Category.sortOrder) private var categories: [Category]
+    @Query private var settingsArray: [AppSettings]
+
+    let store: HomeLiveInputsStore
+    @Binding var settingsSnapshot: HomeSettingsSnapshot
+    let onInitialInputsReady: () -> Void
+    let onDebouncedInputsChanged: () -> Void
+
+    @State private var didDeliverInitialInputs = false
+    @State private var pendingDebouncedRefreshWork: DispatchWorkItem?
+
+    var body: some View {
+        Color.clear
+            .frame(width: 0, height: 0)
+            .onAppear {
+                syncLiveInputs(triggerDebouncedRefresh: false)
+            }
+            .onChange(of: pantryItems) { _, _ in
+                syncLiveInputs(triggerDebouncedRefresh: true)
+            }
+            .onChange(of: recipes) { _, _ in
+                syncLiveInputs(triggerDebouncedRefresh: true)
+            }
+            .onChange(of: categories) { _, _ in
+                syncLiveInputs(triggerDebouncedRefresh: true)
+            }
+            .onChange(of: settingsArray) { _, _ in
+                syncLiveInputs(triggerDebouncedRefresh: true)
+            }
+    }
+
+    private func syncLiveInputs(triggerDebouncedRefresh: Bool) {
+        store.pantryItems = pantryItems
+        store.recipes = recipes
+        store.categories = categories
+
+        let newSettingsSnapshot = HomeSettingsSnapshot(settings: settingsArray.first)
+        if settingsSnapshot != newSettingsSnapshot {
+            settingsSnapshot = newSettingsSnapshot
+        }
+
+        if !didDeliverInitialInputs {
+            didDeliverInitialInputs = true
+            onInitialInputsReady()
+            return
+        }
+
+        guard triggerDebouncedRefresh else { return }
+
+        pendingDebouncedRefreshWork?.cancel()
+        let workItem = DispatchWorkItem {
+            onDebouncedInputsChanged()
+        }
+        pendingDebouncedRefreshWork = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25, execute: workItem)
+    }
+}
+
 private struct HomeView: View {
     @Environment(\.scrollToTopTrigger) private var scrollToTopTrigger
     @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.openRecipeInRecipesTab) private var openRecipeInRecipesTab
+    @Environment(\.suspendActiveTabDataSubscriptions) private var suspendActiveTabDataSubscriptions
     @EnvironmentObject private var searchBarState: SearchBarState
     // Corrigido ciclo do AttributeGraph separando dependências reativas de SwiftData em @State com atualização manual para evitar travamentos no macOS.
-
-    @Query(filter: #Predicate<UnifiedItem> { $0.isPantry }, sort: \UnifiedItem.name) private var pantryItems: [UnifiedItem]
-    @Query(sort: \Recipe.name) private var recipes: [Recipe]
-    @Query(sort: \Category.sortOrder) private var categories: [Category]
-    @Query private var settingsArray: [AppSettings]
 
     @State private var showAddGrocery = false
     @State private var showAddPantry = false
@@ -1941,8 +2138,9 @@ private struct HomeView: View {
     @State private var expiringItemsState: [UnifiedItem] = []
     @State private var contentResetToken: Int = 0
     @State private var shortcutDeckWidth: CGFloat = 0
-
-    private var settings: AppSettings? { settingsArray.first }
+    @State private var settingsSnapshot = HomeSettingsSnapshot()
+    @StateObject private var liveInputs = HomeLiveInputsStore()
+    @State private var hasLoadedInitialInputs = false
     
     let onSettingsTap: () -> Void
     let onOpenChat: () -> Void
@@ -1966,7 +2164,9 @@ private struct HomeView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 32) {
                         actionDeck
-                        PendingNutritionDaysCard()
+                        if !shouldSuspendDataSubscriptions {
+                            PendingNutritionDaysCard()
+                        }
                         if !expiringItemsState.isEmpty {
                             expiringSection
                         }
@@ -1983,6 +2183,22 @@ private struct HomeView: View {
                 HomeInfoContent()
             }
         )
+        .background(alignment: .topLeading) {
+            if !shouldSuspendDataSubscriptions {
+                HomeLiveInputsObserver(
+                    store: liveInputs,
+                    settingsSnapshot: $settingsSnapshot,
+                    onInitialInputsReady: {
+                        hasLoadedInitialInputs = true
+                        refreshHomeDerivedState(logEvent: false)
+                    },
+                    onDebouncedInputsChanged: {
+                        refreshHomeDerivedState(logEvent: true)
+                    }
+                )
+                .allowsHitTesting(false)
+            }
+        }
         #if os(iOS)
         .toolbar(.hidden, for: .navigationBar)
         #endif
@@ -2030,23 +2246,8 @@ private struct HomeView: View {
             ItemDetailContainerView(itemID: selection.id)
                 .forceLightStatusBar()
         }
-        .onAppear {
-            updateRecipeCategories()
-            updateCompatibleMatches()
-            updateExpiringItems()
-        }
-        .onChange(of: pantryItems) { _, _ in
-            updateCompatibleMatches()
-            updateExpiringItems()
-        }
-        .onChange(of: recipes) { _, _ in
-            updateCompatibleMatches()
-            updateRecipeCategories()
-        }
-        .onChange(of: categories) { _, _ in
-            updateRecipeCategories()
-        }
         .onChange(of: selectedCompatibleCategory) { _, _ in
+            // User-driven changes feel best with no perceptible delay.
             updateCompatibleMatches()
         }
         .onChange(of: scrollToTopTrigger) { _, _ in
@@ -2054,16 +2255,35 @@ private struct HomeView: View {
         }
     }
 
+    private func refreshHomeDerivedState(logEvent: Bool) {
+        if logEvent {
+            PerformanceLogger.event(.cloudSync, "HomeView debounced refresh")
+        }
+        updateRecipeCategories()
+        updateCompatibleMatches()
+        updateExpiringItems()
+    }
+
+    /// While the foreground-burst mitigation window is active AND we already
+    /// rendered a populated state once, stop mounting heavy `@Query`
+    /// subscribers so the CloudKit merge burst does not trigger dozens of
+    /// main-thread fetches per remote change. The observer remounts once the
+    /// window closes and performs a single fresh fetch via its initial-load
+    /// path.
+    private var shouldSuspendDataSubscriptions: Bool {
+        suspendActiveTabDataSubscriptions && hasLoadedInitialInputs
+    }
+
     private func updateRecipeCategories() {
-        recipeCategoriesState = categories.filter { $0.type == .recipe }
+        recipeCategoriesState = liveInputs.categories.filter { $0.type == .recipe }
     }
     private func updateCompatibleMatches() {
-        let pantryNames = pantryItems.map { normalized($0.name) }
-        let threshold = Double(settings?.recipeCompatibilityThresholdPercent ?? 80) / 100.0
+        let pantryNames = liveInputs.pantryItems.map { normalized($0.name) }
+        let threshold = Double(settingsSnapshot.recipeCompatibilityThresholdPercent) / 100.0
         let applyTimeFilter = selectedCompatibleCategory == nil
         let mealKeywords = applyTimeFilter ? Self.mealKeywordsForCurrentTime() : []
 
-        compatibleMatchesState = recipes
+        compatibleMatchesState = liveInputs.recipes
             .filter { recipe in
                 guard let selectedCompatibleCategory = selectedCompatibleCategory else { return true }
                 return recipe.categories.contains(selectedCompatibleCategory)
@@ -2116,10 +2336,10 @@ private struct HomeView: View {
         }
     }
     private func updateExpiringItems() {
-        let leadDays = settings?.expiringItemsLeadDays ?? 30
+        let leadDays = settingsSnapshot.expiringItemsLeadDays
         let now = Calendar.current.startOfDay(for: .now)
         let limit = Calendar.current.date(byAdding: .day, value: leadDays, to: now) ?? now
-        expiringItemsState = pantryItems
+        expiringItemsState = liveInputs.pantryItems
             .filter {
                 guard let expirationDate = $0.expirationDate else { return false }
                 let day = Calendar.current.startOfDay(for: expirationDate)

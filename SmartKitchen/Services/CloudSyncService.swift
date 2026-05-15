@@ -20,6 +20,9 @@ final class CloudSyncService: @unchecked Sendable {
     private static let storeSplitKey = "SmartKitchen.hasCompletedStoreSplit"
     private static let storeRecoveryAttemptedKey = "SmartKitchen.storeRecoveryAttempted"
     private var remoteChangeObserver: Any?
+    private var remoteChangeBurstFlushWorkItem: DispatchWorkItem?
+    private var remoteChangeBurstCount = 0
+    private var remoteChangeBurstStartedAt: Date?
     private var deduplicationWorkItem: DispatchWorkItem?
     private var shouldActivateCloudOnLaunch = false
     private var hasAttemptedCloudActivationOnLaunch = false
@@ -38,6 +41,9 @@ final class CloudSyncService: @unchecked Sendable {
     /// Debounce window for collapsing the burst of remote-change
     /// notifications CloudKit emits when a sync cycle delivers many records.
     private static let deduplicationDebounce: TimeInterval = 1.5
+    /// Emit a single summary log line once a remote-change burst quiets down.
+    private static let remoteChangeBurstFlushDelay: TimeInterval = 1.0
+    private static let verboseRemoteChangeLoggingEnabled = ProcessInfo.processInfo.arguments.contains("-PerfVerboseRemoteChanges")
 
     private(set) var container: ModelContainer
     private(set) var containerID = UUID()
@@ -896,7 +902,7 @@ final class CloudSyncService: @unchecked Sendable {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            PerformanceLogger.event(.remoteChange, "remote change → scheduleDeduplication")
+            self?.recordRemoteChangeEvent()
             self?.scheduleDeduplication()
         }
         PerformanceLogger.event(.cloudSync, "registered NSPersistentStoreRemoteChange observer")
@@ -907,6 +913,41 @@ final class CloudSyncService: @unchecked Sendable {
             NotificationCenter.default.removeObserver(observer)
             remoteChangeObserver = nil
         }
+        remoteChangeBurstFlushWorkItem?.cancel()
+        remoteChangeBurstFlushWorkItem = nil
+        remoteChangeBurstCount = 0
+        remoteChangeBurstStartedAt = nil
+    }
+
+    private func recordRemoteChangeEvent() {
+        let now = Date()
+        if remoteChangeBurstStartedAt == nil {
+            remoteChangeBurstStartedAt = now
+        }
+        remoteChangeBurstCount += 1
+
+        if Self.verboseRemoteChangeLoggingEnabled {
+            PerformanceLogger.event(.remoteChange, "remote change → scheduleDeduplication")
+        }
+
+        remoteChangeBurstFlushWorkItem?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            self?.flushRemoteChangeBurst()
+        }
+        remoteChangeBurstFlushWorkItem = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + Self.remoteChangeBurstFlushDelay, execute: work)
+    }
+
+    private func flushRemoteChangeBurst() {
+        guard remoteChangeBurstCount > 0 else { return }
+
+        let startedAt = remoteChangeBurstStartedAt ?? Date()
+        let windowMs = Int(Date().timeIntervalSince(startedAt) * 1_000)
+        PerformanceLogger.event(.remoteChange, "remote change burst", metadata: "count=\(remoteChangeBurstCount) windowMs=\(windowMs)")
+
+        remoteChangeBurstFlushWorkItem = nil
+        remoteChangeBurstCount = 0
+        remoteChangeBurstStartedAt = nil
     }
 
     private func scheduleDeduplication() {

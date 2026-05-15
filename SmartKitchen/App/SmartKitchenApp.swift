@@ -144,6 +144,7 @@ struct SmartKitchenApp: App {
         // recorded relative to launch. This is the source of truth used to
         // diagnose post-foreground stutters.
         PerformanceLogger.installLifecycleObservers()
+        PerformanceLogger.installMainThreadHangDetector()
         PerformanceLogger.event(.launch, "SmartKitchenApp.init")
     }
 

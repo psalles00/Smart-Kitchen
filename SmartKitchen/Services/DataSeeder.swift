@@ -68,6 +68,7 @@ struct DataSeeder {
         // Use a local flag to prevent re-seeding when CloudKit sync
         // delivers data from another device before local queries resolve.
         let hasSeededKey = "SmartKitchen.hasSeeded"
+        var didMutate = false
 
         // Also check if settings already exist (e.g. synced from another device)
         let settingsDescriptor = FetchDescriptor<AppSettings>()
@@ -85,8 +86,10 @@ struct DataSeeder {
         if existing == nil, !hasSeeded, !hasSyncedData {
             let settings = AppSettings()
             context.insert(settings)
+            didMutate = true
 
             seedCategories(context: context)
+            didMutate = true
             // NOTE: As of the new first-launch onboarding, we no longer seed
             // demo pantry/grocery items or sample recipes — the user picks
             // their own initial selection during the onboarding flow. Only
@@ -94,9 +97,11 @@ struct DataSeeder {
             // them for classification and grouping.
         }
 
-        synchronizeCategories(context: context)
+        didMutate = synchronizeCategories(context: context) || didMutate
 
-        try? context.save()
+        if didMutate {
+            try? context.save()
+        }
         UserDefaults.standard.set(true, forKey: hasSeededKey)
     }
 
@@ -134,10 +139,12 @@ struct DataSeeder {
     /// when opening the app" report.
     private static let legacyCategoryMigrationKey = "SmartKitchen.legacyCategoryMigrationCompleted"
 
-    private static func synchronizeCategories(context: ModelContext) {
-        synchronizeCategoryDefinitions(pantryCategoryDefinitions, type: .pantry, context: context)
-        synchronizeCategoryDefinitions(recipeCategoryDefinitions, type: .recipe, context: context)
-        synchronizeCategoryDefinitions(utensilCategoryDefinitions, type: .utensil, context: context)
+    private static func synchronizeCategories(context: ModelContext) -> Bool {
+        var didMutate = false
+
+        didMutate = synchronizeCategoryDefinitions(pantryCategoryDefinitions, type: .pantry, context: context) || didMutate
+        didMutate = synchronizeCategoryDefinitions(recipeCategoryDefinitions, type: .recipe, context: context) || didMutate
+        didMutate = synchronizeCategoryDefinitions(utensilCategoryDefinitions, type: .utensil, context: context) || didMutate
 
         // Legacy category-rename migrations only need to run once. The
         // mappings rewrite outdated category strings (e.g. "Vegetais" ->
@@ -145,26 +152,35 @@ struct DataSeeder {
         // those obsolete names — both the seed list and every UI surface
         // only emit the new names.
         if !UserDefaults.standard.bool(forKey: legacyCategoryMigrationKey) {
-            migrateLegacyItemCategories(context: context)
-            removeLegacyUtensilCategories(context: context)
+            didMutate = migrateLegacyItemCategories(context: context) || didMutate
+            didMutate = removeLegacyUtensilCategories(context: context) || didMutate
             UserDefaults.standard.set(true, forKey: legacyCategoryMigrationKey)
         }
+
+        return didMutate
     }
 
     private static func synchronizeCategoryDefinitions(
         _ definitions: [CategorySeedDefinition],
         type: CategoryType,
         context: ModelContext
-    ) {
+    ) -> Bool {
         let resolvedType = type.canonicalType
         let existing = CategoryMutationService.fetchCategories(of: resolvedType, context: context)
         let deletedDefaultNames = CategoryMutationService.fetchDeletedDefaultNames(of: resolvedType, context: context)
         var nextSortOrder = (existing.map(\.sortOrder).max() ?? -1) + 1
+        var didMutate = false
 
         for definition in definitions {
             if let category = existing.first(where: { sameCategoryName($0.name, definition.name) }) {
-                category.name = definition.name
-                category.iconName = definition.iconName
+                if category.name != definition.name {
+                    category.name = definition.name
+                    didMutate = true
+                }
+                if category.iconName != definition.iconName {
+                    category.iconName = definition.iconName
+                    didMutate = true
+                }
             } else if !deletedDefaultNames.contains(CategoryMutationService.normalizedKey(for: definition.name)) {
                 context.insert(
                     Category(
@@ -175,53 +191,70 @@ struct DataSeeder {
                     )
                 )
                 nextSortOrder += 1
+                didMutate = true
             }
         }
+
+        return didMutate
     }
 
-    private static func migrateLegacyItemCategories(context: ModelContext) {
-        migratePantryCategories(context: context)
-        migrateGroceryCategories(context: context)
-        migrateUtensilCategories(context: context)
+    private static func migrateLegacyItemCategories(context: ModelContext) -> Bool {
+        var didMutate = false
+        didMutate = migratePantryCategories(context: context) || didMutate
+        didMutate = migrateGroceryCategories(context: context) || didMutate
+        didMutate = migrateUtensilCategories(context: context) || didMutate
+        return didMutate
     }
 
-    private static func migratePantryCategories(context: ModelContext) {
+    private static func migratePantryCategories(context: ModelContext) -> Bool {
         let descriptor = FetchDescriptor<UnifiedItem>()
         let items = (try? context.fetch(descriptor)) ?? []
+        var didMutate = false
         for item in items where item.isPantry {
             if let replacement = legacyPantryCategoryMapping[item.category] {
                 item.category = replacement
+                didMutate = true
             }
         }
+        return didMutate
     }
 
-    private static func migrateGroceryCategories(context: ModelContext) {
+    private static func migrateGroceryCategories(context: ModelContext) -> Bool {
         let descriptor = FetchDescriptor<UnifiedItem>()
         let items = (try? context.fetch(descriptor)) ?? []
+        var didMutate = false
         for item in items where item.isGrocery {
             if let replacement = legacyPantryCategoryMapping[item.category] {
                 item.category = replacement
+                didMutate = true
             }
         }
+        return didMutate
     }
 
-    private static func migrateUtensilCategories(context: ModelContext) {
+    private static func migrateUtensilCategories(context: ModelContext) -> Bool {
         let descriptor = FetchDescriptor<UnifiedItem>()
         let items = (try? context.fetch(descriptor)) ?? []
+        var didMutate = false
         for item in items where item.isUtensil {
             if let replacement = legacyUtensilCategoryMapping[item.category] {
                 item.category = replacement
+                didMutate = true
             }
         }
+        return didMutate
     }
 
-    private static func removeLegacyUtensilCategories(context: ModelContext) {
+    private static func removeLegacyUtensilCategories(context: ModelContext) -> Bool {
         let descriptor = FetchDescriptor<Category>()
         let existing = (try? context.fetch(descriptor)) ?? []
+        var didMutate = false
         for category in existing
         where category.type == .utensil && legacyUtensilCategoryMapping.keys.contains(category.name) {
             context.delete(category)
+            didMutate = true
         }
+        return didMutate
     }
 
     private static func sameCategoryName(_ lhs: String, _ rhs: String) -> Bool {

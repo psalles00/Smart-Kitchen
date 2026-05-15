@@ -16,6 +16,32 @@ extension EnvironmentValues {
     }
 }
 
+private struct SuspendAnimatedPageBackgroundKey: EnvironmentKey {
+    nonisolated(unsafe) static let defaultValue = false
+}
+
+extension EnvironmentValues {
+    var suspendAnimatedPageBackground: Bool {
+        get { self[SuspendAnimatedPageBackgroundKey.self] }
+        set { self[SuspendAnimatedPageBackgroundKey.self] = newValue }
+    }
+}
+
+/// True while the foreground-burst mitigation window is active. Views that
+/// own heavy `@Query` subscribers should unmount them (after the initial
+/// load) while this is `true` so the CloudKit remote-change burst doesn't
+/// trigger dozens of main-thread fetches per change.
+private struct SuspendActiveTabDataSubscriptionsKey: EnvironmentKey {
+    nonisolated(unsafe) static let defaultValue = false
+}
+
+extension EnvironmentValues {
+    var suspendActiveTabDataSubscriptions: Bool {
+        get { self[SuspendActiveTabDataSubscriptionsKey.self] }
+        set { self[SuspendActiveTabDataSubscriptionsKey.self] = newValue }
+    }
+}
+
 struct ContentPanelCutoutDescriptor {
     let bounds: Anchor<CGRect>
     let style: ContentPanelCutoutStyle
@@ -53,6 +79,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
     @Environment(\.usesGlobalPageBackground) private var usesGlobalPageBackground
     @Environment(\.visiblePageTheme) private var visiblePageTheme
     @Environment(\.searchOverlay) private var searchOverlay
+    @Environment(\.suspendAnimatedPageBackground) private var suspendAnimatedPageBackground
     @EnvironmentObject private var searchBarState: SearchBarState
 
     /// Use the animated background theme from environment if available, otherwise fall back to the page's own theme.
@@ -83,6 +110,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
         #if os(macOS)
         true
         #else
+        guard !suspendAnimatedPageBackground else { return false }
         guard !usesGlobalPageBackground else { return false }
         guard let visiblePageTheme else { return true }
         return visiblePageTheme == pageTheme

@@ -21,14 +21,165 @@ struct PendingNutritionDaysCard: View {
     @Query(sort: \NutritionProfile.createdAt) private var profiles: [NutritionProfile]
 
     @State private var pendingAction: PendingActionRequest?
+    @State private var startedDaysState: [PendingNutritionDaysCard_RowDay] = []
+    @State private var calorieGoalState: Int = 0
+    @State private var didRunInitialRefresh = false
+    @State private var refreshWorkItem: DispatchWorkItem?
 
     private var calendar: Calendar { .current }
-    private var profile: NutritionProfile? { profiles.first }
-    private var calorieGoal: Int { profile?.effectiveCalories ?? 0 }
 
-    private var startedDays: [PendingNutritionDaysCard_RowDay] {
+    var body: some View {
+        let days = startedDaysState
+        Group {
+            if days.isEmpty {
+                EmptyView()
+            } else {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(alignment: .firstTextBaseline) {
+                        HStack(spacing: 4) {
+                            Text("Registro não concluído")
+                                .font(.headline.weight(.semibold))
+                            SectionInfoButton(
+                                title: "Registro não concluído",
+                                message: "Dias que você começou a registrar mas ainda não concluiu. Eles não entram na sua média até serem concluídos. Toque na linha para continuar, ou arraste para concluir/desistir."
+                            )
+                        }
+
+                        Spacer()
+
+                        Text("\(days.count)")
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(.secondary)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(Color.secondary.opacity(0.14), in: .capsule)
+                    }
+
+                    VStack(spacing: 0) {
+                        let visibleDays = Array(days.prefix(5))
+                        List {
+                            ForEach(Array(visibleDays.enumerated()), id: \.element.id) { index, day in
+                                Button {
+                                    openNutrition(at: day.date)
+                                } label: {
+                                    PendingDayRow(
+                                        day: day,
+                                        calorieGoal: calorieGoalState,
+                                        titleProvider: { titleLabel(for: day.date) },
+                                        showsBottomDivider: index < visibleDays.count - 1
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                                .contextMenu {
+                                    Button {
+                                        openNutrition(at: day.date)
+                                    } label: {
+                                        Label("Continuar", systemImage: "arrow.right.circle")
+                                    }
+                                    Button {
+                                        pendingAction = .init(action: .complete, day: day)
+                                    } label: {
+                                        Label("Concluir", systemImage: "checkmark.circle")
+                                    }
+                                    Button(role: .destructive) {
+                                        pendingAction = .init(action: .cancel, day: day)
+                                    } label: {
+                                        Label("Desistir", systemImage: "xmark.circle")
+                                    }
+                                }
+                                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                    Button {
+                                        pendingAction = .init(action: .cancel, day: day)
+                                    } label: {
+                                        Label("Desistir", systemImage: "xmark.circle.fill")
+                                    }
+                                    .tint(.red)
+
+                                    Button {
+                                        pendingAction = .init(action: .complete, day: day)
+                                    } label: {
+                                        Label("Concluir", systemImage: "checkmark.circle.fill")
+                                    }
+                                    .tint(PageTheme.nutrients.accentColor)
+                                }
+                                .listRowInsets(EdgeInsets())
+                                .listRowSeparator(.hidden)
+                                .listRowBackground(Color.clear)
+                            }
+                        }
+                        .listStyle(.plain)
+                        .scrollDisabled(true)
+                        .scrollContentBackground(.hidden)
+                        .environment(\.defaultMinListRowHeight, 0)
+                        .frame(height: CGFloat(visibleDays.count) * Self.rowHeight)
+                    }
+                    .background(Self.cardBackground, in: .rect(cornerRadius: 18))
+                    .clipShape(.rect(cornerRadius: 18))
+                    .confirmationDialog(
+                        confirmationTitle(for: pendingAction),
+                        isPresented: confirmationBinding,
+                        titleVisibility: .visible,
+                        presenting: pendingAction
+                    ) { request in
+                        Button(
+                            request.action == .complete
+                                ? String(localized: "Concluir dia")
+                                : String(localized: "Desistir do dia"),
+                            role: request.action == .cancel ? .destructive : nil
+                        ) {
+                            switch request.action {
+                            case .complete:
+                                NutritionDayLogStore.complete(date: request.day.date, in: modelContext)
+                            case .cancel:
+                                NutritionDayLogStore.cancel(date: request.day.date, in: modelContext)
+                            }
+                            pendingAction = nil
+                        }
+                        Button("Cancelar", role: .cancel) {}
+                    } message: { request in
+                        Text(confirmationMessage(for: request))
+                    }
+                }
+            }
+        }
+        .onAppear {
+            if !didRunInitialRefresh {
+                didRunInitialRefresh = true
+                refreshCardState()
+            }
+        }
+        .onChange(of: allEntries) { _, _ in
+            scheduleRefresh()
+        }
+        .onChange(of: allDayLogs) { _, _ in
+            scheduleRefresh()
+        }
+        .onChange(of: profiles) { _, _ in
+            scheduleRefresh()
+        }
+    }
+
+    // MARK: - Helpers
+
+    private static let rowHeight: CGFloat = 60
+
+    private func scheduleRefresh() {
+        refreshWorkItem?.cancel()
+        let work = DispatchWorkItem {
+            refreshCardState()
+        }
+        refreshWorkItem = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25, execute: work)
+    }
+
+    private func refreshCardState() {
+        calorieGoalState = profiles.first?.effectiveCalories ?? 0
+
         let today = calendar.startOfDay(for: .now)
-        guard let cutoff = calendar.date(byAdding: .day, value: -60, to: today) else { return [] }
+        guard let cutoff = calendar.date(byAdding: .day, value: -60, to: today) else {
+            startedDaysState = []
+            return
+        }
 
         var results: [PendingNutritionDaysCard_RowDay] = []
         var cursor = today
@@ -53,126 +204,9 @@ struct PendingNutritionDaysCard: View {
             guard let prev = calendar.date(byAdding: .day, value: -1, to: cursor) else { break }
             cursor = prev
         }
-        return results
+        startedDaysState = results
+        refreshWorkItem = nil
     }
-
-    var body: some View {
-        let days = startedDays
-        if days.isEmpty {
-            EmptyView()
-        } else {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack(alignment: .firstTextBaseline) {
-                    HStack(spacing: 4) {
-                        Text("Registro não concluído")
-                            .font(.headline.weight(.semibold))
-                        SectionInfoButton(
-                            title: "Registro não concluído",
-                            message: "Dias que você começou a registrar mas ainda não concluiu. Eles não entram na sua média até serem concluídos. Toque na linha para continuar, ou arraste para concluir/desistir."
-                        )
-                    }
-
-                    Spacer()
-
-                    Text("\(days.count)")
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(.secondary)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
-                        .background(Color.secondary.opacity(0.14), in: .capsule)
-                }
-
-                VStack(spacing: 0) {
-                    let visibleDays = Array(days.prefix(5))
-                    List {
-                        ForEach(Array(visibleDays.enumerated()), id: \.element.id) { index, day in
-                            Button {
-                                openNutrition(at: day.date)
-                            } label: {
-                                PendingDayRow(
-                                    day: day,
-                                    calorieGoal: calorieGoal,
-                                    titleProvider: { titleLabel(for: day.date) },
-                                    showsBottomDivider: index < visibleDays.count - 1
-                                )
-                            }
-                            .buttonStyle(.plain)
-                            .contextMenu {
-                                Button {
-                                    openNutrition(at: day.date)
-                                } label: {
-                                    Label("Continuar", systemImage: "arrow.right.circle")
-                                }
-                                Button {
-                                    pendingAction = .init(action: .complete, day: day)
-                                } label: {
-                                    Label("Concluir", systemImage: "checkmark.circle")
-                                }
-                                Button(role: .destructive) {
-                                    pendingAction = .init(action: .cancel, day: day)
-                                } label: {
-                                    Label("Desistir", systemImage: "xmark.circle")
-                                }
-                            }
-                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                Button {
-                                    pendingAction = .init(action: .cancel, day: day)
-                                } label: {
-                                    Label("Desistir", systemImage: "xmark.circle.fill")
-                                }
-                                .tint(.red)
-
-                                Button {
-                                    pendingAction = .init(action: .complete, day: day)
-                                } label: {
-                                    Label("Concluir", systemImage: "checkmark.circle.fill")
-                                }
-                                .tint(PageTheme.nutrients.accentColor)
-                            }
-                            .listRowInsets(EdgeInsets())
-                            .listRowSeparator(.hidden)
-                            .listRowBackground(Color.clear)
-                        }
-                    }
-                    .listStyle(.plain)
-                    .scrollDisabled(true)
-                    .scrollContentBackground(.hidden)
-                    .environment(\.defaultMinListRowHeight, 0)
-                    .frame(height: CGFloat(visibleDays.count) * Self.rowHeight)
-                }
-                .background(Self.cardBackground, in: .rect(cornerRadius: 18))
-                .clipShape(.rect(cornerRadius: 18))
-                .confirmationDialog(
-                    confirmationTitle(for: pendingAction),
-                    isPresented: confirmationBinding,
-                    titleVisibility: .visible,
-                    presenting: pendingAction
-                ) { request in
-                    Button(
-                        request.action == .complete
-                            ? String(localized: "Concluir dia")
-                            : String(localized: "Desistir do dia"),
-                        role: request.action == .cancel ? .destructive : nil
-                    ) {
-                        switch request.action {
-                        case .complete:
-                            NutritionDayLogStore.complete(date: request.day.date, in: modelContext)
-                        case .cancel:
-                            NutritionDayLogStore.cancel(date: request.day.date, in: modelContext)
-                        }
-                        pendingAction = nil
-                    }
-                    Button("Cancelar", role: .cancel) {}
-                } message: { request in
-                    Text(confirmationMessage(for: request))
-                }
-            }
-        }
-    }
-
-    // MARK: - Helpers
-
-    private static let rowHeight: CGFloat = 60
 
     private var confirmationBinding: Binding<Bool> {
         Binding(

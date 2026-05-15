@@ -9,37 +9,19 @@ struct HomeInfoContent: View {
     @Query(sort: \NutritionDayLog.dayStart, order: .reverse) private var dayLogs: [NutritionDayLog]
     @Query(sort: \NutritionProfile.createdAt) private var profiles: [NutritionProfile]
 
+    @State private var snapshot = HomeInfoSnapshot()
+    @State private var didRunInitialRefresh = false
+    @State private var refreshWorkItem: DispatchWorkItem?
+
     private var calendar: Calendar { .current }
-    private var profile: NutritionProfile? { profiles.first }
     private let secondaryLineOpacity: Double = 0.85
 
     private var expiringSoonCount: Int {
-        guard let limit = calendar.date(byAdding: .day, value: 3, to: .now) else { return 0 }
-        return pantryItems.filter { item in
-            guard let exp = item.expirationDate else { return false }
-            return exp <= limit
-        }.count
+        snapshot.expiringSoonCount
     }
 
     private var pendingNutritionDaysCount: Int {
-        let today = calendar.startOfDay(for: .now)
-        guard let cutoff = calendar.date(byAdding: .day, value: -60, to: today) else { return 0 }
-        var count = 0
-        var cursor = today
-        while cursor >= cutoff {
-            let state = NutritionDayLogStore.state(
-                for: cursor,
-                entries: foodEntries,
-                logs: dayLogs,
-                calendar: calendar
-            )
-            if state == .todayInProgress || state == .pastInProgress {
-                count += 1
-            }
-            guard let prev = calendar.date(byAdding: .day, value: -1, to: cursor) else { break }
-            cursor = prev
-        }
-        return count
+        snapshot.pendingNutritionDaysCount
     }
 
     private var statusLine: String {
@@ -64,13 +46,10 @@ struct HomeInfoContent: View {
     }
 
     private var caloriesConsumedToday: Int {
-        let today = calendar.startOfDay(for: .now)
-        return foodEntries
-            .filter { calendar.isDate($0.timestamp, inSameDayAs: today) }
-            .reduce(0) { $0 + $1.calories }
+        snapshot.caloriesConsumedToday
     }
 
-    private var calorieGoal: Int { profile?.effectiveCalories ?? 0 }
+    private var calorieGoal: Int { snapshot.calorieGoal }
 
     private var caloriesRemaining: Int {
         max(0, calorieGoal - caloriesConsumedToday)
@@ -127,19 +106,98 @@ struct HomeInfoContent: View {
                 .padding(.bottom, 6)
         }
         .padding(.bottom, -3)
+        .onAppear {
+            if !didRunInitialRefresh {
+                didRunInitialRefresh = true
+                refreshSnapshot()
+            }
+        }
+        .onChange(of: pantryItems) { _, _ in
+            scheduleRefresh()
+        }
+        .onChange(of: groceryItems) { _, _ in
+            scheduleRefresh()
+        }
+        .onChange(of: recipes) { _, _ in
+            scheduleRefresh()
+        }
+        .onChange(of: foodEntries) { _, _ in
+            scheduleRefresh()
+        }
+        .onChange(of: dayLogs) { _, _ in
+            scheduleRefresh()
+        }
+        .onChange(of: profiles) { _, _ in
+            scheduleRefresh()
+        }
     }
 
     private var compactCountersLine: some View {
         HStack(spacing: 10) {
-            compactCounter(icon: "refrigerator", count: pantryItems.count, label: String(localized: "desp."))
-            compactCounter(icon: "cart", count: groceryItems.count, label: String(localized: "merc."))
-            compactCounter(icon: "book.closed", count: recipes.count, label: String(localized: "rec."))
+            compactCounter(icon: "refrigerator", count: snapshot.pantryCount, label: String(localized: "desp."))
+            compactCounter(icon: "cart", count: snapshot.groceryCount, label: String(localized: "merc."))
+            compactCounter(icon: "book.closed", count: snapshot.recipeCount, label: String(localized: "rec."))
         }
         .font(.subheadline)
         .foregroundColor(.white.opacity(secondaryLineOpacity))
         .lineLimit(1)
         .minimumScaleFactor(0.85)
         .allowsTightening(true)
+    }
+
+    private func refreshSnapshot() {
+        let today = calendar.startOfDay(for: .now)
+        let pendingCount: Int = {
+            guard let cutoff = calendar.date(byAdding: .day, value: -60, to: today) else { return 0 }
+            var count = 0
+            var cursor = today
+            while cursor >= cutoff {
+                let state = NutritionDayLogStore.state(
+                    for: cursor,
+                    entries: foodEntries,
+                    logs: dayLogs,
+                    calendar: calendar
+                )
+                if state == .todayInProgress || state == .pastInProgress {
+                    count += 1
+                }
+                guard let prev = calendar.date(byAdding: .day, value: -1, to: cursor) else { break }
+                cursor = prev
+            }
+            return count
+        }()
+
+        let expiringCount: Int = {
+            guard let limit = calendar.date(byAdding: .day, value: 3, to: .now) else { return 0 }
+            return pantryItems.filter { item in
+                guard let exp = item.expirationDate else { return false }
+                return exp <= limit
+            }.count
+        }()
+
+        let caloriesToday = foodEntries
+            .filter { calendar.isDate($0.timestamp, inSameDayAs: today) }
+            .reduce(0) { $0 + $1.calories }
+
+        snapshot = HomeInfoSnapshot(
+            pantryCount: pantryItems.count,
+            groceryCount: groceryItems.count,
+            recipeCount: recipes.count,
+            expiringSoonCount: expiringCount,
+            pendingNutritionDaysCount: pendingCount,
+            caloriesConsumedToday: caloriesToday,
+            calorieGoal: profiles.first?.effectiveCalories ?? 0
+        )
+        refreshWorkItem = nil
+    }
+
+    private func scheduleRefresh() {
+        refreshWorkItem?.cancel()
+        let work = DispatchWorkItem {
+            refreshSnapshot()
+        }
+        refreshWorkItem = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25, execute: work)
     }
 
     private func compactCounter(icon: String, count: Int, label: String) -> some View {
@@ -188,4 +246,14 @@ struct HomeInfoContent: View {
             }
         }
     }
+}
+
+private struct HomeInfoSnapshot {
+    var pantryCount: Int = 0
+    var groceryCount: Int = 0
+    var recipeCount: Int = 0
+    var expiringSoonCount: Int = 0
+    var pendingNutritionDaysCount: Int = 0
+    var caloriesConsumedToday: Int = 0
+    var calorieGoal: Int = 0
 }
