@@ -78,6 +78,13 @@ struct ContentView: View {
     @State private var suspendOffscreenTabs = false
     @State private var pendingOffscreenTabsResumeWork: DispatchWorkItem?
     @State private var didScheduleInitialOffscreenTabSuspension = false
+    /// Set of tabs that have ever been selected. We mount a tab on its first
+    /// selection and keep it mounted afterwards. This avoids remounting all
+    /// 4 offscreen tabs at once when the foreground-burst suspension window
+    /// ends, which was causing a ~250ms main-thread hang from concurrent
+    /// `@Query` subscriber setup. Permanent lazy-mount keeps the resume path
+    /// cheap (only the active tab pays initial-fetch cost).
+    @State private var mountedTabs: Set<AppTab> = [.assistant]
 
     // Search-triggered edit sheets
     @State private var searchEditItem: UnifiedItemSelection?
@@ -748,7 +755,13 @@ struct ContentView: View {
     }
 
     private func shouldMountTab(_ tab: AppTab) -> Bool {
-        !suspendOffscreenTabs || selectedTab == tab
+        // Permanent lazy mount: a tab is mounted only on its first selection
+        // and stays mounted afterwards. We deliberately do NOT unmount on
+        // foreground-burst suspension, because mass-remount when the window
+        // ends produced a ~250ms main-thread hang from concurrent `@Query`
+        // subscriber setup. Per-view heavy observers are quieted via the
+        // `suspendActiveTabDataSubscriptions` environment instead.
+        mountedTabs.contains(tab) || selectedTab == tab
     }
 
     private func suspendOffscreenTabsTemporarily(reason: String) {
@@ -1623,6 +1636,7 @@ struct ContentView: View {
 
     private func handleTabSelectionChange(_ newValue: AppTab) {
         lastContentTab = newValue
+        mountedTabs.insert(newValue)
 
         // When leaving the assistant tab to a content tab, defocus the search
         // field (hides keyboard) but DO NOT call `searchBarState.dismiss()` —
