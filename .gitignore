@@ -1,5 +1,6 @@
 # Xcode
 build/
+build-*/
 DerivedData/
 build-copilot-*/
 build-copilot-*.log
