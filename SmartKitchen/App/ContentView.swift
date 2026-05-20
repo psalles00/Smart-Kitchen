@@ -534,6 +534,9 @@ struct ContentView: View {
                 }
                 .environment(\.scrollToTopTrigger, scrollToTopTrigger)
                 .environment(\.suspendActiveTabDataSubscriptions, suspendOffscreenTabs)
+                .environment(\.presentAppSettings) {
+                    showSettings = true
+                }
                 .preferredColorScheme(settingsSnapshot.appearanceMode.colorScheme)
                 .sheet(isPresented: $showSettings) {
                     NavigationStack {
@@ -3328,4 +3331,3 @@ private struct DirectAssistantShortcutsModifier: ViewModifier {
             #endif
     }
 }
-

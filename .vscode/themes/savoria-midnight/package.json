@@ -1,0 +1,23 @@
+{
+	"name": "savoria-midnight",
+	"displayName": "Savoria Midnight",
+	"description": "Dark theme based on the Savoria app's midnight shader - Deep blues with vibrant accents inspired by the app's animated background",
+	"version": "1.0.0",
+	"author": "Pedro Salles",
+	"publisher": "pedrosalles",
+	"engines": {
+		"vscode": "^1.50.0"
+	},
+	"categories": [
+		"Themes"
+	],
+	"contributes": {
+		"themes": [
+			{
+				"label": "Savoria Midnight",
+				"uiTheme": "vs-dark",
+				"path": "./savoria-midnight.json"
+			}
+		]
+	}
+}

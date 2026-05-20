@@ -1,7 +1,7 @@
 name: SmartKitchen
 options:
   bundleIdPrefix: com.smartkitchen
-  developmentLanguage: pt-BR
+  developmentLanguage: en
   deploymentTarget:
     iOS: "26.0"
     macOS: "26.0"
@@ -11,7 +11,7 @@ options:
 
 settings:
   base:
-    DEVELOPMENT_LANGUAGE: pt-BR
+    DEVELOPMENT_LANGUAGE: en
     SWIFT_EMIT_LOC_STRINGS: YES
     SWIFT_VERSION: "6.0"
 
@@ -55,6 +55,11 @@ targets:
         NSSpeechRecognitionUsageDescription: O Savoria usa reconhecimento de voz para transcrever o que você falou sobre sua refeição.
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
+        "UISupportedInterfaceOrientations~ipad":
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
         ITSAppUsesNonExemptEncryption: false
         UIBackgroundModes:
           - remote-notification
@@ -64,8 +69,8 @@ targets:
               - smartkitchen
             CFBundleTypeRole: Viewer
         CFBundleLocalizations:
-          - pt-BR
           - en
+          - pt-BR
           - es
           - fr
           - de
@@ -114,8 +119,8 @@ targets:
       properties:
         CFBundleDisplayName: Savoria
         CFBundleLocalizations:
-          - pt-BR
           - en
+          - pt-BR
           - es
           - fr
           - de
@@ -142,7 +147,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.pedrosalles.smartkitchen.sync.ShareExtension
         DEVELOPMENT_TEAM: 44K57HQAP9
-        MARKETING_VERSION: "3.2.6"
+        MARKETING_VERSION: "3.6.2"
         CURRENT_PROJECT_VERSION: "1"
         CODE_SIGN_STYLE: Automatic
         SWIFT_EMIT_LOC_STRINGS: YES
@@ -161,8 +166,8 @@ targets:
       properties:
         CFBundleDisplayName: Savoria
         CFBundleLocalizations:
-          - pt-BR
           - en
+          - pt-BR
           - es
           - fr
           - de
@@ -174,7 +179,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.pedrosalles.smartkitchen.sync.Widgets
         DEVELOPMENT_TEAM: 44K57HQAP9
-        MARKETING_VERSION: "3.2.6"
+        MARKETING_VERSION: "3.6.2"
         CURRENT_PROJECT_VERSION: "1"
         CODE_SIGN_STYLE: Automatic
         TARGETED_DEVICE_FAMILY: "1,2"
