@@ -4,6 +4,7 @@ import SwiftUI
 struct RecipeCardView: View, Equatable {
     let recipe: Recipe
     var compatibility: RecipeCompatibility? = nil
+    var placeholderIconSources: [RecipePlaceholderIconSource] = []
     var columns: Int = 2
     var cornerRadii: RectangleCornerRadii = .init(topLeading: 16, bottomLeading: 16, bottomTrailing: 16, topTrailing: 16)
 
@@ -16,8 +17,9 @@ struct RecipeCardView: View, Equatable {
             && lhs.recipe.totalTime == rhs.recipe.totalTime
             && lhs.recipe.difficulty == rhs.recipe.difficulty
             && lhs.recipe.isFavorite == rhs.recipe.isFavorite
-            && (lhs.recipe.imageData?.count ?? 0) == (rhs.recipe.imageData?.count ?? 0)
+            && lhs.recipe.updatedAt == rhs.recipe.updatedAt
             && lhs.compatibility == rhs.compatibility
+            && lhs.placeholderIconSources == rhs.placeholderIconSources
             && lhs.columns == rhs.columns
             && cornerRadiiEqual(lhs.cornerRadii, rhs.cornerRadii)
     }
@@ -137,7 +139,7 @@ struct RecipeCardView: View, Equatable {
                         )
                     } else {
                         RecipeImagePlaceholderCompact(
-                            ingredients: (recipe.ingredients ?? []).sorted { $0.sortOrder < $1.sortOrder },
+                            iconSources: placeholderIconSources,
                             darkenOverlay: true
                         )
                     }

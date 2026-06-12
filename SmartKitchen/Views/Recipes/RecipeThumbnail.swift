@@ -17,6 +17,10 @@ struct RecipeThumbnail<Placeholder: View>: View {
     @State private var image: PlatformImage?
     @State private var loadedKey: String?
 
+    private var taskKey: String {
+        "\(recipe.id.uuidString)#\(recipe.updatedAt.timeIntervalSinceReferenceDate)@\(Int(maxPixel))"
+    }
+
     private var cacheKey: String? {
         guard let data = recipe.imageData, !data.isEmpty else { return nil }
         return RecipeImageCache.key(recipeID: recipe.id, dataCount: data.count, maxPixel: maxPixel)
@@ -32,7 +36,7 @@ struct RecipeThumbnail<Placeholder: View>: View {
                 placeholder()
             }
         }
-        .task(id: cacheKey) {
+        .task(id: taskKey) {
             await loadIfNeeded()
         }
     }

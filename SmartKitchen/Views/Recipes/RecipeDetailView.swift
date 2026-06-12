@@ -13,7 +13,6 @@ struct RecipeDetailView: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.openURL) private var openURL
     @Environment(\.modelContext) private var modelContext
-    @Query(filter: #Predicate<UnifiedItem> { $0.isPantry }, sort: \UnifiedItem.name) private var pantryItems: [UnifiedItem]
     @Query(filter: #Predicate<UnifiedItem> { $0.isGrocery }, sort: \UnifiedItem.grocerySortOrder) private var groceryItems: [UnifiedItem]
     @Query(filter: #Predicate<UnifiedItem> { $0.isPantry }, sort: \UnifiedItem.pantrySortOrder) private var pantryListItems: [UnifiedItem]
     @Query(sort: \Category.sortOrder) private var allCategories: [Category]
@@ -29,46 +28,49 @@ struct RecipeDetailView: View {
     /// Porções exibidas no detail. Não persiste; só aplica multiplicador a quantities/nutrição.
     @State private var displayServings: Int = 1
     @State private var didInitDisplayServings = false
+    @State private var cachedSortedIngredients: [RecipeIngredient]
+    @State private var cachedSortedIngredientSections: [RecipeIngredientSection]
+    @State private var cachedIngredientGroups: [IngredientDisplayGroup]
+    @State private var cachedSortedSteps: [RecipeStep]
+    @State private var cachedSortedPreparationMedia: [RecipePreparationMedia]
+    @State private var displayCacheSignature: Int
 
     private let heroHeight: CGFloat = 580
     private let baseContentOverlap: CGFloat = 34
     private let floatingHeroActionSize: CGFloat = 62
 
+    init(recipe: Recipe) {
+        self.recipe = recipe
+        let cache = Self.makeDisplayCache(for: recipe)
+        _cachedSortedIngredients = State(initialValue: cache.ingredients)
+        _cachedSortedIngredientSections = State(initialValue: cache.sections)
+        _cachedIngredientGroups = State(initialValue: cache.ingredientGroups)
+        _cachedSortedSteps = State(initialValue: cache.steps)
+        _cachedSortedPreparationMedia = State(initialValue: cache.preparationMedia)
+        _displayCacheSignature = State(initialValue: cache.signature)
+    }
+
     private var sortedIngredients: [RecipeIngredient] {
-        (recipe.ingredients ?? []).sorted { $0.sortOrder < $1.sortOrder }
+        cachedSortedIngredients
     }
 
     private var sortedIngredientSections: [RecipeIngredientSection] {
-        (recipe.ingredientSections ?? []).sorted { $0.sortOrder < $1.sortOrder }
+        cachedSortedIngredientSections
     }
 
     /// Ordered groups for display: the first group (if any unsectioned
     /// ingredients exist) has no header; subsequent groups are each section
     /// followed by their ingredients.
     private var ingredientGroups: [IngredientDisplayGroup] {
-        let sections = sortedIngredientSections
-        let all = sortedIngredients
-        var groups: [IngredientDisplayGroup] = []
-
-        let unsectioned = all.filter { $0.sectionID == nil }
-        if !unsectioned.isEmpty {
-            groups.append(IngredientDisplayGroup(section: nil, ingredients: unsectioned))
-        }
-        for section in sections {
-            let items = all.filter { $0.sectionID == section.id }
-            // Always show the section header, even when empty, so the user
-            // can see the grouping they defined.
-            groups.append(IngredientDisplayGroup(section: section, ingredients: items))
-        }
-        return groups
+        cachedIngredientGroups
     }
 
     private var sortedSteps: [RecipeStep] {
-        (recipe.steps ?? []).sorted { $0.order < $1.order }
+        cachedSortedSteps
     }
 
     private var sortedPreparationMedia: [RecipePreparationMedia] {
-        (recipe.preparationMedia ?? []).sorted { $0.sortOrder < $1.sortOrder }
+        cachedSortedPreparationMedia
     }
 
     private var hasPreparationMedia: Bool {
@@ -181,7 +183,7 @@ struct RecipeDetailView: View {
     }
 
     private var pantryNames: [String] {
-        pantryItems.map {
+        pantryListItems.map {
             $0.name
                 .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
                 .lowercased()
@@ -200,9 +202,99 @@ struct RecipeDetailView: View {
         sortedIngredients.contains { !ingredientIsInGrocery($0) }
     }
 
+    private struct DisplayCache {
+        let ingredients: [RecipeIngredient]
+        let sections: [RecipeIngredientSection]
+        let ingredientGroups: [IngredientDisplayGroup]
+        let steps: [RecipeStep]
+        let preparationMedia: [RecipePreparationMedia]
+        let signature: Int
+    }
+
+    private static func makeDisplayCache(for recipe: Recipe) -> DisplayCache {
+        let ingredients = (recipe.ingredients ?? []).sorted { $0.sortOrder < $1.sortOrder }
+        let sections = (recipe.ingredientSections ?? []).sorted { $0.sortOrder < $1.sortOrder }
+        let steps = (recipe.steps ?? []).sorted { $0.order < $1.order }
+        let preparationMedia = (recipe.preparationMedia ?? []).sorted { $0.sortOrder < $1.sortOrder }
+
+        var groups: [IngredientDisplayGroup] = []
+        let unsectioned = ingredients.filter { $0.sectionID == nil }
+        if !unsectioned.isEmpty {
+            groups.append(IngredientDisplayGroup(section: nil, ingredients: unsectioned))
+        }
+        for section in sections {
+            let items = ingredients.filter { $0.sectionID == section.id }
+            groups.append(IngredientDisplayGroup(section: section, ingredients: items))
+        }
+
+        var hasher = Hasher()
+        hasher.combine(recipe.id)
+        hasher.combine(recipe.updatedAt)
+        hasher.combine(ingredients.count)
+        for ingredient in ingredients {
+            hasher.combine(ingredient.id)
+            hasher.combine(ingredient.sortOrder)
+            hasher.combine(ingredient.sectionID)
+            hasher.combine(ingredient.name)
+            hasher.combine(ingredient.quantity)
+            hasher.combine(ingredient.unit)
+            hasher.combine(ingredient.preparationState)
+            hasher.combine(ingredient.iconName ?? "")
+        }
+        hasher.combine(sections.count)
+        for section in sections {
+            hasher.combine(section.id)
+            hasher.combine(section.sortOrder)
+            hasher.combine(section.title)
+            hasher.combine(section.subtitle)
+        }
+        hasher.combine(steps.count)
+        for step in steps {
+            hasher.combine(step.id)
+            hasher.combine(step.order)
+            hasher.combine(step.instruction)
+            hasher.combine(step.durationMinutes)
+        }
+        hasher.combine(preparationMedia.count)
+        for media in preparationMedia {
+            hasher.combine(media.id)
+            hasher.combine(media.sortOrder)
+            hasher.combine(media.mediaTypeRaw)
+            hasher.combine(media.data.count)
+            hasher.combine(media.fileExtension)
+        }
+
+        return DisplayCache(
+            ingredients: ingredients,
+            sections: sections,
+            ingredientGroups: groups,
+            steps: steps,
+            preparationMedia: preparationMedia,
+            signature: hasher.finalize()
+        )
+    }
+
+    private func refreshDisplayCacheIfNeeded(reason: String) {
+        let next = Self.makeDisplayCache(for: recipe)
+        guard next.signature != displayCacheSignature else { return }
+
+        cachedSortedIngredients = next.ingredients
+        cachedSortedIngredientSections = next.sections
+        cachedIngredientGroups = next.ingredientGroups
+        cachedSortedSteps = next.steps
+        cachedSortedPreparationMedia = next.preparationMedia
+        displayCacheSignature = next.signature
+
+        PerformanceLogger.event(
+            .recipes,
+            "RecipeDetailView.displayCache refreshed",
+            metadata: "trace=recipe-detail-cache recipe=\(recipe.id) reason=\(reason) ingredients=\(next.ingredients.count) steps=\(next.steps.count) media=\(next.preparationMedia.count)"
+        )
+    }
+
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
+            LazyVStack(alignment: .leading, spacing: 0) {
                 heroImage
                 content
                     .padding(.top, -contentOverlap)
@@ -211,10 +303,18 @@ struct RecipeDetailView: View {
         }
         .coordinateSpace(name: "recipe-detail-scroll")
         .onAppear {
+            PerformanceLogger.event(
+                .recipes,
+                "RecipeDetailView.onAppear",
+                metadata: "trace=recipe-detail recipe=\(recipe.id) ingredients=\(sortedIngredients.count) steps=\(sortedSteps.count) media=\(sortedPreparationMedia.count)"
+            )
             if !didInitDisplayServings {
                 displayServings = max(recipe.servings, 1)
                 didInitDisplayServings = true
             }
+        }
+        .onChange(of: recipe.updatedAt) { _, _ in
+            refreshDisplayCacheIfNeeded(reason: "updatedAt")
         }
         #if os(macOS)
         .padding(.top, -10)
@@ -428,10 +528,13 @@ struct RecipeDetailView: View {
         let upwardScroll = max(-minY, 0)
         let parallaxOffset = minY > 0 ? 0 : upwardScroll * 0.18
         let parallaxHeight = heroHeight + stretch + (upwardScroll * 0.22)
+        let placeholderSources = sortedIngredients
+            .prefix(10)
+            .map(RecipePlaceholderIconSource.init)
 
         Group {
             RecipeThumbnail(recipe: recipe, maxPixel: 1600) {
-                RecipeImagePlaceholder(ingredients: sortedIngredients)
+                RecipeImagePlaceholderCompact(iconSources: placeholderSources)
             }
         }
         .frame(width: proxy.size.width, height: parallaxHeight)
@@ -476,7 +579,7 @@ struct RecipeDetailView: View {
     // MARK: - Content
 
     private var content: some View {
-        VStack(alignment: .leading, spacing: 36) {
+        LazyVStack(alignment: .leading, spacing: 36) {
             // Ingredients
             if !sortedIngredients.isEmpty {
                 ingredientsSection
@@ -2408,4 +2511,3 @@ struct RecipeDetailContainer: View {
         }
     }
 }
-

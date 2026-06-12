@@ -2,14 +2,8 @@ import SwiftUI
 import SwiftData
 
 struct HomeInfoContent: View {
-    @Environment(\.activeAppTab) private var activeAppTab
-
     var body: some View {
-        if activeAppTab == nil || activeAppTab == .assistant {
-            HomeInfoContentLive()
-        } else {
-            EmptyView()
-        }
+        HomeInfoContentLive()
     }
 }
 
@@ -20,13 +14,13 @@ private struct HomeInfoContentLive: View {
     @Query(sort: \FoodEntry.timestamp, order: .reverse) private var foodEntries: [FoodEntry]
     @Query(sort: \NutritionDayLog.dayStart, order: .reverse) private var dayLogs: [NutritionDayLog]
     @Query(sort: \NutritionProfile.createdAt) private var profiles: [NutritionProfile]
+    @Query private var settingsArray: [AppSettings]
 
     @State private var snapshot = HomeInfoSnapshot()
     @State private var didRunInitialRefresh = false
     @State private var refreshWorkItem: DispatchWorkItem?
 
     private var calendar: Calendar { .current }
-    private let secondaryLineOpacity: Double = 0.85
 
     private var expiringSoonCount: Int {
         snapshot.expiringSoonCount
@@ -34,27 +28,6 @@ private struct HomeInfoContentLive: View {
 
     private var pendingNutritionDaysCount: Int {
         snapshot.pendingNutritionDaysCount
-    }
-
-    private var statusLine: String {
-        let fragments = [expiringStatusText, pendingStatusText].compactMap { $0 }
-        return fragments.isEmpty
-            ? String(localized: "Tudo certo na sua cozinha!")
-            : fragments.joined(separator: " · ")
-    }
-
-    private var expiringStatusText: String? {
-        guard expiringSoonCount > 0 else { return nil }
-        return expiringSoonCount == 1
-            ? String(localized: "1 item vencendo")
-            : String(localized: "\(expiringSoonCount) itens vencendo")
-    }
-
-    private var pendingStatusText: String? {
-        guard pendingNutritionDaysCount > 0 else { return nil }
-        return pendingNutritionDaysCount == 1
-            ? String(localized: "1 dia não concluído")
-            : String(localized: "\(pendingNutritionDaysCount) dias não concluídos")
     }
 
     private var caloriesConsumedToday: Int {
@@ -78,38 +51,26 @@ private struct HomeInfoContentLive: View {
 
     private var calorieValueFontSize: CGFloat {
         switch calorieValueText.count {
-        case 0...3: 17
-        case 4: 15
-        case 5: 13.5
-        default: 12
+        case 0...3: 16
+        case 4: 14.5
+        case 5: 13
+        default: 11.5
         }
     }
 
     private var calorieValueFrameWidth: CGFloat {
         switch calorieValueText.count {
-        case 0...3: 29
-        case 4: 33
-        case 5: 36
-        default: 37
+        case 0...3: 27
+        case 4: 31
+        case 5: 34
+        default: 36
         }
     }
 
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
-            VStack(alignment: .leading, spacing: 1) {
-                Text(statusLine)
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.85)
-                    .allowsTightening(true)
-                    .layoutPriority(1)
-                    .padding(.top, -7)
-
-                compactCountersLine
-                    .padding(.top, 3)
-            }
-            .layoutPriority(1)
+            statusPhrase
+                .layoutPriority(1)
 
             Spacer()
 
@@ -142,19 +103,32 @@ private struct HomeInfoContentLive: View {
         .onChange(of: profiles) { _, _ in
             scheduleRefresh()
         }
+        .onChange(of: settingsArray) { _, _ in
+            scheduleRefresh()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .nutritionDayLogChanged)) { _ in
+            scheduleRefresh()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .homeDataShouldRefresh)) { _ in
+            scheduleRefresh()
+        }
     }
 
-    private var compactCountersLine: some View {
-        HStack(spacing: 10) {
-            compactCounter(icon: "refrigerator", count: snapshot.pantryCount, label: String(localized: "desp."))
-            compactCounter(icon: "cart", count: snapshot.groceryCount, label: String(localized: "merc."))
-            compactCounter(icon: "book.closed", count: snapshot.recipeCount, label: String(localized: "rec."))
+    private var statusPhrase: some View {
+        VStack(alignment: .leading, spacing: 1) {
+            ForEach(statusPhraseLines) { line in
+                HStack(spacing: 4) {
+                    ForEach(line.tokens) { token in
+                        statusPhraseTokenView(token)
+                    }
+                }
+                .lineLimit(1)
+                .minimumScaleFactor(0.76)
+                .allowsTightening(true)
+            }
         }
-        .font(.subheadline)
-        .foregroundColor(.white.opacity(secondaryLineOpacity))
-        .lineLimit(1)
-        .minimumScaleFactor(0.85)
-        .allowsTightening(true)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.top, -8)
     }
 
     private func refreshSnapshot() {
@@ -180,10 +154,11 @@ private struct HomeInfoContentLive: View {
         }()
 
         let expiringCount: Int = {
-            guard let limit = calendar.date(byAdding: .day, value: 3, to: .now) else { return 0 }
+            let leadDays = settingsArray.first?.expiringItemsLeadDays ?? 30
+            guard let limit = calendar.date(byAdding: .day, value: leadDays, to: today) else { return 0 }
             return pantryItems.filter { item in
                 guard let exp = item.expirationDate else { return false }
-                return exp <= limit
+                return calendar.startOfDay(for: exp) <= limit
             }.count
         }()
 
@@ -212,13 +187,115 @@ private struct HomeInfoContentLive: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.25, execute: work)
     }
 
-    private func compactCounter(icon: String, count: Int, label: String) -> some View {
-        HStack(spacing: 4) {
-            Image(systemName: icon)
-                .font(.system(size: 12, weight: .semibold))
-            Text("\(count.formatted()) \(label)")
-                .font(.subheadline)
-                .monospacedDigit()
+    private var statusPhraseLines: [KitchenStatusLine] {
+        let facts = statusFacts
+        let firstLineTokens: [KitchenStatusToken] = facts.isEmpty
+            ? [.connector(greetingText)]
+            : [
+                .connector(greetingText),
+                .connector(String(localized: "Você possui"))
+            ]
+        var secondLineTokens: [KitchenStatusToken] = []
+
+        let visibleFacts = facts.isEmpty ? [kitchenReadyFact] : Array(facts.prefix(3))
+
+        for (index, fact) in visibleFacts.enumerated() {
+            if index > 0 {
+                secondLineTokens.append(.connector(String(localized: "e")))
+            }
+            secondLineTokens.append(.fact(fact))
+        }
+
+        return [
+            KitchenStatusLine(id: 0, tokens: firstLineTokens),
+            KitchenStatusLine(id: 1, tokens: secondLineTokens)
+        ]
+    }
+
+    private var statusFacts: [KitchenStatusFact] {
+        var facts: [KitchenStatusFact] = []
+
+        if expiringSoonCount > 0 {
+            facts.append(
+                KitchenStatusFact(
+                    icon: "clock.badge.exclamationmark",
+                    text: expiringSoonCount == 1
+                        ? String(localized: "1 item expirando")
+                        : String(localized: "\(expiringSoonCount) itens expirando")
+                )
+            )
+        }
+
+        if pendingNutritionDaysCount > 0 {
+            facts.append(
+                KitchenStatusFact(
+                    icon: "chart.bar.doc.horizontal",
+                    text: pendingNutritionDaysCount == 1
+                        ? String(localized: "1 dia incompleto")
+                        : String(localized: "\(pendingNutritionDaysCount) dias incompletos")
+                )
+            )
+        }
+
+        if facts.isEmpty {
+            facts.append(
+                KitchenStatusFact(
+                    icon: "refrigerator",
+                    text: String(localized: "\(snapshot.pantryCount) despensa")
+                )
+            )
+            facts.append(
+                KitchenStatusFact(
+                    icon: "cart",
+                    text: String(localized: "\(snapshot.groceryCount) mercado")
+                )
+            )
+            facts.append(
+                KitchenStatusFact(
+                    icon: "book.closed",
+                    text: String(localized: "\(snapshot.recipeCount) receitas")
+                )
+            )
+        }
+
+        return facts
+    }
+
+    private var kitchenReadyFact: KitchenStatusFact {
+        KitchenStatusFact(
+            icon: "checkmark.circle",
+            text: String(localized: "Tudo certo na sua cozinha!")
+        )
+    }
+
+    private var greetingText: String {
+        let hour = calendar.component(.hour, from: .now)
+        switch hour {
+        case 5..<12:
+            return String(localized: "Bom dia.")
+        case 12..<18:
+            return String(localized: "Boa tarde.")
+        default:
+            return String(localized: "Boa noite.")
+        }
+    }
+
+    @ViewBuilder
+    private func statusPhraseTokenView(_ token: KitchenStatusToken) -> some View {
+        switch token {
+        case .connector(let text):
+            Text(text)
+                .font(.system(size: 14.5, weight: .semibold, design: .rounded))
+                .foregroundStyle(.white.opacity(0.55))
+        case .fact(let fact):
+            HStack(spacing: 3) {
+                Image(systemName: fact.icon)
+                    .font(.system(size: 14, weight: .bold))
+                Text(fact.text)
+                    .font(.system(size: 15, weight: .heavy, design: .rounded))
+                    .monospacedDigit()
+            }
+            .foregroundStyle(.white)
         }
     }
 
@@ -227,10 +304,10 @@ private struct HomeInfoContentLive: View {
         if calorieGoal > 0 {
             ZStack {
                 Circle()
-                    .stroke(Color.white.opacity(0.22), lineWidth: 4)
+                    .stroke(Color.white.opacity(0.22), lineWidth: 5.5)
                 Circle()
                     .trim(from: 0, to: calorieProgress)
-                    .stroke(Color.white, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                    .stroke(Color.white, style: StrokeStyle(lineWidth: 5.5, lineCap: .round))
                     .rotationEffect(.degrees(-90))
                 VStack(spacing: 0) {
                     Text(calorieValueText)
@@ -241,11 +318,11 @@ private struct HomeInfoContentLive: View {
                         .allowsTightening(true)
                         .frame(maxWidth: calorieValueFrameWidth)
                     Text("kcal")
-                        .font(.system(size: 9, weight: .semibold, design: .rounded))
+                        .font(.system(size: 8.5, weight: .semibold, design: .rounded))
                         .foregroundStyle(.white.opacity(0.85))
                 }
             }
-            .frame(width: 54, height: 54)
+            .frame(width: 50, height: 50)
             .accessibilityLabel(Text(String(localized: "\(caloriesRemaining) kcal restantes hoje")))
         } else {
             VStack(alignment: .trailing, spacing: 2) {
@@ -268,4 +345,28 @@ private struct HomeInfoSnapshot {
     var pendingNutritionDaysCount: Int = 0
     var caloriesConsumedToday: Int = 0
     var calorieGoal: Int = 0
+}
+
+private struct KitchenStatusFact {
+    let icon: String
+    let text: String
+}
+
+private struct KitchenStatusLine: Identifiable {
+    let id: Int
+    let tokens: [KitchenStatusToken]
+}
+
+private enum KitchenStatusToken: Identifiable {
+    case connector(String)
+    case fact(KitchenStatusFact)
+
+    var id: String {
+        switch self {
+        case .connector(let text):
+            return "connector-\(text)"
+        case .fact(let fact):
+            return "fact-\(fact.icon)-\(fact.text)"
+        }
+    }
 }

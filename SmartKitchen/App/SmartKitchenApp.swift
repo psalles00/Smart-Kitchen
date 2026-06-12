@@ -21,6 +21,11 @@ extension Notification.Name {
     /// Posted when the user taps a pending day on the Home page.
     /// `userInfo["date"]` carries the `Date` (startOfDay) to focus on Nutrição.
     static let openNutritionAtDate = Notification.Name("com.smartkitchen.openNutritionAtDate")
+    /// Posted whenever a Nutrition day is completed, canceled, or reopened.
+    /// Views with derived snapshots use it to refresh immediately after mutations.
+    static let nutritionDayLogChanged = Notification.Name("com.smartkitchen.nutritionDayLogChanged")
+    /// Posted when the Savoria/Home page should recalculate all derived content.
+    static let homeDataShouldRefresh = Notification.Name("com.smartkitchen.homeDataShouldRefresh")
     /// Posted on iOS when the Appearance setting changes so the root view can
     /// update its preferred color scheme immediately.
     static let appearanceModeChanged = Notification.Name("com.smartkitchen.appearanceModeChanged")

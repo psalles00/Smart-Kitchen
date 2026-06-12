@@ -4,6 +4,7 @@ import SwiftUI
 struct RecipeRowView: View, Equatable {
     let recipe: Recipe
     var compatibility: RecipeCompatibility? = nil
+    var placeholderIconSources: [RecipePlaceholderIconSource] = []
 
     private var hasStoredImageData: Bool {
         guard let imageData = recipe.imageData else { return false }
@@ -21,8 +22,9 @@ struct RecipeRowView: View, Equatable {
             && lhs.recipe.difficulty == rhs.recipe.difficulty
             && lhs.recipe.servings == rhs.recipe.servings
             && lhs.recipe.isFavorite == rhs.recipe.isFavorite
-            && (lhs.recipe.imageData?.count ?? 0) == (rhs.recipe.imageData?.count ?? 0)
+            && lhs.recipe.updatedAt == rhs.recipe.updatedAt
             && lhs.compatibility == rhs.compatibility
+            && lhs.placeholderIconSources == rhs.placeholderIconSources
     }
 
     var body: some View {
@@ -82,7 +84,7 @@ struct RecipeRowView: View, Equatable {
             if hasStoredImageData {
                 RecipeImageLoadingPlaceholder(iconSize: 18)
             } else {
-                RecipeImagePlaceholderCompact(ingredients: (recipe.ingredients ?? []).sorted { $0.sortOrder < $1.sortOrder })
+                RecipeImagePlaceholderCompact(iconSources: placeholderIconSources)
             }
         }
     }

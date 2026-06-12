@@ -2,6 +2,71 @@ import SwiftUI
 
 // MARK: - Shared helpers
 
+struct RecipePlaceholderIconSource: Hashable {
+    let name: String
+    let iconFileName: String?
+
+    init(name: String, iconFileName: String? = nil) {
+        self.name = name
+        self.iconFileName = iconFileName
+    }
+
+    init(ingredient: RecipeIngredient) {
+        self.name = ingredient.name
+        self.iconFileName = ingredient.iconName
+    }
+}
+
+private final class RecipePlaceholderIconSlotCache: @unchecked Sendable {
+    static let shared = RecipePlaceholderIconSlotCache()
+
+    private final class Entry {
+        let images: [PlatformImage]
+        init(_ images: [PlatformImage]) { self.images = images }
+    }
+
+    private let cache: NSCache<NSString, Entry> = {
+        let cache = NSCache<NSString, Entry>()
+        cache.countLimit = 600
+        return cache
+    }()
+
+    func slots(from sources: [RecipePlaceholderIconSource], count: Int) -> [PlatformImage] {
+        guard !sources.isEmpty, count > 0 else { return [] }
+
+        let key = cacheKey(for: sources, count: count)
+        if let cached = cache.object(forKey: key as NSString) {
+            return cached.images
+        }
+
+        let images = sources.compactMap { resolveIcon(for: $0) }
+        guard !images.isEmpty else {
+            cache.setObject(Entry([]), forKey: key as NSString)
+            return []
+        }
+
+        var slots: [PlatformImage] = []
+        slots.reserveCapacity(count)
+        while slots.count < count {
+            slots.append(contentsOf: images)
+        }
+
+        let result = Array(slots.prefix(count))
+        cache.setObject(Entry(result), forKey: key as NSString)
+        return result
+    }
+
+    private func cacheKey(for sources: [RecipePlaceholderIconSource], count: Int) -> String {
+        var hasher = Hasher()
+        hasher.combine(count)
+        for source in sources {
+            hasher.combine(source.name)
+            hasher.combine(source.iconFileName ?? "")
+        }
+        return String(hasher.finalize())
+    }
+}
+
 /// Resolves a recipe ingredient to its icon image, if available.
 private func resolveIcon(for ingredient: RecipeIngredient) -> PlatformImage? {
     if let name = ingredient.iconName, !name.isEmpty,
@@ -14,16 +79,25 @@ private func resolveIcon(for ingredient: RecipeIngredient) -> PlatformImage? {
     return nil
 }
 
+private func resolveIcon(for source: RecipePlaceholderIconSource) -> PlatformImage? {
+    if let name = source.iconFileName, !name.isEmpty,
+       let img = IconResolver.image(forFilename: name) {
+        return img
+    }
+    if !source.name.isEmpty {
+        return IconResolver.image(for: source.name)
+    }
+    return nil
+}
+
 /// Builds an array of resolved icon images from ingredients, cycling to fill `count`.
 /// Keeps original list order. Skips ingredients without icons.
 private func buildIconSlots(from ingredients: [RecipeIngredient], count: Int) -> [PlatformImage] {
-    let images = ingredients.compactMap { resolveIcon(for: $0) }
-    guard !images.isEmpty else { return [] }
-    var slots: [PlatformImage] = []
-    while slots.count < count {
-        slots.append(contentsOf: images)
-    }
-    return Array(slots.prefix(count))
+    buildIconSlots(from: ingredients.map(RecipePlaceholderIconSource.init), count: count)
+}
+
+private func buildIconSlots(from sources: [RecipePlaceholderIconSource], count: Int) -> [PlatformImage] {
+    RecipePlaceholderIconSlotCache.shared.slots(from: sources, count: count)
 }
 
 /// Shared gradient background for recipe placeholders.
@@ -121,7 +195,7 @@ struct RecipeImagePlaceholder: View {
 /// row 1 adds one icon on the right, row 2 adds one on the left, row 3 adds one on the right.
 /// Existing visible icon positions are preserved.
 struct RecipeImagePlaceholderCompact: View {
-    let ingredients: [RecipeIngredient]
+    let iconSources: [RecipePlaceholderIconSource]
     var darkenOverlay: Bool = false
 
     @AppStorage(PerformancePreferences.recipeIllustratedPlaceholdersEnabledKey)
@@ -132,8 +206,18 @@ struct RecipeImagePlaceholderCompact: View {
     private static let rows = 3
     private static let totalSlots = 16
 
+    init(ingredients: [RecipeIngredient], darkenOverlay: Bool = false) {
+        self.iconSources = ingredients.map(RecipePlaceholderIconSource.init)
+        self.darkenOverlay = darkenOverlay
+    }
+
+    init(iconSources: [RecipePlaceholderIconSource], darkenOverlay: Bool = false) {
+        self.iconSources = iconSources
+        self.darkenOverlay = darkenOverlay
+    }
+
     var body: some View {
-        let slots = buildIconSlots(from: ingredients, count: Self.totalSlots)
+        let slots = buildIconSlots(from: iconSources, count: Self.totalSlots)
         if !recipeIllustratedPlaceholdersEnabled {
             fallbackPlaceholder
         } else {

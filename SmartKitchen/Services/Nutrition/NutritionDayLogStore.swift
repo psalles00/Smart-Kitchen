@@ -74,6 +74,7 @@ enum NutritionDayLogStore {
             context.insert(log)
         }
         try? context.save()
+        postChangeNotification(for: day)
     }
 
     /// Marca um dia como cancelado/vazio (idempotente).
@@ -94,6 +95,7 @@ enum NutritionDayLogStore {
             context.insert(log)
         }
         try? context.save()
+        postChangeNotification(for: day)
     }
 
     /// Reabre um dia previamente concluído ou cancelado (limpa as datas).
@@ -108,6 +110,7 @@ enum NutritionDayLogStore {
         existing.completedAt = nil
         existing.canceledAt = nil
         try? context.save()
+        postChangeNotification(for: day)
     }
 
     // MARK: - Helpers
@@ -125,5 +128,19 @@ enum NutritionDayLogStore {
         }
         let descriptor = FetchDescriptor<NutritionDayLog>(predicate: predicate)
         return (try? context.fetch(descriptor))?.first
+    }
+
+    @MainActor
+    private static func postChangeNotification(for day: Date) {
+        NotificationCenter.default.post(
+            name: .nutritionDayLogChanged,
+            object: nil,
+            userInfo: ["date": day]
+        )
+        NotificationCenter.default.post(
+            name: .homeDataShouldRefresh,
+            object: nil,
+            userInfo: ["date": day]
+        )
     }
 }

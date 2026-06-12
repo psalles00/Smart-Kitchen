@@ -33,7 +33,7 @@ enum RecipeSortOption: String, CaseIterable {
 struct RecipesView: View {
     var body: some View {
         #if os(iOS)
-        DeferredTabPage(tab: .recipes) {
+        DeferredTabPage(tab: .recipes, delay: .milliseconds(80)) {
             RecipesLoadedView()
         } placeholder: {
             RecipesSkeletonPage()
@@ -123,6 +123,7 @@ private struct RecipesLoadedView: View {
     @State private var cachedFilteredRecipes: [Recipe] = []
     @State private var cachedGroupedRecipes: [RecipeCategoryGroup] = []
     @State private var cachedNotebookSummaries: [RecipeNotebookSummary] = []
+    @State private var cachedRecipePlaceholderIconSources: [UUID: [RecipePlaceholderIconSource]] = [:]
 
     // Tracks when inputs to `recomputeCompatibilities` actually changed so
     // the heavy recompute does not re-run on every SwiftData @Query refresh
@@ -349,6 +350,12 @@ private struct RecipesLoadedView: View {
         .background(Color(.windowBackgroundColor).ignoresSafeArea())
         #endif
         .onAppear {
+            let appearStart = Date()
+            PerformanceLogger.event(
+                .recipes,
+                "RecipesLoadedView.onAppear begin",
+                metadata: "trace=recipes-appear recipes=\(allRecipes.count) categories=\(recipeCategories.count)"
+            )
             let isInitialAppear = !didRunInitialAppearWork
             didRunInitialAppearWork = true
             recomputeCompatibilities()
@@ -356,6 +363,11 @@ private struct RecipesLoadedView: View {
             refreshNotebookSummariesIfNeeded(force: isInitialAppear)
             handleScrollToItemRequest(scrollToItem)
             scheduleGalleryPrefetchIfNeeded()
+            PerformanceLogger.event(
+                .recipes,
+                "RecipesLoadedView.onAppear end",
+                metadata: String(format: "trace=recipes-appear tookMs=%.1f recipes=%d visible=%d groups=%d", Date().timeIntervalSince(appearStart) * 1000, allRecipes.count, recipes.count, groupedRecipes.count)
+            )
         }
         .onDisappear {
             pendingGalleryPrefetchTask?.cancel()
@@ -603,132 +615,192 @@ private struct RecipesLoadedView: View {
 
         let inputsKey = "\(pantryCompatibilitySignature)##\(recipeCompatibilitySignature)"
         // Skip if nothing relevant changed since last successful recompute.
-        if inputsKey == lastCompatibilityInputsKey, !cachedCompatibilities.isEmpty {
+        if inputsKey == lastCompatibilityInputsKey {
             return
         }
 
-        let names = pantryItems.map {
-            $0.name
-                .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
-                .lowercased()
-        }
-        cachedPantryNames = names
-        cachedCompatibilities = Dictionary(
-            uniqueKeysWithValues: allRecipes.compactMap { recipe in
-                guard let compatibility = recipe.compatibility(against: names) else { return nil }
-                return (recipe.id, compatibility)
+        PerformanceLogger.measure(
+            .recipes,
+            "Recipes.recomputeCompatibilities",
+            metadata: "trace=recipes-compat recipes=\(allRecipes.count) pantry=\(pantryItems.count)"
+        ) {
+            let names = pantryItems.map {
+                $0.name
+                    .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
+                    .lowercased()
             }
-        )
-        lastCompatibilityInputsKey = inputsKey
+
+            var nextCompatibilities: [UUID: RecipeCompatibility] = [:]
+            var nextPlaceholderSources: [UUID: [RecipePlaceholderIconSource]] = [:]
+            nextCompatibilities.reserveCapacity(allRecipes.count)
+            nextPlaceholderSources.reserveCapacity(allRecipes.count)
+
+            for recipe in allRecipes {
+                let ingredients = (recipe.ingredients ?? []).sorted { $0.sortOrder < $1.sortOrder }
+                if !ingredients.isEmpty {
+                    nextPlaceholderSources[recipe.id] = ingredients
+                        .prefix(10)
+                        .map(RecipePlaceholderIconSource.init)
+                }
+
+                guard let compatibility = compatibility(for: ingredients, pantryNames: names) else { continue }
+                nextCompatibilities[recipe.id] = compatibility
+            }
+
+            cachedPantryNames = names
+            cachedCompatibilities = nextCompatibilities
+            cachedRecipePlaceholderIconSources = nextPlaceholderSources
+            lastCompatibilityInputsKey = inputsKey
+        }
     }
 
     private func refreshRecipeProjectionsIfNeeded(force: Bool = false) {
         let inputsKey = recipeProjectionInputsKey
         guard force || inputsKey != lastRecipeProjectionInputsKey else { return }
 
-        var result = allRecipes
+        PerformanceLogger.measure(
+            .recipes,
+            "Recipes.refreshRecipeProjections",
+            metadata: "trace=recipes-projection recipes=\(allRecipes.count) visible=\(cachedFilteredRecipes.count) groups=\(cachedGroupedRecipes.count)"
+        ) {
+            var result = allRecipes
 
-        if !searchBarState.searchText.isEmpty {
-            let searchText = searchBarState.searchText
-            result = result.filter {
-                $0.name.localizedCaseInsensitiveContains(searchText) ||
-                $0.tags.contains(where: { $0.localizedCaseInsensitiveContains(searchText) }) ||
-                $0.category.localizedCaseInsensitiveContains(searchText)
-            }
-        }
-
-        if let cat = selectedCategory {
-            result = result.filter { recipe in
-                recipe.categories.contains(where: { CategoryMutationService.matchesName($0, cat) })
-            }
-        }
-
-        if showCompatibleOnly {
-            result = result.filter { (compatibilities[$0.id]?.matchedIngredients ?? 0) > 0 }
-        }
-
-        if showFavoritesOnly {
-            result = result.filter(\.isFavorite)
-        }
-
-        let sortedRecipes = sortRecipes(result)
-        cachedFilteredRecipes = sortedRecipes
-
-        var grouped: [String: [Recipe]] = [:]
-        for recipe in sortedRecipes {
-            let categories = recipe.categories
-            if categories.isEmpty {
-                grouped["", default: []].append(recipe)
-            } else {
-                for category in categories {
-                    grouped[category, default: []].append(recipe)
+            if !searchBarState.searchText.isEmpty {
+                let searchText = searchBarState.searchText
+                result = result.filter {
+                    $0.name.localizedCaseInsensitiveContains(searchText) ||
+                    $0.tags.contains(where: { $0.localizedCaseInsensitiveContains(searchText) }) ||
+                    $0.category.localizedCaseInsensitiveContains(searchText)
                 }
             }
-        }
 
-        let categoryNames: [String]
-        if let selectedCategory {
-            categoryNames = [selectedCategory]
-        } else {
-            let configured = recipeCategories.map(\.name)
-            let remaining = grouped.keys.filter { !configured.contains($0) }.sorted()
-            categoryNames = configured + remaining
-        }
+            if let cat = selectedCategory {
+                result = result.filter { recipe in
+                    recipe.categories.contains(where: { CategoryMutationService.matchesName($0, cat) })
+                }
+            }
 
-        cachedGroupedRecipes = categoryNames.compactMap { categoryName in
-            let recipes = grouped[categoryName, default: []]
-            guard !recipes.isEmpty else { return nil }
-            return RecipeCategoryGroup(category: categoryName, recipes: recipes)
-        }
+            if showCompatibleOnly {
+                result = result.filter { (compatibilities[$0.id]?.matchedIngredients ?? 0) > 0 }
+            }
 
-        lastRecipeProjectionInputsKey = inputsKey
+            if showFavoritesOnly {
+                result = result.filter(\.isFavorite)
+            }
+
+            let sortedRecipes = sortRecipes(result)
+            cachedFilteredRecipes = sortedRecipes
+
+            var grouped: [String: [Recipe]] = [:]
+            grouped.reserveCapacity(recipeCategories.count + 1)
+            for recipe in sortedRecipes {
+                let categories = recipe.categories
+                if categories.isEmpty {
+                    grouped["", default: []].append(recipe)
+                } else {
+                    for category in categories {
+                        grouped[category, default: []].append(recipe)
+                    }
+                }
+            }
+
+            let categoryNames: [String]
+            if let selectedCategory {
+                categoryNames = [selectedCategory]
+            } else {
+                let configured = recipeCategories.map(\.name)
+                let configuredKeys = Set(configured)
+                let remaining = grouped.keys.filter { !configuredKeys.contains($0) }.sorted()
+                categoryNames = configured + remaining
+            }
+
+            cachedGroupedRecipes = categoryNames.compactMap { categoryName in
+                let recipes = grouped[categoryName, default: []]
+                guard !recipes.isEmpty else { return nil }
+                return RecipeCategoryGroup(category: categoryName, recipes: recipes)
+            }
+
+            lastRecipeProjectionInputsKey = inputsKey
+        }
+        scheduleGalleryPrefetchIfNeeded()
     }
 
     private func refreshNotebookSummariesIfNeeded(force: Bool = false) {
         let inputsKey = notebookSummaryInputsKey
         guard force || inputsKey != lastNotebookSummaryInputsKey else { return }
 
-        let searchText = searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        var recipesByCategory: [String: [Recipe]] = [:]
+        PerformanceLogger.measure(
+            .recipes,
+            "Recipes.refreshNotebookSummaries",
+            metadata: "trace=recipes-notebooks recipes=\(allRecipes.count) notebooks=\(cachedNotebookSummaries.count)"
+        ) {
+            let searchText = searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+            var recipesByCategory: [String: [Recipe]] = [:]
+            recipesByCategory.reserveCapacity(recipeCategories.count)
 
-        for recipe in allRecipes {
-            for category in recipe.categories {
-                recipesByCategory[category, default: []].append(recipe)
+            for recipe in allRecipes {
+                for category in recipe.categories {
+                    recipesByCategory[category, default: []].append(recipe)
+                }
+            }
+
+            cachedNotebookSummaries = recipeCategories.compactMap { category in
+                let matchingRecipes = (recipesByCategory[category.name] ?? []).sorted { lhs, rhs in
+                    if lhs.isFavorite != rhs.isFavorite {
+                        return lhs.isFavorite && !rhs.isFavorite
+                    }
+                    if lhs.updatedAt != rhs.updatedAt {
+                        return lhs.updatedAt > rhs.updatedAt
+                    }
+                    return lhs.name.localizedCaseInsensitiveCompare(rhs.name) == .orderedAscending
+                }
+
+                let matchedCompatibilities = matchingRecipes.compactMap { compatibilities[$0.id] }
+                let summary = RecipeNotebookSummary(
+                    category: category,
+                    recipes: matchingRecipes,
+                    compatibilities: matchedCompatibilities
+                )
+
+                guard !searchText.isEmpty else { return summary }
+
+                let localizedCategoryName = category.localizedDisplayName
+                let categoryMatches = category.name.localizedCaseInsensitiveContains(searchText)
+                    || localizedCategoryName.localizedCaseInsensitiveContains(searchText)
+                let recipeMatches = matchingRecipes.contains { recipe in
+                    recipe.name.localizedCaseInsensitiveContains(searchText) ||
+                    recipe.tags.contains(where: { $0.localizedCaseInsensitiveContains(searchText) })
+                }
+
+                return (categoryMatches || recipeMatches) ? summary : nil
+            }
+
+            lastNotebookSummaryInputsKey = inputsKey
+        }
+    }
+
+    private func compatibility(for ingredients: [RecipeIngredient], pantryNames: [String]) -> RecipeCompatibility? {
+        let normalizedIngredients = ingredients
+            .map(\.name)
+            .map(Self.normalizedIngredient)
+
+        guard !normalizedIngredients.isEmpty else { return nil }
+
+        let matchedIngredients = normalizedIngredients.reduce(into: 0) { total, ingredient in
+            if pantryNames.contains(where: { pantry in
+                pantry == ingredient || pantry.contains(ingredient) || ingredient.contains(pantry)
+            }) {
+                total += 1
             }
         }
 
-        cachedNotebookSummaries = recipeCategories.compactMap { category in
-            let matchingRecipes = (recipesByCategory[category.name] ?? []).sorted { lhs, rhs in
-                if lhs.isFavorite != rhs.isFavorite {
-                    return lhs.isFavorite && !rhs.isFavorite
-                }
-                if lhs.updatedAt != rhs.updatedAt {
-                    return lhs.updatedAt > rhs.updatedAt
-                }
-                return lhs.name.localizedCaseInsensitiveCompare(rhs.name) == .orderedAscending
-            }
+        return RecipeCompatibility(matchedIngredients: matchedIngredients, totalIngredients: normalizedIngredients.count)
+    }
 
-            let matchedCompatibilities = matchingRecipes.compactMap { compatibilities[$0.id] }
-            let summary = RecipeNotebookSummary(
-                category: category,
-                recipes: matchingRecipes,
-                compatibilities: matchedCompatibilities
-            )
-
-            guard !searchText.isEmpty else { return summary }
-
-            let localizedCategoryName = category.localizedDisplayName
-            let categoryMatches = category.name.localizedCaseInsensitiveContains(searchText)
-                || localizedCategoryName.localizedCaseInsensitiveContains(searchText)
-            let recipeMatches = matchingRecipes.contains { recipe in
-                recipe.name.localizedCaseInsensitiveContains(searchText) ||
-                recipe.tags.contains(where: { $0.localizedCaseInsensitiveContains(searchText) })
-            }
-
-            return (categoryMatches || recipeMatches) ? summary : nil
-        }
-
-        lastNotebookSummaryInputsKey = inputsKey
+    private static func normalizedIngredient(_ text: String) -> String {
+        text
+            .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
+            .lowercased()
     }
 
     /// Debounces `recomputeCompatibilities()` so a burst of SwiftData /
@@ -1009,6 +1081,7 @@ private struct RecipesLoadedView: View {
         let card = RecipeCardView(
             recipe: recipe,
             compatibility: compatibilities[recipe.id],
+            placeholderIconSources: placeholderIconSources(for: recipe),
             columns: galleryColumnCount,
             cornerRadii: cornerRadii
         )
@@ -1047,11 +1120,12 @@ private struct RecipesLoadedView: View {
 
     @ViewBuilder
     private func recipeRows(_ recipes: [Recipe]) -> some View {
-        VStack(spacing: 10) {
+        LazyVStack(spacing: 10) {
             ForEach(recipes) { recipe in
                 let row = RecipeRowView(
                     recipe: recipe,
-                    compatibility: compatibilities[recipe.id]
+                    compatibility: compatibilities[recipe.id],
+                    placeholderIconSources: placeholderIconSources(for: recipe)
                 )
                 .equatable()
                 .overlay {
@@ -1086,6 +1160,10 @@ private struct RecipesLoadedView: View {
                 #endif
             }
         }
+    }
+
+    private func placeholderIconSources(for recipe: Recipe) -> [RecipePlaceholderIconSource] {
+        cachedRecipePlaceholderIconSources[recipe.id] ?? []
     }
 
     private func recipeSectionHeader(_ title: String) -> some View {
@@ -1222,7 +1300,10 @@ private struct RecipesLoadedView: View {
                     } else {
                         LazyVGrid(columns: notebookColumns, spacing: 12) {
                             ForEach(notebookSummaries) { summary in
-                                RecipeNotebookCard(summary: summary) {
+                                RecipeNotebookCard(
+                                    summary: summary,
+                                    placeholderIconSources: cachedRecipePlaceholderIconSources
+                                ) {
                                     openNotebook(named: summary.category.name)
                                 }
                             }
@@ -1519,12 +1600,16 @@ private struct RecipeNotebookCard: View {
     @State private var showIconPicker = false
 
     let summary: RecipeNotebookSummary
+    let placeholderIconSources: [UUID: [RecipePlaceholderIconSource]]
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             VStack(alignment: .leading, spacing: 10) {
-                RecipeNotebookPreviewStrip(summary: summary)
+                RecipeNotebookPreviewStrip(
+                    summary: summary,
+                    placeholderIconSources: placeholderIconSources
+                )
                     .frame(maxWidth: .infinity)
                     .frame(height: 118)
 
@@ -1595,6 +1680,7 @@ private struct RecipeNotebookCard: View {
 
 private struct RecipeNotebookPreviewStrip: View {
     let summary: RecipeNotebookSummary
+    let placeholderIconSources: [UUID: [RecipePlaceholderIconSource]]
 
     var body: some View {
         // The strip renders side-by-side preview tiles inside a fixed-height
@@ -1610,6 +1696,7 @@ private struct RecipeNotebookPreviewStrip: View {
                     ForEach(Array(summary.previewRecipes.enumerated()), id: \.element.id) { index, recipe in
                         RecipeNotebookPreviewTile(
                             recipe: recipe,
+                            placeholderIconSources: placeholderIconSources[recipe.id] ?? [],
                             cornerRadii: previewCornerRadii(index: index, total: summary.previewRecipes.count)
                         )
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -1674,29 +1761,26 @@ private struct RecipeNotebookEmptyPreviewPlaceholder: View {
 
 private struct RecipeNotebookPreviewTile: View {
     let recipe: Recipe
+    let placeholderIconSources: [RecipePlaceholderIconSource]
     let cornerRadii: RectangleCornerRadii
 
     var body: some View {
-        GeometryReader { geometry in
-            previewImage(in: geometry.size)
-                .background(Color(.secondarySystemBackground))
-                .clipShape(.rect(cornerRadii: cornerRadii))
-                .clipped()
-        }
+        previewImage
+            .background(Color(.secondarySystemBackground))
+            .clipShape(.rect(cornerRadii: cornerRadii))
+            .clipped()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     @ViewBuilder
-    private func previewImage(in size: CGSize) -> some View {
+    private var previewImage: some View {
         RecipeThumbnail(recipe: recipe, maxPixel: 700) {
             RecipeImagePlaceholderCompact(
-                ingredients: (recipe.ingredients ?? []).sorted { $0.sortOrder < $1.sortOrder },
+                iconSources: placeholderIconSources,
                 darkenOverlay: false
             )
-            .frame(width: size.width, height: size.height)
             .clipped()
         }
-        .frame(width: size.width, height: size.height)
         .clipped()
     }
 }

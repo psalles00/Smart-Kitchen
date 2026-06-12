@@ -405,17 +405,23 @@ struct ContentView: View {
                     }
                     .interactiveDismissDisabled(true)
                 }
-                .fullScreenCover(item: fullscreenNutritionEntrySheetBinding) { sheet in
+                .fullScreenCover(item: fullscreenNutritionEntrySheetBinding, onDismiss: {
+                    NotificationCenter.default.post(name: .homeDataShouldRefresh, object: nil)
+                }) { sheet in
                     nutritionEntrySheetContent(for: sheet)
                 }
-                .sheet(item: sheetNutritionEntrySheetBinding) { sheet in
+                .sheet(item: sheetNutritionEntrySheetBinding, onDismiss: {
+                    NotificationCenter.default.post(name: .homeDataShouldRefresh, object: nil)
+                }) { sheet in
                     nutritionEntrySheetContent(for: sheet)
                 }
         )
         #else
         return AnyView(
             content
-                .sheet(item: $searchBarState.pendingNutritionSheet) { sheet in
+                .sheet(item: $searchBarState.pendingNutritionSheet, onDismiss: {
+                    NotificationCenter.default.post(name: .homeDataShouldRefresh, object: nil)
+                }) { sheet in
                     nutritionEntrySheetContent(for: sheet)
                 }
         )
@@ -425,7 +431,10 @@ struct ContentView: View {
     private func applyEditorAndImportSheets(to content: AnyView) -> AnyView {
         AnyView(
             content
-                .sheet(isPresented: $showQuickRecipeImport, onDismiss: handleQuickRecipeImportDismissed) {
+                .sheet(isPresented: $showQuickRecipeImport, onDismiss: {
+                    NotificationCenter.default.post(name: .homeDataShouldRefresh, object: nil)
+                    handleQuickRecipeImportDismissed()
+                }) {
                     RecipeImportHostView(launchMode: quickRecipeImportLaunchMode) { recipeID in
                         pendingQuickImportedRecipeID = recipeID
                         showQuickRecipeImport = false
@@ -452,7 +461,9 @@ struct ContentView: View {
                         RecipeImportInbox.shared.pendingSource = source
                     }
                 ))
-                .sheet(isPresented: $showAddPantry) {
+                .sheet(isPresented: $showAddPantry, onDismiss: {
+                    NotificationCenter.default.post(name: .homeDataShouldRefresh, object: nil)
+                }) {
                     ItemDetailView(
                         mode: .create(destinations: [.pantry]),
                         initialName: addItemPrefill,
@@ -467,7 +478,9 @@ struct ContentView: View {
                     .forceLightStatusBar()
                     .onDisappear { addItemPrefill = "" }
                 }
-                .sheet(isPresented: $showAddGrocery) {
+                .sheet(isPresented: $showAddGrocery, onDismiss: {
+                    NotificationCenter.default.post(name: .homeDataShouldRefresh, object: nil)
+                }) {
                     ItemDetailView(
                         mode: .create(destinations: [.grocery]),
                         initialName: addItemPrefill,
@@ -482,13 +495,17 @@ struct ContentView: View {
                     .forceLightStatusBar()
                     .onDisappear { addItemPrefill = "" }
                 }
-                .sheet(isPresented: $showAddRecipe) {
+                .sheet(isPresented: $showAddRecipe, onDismiss: {
+                    NotificationCenter.default.post(name: .homeDataShouldRefresh, object: nil)
+                }) {
                     NavigationStack {
                         AddRecipeView()
                     }
                     .forceLightStatusBar()
                 }
-                .sheet(isPresented: $showAddUtensil) {
+                .sheet(isPresented: $showAddUtensil, onDismiss: {
+                    NotificationCenter.default.post(name: .homeDataShouldRefresh, object: nil)
+                }) {
                     ItemDetailView(
                         mode: .create(destinations: [.utensil]),
                         onExistingItemRequested: { item in
@@ -497,7 +514,9 @@ struct ContentView: View {
                     )
                     .forceLightStatusBar()
                 }
-                .sheet(isPresented: $showAddItem) {
+                .sheet(isPresented: $showAddItem, onDismiss: {
+                    NotificationCenter.default.post(name: .homeDataShouldRefresh, object: nil)
+                }) {
                     ItemDetailView(
                         mode: .create(),
                         initialName: addItemPrefill,
@@ -527,7 +546,10 @@ struct ContentView: View {
                         addItemCategory = nil
                     }
                 }
-                .sheet(item: $searchEditItem, onDismiss: { searchEditItem = nil }) { selection in
+                .sheet(item: $searchEditItem, onDismiss: {
+                    searchEditItem = nil
+                    NotificationCenter.default.post(name: .homeDataShouldRefresh, object: nil)
+                }) { selection in
                     ItemDetailContainerView(itemID: selection.id)
                         .forceLightStatusBar()
                 }
@@ -537,7 +559,10 @@ struct ContentView: View {
                     }
                     .forceLightStatusBar()
                 }
-                .sheet(item: $searchEditRecipe, onDismiss: { searchEditRecipe = nil }) { selection in
+                .sheet(item: $searchEditRecipe, onDismiss: {
+                    searchEditRecipe = nil
+                    NotificationCenter.default.post(name: .homeDataShouldRefresh, object: nil)
+                }) { selection in
                     NavigationStack {
                         EditRecipeContainerView(recipeID: selection.id)
                     }
@@ -567,7 +592,9 @@ struct ContentView: View {
                     showSettings = true
                 }
                 .preferredColorScheme(settingsSnapshot.appearanceMode.colorScheme)
-                .sheet(isPresented: $showSettings) {
+                .sheet(isPresented: $showSettings, onDismiss: {
+                    NotificationCenter.default.post(name: .homeDataShouldRefresh, object: nil)
+                }) {
                     NavigationStack {
                         SettingsView()
                     }
@@ -618,6 +645,7 @@ struct ContentView: View {
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .shareImportRecipeSaved)) { note in
                     guard let recipeID = note.userInfo?["recipeID"] as? UUID else { return }
+                    NotificationCenter.default.post(name: .homeDataShouldRefresh, object: nil)
                     Task { @MainActor in
                         openRecipeInRecipesTab(recipeID)
                     }
@@ -854,6 +882,7 @@ struct ContentView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
             suspendOffscreenTabsTemporarily(reason: "willEnterForeground")
+            NotificationCenter.default.post(name: .homeDataShouldRefresh, object: nil)
         }
         #endif
         .onChange(of: searchBarState.isVisible) { _, newValue in
@@ -1498,6 +1527,10 @@ struct ContentView: View {
                     searchBarState.mode = .idle
                 }
             }
+
+            if (newValue ?? .home) == .home {
+                NotificationCenter.default.post(name: .homeDataShouldRefresh, object: nil)
+            }
         }
     }
 
@@ -1801,6 +1834,10 @@ struct ContentView: View {
                 object: nil,
                 userInfo: ["date": Calendar.current.startOfDay(for: .now)]
             )
+        }
+
+        if newValue == .assistant {
+            NotificationCenter.default.post(name: .homeDataShouldRefresh, object: nil)
         }
     }
 
@@ -2422,6 +2459,9 @@ private struct HomeLiveInputsObserver: View {
             .onChange(of: settingsArray) { _, _ in
                 syncLiveInputs(triggerDebouncedRefresh: true)
             }
+            .onReceive(NotificationCenter.default.publisher(for: .homeDataShouldRefresh)) { _ in
+                syncLiveInputs(triggerDebouncedRefresh: true)
+            }
     }
 
     private func syncLiveInputs(triggerDebouncedRefresh: Bool) {
@@ -2456,6 +2496,7 @@ private struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.openRecipeInRecipesTab) private var openRecipeInRecipesTab
+    @Environment(\.activeAppTab) private var activeAppTab
     @EnvironmentObject private var searchBarState: SearchBarState
     // Corrigido ciclo do AttributeGraph separando dependências reativas de SwiftData em @State com atualização manual para evitar travamentos no macOS.
 
@@ -2534,21 +2575,32 @@ private struct HomeView: View {
         .toolbar(.hidden, for: .navigationBar)
         #endif
         .tint(PageTheme.home.accentColor)
-        .sheet(isPresented: $showAddGrocery) {
+        .sheet(isPresented: $showAddGrocery, onDismiss: {
+            refreshHomeFromCurrentInputs(logEvent: true)
+            NotificationCenter.default.post(name: .homeDataShouldRefresh, object: nil)
+        }) {
             ItemDetailView(mode: .create(destinations: [.grocery]))
                 .forceLightStatusBar()
         }
-        .sheet(isPresented: $showAddPantry) {
+        .sheet(isPresented: $showAddPantry, onDismiss: {
+            refreshHomeFromCurrentInputs(logEvent: true)
+            NotificationCenter.default.post(name: .homeDataShouldRefresh, object: nil)
+        }) {
             ItemDetailView(mode: .create(destinations: [.pantry]))
                 .forceLightStatusBar()
         }
-        .sheet(isPresented: $showAddRecipe) {
+        .sheet(isPresented: $showAddRecipe, onDismiss: {
+            refreshHomeFromCurrentInputs(logEvent: true)
+            NotificationCenter.default.post(name: .homeDataShouldRefresh, object: nil)
+        }) {
             NavigationStack {
                 AddRecipeView()
             }
             .forceLightStatusBar()
         }
         .sheet(isPresented: $showImportRecipe, onDismiss: {
+            refreshHomeFromCurrentInputs(logEvent: true)
+            NotificationCenter.default.post(name: .homeDataShouldRefresh, object: nil)
             guard let recipeID = pendingImportedRecipeID else { return }
             pendingImportedRecipeID = nil
             Task { @MainActor in
@@ -2573,7 +2625,11 @@ private struct HomeView: View {
         } message: {
             Text("De onde vem essa receita?")
         }
-        .sheet(item: $editingExpiringItem, onDismiss: { editingExpiringItem = nil }) { selection in
+        .sheet(item: $editingExpiringItem, onDismiss: {
+            editingExpiringItem = nil
+            refreshHomeFromCurrentInputs(logEvent: true)
+            NotificationCenter.default.post(name: .homeDataShouldRefresh, object: nil)
+        }) { selection in
             ItemDetailContainerView(itemID: selection.id)
                 .forceLightStatusBar()
         }
@@ -2584,6 +2640,21 @@ private struct HomeView: View {
         .onChange(of: scrollToTopTrigger) { _, _ in
             contentResetToken += 1
         }
+        .onAppear {
+            refreshHomeFromCurrentInputs(logEvent: false)
+        }
+        .onChange(of: activeAppTab) { _, newValue in
+            guard newValue == .assistant else { return }
+            refreshHomeFromCurrentInputs(logEvent: true)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .homeDataShouldRefresh)) { _ in
+            refreshHomeFromCurrentInputs(logEvent: true)
+        }
+    }
+
+    private func refreshHomeFromCurrentInputs(logEvent: Bool) {
+        guard hasLoadedInitialInputs else { return }
+        refreshHomeDerivedState(logEvent: logEvent)
     }
 
     private func refreshHomeDerivedState(logEvent: Bool) {
@@ -2774,7 +2845,7 @@ private struct HomeView: View {
                 .frame(height: tileHeight)
 
             Text(title)
-                .font(.caption.weight(.bold))
+                .font(.caption)
                 .foregroundStyle(.primary)
                 .lineLimit(1)
                 .frame(maxWidth: .infinity)
@@ -2795,7 +2866,7 @@ private struct HomeView: View {
                 .frame(height: tileHeight)
 
             Text(title)
-                .font(.caption.weight(.bold))
+                .font(.caption)
                 .foregroundStyle(.primary)
                 .lineLimit(1)
                 .frame(maxWidth: .infinity)
@@ -2862,7 +2933,7 @@ private struct HomeView: View {
                         }
                         .frame(height: smallSide)
                         Text(String(localized: "Despensa"))
-                            .font(.caption.weight(.bold))
+                            .font(.caption)
                             .foregroundStyle(.primary)
                     }
 
@@ -2872,7 +2943,7 @@ private struct HomeView: View {
                         }
                         .frame(height: smallSide)
                         Text(String(localized: "Mercado"))
-                            .font(.caption.weight(.bold))
+                            .font(.caption)
                             .foregroundStyle(.primary)
                     }
 
@@ -2882,7 +2953,7 @@ private struct HomeView: View {
                         }
                         .frame(height: smallSide)
                         Text(String(localized: "Receitas"))
-                            .font(.caption.weight(.bold))
+                            .font(.caption)
                             .foregroundStyle(.primary)
                     }
 
@@ -2892,7 +2963,7 @@ private struct HomeView: View {
                         }
                         .frame(height: smallSide)
                         Text(String(localized: "Alimento"))
-                            .font(.caption.weight(.bold))
+                            .font(.caption)
                             .foregroundStyle(.primary)
                     }
                 }

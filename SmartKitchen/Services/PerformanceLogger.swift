@@ -33,6 +33,7 @@ enum PerformanceLogger {
         case subscriptions = "Subscriptions"
         case remoteChange  = "RemoteChange"
         case tabSwitch     = "TabSwitch"
+        case recipes       = "Recipes"
 
         var logger: Logger {
             Logger(subsystem: PerformanceLogger.subsystem, category: rawValue)

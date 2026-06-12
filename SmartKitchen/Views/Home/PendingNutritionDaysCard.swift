@@ -14,14 +14,8 @@ import SwiftData
 /// gesto de swipe horizontal é tratado nativamente pelo SwiftUI sem
 /// interferir na rolagem.
 struct PendingNutritionDaysCard: View {
-    @Environment(\.activeAppTab) private var activeAppTab
-
     var body: some View {
-        if activeAppTab == nil || activeAppTab == .assistant {
-            PendingNutritionDaysCardLive()
-        } else {
-            EmptyView()
-        }
+        PendingNutritionDaysCardLive()
     }
 }
 
@@ -42,10 +36,11 @@ private struct PendingNutritionDaysCardLive: View {
 
     var body: some View {
         let days = startedDaysState
-        Group {
-            if days.isEmpty {
-                EmptyView()
-            } else {
+        VStack(spacing: 0) {
+            Color.clear
+                .frame(height: 0)
+
+            if !days.isEmpty {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack(alignment: .firstTextBaseline) {
                         HStack(spacing: 4) {
@@ -167,6 +162,12 @@ private struct PendingNutritionDaysCardLive: View {
             scheduleRefresh()
         }
         .onChange(of: profiles) { _, _ in
+            scheduleRefresh()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .nutritionDayLogChanged)) { _ in
+            scheduleRefresh()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .homeDataShouldRefresh)) { _ in
             scheduleRefresh()
         }
     }
