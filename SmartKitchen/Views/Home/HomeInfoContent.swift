@@ -9,8 +9,6 @@ struct HomeInfoContent: View {
 
 private struct HomeInfoContentLive: View {
     @Query(filter: #Predicate<UnifiedItem> { $0.isPantry }, sort: \UnifiedItem.name) private var pantryItems: [UnifiedItem]
-    @Query(filter: #Predicate<UnifiedItem> { $0.isGrocery }, sort: \UnifiedItem.name) private var groceryItems: [UnifiedItem]
-    @Query(sort: \Recipe.name) private var recipes: [Recipe]
     @Query(sort: \FoodEntry.timestamp, order: .reverse) private var foodEntries: [FoodEntry]
     @Query(sort: \NutritionDayLog.dayStart, order: .reverse) private var dayLogs: [NutritionDayLog]
     @Query(sort: \NutritionProfile.createdAt) private var profiles: [NutritionProfile]
@@ -88,12 +86,6 @@ private struct HomeInfoContentLive: View {
         .onChange(of: pantryItems) { _, _ in
             scheduleRefresh()
         }
-        .onChange(of: groceryItems) { _, _ in
-            scheduleRefresh()
-        }
-        .onChange(of: recipes) { _, _ in
-            scheduleRefresh()
-        }
         .onChange(of: foodEntries) { _, _ in
             scheduleRefresh()
         }
@@ -115,20 +107,48 @@ private struct HomeInfoContentLive: View {
     }
 
     private var statusPhrase: some View {
-        VStack(alignment: .leading, spacing: 1) {
-            ForEach(statusPhraseLines) { line in
-                HStack(spacing: 4) {
-                    ForEach(line.tokens) { token in
-                        statusPhraseTokenView(token)
+        Group {
+            if statusFacts.isEmpty {
+                readyStatusPhrase
+            } else {
+                VStack(alignment: .leading, spacing: 1) {
+                    ForEach(statusPhraseLines) { line in
+                        HStack(spacing: 4) {
+                            ForEach(line.tokens) { token in
+                                statusPhraseTokenView(token)
+                            }
+                        }
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.76)
+                        .allowsTightening(true)
                     }
                 }
-                .lineLimit(1)
-                .minimumScaleFactor(0.76)
-                .allowsTightening(true)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.top, -8)
+    }
+
+    private var readyStatusPhrase: some View {
+        readyStatusText
+            .font(.system(size: 15, weight: .semibold, design: .rounded))
+        .lineLimit(2)
+        .minimumScaleFactor(0.82)
+        .allowsTightening(true)
+        .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private var readyStatusText: Text {
+        Text(greetingText + " ")
+            .foregroundColor(.white.opacity(0.55))
+        + Text(Image(systemName: "checkmark.circle"))
+            .foregroundColor(.white)
+        + Text(" ")
+        + Text(String(localized: "Tudo certo"))
+            .fontWeight(.heavy)
+            .foregroundColor(.white)
+        + Text(" " + String(localized: "na sua cozinha!"))
+            .foregroundColor(.white.opacity(0.55))
     }
 
     private func refreshSnapshot() {
@@ -167,9 +187,6 @@ private struct HomeInfoContentLive: View {
             .reduce(0) { $0 + $1.calories }
 
         snapshot = HomeInfoSnapshot(
-            pantryCount: pantryItems.count,
-            groceryCount: groceryItems.count,
-            recipeCount: recipes.count,
             expiringSoonCount: expiringCount,
             pendingNutritionDaysCount: pendingCount,
             caloriesConsumedToday: caloriesToday,
@@ -233,27 +250,6 @@ private struct HomeInfoContentLive: View {
                     text: pendingNutritionDaysCount == 1
                         ? String(localized: "1 dia incompleto")
                         : String(localized: "\(pendingNutritionDaysCount) dias incompletos")
-                )
-            )
-        }
-
-        if facts.isEmpty {
-            facts.append(
-                KitchenStatusFact(
-                    icon: "refrigerator",
-                    text: String(localized: "\(snapshot.pantryCount) despensa")
-                )
-            )
-            facts.append(
-                KitchenStatusFact(
-                    icon: "cart",
-                    text: String(localized: "\(snapshot.groceryCount) mercado")
-                )
-            )
-            facts.append(
-                KitchenStatusFact(
-                    icon: "book.closed",
-                    text: String(localized: "\(snapshot.recipeCount) receitas")
                 )
             )
         }
@@ -338,9 +334,6 @@ private struct HomeInfoContentLive: View {
 }
 
 private struct HomeInfoSnapshot {
-    var pantryCount: Int = 0
-    var groceryCount: Int = 0
-    var recipeCount: Int = 0
     var expiringSoonCount: Int = 0
     var pendingNutritionDaysCount: Int = 0
     var caloriesConsumedToday: Int = 0

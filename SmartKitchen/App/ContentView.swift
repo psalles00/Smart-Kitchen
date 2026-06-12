@@ -952,7 +952,7 @@ struct ContentView: View {
             // Compensate for the floating tab bar only while it is visible.
             // When the keyboard opens, the tab bar hides and the safe area
             // already repositions this inset above the keyboard.
-            .padding(.bottom, isKeyboardVisible ? 0 : 49)
+            .padding(.bottom, isKeyboardVisible ? 0 : 45)
     }
 
     private func openQuickRecipeImport(_ launchMode: RecipeImportLaunchMode) {
@@ -2479,6 +2479,8 @@ private final class HomeLiveInputsStore: ObservableObject {
     var pantryItems: [UnifiedItem] = []
     var recipes: [Recipe] = []
     var categories: [Category] = []
+    var foodEntries: [FoodEntry] = []
+    var dayLogs: [NutritionDayLog] = []
 }
 
 private struct HomeSettingsSnapshot: Equatable {
@@ -2495,6 +2497,8 @@ private struct HomeLiveInputsObserver: View {
     @Query(filter: #Predicate<UnifiedItem> { $0.isPantry }, sort: \UnifiedItem.name) private var pantryItems: [UnifiedItem]
     @Query(sort: \Recipe.name) private var recipes: [Recipe]
     @Query(sort: \Category.sortOrder) private var categories: [Category]
+    @Query(sort: \FoodEntry.timestamp, order: .reverse) private var foodEntries: [FoodEntry]
+    @Query(sort: \NutritionDayLog.dayStart, order: .reverse) private var dayLogs: [NutritionDayLog]
     @Query private var settingsArray: [AppSettings]
 
     let store: HomeLiveInputsStore
@@ -2520,6 +2524,12 @@ private struct HomeLiveInputsObserver: View {
             .onChange(of: categories) { _, _ in
                 syncLiveInputs(triggerDebouncedRefresh: true)
             }
+            .onChange(of: foodEntries) { _, _ in
+                syncLiveInputs(triggerDebouncedRefresh: true)
+            }
+            .onChange(of: dayLogs) { _, _ in
+                syncLiveInputs(triggerDebouncedRefresh: true)
+            }
             .onChange(of: settingsArray) { _, _ in
                 syncLiveInputs(triggerDebouncedRefresh: true)
             }
@@ -2532,6 +2542,8 @@ private struct HomeLiveInputsObserver: View {
         store.pantryItems = pantryItems
         store.recipes = recipes
         store.categories = categories
+        store.foodEntries = foodEntries
+        store.dayLogs = dayLogs
 
         let newSettingsSnapshot = HomeSettingsSnapshot(settings: settingsArray.first)
         if settingsSnapshot != newSettingsSnapshot {
@@ -2576,6 +2588,7 @@ private struct HomeView: View {
     @State private var recipeCategoriesState: [Category] = []
     @State private var compatibleMatchesState: [HomeRecipeMatch] = []
     @State private var expiringItemsState: [UnifiedItem] = []
+    @State private var hasPendingNutritionDays = false
     @State private var contentResetToken: Int = 0
     @State private var shortcutDeckWidth: CGFloat = 0
     @State private var settingsSnapshot = HomeSettingsSnapshot()
@@ -2602,9 +2615,11 @@ private struct HomeView: View {
             },
             content: {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 32) {
+                    VStack(alignment: .leading, spacing: homeContentSpacing) {
                         actionDeck
-                        PendingNutritionDaysCard()
+                        if hasPendingNutritionDays {
+                            PendingNutritionDaysCard()
+                        }
                         if !expiringItemsState.isEmpty {
                             expiringSection
                         }
@@ -2728,6 +2743,7 @@ private struct HomeView: View {
         updateRecipeCategories()
         updateCompatibleMatches()
         updateExpiringItems()
+        updatePendingNutritionDays()
     }
 
     private func updateRecipeCategories() {
@@ -2805,6 +2821,40 @@ private struct HomeView: View {
                 guard let lhs = $0.expirationDate, let rhs = $1.expirationDate else { return false }
                 return lhs < rhs
             }
+    }
+
+    private func updatePendingNutritionDays() {
+        let today = Calendar.current.startOfDay(for: .now)
+        guard let cutoff = Calendar.current.date(byAdding: .day, value: -60, to: today) else {
+            hasPendingNutritionDays = false
+            return
+        }
+
+        var cursor = today
+        while cursor >= cutoff {
+            let state = NutritionDayLogStore.state(
+                for: cursor,
+                entries: liveInputs.foodEntries,
+                logs: liveInputs.dayLogs,
+                calendar: .current
+            )
+            if state == .todayInProgress || state == .pastInProgress {
+                hasPendingNutritionDays = true
+                return
+            }
+            guard let previousDay = Calendar.current.date(byAdding: .day, value: -1, to: cursor) else { break }
+            cursor = previousDay
+        }
+
+        hasPendingNutritionDays = false
+    }
+
+    private var hasHomeStatusSections: Bool {
+        hasPendingNutritionDays || !expiringItemsState.isEmpty
+    }
+
+    private var homeContentSpacing: CGFloat {
+        32
     }
 
     @ViewBuilder

@@ -1,3 +1,5 @@
+No final de cada alteração, compile o app e abra a versão modificada no app Simulator usando o iPhone 17 Pro.
+
 # Extremamente importante
 - Nunca, jamais, restaure uma versão antiga sem meu consentimento explícito. Se precisar restaurar, me avise e confirme comigo antes de executar a ação.
 - NUNCA execute comandos destrutivos ou de reversão sem meu consentimento explícito no mesmo turno. Isso inclui `git reset --hard`, `git checkout --`, `git restore`, `git clean`, `git revert`, `rm -rf`, `xcrun simctl uninstall` e qualquer comando equivalente que descarte trabalho, reinstale uma versão antiga ou apague dados locais.
