@@ -158,6 +158,7 @@ final class ExaNutritionLookup {
                 sodium:             numeric(entry["sodium_per_100g"]),
                 potassium:          numeric(entry["potassium_per_100g"]),
                 emoji: entry["emoji"] as? String,
+                servingGrams: nil,
                 source: "exa",
                 citationURL: citation,
                 id: nil,
@@ -183,7 +184,7 @@ final class ExaNutritionLookup {
             sugar: nil, addedSugar: nil, fiber: nil,
             saturatedFat: nil, monounsaturatedFat: nil, polyunsaturatedFat: nil,
             cholesterol: nil, sodium: nil, potassium: nil,
-            emoji: nil, source: "exa", citationURL: nil, id: nil,
+            emoji: nil, servingGrams: nil, source: "exa", citationURL: nil, id: nil,
             upvotes: 0, downvotes: 0
         )
     }

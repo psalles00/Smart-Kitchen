@@ -28,7 +28,7 @@ struct OnboardingItemTile: View {
 
                     if isSelected {
                         RoundedRectangle(cornerRadius: 18, style: .continuous)
-                            .strokeBorder(Color.primary, lineWidth: 2.5)
+                            .strokeBorder(Color.accentColor, lineWidth: 2.5)
 
                         VStack {
                             HStack {
@@ -37,7 +37,7 @@ struct OnboardingItemTile: View {
                                     .font(.system(size: 12, weight: .bold))
                                     .foregroundStyle(.white)
                                     .frame(width: 22, height: 22)
-                                    .background(Circle().fill(Color.primary))
+                                    .background(Circle().fill(Color.accentColor))
                                     .padding(8)
                             }
                             Spacer()
@@ -61,4 +61,3 @@ struct OnboardingItemTile: View {
         .sensoryFeedback(.selection, trigger: isSelected)
     }
 }
-

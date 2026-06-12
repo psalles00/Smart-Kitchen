@@ -5,32 +5,84 @@ struct FoodAnalyzingView: View {
     var image: PlatformImage? = nil
     var message: String = String(localized: "Analisando sua refeição…")
 
+    @State private var pulse = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 22) {
             Spacer()
 
-            if let image {
-                ScanningImageView(image: image)
-                    .frame(width: 280, height: 280)
-            } else {
-                Image(systemName: "sparkles")
-                    .font(.system(size: 56))
-                    .foregroundStyle(PageTheme.nutrients.gradient)
+            VStack(spacing: 22) {
+                if let image {
+                    ScanningImageView(image: image)
+                        .frame(width: 270, height: 270)
+                } else {
+                    ZStack {
+                        Circle()
+                            .fill(PageTheme.nutrients.accentColor.opacity(0.10))
+                            .frame(width: 118, height: 118)
+                            .scaleEffect(pulse ? 1.06 : 0.94)
+
+                        Circle()
+                            .stroke(PageTheme.nutrients.accentColor.opacity(0.18), lineWidth: 1)
+                            .frame(width: 92, height: 92)
+
+                        Image(systemName: "sparkles")
+                            .font(.system(size: 54, weight: .semibold))
+                            .foregroundStyle(PageTheme.nutrients.gradient)
+                            .scaleEffect(pulse ? 1.03 : 0.97)
+                    }
+                    .accessibilityHidden(true)
+                }
+
+                Text(message)
+                    .font(.headline)
+                    .foregroundStyle(PageTheme.nutrients.accentColor)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.85)
             }
-
-            ProgressView()
-                .controlSize(.large)
-                .tint(PageTheme.nutrients.accentColor)
-
-            Text(message)
-                .font(.headline)
-                .foregroundStyle(PageTheme.nutrients.accentColor)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+            .padding(.horizontal, 28)
+            .padding(.vertical, 30)
+            .frame(maxWidth: 340)
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 28, style: .continuous)
+                    .stroke(PageTheme.nutrients.accentColor.opacity(0.14), lineWidth: 1)
+            }
+            .shadow(color: PageTheme.nutrients.accentColor.opacity(0.12), radius: 24, x: 0, y: 12)
 
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background {
+            LinearGradient(
+                colors: [
+                    Self.backgroundBase,
+                    PageTheme.nutrients.accentColor.opacity(0.06),
+                    Self.backgroundBase
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
+        }
+        .onAppear {
+            guard !reduceMotion else { return }
+            withAnimation(.easeInOut(duration: 1.35).repeatForever(autoreverses: true)) {
+                pulse = true
+            }
+        }
+    }
+
+    private static var backgroundBase: Color {
+        #if os(iOS)
+        Color(.systemBackground)
+        #elseif os(macOS)
+        Color(.windowBackgroundColor)
+        #else
+        Color(.clear)
+        #endif
     }
 }
 

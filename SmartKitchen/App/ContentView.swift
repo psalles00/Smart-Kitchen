@@ -262,6 +262,12 @@ struct ContentView: View {
         return try? modelContext.fetch(descriptor).first
     }
 
+    private func syncSettingsSnapshot() {
+        let newSnapshot = ContentSettingsSnapshot(settings: fetchSettingsModel())
+        guard settingsSnapshot != newSnapshot else { return }
+        settingsSnapshot = newSnapshot
+    }
+
     /// Returns true when the database already has any user-created content,
     /// indicating this isn't a brand-new install.
     private var hasExistingUserData: Bool {
@@ -547,6 +553,11 @@ struct ContentView: View {
                 .onAppear { syncOnboardingFlag() }
                 .onChange(of: settingsSnapshot.hasCompletedOnboarding) { _, _ in
                     syncOnboardingFlag()
+                }
+                .onReceive(NotificationCenter.default.publisher(for: .appearanceModeChanged)) { _ in
+                    #if os(iOS)
+                    syncSettingsSnapshot()
+                    #endif
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .openSettings)) { _ in
                     showSettings = true

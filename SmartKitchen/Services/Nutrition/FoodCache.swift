@@ -23,6 +23,7 @@ struct Per100gNutrition: Codable, Sendable {
     var potassium: Double?
 
     var emoji: String?
+    var servingGrams: Double?
 
     /// `exa`, `llm`, or `manual`. Distinguishes citation-backed data from
     /// model estimates.
@@ -255,6 +256,7 @@ private struct SupabaseFoodRow: Decodable {
             sodium: sodium_per_100g,
             potassium: potassium_per_100g,
             emoji: emoji,
+            servingGrams: nil,
             source: source,
             citationURL: citation_url,
             id: UUID(uuidString: id),

@@ -59,6 +59,7 @@ final class NutritionAIService {
 
         // 2. Resolve per-100g for each item.
         let (resolved, ids) = await resolvePer100g(for: parsed)
+        guard !resolved.isEmpty else { return try await legacyLLMEstimate(description: trimmed) }
 
         // 3. Combine via pure Swift.
         var combined = NutritionCalculator.combine(items: resolved, originalDescription: trimmed)
@@ -111,11 +112,17 @@ final class NutritionAIService {
     ) async -> (resolved: [NutritionCalculator.Resolved], ids: [UUID]) {
         var slots: [Per100gNutrition?] = Array(repeating: nil, count: items.count)
         var pendingUSDA: [(index: Int, name: String)] = []
+        var pendingLLMOnly: [(index: Int, item: NutritionItemParser.ParsedItem)] = []
 
         // 1. Cache lookup (sequential — Supabase REST is fast enough for small N).
         for (i, item) in items.enumerated() {
+            if Self.shouldResolveWithLLMOnly(item.name) {
+                pendingLLMOnly.append((i, item))
+                continue
+            }
             let canonical = FoodCache.canonicalize(item.name)
-            if let hit = await cache.lookup(canonicalName: canonical) {
+            if let hit = await cache.lookup(canonicalName: canonical),
+               Self.shouldTrustCachedNutrition(hit, for: item.name) {
                 slots[i] = hit
             } else {
                 pendingUSDA.append((i, item.name))
@@ -174,6 +181,12 @@ final class NutritionAIService {
         }
 
         // 4. LLM fallback for any remaining empty/incomplete slots.
+        for pending in pendingLLMOnly where slots[pending.index]?.hasMacros != true {
+            if let llmEntry = await llmPer100gEstimate(for: pending.item) {
+                slots[pending.index] = llmEntry
+            }
+        }
+
         for (i, item) in items.enumerated() where slots[i]?.hasMacros != true {
             if let llmEntry = await llmPer100gEstimate(for: item) {
                 var copy = llmEntry
@@ -201,6 +214,45 @@ final class NutritionAIService {
         return (resolved, ids)
     }
 
+    private static func shouldResolveWithLLMOnly(_ name: String) -> Bool {
+        let n = normalizedFoodName(name)
+        let localCompositeTerms = [
+            "x ", "xis ", "x-", "xtudo", "x tudo", "xduplo", "x duplo",
+            "hamburguer", "hamburger", "burger", "sanduiche", "sandwich",
+            "lanche", "hot dog", "cachorro quente", "coxinha", "pastel"
+        ]
+        return localCompositeTerms.contains { term in
+            let trimmed = term.trimmingCharacters(in: .whitespaces)
+            return n == trimmed || n.contains(term)
+        }
+    }
+
+    private static func shouldTrustCachedNutrition(_ food: Per100gNutrition, for name: String) -> Bool {
+        guard food.hasMacros else { return false }
+        if shouldResolveWithLLMOnly(name) {
+            return food.source == "llm"
+        }
+
+        let display = normalizedFoodName(food.displayName ?? "")
+        let query = normalizedFoodName(name)
+        if food.source == "usda",
+           display.contains("strawberr"),
+           !query.contains("strawberr"),
+           !query.contains("morango") {
+            return false
+        }
+        return true
+    }
+
+    private static func normalizedFoodName(_ value: String) -> String {
+        value
+            .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: AppLocalization.current().foldingLocale)
+            .lowercased()
+            .replacingOccurrences(of: #"[^a-z0-9\s-]"#, with: " ", options: .regularExpression)
+            .replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
     /// Single-item per-100g estimate via LLM (Gemini 3 Flash via OpenRouter or
     /// OpenAI, depending on `AIService` routing). Used when cache and Exa miss.
     private func llmPer100gEstimate(
@@ -209,8 +261,9 @@ final class NutritionAIService {
         let prompt = """
         Estime os valores nutricionais por 100g para o alimento abaixo. Considere \
         valores típicos brasileiros se aplicável. Responda APENAS com JSON:
-        {"display_name":"...","kcal_per_100g":0,"protein_per_100g":0,"carbs_per_100g":0,"fat_per_100g":0,"sugar_per_100g":null,"added_sugar_per_100g":null,"fiber_per_100g":null,"saturated_fat_per_100g":null,"monounsaturated_fat_per_100g":null,"polyunsaturated_fat_per_100g":null,"cholesterol_per_100g":null,"sodium_per_100g":null,"potassium_per_100g":null,"emoji":"🍽️"}
+        {"display_name":"...","serving_size_grams":0,"kcal_per_100g":0,"protein_per_100g":0,"carbs_per_100g":0,"fat_per_100g":0,"sugar_per_100g":null,"added_sugar_per_100g":null,"fiber_per_100g":null,"saturated_fat_per_100g":null,"monounsaturated_fat_per_100g":null,"polyunsaturated_fat_per_100g":null,"cholesterol_per_100g":null,"sodium_per_100g":null,"potassium_per_100g":null,"emoji":"🍽️"}
         macros em g, micros em g (sat/mono/poly/sugar/fiber) ou mg (cholesterol/sodium/potassium).
+        serving_size_grams é a porção típica inteira desse alimento quando o usuário não informa quantidade.
         Use null para o que não souber estimar com confiança.
 
         Alimento: \(item.name)
@@ -259,6 +312,7 @@ final class NutritionAIService {
             sodium: d("sodium_per_100g"),
             potassium: d("potassium_per_100g"),
             emoji: obj["emoji"] as? String,
+            servingGrams: d("serving_size_grams"),
             source: "llm",
             citationURL: nil,
             id: nil,

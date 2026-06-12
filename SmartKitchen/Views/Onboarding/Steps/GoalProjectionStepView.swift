@@ -7,6 +7,8 @@ import Charts
 /// Savoria) and uses the same haptic + entrance pattern of the rest of the
 /// onboarding flow.
 struct GoalProjectionStepView: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     @Bindable var state: OnboardingState
     let onContinue: () -> Void
 
@@ -92,7 +94,9 @@ struct GoalProjectionStepView: View {
     private var backgroundLayer: some View {
         ZStack {
             LinearGradient(
-                colors: [Color(white: 0.99), Color(white: 0.94)],
+                colors: colorScheme == .dark
+                    ? [Color(white: 0.06), Color(white: 0.10)]
+                    : [Color(white: 0.99), Color(white: 0.94)],
                 startPoint: .top,
                 endPoint: .bottom
             )

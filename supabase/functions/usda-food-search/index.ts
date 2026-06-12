@@ -89,6 +89,18 @@ function normalizeName(value: string) {
     .trim()
 }
 
+function tokenSet(value: string) {
+  return new Set(normalizeName(value).split(" ").filter(Boolean))
+}
+
+function hasMeaningfulMatch(food: USDAFood, rawName: string) {
+  const queryTokens = [...tokenSet(rawName)]
+  if (queryTokens.length === 0) return false
+
+  const descriptionTokens = tokenSet(food.description ?? "")
+  return queryTokens.every((token) => descriptionTokens.has(token))
+}
+
 function candidateQueries(rawName: string) {
   const normalized = normalizeName(rawName)
   const singular = normalized.endsWith("s") ? normalized.slice(0, -1) : normalized
@@ -225,6 +237,9 @@ async function lookupName(rawName: string, apiKey: string) {
   for (const query of queries) {
     const foods = await searchFood(query, apiKey)
     for (const food of foods) {
+      if (!hasMeaningfulMatch(food, query)) {
+        continue
+      }
       const score = scoreFood(food, query)
       if (score > bestScore) {
         best = food

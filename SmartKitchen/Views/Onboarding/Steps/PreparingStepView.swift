@@ -5,6 +5,8 @@ import SwiftUI
 /// rotation finishes, we show a brief "ready!" frame with confetti before
 /// auto-advancing to the paywall.
 struct PreparingStepView: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     let onFinished: () -> Void
 
     @State private var progress: Double = 0
@@ -25,7 +27,9 @@ struct PreparingStepView: View {
     var body: some View {
         ZStack {
             LinearGradient(
-                colors: [Color(white: 0.99), Color(white: 0.94)],
+                colors: colorScheme == .dark
+                    ? [Color(white: 0.06), Color(white: 0.10)]
+                    : [Color(white: 0.99), Color(white: 0.94)],
                 startPoint: .top,
                 endPoint: .bottom
             )

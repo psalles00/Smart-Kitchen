@@ -21,6 +21,9 @@ extension Notification.Name {
     /// Posted when the user taps a pending day on the Home page.
     /// `userInfo["date"]` carries the `Date` (startOfDay) to focus on Nutrição.
     static let openNutritionAtDate = Notification.Name("com.smartkitchen.openNutritionAtDate")
+    /// Posted on iOS when the Appearance setting changes so the root view can
+    /// update its preferred color scheme immediately.
+    static let appearanceModeChanged = Notification.Name("com.smartkitchen.appearanceModeChanged")
 }
 
 // MARK: - App Delegate for CloudKit Share Acceptance

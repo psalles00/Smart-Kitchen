@@ -3,8 +3,9 @@ import Foundation
 /// Pure-Swift combiner: turns a list of `(parsed item, per-100g data)` into a
 /// single `FoodAnalysis` for the meal.
 ///
-/// Unit normalization tries to be generous but conservative — when in doubt,
-/// it falls back to a typical-portion default (60 g) for the unknown unit.
+/// Unit normalization tries to be generous but conservative. When a lookup
+/// provides a typical serving size, unknown-unit entries use that; otherwise
+/// they fall back to a local portion heuristic.
 @MainActor
 enum NutritionCalculator {
 
@@ -26,7 +27,7 @@ enum NutritionCalculator {
         var hasCholesterol = false, hasSodium = false, hasPotassium = false
 
         for entry in items {
-            let grams = grams(for: entry.item, name: entry.per100g.canonicalName)
+            let grams = grams(for: entry.item, nutrition: entry.per100g)
             let f = grams / 100.0
             totalGrams += grams
 
@@ -48,7 +49,7 @@ enum NutritionCalculator {
 
         let displayName: String = {
             if items.count == 1 {
-                return items[0].per100g.displayName ?? items[0].item.name
+                return items[0].item.name
             }
             return originalDescription.trimmingCharacters(in: .whitespacesAndNewlines)
         }()
@@ -80,10 +81,17 @@ enum NutritionCalculator {
     /// Best-effort conversion of `(quantity, unit)` to grams. Returns
     /// `defaultPortionGrams` when the unit is missing or unrecognized.
     static func grams(for item: NutritionItemParser.ParsedItem, name: String) -> Double {
+        grams(for: item, name: name, servingGrams: nil)
+    }
+
+    static func grams(for item: NutritionItemParser.ParsedItem, nutrition: Per100gNutrition) -> Double {
+        grams(for: item, name: nutrition.canonicalName, servingGrams: nutrition.servingGrams)
+    }
+
+    private static func grams(for item: NutritionItemParser.ParsedItem, name: String, servingGrams: Double?) -> Double {
         let qty = item.quantity ?? 1.0
         guard let rawUnit = item.unit?.trimmingCharacters(in: .whitespacesAndNewlines), !rawUnit.isEmpty else {
-            // No unit: try to pick a reasonable per-piece weight from the item name.
-            return qty * perPieceGrams(for: name)
+            return qty * (validServingGrams(servingGrams) ?? perPieceGrams(for: name))
         }
         let unit = rawUnit
             .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: AppLocalization.current().foldingLocale)
@@ -97,13 +105,13 @@ enum NutritionCalculator {
         case "mg":
             return qty / 1000
         case "ml", "mililitro", "mililitros":
-            // Treat 1 ml ≈ 1 g for cooking purposes (water-equivalent). Good
+            // Treat 1 ml ~= 1 g for cooking purposes (water-equivalent). Good
             // enough for nutrition estimation.
             return qty
         case "l", "litro", "litros":
             return qty * 1000
         case "un", "unidade", "unidades", "und":
-            return qty * perPieceGrams(for: name)
+            return qty * (validServingGrams(servingGrams) ?? perPieceGrams(for: name))
         case "xicara", "xicaras", "xicara de cha", "xicara de cafe":
             return qty * 240
         case "colher de sopa", "colher sopa", "colheres de sopa":
@@ -123,12 +131,26 @@ enum NutritionCalculator {
         }
     }
 
+    private static func validServingGrams(_ value: Double?) -> Double? {
+        guard let value, value >= 5, value <= 1500 else { return nil }
+        return value
+    }
+
     /// Heuristic per-piece weight when `unit == "un"` or no unit is given.
     /// Conservative defaults that round to a recognizable number of grams.
     private static func perPieceGrams(for name: String) -> Double {
         let n = name
             .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: AppLocalization.current().foldingLocale)
             .lowercased()
+        if n.contains("x tudo") || n.contains("xis tudo") { return 350 }
+        if n.contains("x duplo") || n.contains("xis duplo") { return 300 }
+        if n.hasPrefix("x ") || n.hasPrefix("xis ") || n.contains(" x-") { return 280 }
+        if n.contains("hamburguer") || n.contains("hamburger") || n.contains("burger") { return 220 }
+        if n.contains("sanduiche") || n.contains("sandwich") { return 160 }
+        if n.contains("hot dog") || n.contains("cachorro quente") { return 170 }
+        if n.contains("coxinha") { return 110 }
+        if n.contains("pastel") { return 130 }
+        if n.contains("pizza") { return 120 }
         if n.contains("ovo")      { return 50 }
         if n.contains("banana")   { return 120 }
         if n.contains("maca")     { return 180 }

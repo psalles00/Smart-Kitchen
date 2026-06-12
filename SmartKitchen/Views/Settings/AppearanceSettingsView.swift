@@ -4,6 +4,8 @@ import SwiftData
 /// Página unificada que reúne preferências visuais (modo claro/escuro)
 /// e de performance (fundos animados).
 struct AppearanceSettingsView: View {
+    @Environment(\.modelContext) private var modelContext
+
     @Query private var settingsArray: [AppSettings]
 
     @AppStorage(PerformancePreferences.backgroundShadersEnabledKey)
@@ -20,7 +22,13 @@ struct AppearanceSettingsView: View {
                 if let settings {
                     Picker("Aparência", selection: Binding(
                         get: { settings.appearanceMode },
-                        set: { settings.appearanceMode = $0 }
+                        set: { newMode in
+                            settings.appearanceMode = newMode
+                            try? modelContext.save()
+                            #if os(iOS)
+                            NotificationCenter.default.post(name: .appearanceModeChanged, object: nil)
+                            #endif
+                        }
                     )) {
                         ForEach(AppearanceMode.allCases) { mode in
                             Text(mode.displayName).tag(mode)

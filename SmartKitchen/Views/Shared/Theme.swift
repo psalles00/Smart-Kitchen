@@ -56,6 +56,8 @@ let appPrimaryBackground: Color = {
 /// Cor da divisória de itens em listas no modo escuro (`#545458`). No modo
 /// claro mantemos a estética dashed atual via `Color.primary`/`Color.white`.
 let listItemDividerDarkColor = Color(red: 0x54 / 255.0, green: 0x54 / 255.0, blue: 0x58 / 255.0)
+let listItemDividerDarkPrimaryOpacity = 0.48
+let listItemDividerDarkSecondaryOpacity = 0.24
 
 // MARK: - Typography
 
@@ -135,7 +137,7 @@ struct ItemListDivider: View {
         Capsule(style: .continuous)
             .strokeBorder(
                 colorScheme == .dark
-                    ? listItemDividerDarkColor.opacity(0.95)
+                    ? listItemDividerDarkColor.opacity(listItemDividerDarkPrimaryOpacity)
                     : Color.white.opacity(0.34),
                 style: StrokeStyle(lineWidth: 0.9, lineCap: .round, dash: [1.0, 3.6])
             )
@@ -143,7 +145,7 @@ struct ItemListDivider: View {
                 Capsule(style: .continuous)
                     .strokeBorder(
                         colorScheme == .dark
-                            ? listItemDividerDarkColor
+                            ? listItemDividerDarkColor.opacity(listItemDividerDarkSecondaryOpacity)
                             : Color.primary.opacity(0.1),
                         style: StrokeStyle(lineWidth: 0.9, lineCap: .round, dash: [1.0, 3.6], dashPhase: 1.8)
                     )
