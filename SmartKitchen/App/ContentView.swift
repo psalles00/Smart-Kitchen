@@ -1995,6 +1995,8 @@ struct ContentView: View {
             addItemIconFileName = iconFileName
             addItemCategory = category
             showAddItem = true
+        case .addCatalogItemToGrocery(let name, let iconFileName, let category):
+            addCatalogItemToGrocery(name: name, iconFileName: iconFileName, category: category)
         case .addRecipe:
             showAddRecipe = true
         case .addUtensil:
@@ -2165,9 +2167,71 @@ struct ContentView: View {
         if isQuestion {
             handleCommandBarAction(.askAssistant(prefill: trimmedQuery))
         } else {
+            if let suggestion = searchService.suggestions.first ?? ItemDatabase.shared.search(query: trimmedQuery, limit: 1).first {
+                handleCommandBarAction(.addCatalogItemToGrocery(
+                    name: suggestion.preferredTitle(matching: trimmedQuery),
+                    iconFileName: suggestion.nomeDoArquivo,
+                    category: suggestion.categoria
+                ))
+                return
+            }
+
             // Default: open AddItemView with destination picker
             handleCommandBarAction(.addItem(prefill: trimmedQuery, iconFileName: nil, category: nil))
         }
+    }
+
+    private func addCatalogItemToGrocery(name: String, iconFileName: String?, category: String?) {
+        let traceID = UUID().uuidString
+        let start = DispatchTime.now()
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+
+        var descriptor = FetchDescriptor<UnifiedItem>()
+        descriptor.includePendingChanges = true
+        let allItems = (try? modelContext.fetch(descriptor)) ?? []
+        let nextGrocerySortOrder = ((allItems.filter { $0.isGrocery }.map(\.grocerySortOrder).max()) ?? -1) + 1
+        let resolvedCategory = category.flatMap { CategoryDatabase.shared.entry(for: $0) == nil ? nil : $0 } ?? "Outros"
+
+        let item: UnifiedItem
+        let didCreate: Bool
+        if let existing = UnifiedItem.existingItem(named: trimmed, in: allItems) {
+            item = existing
+            didCreate = false
+            if !item.isGrocery {
+                item.isGrocery = true
+                item.isChecked = false
+                item.grocerySortOrder = nextGrocerySortOrder
+            }
+            if item.iconName == nil {
+                item.iconName = iconFileName
+            }
+            if item.category == "Outros", resolvedCategory != "Outros" {
+                item.category = resolvedCategory
+            }
+        } else {
+            item = UnifiedItem(
+                name: trimmed,
+                category: resolvedCategory,
+                iconName: iconFileName,
+                isGrocery: true,
+                grocerySortOrder: nextGrocerySortOrder
+            )
+            modelContext.insert(item)
+            didCreate = true
+        }
+
+        scrollToItemRequest = ScrollToItemRequest(itemID: item.id, type: "groceryItem")
+        selectedTab = .lists
+        searchService.clear()
+        NotificationCenter.default.post(name: .homeDataShouldRefresh, object: nil)
+
+        let elapsedMs = Double(DispatchTime.now().uptimeNanoseconds &- start.uptimeNanoseconds) / 1_000_000.0
+        PerformanceLogger.event(
+            .assistant,
+            "catalog item added to grocery",
+            metadata: "flow=assistantAdd traceID=\(traceID) itemID=\(item.id) created=\(didCreate) tookMs=\(String(format: "%.1f", elapsedMs))"
+        )
     }
 
     private func refreshSearchAfterMove() {

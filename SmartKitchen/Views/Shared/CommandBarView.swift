@@ -21,6 +21,7 @@ enum CommandBarAction {
     case addItem(prefill: String, iconFileName: String?, category: String?)
     case addRecipe(prefill: String)
     case addUtensil(prefill: String)
+    case addCatalogItemToGrocery(name: String, iconFileName: String?, category: String?)
     case registerFood(prefill: String)
     case openWeightTracker
     case askAssistant(prefill: String)
@@ -293,7 +294,7 @@ struct CommandBarSearchContent: View {
                     suggestions: Array(searchService.suggestions.prefix(12)),
                     query: trimmedQuery
                 ) { entry in
-                    onAction(.addItem(prefill: entry.preferredTitle(matching: trimmedQuery), iconFileName: entry.nomeDoArquivo, category: entry.categoria))
+                    onAction(.addCatalogItemToGrocery(name: entry.preferredTitle(matching: trimmedQuery), iconFileName: entry.nomeDoArquivo, category: entry.categoria))
                 }
             }
         }
@@ -563,7 +564,7 @@ struct CommandBarView: View {
                     suggestions: Array(searchService.suggestions.prefix(12)),
                     query: trimmedQuery
                 ) { entry in
-                    onAction(.addItem(prefill: entry.preferredTitle(matching: trimmedQuery), iconFileName: entry.nomeDoArquivo, category: entry.categoria))
+                    onAction(.addCatalogItemToGrocery(name: entry.preferredTitle(matching: trimmedQuery), iconFileName: entry.nomeDoArquivo, category: entry.categoria))
                     dismiss()
                 }
             }
@@ -618,6 +619,12 @@ struct CommandBarView: View {
             onAction(.askAssistant(prefill: trimmedQuery))
             dismiss()
         } else if !trimmedQuery.isEmpty {
+            if let suggestion = searchService.suggestions.first ?? ItemDatabase.shared.search(query: trimmedQuery, limit: 1).first {
+                onAction(.addCatalogItemToGrocery(name: suggestion.preferredTitle(matching: trimmedQuery), iconFileName: suggestion.nomeDoArquivo, category: suggestion.categoria))
+                dismiss()
+                return
+            }
+
             let actions = CommandBarHelpers.orderedActions(query: trimmedQuery, isQuestion: false)
             if let first = actions.first {
                 first.perform(trimmedQuery, onAction)

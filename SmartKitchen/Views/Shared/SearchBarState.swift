@@ -56,7 +56,7 @@ final class SearchBarState: ObservableObject {
     @Published var pageContext: SearchPageContext = .home
 
     /// Debounced version of searchText for expensive operations (search, filtering).
-    /// Updates 1000ms after the user stops typing — heavy work (filters,
+    /// Updates shortly after the user pauses typing — heavy work (filters,
     /// compatibility scoring, global search) must observe THIS instead of
     /// `searchText` to avoid stalling the main thread on every keystroke.
     @Published var debouncedSearchText: String = ""
@@ -93,12 +93,12 @@ final class SearchBarState: ObservableObject {
     private var focusRequestSession: Int = 0
 
     init() {
-        // PERF: Debounce typing by 1000ms so heavy consumers (recipe filter,
+        // PERF: Debounce typing briefly so heavy consumers (recipe filter,
         // global search, compatibility recomputes) stay off the typing
         // critical path. Empty-string updates are flushed immediately below
         // so clearing the field instantly restores the "all results" view.
         debounceCancellable = $searchText
-            .debounce(for: .milliseconds(1000), scheduler: RunLoop.main)
+            .debounce(for: .milliseconds(180), scheduler: RunLoop.main)
             .sink { [weak self] value in
                 self?.debouncedSearchText = value
             }

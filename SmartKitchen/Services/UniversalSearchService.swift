@@ -12,9 +12,9 @@ final class UniversalSearchService: ObservableObject {
     private var debounceTask: Task<Void, Never>?
 
     /// Perform a search across all data sources.
-    /// Both ItemDatabase suggestions and SwiftData queries are debounced by 600 ms
-    /// so that typing in the assistant search field stays responsive — work
-    /// only fires once the user pauses for ≥ 600 ms.
+    /// ItemDatabase suggestions update immediately. SwiftData queries remain
+    /// briefly debounced so typing stays responsive while the catalog feels
+    /// instant.
     func search(query: String, context: ModelContext, showUtensils: Bool = false) {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
 
@@ -28,18 +28,32 @@ final class UniversalSearchService: ObservableObject {
             return
         }
 
+        let suggestionStart = DispatchTime.now()
+        suggestions = ItemDatabase.shared.search(query: trimmed, limit: 20)
+        let suggestionMs = Self.elapsedMilliseconds(since: suggestionStart)
+        PerformanceLogger.event(
+            .assistant,
+            "catalog suggestions ready",
+            metadata: "flow=assistantSearch query=\(trimmed) count=\(suggestions.count) tookMs=\(String(format: "%.1f", suggestionMs))"
+        )
+
         isSearching = true
         debounceTask = Task { [weak self] in
-            try? await Task.sleep(nanoseconds: 600_000_000) // 600ms debounce
+            try? await Task.sleep(nanoseconds: 180_000_000)
             guard !Task.isCancelled, let self else { return }
 
-            let nextSuggestions = ItemDatabase.shared.search(query: trimmed, limit: 20)
+            let searchStart = DispatchTime.now()
             let found = self.performSearch(query: trimmed, context: context, showUtensils: showUtensils)
             guard !Task.isCancelled else { return }
 
-            self.suggestions = nextSuggestions
             self.results = found
             self.isSearching = false
+            let searchMs = Self.elapsedMilliseconds(since: searchStart)
+            PerformanceLogger.event(
+                .assistant,
+                "swiftdata results ready",
+                metadata: "flow=assistantSearch query=\(trimmed) count=\(found.count) tookMs=\(String(format: "%.1f", searchMs))"
+            )
         }
     }
 
@@ -160,5 +174,9 @@ final class UniversalSearchService: ObservableObject {
         text.lowercased()
             .folding(options: [.diacriticInsensitive, .widthInsensitive], locale: .current)
             .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private static func elapsedMilliseconds(since start: DispatchTime) -> Double {
+        Double(DispatchTime.now().uptimeNanoseconds &- start.uptimeNanoseconds) / 1_000_000.0
     }
 }
