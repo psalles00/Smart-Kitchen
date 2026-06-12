@@ -31,6 +31,59 @@ enum RecipeSortOption: String, CaseIterable {
 // MARK: - View
 
 struct RecipesView: View {
+    var body: some View {
+        #if os(iOS)
+        DeferredTabPage(tab: .recipes) {
+            RecipesLoadedView()
+        } placeholder: {
+            RecipesSkeletonPage()
+        }
+        #else
+        RecipesLoadedView()
+        #endif
+    }
+}
+
+#if os(iOS)
+private struct RecipesSkeletonPage: View {
+    @State private var showAddRecipe = false
+
+    var body: some View {
+        ExpandedPageLayout(
+            pageTheme: .recipes,
+            header: { isInverted in
+                PageHeader(title: String(localized: "Receitas"), isInverted: isInverted) {
+                    HStack(spacing: 6) {
+                        GlassButtonGroup {
+                            GlassGroupButton(systemImage: "plus") {
+                                showAddRecipe = true
+                            }
+                        }
+
+                        SettingsButton()
+                    }
+                }
+            },
+            content: {
+                PageSkeletonGrid(columns: 3, itemCount: 12, showsCategoryBar: true)
+            },
+            infoContent: {
+                EmptyView()
+            }
+        )
+        .toolbar(.hidden, for: .navigationBar)
+        .tint(PageTheme.recipes.accentColor)
+        .sheet(isPresented: $showAddRecipe) {
+            NavigationStack {
+                AddRecipeView()
+            }
+            .forceLightStatusBar()
+        }
+    }
+}
+#endif
+
+private struct RecipesLoadedView: View {
     @Environment(\.scrollToTopTrigger) private var scrollToTopTrigger
     @Environment(\.scrollToItem) private var scrollToItem
     @Environment(\.openRecipeInRecipesTab) private var openRecipeInRecipesTab
@@ -79,6 +132,7 @@ struct RecipesView: View {
     @State private var pendingGalleryPrefetchTask: Task<Void, Never>?
     @State private var lastRecipeProjectionInputsKey: Int = 0
     @State private var lastNotebookSummaryInputsKey: Int = 0
+    @State private var didRunInitialAppearWork = false
 
     private var settings: AppSettings? { settingsArray.first }
     private var viewMode: RecipeViewMode { settings?.recipeViewMode ?? .gallery }
@@ -295,9 +349,11 @@ struct RecipesView: View {
         .background(Color(.windowBackgroundColor).ignoresSafeArea())
         #endif
         .onAppear {
+            let isInitialAppear = !didRunInitialAppearWork
+            didRunInitialAppearWork = true
             recomputeCompatibilities()
-            refreshRecipeProjectionsIfNeeded(force: true)
-            refreshNotebookSummariesIfNeeded(force: true)
+            refreshRecipeProjectionsIfNeeded(force: isInitialAppear)
+            refreshNotebookSummariesIfNeeded(force: isInitialAppear)
             handleScrollToItemRequest(scrollToItem)
             scheduleGalleryPrefetchIfNeeded()
         }
@@ -1996,4 +2052,3 @@ private func recipeCategorySymbol(for name: String) -> String {
     default: return "square.grid.2x2"
     }
 }
-

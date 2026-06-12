@@ -74,6 +74,7 @@ struct NutrientsInfoContent: View {
             }
         }
         .padding(.bottom, 4)
+        .frame(height: ExpandedPageHeaderMetrics.iosCompactInfoHeight)
     }
 
     // MARK: - Composição de texto

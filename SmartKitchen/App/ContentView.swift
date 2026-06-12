@@ -78,13 +78,20 @@ struct ContentView: View {
     @State private var suspendOffscreenTabs = false
     @State private var pendingOffscreenTabsResumeWork: DispatchWorkItem?
     @State private var didScheduleInitialOffscreenTabSuspension = false
+    @State private var stagedTabPrewarmTask: Task<Void, Never>?
+    @State private var didScheduleInitialTabPrewarm = false
+    @State private var nextTabSwitchTraceID = 0
+    @State private var pendingTabSwitchTrace: TabSwitchTrace?
+    #if DEBUG
+    @State private var didRunPerfAutoTabSwitch = false
+    #endif
     /// Set of tabs that have ever been selected. We mount a tab on its first
     /// selection and keep it mounted afterwards. This avoids remounting all
     /// 4 offscreen tabs at once when the foreground-burst suspension window
     /// ends, which was causing a ~250ms main-thread hang from concurrent
     /// `@Query` subscriber setup. Permanent lazy-mount keeps the resume path
     /// cheap (only the active tab pays initial-fetch cost).
-    @State private var mountedTabs: Set<AppTab> = [.assistant]
+    @State private var mountedTabs: Set<AppTab> = [.assistant, .lists, .recipes, .nutrients]
 
     // Search-triggered edit sheets
     @State private var searchEditItem: UnifiedItemSelection?
@@ -329,10 +336,25 @@ struct ContentView: View {
                     if !isResettingRecipeDetail {
                         scrollToTopTrigger += 1
                     }
+                    setSelectedTabWithoutAnimation(newValue)
+                    return
                 }
-                selectedTab = newValue
+
+                if TabSwitchDiagnostics.isEnabled {
+                    beginTabSwitch(to: newValue, source: "tabBar")
+                }
+                setSelectedTabWithoutAnimation(newValue)
             }
         )
+    }
+
+    private func setSelectedTabWithoutAnimation(_ tab: AppTab) {
+        var transaction = Transaction()
+        transaction.animation = nil
+        transaction.disablesAnimations = true
+        withTransaction(transaction) {
+            selectedTab = tab
+        }
     }
 
     var body: some View {
@@ -369,6 +391,7 @@ struct ContentView: View {
                 .environment(\.openRecipeInRecipesTab, openRecipeInRecipesTab)
                 .environment(\.backgroundTheme, displayedBgTheme)
                 .environment(\.visiblePageTheme, activePageTheme)
+                .environment(\.activeAppTab, selectedTab)
         )
     }
 
@@ -550,7 +573,14 @@ struct ContentView: View {
                     }
                     .forceLightStatusBar()
                 }
-                .onAppear { syncOnboardingFlag() }
+                .onAppear {
+                    syncOnboardingFlag()
+                    scheduleInitialTabPrewarmIfNeeded()
+                }
+                .onDisappear {
+                    stagedTabPrewarmTask?.cancel()
+                    stagedTabPrewarmTask = nil
+                }
                 .onChange(of: settingsSnapshot.hasCompletedOnboarding) { _, _ in
                     syncOnboardingFlag()
                 }
@@ -595,6 +625,11 @@ struct ContentView: View {
                 .onChange(of: selectedTab) { _, newValue in
                     handleTabSelectionChange(newValue)
                 }
+                #if DEBUG
+                .task {
+                    await runPerfAutoTabSwitchIfRequested()
+                }
+                #endif
         )
 
         #if os(iOS)
@@ -623,8 +658,36 @@ struct ContentView: View {
         #endif
     }
 
+    #if os(iOS)
+    @ViewBuilder
+    private var iosAppBackground: some View {
+        // Same strategy as macOS: keep the heavy SceneKit-backed shader
+        // surfaces mounted and switch by opacity. Recreating these views on
+        // each tab selection was showing up as main-thread hitches.
+        ZStack {
+            Color.black
+            ForEach([PageTheme.home, .lists, .recipes, .nutrients], id: \.self) { theme in
+                ThemedBackgroundView(
+                    theme: theme,
+                    selection: BackgroundManager.shared.background(for: theme),
+                    progress: 1.0
+                )
+                .opacity(theme == displayedBgTheme ? 1 : 0)
+                .allowsHitTesting(false)
+            }
+        }
+        .transaction { transaction in
+            transaction.animation = nil
+        }
+    }
+    #endif
+
     private var nativeTabView: some View {
         ZStack {
+            iosAppBackground
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
+
             TabView(selection: tabSelectionBinding) {
                 Tab(value: AppTab.assistant) {
                     Group {
@@ -646,9 +709,17 @@ struct ContentView: View {
                                     onOpenFoodGalleryDirect: openDirectFoodGallery
                                 )
                             }
+                            .toolbar(.hidden, for: .navigationBar)
                         } else {
                             inactiveTabPlaceholder
                         }
+                    }
+                    .background {
+                        TabActivationProbe(
+                            tab: .assistant,
+                            selectedTab: selectedTab,
+                            trace: pendingTabSwitchTrace
+                        )
                     }
                 } label: {
                     Label("Savoria", systemImage: AppTab.assistant.icon)
@@ -660,9 +731,17 @@ struct ContentView: View {
                             NavigationStack {
                                 ListsTabView()
                             }
+                            .toolbar(.hidden, for: .navigationBar)
                         } else {
                             inactiveTabPlaceholder
                         }
+                    }
+                    .background {
+                        TabActivationProbe(
+                            tab: .lists,
+                            selectedTab: selectedTab,
+                            trace: pendingTabSwitchTrace
+                        )
                     }
                 } label: {
                     Label("Listas", systemImage: AppTab.lists.icon)
@@ -674,9 +753,17 @@ struct ContentView: View {
                             NavigationStack(path: $recipeNavigationPath) {
                                 RecipesView()
                             }
+                            .toolbar(.hidden, for: .navigationBar)
                         } else {
                             inactiveTabPlaceholder
                         }
+                    }
+                    .background {
+                        TabActivationProbe(
+                            tab: .recipes,
+                            selectedTab: selectedTab,
+                            trace: pendingTabSwitchTrace
+                        )
                     }
                 } label: {
                     Label("Receitas", systemImage: AppTab.recipes.icon)
@@ -688,9 +775,17 @@ struct ContentView: View {
                             NavigationStack {
                                 NutrientsView()
                             }
+                            .toolbar(.hidden, for: .navigationBar)
                         } else {
                             inactiveTabPlaceholder
                         }
+                    }
+                    .background {
+                        TabActivationProbe(
+                            tab: .nutrients,
+                            selectedTab: selectedTab,
+                            trace: pendingTabSwitchTrace
+                        )
                     }
                 } label: {
                     Label("Nutrição", systemImage: AppTab.nutrients.icon)
@@ -715,10 +810,22 @@ struct ContentView: View {
                             inactiveTabPlaceholder
                         }
                     }
+                    .background {
+                        TabActivationProbe(
+                            tab: .commandBar,
+                            selectedTab: selectedTab,
+                            trace: pendingTabSwitchTrace
+                        )
+                    }
                 } label: {
                     Label("Buscar", systemImage: AppTab.commandBar.icon)
                 }
             }
+            .transaction { transaction in
+                transaction.animation = nil
+                transaction.disablesAnimations = true
+            }
+            .environment(\.usesGlobalPageBackground, true)
             #if os(iOS)
             // Hide the tab bar only while the keyboard is up; otherwise the
             // assistant bar always shows alongside the tab bar.
@@ -1651,6 +1758,28 @@ struct ContentView: View {
         lastContentTab = newValue
         mountedTabs.insert(newValue)
 
+        if TabSwitchDiagnostics.isEnabled,
+           let trace = pendingTabSwitchTrace,
+           trace.target == newValue {
+            let elapsed = PerformanceLogger.monotonicMillisSinceLaunch() - trace.startedAtMs
+            PerformanceLogger.event(
+                .tabSwitch,
+                "state committed",
+                metadata: String(format: "trace=%d from=%@ target=%@ mountedBefore=%@ elapsedMs=%.1f",
+                                 trace.id,
+                                 trace.from.rawValue,
+                                 trace.target.rawValue,
+                                 trace.wasMounted.description,
+                                 elapsed)
+            )
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(400))
+                if pendingTabSwitchTrace?.id == trace.id {
+                    pendingTabSwitchTrace = nil
+                }
+            }
+        }
+
         // When leaving the assistant tab to a content tab, defocus the search
         // field (hides keyboard) but DO NOT call `searchBarState.dismiss()` —
         // the AI page navigation state inside the assistant tab must survive
@@ -1674,6 +1803,118 @@ struct ContentView: View {
             )
         }
     }
+
+    private func beginTabSwitch(to newValue: AppTab, source: String) {
+        guard newValue != selectedTab else { return }
+
+        nextTabSwitchTraceID += 1
+        let trace = TabSwitchTrace(
+            id: nextTabSwitchTraceID,
+            from: selectedTab,
+            target: newValue,
+            startedAtMs: PerformanceLogger.monotonicMillisSinceLaunch(),
+            wasMounted: mountedTabs.contains(newValue)
+        )
+        pendingTabSwitchTrace = trace
+        PerformanceLogger.event(
+            .tabSwitch,
+            "begin",
+            metadata: "trace=\(trace.id) source=\(source) from=\(trace.from.rawValue) target=\(trace.target.rawValue) mountedBefore=\(trace.wasMounted)"
+        )
+    }
+
+    private func scheduleInitialTabPrewarmIfNeeded() {
+        guard !didScheduleInitialTabPrewarm else { return }
+        didScheduleInitialTabPrewarm = true
+        scheduleStagedTabPrewarm(reason: "initialContentView")
+    }
+
+    private func scheduleStagedTabPrewarm(reason: String) {
+        #if os(iOS)
+        stagedTabPrewarmTask?.cancel()
+        let tabs: [AppTab] = [.lists, .recipes, .nutrients, .commandBar]
+        stagedTabPrewarmTask = Task { @MainActor in
+            if TabSwitchDiagnostics.isEnabled {
+                PerformanceLogger.event(
+                    .tabSwitch,
+                    "prewarm scheduled",
+                    metadata: "reason=\(reason) tabs=\(tabs.map(\.rawValue).joined(separator: ","))"
+                )
+            }
+            try? await Task.sleep(for: .milliseconds(1800))
+
+            for tab in tabs {
+                guard !Task.isCancelled else { return }
+                if !mountedTabs.contains(tab) {
+                    let start = PerformanceLogger.monotonicMillisSinceLaunch()
+                    mountedTabs.insert(tab)
+                    if TabSwitchDiagnostics.isEnabled {
+                        PerformanceLogger.event(
+                            .tabSwitch,
+                            "prewarm mount requested",
+                            metadata: "reason=\(reason) tab=\(tab.rawValue)"
+                        )
+                        DispatchQueue.main.async {
+                            let elapsed = PerformanceLogger.monotonicMillisSinceLaunch() - start
+                            PerformanceLogger.event(
+                                .tabSwitch,
+                                "prewarm mount next runloop",
+                                metadata: String(format: "reason=%@ tab=%@ elapsedMs=%.1f",
+                                                 reason,
+                                                 tab.rawValue,
+                                                 elapsed)
+                            )
+                        }
+                    }
+                }
+                try? await Task.sleep(for: .milliseconds(350))
+            }
+
+            if TabSwitchDiagnostics.isEnabled {
+                PerformanceLogger.event(.tabSwitch, "prewarm finished", metadata: "reason=\(reason)")
+            }
+            stagedTabPrewarmTask = nil
+        }
+        #endif
+    }
+
+    #if DEBUG
+    @MainActor
+    private func runPerfAutoTabSwitchIfRequested() async {
+        guard ProcessInfo.processInfo.arguments.contains("-PerfAutoTabSwitch"),
+              !didRunPerfAutoTabSwitch else {
+            return
+        }
+
+        didRunPerfAutoTabSwitch = true
+        let sequence: [AppTab] = [
+            .lists,
+            .recipes,
+            .nutrients,
+            .commandBar,
+            .assistant,
+            .lists,
+            .recipes,
+            .nutrients,
+            .commandBar,
+            .assistant
+        ]
+
+        PerformanceLogger.event(.tabSwitch, "auto sequence scheduled", metadata: "count=\(sequence.count)")
+        try? await Task.sleep(for: .milliseconds(3800))
+
+        for tab in sequence {
+            guard !Task.isCancelled else { return }
+            if tab != selectedTab {
+                beginTabSwitch(to: tab, source: "autorun")
+                selectedTab = tab
+            }
+            try? await Task.sleep(for: .milliseconds(700))
+        }
+
+        PerformanceLogger.event(.tabSwitch, "auto sequence finished")
+    }
+    #endif
 
     private func handleCommandBarAction(_ action: CommandBarAction) {
         // For move actions triggered from search quick-action, keep search open
@@ -2041,6 +2282,74 @@ private struct ContentSettingsSnapshot: Equatable {
         appearanceMode = settings?.appearanceMode ?? .system
         hasCompletedOnboarding = settings?.hasCompletedOnboarding ?? true
         showUtensils = settings?.showUtensils == true
+    }
+}
+
+private struct TabSwitchTrace: Equatable {
+    let id: Int
+    let from: AppTab
+    let target: AppTab
+    let startedAtMs: Double
+    let wasMounted: Bool
+}
+
+private enum TabSwitchDiagnostics {
+    static let isEnabled = ProcessInfo.processInfo.arguments.contains("-PerfAutoTabSwitch")
+}
+
+private struct TabActivationProbe: View {
+    let tab: AppTab
+    let selectedTab: AppTab
+    let trace: TabSwitchTrace?
+
+    var body: some View {
+        Color.clear
+            .frame(width: 0, height: 0)
+            .onAppear {
+                logActivation(stage: "appear")
+            }
+            .onChange(of: selectedTab) { _, newValue in
+                guard newValue == tab else { return }
+                logActivation(stage: "selectionChange")
+            }
+    }
+
+    private func logActivation(stage: String) {
+        guard TabSwitchDiagnostics.isEnabled,
+              selectedTab == tab,
+              let trace,
+              trace.target == tab else {
+            return
+        }
+
+        let elapsed = PerformanceLogger.monotonicMillisSinceLaunch() - trace.startedAtMs
+        PerformanceLogger.event(
+            .tabSwitch,
+            "content active",
+            metadata: String(format: "trace=%d stage=%@ target=%@ mountedBefore=%@ elapsedMs=%.1f",
+                             trace.id,
+                             stage,
+                             trace.target.rawValue,
+                             trace.wasMounted.description,
+                             elapsed)
+        )
+
+        let startedAtMs = trace.startedAtMs
+        let traceID = trace.id
+        let target = trace.target.rawValue
+        let wasMounted = trace.wasMounted.description
+        DispatchQueue.main.async {
+            let nextRunloopElapsed = PerformanceLogger.monotonicMillisSinceLaunch() - startedAtMs
+            PerformanceLogger.event(
+                .tabSwitch,
+                "content active next runloop",
+                metadata: String(format: "trace=%d target=%@ mountedBefore=%@ elapsedMs=%.1f",
+                                 traceID,
+                                 target,
+                                 wasMounted,
+                                 nextRunloopElapsed)
+            )
+        }
     }
 }
 

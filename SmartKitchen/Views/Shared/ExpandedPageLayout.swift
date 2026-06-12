@@ -59,6 +59,22 @@ struct ContentPanelCutoutKey: PreferenceKey {
     }
 }
 
+enum ExpandedPageHeaderMetrics {
+    static let iosTitleHeight: CGFloat = 60
+    static let iosInfoTopPadding: CGFloat = 4
+    static let iosInfoBottomGap: CGFloat = 16
+    static let iosEmptyInfoHeight: CGFloat = 0
+    static let iosCompactInfoHeight: CGFloat = 44
+
+    static func iosShaderHeight(infoHeight: CGFloat) -> CGFloat {
+        iosInfoTopPadding + infoHeight + iosInfoBottomGap
+    }
+
+    static func iosTotalHeight(infoHeight: CGFloat) -> CGFloat {
+        iosTitleHeight + iosShaderHeight(infoHeight: infoHeight)
+    }
+}
+
 // MARK: - Expanded Page Layout
 
 /// Layout with a fixed animated background, a floating header, and a
@@ -85,7 +101,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
     /// Use the animated background theme from environment if available, otherwise fall back to the page's own theme.
     private var effectiveBgTheme: PageTheme { backgroundTheme ?? pageTheme }
 
-    private let headerHeight: CGFloat = 60
+    private let headerHeight: CGFloat = ExpandedPageHeaderMetrics.iosTitleHeight
     private let cornerRadius: CGFloat = 24
     private let topMargin: CGFloat = 10
     private let leadingPanelInset: CGFloat = 8
@@ -183,32 +199,37 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
             }
         }
         #else
-        ZStack(alignment: .top) {
-            // FIXED BACKGROUND
-            if !usesGlobalPageBackground {
+        GeometryReader { proxy in
+            ZStack(alignment: .top) {
+                // Fixed page background. Keep this inside the page even when the
+                // app also keeps global backgrounds warm: TabView/NavigationStack
+                // can draw an opaque host behind the tab content on iOS, so the
+                // shader/header area must not depend on a background behind them.
                 backgroundLayer
                     .ignoresSafeArea()
                     .allowsHitTesting(false)
+
+                // LAYOUT
+                VStack(spacing: 0) {
+                    // Fixed header (transparent, over shader)
+                    header(false)
+                        .frame(height: headerHeight)
+
+                    // Shader zone: info content + search bar slot
+                    shaderZone
+
+                    // Content area
+                    contentArea
+                }
+                .padding(.top, proxy.safeAreaInsets.top)
             }
-
-            // LAYOUT
-            VStack(spacing: 0) {
-                // Fixed header (transparent, over shader)
-                header(false)
-                    .frame(height: headerHeight)
-
-                // Shader zone: info content + search bar slot
-                shaderZone
-
-                // Content area
-                contentArea
-            }
+            .ignoresSafeArea(edges: .top)
         }
         .onAppear {
             searchBarState.pageContext = pageTheme.searchContext
-        }
-        #endif
     }
+    #endif
+}
 
     // MARK: - Shader Zone (iOS)
 
@@ -218,9 +239,9 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
         VStack(spacing: 0) {
             infoContent()
                 .padding(.horizontal, 20)
-                .padding(.top, 4)
+                .padding(.top, ExpandedPageHeaderMetrics.iosInfoTopPadding)
 
-            Spacer().frame(height: 16)
+            Spacer().frame(height: ExpandedPageHeaderMetrics.iosInfoBottomGap)
         }
         .frame(maxWidth: .infinity)
         .contentShape(Rectangle())
@@ -242,18 +263,8 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
                     .transition(.opacity.animation(.easeInOut(duration: 0.15)))
             }
         }
-        .overlayPreferenceValue(ContentPanelCutoutKey.self) { cutouts in
-            GeometryReader { proxy in
-                ZStack {
-                    ForEach(Array(cutouts.enumerated()), id: \.offset) { _, cutout in
-                        cutoutView(for: cutout, in: proxy)
-                    }
-                }
-            }
-        }
-        .compositingGroup()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .safeAreaInset(edge: .bottom) {
+        .safeAreaInset(edge: .bottom, spacing: 0) {
             Color.clear.frame(height: bottomTabBarContentInset)
         }
         .background(appPrimaryBackground)
@@ -268,6 +279,15 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
         .ignoresSafeArea(edges: .bottom)
         .padding(.leading, leadingPanelInset)
         .padding(.trailing, trailingPanelInset)
+        .overlayPreferenceValue(ContentPanelCutoutKey.self) { cutouts in
+            GeometryReader { proxy in
+                ForEach(Array(cutouts.enumerated()), id: \.offset) { _, cutout in
+                    cutoutView(for: cutout, in: proxy)
+                }
+            }
+            .allowsHitTesting(false)
+        }
+        .compositingGroup()
         .animation(.spring(response: 0.38, dampingFraction: 0.78), value: searchBarState.isVisible)
     }
 
@@ -372,4 +392,283 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
             animated: shouldAnimateShaderBackground
         )
     }
+}
+
+// MARK: - Deferred Tab Loading
+
+struct DeferredTabPage<Loaded: View, Placeholder: View>: View {
+    let tab: AppTab
+    var delay: Duration = .milliseconds(320)
+    @ViewBuilder var loaded: () -> Loaded
+    @ViewBuilder var placeholder: () -> Placeholder
+
+    @Environment(\.activeAppTab) private var activeAppTab
+    @State private var isReady = false
+    @State private var loadTask: Task<Void, Never>?
+
+    var body: some View {
+        #if os(iOS)
+        Group {
+            if isReady {
+                loaded()
+            } else {
+                placeholder()
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .transaction { transaction in
+            transaction.animation = nil
+            transaction.disablesAnimations = true
+        }
+        .toolbar(.hidden, for: .navigationBar)
+        .onAppear {
+            updateReadiness(for: activeAppTab)
+        }
+        .onChange(of: activeAppTab) { _, newValue in
+            updateReadiness(for: newValue)
+        }
+        .onDisappear {
+            loadTask?.cancel()
+            loadTask = nil
+        }
+        #else
+        loaded()
+        #endif
+    }
+
+    #if os(iOS)
+    private func updateReadiness(for activeTab: AppTab?) {
+        guard activeTab == tab else {
+            loadTask?.cancel()
+            loadTask = nil
+            isReady = false
+            return
+        }
+
+        guard !isReady, loadTask == nil else { return }
+
+        loadTask = Task { @MainActor in
+            try? await Task.sleep(for: delay)
+            guard !Task.isCancelled else { return }
+            isReady = true
+            loadTask = nil
+        }
+    }
+    #endif
+}
+
+struct PageSkeletonRows: View {
+    var rowCount: Int = 9
+    var showsCategoryBar = true
+
+    var body: some View {
+        VStack(spacing: 0) {
+            if showsCategoryBar {
+                SkeletonSegmentedBar()
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
+                    .padding(.bottom, 8)
+            }
+
+            VStack(spacing: 0) {
+                ForEach(0..<rowCount, id: \.self) { index in
+                    SkeletonListRow(index: index)
+                }
+            }
+            .padding(.top, 8)
+
+            Spacer(minLength: 0)
+        }
+        .skeletonShimmer()
+        .allowsHitTesting(false)
+    }
+}
+
+struct PageSkeletonGrid: View {
+    var columns = 3
+    var itemCount = 12
+    var showsCategoryBar = true
+
+    var body: some View {
+        VStack(spacing: 0) {
+            if showsCategoryBar {
+                SkeletonSegmentedBar()
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
+                    .padding(.bottom, 8)
+            }
+
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 1), count: columns), spacing: 1) {
+                ForEach(0..<itemCount, id: \.self) { index in
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(skeletonBaseColor)
+                        .aspectRatio(0.78, contentMode: .fit)
+                        .overlay(alignment: .bottomLeading) {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Capsule()
+                                    .fill(skeletonHighlightColor)
+                                    .frame(width: index.isMultiple(of: 2) ? 72 : 96, height: 12)
+                                Capsule()
+                                    .fill(skeletonHighlightColor.opacity(0.75))
+                                    .frame(width: 48, height: 9)
+                            }
+                            .padding(12)
+                        }
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 8)
+
+            Spacer(minLength: 0)
+        }
+        .skeletonShimmer()
+        .allowsHitTesting(false)
+    }
+}
+
+struct NutritionPageSkeleton: View {
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 14) {
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .fill(skeletonBaseColor)
+                    .frame(height: 176)
+
+                HStack(spacing: 12) {
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .fill(skeletonBaseColor)
+                        .frame(height: 108)
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .fill(skeletonBaseColor)
+                        .frame(height: 108)
+                }
+
+                ForEach(0..<5, id: \.self) { index in
+                    SkeletonListRow(index: index)
+                        .background(skeletonBaseColor.opacity(0.55), in: .rect(cornerRadius: 16))
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 12)
+            .padding(.bottom, 24)
+        }
+        .skeletonShimmer()
+        .allowsHitTesting(false)
+    }
+}
+
+struct NutritionInfoSkeleton: View {
+    var body: some View {
+        HStack(spacing: 12) {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(.white.opacity(0.24))
+                .frame(height: 28)
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(.white.opacity(0.18))
+                .frame(width: 92, height: 32)
+        }
+        .frame(height: ExpandedPageHeaderMetrics.iosCompactInfoHeight)
+        .skeletonShimmer()
+        .allowsHitTesting(false)
+    }
+}
+
+private struct SkeletonSegmentedBar: View {
+    var body: some View {
+        HStack(spacing: 8) {
+            ForEach(0..<3, id: \.self) { index in
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(index == 0 ? skeletonHighlightColor : skeletonBaseColor)
+                    .frame(height: 34)
+            }
+        }
+        .padding(4)
+        .background(skeletonBaseColor.opacity(0.6), in: .rect(cornerRadius: 12))
+    }
+}
+
+private struct SkeletonListRow: View {
+    let index: Int
+
+    var body: some View {
+        HStack(spacing: 14) {
+            Circle()
+                .fill(skeletonBaseColor)
+                .frame(width: 44, height: 44)
+
+            VStack(alignment: .leading, spacing: 8) {
+                Capsule()
+                    .fill(skeletonBaseColor)
+                    .frame(width: index.isMultiple(of: 3) ? 136 : 190, height: 14)
+                Capsule()
+                    .fill(skeletonBaseColor.opacity(0.72))
+                    .frame(width: index.isMultiple(of: 2) ? 80 : 112, height: 10)
+            }
+
+            Spacer()
+
+            Circle()
+                .stroke(skeletonBaseColor, lineWidth: 4)
+                .frame(width: 42, height: 42)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(skeletonBaseColor.opacity(0.55))
+                .frame(height: 1)
+                .padding(.leading, 74)
+                .padding(.trailing, 16)
+        }
+    }
+}
+
+private struct SkeletonShimmerModifier: ViewModifier {
+    @State private var phase: CGFloat = -1
+
+    func body(content: Content) -> some View {
+        content
+            .overlay {
+                GeometryReader { geometry in
+                    LinearGradient(
+                        colors: [.clear, .white.opacity(0.34), .clear],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .rotationEffect(.degrees(18))
+                    .frame(width: geometry.size.width * 0.55, height: geometry.size.height * 1.6)
+                    .offset(x: geometry.size.width * phase, y: -geometry.size.height * 0.25)
+                    .blendMode(.plusLighter)
+                }
+                .allowsHitTesting(false)
+            }
+            .clipped()
+            .onAppear {
+                withAnimation(.linear(duration: 1.15).repeatForever(autoreverses: false)) {
+                    phase = 2.1
+                }
+            }
+    }
+}
+
+private extension View {
+    func skeletonShimmer() -> some View {
+        modifier(SkeletonShimmerModifier())
+    }
+}
+
+private var skeletonBaseColor: Color {
+    #if os(iOS)
+    Color(.systemGray5)
+    #else
+    Color.secondary.opacity(0.15)
+    #endif
+}
+
+private var skeletonHighlightColor: Color {
+    #if os(iOS)
+    Color(.systemBackground).opacity(0.92)
+    #else
+    Color.primary.opacity(0.12)
+    #endif
 }

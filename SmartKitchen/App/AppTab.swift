@@ -33,3 +33,14 @@ enum AppTab: String, Hashable {
         }
     }
 }
+
+private struct ActiveAppTabKey: EnvironmentKey {
+    static let defaultValue: AppTab? = nil
+}
+
+extension EnvironmentValues {
+    var activeAppTab: AppTab? {
+        get { self[ActiveAppTabKey.self] }
+        set { self[ActiveAppTabKey.self] = newValue }
+    }
+}

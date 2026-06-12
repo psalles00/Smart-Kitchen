@@ -2,6 +2,18 @@ import SwiftUI
 import SwiftData
 
 struct HomeInfoContent: View {
+    @Environment(\.activeAppTab) private var activeAppTab
+
+    var body: some View {
+        if activeAppTab == nil || activeAppTab == .assistant {
+            HomeInfoContentLive()
+        } else {
+            EmptyView()
+        }
+    }
+}
+
+private struct HomeInfoContentLive: View {
     @Query(filter: #Predicate<UnifiedItem> { $0.isPantry }, sort: \UnifiedItem.name) private var pantryItems: [UnifiedItem]
     @Query(filter: #Predicate<UnifiedItem> { $0.isGrocery }, sort: \UnifiedItem.name) private var groceryItems: [UnifiedItem]
     @Query(sort: \Recipe.name) private var recipes: [Recipe]

@@ -79,11 +79,85 @@ struct ListsDragPayload: Codable, Transferable, Hashable {
 }
 
 struct ListsTabView: View {
+    let initialSubtab: ListSubtab
+
+    init(initialSubtab: ListSubtab = .pantry) {
+        self.initialSubtab = initialSubtab
+    }
+
+    var body: some View {
+        #if os(iOS)
+        DeferredTabPage(tab: .lists) {
+            ListsLoadedTabView(initialSubtab: initialSubtab)
+        } placeholder: {
+            ListsSkeletonPage(initialSubtab: initialSubtab)
+        }
+        #else
+        ListsLoadedTabView(initialSubtab: initialSubtab)
+        #endif
+    }
+}
+
+#if os(iOS)
+private struct ListsSkeletonPage: View {
+    @State private var selectedSubtab: ListSubtab
+    @State private var showAddPantry = false
+    @State private var showAddGrocery = false
+    @State private var showAddUtensil = false
+
+    init(initialSubtab: ListSubtab = .pantry) {
+        _selectedSubtab = State(initialValue: initialSubtab)
+    }
+
+    var body: some View {
+        ExpandedPageLayout(
+            pageTheme: .lists,
+            header: { isInverted in
+                PageHeader(title: String(localized: "Listas"), isInverted: isInverted) {
+                    HStack(spacing: 6) {
+                        GlassButtonGroup {
+                            GlassGroupButton(systemImage: "plus") {
+                                switch selectedSubtab {
+                                case .pantry: showAddPantry = true
+                                case .grocery: showAddGrocery = true
+                                case .utensils: showAddUtensil = true
+                                }
+                            }
+                        }
+
+                        SettingsButton()
+                    }
+                }
+            },
+            content: {
+                PageSkeletonRows(rowCount: 10, showsCategoryBar: true)
+            },
+            infoContent: {
+                EmptyView()
+            }
+        )
+        .toolbar(.hidden, for: .navigationBar)
+        .tint(PageTheme.lists.accentColor)
+        .sheet(isPresented: $showAddPantry) {
+            ItemDetailView(mode: .create(destinations: [.pantry]))
+                .forceLightStatusBar()
+        }
+        .sheet(isPresented: $showAddGrocery) {
+            ItemDetailView(mode: .create(destinations: [.grocery]))
+                .forceLightStatusBar()
+        }
+        .sheet(isPresented: $showAddUtensil) {
+            ItemDetailView(mode: .create(destinations: [.utensil]))
+                .forceLightStatusBar()
+        }
+    }
+}
+#endif
+
+private struct ListsLoadedTabView: View {
     @Environment(\.scrollToTopTrigger) private var scrollToTopTrigger
     @Environment(\.scrollToItem) private var scrollToItem
     @Environment(\.modelContext) private var modelContext
-    @Query(filter: #Predicate<UnifiedItem> { $0.isPantry }, sort: \UnifiedItem.pantrySortOrder) private var pantryItems: [UnifiedItem]
-    @Query(filter: #Predicate<UnifiedItem> { $0.isGrocery }, sort: \UnifiedItem.grocerySortOrder) private var groceryItems: [UnifiedItem]
     @Query private var settingsArray: [AppSettings]
 
     @State private var selectedSubtab: ListSubtab
@@ -392,12 +466,12 @@ struct ListsTabView: View {
 
         switch (payload.sourceList, destination) {
         case (.pantry, .grocery):
-            guard let item = pantryItems.first(where: { $0.id == payload.itemID }) else { return }
+            guard let item = item(withID: payload.itemID) else { return }
             item.isGrocery = true
             item.isPantry = false
             selectedSubtab = .grocery
         case (.grocery, .pantry):
-            guard let item = groceryItems.first(where: { $0.id == payload.itemID }) else { return }
+            guard let item = item(withID: payload.itemID) else { return }
             item.isPantry = true
             item.isGrocery = false
             if let days = item.defaultExpiryDays, days > 0 {
@@ -406,6 +480,26 @@ struct ListsTabView: View {
             selectedSubtab = .pantry
         default:
             break
+        }
+    }
+
+    private func item(withID itemID: UUID) -> UnifiedItem? {
+        var descriptor = FetchDescriptor<UnifiedItem>(
+            predicate: #Predicate<UnifiedItem> { item in
+                item.id == itemID
+            }
+        )
+        descriptor.fetchLimit = 1
+
+        do {
+            return try modelContext.fetch(descriptor).first
+        } catch {
+            PerformanceLogger.error(
+                .tabSwitch,
+                "ListsTabView drag item fetch failed",
+                metadata: "itemID=\(itemID.uuidString) error=\(error.localizedDescription)"
+            )
+            return nil
         }
     }
 

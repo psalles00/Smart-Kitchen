@@ -14,6 +14,18 @@ import SwiftData
 /// gesto de swipe horizontal é tratado nativamente pelo SwiftUI sem
 /// interferir na rolagem.
 struct PendingNutritionDaysCard: View {
+    @Environment(\.activeAppTab) private var activeAppTab
+
+    var body: some View {
+        if activeAppTab == nil || activeAppTab == .assistant {
+            PendingNutritionDaysCardLive()
+        } else {
+            EmptyView()
+        }
+    }
+}
+
+private struct PendingNutritionDaysCardLive: View {
     @Environment(\.modelContext) private var modelContext
 
     @Query(sort: \FoodEntry.timestamp, order: .reverse) private var allEntries: [FoodEntry]
@@ -292,7 +304,7 @@ private struct PendingDayRow: View {
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(PendingNutritionDaysCard.cardBackground)
+        .background(PendingNutritionDaysCardLive.cardBackground)
         .overlay(alignment: .bottom) {
             if showsBottomDivider {
                 ItemListDivider().padding(.horizontal, 14)
