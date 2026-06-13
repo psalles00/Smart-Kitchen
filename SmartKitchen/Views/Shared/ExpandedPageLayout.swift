@@ -526,6 +526,61 @@ struct PageSkeletonGrid: View {
     }
 }
 
+struct PageSkeletonNotebooks: View {
+    var columns = 2
+    var itemCount = 8
+
+    var body: some View {
+        LazyVGrid(
+            columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: columns),
+            spacing: 12
+        ) {
+            ForEach(0..<itemCount, id: \.self) { index in
+                SkeletonNotebookCard(index: index)
+            }
+        }
+        .skeletonShimmer()
+        .allowsHitTesting(false)
+    }
+}
+
+private struct SkeletonNotebookCard: View {
+    let index: Int
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(skeletonBaseColor)
+                .frame(height: 118)
+                .overlay(alignment: .topLeading) {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(skeletonHighlightColor.opacity(0.86))
+                        .frame(width: 42, height: 30)
+                        .padding(10)
+                }
+
+            VStack(alignment: .leading, spacing: 8) {
+                Capsule()
+                    .fill(skeletonBaseColor)
+                    .frame(width: index.isMultiple(of: 2) ? 104 : 132, height: 15)
+
+                HStack(spacing: 12) {
+                    Capsule()
+                        .fill(skeletonBaseColor.opacity(0.72))
+                        .frame(width: 54, height: 11)
+                    Capsule()
+                        .fill(skeletonBaseColor.opacity(0.72))
+                        .frame(width: 64, height: 11)
+                }
+            }
+        }
+        .frame(height: 168, alignment: .top)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(skeletonBaseColor.opacity(0.55), in: .rect(cornerRadius: 18))
+    }
+}
+
 struct NutritionPageSkeleton: View {
     var body: some View {
         ScrollView(.vertical) {

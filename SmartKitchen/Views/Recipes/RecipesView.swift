@@ -131,9 +131,12 @@ private struct RecipesLoadedView: View {
     @State private var lastCompatibilityInputsKey: String = ""
     @State private var pendingCompatibilityRecomputeWork: DispatchWorkItem?
     @State private var pendingGalleryPrefetchTask: Task<Void, Never>?
+    @State private var pendingNotebookRefreshTask: Task<Void, Never>?
     @State private var lastRecipeProjectionInputsKey: Int = 0
     @State private var lastNotebookSummaryInputsKey: Int = 0
     @State private var didRunInitialAppearWork = false
+    @State private var isNotebookLoading = false
+    @State private var notebookSummariesNeedRefresh = true
 
     private var settings: AppSettings? { settingsArray.first }
     private var viewMode: RecipeViewMode { settings?.recipeViewMode ?? .gallery }
@@ -360,7 +363,11 @@ private struct RecipesLoadedView: View {
             didRunInitialAppearWork = true
             recomputeCompatibilities()
             refreshRecipeProjectionsIfNeeded(force: isInitialAppear)
-            refreshNotebookSummariesIfNeeded(force: isInitialAppear)
+            if isShowingCadernos {
+                scheduleNotebookRefresh(showSkeleton: cachedNotebookSummaries.isEmpty, force: isInitialAppear)
+            } else if isInitialAppear {
+                notebookSummariesNeedRefresh = true
+            }
             handleScrollToItemRequest(scrollToItem)
             scheduleGalleryPrefetchIfNeeded()
             PerformanceLogger.event(
@@ -372,6 +379,8 @@ private struct RecipesLoadedView: View {
         .onDisappear {
             pendingGalleryPrefetchTask?.cancel()
             pendingGalleryPrefetchTask = nil
+            pendingNotebookRefreshTask?.cancel()
+            pendingNotebookRefreshTask = nil
         }
         // PERF: previously these used `.onChange(of: pantryItems)` /
         // `.onChange(of: allRecipes)` which fire on EVERY SwiftData @Query
@@ -391,19 +400,19 @@ private struct RecipesLoadedView: View {
         .onChange(of: recipeCategoryNamesSignature) { _, _ in
             normalizeSelectedCategoryIfNeeded()
             refreshRecipeProjectionsIfNeeded(force: true)
-            refreshNotebookSummariesIfNeeded(force: true)
+            invalidateNotebookSummaries(force: true)
         }
         .onChange(of: recipeCategoriesDisplaySignature) { _, _ in
             refreshRecipeProjectionsIfNeeded(force: true)
-            refreshNotebookSummariesIfNeeded(force: true)
+            invalidateNotebookSummaries(force: true)
         }
         .onChange(of: allRecipes) { _, _ in
             refreshRecipeProjectionsIfNeeded()
-            refreshNotebookSummariesIfNeeded()
+            invalidateNotebookSummaries()
         }
         .onChange(of: searchBarState.searchText) { _, _ in
             refreshRecipeProjectionsIfNeeded()
-            refreshNotebookSummariesIfNeeded()
+            invalidateNotebookSummaries(showSkeleton: isShowingCadernos && cachedNotebookSummaries.isEmpty)
         }
         .onChange(of: selectedCategory) { _, _ in
             refreshRecipeProjectionsIfNeeded()
@@ -422,7 +431,7 @@ private struct RecipesLoadedView: View {
         }
         .onChange(of: lastCompatibilityInputsKey) { _, _ in
             refreshRecipeProjectionsIfNeeded(force: true)
-            refreshNotebookSummariesIfNeeded(force: true)
+            invalidateNotebookSummaries(force: true)
         }
         .onChange(of: scrollToItem) { _, request in
             handleScrollToItemRequest(request)
@@ -725,9 +734,13 @@ private struct RecipesLoadedView: View {
         scheduleGalleryPrefetchIfNeeded()
     }
 
-    private func refreshNotebookSummariesIfNeeded(force: Bool = false) {
+    @discardableResult
+    private func refreshNotebookSummariesIfNeeded(force: Bool = false) -> Bool {
         let inputsKey = notebookSummaryInputsKey
-        guard force || inputsKey != lastNotebookSummaryInputsKey else { return }
+        guard force || inputsKey != lastNotebookSummaryInputsKey else {
+            notebookSummariesNeedRefresh = false
+            return false
+        }
 
         PerformanceLogger.measure(
             .recipes,
@@ -735,31 +748,26 @@ private struct RecipesLoadedView: View {
             metadata: "trace=recipes-notebooks recipes=\(allRecipes.count) notebooks=\(cachedNotebookSummaries.count)"
         ) {
             let searchText = searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-            var recipesByCategory: [String: [Recipe]] = [:]
-            recipesByCategory.reserveCapacity(recipeCategories.count)
+            var accumulators: [String: RecipeNotebookAccumulator] = [:]
+            accumulators.reserveCapacity(recipeCategories.count)
 
             for recipe in allRecipes {
                 for category in recipe.categories {
-                    recipesByCategory[category, default: []].append(recipe)
+                    accumulators[category, default: RecipeNotebookAccumulator()].add(
+                        recipe,
+                        compatibility: compatibilities[recipe.id],
+                        searchText: searchText
+                    )
                 }
             }
 
             cachedNotebookSummaries = recipeCategories.compactMap { category in
-                let matchingRecipes = (recipesByCategory[category.name] ?? []).sorted { lhs, rhs in
-                    if lhs.isFavorite != rhs.isFavorite {
-                        return lhs.isFavorite && !rhs.isFavorite
-                    }
-                    if lhs.updatedAt != rhs.updatedAt {
-                        return lhs.updatedAt > rhs.updatedAt
-                    }
-                    return lhs.name.localizedCaseInsensitiveCompare(rhs.name) == .orderedAscending
-                }
-
-                let matchedCompatibilities = matchingRecipes.compactMap { compatibilities[$0.id] }
+                let accumulator = accumulators[category.name] ?? RecipeNotebookAccumulator()
                 let summary = RecipeNotebookSummary(
                     category: category,
-                    recipes: matchingRecipes,
-                    compatibilities: matchedCompatibilities
+                    recipeCount: accumulator.recipeCount,
+                    compatibleCount: accumulator.compatibleCount,
+                    previewRecipes: accumulator.previewRecipes
                 )
 
                 guard !searchText.isEmpty else { return summary }
@@ -767,15 +775,43 @@ private struct RecipesLoadedView: View {
                 let localizedCategoryName = category.localizedDisplayName
                 let categoryMatches = category.name.localizedCaseInsensitiveContains(searchText)
                     || localizedCategoryName.localizedCaseInsensitiveContains(searchText)
-                let recipeMatches = matchingRecipes.contains { recipe in
-                    recipe.name.localizedCaseInsensitiveContains(searchText) ||
-                    recipe.tags.contains(where: { $0.localizedCaseInsensitiveContains(searchText) })
-                }
 
-                return (categoryMatches || recipeMatches) ? summary : nil
+                return (categoryMatches || accumulator.recipeMatchesSearch) ? summary : nil
             }
 
             lastNotebookSummaryInputsKey = inputsKey
+            notebookSummariesNeedRefresh = false
+        }
+        return true
+    }
+
+    private func invalidateNotebookSummaries(showSkeleton: Bool = false, force: Bool = false) {
+        notebookSummariesNeedRefresh = true
+        guard isShowingCadernos else { return }
+        scheduleNotebookRefresh(showSkeleton: showSkeleton, force: force)
+    }
+
+    private func scheduleNotebookRefresh(showSkeleton: Bool, force: Bool) {
+        pendingNotebookRefreshTask?.cancel()
+
+        if showSkeleton {
+            isNotebookLoading = true
+        }
+
+        pendingNotebookRefreshTask = Task { @MainActor in
+            // Let the skeleton commit before any summary walk/sort work runs.
+            if showSkeleton {
+                try? await Task.sleep(for: .milliseconds(90))
+            } else {
+                await Task.yield()
+            }
+            guard !Task.isCancelled else { return }
+
+            let shouldForce = force || notebookSummariesNeedRefresh
+            _ = refreshNotebookSummariesIfNeeded(force: shouldForce)
+            prefetchNotebookPreviewThumbnails()
+            isNotebookLoading = false
+            pendingNotebookRefreshTask = nil
         }
     }
 
@@ -1285,7 +1321,10 @@ private struct RecipesLoadedView: View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 18) {
                 Group {
-                    if notebookSummaries.isEmpty {
+                    if isNotebookLoading {
+                        PageSkeletonNotebooks(columns: 2, itemCount: 8)
+                            .padding(.horizontal, 16)
+                    } else if notebookSummaries.isEmpty {
                         if searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                             ContentUnavailableView {
                                 Label("Sem Cadernos", systemImage: "books.vertical")
@@ -1455,10 +1494,12 @@ private struct RecipesLoadedView: View {
         if isShowingCadernos {
             isShowingCadernos = false
         } else if isNearTop {
-            refreshNotebookSummariesIfNeeded()
-            prefetchNotebookPreviewThumbnails()
             isShowingCadernos = true
             selectedRecipeID = nil
+            scheduleNotebookRefresh(
+                showSkeleton: cachedNotebookSummaries.isEmpty || notebookSummariesNeedRefresh,
+                force: notebookSummariesNeedRefresh
+            )
         } else {
             contentResetToken += 1
         }
@@ -1472,28 +1513,28 @@ private struct RecipesLoadedView: View {
 
     private func toggleNotebookPage() {
         if !isShowingCadernos {
-            refreshNotebookSummariesIfNeeded()
-            // PERF: warm the thumbnail cache for the first batch of notebook
-            // tiles BEFORE the swap. This avoids a visible empty-placeholder
-            // → image flash on the first toggle.
-            prefetchNotebookPreviewThumbnails()
+            isShowingCadernos = true
+            selectedRecipeID = nil
+            scheduleNotebookRefresh(
+                showSkeleton: cachedNotebookSummaries.isEmpty || notebookSummariesNeedRefresh,
+                force: notebookSummariesNeedRefresh
+            )
+            return
         }
         // Instant swap — no animation. Both branches are heavy; cross-fading
         // them visibly drops frames.
-        isShowingCadernos.toggle()
-        if isShowingCadernos {
-            selectedRecipeID = nil
-        }
+        isShowingCadernos = false
     }
 
     private func prefetchNotebookPreviewThumbnails() {
-        // Limit to the first ~12 cards × 3 previews to avoid kicking off
-        // hundreds of decodes when the user has many notebooks.
+        // Warm only the cover image for the first cards. Mini previews load
+        // at a much smaller target size on demand, which keeps the notebooks
+        // page responsive even when a category has many recipes.
         let previews = cachedNotebookSummaries
-            .prefix(12)
-            .flatMap { $0.previewRecipes }
+            .prefix(10)
+            .compactMap(\.coverRecipe)
         guard !previews.isEmpty else { return }
-        let maxPixel: CGFloat = 700
+        let maxPixel: CGFloat = 420
         for recipe in previews {
             guard let data = recipe.imageData, !data.isEmpty else { continue }
             let key = RecipeImageCache.key(
@@ -1579,20 +1620,80 @@ private struct RecipeCategoryGroup: Identifiable {
 }
 
 private struct RecipeNotebookSummary: Identifiable {
+    static let previewLimit = 3
+
     let category: Category
-    let recipes: [Recipe]
-    let compatibilities: [RecipeCompatibility]
+    let recipeCount: Int
+    let compatibleCount: Int
+    let previewRecipes: [Recipe]
 
     var id: UUID { category.id }
-    var previewRecipes: [Recipe] { Array(recipes.prefix(3)) }
-    var recipeCountAbbreviation: String { "\(recipes.count) rec." }
-    var compatibilityAbbreviation: String {
-        let compatibleCount = compatibilities.filter { $0.matchedIngredients > 0 }.count
-        return "\(compatibleCount) comp."
+    var coverRecipe: Recipe? { previewRecipes.first }
+    var miniPreviewRecipes: [Recipe] { Array(previewRecipes.dropFirst().prefix(2)) }
+    var recipeCountAbbreviation: String { "\(Self.compactCount(recipeCount)) rec." }
+    var compatibilityAbbreviation: String { "\(Self.compactCount(compatibleCount)) comp." }
+    var additionalRecipeCount: Int { max(recipeCount - 1, 0) }
+    var additionalRecipeBadge: String? {
+        guard additionalRecipeCount > 0 else { return nil }
+        return "+\(Self.compactCount(additionalRecipeCount))"
+    }
+
+    static func previewSortPrecedes(_ lhs: Recipe, _ rhs: Recipe) -> Bool {
+        if lhs.isFavorite != rhs.isFavorite {
+            return lhs.isFavorite && !rhs.isFavorite
+        }
+        if lhs.updatedAt != rhs.updatedAt {
+            return lhs.updatedAt > rhs.updatedAt
+        }
+        return lhs.name.localizedCaseInsensitiveCompare(rhs.name) == .orderedAscending
+    }
+
+    private static func compactCount(_ count: Int) -> String {
+        if count < 1_000 { return "\(count)" }
+        if count < 10_000 {
+            let value = Double(count) / 1_000
+            return String(format: "%.1fk", value)
+        }
+        return "9.9k+"
+    }
+}
+
+private struct RecipeNotebookAccumulator {
+    var recipeCount = 0
+    var compatibleCount = 0
+    var previewRecipes: [Recipe] = []
+    var recipeMatchesSearch = false
+
+    mutating func add(_ recipe: Recipe, compatibility: RecipeCompatibility?, searchText: String) {
+        recipeCount += 1
+        if (compatibility?.matchedIngredients ?? 0) > 0 {
+            compatibleCount += 1
+        }
+        if !searchText.isEmpty,
+           recipe.name.localizedCaseInsensitiveContains(searchText)
+            || recipe.tags.contains(where: { $0.localizedCaseInsensitiveContains(searchText) }) {
+            recipeMatchesSearch = true
+        }
+        insertPreviewRecipe(recipe)
+    }
+
+    private mutating func insertPreviewRecipe(_ recipe: Recipe) {
+        if let insertionIndex = previewRecipes.firstIndex(where: { RecipeNotebookSummary.previewSortPrecedes(recipe, $0) }) {
+            previewRecipes.insert(recipe, at: insertionIndex)
+        } else if previewRecipes.count < RecipeNotebookSummary.previewLimit {
+            previewRecipes.append(recipe)
+        }
+
+        if previewRecipes.count > RecipeNotebookSummary.previewLimit {
+            previewRecipes.removeLast()
+        }
     }
 }
 
 private let notebookSuggestedCardBackgroundColor = neutralSurfaceColor
+private let notebookCardHeight: CGFloat = 192
+private let notebookCardInnerHeight: CGFloat = 168
+private let notebookPreviewHeight: CGFloat = 118
 
 private struct RecipeNotebookCard: View {
     @Environment(\.modelContext) private var modelContext
@@ -1611,13 +1712,16 @@ private struct RecipeNotebookCard: View {
                     placeholderIconSources: placeholderIconSources
                 )
                     .frame(maxWidth: .infinity)
-                    .frame(height: 118)
+                    .frame(height: notebookPreviewHeight)
+                    .clipShape(.rect(cornerRadius: 16))
+                    .clipped()
 
                 VStack(alignment: .leading, spacing: 5) {
                     Text(summary.category.localizedDisplayName)
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.primary)
                         .lineLimit(2)
+                        .frame(minHeight: 20, alignment: .topLeading)
 
                     HStack(spacing: 12) {
                         Label {
@@ -1637,13 +1741,19 @@ private struct RecipeNotebookCard: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.82)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
+            .frame(height: notebookCardInnerHeight, alignment: .top)
         }
         .buttonStyle(.plain)
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(12)
+        .frame(height: notebookCardHeight, alignment: .top)
         .background(notebookSuggestedCardBackgroundColor, in: .rect(cornerRadius: 18))
+        .clipShape(.rect(cornerRadius: 18))
+        .contentShape(.rect(cornerRadius: 18))
         .overlay(alignment: .topLeading) {
             Button {
                 showIconPicker = true
@@ -1683,47 +1793,58 @@ private struct RecipeNotebookPreviewStrip: View {
     let placeholderIconSources: [UUID: [RecipePlaceholderIconSource]]
 
     var body: some View {
-        // The strip renders side-by-side preview tiles inside a fixed-height
-        // container set by the parent. Each tile gets an equal flexible
-        // width via the HStack so the visual layout matches the previous
-        // GeometryReader-based version, without paying for an extra
-        // geometry pass per notebook card.
         Group {
-            if summary.previewRecipes.isEmpty {
-                RecipeNotebookEmptyPreviewPlaceholder(category: summary.category)
+            if let coverRecipe = summary.coverRecipe {
+                RecipeNotebookCoverPreview(
+                    recipe: coverRecipe,
+                    miniRecipes: summary.miniPreviewRecipes,
+                    additionalRecipeBadge: summary.additionalRecipeBadge,
+                    placeholderIconSources: placeholderIconSources
+                )
             } else {
-                HStack(spacing: 1) {
-                    ForEach(Array(summary.previewRecipes.enumerated()), id: \.element.id) { index, recipe in
-                        RecipeNotebookPreviewTile(
-                            recipe: recipe,
-                            placeholderIconSources: placeholderIconSources[recipe.id] ?? [],
-                            cornerRadii: previewCornerRadii(index: index, total: summary.previewRecipes.count)
-                        )
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    }
-                }
+                RecipeNotebookEmptyPreviewPlaceholder(category: summary.category)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .clipped()
     }
+}
 
-    private func previewCornerRadii(index: Int, total: Int) -> RectangleCornerRadii {
-        let radius: CGFloat = 16
+private struct RecipeNotebookCoverPreview: View {
+    let recipe: Recipe
+    let miniRecipes: [Recipe]
+    let additionalRecipeBadge: String?
+    let placeholderIconSources: [UUID: [RecipePlaceholderIconSource]]
 
-        if total == 1 {
-            return .init(topLeading: radius, bottomLeading: radius, bottomTrailing: radius, topTrailing: radius)
-        }
-
-        let isFirst = index == 0
-        let isLast = index == total - 1
-
-        return .init(
-            topLeading: isFirst ? radius : 0,
-            bottomLeading: isFirst ? radius : 0,
-            bottomTrailing: isLast ? radius : 0,
-            topTrailing: isLast ? radius : 0
+    var body: some View {
+        RecipeNotebookPreviewTile(
+            recipe: recipe,
+            placeholderIconSources: placeholderIconSources[recipe.id] ?? [],
+            maxPixel: 420
         )
+        .overlay(alignment: .bottomTrailing) {
+            HStack(spacing: -7) {
+                ForEach(miniRecipes, id: \.id) { miniRecipe in
+                    RecipeNotebookMiniPreviewTile(
+                        recipe: miniRecipe,
+                        placeholderIconSources: placeholderIconSources[miniRecipe.id] ?? []
+                    )
+                }
+
+                if let additionalRecipeBadge {
+                    Text(additionalRecipeBadge)
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(.white)
+                        .frame(width: 34, height: 28)
+                        .background(Color.black.opacity(0.68), in: .rect(cornerRadius: 10))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .stroke(.white.opacity(0.72), lineWidth: 1)
+                        )
+                }
+            }
+            .padding(9)
+        }
     }
 }
 
@@ -1762,26 +1883,48 @@ private struct RecipeNotebookEmptyPreviewPlaceholder: View {
 private struct RecipeNotebookPreviewTile: View {
     let recipe: Recipe
     let placeholderIconSources: [RecipePlaceholderIconSource]
-    let cornerRadii: RectangleCornerRadii
+    let maxPixel: CGFloat
 
     var body: some View {
-        previewImage
-            .background(Color(.secondarySystemBackground))
-            .clipShape(.rect(cornerRadii: cornerRadii))
-            .clipped()
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    @ViewBuilder
-    private var previewImage: some View {
-        RecipeThumbnail(recipe: recipe, maxPixel: 700) {
-            RecipeImagePlaceholderCompact(
-                iconSources: placeholderIconSources,
-                darkenOverlay: false
-            )
+        GeometryReader { proxy in
+            RecipeThumbnail(recipe: recipe, maxPixel: maxPixel) {
+                RecipeImagePlaceholderCompact(
+                    iconSources: placeholderIconSources,
+                    darkenOverlay: false
+                )
+            }
+            .frame(width: proxy.size.width, height: proxy.size.height)
             .clipped()
         }
+        .background(Color(.secondarySystemBackground))
+        .clipShape(.rect(cornerRadius: 16))
         .clipped()
+    }
+}
+
+private struct RecipeNotebookMiniPreviewTile: View {
+    let recipe: Recipe
+    let placeholderIconSources: [RecipePlaceholderIconSource]
+
+    var body: some View {
+        GeometryReader { proxy in
+            RecipeThumbnail(recipe: recipe, maxPixel: 160) {
+                RecipeImagePlaceholderCompact(
+                    iconSources: placeholderIconSources,
+                    darkenOverlay: false
+                )
+            }
+            .frame(width: proxy.size.width, height: proxy.size.height)
+            .clipped()
+        }
+        .frame(width: 34, height: 28)
+        .background(Color(.secondarySystemBackground))
+        .clipShape(.rect(cornerRadius: 10))
+        .overlay(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .stroke(.white.opacity(0.72), lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(0.12), radius: 5, x: 0, y: 2)
     }
 }
 
