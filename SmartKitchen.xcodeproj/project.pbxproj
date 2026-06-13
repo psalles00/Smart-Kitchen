@@ -66,6 +66,7 @@
 		3EA393B3C25F3FC2197BA9E5 /* NutritionItemParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07B7FAD77E9ACBAA1DD1424E /* NutritionItemParser.swift */; };
 		3F994D9FF25B1DCFFB1F0C84 /* PlayfairDisplay-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 8C144A56063311B85CEF7DBB /* PlayfairDisplay-Italic.ttf */; };
 		40F75377893BD1DDC712E2E3 /* NutritionDayLogStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 666404C5C00E49B47AFFC4BA /* NutritionDayLogStore.swift */; };
+		41A5B798F77FF6CAD297D1D0 /* NutritionAIPackagedProductTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A083E1173A0F0624095BBEBF /* NutritionAIPackagedProductTests.swift */; };
 		423C5938476CD36AE2C1D4D4 /* ItemDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D23D5730AFF637BAC6DCE1E /* ItemDatabase.swift */; };
 		427EC4BE15BDB470633438E8 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CD351710E6E853F0407AB7E /* SettingsView.swift */; };
 		430732A8C4F98B184B3BCE9A /* ItemEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A2B9A25959E9E24FA72DBF7 /* ItemEntry.swift */; };
@@ -475,6 +476,7 @@
 		9FADD1260C9C0A0C0A036CB1 /* Boska-Extralight.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Boska-Extralight.otf"; sourceTree = "<group>"; };
 		9FB27D36035A17E426278482 /* NutritionDayState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionDayState.swift; sourceTree = "<group>"; };
 		A01C258879867293F931BB38 /* AddUtensilItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddUtensilItemView.swift; sourceTree = "<group>"; };
+		A083E1173A0F0624095BBEBF /* NutritionAIPackagedProductTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionAIPackagedProductTests.swift; sourceTree = "<group>"; };
 		A0E510B072AA05179DF44BD5 /* SmartKitchenApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartKitchenApp.swift; sourceTree = "<group>"; };
 		A1D8CBA67DBB7AF6528D0F4D /* meta-ja.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "meta-ja.json"; sourceTree = "<group>"; };
 		A262F61D96421194E3F9265B /* OnboardingStep.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingStep.swift; sourceTree = "<group>"; };
@@ -636,6 +638,7 @@
 		1556E93E94DA5EB33FFE782E /* SmartKitchenTests */ = {
 			isa = PBXGroup;
 			children = (
+				A083E1173A0F0624095BBEBF /* NutritionAIPackagedProductTests.swift */,
 				B012798476230FEB704A416E /* NutritionAIReliabilityTests.swift */,
 				019A8D5CCB169B9909C7F98A /* NutritionAITestDoubles.swift */,
 				0FD39D5CF6BCD236C35FCDC9 /* NutritionAITestFixtures.swift */,
@@ -1622,6 +1625,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				41A5B798F77FF6CAD297D1D0 /* NutritionAIPackagedProductTests.swift in Sources */,
 				44465DB73519ED318B36F378 /* NutritionAIReliabilityTests.swift in Sources */,
 				C9395A0C9CA3A803C0D42774 /* NutritionAITestDoubles.swift in Sources */,
 				EB48AFB6177D617A32F33A81 /* NutritionAITestFixtures.swift in Sources */,
