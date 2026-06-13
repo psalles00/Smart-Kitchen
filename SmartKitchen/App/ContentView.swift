@@ -3136,7 +3136,7 @@ private struct HomeView: View {
             HStack(spacing: 12) {
                 ForEach(visibleItems) { item in
                     expiringSectionCard(for: item)
-                        .frame(width: 104, height: 100)
+                        .frame(width: 112, height: 116)
                         .offset(y: -5)
                 }
             }
@@ -3186,10 +3186,10 @@ private struct HomeView: View {
                     name: item.name,
                     iconFileName: item.resolvedIconName(),
                     fallbackSymbol: "clock.badge.exclamationmark",
-                    size: 68,
+                    size: 86,
                     showBalloon: false
                 )
-                .shadow(color: Color.black.opacity(0.16), radius: 5, x: 0, y: 5)
+                .shadow(color: Color.black.opacity(0.16), radius: 6, x: 0, y: 6)
                 .offset(y: -20)
                 .allowsHitTesting(false)
             }

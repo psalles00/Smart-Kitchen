@@ -126,7 +126,7 @@ struct RecentsView: View {
                     Button("Fechar") { dismiss() }
                 }
             }
-            .tint(PageTheme.nutrients.accentColor)
+            .tint(Color.primary.opacity(0.82))
         }
         #if os(iOS)
         .presentationDetents([.medium, .large])
@@ -210,7 +210,7 @@ struct RecentsView: View {
                 Label(favorite ? "Desfavoritar" : "Favoritar",
                       systemImage: favorite ? "star.slash.fill" : "star.fill")
             }
-            .tint(.yellow)
+            .tint(Color.primary.opacity(0.72))
         }
         .contextMenu {
             Button {
@@ -226,7 +226,7 @@ struct RecentsView: View {
         VStack(spacing: 14) {
             Image(systemName: icon)
                 .font(.system(size: 40))
-                .foregroundStyle(PageTheme.nutrients.accentColor.opacity(0.5))
+                .foregroundStyle(Color.primary.opacity(0.42))
             Text(message)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
@@ -296,6 +296,18 @@ private struct SavedMealRow: View {
     let subtitle: String?
     var isFavorite: Bool = false
 
+    private var rowAccent: Color {
+        Color.primary.opacity(0.82)
+    }
+
+    private var thumbnailFill: Color {
+        Color.primary.opacity(0.08)
+    }
+
+    private var thumbnailStroke: Color {
+        Color.primary.opacity(0.07)
+    }
+
     var body: some View {
         HStack(spacing: 12) {
             thumbnail
@@ -311,14 +323,14 @@ private struct SavedMealRow: View {
                     if isFavorite {
                         Image(systemName: "star.fill")
                             .font(.caption)
-                            .foregroundStyle(.yellow)
+                            .foregroundStyle(rowAccent)
                     }
                 }
                 Group {
                 HStack(spacing: 6) {
                     Text("\(entry.calories) kcal")
                         .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                        .foregroundStyle(PageTheme.nutrients.accentColor)
+                        .foregroundStyle(rowAccent)
                     if let subtitle {
                         Text("·").foregroundStyle(.tertiary)
                         Text(subtitle)
@@ -338,7 +350,8 @@ private struct SavedMealRow: View {
 
             Image(systemName: "plus.circle.fill")
                 .font(.title3)
-                .foregroundStyle(PageTheme.nutrients.accentColor)
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(rowAccent)
         }
         .padding(.vertical, 4)
         .contentShape(.rect)
@@ -353,14 +366,17 @@ private struct SavedMealRow: View {
                 .scaledToFill()
         } else if let emoji = entry.emoji, !emoji.isEmpty {
             ZStack {
-                Rectangle().fill(PageTheme.nutrients.cardGradient)
+                Rectangle().fill(thumbnailFill)
+                Rectangle().stroke(thumbnailStroke, lineWidth: 1)
                 Text(emoji).font(.title2)
             }
         } else {
             ZStack {
-                Rectangle().fill(PageTheme.nutrients.cardGradient)
+                Rectangle().fill(thumbnailFill)
+                Rectangle().stroke(thumbnailStroke, lineWidth: 1)
                 Image(systemName: entry.mealType.icon)
-                    .foregroundStyle(.white)
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(rowAccent)
             }
         }
     }
@@ -371,6 +387,6 @@ private struct SavedMealRow: View {
             .foregroundStyle(.secondary)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
-            .background(PageTheme.nutrients.accentColor.opacity(0.08), in: .capsule)
+            .background(Color.primary.opacity(0.055), in: .capsule)
     }
 }

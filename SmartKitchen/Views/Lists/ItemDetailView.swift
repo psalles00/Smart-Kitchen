@@ -111,7 +111,6 @@ struct ItemDetailView: View {
     @State private var showCategorySelection = false
     @State private var showRemoveConfirmation = false
     @State private var selectedPhoto: PhotosPickerItem?
-    @State private var presentationDetent: PresentationDetent = .fraction(0.62)
     @FocusState private var nameFieldFocused: Bool
 
     private var settings: AppSettings? { settingsArray.first }
@@ -221,9 +220,8 @@ struct ItemDetailView: View {
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .navigationBar)
-        .presentationDetents([.fraction(0.62), .large], selection: $presentationDetent)
         .presentationDragIndicator(.visible)
-        .presentationBackground(.clear)
+        .presentationBackground(appPrimaryBackground)
         #endif
         .tint(PageTheme.lists.accentColor)
         .sheet(isPresented: $showIconPicker) {

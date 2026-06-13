@@ -229,6 +229,10 @@ private struct ModalNavigationTitleModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         content
+            .background(appPrimaryBackground)
+#if os(iOS)
+            .presentationBackground(appPrimaryBackground)
+#endif
             .navigationTitle(title)
 #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)

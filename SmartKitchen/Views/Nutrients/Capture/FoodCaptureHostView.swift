@@ -86,6 +86,14 @@ struct FoodCaptureHostView: View {
     private let ai = NutritionAIService()
     private static let supportEmail = "pedrosalles00@gmail.com"
 
+    private var neutralCaptureAccent: Color {
+        Color.primary.opacity(0.84)
+    }
+
+    private var subtleCaptureAccent: Color {
+        Color.primary.opacity(0.10)
+    }
+
     init(mode: Mode,
          logDate: Date,
          initialInput: InitialInput = .chooser,
@@ -131,7 +139,7 @@ struct FoodCaptureHostView: View {
                     errorView(message)
                 }
             }
-            .tint(PageTheme.nutrients.accentColor)
+            .tint(neutralCaptureAccent)
         }
         #if os(iOS)
         .presentationDetents([.medium, .large], selection: $preferredDetent)
@@ -223,12 +231,12 @@ struct FoodCaptureHostView: View {
                     HStack(spacing: 14) {
                         ZStack {
                             Circle()
-                                .fill(PageTheme.nutrients.accentColor.opacity(0.12))
+                                .fill(subtleCaptureAccent)
                                 .frame(width: 56, height: 56)
 
                             Image(systemName: mode == .photo ? "camera.macro" : "doc.text.viewfinder")
                                 .font(.system(size: 24, weight: .semibold))
-                                .foregroundStyle(PageTheme.nutrients.gradient)
+                                .foregroundStyle(neutralCaptureAccent)
                         }
 
                         VStack(alignment: .leading, spacing: 4) {
@@ -236,7 +244,7 @@ struct FoodCaptureHostView: View {
                                 .font(.title3.weight(.semibold))
                             Text(mode == .photo ? String(localized: "IA visual") : String(localized: "Leitura assistida"))
                                 .font(.caption.weight(.semibold))
-                                .foregroundStyle(PageTheme.nutrients.accentColor)
+                                .foregroundStyle(.secondary)
                         }
 
                         Spacer()
@@ -277,7 +285,7 @@ struct FoodCaptureHostView: View {
                                 }
                                 .buttonStyle(.bordered)
                                 .buttonBorderShape(.capsule)
-                                .tint(PageTheme.nutrients.accentColor)
+                                .tint(neutralCaptureAccent)
                                 #endif
 
                                 Button {
@@ -287,7 +295,7 @@ struct FoodCaptureHostView: View {
                                 }
                                 .buttonStyle(.bordered)
                                 .buttonBorderShape(.capsule)
-                                .tint(PageTheme.nutrients.accentColor)
+                                .tint(neutralCaptureAccent)
 
                                 Spacer(minLength: 0)
                             }
@@ -313,7 +321,7 @@ struct FoodCaptureHostView: View {
                                 .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(.borderedProminent)
-                        .tint(PageTheme.nutrients.accentColor)
+                        .tint(neutralCaptureAccent)
                         .controlSize(.large)
                         #endif
 
@@ -324,7 +332,7 @@ struct FoodCaptureHostView: View {
                                 .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(.bordered)
-                        .tint(PageTheme.nutrients.accentColor)
+                        .tint(neutralCaptureAccent)
                         .controlSize(.large)
                     }
                 }
@@ -429,11 +437,11 @@ struct FoodCaptureHostView: View {
         .padding(.horizontal, 20)
         .padding(.top, 16)
         .padding(.bottom, 14)
-        .background(Color.clear)
+        .background(appPrimaryBackground)
         .scrollDismissesKeyboard(.interactively)
         .modalNavigationTitle(String(localized: "Registrar por texto"))
         #if os(iOS)
-        .presentationBackground(.ultraThinMaterial)
+        .presentationBackground(appPrimaryBackground)
         #endif
         .onChange(of: typedText) { _, _ in
             if case .failure = analysisButtonState {
@@ -468,12 +476,12 @@ struct FoodCaptureHostView: View {
 
     private var textEditorBackground: some View {
         textEditorShape
-            .fill(.ultraThinMaterial)
+            .fill(neutralSurfaceColor)
             .overlay {
                 textEditorShape
                     .fill(
                         isTextEditorFocused
-                            ? PageTheme.nutrients.accentColor.opacity(0.045)
+                            ? Color.primary.opacity(0.055)
                             : Color.primary.opacity(0.025)
                     )
             }
@@ -483,7 +491,7 @@ struct FoodCaptureHostView: View {
         textEditorShape
             .stroke(
                 isTextEditorFocused
-                    ? PageTheme.nutrients.accentColor.opacity(0.34)
+                    ? Color.primary.opacity(0.28)
                     : Color.primary.opacity(0.06),
                 lineWidth: isTextEditorFocused ? 1.4 : 1
             )
@@ -545,11 +553,11 @@ struct FoodCaptureHostView: View {
     private func analysisButtonBackground(isDisabled: Bool) -> Color {
         switch analysisButtonState {
         case .idle:
-            isDisabled ? Color.primary.opacity(0.055) : PageTheme.nutrients.accentColor
+            isDisabled ? Color.primary.opacity(0.055) : neutralCaptureAccent
         case .loading:
-            PageTheme.nutrients.accentColor
+            neutralCaptureAccent
         case .success:
-            Color.green
+            neutralCaptureAccent
         case .failure:
             Color.red
         }
@@ -558,11 +566,11 @@ struct FoodCaptureHostView: View {
     private func analysisButtonShadowColor(isDisabled: Bool) -> Color {
         switch analysisButtonState {
         case .idle:
-            isDisabled ? .clear : PageTheme.nutrients.accentColor.opacity(0.22)
+            isDisabled ? .clear : Color.primary.opacity(0.16)
         case .loading:
-            PageTheme.nutrients.accentColor.opacity(0.3)
+            Color.primary.opacity(0.20)
         case .success:
-            Color.green.opacity(0.34)
+            Color.primary.opacity(0.20)
         case .failure:
             Color.red.opacity(0.24)
         }
@@ -616,7 +624,7 @@ struct FoodCaptureHostView: View {
                     HStack(alignment: .top, spacing: 12) {
                         minimalCaptureHeader(
                             systemImage: speech.state == .recording ? "waveform.circle.fill" : "mic.fill",
-                            tint: speech.state == .recording ? .red : PageTheme.nutrients.accentColor,
+                            tint: speech.state == .recording ? .red : neutralCaptureAccent,
                             title: speech.state == .recording ? String(localized: "Ouvindo agora") : (speech.transcript.isEmpty ? String(localized: "Ditado") : String(localized: "Transcrição pronta")),
                             subtitle: speech.state == .recording ? String(localized: "Fale normalmente. A transcrição aparece em tempo real.") : String(localized: "Revise a transcrição e analise quando estiver pronto."),
                             trailingCount: speech.transcript.isEmpty ? nil : speech.transcript.count,
@@ -651,7 +659,7 @@ struct FoodCaptureHostView: View {
                             }
                             .buttonStyle(.bordered)
                             .buttonBorderShape(.capsule)
-                            .tint(PageTheme.nutrients.accentColor)
+                            .tint(neutralCaptureAccent)
 
                             Spacer(minLength: 0)
                         }
@@ -694,7 +702,7 @@ struct FoodCaptureHostView: View {
             .padding(.horizontal, 20)
             .padding(.top, 10)
             .padding(.bottom, 12)
-            .background(.ultraThinMaterial)
+            .background(appPrimaryBackground)
         }
         .modalNavigationTitle(String(localized: "Registrar por voz"))
         .toolbar {
@@ -741,7 +749,7 @@ struct FoodCaptureHostView: View {
                     .buttonStyle(.bordered)
                 Button("Fechar") { dismiss() }
                     .buttonStyle(.borderedProminent)
-                    .tint(PageTheme.nutrients.accentColor)
+                    .tint(neutralCaptureAccent)
             }
             .controlSize(.large)
         }
@@ -763,10 +771,10 @@ struct FoodCaptureHostView: View {
             content()
         }
         .padding(18)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .background(neutralSurfaceColor, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(PageTheme.nutrients.accentColor.opacity(0.12), lineWidth: 1)
+                .stroke(Color.primary.opacity(0.08), lineWidth: 1)
         )
     }
 
@@ -784,7 +792,7 @@ struct FoodCaptureHostView: View {
         .shadow(color: .black.opacity(0.035), radius: 16, x: 0, y: 8)
     }
 
-    private func captureBadge(systemImage: String, tint: Color = PageTheme.nutrients.accentColor) -> some View {
+    private func captureBadge(systemImage: String, tint: Color = Color.primary.opacity(0.84)) -> some View {
         Circle()
             .fill(tint.opacity(0.1))
             .frame(width: 38, height: 38)
@@ -806,7 +814,7 @@ struct FoodCaptureHostView: View {
 
     private func minimalCaptureHeader(
         systemImage: String,
-        tint: Color = PageTheme.nutrients.accentColor,
+        tint: Color = Color.primary.opacity(0.84),
         title: String,
         subtitle: String,
         trailingCount: Int? = nil,
@@ -853,17 +861,17 @@ struct FoodCaptureHostView: View {
         content()
             .background(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(.regularMaterial)
+                    .fill(neutralSurfaceColor)
                     .overlay {
                         RoundedRectangle(cornerRadius: 18, style: .continuous)
-                            .fill(PageTheme.nutrients.accentColor.opacity(isFocused ? 0.055 : 0.025))
+                            .fill(Color.primary.opacity(isFocused ? 0.055 : 0.025))
                     }
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
                     .stroke(
                         isFocused
-                            ? PageTheme.nutrients.accentColor.opacity(0.38)
+                            ? Color.primary.opacity(0.30)
                             : Color.white.opacity(0.38),
                         lineWidth: isFocused ? 1.6 : 1
                     )
