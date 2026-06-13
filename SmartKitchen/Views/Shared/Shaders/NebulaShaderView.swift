@@ -530,17 +530,17 @@ struct NebulaShaderView: View {
             let tintInfo: (color: Color, strength: Float, color2: Color, strength2: Float) = {
                 switch theme {
                 case .home:
-                    // Red-crimson tint only
-                    return (Color(red: 0.82, green: 0.10, blue: 0.18), 1.1,
+                    // Bright crimson tint only.
+                    return (Color(red: 0.95, green: 0.08, blue: 0.18), 1.32,
                             Color.white, 0.0)
                 case .lists:
-                    return (Color(red: 0.2, green: 0.5, blue: 1.0), 1.0,
+                    return (Color(red: 0.12, green: 0.55, blue: 1.0), 1.22,
                             Color.white, 0.0)
                 case .recipes:
-                    return (Color(red: 0.90, green: 0.62, blue: 0.12), 1.0,
+                    return (Color(red: 1.0, green: 0.66, blue: 0.06), 1.20,
                             Color.white, 0.0)
                 case .nutrients:
-                    return (Color(red: 0.1, green: 0.9, blue: 0.3), 1.0,
+                    return (Color(red: 0.04, green: 1.0, blue: 0.34), 1.22,
                             Color.white, 0.0)
                 case .settings:
                     // Cool slate gray — low strength keeps the shader neutral.
@@ -564,7 +564,7 @@ struct NebulaShaderView: View {
 
             // Darken layer for home
             if theme == .home {
-                Color.black.opacity(0.18)
+                Color.black.opacity(0.10)
                     .ignoresSafeArea()
             }
 

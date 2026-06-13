@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Botão inline de ditado usado na barra unificada do Modo IA.
+/// Botão inline de ditado usado na barra unificada do SavorIA.
 ///
 /// Inicia/para a captura de voz via `NutritionSpeechRecognizer` e escreve a
 /// transcrição diretamente no `targetText` (a mesma `searchText` da barra).

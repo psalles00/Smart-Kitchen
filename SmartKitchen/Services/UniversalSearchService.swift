@@ -106,7 +106,7 @@ final class UniversalSearchService: ObservableObject {
                 type: primaryType,
                 score: score + recencyBoost,
                 objectID: item.id,
-                iconFilename: item.iconName,
+                iconFilename: item.resolvedIconName(),
                 imageData: nil
             )
             result.isAlsoInOtherList = item.activeFlags.count > 1

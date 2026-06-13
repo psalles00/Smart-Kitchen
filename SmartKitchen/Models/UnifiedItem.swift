@@ -124,6 +124,13 @@ final class UnifiedItem {
         return CategoryMutationService.localizedDisplayName(for: category, type: categoryType)
     }
 
+    func resolvedIconName(categoryIconName: String? = nil) -> String? {
+        iconName
+            ?? ItemDatabase.shared.preferredMatch(for: name)?.nomeDoArquivo
+            ?? categoryIconName
+            ?? CategoryDatabase.shared.entry(for: category)?.iconFileName
+    }
+
     /// Plain-text summary for AI context.
     var aiReadableDescription: String {
         var text = name

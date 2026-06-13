@@ -10,7 +10,7 @@ enum AssistantScrollMetrics {
 // MARK: - Fullscreen Assistant View
 
 /// Full-screen page that hosts both the "Assistente" (search) and the
-/// "Modo IA" (chat) experiences on iOS.
+/// "SavorIA" (chat) experiences on iOS.
 ///
 /// Presented as a ZStack overlay in ContentView so the persistent search bar
 /// remains mounted and focused while the assistant expands.
@@ -46,7 +46,7 @@ struct FullscreenAssistantView: View {
     var presentation: Presentation = .overlay
     var chromeStyle: ChromeStyle = .fullscreen
     var usesDarkShaderBackground: Bool = false
-    /// When set, the idle "Perguntar à IA" / "Ideias de receitas" buttons call
+    /// When set, the idle "Pergunte à SavorIA" / "Ideias de receitas" buttons call
     /// this closure (with the desired preset) instead of mutating the global
     /// `searchBarState.mode`. Used by the search-tab to push the AI page.
     var onRequestAIMode: ((AIChatPreset, String?) -> Void)? = nil
@@ -232,7 +232,7 @@ struct FullscreenAssistantView: View {
                 Button {
                     // Reset AI state BEFORE popping so the parent view re-renders
                     // with the idle "Assistente" title during the pop animation.
-                    // Otherwise the user briefly sees a second "Modo IA" screen
+                    // Otherwise the user briefly sees a second "SavorIA" screen
                     // (the parent FullscreenAssistantView still in `.aiChat` mode).
                     pendingOpenChat = false
                     searchBarState.mode = .idle
@@ -257,7 +257,7 @@ struct FullscreenAssistantView: View {
                 .accessibilityLabel(Text(String(localized: "Voltar")))
             }
 
-            Text(searchBarState.mode == .aiChat ? String(localized: "Modo IA") : String(localized: "Assistente"))
+            Text(searchBarState.mode == .aiChat ? String(localized: "SavorIA") : String(localized: "Assistente"))
                 .font(assistantHeaderTitleFont)
                 .foregroundStyle(Color.primary)
                 .lineLimit(1)
@@ -386,10 +386,10 @@ struct FullscreenAssistantView: View {
 
                     LazyVGrid(columns: assistantActionColumns, alignment: .leading, spacing: 6) {
                         assistantActionButton(
-                            title: String(localized: "Perguntar à IA"),
+                            title: String(localized: "Pergunte à SavorIA"),
                             icon: "sparkles",
                             tint: assistantIAAccent,
-                            imageName: "modo ia",
+                            imageName: "savorai",
                             imageHeight: 82,
                             imageOffset: CGSize(width: 8, height: 12)
                         ) {
@@ -628,13 +628,13 @@ struct FullscreenAssistantView: View {
         searchBarState.selectResult()
     }
 
-    // MARK: - Sugestões do Modo IA (espelhadas no Modo IA)
+    // MARK: - Sugestões do SavorIA (espelhadas no SavorIA)
 
     @ViewBuilder
     private var aiModeSuggestionsSection: some View {
         let suggestions = AIModeSuggestions.nutritionCoachSuggestions(profile: nutritionProfiles.first)
         VStack(alignment: .leading, spacing: 10) {
-            Text("Sugestões do Modo IA")
+            Text("Sugestões do SavorIA")
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 4)
@@ -837,7 +837,7 @@ struct MacAssistantExpandedPage: View {
             case .assistant:
                 return String(localized: "Assistente")
             case .aiMode:
-                return String(localized: "Modo IA")
+                return String(localized: "SavorIA")
             }
         }
     }
@@ -920,8 +920,8 @@ struct AssistantTabAIDestination: Hashable {
 
 /// Tab content used by the new "Buscar" (search) tab. Hosts the assistant in
 /// `.tab` presentation mode (no close/dismiss affordances) and routes the
-/// "Perguntar à IA" / "Ideias de receitas" actions through a NavigationStack
-/// push so the AI mode lives as a separate page with a native back button.
+/// "Pergunte à SavorIA" / "Ideias de receitas" actions through a NavigationStack
+/// push so SavorIA lives as a separate page with a native back button.
 struct AssistantSearchTabContent: View {
     @ObservedObject var searchBarState: SearchBarState
     @ObservedObject var searchService: UniversalSearchService
@@ -1049,5 +1049,3 @@ private struct AssistantSearchTabAIPage: View {
         // back button, which performs its own cleanup before popping.
     }
 }
-
-

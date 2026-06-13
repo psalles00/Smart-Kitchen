@@ -697,7 +697,7 @@ enum CommandBarHelpers {
             title: query,
             icon: "sparkles",
             tint: .blue,
-            imageName: "modo ia",
+            imageName: "savorai",
             imageHeight: 84,
             imageOffset: CGSize(width: 16, height: 23)
         ) { q, action in action(.askAssistant(prefill: q)) }

@@ -40,7 +40,7 @@ struct AIChatWidget: Widget {
                 .containerBackground(.fill.tertiary, for: .widget)
                 .widgetURL(aiChatDeepLink)
         }
-        .configurationDisplayName("Modo IA")
+        .configurationDisplayName("SavorIA")
         .description("Abre o Savoria direto no chat com a IA, com o teclado pronto para digitar.")
         .supportedFamilies([
             .accessoryCircular,
@@ -95,7 +95,7 @@ private struct AIChatRectangularView: View {
                 .font(.system(size: 24, weight: .semibold))
                 .widgetAccentable()
             VStack(alignment: .leading, spacing: 1) {
-                Text("Modo IA")
+                Text("SavorIA")
                     .font(.system(.footnote, design: .rounded, weight: .semibold))
                     .widgetAccentable()
                 Text("Converse com a IA")
@@ -112,7 +112,7 @@ private struct AIChatRectangularView: View {
 
 private struct AIChatInlineView: View {
     var body: some View {
-        Label("Modo IA Savoria", systemImage: "bubble.and.pencil")
+        Label("SavorIA", systemImage: "bubble.and.pencil")
     }
 }
 
@@ -132,7 +132,7 @@ private struct AIChatSmallView: View {
                 )
             Spacer(minLength: 0)
             VStack(alignment: .leading, spacing: 2) {
-                Text("Modo IA")
+                Text("SavorIA")
                     .font(.system(.headline, design: .rounded, weight: .bold))
                 Text("Toque para conversar")
                     .font(.system(.caption, design: .rounded))

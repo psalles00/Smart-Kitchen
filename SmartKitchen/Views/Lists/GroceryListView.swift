@@ -408,7 +408,7 @@ struct GroceryItemRow: View {
             HStack(alignment: .center, spacing: 12) {
                 IconImage(
                     name: item.name,
-                    iconFileName: item.iconName ?? ItemDatabase.shared.preferredMatch(for: item.name)?.nomeDoArquivo ?? categoryIconName,
+                    iconFileName: item.resolvedIconName(categoryIconName: categoryIconName),
                     fallbackSymbol: "basket",
                     size: 24,
                     showBalloon: true

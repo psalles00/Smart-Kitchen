@@ -70,6 +70,7 @@ struct UnifiedItemSelection: Identifiable, Hashable {
 struct ItemDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var colorScheme
     @Query private var allUnifiedItems: [UnifiedItem]
     @Query(sort: \Category.sortOrder) private var allCategories: [Category]
     @Query private var settingsArray: [AppSettings]
@@ -110,6 +111,7 @@ struct ItemDetailView: View {
     @State private var showCategorySelection = false
     @State private var showRemoveConfirmation = false
     @State private var selectedPhoto: PhotosPickerItem?
+    @State private var presentationDetent: PresentationDetent = .fraction(0.62)
     @FocusState private var nameFieldFocused: Bool
 
     private var settings: AppSettings? { settingsArray.first }
@@ -152,70 +154,76 @@ struct ItemDetailView: View {
     // MARK: - Body
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 0) {
-                closeButtonRow
+        ZStack(alignment: .top) {
+            itemDetailBackground
 
-                // Icon area
-                iconHeader
-                    .padding(.top, isCreateMode ? 20 : 10)
+            ScrollView {
+                VStack(spacing: 0) {
+                    closeButtonRow
 
-                // Name field
-                nameSection
-                    .padding(.top, 12)
+                    // Icon area
+                    iconHeader
+                        .padding(.top, 32)
 
-                // Category
-                categorySection
-                    .padding(.top, 4)
+                    // Name field
+                    nameSection
+                        .padding(.top, 32)
 
-                // Suggestion chips (below category)
-                suggestionsSection
+                    // Category
+                    categorySection
+                        .padding(.top, 4)
 
-                existingItemNoticeSection
+                    // Suggestion chips (below category)
+                    suggestionsSection
 
-                // List toggle
-                listToggleSection
-                    .padding(.top, 20)
+                    existingItemNoticeSection
 
-                Divider()
-                    .padding(.horizontal, 20)
-                    .padding(.top, 20)
+                    // List toggle
+                    listToggleSection
+                        .padding(.top, 20)
 
-                // Description + Photo
-                descriptionPhotoSection
-                    .padding(.top, 16)
-
-                // Expiry (conditional)
-                if (hasPantry || hasGrocery) && !isUtensil {
-                    expirySection
+                    Divider()
+                        .padding(.horizontal, 20)
                         .padding(.top, 16)
-                }
 
-                // Quantity (always show when not utensil)
-                if !isUtensil {
-                    quantitySection
-                        .padding(.top, 16)
-                }
+                    // Description + Photo
+                    descriptionPhotoSection
+                        .padding(.top, 14)
 
-                // Save button (create mode only)
-                if isCreateMode {
-                    saveButton
-                        .padding(.top, 28)
-                        .padding(.bottom, 20)
-                } else if showsRemoveButton {
-                    removeButton
-                        .padding(.top, 28)
-                        .padding(.bottom, 20)
-                }
+                    // Expiry (conditional)
+                    if (hasPantry || hasGrocery) && !isUtensil {
+                        expirySection
+                            .padding(.top, 10)
+                    }
 
-                Spacer(minLength: 40)
+                    // Quantity (always show when not utensil)
+                    if !isUtensil {
+                        quantitySection
+                            .padding(.top, 10)
+                    }
+
+                    // Save button (create mode only)
+                    if isCreateMode {
+                        saveButton
+                            .padding(.top, 20)
+                            .padding(.bottom, 20)
+                    } else if showsRemoveButton {
+                        removeButton
+                            .padding(.top, 20)
+                            .padding(.bottom, 20)
+                    }
+
+                    Spacer(minLength: 40)
+                }
+                .padding(.horizontal, 20)
             }
-            .padding(.horizontal, 20)
         }
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .navigationBar)
-        .presentationDetents([.medium, .large])
+        .presentationDetents([.fraction(0.62), .large], selection: $presentationDetent)
+        .presentationDragIndicator(.visible)
+        .presentationBackground(.clear)
         #endif
         .tint(PageTheme.lists.accentColor)
         .sheet(isPresented: $showIconPicker) {
@@ -277,6 +285,22 @@ struct ItemDetailView: View {
         iconName ?? editingItem?.iconName
     }
 
+    private var currentCategoryName: String {
+        isCreateMode ? selectedCategory : (editingItem?.category ?? selectedCategory)
+    }
+
+    private var currentCategoryIconName: String? {
+        allCategories.first { category in
+            category.name == currentCategoryName && category.type == (isUtensil ? .utensil : .pantry)
+        }?.iconName ?? CategoryDatabase.shared.entry(for: currentCategoryName)?.iconFileName
+    }
+
+    private var resolvedHeaderIconName: String? {
+        currentIconName
+            ?? ItemDatabase.shared.preferredMatch(for: currentNameValue)?.nomeDoArquivo
+            ?? currentCategoryIconName
+    }
+
     private var currentName: String {
         name
     }
@@ -292,6 +316,11 @@ struct ItemDetailView: View {
     private var resolvedImageData: Data? {
         if isCreateMode { return imageData }
         return editingItem?.imageData ?? imageData
+    }
+
+    private var itemDetailBackground: some View {
+        Color(PlatformColor.systemBackground)
+            .ignoresSafeArea()
     }
 
     @ViewBuilder
@@ -322,25 +351,26 @@ struct ItemDetailView: View {
             showIconPicker = true
         } label: {
             ZStack {
-                // Shadow icon (behind, stretched + blurred)
                 IconImage(
                     name: currentName,
-                    iconFileName: currentIconName,
+                    iconFileName: resolvedHeaderIconName,
                     fallbackSymbol: "leaf",
-                    size: 97
+                    size: 96
                 )
-                .scaleEffect(x: 1.5, y: 0.5)
-                .blur(radius: 10)
-                .opacity(0.5)
+                .scaleEffect(6.0)
+                .blur(radius: 34)
+                .offset(y: -108)
+                .opacity(colorScheme == .dark ? 0.22 : 0.28)
+                .allowsHitTesting(false)
 
-                // Main icon (no balloon background)
                 IconImage(
                     name: currentName,
-                    iconFileName: currentIconName,
+                    iconFileName: resolvedHeaderIconName,
                     fallbackSymbol: "leaf",
-                    size: 97
+                    size: 96
                 )
             }
+            .frame(width: 112, height: 106)
         }
         .buttonStyle(.plain)
     }
@@ -525,9 +555,27 @@ struct ItemDetailView: View {
                 .frame(maxWidth: .infinity)
                 .background(pantrySelected ? ItemListType.pantry.color : Color(.tertiarySystemFill))
                 .foregroundStyle(pantrySelected ? .white : .primary)
+                .clipShape(UnevenRoundedRectangle(topLeadingRadius: 12, bottomLeadingRadius: 12, style: .continuous))
             }
             .buttonStyle(.plain)
             .disabled(!isCreateMode && isUtensil)
+
+            Button {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                    selectedLists = [.pantry, .grocery]
+                }
+            } label: {
+                Image(systemName: "arrow.left.arrow.right")
+                    .font(.system(size: 13, weight: .medium))
+                    .padding(.vertical, 10)
+                    .frame(width: 42)
+                    .background(bothSelected ? PageTheme.lists.accentColor : Color(.tertiarySystemFill))
+                    .foregroundStyle(bothSelected ? .white : .primary)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .disabled(!isCreateMode && isUtensil)
+            .accessibilityLabel(Text("Despensa & Mercado"))
 
             // Grocery button
             Button {
@@ -546,30 +594,12 @@ struct ItemDetailView: View {
                 .frame(maxWidth: .infinity)
                 .background(grocerySelected ? ItemListType.grocery.color : Color(.tertiarySystemFill))
                 .foregroundStyle(grocerySelected ? .white : .primary)
+                .clipShape(UnevenRoundedRectangle(bottomTrailingRadius: 12, topTrailingRadius: 12, style: .continuous))
             }
             .buttonStyle(.plain)
             .disabled(!isCreateMode && isUtensil)
         }
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-
-        // "Add to both" hint when one is selected
-        if !bothSelected && !isUtensil {
-            Button {
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                    selectedLists = [.pantry, .grocery]
-                }
-            } label: {
-                HStack(spacing: 4) {
-                    Image(systemName: "plus.circle.fill")
-                        .font(.system(size: 12))
-                    Text("Adicionar em ambos")
-                        .font(.caption)
-                }
-                .foregroundStyle(.secondary)
-            }
-            .buttonStyle(.plain)
-            .transition(.opacity)
-        }
     }
 
     @ViewBuilder
@@ -599,51 +629,36 @@ struct ItemDetailView: View {
 
     @ViewBuilder
     private var descriptionPhotoSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             Text("Detalhes")
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(.secondary)
 
-            HStack(alignment: .top, spacing: 12) {
-                // Description field
-                TextField("Descrição (opcional)", text: isCreateMode ? $descriptionText : editDescriptionBinding, axis: .vertical)
-                    .lineLimit(3...6)
-                    .font(.body)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+            TextField("Observações, marca ou preparo", text: isCreateMode ? $descriptionText : editDescriptionBinding, axis: .vertical)
+                .lineLimit(1...3)
+                .font(.body)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 9)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color(.tertiarySystemFill).opacity(0.55), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
 
-                // Photo area (right)
-                if let data = resolvedImageData, let image = PlatformImage(data: data) {
-                    Button {
+            PhotosPicker(selection: $selectedPhoto, matching: .images) {
+                Label(resolvedImageData == nil ? "Adicionar Foto" : "Alterar Foto", systemImage: resolvedImageData == nil ? "photo.badge.plus" : "photo")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 8)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .contextMenu {
+                if resolvedImageData != nil {
+                    Button("Ver Foto", systemImage: "photo") {
                         showPhotoPreview = true
-                    } label: {
-                        Image(platformImage: image)
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: 72, height: 72)
-                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     }
-                    .buttonStyle(.plain)
-                    .contextMenu {
-                        Button("Remover Foto", systemImage: "trash", role: .destructive) {
-                            removePhoto()
-                        }
-                        PhotosPicker(selection: $selectedPhoto, matching: .images) {
-                            Label("Alterar Foto", systemImage: "photo")
-                        }
+                    Button("Remover Foto", systemImage: "trash", role: .destructive) {
+                        removePhoto()
                     }
-                } else {
-                    PhotosPicker(selection: $selectedPhoto, matching: .images) {
-                        VStack(spacing: 6) {
-                            Image(systemName: "photo.badge.plus")
-                                .font(.system(size: 20))
-                            Text("Foto")
-                                .font(.caption2)
-                        }
-                        .foregroundStyle(.secondary)
-                        .frame(width: 72, height: 72)
-                        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Color(.tertiarySystemFill), lineWidth: 1.5))
-                    }
-                    .buttonStyle(.plain)
                 }
             }
         }

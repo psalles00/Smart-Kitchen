@@ -75,11 +75,11 @@ final class SearchBarState: ObservableObject {
     /// Triggers "execute top result" when user presses Enter (incremented each submit).
     @Published var submitTrigger: Int = 0
 
-    /// Event-like chat send request emitted by the unified search bar in AI mode.
+    /// Event-like chat send request emitted by the unified search bar in SavorIA.
     /// A unique ID is required so repeated sends with the same text are never lost.
     @Published var pendingChatMessageRequest: PendingChatMessageRequest? = nil
 
-    /// Incrementing event tokens for AI Mode header actions. Tokens are more
+    /// Incrementing event tokens for SavorIA header actions. Tokens are more
     /// reliable than transient booleans because repeated taps cannot be lost
     /// in a true/false race across multiple view layers.
     @Published var aiNewConversationRequestToken: Int = 0

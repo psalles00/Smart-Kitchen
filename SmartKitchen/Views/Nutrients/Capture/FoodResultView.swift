@@ -16,6 +16,19 @@ struct FoodResultView: View {
     @State private var mealTypeRaw: String = MealType.snack.rawValue
     @State private var showMore: Bool = false
     @State private var servingUnit: ServingUnit = .grams
+    @State private var caloriesText: String = ""
+    @State private var proteinText: String = ""
+    @State private var carbsText: String = ""
+    @State private var fatText: String = ""
+    @State private var sugarText: String = ""
+    @State private var addedSugarText: String = ""
+    @State private var fiberText: String = ""
+    @State private var saturatedFatText: String = ""
+    @State private var monounsaturatedFatText: String = ""
+    @State private var polyunsaturatedFatText: String = ""
+    @State private var cholesterolText: String = ""
+    @State private var sodiumText: String = ""
+    @State private var potassiumText: String = ""
 
     private enum ServingUnit: String, CaseIterable, Identifiable {
         case grams = "g"
@@ -32,6 +45,13 @@ struct FoodResultView: View {
         guard allowsServingAdjustment else { return 1 }
         guard analysis.servingSizeGrams > 0 else { return 1 }
         return parsedServing / analysis.servingSizeGrams
+    }
+    private var canSave: Bool {
+        !name.trimmingCharacters(in: .whitespaces).isEmpty
+            && parsedInt(caloriesText) != nil
+            && parsedDouble(proteinText) != nil
+            && parsedDouble(carbsText) != nil
+            && parsedDouble(fatText) != nil
     }
 
     // MARK: - Scaled values
@@ -78,23 +98,23 @@ struct FoodResultView: View {
                 }
 
                 Section("Nutrição") {
-                    macroRow("Calorias", "\(scaledCalories) kcal")
-                    macroRow("Proteína", "\(scaledProtein) g")
-                    macroRow("Carbos", "\(scaledCarbs) g")
-                    macroRow("Gordura", "\(scaledFat) g")
+                    nutritionNumberRow("Calorias", unit: "kcal", text: $caloriesText, integerOnly: true)
+                    nutritionNumberRow("Proteína", unit: "g", text: $proteinText)
+                    nutritionNumberRow("Carbos", unit: "g", text: $carbsText)
+                    nutritionNumberRow("Gordura", unit: "g", text: $fatText)
                 }
 
                 Section {
                     DisclosureGroup("Mais nutrientes", isExpanded: $showMore) {
-                        optionalRow("Açúcar", value: scaledOpt(analysis.sugarG), unit: "g")
-                        optionalRow("Açúcar adicionado", value: scaledOpt(analysis.addedSugarG), unit: "g")
-                        optionalRow("Fibra", value: scaledOpt(analysis.fiberG), unit: "g")
-                        optionalRow("Gordura saturada", value: scaledOpt(analysis.saturatedFatG), unit: "g")
-                        optionalRow("Gordura mono", value: scaledOpt(analysis.monounsaturatedFatG), unit: "g")
-                        optionalRow("Gordura poli", value: scaledOpt(analysis.polyunsaturatedFatG), unit: "g")
-                        optionalRow("Colesterol", value: scaledOpt(analysis.cholesterolMg), unit: "mg")
-                        optionalRow("Sódio", value: scaledOpt(analysis.sodiumMg), unit: "mg")
-                        optionalRow("Potássio", value: scaledOpt(analysis.potassiumMg), unit: "mg")
+                        optionalNumberRow("Açúcar", unit: "g", text: $sugarText)
+                        optionalNumberRow("Açúcar adicionado", unit: "g", text: $addedSugarText)
+                        optionalNumberRow("Fibra", unit: "g", text: $fiberText)
+                        optionalNumberRow("Gordura saturada", unit: "g", text: $saturatedFatText)
+                        optionalNumberRow("Gordura mono", unit: "g", text: $monounsaturatedFatText)
+                        optionalNumberRow("Gordura poli", unit: "g", text: $polyunsaturatedFatText)
+                        optionalNumberRow("Colesterol", unit: "mg", text: $cholesterolText)
+                        optionalNumberRow("Sódio", unit: "mg", text: $sodiumText)
+                        optionalNumberRow("Potássio", unit: "mg", text: $potassiumText)
                     }
                 }
 
@@ -122,7 +142,7 @@ struct FoodResultView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Registrar") { save() }
                         .fontWeight(.semibold)
-                        .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
+                        .disabled(!canSave)
                 }
             }
             .tint(PageTheme.nutrients.accentColor)
@@ -131,7 +151,11 @@ struct FoodResultView: View {
             if allowsServingAdjustment, servingText.isEmpty {
                 servingText = formatNumber(analysis.servingSizeGrams)
             }
+            loadEditableNutritionValues()
             mealTypeRaw = MealType.suggestion(for: logDate).rawValue
+        }
+        .onChange(of: servingText) { _, _ in
+            loadEditableNutritionValues()
         }
     }
 
@@ -148,6 +172,15 @@ struct FoodResultView: View {
                         .scaledToFill()
                         .frame(maxHeight: 180)
                         .clipShape(.rect(cornerRadius: 14))
+                } else if let iconName = resolvedFoodIconName {
+                    IconImage(
+                        name: name,
+                        iconFileName: iconName,
+                        fallbackSymbol: "fork.knife",
+                        size: 88,
+                        showBalloon: true,
+                        balloonColor: PageTheme.nutrients.accentColor.opacity(0.14)
+                    )
                 } else if let emoji = analysis.emoji, !emoji.isEmpty {
                     Text(emoji).font(.system(size: 72))
                 } else {
@@ -163,30 +196,120 @@ struct FoodResultView: View {
         }
     }
 
-    private func macroRow(_ label: String, _ value: String) -> some View {
+    private var resolvedFoodIconName: String? {
+        Self.firstResolvedFoodIconName(from: name.isEmpty ? analysis.name : name)
+    }
+
+    private func nutritionNumberRow(_ label: String, unit: String, text: Binding<String>, integerOnly: Bool = false) -> some View {
         HStack {
             Text(label)
             Spacer()
-            Text(value).foregroundStyle(.secondary)
+            TextField("0", text: text)
+                #if os(iOS)
+                .keyboardType(integerOnly ? .numberPad : .decimalPad)
+                #endif
+                .multilineTextAlignment(.trailing)
+                .frame(maxWidth: 96)
+            Text(unit)
+                .foregroundStyle(.secondary)
+                .font(.footnote)
         }
     }
 
     @ViewBuilder
-    private func optionalRow(_ label: String, value: Double?, unit: String) -> some View {
-        HStack {
-            Text(label)
-            Spacer()
-            if let value {
-                Text("\(formatNumber(value)) \(unit)").foregroundStyle(.secondary)
-            } else {
-                Text("—").foregroundStyle(.tertiary)
-            }
-        }
+    private func optionalNumberRow(_ label: String, unit: String, text: Binding<String>) -> some View {
+        nutritionNumberRow(label, unit: unit, text: text)
     }
 
     private func formatNumber(_ v: Double) -> String {
         if v == v.rounded() { return String(Int(v)) }
         return String(format: "%.1f", v)
+    }
+
+    private func parsedInt(_ value: String) -> Int? {
+        parsedDouble(value).map { Int($0.rounded()) }
+    }
+
+    private func parsedDouble(_ value: String) -> Double? {
+        Double(value.replacingOccurrences(of: ",", with: ".").trimmingCharacters(in: .whitespacesAndNewlines))
+    }
+
+    private func parsedOptionalDouble(_ value: String) -> Double? {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        return parsedDouble(trimmed)
+    }
+
+    private func loadEditableNutritionValues() {
+        caloriesText = String(scaledCalories)
+        proteinText = formatNumber(Double(scaledProtein))
+        carbsText = formatNumber(Double(scaledCarbs))
+        fatText = formatNumber(Double(scaledFat))
+        sugarText = formatOptional(scaledOpt(analysis.sugarG))
+        addedSugarText = formatOptional(scaledOpt(analysis.addedSugarG))
+        fiberText = formatOptional(scaledOpt(analysis.fiberG))
+        saturatedFatText = formatOptional(scaledOpt(analysis.saturatedFatG))
+        monounsaturatedFatText = formatOptional(scaledOpt(analysis.monounsaturatedFatG))
+        polyunsaturatedFatText = formatOptional(scaledOpt(analysis.polyunsaturatedFatG))
+        cholesterolText = formatOptional(scaledOpt(analysis.cholesterolMg))
+        sodiumText = formatOptional(scaledOpt(analysis.sodiumMg))
+        potassiumText = formatOptional(scaledOpt(analysis.potassiumMg))
+    }
+
+    private func formatOptional(_ value: Double?) -> String {
+        value.map(formatNumber) ?? ""
+    }
+
+    private static func firstResolvedFoodIconName(from rawName: String) -> String? {
+        let candidates = iconCandidateNames(from: rawName)
+        for candidate in candidates where !candidate.isEmpty {
+            if let file = ItemDatabase.shared.exactMatch(for: candidate)?.nomeDoArquivo {
+                return file
+            }
+            if let file = ItemDatabase.shared.preferredMatch(for: candidate)?.nomeDoArquivo {
+                return file
+            }
+            if let file = IconResolver.resolve(candidate) {
+                return file
+            }
+        }
+        return nil
+    }
+
+    private static func iconCandidateNames(from rawName: String) -> [String] {
+        let protected = rawName
+            .replacingOccurrences(of: #"(?i)\bpão\s+de\s+forma\b"#, with: "pao_de_forma", options: .regularExpression)
+            .replacingOccurrences(of: #"(?i)\bpao\s+de\s+forma\b"#, with: "pao_de_forma", options: .regularExpression)
+            .replacingOccurrences(of: #"(?i)\bpão\s+de\s+queijo\b"#, with: "pao_de_queijo", options: .regularExpression)
+            .replacingOccurrences(of: #"(?i)\bpao\s+de\s+queijo\b"#, with: "pao_de_queijo", options: .regularExpression)
+
+        var pieces = protected
+            .replacingOccurrences(of: #"(?i)\s*(?:;|,|\+|\bcom\b|\be\b)\s*"#, with: "\u{1F}", options: .regularExpression)
+            .components(separatedBy: "\u{1F}")
+            .map {
+                $0
+                    .replacingOccurrences(of: "pao_de_forma", with: "pao de forma")
+                    .replacingOccurrences(of: "pao_de_queijo", with: "pao de queijo")
+            }
+            .map(cleanIconCandidateName)
+            .filter { !$0.isEmpty }
+
+        let whole = cleanIconCandidateName(rawName)
+        if !whole.isEmpty {
+            pieces.append(whole)
+        }
+        return pieces
+    }
+
+    private static func cleanIconCandidateName(_ raw: String) -> String {
+        raw
+            .replacingOccurrences(
+                of: #"(?i)^\s*(?:\d+(?:[\.,]\d+)?|meia?|meio|uma?|um|duas?|dois|tr[eê]s|quatro|cinco)?\s*(?:kg|g|gramas?|ml|l|litros?|un|unidades?|und|x[ií]caras?|colheres?\s+de\s+sopa|colheres?\s+de\s+ch[aá]|fatias?|por(?:ç|c)(?:a|o|oes|ões)|copos?)?\s*(?:de|da|do|das|dos)?\s*"#,
+                with: "",
+                options: .regularExpression
+            )
+            .replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     // MARK: - Save
@@ -207,10 +330,10 @@ struct FoodResultView: View {
 
         let entry = FoodEntry(
             name: trimmedName,
-            calories: scaledCalories,
-            proteinG: Double(scaledProtein),
-            carbsG: Double(scaledCarbs),
-            fatG: Double(scaledFat),
+            calories: parsedInt(caloriesText) ?? 0,
+            proteinG: parsedDouble(proteinText) ?? 0,
+            carbsG: parsedDouble(carbsText) ?? 0,
+            fatG: parsedDouble(fatText) ?? 0,
             mealType: MealType(rawValue: mealTypeRaw) ?? MealType.suggestion(for: timestamp),
             source: image == nil ? .textInput : .snapFood,
             timestamp: timestamp,
@@ -219,15 +342,15 @@ struct FoodResultView: View {
             imageFilename: filename
         )
         // Micros
-        entry.sugarG = scaledOpt(analysis.sugarG)
-        entry.addedSugarG = scaledOpt(analysis.addedSugarG)
-        entry.fiberG = scaledOpt(analysis.fiberG)
-        entry.saturatedFatG = scaledOpt(analysis.saturatedFatG)
-        entry.monounsaturatedFatG = scaledOpt(analysis.monounsaturatedFatG)
-        entry.polyunsaturatedFatG = scaledOpt(analysis.polyunsaturatedFatG)
-        entry.cholesterolMg = scaledOpt(analysis.cholesterolMg)
-        entry.sodiumMg = scaledOpt(analysis.sodiumMg)
-        entry.potassiumMg = scaledOpt(analysis.potassiumMg)
+        entry.sugarG = parsedOptionalDouble(sugarText)
+        entry.addedSugarG = parsedOptionalDouble(addedSugarText)
+        entry.fiberG = parsedOptionalDouble(fiberText)
+        entry.saturatedFatG = parsedOptionalDouble(saturatedFatText)
+        entry.monounsaturatedFatG = parsedOptionalDouble(monounsaturatedFatText)
+        entry.polyunsaturatedFatG = parsedOptionalDouble(polyunsaturatedFatText)
+        entry.cholesterolMg = parsedOptionalDouble(cholesterolText)
+        entry.sodiumMg = parsedOptionalDouble(sodiumText)
+        entry.potassiumMg = parsedOptionalDouble(potassiumText)
 
         modelContext.insert(entry)
         try? modelContext.save()

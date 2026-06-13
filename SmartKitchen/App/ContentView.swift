@@ -26,7 +26,7 @@ enum SidebarItem: String, CaseIterable, Identifiable {
         case .recipes: return String(localized: "Receitas")
         case .nutrients: return String(localized: "Nutrição")
         case .assistant: return String(localized: "Assistente")
-        case .aiMode: return String(localized: "Modo IA")
+        case .aiMode: return String(localized: "SavorIA")
         case .settings: return String(localized: "Configurações")
         }
     }
@@ -68,7 +68,7 @@ struct ContentView: View {
     @StateObject private var searchBarState = SearchBarState()
 
     // Navigation stack for the search/assistant tab. Owned here so that the
-    // home view's "Perguntar à IA" / "Ideias de receitas" / "Assistente"
+    // home view's "Pergunte à SavorIA" / "Ideias de receitas" / "Assistente"
     // shortcuts can both switch to the search tab AND push the AI page.
     @State private var assistantTabPath: [AssistantTabAIDestination] = []
     /// Tracks whether the on-screen keyboard is visible so we can hide the tab
@@ -288,7 +288,7 @@ struct ContentView: View {
     }
 
     private var assistantOverlayTitle: String {
-        searchBarState.mode == .aiChat ? String(localized: "Modo IA") : String(localized: "Assistente")
+        searchBarState.mode == .aiChat ? String(localized: "SavorIA") : String(localized: "Assistente")
     }
     private var assistantOverlaySubtitle: String {
         String(localized: "Adicione itens, busque na despensa ou pergunte à IA.")
@@ -1323,7 +1323,7 @@ struct ContentView: View {
                 .padding(.bottom, 4)
 
             // IA — accent .home
-            macSidebarActionRow(title: String(localized: "Perguntar à IA"),
+            macSidebarActionRow(title: String(localized: "Pergunte à SavorIA"),
                                 systemImage: "sparkles", tint: .home) {
                 openAIMode(preset: .nutritionCoach)
             }
@@ -1454,7 +1454,7 @@ struct ContentView: View {
             searchService.search(query: newValue, context: modelContext, showUtensils: settingsSnapshot.showUtensils)
         }
         // When the user starts typing in the floating assistant bar, route
-        // them to the dedicated Assistente sidebar page (or Modo IA when in
+        // them to the dedicated Assistente sidebar page (or SavorIA when in
         // AI chat mode) instead of stacking the legacy modal overlay on top
         // of whatever page they were on.
         .onChange(of: searchBarState.searchText) { _, newValue in
@@ -1505,11 +1505,11 @@ struct ContentView: View {
             macBackgroundToTheme = newTheme
             macBackgroundFromTheme = newTheme
 
-            // When the user navigates away from the AI Mode page, collapse
+            // When the user navigates away from the SavorIA page, collapse
             // the legacy assistant bar back into idle so the previous chat
             // doesn't keep showing as a floating modal over the new page.
             // The AI conversation itself is preserved by the dedicated
-            // `Modo IA` page and resumes when the user returns to it.
+            // `SavorIA` page and resumes when the user returns to it.
             if newValue != .aiMode && newValue != .assistant {
                 if searchBarState.mode == .aiChat {
                     searchBarState.mode = .idle
@@ -1537,7 +1537,7 @@ struct ContentView: View {
     private var macHasSearchContent: Bool {
         // Retained as a no-op to avoid touching unrelated call sites — the
         // legacy modal search overlay was removed from the macOS layout; the
-        // dedicated Assistente / Modo IA sidebar pages now host the assistant
+        // dedicated Assistente / SavorIA sidebar pages now host the assistant
         // chrome and search results directly.
         false
     }
@@ -1653,8 +1653,8 @@ struct ContentView: View {
 
             Button {
                 // Snap back into the sidebar: defocus, clear text, and
-                // collapse. (AI Mode conversation state lives in the
-                // dedicated `Modo IA` page and is unaffected.)
+                // collapse. (SavorIA conversation state lives in the
+                // dedicated `SavorIA` page and is unaffected.)
                 macSearchFieldFocused = false
                 searchBarState.searchText = ""
                 searchBarState.debouncedSearchText = ""
@@ -2892,9 +2892,9 @@ private struct HomeView: View {
 
                     VStack(spacing: spacing) {
                         homeShortcutButton(
-                            title: String(localized: "Modo IA"),
-                            subtitle: String(localized: "Inteligência"),
-                            imageName: "modo ia",
+                            title: String(localized: "SavorIA"),
+                            subtitle: String(localized: "AI Mode"),
+                            imageName: "savorai",
                             style: .wide,
                             imageSize: 150,
                             imageOffset: CGSize(width: 22, height: 26),
@@ -2997,7 +2997,7 @@ private struct HomeView: View {
             let topSide = smallSide * 2 + spacing
 
             VStack(spacing: spacing) {
-                // Linha superior: Assistente (featured) + Modo IA / Receitas (wide)
+                // Linha superior: Assistente (featured) + SavorIA / Receitas (wide)
                 HStack(spacing: spacing) {
                     homeShortcutButton(
                         title: String(localized: "Assistente"),
@@ -3013,9 +3013,9 @@ private struct HomeView: View {
 
                     VStack(spacing: spacing) {
                         homeShortcutButton(
-                            title: String(localized: "Modo IA"),
-                            subtitle: String(localized: "Inteligência"),
-                            imageName: "modo ia",
+                            title: String(localized: "SavorIA"),
+                            subtitle: String(localized: "AI Mode"),
+                            imageName: "savorai",
                             style: .wide,
                             imageSize: 126,
                             imageOffset: CGSize(width: 80, height: 38)
@@ -3132,53 +3132,67 @@ private struct HomeView: View {
     private var expiringSectionList: some View {
         let visibleItems = Array(expiringItemsState.prefix(5))
 
-        return VStack(spacing: 0) {
-            ForEach(Array(visibleItems.enumerated()), id: \.element.id) { index, item in
-                expiringSectionRow(for: item)
-
-                if index < visibleItems.count - 1 {
-                    ItemListDivider()
-                        .padding(.horizontal, 14)
+        return ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 12) {
+                ForEach(visibleItems) { item in
+                    expiringSectionCard(for: item)
+                        .frame(width: 104, height: 100)
+                        .offset(y: -5)
                 }
             }
+            .padding(.top, 18)
+            .padding(.bottom, -4)
         }
-        .background(homeShortcutBackgroundColor, in: .rect(cornerRadius: 18))
     }
 
-    private func expiringSectionRow(for item: UnifiedItem) -> some View {
+    private func expiringSectionCard(for item: UnifiedItem) -> some View {
         Button {
             editingExpiringItem = UnifiedItemSelection(id: item.id)
         } label: {
-            HStack(spacing: 12) {
-                IconImage(
-                    name: item.name,
-                    iconFileName: item.iconName,
-                    fallbackSymbol: "clock.badge.exclamationmark",
-                    size: 28,
-                    showBalloon: true,
-                    balloonColor: expiringItemBalloonColor
-                )
+            ZStack(alignment: .bottom) {
+                expiringCardSurface(for: item.expirationDate)
 
-                VStack(alignment: .leading, spacing: 3) {
+                VStack(spacing: 0) {
                     Text(item.name)
-                        .font(.subheadline.weight(.semibold))
-                    if let expiration = item.formattedExpirationDate {
-                        Text("Validade \(expiration)")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                        .font(.system(size: 12.5, weight: .bold, design: .rounded))
+                        .foregroundStyle(.primary)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.center)
+                        .truncationMode(.tail)
+                        .minimumScaleFactor(0.82)
+                        .frame(maxWidth: .infinity)
+
+                    if let expirationDate = item.expirationDate {
+                        Text(relativeExpirationText(for: expirationDate))
+                            .font(.system(size: 9, weight: .medium))
+                            .foregroundStyle(expirationHighlightColor(for: expirationDate))
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                            .minimumScaleFactor(0.75)
                     }
                 }
-
-                Spacer()
-
-                if let expirationDate = item.expirationDate {
-                    Text(relativeExpirationText(for: expirationDate))
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(expirationHighlightColor(for: expirationDate))
-                }
+                .padding(.horizontal, 8)
+                .padding(.bottom, 7)
+                .frame(maxWidth: .infinity, minHeight: 46)
+                .background(
+                    expiringCardTextPanelColor(for: item.expirationDate)
+                        .clipShape(
+                            UnevenRoundedRectangle(bottomLeadingRadius: 16, bottomTrailingRadius: 16)
+                        )
+                )
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 10)
+            .overlay(alignment: .top) {
+                IconImage(
+                    name: item.name,
+                    iconFileName: item.resolvedIconName(),
+                    fallbackSymbol: "clock.badge.exclamationmark",
+                    size: 68,
+                    showBalloon: false
+                )
+                .shadow(color: Color.black.opacity(0.16), radius: 5, x: 0, y: 5)
+                .offset(y: -20)
+                .allowsHitTesting(false)
+            }
         }
         .buttonStyle(.plain)
         .contextMenu {
@@ -3198,6 +3212,60 @@ private struct HomeView: View {
         colorScheme == .dark
             ? Color(red: 0x19 / 255.0, green: 0x19 / 255.0, blue: 0x1A / 255.0)
             : .white
+    }
+
+    private var expiringCardSurfaceColor: Color {
+        colorScheme == .dark ? Color(red: 0x2C / 255.0, green: 0x2C / 255.0, blue: 0x2E / 255.0) : neutralSurfaceColor
+    }
+
+    private func expiringCardTextPanelColor(for date: Date?) -> Color {
+        let isExpired = date.map { expirationDaysUntil($0) < 0 } ?? false
+        if isExpired {
+            return .clear
+        }
+        return expiringCardSurfaceColor.opacity(colorScheme == .dark ? 0.60 : 0.48)
+    }
+
+    private func expiringCardSurface(for date: Date?) -> some View {
+        let isExpired = date.map { expirationDaysUntil($0) < 0 } ?? false
+        let accent = isExpired
+            ? Color.red
+            : Color.primary.opacity(colorScheme == .dark ? 0.58 : 0.42)
+
+        return RoundedRectangle(cornerRadius: 16, style: .continuous)
+            .fill(expiringCardSurfaceColor)
+            .overlay {
+                expiringCardSurfaceGradient(isExpired: isExpired)
+                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            }
+            .expiringGlassReflectionBorder(cornerRadius: 16, accentColor: accent, isColored: true)
+            .shadow(color: .black.opacity(0.03), radius: 4, x: 0, y: 4)
+    }
+
+    private func expiringCardSurfaceGradient(isExpired: Bool) -> LinearGradient {
+        if isExpired {
+            return LinearGradient(
+                stops: [
+                    .init(color: Color.red.opacity(colorScheme == .dark ? 0.46 : 0.28), location: 0.00),
+                    .init(color: Color.red.opacity(colorScheme == .dark ? 0.26 : 0.16), location: 0.24),
+                    .init(color: Color.red.opacity(colorScheme == .dark ? 0.13 : 0.08), location: 0.58),
+                    .init(color: Color.red.opacity(colorScheme == .dark ? 0.04 : 0.025), location: 0.82),
+                    .init(color: Color.red.opacity(0.00), location: 1.00)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        }
+
+        return LinearGradient(
+            stops: [
+                .init(color: Color.primary.opacity(colorScheme == .dark ? 0.12 : 0.055), location: 0.00),
+                .init(color: Color.primary.opacity(colorScheme == .dark ? 0.055 : 0.028), location: 0.48),
+                .init(color: Color.primary.opacity(0.00), location: 1.00)
+            ],
+            startPoint: .top,
+            endPoint: .bottom
+        )
     }
 
     private var dessertShelf: some View {
@@ -3595,23 +3663,116 @@ private struct HomeView: View {
             .lowercased()
     }
 
+    private func expirationDaysUntil(_ date: Date) -> Int {
+        Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: .now), to: Calendar.current.startOfDay(for: date)).day ?? 0
+    }
+
     private func relativeExpirationText(for date: Date) -> String {
-        let days = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: .now), to: Calendar.current.startOfDay(for: date)).day ?? 0
-        if days < 0 { return "Expirado" }
-        if days == 0 { return "Hoje" }
-        if days == 1 { return "1 dia" }
-        return "\(days) dias"
+        let days = expirationDaysUntil(date)
+        if days < -1 {
+            return String.localizedStringWithFormat(String(localized: "Expirou há %lld dias"), abs(days))
+        }
+        if days == -1 { return String(localized: "Expirou há 1 dia") }
+        if days == 0 { return String(localized: "Expira hoje") }
+        if days == 1 { return String(localized: "Expira amanhã") }
+        return String.localizedStringWithFormat(String(localized: "Expira em %lld dias"), days)
     }
 
     private func expirationHighlightColor(for date: Date) -> Color {
-        let days = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: .now), to: Calendar.current.startOfDay(for: date)).day ?? 0
+        let days = expirationDaysUntil(date)
         if days < 0 { return .red }
-        if days <= 7 { return .yellow }
-        return .orange
+        return .secondary
     }
 }
 
 private let homeShortcutBackgroundColor = neutralSurfaceColor
+
+private struct ExpiringGlassReflectionBorderModifier: ViewModifier {
+    let cornerRadius: CGFloat
+    let accentColor: Color
+    let isColored: Bool
+    @Environment(\.colorScheme) private var colorScheme
+
+    func body(content: Content) -> some View {
+        content
+            .overlay {
+                ZStack {
+                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                        .strokeBorder(continuousEdgeReflection, lineWidth: colorScheme == .dark ? 1.25 : 1.15)
+                        .mask(continuousEdgeOpacityMask)
+
+                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                        .strokeBorder(topReflection, lineWidth: colorScheme == .dark ? 0.95 : 1.05)
+                        .mask(topReflectionMask)
+                        .blendMode(colorScheme == .dark ? .screen : .normal)
+                }
+                .allowsHitTesting(false)
+            }
+    }
+
+    private var continuousEdgeOpacityMask: some View {
+        GeometryReader { geometry in
+            let midCornerLocation = min(max((cornerRadius / 2) / max(geometry.size.height, 1), 0), 1)
+
+            LinearGradient(
+                stops: [
+                    .init(color: .white, location: 0.00),
+                    .init(color: .white.opacity(0.05), location: midCornerLocation),
+                    .init(color: .white.opacity(0.35), location: 1.00)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        }
+    }
+
+    private var topReflectionMask: some View {
+        VStack(spacing: 0) {
+            LinearGradient(
+                stops: [
+                    .init(color: .white, location: 0.00),
+                    .init(color: .white, location: 0.18),
+                    .init(color: .white.opacity(0.56), location: 0.54),
+                    .init(color: .white.opacity(0.18), location: 1.00)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .frame(height: cornerRadius + 8)
+
+            Rectangle()
+                .fill(.white.opacity(0.18))
+        }
+    }
+
+    private var topReflection: some ShapeStyle {
+        AngularGradient(
+            stops: [
+                .init(color: accentColor.opacity(0.00), location: 0.00),
+                .init(color: accentColor.opacity(isColored ? (colorScheme == .dark ? 0.18 : 0.12) : 0.06), location: 0.08),
+                .init(color: accentColor.opacity(isColored ? (colorScheme == .dark ? 0.36 : 0.24) : 0.10), location: 0.18),
+                .init(color: accentColor.opacity(isColored ? (colorScheme == .dark ? 0.58 : 0.38) : 0.14), location: 0.25),
+                .init(color: accentColor.opacity(isColored ? (colorScheme == .dark ? 0.36 : 0.24) : 0.10), location: 0.32),
+                .init(color: accentColor.opacity(isColored ? (colorScheme == .dark ? 0.18 : 0.12) : 0.06), location: 0.42),
+                .init(color: accentColor.opacity(0.00), location: 0.50),
+                .init(color: accentColor.opacity(0.00), location: 1.00)
+            ],
+            center: .center,
+            startAngle: .degrees(-180),
+            endAngle: .degrees(180)
+        )
+    }
+
+    private var continuousEdgeReflection: some ShapeStyle {
+        accentColor.opacity(isColored ? (colorScheme == .dark ? 0.28 : 0.18) : (colorScheme == .dark ? 0.16 : 0.10))
+    }
+}
+
+private extension View {
+    func expiringGlassReflectionBorder(cornerRadius: CGFloat, accentColor: Color, isColored: Bool) -> some View {
+        modifier(ExpiringGlassReflectionBorderModifier(cornerRadius: cornerRadius, accentColor: accentColor, isColored: isColored))
+    }
+}
 
 private struct HomeShortcutButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {

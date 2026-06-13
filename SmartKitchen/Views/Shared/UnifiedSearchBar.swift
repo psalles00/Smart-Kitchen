@@ -141,7 +141,7 @@ struct UnifiedSearchBar: View {
             // Quando o usuário digita, mostramos apagar + enviar.
             inlineSendActions
         } else if state.mode == .aiChat {
-            // Em Modo IA sem texto, oferecemos ditado para puxar a fala.
+            // Em SavorIA sem texto, oferecemos ditado para puxar a fala.
             DictationButton(targetText: $state.searchText)
         } else if shouldCollapseQuickActions {
             collapsedAccessoryMenu

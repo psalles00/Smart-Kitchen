@@ -113,7 +113,11 @@ struct UtensilsView: View {
                 Button {
                     editingItem = UnifiedItemSelection(id: item.id)
                 } label: {
-                    UtensilItemRow(item: item, showsDivider: itemIndex > 0)
+                    UtensilItemRow(
+                        item: item,
+                        categoryIconName: categoryIconName(for: item),
+                        showsDivider: itemIndex > 0
+                    )
                         .contentShape(Rectangle())
                         .background(alignment: .top) {
                             if categoryIndex == 0, itemIndex == 0 {
@@ -157,6 +161,10 @@ struct UtensilsView: View {
         }
     }
 
+    private func categoryIconName(for item: UnifiedItem) -> String? {
+        utensilCategories.first { $0.name == item.category }?.iconName
+    }
+
     private func deleteItem(_ item: UnifiedItem) {
         withAnimation {
             if item.isPantry || item.isGrocery {
@@ -170,6 +178,7 @@ struct UtensilsView: View {
 
 struct UtensilItemRow: View {
     let item: UnifiedItem
+    let categoryIconName: String?
     let showsDivider: Bool
 
     var body: some View {
@@ -181,7 +190,13 @@ struct UtensilItemRow: View {
             }
 
             HStack(alignment: .center, spacing: 12) {
-                IconImage(name: item.name, iconFileName: item.iconName, fallbackSymbol: "fork.knife", size: 24, showBalloon: true)
+                IconImage(
+                    name: item.name,
+                    iconFileName: item.resolvedIconName(categoryIconName: categoryIconName),
+                    fallbackSymbol: "fork.knife",
+                    size: 24,
+                    showBalloon: true
+                )
 
                 Text(item.name)
                     .font(.system(size: 14, weight: .medium))

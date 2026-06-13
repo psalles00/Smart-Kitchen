@@ -7,7 +7,7 @@ enum PageTheme: String, Codable, CaseIterable {
     case nutrients = "nutrients"
     /// Neutral gray theme used by the macOS Settings sidebar page.
     case settings = "settings"
-    /// Neutral gray theme used by the macOS Assistente / Modo IA pages.
+    /// Neutral gray theme used by the macOS Assistente / SavorIA pages.
     case assistant = "assistant"
 
     var accentColor: Color {

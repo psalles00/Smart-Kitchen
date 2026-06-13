@@ -103,7 +103,7 @@ struct InlineChatView: View {
         self.dismissOnEmptyTap = dismissOnEmptyTap
     }
 
-    /// Whether this chat is in "AI Mode" (embedded with unified search bar) vs standalone assistant.
+    /// Whether this chat is in "SavorIA" (embedded with unified search bar) vs standalone assistant.
     private var isAIMode: Bool { searchBarState != nil }
     private var aiChatPreset: AIChatPreset { searchBarState?.aiChatPreset ?? .nutritionCoach }
 
@@ -467,7 +467,7 @@ struct InlineChatView: View {
         }
     }
 
-    // MARK: - AI Mode Empty State
+    // MARK: - SavorIA Empty State
 
     @ViewBuilder
     private var aiModeEmptyState: some View {
@@ -756,7 +756,7 @@ struct InlineChatView: View {
 
         let normalizedPrompt = normalized(trimmedText)
         let hasRecipeIdeasContext = isAIMode && (autoActivatedRecipeIdeasMode || aiChatPreset == .recipeIdeas)
-        // Em AI mode, qualquer pedido reconhecido como sugestão de receita deve
+        // Em SavorIA, qualquer pedido reconhecido como sugestão de receita deve
         // entrar no fluxo estruturado (Suas Receitas + Ideias Rápidas + Web).
         let isRecipePromptInAIMode = isAIMode &&
             !isRecipeManagementPrompt(normalizedPrompt) &&

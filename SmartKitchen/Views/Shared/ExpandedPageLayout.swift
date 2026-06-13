@@ -528,7 +528,7 @@ struct PageSkeletonGrid: View {
 
 struct NutritionPageSkeleton: View {
     var body: some View {
-        ScrollView {
+        ScrollView(.vertical) {
             VStack(spacing: 14) {
                 RoundedRectangle(cornerRadius: 22, style: .continuous)
                     .fill(skeletonBaseColor)
@@ -548,11 +548,15 @@ struct NutritionPageSkeleton: View {
                         .background(skeletonBaseColor.opacity(0.55), in: .rect(cornerRadius: 16))
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .top)
             .padding(.horizontal, 16)
             .padding(.top, 12)
             .padding(.bottom, 24)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .scrollIndicators(.hidden)
         .skeletonShimmer()
+        .clipped()
         .allowsHitTesting(false)
     }
 }
@@ -567,8 +571,10 @@ struct NutritionInfoSkeleton: View {
                 .fill(.white.opacity(0.18))
                 .frame(width: 92, height: 32)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .frame(height: ExpandedPageHeaderMetrics.iosCompactInfoHeight)
         .skeletonShimmer()
+        .clipped()
         .allowsHitTesting(false)
     }
 }
@@ -611,6 +617,7 @@ private struct SkeletonListRow: View {
                 .stroke(skeletonBaseColor, lineWidth: 4)
                 .frame(width: 42, height: 42)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
         .overlay(alignment: .bottom) {

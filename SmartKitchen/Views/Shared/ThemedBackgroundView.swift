@@ -74,9 +74,9 @@ private struct StaticAppleOrbBackground: View {
                     .fill(
                         RadialGradient(
                             colors: [
-                                Color(red: 0.80, green: 0.86, blue: 0.90).opacity(0.88),
-                                orbAccentTint.opacity(0.44),
-                                orbDarkTint.opacity(0.90),
+                                Color(red: 0.88, green: 0.94, blue: 1.00).opacity(0.92),
+                                orbAccentTint.opacity(0.58),
+                                orbDarkTint.opacity(0.86),
                                 Color.black.opacity(0.0)
                             ],
                             center: .topLeading,
@@ -92,8 +92,8 @@ private struct StaticAppleOrbBackground: View {
                     .fill(
                         LinearGradient(
                             colors: [
-                                Color.white.opacity(0.11),
-                                orbAccentTint.opacity(0.18),
+                                Color.white.opacity(0.15),
+                                orbAccentTint.opacity(0.28),
                                 Color.clear
                             ],
                             startPoint: .topLeading,
@@ -127,16 +127,16 @@ private struct StaticAppleOrbBackground: View {
     private var orbAccentTint: Color {
         Color(
             hue: themeOrbHue,
-            saturation: 0.82,
-            brightness: 0.3255
+            saturation: 0.98,
+            brightness: 0.43
         )
     }
 
     private var orbDarkTint: Color {
         Color(
             hue: themeOrbHue,
-            saturation: 0.82,
-            brightness: 0.2300
+            saturation: 0.96,
+            brightness: 0.30
         )
     }
 

@@ -2,7 +2,7 @@ import SwiftUI
 import PhotosUI
 
 /// Host único para os 4 modos de captura automática: foto, rótulo, voz e texto.
-/// Gerencia ciclo gathering → analyzing → result → (erro).
+/// Gerencia ciclo gathering → result → (erro), com análise inline no botão.
 struct FoodCaptureHostView: View {
     enum InitialInput {
         case chooser
@@ -19,12 +19,11 @@ struct FoodCaptureHostView: View {
 
     enum Stage {
         case gathering
-        case analyzing
         case result(FoodAnalysis)
         case error(String)
     }
 
-    private enum TextAnalysisButtonState: Equatable {
+    private enum AnalysisButtonState: Equatable {
         case idle
         case loading
         case success
@@ -71,13 +70,12 @@ struct FoodCaptureHostView: View {
     @State private var showPhotoPicker: Bool = false
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var hasTriggeredInitialInput = false
-    @State private var hasTriggeredPreloadedAnalysis = false
     @State private var hasTriggeredAutomaticTextAnalysis = false
     /// Drives the in-app paywall sheet when the daily Nutrition AI quota
     /// is reached on free tier.
     @State private var pendingPaywallReason: PaywallSheet.Reason?
-    @State private var textAnalysisButtonState: TextAnalysisButtonState = .idle
-    @State private var showTextAnalysisSupportFallback: Bool = false
+    @State private var analysisButtonState: AnalysisButtonState = .idle
+    @State private var showAnalysisSupportFallback: Bool = false
     @FocusState private var isTextEditorFocused: Bool
 
     #if os(iOS)
@@ -101,10 +99,8 @@ struct FoodCaptureHostView: View {
         self.initialText = initialText
         self.shouldAutoAnalyzeTextOnAppear = shouldAutoAnalyzeTextOnAppear
         _typedText = State(initialValue: initialText)
-        // Start directly in analyzing stage when a preloaded image is provided,
-        // so no gathering UI is ever rendered.
         if preloadedImage != nil {
-            _stage = State(initialValue: .analyzing)
+            _stage = State(initialValue: .gathering)
             _capturedImage = State(initialValue: preloadedImage)
         } else {
             _stage = State(initialValue: .gathering)
@@ -129,8 +125,6 @@ struct FoodCaptureHostView: View {
                 switch stage {
                 case .gathering:
                     gatheringView
-                case .analyzing:
-                    FoodAnalyzingView(image: capturedImage, message: analyzingMessage)
                 case .result(let analysis):
                     FoodResultView(analysis: analysis, image: capturedImage, logDate: logDate)
                 case .error(let message):
@@ -145,7 +139,8 @@ struct FoodCaptureHostView: View {
         .fullScreenCover(isPresented: $showCamera) {
             FoodCameraPicker { image in
                 capturedImage = image
-                startImageAnalysis()
+                selectedPhotoItem = nil
+                resetAnalysisButton()
             }
             .ignoresSafeArea()
         }
@@ -171,11 +166,15 @@ struct FoodCaptureHostView: View {
         }
         .onAppear {
             triggerInitialInputIfNeeded()
-            triggerPreloadedAnalysisIfNeeded()
             triggerAutomaticTextAnalysisIfNeeded()
         }
         .sheet(item: $pendingPaywallReason) { reason in
             PaywallSheet(reason: reason)
+        }
+        .alert(String(localized: "Contatar suporte"), isPresented: $showAnalysisSupportFallback) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(String(localized: "Envie um e-mail para \(Self.supportEmail). Nenhum app de e-mail está configurado neste dispositivo."))
         }
     }
 
@@ -185,7 +184,7 @@ struct FoodCaptureHostView: View {
     private var gatheringView: some View {
         switch mode {
         case .photo:
-            if initialInput == .chooser {
+            if initialInput == .chooser || capturedImage != nil {
                 photoGathering
             } else {
                 directLaunchPlaceholder
@@ -250,28 +249,84 @@ struct FoodCaptureHostView: View {
                         .foregroundStyle(.secondary)
                 }
 
-                capturePanel {
-                    #if os(iOS)
-                    Button {
-                        showCamera = true
-                    } label: {
-                        Label(mode == .photo ? "Abrir câmera" : "Fotografar agora", systemImage: "camera")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(PageTheme.nutrients.accentColor)
-                    .controlSize(.large)
-                    #endif
+                if let capturedImage {
+                    capturePanel {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Image(platformImage: capturedImage)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 190)
+                                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                                .overlay(alignment: .topLeading) {
+                                    Label("Imagem selecionada", systemImage: "checkmark.circle.fill")
+                                        .font(.caption.weight(.semibold))
+                                        .foregroundStyle(.white)
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 7)
+                                        .background(.black.opacity(0.42), in: Capsule())
+                                        .padding(10)
+                                }
 
-                    Button {
-                        showPhotoPicker = true
-                    } label: {
-                        Label("Escolher da galeria", systemImage: "photo")
-                            .frame(maxWidth: .infinity)
+                            HStack(spacing: 10) {
+                                #if os(iOS)
+                                Button {
+                                    showCamera = true
+                                } label: {
+                                    Label("Trocar foto", systemImage: "camera")
+                                }
+                                .buttonStyle(.bordered)
+                                .buttonBorderShape(.capsule)
+                                .tint(PageTheme.nutrients.accentColor)
+                                #endif
+
+                                Button {
+                                    showPhotoPicker = true
+                                } label: {
+                                    Label("Galeria", systemImage: "photo")
+                                }
+                                .buttonStyle(.bordered)
+                                .buttonBorderShape(.capsule)
+                                .tint(PageTheme.nutrients.accentColor)
+
+                                Spacer(minLength: 0)
+                            }
+
+                            animatedAnalyzeButton(
+                                isDisabled: isImageAnalyzeDisabled,
+                                action: startImageAnalysis
+                            )
+
+                            if case .failure(let message) = analysisButtonState {
+                                analysisErrorPanel(message)
+                                    .transition(.move(edge: .top).combined(with: .opacity))
+                            }
+                        }
                     }
-                    .buttonStyle(.bordered)
-                    .tint(PageTheme.nutrients.accentColor)
-                    .controlSize(.large)
+                } else {
+                    capturePanel {
+                        #if os(iOS)
+                        Button {
+                            showCamera = true
+                        } label: {
+                            Label(mode == .photo ? "Abrir câmera" : "Fotografar agora", systemImage: "camera")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(PageTheme.nutrients.accentColor)
+                        .controlSize(.large)
+                        #endif
+
+                        Button {
+                            showPhotoPicker = true
+                        } label: {
+                            Label("Escolher da galeria", systemImage: "photo")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(PageTheme.nutrients.accentColor)
+                        .controlSize(.large)
+                    }
                 }
             }
             .padding(20)
@@ -302,13 +357,6 @@ struct FoodCaptureHostView: View {
         case .gallery:
             showPhotoPicker = true
         }
-    }
-
-    private func triggerPreloadedAnalysisIfNeeded() {
-        guard !hasTriggeredPreloadedAnalysis else { return }
-        guard preloadedImage != nil else { return }
-        hasTriggeredPreloadedAnalysis = true
-        startImageAnalysis()
     }
 
     private func triggerAutomaticTextAnalysisIfNeeded() {
@@ -368,28 +416,13 @@ struct FoodCaptureHostView: View {
             }
             .overlay(textEditorStroke)
 
-            Button(action: startTextAnalysis) {
-                textAnalysisButtonLabel
-            }
-            .buttonStyle(.plain)
-            .disabled(isTextAnalyzeDisabled)
-            .frame(width: textAnalysisButtonState.isCompact ? 52 : nil)
-            .frame(maxWidth: textAnalysisButtonState.isCompact ? nil : .infinity)
-            .frame(height: 52)
-            .background(textAnalysisButtonBackground)
-            .clipShape(RoundedRectangle(cornerRadius: textAnalysisButtonState.isCompact ? 26 : 16, style: .continuous))
-            .shadow(
-                color: textAnalysisButtonShadowColor,
-                radius: textAnalysisButtonState.isRunning ? 18 : 10,
-                x: 0,
-                y: textAnalysisButtonState.isRunning ? 10 : 5
+            animatedAnalyzeButton(
+                isDisabled: isTextAnalyzeDisabled,
+                action: startTextAnalysis
             )
-            .scaleEffect(textAnalysisButtonState == .success ? 1.04 : 1)
-            .animation(.spring(response: 0.42, dampingFraction: 0.82), value: textAnalysisButtonState.animationKey)
-            .accessibilityLabel(textAnalysisAccessibilityLabel)
 
-            if case .failure(let message) = textAnalysisButtonState {
-                textAnalysisErrorPanel(message)
+            if case .failure(let message) = analysisButtonState {
+                analysisErrorPanel(message)
                     .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
@@ -402,15 +435,10 @@ struct FoodCaptureHostView: View {
         #if os(iOS)
         .presentationBackground(.ultraThinMaterial)
         #endif
-        .alert(String(localized: "Contatar suporte"), isPresented: $showTextAnalysisSupportFallback) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(String(localized: "Envie um e-mail para \(Self.supportEmail). Nenhum app de e-mail está configurado neste dispositivo."))
-        }
         .onChange(of: typedText) { _, _ in
-            if case .failure = textAnalysisButtonState {
+            if case .failure = analysisButtonState {
                 withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) {
-                    textAnalysisButtonState = .idle
+                    analysisButtonState = .idle
                 }
             }
         }
@@ -424,8 +452,14 @@ struct FoodCaptureHostView: View {
 
     private var isTextAnalyzeDisabled: Bool {
         typedText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            || textAnalysisButtonState == .loading
-            || textAnalysisButtonState == .success
+            || analysisButtonState == .loading
+            || analysisButtonState == .success
+    }
+
+    private var isImageAnalyzeDisabled: Bool {
+        capturedImage == nil
+            || analysisButtonState == .loading
+            || analysisButtonState == .success
     }
 
     private var textEditorShape: RoundedRectangle {
@@ -455,14 +489,36 @@ struct FoodCaptureHostView: View {
             )
     }
 
+    private func animatedAnalyzeButton(isDisabled: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            analysisButtonLabel(isDisabled: isDisabled)
+        }
+        .buttonStyle(.plain)
+        .disabled(isDisabled || analysisButtonState == .loading || analysisButtonState == .success)
+        .frame(width: analysisButtonState.isCompact ? 52 : nil)
+        .frame(maxWidth: analysisButtonState.isCompact ? nil : .infinity)
+        .frame(height: 52)
+        .background(analysisButtonBackground(isDisabled: isDisabled))
+        .clipShape(RoundedRectangle(cornerRadius: analysisButtonState.isCompact ? 26 : 16, style: .continuous))
+        .shadow(
+            color: analysisButtonShadowColor(isDisabled: isDisabled),
+            radius: analysisButtonState.isRunning ? 18 : 10,
+            x: 0,
+            y: analysisButtonState.isRunning ? 10 : 5
+        )
+        .scaleEffect(analysisButtonState == .success ? 1.04 : 1)
+        .animation(.spring(response: 0.42, dampingFraction: 0.82), value: analysisButtonState.animationKey)
+        .accessibilityLabel(analysisAccessibilityLabel)
+    }
+
     @ViewBuilder
-    private var textAnalysisButtonLabel: some View {
+    private func analysisButtonLabel(isDisabled: Bool) -> some View {
         ZStack {
-            switch textAnalysisButtonState {
+            switch analysisButtonState {
             case .idle:
                 Label("Analisar", systemImage: "sparkles")
                     .font(.headline.weight(.semibold))
-                    .foregroundStyle(isTextAnalyzeDisabled ? Color.secondary : Color.white)
+                    .foregroundStyle(isDisabled ? Color.secondary : Color.white)
                     .contentTransition(.opacity)
             case .loading:
                 ProgressView()
@@ -486,10 +542,10 @@ struct FoodCaptureHostView: View {
         .frame(height: 52)
     }
 
-    private var textAnalysisButtonBackground: Color {
-        switch textAnalysisButtonState {
+    private func analysisButtonBackground(isDisabled: Bool) -> Color {
+        switch analysisButtonState {
         case .idle:
-            isTextAnalyzeDisabled ? Color.primary.opacity(0.055) : PageTheme.nutrients.accentColor
+            isDisabled ? Color.primary.opacity(0.055) : PageTheme.nutrients.accentColor
         case .loading:
             PageTheme.nutrients.accentColor
         case .success:
@@ -499,10 +555,10 @@ struct FoodCaptureHostView: View {
         }
     }
 
-    private var textAnalysisButtonShadowColor: Color {
-        switch textAnalysisButtonState {
+    private func analysisButtonShadowColor(isDisabled: Bool) -> Color {
+        switch analysisButtonState {
         case .idle:
-            isTextAnalyzeDisabled ? .clear : PageTheme.nutrients.accentColor.opacity(0.22)
+            isDisabled ? .clear : PageTheme.nutrients.accentColor.opacity(0.22)
         case .loading:
             PageTheme.nutrients.accentColor.opacity(0.3)
         case .success:
@@ -512,8 +568,8 @@ struct FoodCaptureHostView: View {
         }
     }
 
-    private var textAnalysisAccessibilityLabel: String {
-        switch textAnalysisButtonState {
+    private var analysisAccessibilityLabel: String {
+        switch analysisButtonState {
         case .idle:
             String(localized: "Analisar")
         case .loading:
@@ -525,7 +581,7 @@ struct FoodCaptureHostView: View {
         }
     }
 
-    private func textAnalysisErrorPanel(_ message: String) -> some View {
+    private func analysisErrorPanel(_ message: String) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(message)
                 .font(.footnote)
@@ -533,7 +589,7 @@ struct FoodCaptureHostView: View {
                 .fixedSize(horizontal: false, vertical: true)
 
             Button {
-                sendTextAnalysisErrorToSupport(message: message)
+                sendAnalysisErrorToSupport(message: message)
             } label: {
                 Label("Enviar erro ao suporte", systemImage: "envelope.badge")
                     .font(.footnote.weight(.semibold))
@@ -571,6 +627,7 @@ struct FoodCaptureHostView: View {
                             Button {
                                 speech.reset()
                                 typedText = ""
+                                resetAnalysisButton()
                             } label: {
                                 Label("Limpar", systemImage: "arrow.counterclockwise")
                                     .labelStyle(.iconOnly)
@@ -623,10 +680,21 @@ struct FoodCaptureHostView: View {
         }
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom) {
-            stickyAnalyzeBar(
-                isDisabled: speech.transcript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-                action: analyzeVoiceTranscript
-            )
+            VStack(spacing: 10) {
+                animatedAnalyzeButton(
+                    isDisabled: isVoiceAnalyzeDisabled,
+                    action: analyzeVoiceTranscript
+                )
+
+                if case .failure(let message) = analysisButtonState {
+                    analysisErrorPanel(message)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 10)
+            .padding(.bottom, 12)
+            .background(.ultraThinMaterial)
         }
         .modalNavigationTitle(String(localized: "Registrar por voz"))
         .toolbar {
@@ -635,12 +703,25 @@ struct FoodCaptureHostView: View {
             }
         }
         .onAppear { speech.start() }
+        .onChange(of: speech.transcript) { _, _ in
+            if case .failure = analysisButtonState {
+                resetAnalysisButton()
+            }
+        }
         .onDisappear { speech.stop() }
         #else
         Text("Voz disponível apenas no iOS.")
             .foregroundStyle(.secondary)
         #endif
     }
+
+    #if os(iOS)
+    private var isVoiceAnalyzeDisabled: Bool {
+        speech.transcript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            || analysisButtonState == .loading
+            || analysisButtonState == .success
+    }
+    #endif
 
     @ViewBuilder
     private func errorView(_ message: String) -> some View {
@@ -665,15 +746,6 @@ struct FoodCaptureHostView: View {
             .controlSize(.large)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    private var analyzingMessage: String {
-        switch mode {
-        case .photo:           String(localized: "Identificando a refeição…")
-        case .nutritionLabel:  String(localized: "Lendo rótulo nutricional…")
-        case .text:            String(localized: "Estimando nutrientes…")
-        case .voice:           String(localized: "Estimando nutrientes…")
-        }
     }
 
     private var captureModalTitle: String {
@@ -798,48 +870,6 @@ struct FoodCaptureHostView: View {
             )
     }
 
-    private func stickyAnalyzeBar(isDisabled: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Label("Analisar", systemImage: "sparkles")
-                .font(.headline.weight(.semibold))
-                .foregroundStyle(isDisabled ? Color.secondary : Color.white)
-                .frame(maxWidth: .infinity)
-                .frame(height: 58)
-                .background(stickyAnalyzeBackground(isDisabled: isDisabled))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .stroke(Color.white.opacity(isDisabled ? 0.18 : 0.28), lineWidth: 1)
-                }
-        }
-        .buttonStyle(.plain)
-        .disabled(isDisabled)
-        .padding(.horizontal, 20)
-        .padding(.top, 10)
-        .padding(.bottom, 12)
-        .background(.ultraThinMaterial)
-    }
-
-    @ViewBuilder
-    private func stickyAnalyzeBackground(isDisabled: Bool) -> some View {
-        let shape = RoundedRectangle(cornerRadius: 20, style: .continuous)
-
-        if #available(iOS 26, macOS 26, *) {
-            shape
-                .fill(
-                    isDisabled
-                        ? Color.primary.opacity(0.045)
-                        : PageTheme.nutrients.accentColor.opacity(0.92)
-                )
-                .glassEffect(
-                    .regular.tint(PageTheme.nutrients.accentColor.opacity(isDisabled ? 0.08 : 0.28)).interactive(),
-                    in: shape
-                )
-        } else {
-            shape
-                .fill(isDisabled ? Color.primary.opacity(0.06) : PageTheme.nutrients.accentColor)
-        }
-    }
-
     // MARK: - Actions
 
     private func setStage(_ newStage: Stage, animated: Bool = true) {
@@ -848,7 +878,7 @@ struct FoodCaptureHostView: View {
         switch newStage {
         case .gathering:
             targetDetent = .medium
-        case .analyzing, .result, .error:
+        case .result, .error:
             targetDetent = .large
         }
 
@@ -868,23 +898,40 @@ struct FoodCaptureHostView: View {
         do {
             if let data = try await item.loadTransferable(type: Data.self),
                let img = PlatformImage(data: data) {
-                capturedImage = img
-                startImageAnalysis()
+                await MainActor.run {
+                    capturedImage = img
+                    resetAnalysisButton()
+                }
             }
         } catch {
-            await MainActor.run { setStage(.error(error.localizedDescription)) }
+            await MainActor.run {
+                withAnimation(.spring(response: 0.36, dampingFraction: 0.82)) {
+                    analysisButtonState = .failure(error.localizedDescription)
+                }
+            }
+        }
+    }
+
+    private func resetAnalysisButton() {
+        withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) {
+            analysisButtonState = .idle
         }
     }
 
     private func startImageAnalysis() {
         guard let image = capturedImage else { return }
+        guard analysisButtonState != .loading else { return }
         // Free-tier daily Nutrition AI gate.
         guard FeatureGate.shared.canUse(.nutritionAI) else {
             pendingPaywallReason = .limitReached(.nutritionAI)
-            setStage(.gathering)
+            resetAnalysisButton()
             return
         }
-        setStage(.analyzing)
+
+        withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) {
+            analysisButtonState = .loading
+        }
+
         Task {
             do {
                 // Normaliza para ≤1024px JPEG 0.8
@@ -905,6 +952,14 @@ struct FoodCaptureHostView: View {
                     let analysis = try await ai.analyzeFoodImage(imageData: data)
                     await MainActor.run {
                         FeatureGate.shared.consume(.nutritionAI)
+                        HapticManager.impact(style: .medium)
+                        withAnimation(.spring(response: 0.34, dampingFraction: 0.7)) {
+                            analysisButtonState = .success
+                        }
+                    }
+                    try? await Task.sleep(for: .milliseconds(620))
+                    await MainActor.run {
+                        guard analysisButtonState == .success else { return }
                         setStage(.result(analysis))
                     }
                 case .nutritionLabel:
@@ -913,6 +968,14 @@ struct FoodCaptureHostView: View {
                     let analysis = label.scaled(to: serving)
                     await MainActor.run {
                         FeatureGate.shared.consume(.nutritionAI)
+                        HapticManager.impact(style: .medium)
+                        withAnimation(.spring(response: 0.34, dampingFraction: 0.7)) {
+                            analysisButtonState = .success
+                        }
+                    }
+                    try? await Task.sleep(for: .milliseconds(620))
+                    await MainActor.run {
+                        guard analysisButtonState == .success else { return }
                         setStage(.result(analysis))
                     }
                 case .text, .voice:
@@ -920,54 +983,35 @@ struct FoodCaptureHostView: View {
                 }
             } catch {
                 let msg = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
-                await MainActor.run { setStage(.error(msg)) }
+                await MainActor.run {
+                    HapticManager.impact(style: .heavy)
+                    withAnimation(.spring(response: 0.36, dampingFraction: 0.82)) {
+                        analysisButtonState = .failure(msg)
+                    }
+                }
             }
         }
     }
 
     private func startTextAnalysis() {
-        if mode == .text {
-            startInlineTextAnalysis()
-            return
-        }
-
-        let text = typedText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty else { return }
-        // Free-tier daily Nutrition AI gate.
-        guard FeatureGate.shared.canUse(.nutritionAI) else {
-            pendingPaywallReason = .limitReached(.nutritionAI)
-            return
-        }
-        setStage(.analyzing)
-        Task {
-            do {
-                let analysis = try await ai.analyzeText(description: text)
-                await MainActor.run {
-                    FeatureGate.shared.consume(.nutritionAI)
-                    setStage(.result(analysis))
-                }
-            } catch {
-                let msg = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
-                await MainActor.run { setStage(.error(msg)) }
-            }
-        }
+        startInlineTextAnalysis()
     }
 
     private func startInlineTextAnalysis() {
         let text = typedText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty, textAnalysisButtonState != .loading else { return }
+        guard !text.isEmpty, analysisButtonState != .loading else { return }
 
         guard FeatureGate.shared.canUse(.nutritionAI) else {
             pendingPaywallReason = .limitReached(.nutritionAI)
             withAnimation(.spring(response: 0.3, dampingFraction: 0.86)) {
-                textAnalysisButtonState = .idle
+                analysisButtonState = .idle
             }
             return
         }
 
         isTextEditorFocused = false
         withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) {
-            textAnalysisButtonState = .loading
+            analysisButtonState = .loading
         }
 
         Task {
@@ -977,14 +1021,14 @@ struct FoodCaptureHostView: View {
                     FeatureGate.shared.consume(.nutritionAI)
                     HapticManager.impact(style: .medium)
                     withAnimation(.spring(response: 0.34, dampingFraction: 0.7)) {
-                        textAnalysisButtonState = .success
+                        analysisButtonState = .success
                     }
                 }
 
                 try? await Task.sleep(for: .milliseconds(620))
 
                 await MainActor.run {
-                    guard textAnalysisButtonState == .success else { return }
+                    guard analysisButtonState == .success else { return }
                     setStage(.result(analysis))
                 }
             } catch {
@@ -992,40 +1036,53 @@ struct FoodCaptureHostView: View {
                 await MainActor.run {
                     HapticManager.impact(style: .heavy)
                     withAnimation(.spring(response: 0.36, dampingFraction: 0.82)) {
-                        textAnalysisButtonState = .failure(msg)
+                        analysisButtonState = .failure(msg)
                     }
                 }
             }
         }
     }
 
-    private func sendTextAnalysisErrorToSupport(message: String) {
-        guard let url = textAnalysisSupportURL(message: message) else {
-            showTextAnalysisSupportFallback = true
+    private func sendAnalysisErrorToSupport(message: String) {
+        guard let url = analysisSupportURL(message: message) else {
+            showAnalysisSupportFallback = true
             return
         }
 
         openURL(url) { accepted in
             if !accepted {
-                showTextAnalysisSupportFallback = true
+                showAnalysisSupportFallback = true
             }
         }
     }
 
-    private func textAnalysisSupportURL(message: String) -> URL? {
+    private func analysisSupportURL(message: String) -> URL? {
         var components = URLComponents()
         components.scheme = "mailto"
         components.path = Self.supportEmail
         let enteredText = typedText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let modeDescription = captureModalTitle
+        let inputDescription: String = {
+            if !enteredText.isEmpty {
+                return enteredText
+            }
+            if capturedImage != nil {
+                return String(localized: "Imagem selecionada")
+            }
+            return String(localized: "Entrada vazia")
+        }()
         components.queryItems = [
-            URLQueryItem(name: "subject", value: String(localized: "Erro no registro por texto - Savoria")),
+            URLQueryItem(name: "subject", value: String(localized: "Erro no registro de refeição - Savoria")),
             URLQueryItem(
                 name: "body",
                 value: """
-                \(String(localized: "Erro ao analisar refeição por texto."))
+                \(String(localized: "Erro ao analisar refeição."))
 
-                \(String(localized: "Texto digitado:"))
-                \(enteredText)
+                \(String(localized: "Modo:"))
+                \(modeDescription)
+
+                \(String(localized: "Entrada:"))
+                \(inputDescription)
 
                 \(String(localized: "Erro:"))
                 \(message)
@@ -1043,6 +1100,7 @@ struct FoodCaptureHostView: View {
             if !speech.transcript.isEmpty {
                 speech.reset()
             }
+            resetAnalysisButton()
             speech.start()
         }
     }

@@ -1,10 +1,10 @@
 import SwiftUI
 import SwiftData
 
-// MARK: - AI Mode Suggestions
+// MARK: - SavorIA Suggestions
 
-/// Single source of truth for the suggestion buttons displayed in **Modo IA**
-/// and mirrored in the **Assistente** idle screen ("Sugestões do Modo IA").
+/// Single source of truth for the suggestion buttons displayed in **SavorIA**
+/// and mirrored in the **Assistente** idle screen ("Sugestões do SavorIA").
 ///
 /// Any change here automatically propagates to both surfaces.
 struct AIModeSuggestion: Identifiable, Hashable {
@@ -29,7 +29,7 @@ enum AIModeSuggestions {
         )
     }
 
-    // MARK: Fixed AI-driven actions (sempre visíveis no Modo IA / Assistente)
+    // MARK: Fixed AI-driven actions (sempre visíveis no SavorIA / Assistente)
 
     /// Estes três botões executam pedidos analíticos para a IA. Como a IA já
     /// recebe contexto completo (despensa, mercado, receitas, nutrição), os
@@ -108,8 +108,8 @@ enum AIModeSuggestions {
         }
     }
 
-    /// Lista combinada usada pelo Modo IA (preset coach) e pela seção
-    /// "Sugestões do Modo IA" no Assistente. Inclui sugestões dinâmicas
+    /// Lista combinada usada pelo SavorIA (preset coach) e pela seção
+    /// "Sugestões do SavorIA" no Assistente. Inclui sugestões dinâmicas
     /// + ações fixas de IA.
     static func nutritionCoachSuggestions(profile: NutritionProfile?) -> [AIModeSuggestion] {
         coachStarters(profile: profile) + fixedActions
@@ -128,7 +128,7 @@ enum AIModeSuggestions {
 // MARK: - Reusable list view
 
 /// Lista vertical de sugestões em formato pílula com emoji + texto.
-/// Usada no estado vazio do Modo IA.
+/// Usada no estado vazio do SavorIA.
 struct AIModeSuggestionsList: View {
     let suggestions: [AIModeSuggestion]
     let onTap: (AIModeSuggestion) -> Void

@@ -27,8 +27,7 @@ struct FoodEntryFormView: View {
     @State private var mealTypeRaw: String = MealType.snack.rawValue
     @State private var timestamp: Date = .now
 
-    // MARK: AI prompt state
-    @State private var aiPrompt: String = ""
+    // MARK: AI state
     @State private var aiAnalysis: FoodAnalysis? = nil
     @State private var isAnalyzing: Bool = false
     @State private var aiError: String? = nil
@@ -42,7 +41,7 @@ struct FoodEntryFormView: View {
 
     @FocusState private var focused: Field?
 
-    private enum Field { case name, emoji, calories, protein, carbs, fat, serving, ai }
+    private enum Field { case name, emoji, calories, protein, carbs, fat, serving }
 
     private var isEdit: Bool {
         if case .edit = mode { return true } else { return false }
@@ -56,24 +55,26 @@ struct FoodEntryFormView: View {
         NavigationStack {
             Form {
                 Section("Alimento") {
-                    HStack(spacing: 10) {
-                        TextField("🍎", text: $emoji)
-                            .multilineTextAlignment(.center)
-                            .frame(width: 44, height: 44)
-                            .background(.quaternary.opacity(0.4), in: .rect(cornerRadius: 10))
-                            .focused($focused, equals: .emoji)
-                            .onChange(of: emoji) { _, new in
-                                // limita a 1 caractere/glyph
-                                if new.count > 1 { emoji = String(new.prefix(1)) }
-                            }
-                        TextField("ex.: Salada caseira", text: $name)
-                            .focused($focused, equals: .name)
-                            .autocorrectionDisabled()
-                    }
-                }
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack(spacing: 10) {
+                            TextField("🍎", text: $emoji)
+                                .multilineTextAlignment(.center)
+                                .frame(width: 44, height: 44)
+                                .background(.quaternary.opacity(0.4), in: .rect(cornerRadius: 10))
+                                .focused($focused, equals: .emoji)
+                                .onChange(of: emoji) { _, new in
+                                    // limita a 1 caractere/glyph
+                                    if new.count > 1 { emoji = String(new.prefix(1)) }
+                                }
+                            TextField("ex.: Salada caseira", text: $name)
+                                .focused($focused, equals: .name)
+                                .autocorrectionDisabled()
+                        }
 
-                if !isEdit {
-                    aiSection
+                        if !isEdit {
+                            automaticFoodOptions
+                        }
+                    }
                 }
 
                 Section("Macros") {
@@ -115,7 +116,7 @@ struct FoodEntryFormView: View {
                 // before pressing the mic button.
                 let combined = (voiceTranscriptBaseline + " " + newValue)
                     .trimmingCharacters(in: .whitespaces)
-                aiPrompt = combined
+                name = combined
             }
             .platformPresentationDetentsMediumLarge()
             .platformPresentationDragIndicatorVisible()
@@ -125,82 +126,60 @@ struct FoodEntryFormView: View {
         }
     }
 
-    // MARK: - AI section
+    // MARK: - Automatic food options
 
     @ViewBuilder
-    private var aiSection: some View {
-        Section {
-            VStack(alignment: .leading, spacing: 10) {
-                ZStack(alignment: .topLeading) {
-                    if aiPrompt.isEmpty {
-                        Text("Ex.: 2 ovos com 50g de pão francês e 1 copo de leite")
-                            .foregroundStyle(.secondary)
-                            .padding(.top, 8)
-                            .padding(.horizontal, 4)
-                            .allowsHitTesting(false)
-                    }
-                    TextEditor(text: $aiPrompt)
-                        .focused($focused, equals: .ai)
-                        .frame(minHeight: 72, maxHeight: 140)
-                        .scrollContentBackground(.hidden)
+    private var automaticFoodOptions: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 10) {
+                Button {
+                    toggleVoice()
+                } label: {
+                    Label(
+                        speech.state == .recording ? "Parar" : "Ditar",
+                        systemImage: speech.state == .recording ? "stop.circle.fill" : "mic.fill"
+                    )
+                    .labelStyle(.iconOnly)
+                    .frame(width: 18, height: 18)
                 }
+                .buttonStyle(.bordered)
+                .tint(speech.state == .recording ? .red : PageTheme.nutrients.accentColor)
+                .disabled(isAnalyzing)
+                .accessibilityLabel(speech.state == .recording ? String(localized: "Parar") : String(localized: "Ditar"))
 
-                HStack(spacing: 12) {
-                    Button {
-                        toggleVoice()
-                    } label: {
-                        Label(
-                            speech.state == .recording ? "Parar" : "Ditar",
-                            systemImage: speech.state == .recording ? "stop.circle.fill" : "mic.fill"
-                        )
-                        .labelStyle(.titleAndIcon)
-                    }
-                    .buttonStyle(.bordered)
-                    .tint(speech.state == .recording ? .red : PageTheme.nutrients.accentColor)
-                    .disabled(isAnalyzing)
-
-                    Spacer()
-
-                    Button {
-                        Task { await runAI() }
-                    } label: {
-                        HStack(spacing: 6) {
-                            if isAnalyzing {
-                                ProgressView().controlSize(.small)
-                            } else {
-                                Image(systemName: "sparkles")
-                            }
-                            Text(isAnalyzing ? "Analisando…" : "Preencher com IA")
-                                .fontWeight(.semibold)
+                Button {
+                    Task { await runAI() }
+                } label: {
+                    HStack(spacing: 6) {
+                        if isAnalyzing {
+                            ProgressView().controlSize(.small)
+                        } else {
+                            Image(systemName: "sparkles")
                         }
+                        Text(isAnalyzing ? "Analisando…" : "Preencher com IA")
+                            .fontWeight(.semibold)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(PageTheme.nutrients.accentColor)
-                    .disabled(aiPrompt.trimmingCharacters(in: .whitespaces).isEmpty || isAnalyzing)
                 }
-
-                if case .error(let msg) = speech.state {
-                    Text(msg)
-                        .font(.footnote)
-                        .foregroundStyle(.red)
-                }
-                if let aiError {
-                    Text(aiError)
-                        .font(.footnote)
-                        .foregroundStyle(.red)
-                }
-                if aiAnalysis != nil && aiError == nil && !isAnalyzing {
-                    Label("Campos preenchidos. Revise e salve.", systemImage: "checkmark.circle.fill")
-                        .font(.footnote)
-                        .foregroundStyle(.green)
-                }
+                .buttonStyle(.borderedProminent)
+                .tint(PageTheme.nutrients.accentColor)
+                .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || isAnalyzing)
             }
-        } header: {
-            Label("Pergunte à IA", systemImage: "sparkles")
-        } footer: {
-            Text("Descreva um alimento ou uma refeição completa. A IA preenche o formulário automaticamente.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+
+            if case .error(let msg) = speech.state {
+                Text(msg)
+                    .font(.footnote)
+                    .foregroundStyle(.red)
+            }
+            if let aiError {
+                Text(aiError)
+                    .font(.footnote)
+                    .foregroundStyle(.red)
+            }
+            if aiAnalysis != nil && aiError == nil && !isAnalyzing {
+                Label("Campos preenchidos. Revise e salve.", systemImage: "checkmark.circle.fill")
+                    .font(.footnote)
+                    .foregroundStyle(.green)
+            }
         }
     }
 
@@ -208,14 +187,14 @@ struct FoodEntryFormView: View {
         if speech.state == .recording {
             speech.stop()
         } else {
-            voiceTranscriptBaseline = aiPrompt
+            voiceTranscriptBaseline = name
             usedVoice = true
             speech.start()
         }
     }
 
     private func runAI() async {
-        let trimmed = aiPrompt.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         // Free-tier daily Nutrition AI gate.
         guard FeatureGate.shared.canUse(.nutritionAI) else {
@@ -279,8 +258,7 @@ struct FoodEntryFormView: View {
             mealTypeRaw = (prefillMealType ?? MealType.suggestion(for: timestamp)).rawValue
             if let prefillName, !prefillName.isEmpty {
                 name = prefillName
-                aiPrompt = prefillName
-                if focused == nil { focused = .ai }
+                if focused == nil { focused = .name }
             } else if focused == nil {
                 focused = .name
             }

@@ -1062,7 +1062,8 @@ struct RecipeDetailView: View {
 
             ForEach(recipe.requiredUtensils ?? [], id: \.self) { utensil in
                 let isAvailable = utensilIsAvailable(utensil)
-                let iconName = utensilItems.first(where: { sameName($0.name, utensil) })?.iconName
+                let matchingUtensil = utensilItems.first(where: { sameName($0.name, utensil) })
+                let iconName = matchingUtensil?.resolvedIconName()
                     ?? ItemDatabase.shared.exactMatch(for: utensil)?.nomeDoArquivo
 
                 HStack(spacing: 12) {
