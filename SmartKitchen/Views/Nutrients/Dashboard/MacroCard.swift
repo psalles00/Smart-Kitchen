@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Card compacto de nutriente no padrão dos cards visuais da Home:
-/// superfície neutra, ícone em círculo com progresso e texto abaixo.
+/// superfície neutra, borda de progresso, ícone e texto abaixo.
 struct MacroCard: View {
     let label: String
     let current: Double
@@ -27,7 +27,8 @@ struct MacroCard: View {
             NutrientGlassCardSurface(
                 cornerRadius: 16,
                 accentColor: tint,
-                isColored: true
+                isColored: true,
+                progress: progress
             )
             .padding(.top, 20)
 
@@ -62,25 +63,13 @@ struct MacroCard: View {
 
     private var progressIcon: some View {
         ZStack {
-            Circle()
-                .fill(appPrimaryBackground)
-
-            Circle()
-                .stroke(tint.opacity(colorScheme == .dark ? 0.24 : 0.18), lineWidth: 5)
-
-            Circle()
-                .trim(from: 0, to: progress)
-                .stroke(tint, style: StrokeStyle(lineWidth: 5, lineCap: .round))
-                .rotationEffect(.degrees(-90))
-
             IconImage(
                 name: label,
                 iconFileName: iconFileName,
                 fallbackSymbol: fallbackSymbol,
-                size: 34,
+                size: 74,
                 showBalloon: false
             )
-            .padding(6)
         }
         .frame(width: 58, height: 58)
         .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.16 : 0.10), radius: 6, x: 0, y: 5)
@@ -99,6 +88,7 @@ struct NutrientGlassCardSurface: View {
     let cornerRadius: CGFloat
     let accentColor: Color
     let isColored: Bool
+    var progress: Double? = nil
 
     @Environment(\.colorScheme) private var colorScheme
 
@@ -113,6 +103,12 @@ struct NutrientGlassCardSurface: View {
                 cornerRadius: cornerRadius,
                 accentColor: accentColor,
                 isColored: isColored
+            )
+            .nutrientGlassProgressBorder(
+                cornerRadius: cornerRadius,
+                accentColor: accentColor,
+                isColored: isColored,
+                progress: progress
             )
             .shadow(color: .black.opacity(colorScheme == .dark ? 0.0 : 0.03), radius: 4, x: 0, y: 4)
     }
@@ -231,9 +227,190 @@ private struct NutrientGlassReflectionBorderModifier: ViewModifier {
     }
 }
 
+private struct NutrientGlassProgressBorderModifier: ViewModifier {
+    let cornerRadius: CGFloat
+    let accentColor: Color
+    let isColored: Bool
+    let progress: Double?
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    func body(content: Content) -> some View {
+        content
+            .overlay {
+                if let progress {
+                    TopCenterRoundedRectProgressShape(progress: progress, cornerRadius: cornerRadius)
+                        .stroke(
+                            progressColor.opacity(colorScheme == .dark ? 0.34 : 0.24),
+                            style: StrokeStyle(
+                                lineWidth: colorScheme == .dark ? 8.0 : 7.0,
+                                lineCap: .round,
+                                lineJoin: .round
+                            )
+                        )
+                        .blur(radius: colorScheme == .dark ? 5.0 : 4.0)
+                        .blendMode(colorScheme == .dark ? .screen : .plusLighter)
+                        .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous).inset(by: 1.35))
+                        .padding(1.35)
+                        .allowsHitTesting(false)
+
+                    TopCenterRoundedRectProgressShape(progress: progress, cornerRadius: cornerRadius)
+                        .stroke(
+                            progressColor,
+                            style: StrokeStyle(
+                                lineWidth: colorScheme == .dark ? 2.4 : 2.2,
+                                lineCap: .round,
+                                lineJoin: .round
+                            )
+                        )
+                        .padding(1.35)
+                        .shadow(color: progressColor.opacity(colorScheme == .dark ? 0.28 : 0.18), radius: 3, x: 0, y: 1)
+                        .allowsHitTesting(false)
+                }
+            }
+    }
+
+    private var progressColor: Color {
+        accentColor.opacity(isColored ? (colorScheme == .dark ? 0.72 : 0.50) : (colorScheme == .dark ? 0.76 : 0.62))
+    }
+}
+
+private struct TopCenterRoundedRectProgressShape: Shape {
+    var progress: Double
+    let cornerRadius: CGFloat
+
+    var animatableData: Double {
+        get { progress }
+        set { progress = newValue }
+    }
+
+    func path(in rect: CGRect) -> Path {
+        let clampedProgress = min(max(progress, 0), 1)
+        guard clampedProgress > 0 else { return Path() }
+
+        let radius = min(cornerRadius, min(rect.width, rect.height) / 2)
+        let points = perimeterPoints(in: rect, radius: radius)
+        guard points.count > 1 else { return Path() }
+
+        let segmentLengths = zip(points, points.dropFirst()).map { distance(from: $0, to: $1) }
+        let totalLength = segmentLengths.reduce(0, +)
+        let targetLength = totalLength * clampedProgress
+
+        var path = Path()
+        path.move(to: points[0])
+
+        var consumedLength: CGFloat = 0
+        for index in segmentLengths.indices {
+            let segmentLength = segmentLengths[index]
+            let nextConsumedLength = consumedLength + segmentLength
+
+            if nextConsumedLength <= targetLength {
+                path.addLine(to: points[index + 1])
+                consumedLength = nextConsumedLength
+                continue
+            }
+
+            let remainingLength = max(targetLength - consumedLength, 0)
+            if segmentLength > 0 {
+                let t = remainingLength / segmentLength
+                path.addLine(to: interpolate(from: points[index], to: points[index + 1], progress: t))
+            }
+            break
+        }
+
+        return path
+    }
+
+    private func perimeterPoints(in rect: CGRect, radius: CGFloat) -> [CGPoint] {
+        let minX = rect.minX
+        let maxX = rect.maxX
+        let minY = rect.minY
+        let maxY = rect.maxY
+        let midX = rect.midX
+        let samplesPerCorner = 12
+
+        var points: [CGPoint] = [CGPoint(x: midX, y: minY)]
+
+        points.append(CGPoint(x: maxX - radius, y: minY))
+        appendArcPoints(
+            to: &points,
+            center: CGPoint(x: maxX - radius, y: minY + radius),
+            radius: radius,
+            startAngle: -.pi / 2,
+            endAngle: 0,
+            samples: samplesPerCorner
+        )
+        points.append(CGPoint(x: maxX, y: maxY - radius))
+        appendArcPoints(
+            to: &points,
+            center: CGPoint(x: maxX - radius, y: maxY - radius),
+            radius: radius,
+            startAngle: 0,
+            endAngle: .pi / 2,
+            samples: samplesPerCorner
+        )
+        points.append(CGPoint(x: minX + radius, y: maxY))
+        appendArcPoints(
+            to: &points,
+            center: CGPoint(x: minX + radius, y: maxY - radius),
+            radius: radius,
+            startAngle: .pi / 2,
+            endAngle: .pi,
+            samples: samplesPerCorner
+        )
+        points.append(CGPoint(x: minX, y: minY + radius))
+        appendArcPoints(
+            to: &points,
+            center: CGPoint(x: minX + radius, y: minY + radius),
+            radius: radius,
+            startAngle: .pi,
+            endAngle: .pi * 1.5,
+            samples: samplesPerCorner
+        )
+        points.append(CGPoint(x: midX, y: minY))
+
+        return points
+    }
+
+    private func appendArcPoints(
+        to points: inout [CGPoint],
+        center: CGPoint,
+        radius: CGFloat,
+        startAngle: CGFloat,
+        endAngle: CGFloat,
+        samples: Int
+    ) {
+        guard samples > 0 else { return }
+
+        for step in 1...samples {
+            let t = CGFloat(step) / CGFloat(samples)
+            let angle = startAngle + ((endAngle - startAngle) * t)
+            points.append(CGPoint(
+                x: center.x + cos(angle) * radius,
+                y: center.y + sin(angle) * radius
+            ))
+        }
+    }
+
+    private func distance(from start: CGPoint, to end: CGPoint) -> CGFloat {
+        hypot(end.x - start.x, end.y - start.y)
+    }
+
+    private func interpolate(from start: CGPoint, to end: CGPoint, progress: CGFloat) -> CGPoint {
+        CGPoint(
+            x: start.x + ((end.x - start.x) * progress),
+            y: start.y + ((end.y - start.y) * progress)
+        )
+    }
+}
+
 private extension View {
     func nutrientGlassReflectionBorder(cornerRadius: CGFloat, accentColor: Color, isColored: Bool) -> some View {
         modifier(NutrientGlassReflectionBorderModifier(cornerRadius: cornerRadius, accentColor: accentColor, isColored: isColored))
+    }
+
+    func nutrientGlassProgressBorder(cornerRadius: CGFloat, accentColor: Color, isColored: Bool, progress: Double?) -> some View {
+        modifier(NutrientGlassProgressBorderModifier(cornerRadius: cornerRadius, accentColor: accentColor, isColored: isColored, progress: progress))
     }
 }
 

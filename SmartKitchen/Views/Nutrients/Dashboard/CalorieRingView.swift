@@ -6,11 +6,8 @@ struct CalorieRingView: View {
     let consumed: Int
     let goal: Int
 
-    var remaining: Int { max(goal - consumed, 0) }
-    var rawRemaining: Int { goal - consumed }
-
     @Environment(\.colorScheme) private var colorScheme
-    @State private var displayedRemaining = 0
+    @State private var displayedCalorieGoal = 0
 
     private var titleColor: Color {
         #if canImport(UIKit)
@@ -42,14 +39,15 @@ struct CalorieRingView: View {
             NutrientGlassCardSurface(
                 cornerRadius: 26,
                 accentColor: Color.primary.opacity(colorScheme == .dark ? 0.58 : 0.40),
-                isColored: false
+                isColored: false,
+                progress: progress
             )
-            .padding(.top, 40)
+            .padding(.top, 34)
 
             VStack(spacing: -8) {
-                Spacer(minLength: 100)
+                Spacer(minLength: 74)
 
-                Text("\(displayedRemaining)")
+                Text("\(displayedCalorieGoal)")
                     .font(titleFont)
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
@@ -65,68 +63,51 @@ struct CalorieRingView: View {
             .padding(.horizontal, 18)
 
             calorieTrackerIcon
-                .frame(width: 104, height: 104)
-                .offset(y: -2)
+                .frame(width: 58, height: 58)
+                .offset(y: 10)
                 .allowsHitTesting(false)
         }
         .frame(maxWidth: .infinity)
-        .frame(minHeight: 236)
+        .frame(minHeight: 206)
         .contentShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
         .onAppear {
-            displayedRemaining = 0
+            displayedCalorieGoal = 0
 
             DispatchQueue.main.async {
                 withAnimation(.snappy(duration: 0.25)) {
-                    displayedRemaining = rawRemaining
+                    displayedCalorieGoal = goal
                 }
             }
         }
-        .onChange(of: rawRemaining) { _, newValue in
+        .onChange(of: goal) { _, newValue in
             withAnimation(.snappy(duration: 0.25)) {
-                displayedRemaining = newValue
+                displayedCalorieGoal = newValue
             }
         }
     }
 
     private var calorieTrackerIcon: some View {
         ZStack {
-            Circle()
-                .fill(appPrimaryBackground)
-
-            Circle()
-                .stroke(accentColor.opacity(colorScheme == .dark ? 0.22 : 0.16), lineWidth: 8)
-
-            Circle()
-                .trim(from: 0, to: progress)
-                .stroke(
-                    accentColor,
-                    style: StrokeStyle(lineWidth: 8, lineCap: .round)
-                )
-                .rotationEffect(.degrees(-90))
-
             Image("nutrientes")
                 .resizable()
                 .scaledToFit()
-                .padding(21)
+                .frame(width: 82, height: 82)
         }
-        .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.18 : 0.10), radius: 8, x: 0, y: 6)
+        .frame(width: 58, height: 58)
+        .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.14 : 0.08), radius: 6, x: 0, y: 5)
     }
 
     @ViewBuilder
     private var remainingCaption: some View {
-        if displayedRemaining < 0 {
-            Text("kcal extras consumidas")
+        let format = String(localized: "de **%lld kcal** restantes")
+        let localizedText = String.localizedStringWithFormat(format, displayedCalorieGoal)
+        if let attributed = try? AttributedString(
+            markdown: localizedText,
+            options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)
+        ) {
+            Text(attributed)
         } else {
-            let format = String(localized: "de **%lld kcal** restantes")
-            let localizedText = String.localizedStringWithFormat(format, displayedRemaining)
-            if let attributed = try? AttributedString(
-                markdown: localizedText,
-                options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)
-            ) {
-                Text(attributed)
-            } else {
-                Text(localizedText)
-            }
+            Text(localizedText)
         }
     }
 }
