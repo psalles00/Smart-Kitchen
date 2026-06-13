@@ -138,6 +138,7 @@ struct SmartKitchenApp: App {
     /// the entire entitlement check (and the implicit JIT setup that
     /// follows) which contributes to the post-resume jank.
     @State private var lastEntitlementRefresh: Date = .distantPast
+    @State private var pendingSceneLeaveSaveTask: Task<Void, Never>?
 
     init() {
         // Must be called after all stored properties are initialized
@@ -299,7 +300,9 @@ struct SmartKitchenApp: App {
                     // main-thread hangs during the `active -> inactive ->
                     // background` sequence. Running it async lets UIKit finish
                     // the transition before we pay that cost.
-                    if newValue == .inactive || newValue == .background {
+                    let isLeavingForeground = oldValue != .background
+                        && (newValue == .inactive || newValue == .background)
+                    if isLeavingForeground {
                         let ctx = cloudSync.container.mainContext
                         let hasChanges = ctx.hasChanges
                         let inserted = ctx.insertedModelsArray.count
@@ -310,13 +313,11 @@ struct SmartKitchenApp: App {
                             "scene-leave save inspection",
                             metadata: "hasChanges=\(hasChanges) inserted=\(inserted) changed=\(changed) deleted=\(deleted)"
                         )
-                        // DIAGNOSTIC: temporarily skip save to confirm whether
-                        // the hang on background transition is caused by the
-                        // save itself. If the hang disappears, the save is
-                        // the culprit and we need to move it to a background
-                        // context.
                         if hasChanges {
-                            PerformanceLogger.event(.cloudSync, "scene-leave save SKIPPED (diagnostic)")
+                            scheduleSceneLeaveSave(
+                                reason: "\(oldValue)->\(newValue)",
+                                delay: newValue == .background ? .milliseconds(30) : .milliseconds(160)
+                            )
                         }
                     }
                 }
@@ -348,6 +349,38 @@ struct SmartKitchenApp: App {
             height: Self.macSettingsWindowSize.height
         )
         #endif
+    }
+
+    @MainActor
+    private func scheduleSceneLeaveSave(reason: String, delay: Duration) {
+        pendingSceneLeaveSaveTask?.cancel()
+        pendingSceneLeaveSaveTask = Task { @MainActor in
+            try? await Task.sleep(for: delay)
+            guard !Task.isCancelled else { return }
+            defer { pendingSceneLeaveSaveTask = nil }
+
+            let ctx = cloudSync.container.mainContext
+            guard ctx.hasChanges else {
+                PerformanceLogger.event(
+                    .cloudSync,
+                    "scene-leave save skipped (no pending changes)",
+                    metadata: "reason=\(reason)"
+                )
+                return
+            }
+
+            do {
+                try PerformanceLogger.measure(.cloudSync, "scene-leave save", metadata: "reason=\(reason)") {
+                    try ctx.save()
+                }
+            } catch {
+                PerformanceLogger.error(
+                    .cloudSync,
+                    "scene-leave save failed",
+                    metadata: "reason=\(reason) error=\(error.localizedDescription)"
+                )
+            }
+        }
     }
 
     @MainActor

@@ -75,9 +75,6 @@ struct ContentView: View {
     /// bar only while the user is actively typing. Driven by UIKit keyboard
     /// notifications on iOS.
     @State private var isKeyboardVisible: Bool = false
-    @State private var suspendOffscreenTabs = false
-    @State private var pendingOffscreenTabsResumeWork: DispatchWorkItem?
-    @State private var didScheduleInitialOffscreenTabSuspension = false
     @State private var stagedTabPrewarmTask: Task<Void, Never>?
     @State private var didScheduleInitialTabPrewarm = false
     @State private var nextTabSwitchTraceID = 0
@@ -129,8 +126,7 @@ struct ContentView: View {
     /// fullscreen cover until the user finishes (or chooses the free plan).
     @State private var showOnboarding: Bool = false
     @State private var settingsSnapshot = ContentSettingsSnapshot()
-
-    private let offscreenTabSuspensionDuration: TimeInterval = 8.0
+    @State private var pendingForegroundHomeRefreshWork: DispatchWorkItem?
 
     #if os(macOS)
     @State private var selectedSidebar: SidebarItem? = .home
@@ -587,7 +583,6 @@ struct ContentView: View {
                         .allowsHitTesting(false)
                 }
                 .environment(\.scrollToTopTrigger, scrollToTopTrigger)
-                .environment(\.suspendActiveTabDataSubscriptions, suspendOffscreenTabs)
                 .environment(\.presentAppSettings) {
                     showSettings = true
                 }
@@ -869,11 +864,6 @@ struct ContentView: View {
             persistentAssistantBar
         }
         #if os(iOS)
-        .task {
-            guard !didScheduleInitialOffscreenTabSuspension else { return }
-            didScheduleInitialOffscreenTabSuspension = true
-            suspendOffscreenTabsTemporarily(reason: "initialLaunch")
-        }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
             isKeyboardVisible = true
         }
@@ -881,8 +871,7 @@ struct ContentView: View {
             isKeyboardVisible = false
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
-            suspendOffscreenTabsTemporarily(reason: "willEnterForeground")
-            NotificationCenter.default.post(name: .homeDataShouldRefresh, object: nil)
+            scheduleForegroundHomeRefreshIfNeeded()
         }
         #endif
         .onChange(of: searchBarState.isVisible) { _, newValue in
@@ -913,31 +902,24 @@ struct ContentView: View {
         mountedTabs.contains(tab) || selectedTab == tab
     }
 
-    private func suspendOffscreenTabsTemporarily(reason: String) {
-        pendingOffscreenTabsResumeWork?.cancel()
+    private func scheduleForegroundHomeRefreshIfNeeded() {
+        pendingForegroundHomeRefreshWork?.cancel()
 
-        if !suspendOffscreenTabs {
-            suspendOffscreenTabs = true
+        guard selectedTab == .assistant else {
             PerformanceLogger.event(
                 .scenePhase,
-                "offscreen tab suspension enabled",
-                metadata: "reason=\(reason), durationMs=\(Int(offscreenTabSuspensionDuration * 1_000.0))"
+                "foreground Home refresh skipped",
+                metadata: "selectedTab=\(selectedTab.rawValue)"
             )
-        } else {
-            PerformanceLogger.event(
-                .scenePhase,
-                "offscreen tab suspension extended",
-                metadata: "reason=\(reason), durationMs=\(Int(offscreenTabSuspensionDuration * 1_000.0))"
-            )
+            return
         }
 
         let workItem = DispatchWorkItem {
-            suspendOffscreenTabs = false
-            pendingOffscreenTabsResumeWork = nil
-            PerformanceLogger.event(.scenePhase, "offscreen tab suspension ended")
+            pendingForegroundHomeRefreshWork = nil
+            NotificationCenter.default.post(name: .homeDataShouldRefresh, object: nil)
         }
-        pendingOffscreenTabsResumeWork = workItem
-        DispatchQueue.main.asyncAfter(deadline: .now() + offscreenTabSuspensionDuration, execute: workItem)
+        pendingForegroundHomeRefreshWork = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.65, execute: workItem)
     }
 
     private var persistentAssistantBar: some View {
@@ -2724,9 +2706,6 @@ private struct HomeView: View {
         }
         .onChange(of: activeAppTab) { _, newValue in
             guard newValue == .assistant else { return }
-            refreshHomeFromCurrentInputs(logEvent: true)
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .homeDataShouldRefresh)) { _ in
             refreshHomeFromCurrentInputs(logEvent: true)
         }
     }

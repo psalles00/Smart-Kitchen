@@ -99,7 +99,7 @@ struct NutritionDashboardView: View {
                         .padding(.horizontal, 12)
 
                         Button(action: onOpenProgress) {
-                            VStack(spacing: 34) {
+                            VStack(spacing: 16) {
                                 CalorieRingView(consumed: caloriesConsumed, goal: profile.effectiveCalories)
                                     .padding(.top, 0)
 
@@ -180,7 +180,7 @@ struct NutritionDashboardView: View {
                     .tag(2)
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
-            .frame(height: 86)
+            .frame(height: 118)
 
             // Indicador customizado para garantir aparência neutra.
             HStack(spacing: 6) {
@@ -201,9 +201,30 @@ struct NutritionDashboardView: View {
     @ViewBuilder
     private var macroPageMain: some View {
         HStack(spacing: 10) {
-            MacroCard(label: String(localized: "Proteína"), current: proteinConsumed, goal: profile.effectiveProteinG)
-            MacroCard(label: String(localized: "Carbos"), current: carbsConsumed, goal: profile.effectiveCarbsG)
-            MacroCard(label: String(localized: "Gordura"), current: fatConsumed, goal: profile.effectiveFatG)
+            MacroCard(
+                label: String(localized: "Proteína"),
+                current: Double(proteinConsumed),
+                goal: Double(profile.effectiveProteinG),
+                unit: "g",
+                systemImage: "bolt.fill",
+                tint: Color(red: 0.91, green: 0.37, blue: 0.31)
+            )
+            MacroCard(
+                label: String(localized: "Carbos"),
+                current: Double(carbsConsumed),
+                goal: Double(profile.effectiveCarbsG),
+                unit: "g",
+                systemImage: "leaf.fill",
+                tint: Color(red: 0.34, green: 0.68, blue: 0.36)
+            )
+            MacroCard(
+                label: String(localized: "Gordura"),
+                current: Double(fatConsumed),
+                goal: Double(profile.effectiveFatG),
+                unit: "g",
+                systemImage: "drop.fill",
+                tint: Color(red: 0.95, green: 0.63, blue: 0.22)
+            )
         }
     }
 
@@ -213,18 +234,60 @@ struct NutritionDashboardView: View {
     @ViewBuilder
     private var macroPageMicros1: some View {
         HStack(spacing: 10) {
-            MacroCard(label: String(localized: "Fibra"), current: fiberConsumed, goal: 25)
-            MacroCard(label: String(localized: "Açúcar"), current: sugarConsumed, goal: 50)
-            MacroCard(label: String(localized: "Sódio"), current: sodiumConsumed, goal: 2300)
+            MacroCard(
+                label: String(localized: "Fibra"),
+                current: fiberConsumed,
+                goal: 25,
+                unit: "g",
+                systemImage: "leaf.fill",
+                tint: Color(red: 0.24, green: 0.58, blue: 0.40)
+            )
+            MacroCard(
+                label: String(localized: "Açúcar"),
+                current: sugarConsumed,
+                goal: 50,
+                unit: "g",
+                systemImage: "cube.fill",
+                tint: Color(red: 0.63, green: 0.48, blue: 0.86)
+            )
+            MacroCard(
+                label: String(localized: "Sódio"),
+                current: sodiumConsumed,
+                goal: 2300,
+                unit: "mg",
+                systemImage: "sparkles",
+                tint: Color(red: 0.36, green: 0.58, blue: 0.86)
+            )
         }
     }
 
     @ViewBuilder
     private var macroPageMicros2: some View {
         HStack(spacing: 10) {
-            MacroCard(label: String(localized: "Saturada"), current: saturatedFatConsumed, goal: 20)
-            MacroCard(label: String(localized: "Colesterol"), current: cholesterolConsumed, goal: 300)
-            MacroCard(label: String(localized: "Potássio"), current: potassiumConsumed, goal: 3500)
+            MacroCard(
+                label: String(localized: "Saturada"),
+                current: saturatedFatConsumed,
+                goal: 20,
+                unit: "g",
+                systemImage: "drop.fill",
+                tint: Color(red: 0.86, green: 0.48, blue: 0.26)
+            )
+            MacroCard(
+                label: String(localized: "Colesterol"),
+                current: cholesterolConsumed,
+                goal: 300,
+                unit: "mg",
+                systemImage: "heart.fill",
+                tint: Color(red: 0.86, green: 0.30, blue: 0.46)
+            )
+            MacroCard(
+                label: String(localized: "Potássio"),
+                current: potassiumConsumed,
+                goal: 3500,
+                unit: "mg",
+                systemImage: "bolt.fill",
+                tint: Color(red: 0.73, green: 0.58, blue: 0.24)
+            )
         }
     }
 

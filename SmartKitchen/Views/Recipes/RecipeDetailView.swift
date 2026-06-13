@@ -300,8 +300,15 @@ struct RecipeDetailView: View {
                     .padding(.top, -contentOverlap)
                     .zIndex(1)
             }
+            .background {
+                ScrollViewInsetAdjustmentDisabler()
+            }
         }
         .coordinateSpace(name: "recipe-detail-scroll")
+        #if os(iOS)
+        .contentMargins(.top, 0, for: .scrollContent)
+        .scrollClipDisabled()
+        #endif
         .onAppear {
             PerformanceLogger.event(
                 .recipes,
@@ -431,11 +438,13 @@ struct RecipeDetailView: View {
     @ViewBuilder
     private var heroImage: some View {
         GeometryReader { proxy in
-            let minY = proxy.frame(in: .named("recipe-detail-scroll")).minY
-            let stretch = max(minY, 0)
+            let topInset = max(proxy.safeAreaInsets.top, Self.deviceTopSafeAreaInset())
 
             ZStack(alignment: .bottomLeading) {
-                heroBackgroundImage(in: proxy, minY: minY)
+                heroBackgroundImage(
+                    pageWidth: proxy.size.width,
+                    topInset: topInset
+                )
                     .contentShape(Rectangle())
                     .onTapGesture {
                         openPreferredPreparationMedia()
@@ -446,16 +455,9 @@ struct RecipeDetailView: View {
                         }
                     }
 
-                LinearGradient(
-                    colors: [
-                        .clear,
-                        .clear,
-                        Color.black.opacity(0.15),
-                        Color.black.opacity(0.45),
-                        Color.black.opacity(0.92)
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
+                heroTextBackdrop(
+                    pageWidth: proxy.size.width,
+                    topInset: topInset
                 )
 
                 VStack(alignment: .leading, spacing: 14) {
@@ -486,9 +488,7 @@ struct RecipeDetailView: View {
                 .padding(.horizontal, 20)
                 .padding(.bottom, 72)
             }
-            .frame(width: proxy.size.width, height: heroHeight + stretch)
-            .offset(y: stretch > 0 ? -stretch : 0)
-            .clipped()
+            .frame(width: proxy.size.width, height: heroHeight, alignment: .bottomLeading)
         }
         .frame(height: heroHeight)
     }
@@ -522,24 +522,69 @@ struct RecipeDetailView: View {
         }
     }
 
-    @ViewBuilder
-    private func heroBackgroundImage(in proxy: GeometryProxy, minY: CGFloat) -> some View {
-        let stretch = max(minY, 0)
-        let upwardScroll = max(-minY, 0)
-        let parallaxOffset = minY > 0 ? 0 : upwardScroll * 0.18
-        let parallaxHeight = heroHeight + stretch + (upwardScroll * 0.22)
-        let placeholderSources = sortedIngredients
-            .prefix(10)
-            .map(RecipePlaceholderIconSource.init)
+    private func heroTextBackdrop(
+        pageWidth: CGFloat,
+        topInset: CGFloat
+    ) -> some View {
+        GeometryReader { proxy in
+            let minY = proxy.frame(in: .named("recipe-detail-scroll")).minY
+            let pullDown = max(minY, 0)
+            let baseHeight = proxy.size.height + topInset
+            let stretchedHeight = baseHeight + pullDown
 
-        Group {
-            RecipeThumbnail(recipe: recipe, maxPixel: 1600) {
-                RecipeImagePlaceholderCompact(iconSources: placeholderSources)
-            }
+            LinearGradient(
+                colors: [
+                    .clear,
+                    .clear,
+                    Color.black.opacity(0.15),
+                    Color.black.opacity(0.45),
+                    Color.black.opacity(0.92)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .frame(width: pageWidth, height: stretchedHeight, alignment: .bottom)
+            .offset(y: -(pullDown + topInset))
         }
-        .frame(width: proxy.size.width, height: parallaxHeight)
-        .offset(y: parallaxOffset)
-        .clipped()
+        .frame(width: pageWidth, height: heroHeight)
+        .allowsHitTesting(false)
+    }
+
+    @ViewBuilder
+    private func heroBackgroundImage(
+        pageWidth: CGFloat,
+        topInset: CGFloat
+    ) -> some View {
+        GeometryReader { proxy in
+            let minY = proxy.frame(in: .named("recipe-detail-scroll")).minY
+            let pullDown = max(minY, 0)
+            let baseHeight = proxy.size.height + topInset
+            let stretchedHeight = baseHeight + pullDown
+            let placeholderSources = sortedIngredients
+                .prefix(10)
+                .map(RecipePlaceholderIconSource.init)
+
+            Group {
+                RecipeThumbnail(recipe: recipe, maxPixel: 1600) {
+                    RecipeImagePlaceholderCompact(iconSources: placeholderSources)
+                }
+            }
+            .frame(width: pageWidth, height: stretchedHeight, alignment: .bottom)
+            .offset(y: -(pullDown + topInset))
+        }
+        .frame(width: pageWidth, height: heroHeight)
+    }
+
+    private static func deviceTopSafeAreaInset() -> CGFloat {
+        #if os(iOS)
+        let inset = UIApplication.shared.connectedScenes
+            .compactMap { ($0 as? UIWindowScene)?.windows.first(where: \.isKeyWindow) }
+            .first?
+            .safeAreaInsets.top
+        return inset ?? 44
+        #else
+        return 0
+        #endif
     }
 
     private func openPreparationMedia(_ media: RecipePreparationMedia) {
@@ -2464,6 +2509,111 @@ private struct RecipeVideoPlayerSurface: NSViewRepresentable {
         nsView.player = player
         nsView.controlsStyle = .none
         nsView.videoGravity = .resizeAspectFill
+    }
+}
+#endif
+
+#if os(iOS)
+private struct ScrollViewInsetAdjustmentDisabler: UIViewRepresentable {
+    func makeUIView(context: Context) -> InsetDisablerView {
+        InsetDisablerView(frame: .zero)
+    }
+
+    func updateUIView(_ view: InsetDisablerView, context: Context) {
+        view.applyToEnclosingScrollView()
+    }
+
+    final class InsetDisablerView: UIView {
+        private weak var targetScrollView: UIScrollView?
+
+        override init(frame: CGRect) {
+            super.init(frame: frame)
+            isUserInteractionEnabled = false
+            backgroundColor = .clear
+        }
+
+        required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            applyToEnclosingScrollView()
+        }
+
+        override func didMoveToSuperview() {
+            super.didMoveToSuperview()
+            applyToEnclosingScrollView()
+        }
+
+        override func layoutSubviews() {
+            super.layoutSubviews()
+            applyToEnclosingScrollView()
+        }
+
+        func applyToEnclosingScrollView() {
+            if let targetScrollView,
+               targetScrollView.window != nil,
+               isManagedVerticalScrollView(targetScrollView) {
+                applyAdjustment(to: targetScrollView)
+                return
+            }
+
+            var candidate: UIView? = superview
+            while let view = candidate {
+                if let scrollView = view as? UIScrollView,
+                   isManagedVerticalScrollView(scrollView) {
+                    targetScrollView = scrollView
+                    applyAdjustment(to: scrollView)
+                    return
+                }
+                candidate = view.superview
+            }
+        }
+
+        private func isManagedVerticalScrollView(_ scrollView: UIScrollView) -> Bool {
+            let verticalOverflow = scrollView.contentSize.height - scrollView.bounds.height
+            let horizontalOverflow = scrollView.contentSize.width - scrollView.bounds.width
+
+            if scrollView.isPagingEnabled {
+                return false
+            }
+
+            if horizontalOverflow > 6,
+               horizontalOverflow > max(verticalOverflow, 0) * 1.2 {
+                return false
+            }
+
+            if scrollView.alwaysBounceVertical {
+                return true
+            }
+
+            if scrollView.showsVerticalScrollIndicator,
+               !scrollView.showsHorizontalScrollIndicator {
+                return true
+            }
+
+            return verticalOverflow > 6
+        }
+
+        private func applyAdjustment(to scrollView: UIScrollView) {
+            if scrollView.contentInsetAdjustmentBehavior != .never {
+                scrollView.contentInsetAdjustmentBehavior = .never
+            }
+            if scrollView.automaticallyAdjustsScrollIndicatorInsets {
+                scrollView.automaticallyAdjustsScrollIndicatorInsets = false
+            }
+            if scrollView.contentInset.top != 0 {
+                scrollView.contentInset.top = 0
+            }
+            if scrollView.verticalScrollIndicatorInsets.top != 0 {
+                scrollView.verticalScrollIndicatorInsets.top = 0
+            }
+        }
+    }
+}
+#else
+private struct ScrollViewInsetAdjustmentDisabler: View {
+    var body: some View {
+        Color.clear
     }
 }
 #endif

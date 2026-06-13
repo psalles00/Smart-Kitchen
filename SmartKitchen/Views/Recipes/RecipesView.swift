@@ -1057,6 +1057,8 @@ private struct RecipesLoadedView: View {
                     }
                 }
             }
+
+            recipesModeSwitchButton
         }
         .padding(.horizontal, 16)
         .padding(.top, 0)
@@ -1102,6 +1104,8 @@ private struct RecipesLoadedView: View {
                     recipeRows(group.recipes)
                 }
             }
+
+            recipesModeSwitchButton
         }
         .padding(.horizontal, 16)
         .padding(.top, 0)
@@ -1320,6 +1324,10 @@ private struct RecipesLoadedView: View {
     private var cadernosContent: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 18) {
+                notebookManagerButton
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
+
                 Group {
                     if isNotebookLoading {
                         PageSkeletonNotebooks(columns: 2, itemCount: 8)
@@ -1350,34 +1358,75 @@ private struct RecipesLoadedView: View {
                         .padding(.horizontal, 16)
                     }
                 }
-                .padding(.top, 8)
 
-                Button {
-                    showNotebookManager = true
-                } label: {
-                    HStack(spacing: 10) {
-                        Image(systemName: "slider.horizontal.3")
-                            .font(.footnote.weight(.semibold))
-                        Text("Gerenciar cadernos")
-                            .font(.footnote.weight(.semibold))
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .font(.caption2.weight(.bold))
-                    }
-                    .foregroundStyle(Color.white.opacity(0.94))
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 13)
-                    .background(
-                        RoundedRectangle(cornerRadius: 20, style: .continuous)
-                            .fill(Color(red: 44 / 255, green: 44 / 255, blue: 46 / 255))
-                    )
-                }
-                .buttonStyle(.plain)
+                notebookModeSwitchButton
                 .padding(.horizontal, 16)
                 .padding(.bottom, 28)
             }
         }
         .onScrollOffsetChange(perform: updateInlineTitle)
+    }
+
+    private var notebookManagerButton: some View {
+        Button {
+            showNotebookManager = true
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: "slider.horizontal.3")
+                    .font(.footnote.weight(.semibold))
+                Text("Gerenciar cadernos")
+                    .font(.footnote.weight(.semibold))
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.caption2.weight(.bold))
+            }
+            .foregroundStyle(Color.white.opacity(0.94))
+            .padding(.horizontal, 16)
+            .padding(.vertical, 13)
+            .background(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(Color(red: 44 / 255, green: 44 / 255, blue: 46 / 255))
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var recipesModeSwitchButton: some View {
+        modeSwitchButton(title: "Ir para os cadernos", systemImage: "books.vertical") {
+            toggleNotebookPage()
+        }
+    }
+
+    private var notebookModeSwitchButton: some View {
+        modeSwitchButton(title: "Ir para as receitas", systemImage: "book.closed") {
+            toggleNotebookPage()
+        }
+    }
+
+    private func modeSwitchButton(title: LocalizedStringKey, systemImage: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 10) {
+                Image(systemName: systemImage)
+                    .font(.footnote.weight(.semibold))
+                Text(title)
+                    .font(.footnote.weight(.semibold))
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.caption2.weight(.bold))
+            }
+            .foregroundStyle(Color.primary.opacity(0.68))
+            .padding(.horizontal, 16)
+            .padding(.vertical, 13)
+            .background(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(neutralSurfaceColor.opacity(0.72))
+            )
+            .overlay {
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .stroke(Color.primary.opacity(0.08), lineWidth: 1)
+            }
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - Actions
