@@ -25,12 +25,12 @@ struct DataSeeder {
     ]
 
     static let recipeCategoryDefinitions: [CategorySeedDefinition] = [
-        CategorySeedDefinition(name: "Café da manhã", iconName: "pancakes.png", localizedNames: ["en": "Breakfast"]),
+        CategorySeedDefinition(name: "Café da manhã", iconName: "pancake.png", localizedNames: ["en": "Breakfast"]),
         CategorySeedDefinition(name: "Almoço", iconName: "lunch-box.png", localizedNames: ["en": "Lunch"]),
-        CategorySeedDefinition(name: "Jantar", iconName: "dinner.png", localizedNames: ["en": "Dinner"]),
+        CategorySeedDefinition(name: "Jantar", iconName: "plate.png", localizedNames: ["en": "Dinner"]),
         CategorySeedDefinition(name: "Lanche", iconName: "sandwich.png", localizedNames: ["en": "Snack"]),
         CategorySeedDefinition(name: "Sobremesa", iconName: "cake.png", localizedNames: ["en": "Dessert"]),
-        CategorySeedDefinition(name: "Bebida", iconName: "smoothie.png", localizedNames: ["en": "Drink"]),
+        CategorySeedDefinition(name: "Bebida", iconName: "smoothie-bowl.png", localizedNames: ["en": "Drink"]),
         CategorySeedDefinition(name: "Outros", iconName: "recipe-card.png", localizedNames: ["en": "Other"]),
     ]
 
