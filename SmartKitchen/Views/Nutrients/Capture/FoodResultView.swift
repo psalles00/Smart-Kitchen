@@ -27,7 +27,9 @@ struct FoodResultView: View {
     private var parsedServing: Double {
         Double(servingText.replacingOccurrences(of: ",", with: ".")) ?? analysis.servingSizeGrams
     }
+    private var allowsServingAdjustment: Bool { analysis.componentCount <= 1 }
     private var scaleFactor: Double {
+        guard allowsServingAdjustment else { return 1 }
         guard analysis.servingSizeGrams > 0 else { return 1 }
         return parsedServing / analysis.servingSizeGrams
     }
@@ -52,24 +54,26 @@ struct FoodResultView: View {
                         .autocorrectionDisabled()
                 }
 
-                Section("Porção") {
-                    HStack {
-                        Text("Quantidade")
-                        Spacer()
-                        TextField("100", text: $servingText)
-                            #if os(iOS)
-                            .keyboardType(.decimalPad)
-                            #endif
-                            .multilineTextAlignment(.trailing)
-                            .frame(maxWidth: 100)
-                        Picker("", selection: $servingUnit) {
-                            ForEach(ServingUnit.allCases) { unit in
-                                Text(unit.rawValue).tag(unit)
+                if allowsServingAdjustment {
+                    Section("Porção") {
+                        HStack {
+                            Text("Quantidade")
+                            Spacer()
+                            TextField("100", text: $servingText)
+                                #if os(iOS)
+                                .keyboardType(.decimalPad)
+                                #endif
+                                .multilineTextAlignment(.trailing)
+                                .frame(maxWidth: 100)
+                            Picker("", selection: $servingUnit) {
+                                ForEach(ServingUnit.allCases) { unit in
+                                    Text(unit.rawValue).tag(unit)
+                                }
                             }
+                            .pickerStyle(.segmented)
+                            .frame(width: 88)
+                            .labelsHidden()
                         }
-                        .pickerStyle(.segmented)
-                        .frame(width: 88)
-                        .labelsHidden()
                     }
                 }
 
@@ -124,7 +128,7 @@ struct FoodResultView: View {
             .tint(PageTheme.nutrients.accentColor)
         .onAppear {
             if name.isEmpty { name = analysis.name }
-            if servingText.isEmpty {
+            if allowsServingAdjustment, servingText.isEmpty {
                 servingText = formatNumber(analysis.servingSizeGrams)
             }
             mealTypeRaw = MealType.suggestion(for: logDate).rawValue
@@ -211,7 +215,7 @@ struct FoodResultView: View {
             source: image == nil ? .textInput : .snapFood,
             timestamp: timestamp,
             emoji: analysis.emoji,
-            servingSizeGrams: parsedServing,
+            servingSizeGrams: allowsServingAdjustment ? parsedServing : analysis.servingSizeGrams,
             imageFilename: filename
         )
         // Micros

@@ -105,6 +105,31 @@ final class NutritionAITypeCoverageTests: XCTestCase {
         XCTAssertEqual(analysis.sugarG ?? -1, 37.1, accuracy: 0.1)
     }
 
+    func testCompositeBreakfastIsResolvedAsSeparateFoodsAndMarkedComposite() async throws {
+        let input = "Café com leite e açúcar; 2 fatias de pão de forma com requeijao light"
+        let parser = MockNutritionItemParser(itemsByDescription: [
+            input: NutritionItemParser.expandedItems(from: [
+                NutritionItemParser.ParsedItem(name: input, quantity: nil, unit: nil)
+            ])
+        ])
+        let service = NutritionAIService(
+            ai: MockNutritionAIClient(),
+            usda: MockUSDANutritionLookup(foodsByName: [:]),
+            exa: EmptyExaNutritionLookup(),
+            parser: parser,
+            cache: DisabledFoodCache()
+        )
+
+        let analysis = try await service.analyzeText(description: input)
+
+        XCTAssertEqual(analysis.componentCount, 5)
+        XCTAssertEqual(analysis.calories, 234)
+        XCTAssertEqual(analysis.protein, 8)
+        XCTAssertEqual(analysis.carbs, 32)
+        XCTAssertEqual(analysis.fat, 7)
+        XCTAssertEqual(analysis.servingSizeGrams, 235)
+    }
+
     func testCameraAndGalleryPhotoContractParsesFoodAnalysis() async throws {
         let ai = MockNutritionAIClient()
         ai.imageContent = """

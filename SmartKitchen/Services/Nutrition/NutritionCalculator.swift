@@ -17,7 +17,11 @@ enum NutritionCalculator {
         let per100g: Per100gNutrition
     }
 
-    static func combine(items: [Resolved], originalDescription: String) -> FoodAnalysis {
+    static func combine(
+        items: [Resolved],
+        originalDescription: String,
+        componentCount: Int? = nil
+    ) -> FoodAnalysis {
         var kcal = 0.0, protein = 0.0, carbs = 0.0, fat = 0.0, totalGrams = 0.0
         var sugar = 0.0, addedSugar = 0.0, fiber = 0.0
         var sat = 0.0, mono = 0.0, poly = 0.0
@@ -64,6 +68,7 @@ enum NutritionCalculator {
             fat:      Int(fat.rounded()),
             servingSizeGrams: totalGrams > 0 ? round1(totalGrams) : defaultPortionGrams,
             emoji: emoji,
+            componentCount: max(componentCount ?? items.count, 1),
             sugarG:              hasSugar         ? round1(sugar)       : nil,
             addedSugarG:         hasAddedSugar    ? round1(addedSugar)  : nil,
             fiberG:              hasFiber         ? round1(fiber)       : nil,
@@ -119,7 +124,7 @@ enum NutritionCalculator {
         case "colher de cha", "colher cha", "colheres de cha":
             return qty * 5
         case "fatia", "fatias":
-            return qty * 30
+            return qty * sliceGrams(for: name)
         case "concha", "conchas":
             return qty * 100
         case "copo", "copos":
@@ -145,6 +150,10 @@ enum NutritionCalculator {
         if n.contains("x tudo") || n.contains("xis tudo") { return 350 }
         if n.contains("x duplo") || n.contains("xis duplo") { return 300 }
         if n.hasPrefix("x ") || n.hasPrefix("xis ") || n.contains(" x-") { return 280 }
+        if n.contains("requeijao") || n.contains("cream cheese") { return 30 }
+        if n.contains("acucar") || n.contains("sugar") { return 5 }
+        if n.contains("leite") || n.contains("milk") { return 200 }
+        if n.contains("cafe") || n.contains("coffee") { return 100 }
         if n.contains("hamburguer") || n.contains("hamburger") || n.contains("burger") { return 220 }
         if n.contains("sanduiche") || n.contains("sandwich") { return 160 }
         if n.contains("hot dog") || n.contains("cachorro quente") { return 170 }
@@ -159,6 +168,16 @@ enum NutritionCalculator {
         if n.contains("biscoito") || n.contains("bolacha") { return 8 }
         if n.contains("queijo")   { return 30 }
         return defaultPortionGrams
+    }
+
+    private static func sliceGrams(for name: String) -> Double {
+        let n = name
+            .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: AppLocalization.current().foldingLocale)
+            .lowercased()
+        if n.contains("pizza") { return 120 }
+        if n.contains("pao de forma") || n.contains("bread") { return 25 }
+        if n.contains("queijo") || n.contains("cheese") { return 20 }
+        return 30
     }
 
     private static func round1(_ x: Double) -> Double { (x * 10).rounded() / 10 }

@@ -9,6 +9,7 @@ struct FoodAnalysis: Sendable {
     var fat: Int
     var servingSizeGrams: Double
     var emoji: String?
+    var componentCount: Int = 1
 
     // Micros (g)
     var sugarG: Double?

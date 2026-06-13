@@ -84,9 +84,13 @@ final class NutritionAIService {
             }
             return try await legacyLLMEstimate(description: trimmed)
         }
+        let adjustedParsed = Self.adjustPortionsForCompositeContext(
+            parsed,
+            originalDescription: trimmed
+        )
 
         // 2. Resolve per-100g for each item.
-        let (resolved, ids) = await resolvePer100g(for: parsed)
+        let (resolved, ids) = await resolvePer100g(for: adjustedParsed)
         guard !resolved.isEmpty else {
             if let local = LocalNutritionFallback.analyzeText(trimmed) {
                 return local
@@ -95,7 +99,11 @@ final class NutritionAIService {
         }
 
         // 3. Combine via pure Swift.
-        var combined = NutritionCalculator.combine(items: resolved, originalDescription: trimmed)
+        var combined = NutritionCalculator.combine(
+            items: resolved,
+            originalDescription: trimmed,
+            componentCount: adjustedParsed.count
+        )
         combined.cachedFoodIDs = ids.isEmpty ? nil : ids
         return combined
     }
@@ -151,6 +159,11 @@ final class NutritionAIService {
         let locale = AppLocalization.current().nutritionCacheLocaleIdentifier
 
         for (i, item) in items.enumerated() {
+            if Self.shouldUseLocalReferenceFirst(item.name),
+               let local = LocalNutritionFallback.nutrition(for: item.name) {
+                slots[i] = local
+                continue
+            }
             if Self.shouldResolveWithLLMOnly(item.name) {
                 pendingLLMOnly.append((i, item))
                 continue
@@ -247,6 +260,44 @@ final class NutritionAIService {
             }
         }
         return (resolved, ids)
+    }
+
+    private static func shouldUseLocalReferenceFirst(_ name: String) -> Bool {
+        let n = normalizedFoodName(name)
+        let exactLocalTerms = [
+            "cafe", "coffee",
+            "leite", "milk",
+            "acucar", "sugar"
+        ]
+        if exactLocalTerms.contains(n) {
+            return true
+        }
+
+        let containedLocalTerms = [
+            "pao de forma", "sandwich bread", "white bread",
+            "requeijao", "cream cheese"
+        ]
+        return containedLocalTerms.contains { term in
+            n == term || n.contains(term)
+        }
+    }
+
+    private static func adjustPortionsForCompositeContext(
+        _ items: [NutritionItemParser.ParsedItem],
+        originalDescription: String
+    ) -> [NutritionItemParser.ParsedItem] {
+        let original = normalizedFoodName(originalDescription)
+        let hasCoffeeWithMilk = original.contains("cafe") && original.contains("leite")
+
+        return items.map { item in
+            var item = item
+            let name = normalizedFoodName(item.name)
+            if hasCoffeeWithMilk, name == "leite", item.quantity == nil {
+                item.quantity = 50
+                item.unit = "ml"
+            }
+            return item
+        }
     }
 
     private static func shouldResolveWithLLMOnly(_ name: String) -> Bool {

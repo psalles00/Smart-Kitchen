@@ -22,14 +22,20 @@ enum LocalNutritionFallback {
 
     static func nutrition(for rawName: String) -> Per100gNutrition? {
         let normalized = normalize(rawName)
-        let match = entries
+        let candidates = entries
             .flatMap { entry in entry.aliases.map { (alias: $0, entry: entry) } }
+
+        let exactMatch = candidates
+            .filter { alias, _ in normalized == alias }
+            .max { lhs, rhs in lhs.alias.count < rhs.alias.count }
+
+        let fuzzyMatch = candidates
             .filter { alias, _ in
-                normalized == alias || normalized.contains(alias) || alias.contains(normalized)
+                normalized.contains(alias) || alias.contains(normalized)
             }
             .max { lhs, rhs in lhs.alias.count < rhs.alias.count }
 
-        guard let entry = match?.entry else { return nil }
+        guard let entry = (exactMatch ?? fuzzyMatch)?.entry else { return nil }
         return Per100gNutrition(
             canonicalName: FoodCache.canonicalize(entry.aliases[0]),
             locale: AppLocalization.current().nutritionCacheLocaleIdentifier,
@@ -186,7 +192,11 @@ enum LocalNutritionFallback {
         Entry(displayName: "Feijao cozido", aliases: ["feijao", "feijao carioca", "beans"], kcal: 76, protein: 4.8, carbs: 13.6, fat: 0.5, sugar: nil, addedSugar: nil, fiber: 8.5, saturatedFat: 0.1, cholesterol: 0, sodium: 2, potassium: 255, servingGrams: 100, emoji: nil, citationURL: "https://tbca.net.br/"),
         Entry(displayName: "Frango grelhado", aliases: ["frango", "peito de frango", "chicken breast", "grilled chicken"], kcal: 165, protein: 31, carbs: 0, fat: 3.6, sugar: 0, addedSugar: nil, fiber: 0, saturatedFat: 1.0, cholesterol: 85, sodium: 74, potassium: 256, servingGrams: 120, emoji: nil, citationURL: "https://fdc.nal.usda.gov/"),
         Entry(displayName: "Pao frances", aliases: ["pao frances", "pao", "bread"], kcal: 300, protein: 8, carbs: 58, fat: 3.1, sugar: 2.0, addedSugar: nil, fiber: 2.3, saturatedFat: 0.7, cholesterol: 0, sodium: 648, potassium: 115, servingGrams: 50, emoji: nil, citationURL: "https://tbca.net.br/"),
+        Entry(displayName: "Pao de forma", aliases: ["pao de forma", "pao forma", "sandwich bread", "white bread"], kcal: 253, protein: 8.0, carbs: 45.0, fat: 3.3, sugar: 5.0, addedSugar: nil, fiber: 2.7, saturatedFat: 0.8, cholesterol: 0, sodium: 491, potassium: 115, servingGrams: 25, emoji: nil, citationURL: "https://tbca.net.br/"),
         Entry(displayName: "Leite integral", aliases: ["leite integral", "leite", "whole milk", "milk"], kcal: 61, protein: 3.2, carbs: 4.8, fat: 3.3, sugar: 5.1, addedSugar: nil, fiber: 0, saturatedFat: 1.9, cholesterol: 10, sodium: 43, potassium: 150, servingGrams: 200, emoji: nil, citationURL: "https://fdc.nal.usda.gov/"),
+        Entry(displayName: "Cafe sem acucar", aliases: ["cafe", "cafe preto", "coffee", "black coffee"], kcal: 2, protein: 0.1, carbs: 0, fat: 0, sugar: 0, addedSugar: 0, fiber: 0, saturatedFat: 0, cholesterol: 0, sodium: 2, potassium: 49, servingGrams: 100, emoji: nil, citationURL: "https://fdc.nal.usda.gov/"),
+        Entry(displayName: "Acucar", aliases: ["acucar", "sugar"], kcal: 387, protein: 0, carbs: 100, fat: 0, sugar: 100, addedSugar: 100, fiber: 0, saturatedFat: 0, cholesterol: 0, sodium: 1, potassium: 2, servingGrams: 5, emoji: nil, citationURL: "https://fdc.nal.usda.gov/"),
+        Entry(displayName: "Requeijao light", aliases: ["requeijao light", "requeijao", "light cream cheese", "cream cheese light"], kcal: 185, protein: 9.0, carbs: 6.0, fat: 13.0, sugar: 3.0, addedSugar: nil, fiber: 0, saturatedFat: 8.0, cholesterol: 40, sodium: 520, potassium: nil, servingGrams: 30, emoji: nil, citationURL: "https://tbca.net.br/"),
         Entry(displayName: "Aveia", aliases: ["aveia", "oats", "oatmeal"], kcal: 389, protein: 16.9, carbs: 66.3, fat: 6.9, sugar: 1.0, addedSugar: nil, fiber: 10.6, saturatedFat: 1.2, cholesterol: 0, sodium: 2, potassium: 429, servingGrams: 40, emoji: nil, citationURL: "https://fdc.nal.usda.gov/"),
         Entry(displayName: "Coca-Cola", aliases: ["coca-cola", "coca cola", "coke"], kcal: 42, protein: 0, carbs: 10.6, fat: 0, sugar: 10.6, addedSugar: 10.6, fiber: 0, saturatedFat: 0, cholesterol: 0, sodium: 4, potassium: nil, servingGrams: 350, emoji: nil, citationURL: "https://world.openfoodfacts.org/"),
         Entry(displayName: "Soda Antarctica", aliases: ["soda antarctica", "soda limonada antarctica"], kcal: 40, protein: 0, carbs: 10, fat: 0, sugar: 10, addedSugar: 10, fiber: 0, saturatedFat: 0, cholesterol: 0, sodium: 4, potassium: nil, servingGrams: 350, emoji: nil, citationURL: "https://world.openfoodfacts.org/"),

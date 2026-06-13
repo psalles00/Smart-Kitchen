@@ -33,6 +33,13 @@ final class NutritionItemParser {
         quantidade e unidade canônica. Use unidades curtas: "g", "ml", "un", \
         "xícara", "colher de sopa", "colher de chá", "fatia". Se a quantidade \
         não estiver explícita, use null.
+
+        Regra crítica: se o texto descreve vários alimentos ligados por ";", ",", \
+        "com" ou "e", emita cada alimento separadamente. Não emita um item composto \
+        como "café com leite e açúcar" ou "pão com requeijão"; emita "café", \
+        "leite", "açúcar", "pão" e "requeijão" como itens distintos. Quando uma \
+        quantidade antes do alimento se aplica apenas ao primeiro alimento, não copie \
+        essa quantidade para os complementos.
         """
 
         let userPrompt = "Texto: \(trimmed)"
@@ -83,7 +90,7 @@ final class NutritionItemParser {
               let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let raw = dict["items"] as? [[String: Any]] else {
             // Fallback: treat the whole string as a single item with no quantity.
-            return [ParsedItem(name: trimmed, quantity: nil, unit: nil)]
+            return Self.expandedItems(from: [ParsedItem(name: trimmed, quantity: nil, unit: nil)])
         }
 
         var items: [ParsedItem] = []
@@ -96,9 +103,9 @@ final class NutritionItemParser {
         }
 
         if items.isEmpty {
-            return [ParsedItem(name: trimmed, quantity: nil, unit: nil)]
+            return Self.expandedItems(from: [ParsedItem(name: trimmed, quantity: nil, unit: nil)])
         }
-        return items
+        return Self.expandedItems(from: items)
     }
 
     private static func numeric(_ value: Any?) -> Double? {
@@ -108,5 +115,109 @@ final class NutritionItemParser {
             return Double(value.trimmingCharacters(in: .whitespacesAndNewlines))
         }
         return nil
+    }
+
+    static func expandedItems(from items: [ParsedItem]) -> [ParsedItem] {
+        items.flatMap(expandedItems(from:))
+    }
+
+    private static func expandedItems(from item: ParsedItem) -> [ParsedItem] {
+        let fragments = splitCompositeName(item.name)
+        guard fragments.count > 1 else {
+            return [extractEmbeddedQuantity(from: item)]
+        }
+
+        return fragments.enumerated().compactMap { index, fragment in
+            var parsed = extractEmbeddedQuantity(
+                from: ParsedItem(name: fragment, quantity: nil, unit: nil)
+            )
+            if index == 0, parsed.quantity == nil, item.quantity != nil {
+                parsed.quantity = item.quantity
+                parsed.unit = item.unit
+            }
+            return parsed.name.isEmpty ? nil : parsed
+        }
+    }
+
+    private static func splitCompositeName(_ value: String) -> [String] {
+        let protected = protectCompositeFoodNames(value)
+        let pattern = #"(?i)\s*(?:;|,|\+|\bcom\b|\be\b)\s*"#
+        let pieces = protected
+            .replacingOccurrences(of: pattern, with: "\u{1F}", options: .regularExpression)
+            .components(separatedBy: "\u{1F}")
+            .map { restoreCompositeFoodNames($0).trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        return pieces.isEmpty ? [value.trimmingCharacters(in: .whitespacesAndNewlines)] : pieces
+    }
+
+    private static func protectCompositeFoodNames(_ value: String) -> String {
+        value
+            .replacingOccurrences(of: #"(?i)\bpão\s+de\s+forma\b"#, with: "pao_de_forma", options: .regularExpression)
+            .replacingOccurrences(of: #"(?i)\bpao\s+de\s+forma\b"#, with: "pao_de_forma", options: .regularExpression)
+            .replacingOccurrences(of: #"(?i)\bpão\s+de\s+queijo\b"#, with: "pao_de_queijo", options: .regularExpression)
+            .replacingOccurrences(of: #"(?i)\bpao\s+de\s+queijo\b"#, with: "pao_de_queijo", options: .regularExpression)
+    }
+
+    private static func restoreCompositeFoodNames(_ value: String) -> String {
+        value
+            .replacingOccurrences(of: "pao_de_forma", with: "pao de forma")
+            .replacingOccurrences(of: "pao_de_queijo", with: "pao de queijo")
+    }
+
+    private static func extractEmbeddedQuantity(from item: ParsedItem) -> ParsedItem {
+        guard item.quantity == nil else {
+            return ParsedItem(name: cleanName(item.name), quantity: item.quantity, unit: item.unit)
+        }
+
+        let trimmed = item.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let match = firstMatch(
+            in: trimmed,
+            pattern: #"^(\d+(?:[\.,]\d+)?)\s*(kg|g|gramas?|ml|l|litros?|un|unidades?|und|x[ií]caras?|colheres?\s+de\s+sopa|colheres?\s+de\s+ch[aá]|fatias?|por(?:ç|c)(?:a|o|oes|ões)|copos?)\b(?:\s+de)?\s*(.+)$"#
+        ) else {
+            return ParsedItem(name: cleanName(trimmed), quantity: nil, unit: item.unit)
+        }
+
+        let quantity = numeric(match[0])
+        let unit = canonicalUnit(match[1])
+        return ParsedItem(name: cleanName(match[2]), quantity: quantity, unit: unit)
+    }
+
+    private static func firstMatch(in text: String, pattern: String) -> [String]? {
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else {
+            return nil
+        }
+        let nsText = text as NSString
+        let range = NSRange(location: 0, length: nsText.length)
+        guard let result = regex.firstMatch(in: text, range: range) else { return nil }
+        let groups = (1..<result.numberOfRanges).compactMap { index -> String? in
+            let groupRange = result.range(at: index)
+            guard groupRange.location != NSNotFound else { return nil }
+            return nsText.substring(with: groupRange)
+        }
+        return groups
+    }
+
+    private static func cleanName(_ value: String) -> String {
+        value
+            .replacingOccurrences(of: #"^(de|da|do|das|dos)\s+"#, with: "", options: [.regularExpression, .caseInsensitive])
+            .replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private static func canonicalUnit(_ raw: String) -> String {
+        let unit = raw
+            .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: AppLocalization.current().foldingLocale)
+            .lowercased()
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        if unit == "grama" || unit == "gramas" { return "g" }
+        if unit == "litro" || unit == "litros" { return "l" }
+        if unit == "unidade" || unit == "unidades" || unit == "und" { return "un" }
+        if unit == "xicaras" { return "xicara" }
+        if unit == "colheres de sopa" { return "colher de sopa" }
+        if unit == "colheres de cha" { return "colher de cha" }
+        if unit == "fatias" { return "fatia" }
+        if unit == "porcao" || unit == "porcoes" { return "porcao" }
+        if unit == "copos" { return "copo" }
+        return unit
     }
 }

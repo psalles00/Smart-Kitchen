@@ -24,7 +24,38 @@ struct FoodCaptureHostView: View {
         case error(String)
     }
 
+    private enum TextAnalysisButtonState: Equatable {
+        case idle
+        case loading
+        case success
+        case failure(String)
+
+        var isRunning: Bool {
+            if case .loading = self { return true }
+            return false
+        }
+
+        var isCompact: Bool {
+            switch self {
+            case .loading, .success:
+                return true
+            case .idle, .failure:
+                return false
+            }
+        }
+
+        var animationKey: String {
+            switch self {
+            case .idle: "idle"
+            case .loading: "loading"
+            case .success: "success"
+            case .failure: "failure"
+            }
+        }
+    }
+
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
 
     let mode: Mode
     let logDate: Date
@@ -45,6 +76,8 @@ struct FoodCaptureHostView: View {
     /// Drives the in-app paywall sheet when the daily Nutrition AI quota
     /// is reached on free tier.
     @State private var pendingPaywallReason: PaywallSheet.Reason?
+    @State private var textAnalysisButtonState: TextAnalysisButtonState = .idle
+    @State private var showTextAnalysisSupportFallback: Bool = false
     @FocusState private var isTextEditorFocused: Bool
 
     #if os(iOS)
@@ -53,6 +86,7 @@ struct FoodCaptureHostView: View {
     #endif
 
     private let ai = NutritionAIService()
+    private static let supportEmail = "pedrosalles00@gmail.com"
 
     init(mode: Mode,
          logDate: Date,
@@ -291,55 +325,93 @@ struct FoodCaptureHostView: View {
     }
 
     private var textGathering: some View {
-        ScrollView {
-            VStack(spacing: 12) {
-                compactCapturePanel {
-                    minimalCaptureHeader(
-                        systemImage: "character.cursor.ibeam",
-                        title: String(localized: "Descreva a refeição"),
-                        subtitle: String(localized: "Ingredientes, quantidades e preparo em linguagem natural."),
-                        trailingCount: typedText.isEmpty ? nil : typedText.count
-                    )
+        VStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Descreva a refeição")
+                    .font(.custom("Bricolage Grotesque", size: 22, relativeTo: .title3).weight(.bold))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.86)
 
-                    captureInputSurface(isFocused: isTextEditorFocused) {
-                        ZStack(alignment: .topLeading) {
-                            TextEditor(text: $typedText)
-                                .focused($isTextEditorFocused)
-                                .frame(minHeight: 130, maxHeight: 130)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 10)
-                                #if os(iOS)
-                                .scrollContentBackground(.hidden)
-                                #endif
+                Text("Ingredientes, quantidades e preparo em linguagem natural.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.bottom, 2)
 
-                            if typedText.isEmpty {
-                                Text("Ex.: 2 ovos mexidos, pão integral e meia banana.")
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
-                                    .padding(.horizontal, 26)
-                                    .padding(.vertical, 22)
-                                    .allowsHitTesting(false)
-                            }
-                        }
-                    }
+            ZStack(alignment: .topLeading) {
+                TextEditor(text: $typedText)
+                    .focused($isTextEditorFocused)
+                    .font(.body)
+                    .foregroundStyle(.primary)
+                    .frame(minHeight: 142, maxHeight: 142)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 8)
+                    #if os(iOS)
+                    .scrollContentBackground(.hidden)
+                    #endif
+
+                if typedText.isEmpty {
+                    Text("Ex.: 2 ovos mexidos, pão integral e meia banana.")
+                        .font(.body)
+                        .foregroundStyle(Color.secondary.opacity(0.72))
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 22)
+                        .allowsHitTesting(false)
                 }
             }
-            .padding(.horizontal, 20)
-            .padding(.top, 16)
-            .padding(.bottom, 12)
-        }
-        .scrollIndicators(.hidden)
-        .scrollDismissesKeyboard(.interactively)
-        .safeAreaInset(edge: .bottom) {
-            stickyAnalyzeBar(
-                isDisabled: typedText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-                action: startTextAnalysis
+            .background {
+                textEditorBackground
+            }
+            .overlay(textEditorStroke)
+
+            Button(action: startTextAnalysis) {
+                textAnalysisButtonLabel
+            }
+            .buttonStyle(.plain)
+            .disabled(isTextAnalyzeDisabled)
+            .frame(width: textAnalysisButtonState.isCompact ? 52 : nil)
+            .frame(maxWidth: textAnalysisButtonState.isCompact ? nil : .infinity)
+            .frame(height: 52)
+            .background(textAnalysisButtonBackground)
+            .clipShape(RoundedRectangle(cornerRadius: textAnalysisButtonState.isCompact ? 26 : 16, style: .continuous))
+            .shadow(
+                color: textAnalysisButtonShadowColor,
+                radius: textAnalysisButtonState.isRunning ? 18 : 10,
+                x: 0,
+                y: textAnalysisButtonState.isRunning ? 10 : 5
             )
+            .scaleEffect(textAnalysisButtonState == .success ? 1.04 : 1)
+            .animation(.spring(response: 0.42, dampingFraction: 0.82), value: textAnalysisButtonState.animationKey)
+            .accessibilityLabel(textAnalysisAccessibilityLabel)
+
+            if case .failure(let message) = textAnalysisButtonState {
+                textAnalysisErrorPanel(message)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
         }
+        .padding(.horizontal, 20)
+        .padding(.top, 16)
+        .padding(.bottom, 14)
+        .background(Color.clear)
+        .scrollDismissesKeyboard(.interactively)
         .modalNavigationTitle(String(localized: "Registrar por texto"))
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Cancelar") { dismiss() }
+        #if os(iOS)
+        .presentationBackground(.ultraThinMaterial)
+        #endif
+        .alert(String(localized: "Contatar suporte"), isPresented: $showTextAnalysisSupportFallback) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(String(localized: "Envie um e-mail para \(Self.supportEmail). Nenhum app de e-mail está configurado neste dispositivo."))
+        }
+        .onChange(of: typedText) { _, _ in
+            if case .failure = textAnalysisButtonState {
+                withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) {
+                    textAnalysisButtonState = .idle
+                }
             }
         }
         .onAppear {
@@ -347,6 +419,135 @@ struct FoodCaptureHostView: View {
         }
         .onDisappear {
             isTextEditorFocused = false
+        }
+    }
+
+    private var isTextAnalyzeDisabled: Bool {
+        typedText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            || textAnalysisButtonState == .loading
+            || textAnalysisButtonState == .success
+    }
+
+    private var textEditorShape: RoundedRectangle {
+        RoundedRectangle(cornerRadius: 18, style: .continuous)
+    }
+
+    private var textEditorBackground: some View {
+        textEditorShape
+            .fill(.ultraThinMaterial)
+            .overlay {
+                textEditorShape
+                    .fill(
+                        isTextEditorFocused
+                            ? PageTheme.nutrients.accentColor.opacity(0.045)
+                            : Color.primary.opacity(0.025)
+                    )
+            }
+    }
+
+    private var textEditorStroke: some View {
+        textEditorShape
+            .stroke(
+                isTextEditorFocused
+                    ? PageTheme.nutrients.accentColor.opacity(0.34)
+                    : Color.primary.opacity(0.06),
+                lineWidth: isTextEditorFocused ? 1.4 : 1
+            )
+    }
+
+    @ViewBuilder
+    private var textAnalysisButtonLabel: some View {
+        ZStack {
+            switch textAnalysisButtonState {
+            case .idle:
+                Label("Analisar", systemImage: "sparkles")
+                    .font(.headline.weight(.semibold))
+                    .foregroundStyle(isTextAnalyzeDisabled ? Color.secondary : Color.white)
+                    .contentTransition(.opacity)
+            case .loading:
+                ProgressView()
+                    .progressViewStyle(.circular)
+                    .tint(.white)
+                    .controlSize(.regular)
+                    .contentTransition(.opacity)
+            case .success:
+                Image(systemName: "checkmark")
+                    .font(.system(size: 21, weight: .bold))
+                    .foregroundStyle(.white)
+                    .contentTransition(.symbolEffect(.replace))
+            case .failure:
+                Label("Não consegui analisar", systemImage: "exclamationmark.triangle.fill")
+                    .font(.headline.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .contentTransition(.opacity)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: 52)
+    }
+
+    private var textAnalysisButtonBackground: Color {
+        switch textAnalysisButtonState {
+        case .idle:
+            isTextAnalyzeDisabled ? Color.primary.opacity(0.055) : PageTheme.nutrients.accentColor
+        case .loading:
+            PageTheme.nutrients.accentColor
+        case .success:
+            Color.green
+        case .failure:
+            Color.red
+        }
+    }
+
+    private var textAnalysisButtonShadowColor: Color {
+        switch textAnalysisButtonState {
+        case .idle:
+            isTextAnalyzeDisabled ? .clear : PageTheme.nutrients.accentColor.opacity(0.22)
+        case .loading:
+            PageTheme.nutrients.accentColor.opacity(0.3)
+        case .success:
+            Color.green.opacity(0.34)
+        case .failure:
+            Color.red.opacity(0.24)
+        }
+    }
+
+    private var textAnalysisAccessibilityLabel: String {
+        switch textAnalysisButtonState {
+        case .idle:
+            String(localized: "Analisar")
+        case .loading:
+            String(localized: "Analisando…")
+        case .success:
+            String(localized: "Análise concluída")
+        case .failure:
+            String(localized: "Não consegui analisar")
+        }
+    }
+
+    private func textAnalysisErrorPanel(_ message: String) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(message)
+                .font(.footnote)
+                .foregroundStyle(.red)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Button {
+                sendTextAnalysisErrorToSupport(message: message)
+            } label: {
+                Label("Enviar erro ao suporte", systemImage: "envelope.badge")
+                    .font(.footnote.weight(.semibold))
+            }
+            .buttonStyle(.bordered)
+            .buttonBorderShape(.capsule)
+            .tint(.red)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(14)
+        .background(Color.red.opacity(0.08), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(Color.red.opacity(0.16), lineWidth: 1)
         }
     }
 
@@ -580,15 +781,19 @@ struct FoodCaptureHostView: View {
         content()
             .background(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(Color(.tertiarySystemFill).opacity(0.78))
+                    .fill(.regularMaterial)
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .fill(PageTheme.nutrients.accentColor.opacity(isFocused ? 0.055 : 0.025))
+                    }
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
                     .stroke(
                         isFocused
-                            ? PageTheme.nutrients.accentColor.opacity(0.26)
-                            : Color.primary.opacity(0.05),
-                        lineWidth: isFocused ? 1.5 : 1
+                            ? PageTheme.nutrients.accentColor.opacity(0.38)
+                            : Color.white.opacity(0.38),
+                        lineWidth: isFocused ? 1.6 : 1
                     )
             )
     }
@@ -597,21 +802,42 @@ struct FoodCaptureHostView: View {
         Button(action: action) {
             Label("Analisar", systemImage: "sparkles")
                 .font(.headline.weight(.semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(isDisabled ? Color.secondary : Color.white)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 15)
-                .background(
-                    isDisabled
-                        ? PageTheme.nutrients.accentColor.opacity(0.35)
-                        : PageTheme.nutrients.accentColor,
-                    in: RoundedRectangle(cornerRadius: 16, style: .continuous)
-                )
+                .frame(height: 58)
+                .background(stickyAnalyzeBackground(isDisabled: isDisabled))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .stroke(Color.white.opacity(isDisabled ? 0.18 : 0.28), lineWidth: 1)
+                }
         }
         .buttonStyle(.plain)
         .disabled(isDisabled)
         .padding(.horizontal, 20)
-        .padding(.top, 8)
-        .padding(.bottom, 10)
+        .padding(.top, 10)
+        .padding(.bottom, 12)
+        .background(.ultraThinMaterial)
+    }
+
+    @ViewBuilder
+    private func stickyAnalyzeBackground(isDisabled: Bool) -> some View {
+        let shape = RoundedRectangle(cornerRadius: 20, style: .continuous)
+
+        if #available(iOS 26, macOS 26, *) {
+            shape
+                .fill(
+                    isDisabled
+                        ? Color.primary.opacity(0.045)
+                        : PageTheme.nutrients.accentColor.opacity(0.92)
+                )
+                .glassEffect(
+                    .regular.tint(PageTheme.nutrients.accentColor.opacity(isDisabled ? 0.08 : 0.28)).interactive(),
+                    in: shape
+                )
+        } else {
+            shape
+                .fill(isDisabled ? Color.primary.opacity(0.06) : PageTheme.nutrients.accentColor)
+        }
     }
 
     // MARK: - Actions
@@ -700,6 +926,11 @@ struct FoodCaptureHostView: View {
     }
 
     private func startTextAnalysis() {
+        if mode == .text {
+            startInlineTextAnalysis()
+            return
+        }
+
         let text = typedText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return }
         // Free-tier daily Nutrition AI gate.
@@ -720,6 +951,88 @@ struct FoodCaptureHostView: View {
                 await MainActor.run { setStage(.error(msg)) }
             }
         }
+    }
+
+    private func startInlineTextAnalysis() {
+        let text = typedText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty, textAnalysisButtonState != .loading else { return }
+
+        guard FeatureGate.shared.canUse(.nutritionAI) else {
+            pendingPaywallReason = .limitReached(.nutritionAI)
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.86)) {
+                textAnalysisButtonState = .idle
+            }
+            return
+        }
+
+        isTextEditorFocused = false
+        withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) {
+            textAnalysisButtonState = .loading
+        }
+
+        Task {
+            do {
+                let analysis = try await ai.analyzeText(description: text)
+                await MainActor.run {
+                    FeatureGate.shared.consume(.nutritionAI)
+                    HapticManager.impact(style: .medium)
+                    withAnimation(.spring(response: 0.34, dampingFraction: 0.7)) {
+                        textAnalysisButtonState = .success
+                    }
+                }
+
+                try? await Task.sleep(for: .milliseconds(620))
+
+                await MainActor.run {
+                    guard textAnalysisButtonState == .success else { return }
+                    setStage(.result(analysis))
+                }
+            } catch {
+                let msg = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+                await MainActor.run {
+                    HapticManager.impact(style: .heavy)
+                    withAnimation(.spring(response: 0.36, dampingFraction: 0.82)) {
+                        textAnalysisButtonState = .failure(msg)
+                    }
+                }
+            }
+        }
+    }
+
+    private func sendTextAnalysisErrorToSupport(message: String) {
+        guard let url = textAnalysisSupportURL(message: message) else {
+            showTextAnalysisSupportFallback = true
+            return
+        }
+
+        openURL(url) { accepted in
+            if !accepted {
+                showTextAnalysisSupportFallback = true
+            }
+        }
+    }
+
+    private func textAnalysisSupportURL(message: String) -> URL? {
+        var components = URLComponents()
+        components.scheme = "mailto"
+        components.path = Self.supportEmail
+        let enteredText = typedText.trimmingCharacters(in: .whitespacesAndNewlines)
+        components.queryItems = [
+            URLQueryItem(name: "subject", value: String(localized: "Erro no registro por texto - Savoria")),
+            URLQueryItem(
+                name: "body",
+                value: """
+                \(String(localized: "Erro ao analisar refeição por texto."))
+
+                \(String(localized: "Texto digitado:"))
+                \(enteredText)
+
+                \(String(localized: "Erro:"))
+                \(message)
+                """
+            )
+        ]
+        return components.url
     }
 
     #if os(iOS)
