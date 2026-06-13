@@ -168,19 +168,16 @@ struct NutritionDashboardView: View {
         VStack(spacing: 10) {
             TabView(selection: $macroPageIndex) {
                 macroPageMain
-                    .padding(.horizontal, 0)
                     .tag(0)
 
                 macroPageMicros1
-                    .padding(.horizontal, 0)
                     .tag(1)
 
                 macroPageMicros2
-                    .padding(.horizontal, 0)
                     .tag(2)
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
-            .frame(height: 118)
+            .frame(height: 146)
 
             // Indicador customizado para garantir aparência neutra.
             HStack(spacing: 6) {
@@ -206,7 +203,8 @@ struct NutritionDashboardView: View {
                 current: Double(proteinConsumed),
                 goal: Double(profile.effectiveProteinG),
                 unit: "g",
-                systemImage: "bolt.fill",
+                iconFileName: "protein-powder.png",
+                fallbackSymbol: "bolt.fill",
                 tint: Color(red: 0.91, green: 0.37, blue: 0.31)
             )
             MacroCard(
@@ -214,7 +212,8 @@ struct NutritionDashboardView: View {
                 current: Double(carbsConsumed),
                 goal: Double(profile.effectiveCarbsG),
                 unit: "g",
-                systemImage: "leaf.fill",
+                iconFileName: "bread-white.png",
+                fallbackSymbol: "leaf.fill",
                 tint: Color(red: 0.34, green: 0.68, blue: 0.36)
             )
             MacroCard(
@@ -222,10 +221,13 @@ struct NutritionDashboardView: View {
                 current: Double(fatConsumed),
                 goal: Double(profile.effectiveFatG),
                 unit: "g",
-                systemImage: "drop.fill",
+                iconFileName: "olive-oil.png",
+                fallbackSymbol: "drop.fill",
                 tint: Color(red: 0.95, green: 0.63, blue: 0.22)
             )
         }
+        .padding(.top, 18)
+        .padding(.horizontal, 0)
     }
 
     /// Página 2 — micronutrientes comuns. Metas baseadas em referências
@@ -239,7 +241,8 @@ struct NutritionDashboardView: View {
                 current: fiberConsumed,
                 goal: 25,
                 unit: "g",
-                systemImage: "leaf.fill",
+                iconFileName: "salad.png",
+                fallbackSymbol: "leaf.fill",
                 tint: Color(red: 0.24, green: 0.58, blue: 0.40)
             )
             MacroCard(
@@ -247,7 +250,8 @@ struct NutritionDashboardView: View {
                 current: sugarConsumed,
                 goal: 50,
                 unit: "g",
-                systemImage: "cube.fill",
+                iconFileName: "sugar-cube.png",
+                fallbackSymbol: "cube.fill",
                 tint: Color(red: 0.63, green: 0.48, blue: 0.86)
             )
             MacroCard(
@@ -255,10 +259,13 @@ struct NutritionDashboardView: View {
                 current: sodiumConsumed,
                 goal: 2300,
                 unit: "mg",
-                systemImage: "sparkles",
+                iconFileName: "salt.png",
+                fallbackSymbol: "sparkles",
                 tint: Color(red: 0.36, green: 0.58, blue: 0.86)
             )
         }
+        .padding(.top, 18)
+        .padding(.horizontal, 0)
     }
 
     @ViewBuilder
@@ -269,7 +276,8 @@ struct NutritionDashboardView: View {
                 current: saturatedFatConsumed,
                 goal: 20,
                 unit: "g",
-                systemImage: "drop.fill",
+                iconFileName: "sunflower-oil.png",
+                fallbackSymbol: "drop.fill",
                 tint: Color(red: 0.86, green: 0.48, blue: 0.26)
             )
             MacroCard(
@@ -277,7 +285,8 @@ struct NutritionDashboardView: View {
                 current: cholesterolConsumed,
                 goal: 300,
                 unit: "mg",
-                systemImage: "heart.fill",
+                iconFileName: "egg.png",
+                fallbackSymbol: "heart.fill",
                 tint: Color(red: 0.86, green: 0.30, blue: 0.46)
             )
             MacroCard(
@@ -285,10 +294,13 @@ struct NutritionDashboardView: View {
                 current: potassiumConsumed,
                 goal: 3500,
                 unit: "mg",
-                systemImage: "bolt.fill",
+                iconFileName: "banana.png",
+                fallbackSymbol: "bolt.fill",
                 tint: Color(red: 0.73, green: 0.58, blue: 0.24)
             )
         }
+        .padding(.top, 18)
+        .padding(.horizontal, 0)
     }
 
     /// Card unificado “Refeições do dia”, com subseções por `MealType`. Cada subseção

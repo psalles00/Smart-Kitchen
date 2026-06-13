@@ -34,29 +34,21 @@ struct CalorieRingView: View {
     }
 
     private var titleFont: Font {
-        .custom("Bricolage Grotesque", size: 96, relativeTo: .largeTitle).weight(.bold)
+        .custom("Bricolage Grotesque", size: 82, relativeTo: .largeTitle).weight(.bold)
     }
 
     var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(neutralSurfaceColor)
-                .overlay {
-                    RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .stroke(Color.primary.opacity(colorScheme == .dark ? 0.08 : 0.05), lineWidth: 1)
-                }
+        ZStack(alignment: .top) {
+            NutrientGlassCardSurface(
+                cornerRadius: 26,
+                accentColor: Color.primary.opacity(colorScheme == .dark ? 0.58 : 0.40),
+                isColored: false
+            )
+            .padding(.top, 40)
 
-            HStack {
-                Spacer()
+            VStack(spacing: -8) {
+                Spacer(minLength: 100)
 
-                calorieTrackerIcon
-                    .frame(width: 132, height: 132)
-                    .opacity(colorScheme == .dark ? 0.30 : 0.22)
-                    .offset(x: 22, y: -22)
-            }
-            .allowsHitTesting(false)
-
-            VStack(spacing: -10) {
                 Text("\(displayedRemaining)")
                     .font(titleFont)
                     .lineLimit(1)
@@ -65,16 +57,21 @@ struct CalorieRingView: View {
                     .foregroundStyle(titleColor)
 
                 remainingCaption
-                    .font(.subheadline.weight(.medium))
+                    .font(.subheadline)
                     .foregroundStyle(.secondary)
+
+                Spacer(minLength: 28)
             }
             .padding(.horizontal, 18)
-            .padding(.vertical, 28)
+
+            calorieTrackerIcon
+                .frame(width: 104, height: 104)
+                .offset(y: -2)
+                .allowsHitTesting(false)
         }
         .frame(maxWidth: .infinity)
-        .frame(minHeight: 184)
-        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .frame(minHeight: 236)
+        .contentShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
         .onAppear {
             displayedRemaining = 0
 
@@ -94,24 +91,25 @@ struct CalorieRingView: View {
     private var calorieTrackerIcon: some View {
         ZStack {
             Circle()
-                .fill(accentColor.opacity(colorScheme == .dark ? 0.16 : 0.10))
+                .fill(appPrimaryBackground)
 
             Circle()
-                .stroke(accentColor.opacity(colorScheme == .dark ? 0.20 : 0.16), lineWidth: 5)
+                .stroke(accentColor.opacity(colorScheme == .dark ? 0.22 : 0.16), lineWidth: 8)
 
             Circle()
                 .trim(from: 0, to: progress)
                 .stroke(
                     accentColor,
-                    style: StrokeStyle(lineWidth: 5, lineCap: .round)
+                    style: StrokeStyle(lineWidth: 8, lineCap: .round)
                 )
                 .rotationEffect(.degrees(-90))
 
             Image("nutrientes")
                 .resizable()
                 .scaledToFit()
-                .padding(18)
+                .padding(21)
         }
+        .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.18 : 0.10), radius: 8, x: 0, y: 6)
     }
 
     @ViewBuilder
@@ -120,7 +118,7 @@ struct CalorieRingView: View {
             Text("kcal extras consumidas")
         } else {
             let format = String(localized: "de **%lld kcal** restantes")
-            let localizedText = String.localizedStringWithFormat(format, goal)
+            let localizedText = String.localizedStringWithFormat(format, displayedRemaining)
             if let attributed = try? AttributedString(
                 markdown: localizedText,
                 options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)
