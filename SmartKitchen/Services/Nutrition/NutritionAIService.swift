@@ -26,13 +26,31 @@ final class NutritionAIService {
         }
     }
 
-    private let ai = AIService()
-    private let usda = USDANutritionLookup()
-    private let exa = ExaNutritionLookup()
-    private let parser = NutritionItemParser()
-    private let cache = FoodCache.shared
-    private let visionModel = "gpt-4o-mini"
-    private let textModel = "gpt-4.1-mini"
+    private let ai: any NutritionAIClient
+    private let usda: any NutritionUSDALookingUp
+    private let exa: any NutritionExaLookingUp
+    private let parser: any NutritionItemParsing
+    private let cache: any NutritionFoodCaching
+    private let visionModel: String
+    private let textModel: String
+
+    init(
+        ai: any NutritionAIClient = AIService(),
+        usda: any NutritionUSDALookingUp = USDANutritionLookup(),
+        exa: any NutritionExaLookingUp = ExaNutritionLookup(),
+        parser: (any NutritionItemParsing)? = nil,
+        cache: any NutritionFoodCaching = FoodCache.shared,
+        visionModel: String = "gpt-4o-mini",
+        textModel: String = "gpt-4.1-mini"
+    ) {
+        self.ai = ai
+        self.usda = usda
+        self.exa = exa
+        self.parser = parser ?? NutritionItemParser(ai: ai)
+        self.cache = cache
+        self.visionModel = visionModel
+        self.textModel = textModel
+    }
 
     // MARK: - Public API
 
@@ -115,13 +133,15 @@ final class NutritionAIService {
         var pendingLLMOnly: [(index: Int, item: NutritionItemParser.ParsedItem)] = []
 
         // 1. Cache lookup (sequential — Supabase REST is fast enough for small N).
+        let locale = AppLocalization.current().nutritionCacheLocaleIdentifier
+
         for (i, item) in items.enumerated() {
             if Self.shouldResolveWithLLMOnly(item.name) {
                 pendingLLMOnly.append((i, item))
                 continue
             }
             let canonical = FoodCache.canonicalize(item.name)
-            if let hit = await cache.lookup(canonicalName: canonical),
+            if let hit = await cache.lookup(canonicalName: canonical, locale: locale),
                Self.shouldTrustCachedNutrition(hit, for: item.name) {
                 slots[i] = hit
             } else {
@@ -132,7 +152,7 @@ final class NutritionAIService {
         // 2. USDA batch for the misses.
         if !pendingUSDA.isEmpty {
             let names = pendingUSDA.map { $0.name }
-            let usdaResults = await usda.fetchPer100g(for: names)
+            let usdaResults = await usda.fetchPer100g(for: names, locale: locale)
             for (offset, usdaItem) in usdaResults.enumerated() {
                 let slot = pendingUSDA[offset].index
                 if usdaItem.hasMacros {
@@ -159,7 +179,7 @@ final class NutritionAIService {
         if !pendingExa.isEmpty {
             let names = pendingExa.map { $0.name }
             do {
-                let exaResults = try await exa.fetchPer100g(for: names)
+                let exaResults = try await exa.fetchPer100g(for: names, locale: locale)
                 for (offset, exaItem) in exaResults.enumerated() {
                     let slot = pendingExa[offset].index
                     if exaItem.hasMacros {
@@ -270,7 +290,13 @@ final class NutritionAIService {
         """
         let messages: [[String: Any]] = [["role": "user", "content": prompt]]
         do {
-            let response = try await ai.sendChat(messages: messages, apiKey: APIConfig.openAIAPIKey)
+            let response = try await ai.sendNutritionChat(
+                messages: messages,
+                tools: nil,
+                apiKey: APIConfig.openAIAPIKey,
+                model: nil,
+                acceptLanguage: AppLocalization.current().acceptLanguageHeader
+            )
             guard let content = response.content, !content.isEmpty else { return nil }
             return Self.parsePer100g(rawJSON: content, name: item.name)
         } catch {
@@ -343,8 +369,9 @@ final class NutritionAIService {
         let messages: [[String: Any]] = [
             ["role": "user", "content": prompt]
         ]
-        let response = try await ai.sendChat(
+        let response = try await ai.sendNutritionChat(
             messages: messages,
+            tools: nil,
             apiKey: apiKey,
             model: textModel,
             acceptLanguage: AppLocalization.current().acceptLanguageHeader
@@ -356,7 +383,7 @@ final class NutritionAIService {
     }
 
     private func callVision(prompt: String, imageData: Data) async throws -> String {
-        try await ai.analyzeImage(
+        try await ai.analyzeNutritionImage(
             prompt: prompt,
             imageData: imageData,
             apiKey: APIConfig.openAIAPIKey,
@@ -393,16 +420,8 @@ final class NutritionAIService {
             throw NutritionAIError.invalidJSON(raw)
         }
 
-        func intValue(_ key: String) -> Int {
-            if let v = obj[key] as? Int { return v }
-            if let v = obj[key] as? Double { return Int(v.rounded()) }
-            return 0
-        }
-        func doubleOpt(_ key: String) -> Double? {
-            if let v = obj[key] as? Double { return v }
-            if let v = obj[key] as? Int { return Double(v) }
-            return nil
-        }
+        func intValue(_ key: String) -> Int { numeric(obj[key]).map { Int($0.rounded()) } ?? 0 }
+        func doubleOpt(_ key: String) -> Double? { numeric(obj[key]) }
 
         return FoodAnalysis(
             name: (obj["name"] as? String) ?? "",
@@ -430,16 +449,8 @@ final class NutritionAIService {
               let obj = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             throw NutritionAIError.invalidJSON(raw)
         }
-        func d(_ key: String) -> Double {
-            if let v = obj[key] as? Double { return v }
-            if let v = obj[key] as? Int { return Double(v) }
-            return 0
-        }
-        func dOpt(_ key: String) -> Double? {
-            if let v = obj[key] as? Double { return v }
-            if let v = obj[key] as? Int { return Double(v) }
-            return nil
-        }
+        func d(_ key: String) -> Double { numeric(obj[key]) ?? 0 }
+        func dOpt(_ key: String) -> Double? { numeric(obj[key]) }
         return NutritionLabelAnalysis(
             name: (obj["name"] as? String) ?? "",
             caloriesPer100g: d("calories_per_100g"),
@@ -457,5 +468,14 @@ final class NutritionAIService {
             sodiumPer100g: dOpt("sodium_per_100g"),
             potassiumPer100g: dOpt("potassium_per_100g")
         )
+    }
+
+    private static func numeric(_ value: Any?) -> Double? {
+        if let value = value as? Double { return value }
+        if let value = value as? Int { return Double(value) }
+        if let value = value as? String {
+            return Double(value.trimmingCharacters(in: .whitespacesAndNewlines))
+        }
+        return nil
     }
 }

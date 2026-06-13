@@ -15,6 +15,35 @@ settings:
     SWIFT_EMIT_LOC_STRINGS: YES
     SWIFT_VERSION: "6.0"
 
+schemes:
+  Savoria:
+    build:
+      targets:
+        Savoria: all
+    test:
+      config: Debug
+      gatherCoverageData: false
+      macroExpansion: Savoria
+      targets:
+        - SavoriaTests
+    run:
+      config: Release
+      debugEnabled: false
+      executable: Savoria
+      storeKitConfiguration: SmartKitchen/Resources/Configuration.storekit
+      simulateLocation:
+        allow: true
+    profile:
+      config: Release
+      executable: Savoria
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+      revealArchiveInOrganizer: true
+    management:
+      shared: true
+
 targets:
   Savoria:
     type: application
@@ -49,6 +78,8 @@ targets:
         ATSApplicationFontsPath: "."
         UILaunchScreen: {}
         CFBundleDisplayName: Savoria
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         NSCameraUsageDescription: O Savoria usa a câmera para tirar fotos das suas receitas e refeições.
         NSPhotoLibraryUsageDescription: O Savoria acessa a galeria para anexar fotos às suas receitas.
         NSMicrophoneUsageDescription: O Savoria usa o microfone para registrar refeições por voz.
@@ -78,6 +109,20 @@ targets:
           - ja
     entitlements:
       path: SmartKitchen/SmartKitchen.entitlements
+      properties:
+        aps-environment: development
+        com.apple.developer.aps-environment: development
+        com.apple.developer.icloud-container-identifiers:
+          - iCloud.com.pedrosalles.smartkitchen.syn
+          - iCloud.com.pedrosalles.smartkitchen.sync
+        com.apple.developer.icloud-services:
+          - CloudKit
+          - CloudDocuments
+        com.apple.developer.ubiquity-container-identifiers:
+          - iCloud.com.pedrosalles.smartkitchen.syn
+          - iCloud.com.pedrosalles.smartkitchen.sync
+        com.apple.security.application-groups:
+          - group.com.pedrosalles.smartkitchen.sync
     capabilities:
       - iCloud:
           cloudKit: true
@@ -102,10 +147,23 @@ targets:
         CURRENT_PROJECT_VERSION: "1"
         CODE_SIGN_STYLE: Automatic
         TARGETED_DEVICE_FAMILY: "1,2"
-    scheme:
-      testTargets: []
-      gatherCoverageData: false
-      storeKitConfiguration: SmartKitchen/Resources/Configuration.storekit
+  SavoriaTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: SmartKitchenTests
+    dependencies:
+      - target: Savoria
+        platformFilter: iOS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.pedrosalles.smartkitchen.sync.tests
+        DEVELOPMENT_TEAM: 44K57HQAP9
+        CODE_SIGN_STYLE: Automatic
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Savoria.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Savoria"
+        BUNDLE_LOADER: "$(TEST_HOST)"
 
   SavoriaShareExtension:
     type: app-extension
@@ -118,6 +176,8 @@ targets:
       path: SmartKitchenShareExtension/Info.plist
       properties:
         CFBundleDisplayName: Savoria
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         CFBundleLocalizations:
           - en
           - pt-BR
@@ -165,6 +225,8 @@ targets:
       path: SmartKitchenWidgets/Info.plist
       properties:
         CFBundleDisplayName: Savoria
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         CFBundleLocalizations:
           - en
           - pt-BR

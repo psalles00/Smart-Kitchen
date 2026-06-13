@@ -19,49 +19,6 @@
 			<key>orderHint</key>
 			<integer>1</integer>
 		</dict>
-		<key>SmartKitchen - Release.xcscheme_^#shared#^_</key>
-		<dict>
-			<key>orderHint</key>
-			<integer>1</integer>
-		</dict>
-		<key>SmartKitchen - Uso.xcscheme_^#shared#^_</key>
-		<dict>
-			<key>orderHint</key>
-			<integer>1</integer>
-		</dict>
-		<key>SmartKitchen.xcscheme_^#shared#^_</key>
-		<dict>
-			<key>orderHint</key>
-			<integer>0</integer>
-		</dict>
-		<key>SmartKitchenShareExtension.xcscheme_^#shared#^_</key>
-		<dict>
-			<key>orderHint</key>
-			<integer>1</integer>
-		</dict>
-		<key>SmartKitchenWidgets.xcscheme_^#shared#^_</key>
-		<dict>
-			<key>orderHint</key>
-			<integer>2</integer>
-		</dict>
-	</dict>
-	<key>SuppressBuildableAutocreation</key>
-	<dict>
-		<key>9148A3EC99E8B7F9A68E1A47</key>
-		<dict>
-			<key>primary</key>
-			<true/>
-		</dict>
-		<key>9304226077C6C2B4667662DD</key>
-		<dict>
-			<key>primary</key>
-			<true/>
-		</dict>
-		<key>EFAE869C76E23275B865F646</key>
-		<dict>
-			<key>primary</key>
-			<true/>
-		</dict>
 	</dict>
 </dict>
 </plist>

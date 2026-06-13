@@ -15,9 +15,9 @@ final class NutritionItemParser {
         var unit: String?      // free-form unit ("g", "ml", "un", "xícara")
     }
 
-    private let ai: AIService
+    private let ai: any NutritionAIClient
 
-    init(ai: AIService = AIService()) {
+    init(ai: any NutritionAIClient = AIService()) {
         self.ai = ai
     }
 
@@ -63,15 +63,20 @@ final class NutritionItemParser {
             ]
         ]]
 
-        var messages: [[String: Any]] = [
+        let messages: [[String: Any]] = [
             ["role": "system", "content": systemPrompt],
             ["role": "user",   "content": userPrompt],
             ["role": "user",   "content": "Chame a função emit_items. Não envie texto fora da chamada."]
         ]
-        _ = messages // keep mutability semantics consistent for callers that may extend
 
         let apiKey = APIConfig.openAIAPIKey
-        let response = try await ai.sendChat(messages: messages, tools: tool, apiKey: apiKey)
+        let response = try await ai.sendNutritionChat(
+            messages: messages,
+            tools: tool,
+            apiKey: apiKey,
+            model: nil,
+            acceptLanguage: AppLocalization.current().acceptLanguageHeader
+        )
 
         guard let call = response.toolCalls.first,
               let data = call.argumentsJSON.data(using: .utf8),
@@ -85,8 +90,7 @@ final class NutritionItemParser {
         for entry in raw {
             guard let name = (entry["name"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines),
                   !name.isEmpty else { continue }
-            let qty = entry["quantity"] as? Double
-                ?? (entry["quantity"] as? Int).map(Double.init)
+            let qty = Self.numeric(entry["quantity"])
             let unit = (entry["unit"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
             items.append(ParsedItem(name: name, quantity: qty, unit: unit))
         }
@@ -95,5 +99,14 @@ final class NutritionItemParser {
             return [ParsedItem(name: trimmed, quantity: nil, unit: nil)]
         }
         return items
+    }
+
+    private static func numeric(_ value: Any?) -> Double? {
+        if let value = value as? Double { return value }
+        if let value = value as? Int { return Double(value) }
+        if let value = value as? String {
+            return Double(value.trimmingCharacters(in: .whitespacesAndNewlines))
+        }
+        return nil
     }
 }
