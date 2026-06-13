@@ -19,6 +19,7 @@
 		092FE0F7C3BCE16A6FCCE012 /* PageTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8553574E6585FF064B4CDA62 /* PageTheme.swift */; };
 		09346676535CE12D3EADF1C3 /* Boska-BlackItalic.otf in Resources */ = {isa = PBXBuildFile; fileRef = 4C5880CFC6DCD2F43D3FA289 /* Boska-BlackItalic.otf */; };
 		09817140A56D70511D6D5226 /* RecipeRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C901446BD6E1A569FBFCE82E /* RecipeRowView.swift */; };
+		0A0B613DBC136098D259BF7A /* LocalNutritionFallback.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA3DCEAE4481E11D9F0DD5C3 /* LocalNutritionFallback.swift */; };
 		0EA4DFDE3610C34E70A00DF2 /* PaywallStepView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 806875DF985D726073E0F02D /* PaywallStepView.swift */; };
 		111F46B36114F5ABD00E2DC2 /* TextPipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB26A2A8B6FF269608716F69 /* TextPipeline.swift */; };
 		1139162840553D9BA9E846F7 /* items_database.json in Resources */ = {isa = PBXBuildFile; fileRef = BD8EFA8D0DF90B9B35DF27A4 /* items_database.json */; };
@@ -275,6 +276,7 @@
 		FB0E21FD1F256A5C68D4A542 /* RecipeStructurer+FoundationModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB6629D4FB97AF1FA488919F /* RecipeStructurer+FoundationModels.swift */; };
 		FB2ECC261AB38C41C8817FFE /* NutritionDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99C6135DB82BD993DD2123C5 /* NutritionDashboardView.swift */; };
 		FB30E7FA319FF61461CB2F6B /* iCloudSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE34761A8547DB1BC47F0FF5 /* iCloudSettingsView.swift */; };
+		FD2513CA9BCCEFDE7CDAA361 /* AIServiceFallbackTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42C957C161706DEDC7C9E7F2 /* AIServiceFallbackTests.swift */; };
 		FD85C163D0574DDC05044A4B /* Telma-Black.otf in Resources */ = {isa = PBXBuildFile; fileRef = 4FFE418BF404A910C30CECCD /* Telma-Black.otf */; };
 		FF221A2BB996A7C7C86EEB24 /* NotificationSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80D12790A5FFD5D1F1730C5C /* NotificationSettingsView.swift */; };
 		FF60AC160FD69C166D5A44FC /* LLMProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F2EA589C249BEA8EA6153BF /* LLMProvider.swift */; };
@@ -382,6 +384,7 @@
 		3EEFD07FFC5E5CD8A5B51DE2 /* ItemEntry+Display.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ItemEntry+Display.swift"; sourceTree = "<group>"; };
 		3F57F27B8FA704D0DDEFDE46 /* NutritionProfileStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionProfileStore.swift; sourceTree = "<group>"; };
 		41340DD47388F9AEF5B06243 /* meta-en.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "meta-en.json"; sourceTree = "<group>"; };
+		42C957C161706DEDC7C9E7F2 /* AIServiceFallbackTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIServiceFallbackTests.swift; sourceTree = "<group>"; };
 		431593D600C41201D213FA71 /* FoodCameraPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodCameraPicker.swift; sourceTree = "<group>"; };
 		45656677AD3714E163ED9011 /* Telma-Bold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Telma-Bold.otf"; sourceTree = "<group>"; };
 		45890FB81F05FADA6EF03881 /* RecipeImportOrchestrator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeImportOrchestrator.swift; sourceTree = "<group>"; };
@@ -508,6 +511,7 @@
 		B8745E6D949D25CCD17EA5D2 /* AddGroceryItemView 2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AddGroceryItemView 2.swift"; sourceTree = "<group>"; };
 		B8E44E925C852E9239F7790A /* ListsInfoContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListsInfoContent.swift; sourceTree = "<group>"; };
 		B970691AA2D626F97231E533 /* PageHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageHeader.swift; sourceTree = "<group>"; };
+		BA3DCEAE4481E11D9F0DD5C3 /* LocalNutritionFallback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalNutritionFallback.swift; sourceTree = "<group>"; };
 		BAF473EA9325CA28C5786796 /* FoodCacheVoteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodCacheVoteView.swift; sourceTree = "<group>"; };
 		BC8BE503644CCEF8735CA67C /* SmartCountStepView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartCountStepView.swift; sourceTree = "<group>"; };
 		BD63B6313209711B5CC7C9BC /* AddGroceryItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddGroceryItemView.swift; sourceTree = "<group>"; };
@@ -638,6 +642,7 @@
 		1556E93E94DA5EB33FFE782E /* SmartKitchenTests */ = {
 			isa = PBXGroup;
 			children = (
+				42C957C161706DEDC7C9E7F2 /* AIServiceFallbackTests.swift */,
 				A083E1173A0F0624095BBEBF /* NutritionAIPackagedProductTests.swift */,
 				B012798476230FEB704A416E /* NutritionAIReliabilityTests.swift */,
 				019A8D5CCB169B9909C7F98A /* NutritionAITestDoubles.swift */,
@@ -992,6 +997,7 @@
 				7208600E7E29C32EF7BF03C1 /* ExaNutritionLookup.swift */,
 				69DAED45966A299314A19A92 /* FoodCache.swift */,
 				C758332A037C07A7DF37C53C /* FoodImageStore.swift */,
+				BA3DCEAE4481E11D9F0DD5C3 /* LocalNutritionFallback.swift */,
 				EBD507C7B8679FE1F7362563 /* NutritionAIProtocols.swift */,
 				051CE64F7E0B86B66A54A17E /* NutritionAIService.swift */,
 				A60237FCFFA1478DAAEB7DFE /* NutritionAveragesService.swift */,
@@ -1486,6 +1492,7 @@
 				3452F7DBF6259E57E5419A3A /* ListsInfoContent.swift in Sources */,
 				87569E28993E1A82FBBE8E47 /* ListsSettingsView.swift in Sources */,
 				B74B4C8E6F536D24F4A12ECE /* ListsTabView.swift in Sources */,
+				0A0B613DBC136098D259BF7A /* LocalNutritionFallback.swift in Sources */,
 				B613C74D56FD8B795710F5F7 /* LogWeightSheet.swift in Sources */,
 				CBD3718C35C3567FE2C9B660 /* MacCameraMediaPicker.swift in Sources */,
 				BD8ECA41B4514F3678AE8937 /* MacroCard.swift in Sources */,
@@ -1625,6 +1632,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FD2513CA9BCCEFDE7CDAA361 /* AIServiceFallbackTests.swift in Sources */,
 				41A5B798F77FF6CAD297D1D0 /* NutritionAIPackagedProductTests.swift in Sources */,
 				44465DB73519ED318B36F378 /* NutritionAIReliabilityTests.swift in Sources */,
 				C9395A0C9CA3A803C0D42774 /* NutritionAITestDoubles.swift in Sources */,
@@ -1957,12 +1965,15 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 44K57HQAP9;
+				EXA_API_KEY = "";
 				INFOPLIST_FILE = SmartKitchen/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 3.6.2;
+				OPENAI_API_KEY = "";
+				OPENROUTER_API_KEY = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.pedrosalles.smartkitchen.sync;
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";

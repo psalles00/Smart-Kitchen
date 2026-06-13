@@ -67,6 +67,9 @@ targets:
       properties:
         SupabaseURL: https://yfcmvdijvgeaihvwyssb.supabase.co
         SupabaseAnonKey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmY212ZGlqdmdlYWlodnd5c3NiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4ODAwMjEsImV4cCI6MjA5MjQ1NjAyMX0.Ffpszze5umpURnzNL_Fl3u7SFmjb_opQmWVPdpUjhiI
+        OpenAIAPIKey: "$(OPENAI_API_KEY)"
+        OpenRouterAPIKey: "$(OPENROUTER_API_KEY)"
+        ExaAPIKey: "$(EXA_API_KEY)"
         UIAppFonts:
           - PlayfairDisplay.ttf
           - PlayfairDisplay-Italic.ttf
@@ -147,6 +150,11 @@ targets:
         CURRENT_PROJECT_VERSION: "1"
         CODE_SIGN_STYLE: Automatic
         TARGETED_DEVICE_FAMILY: "1,2"
+      configs:
+        Release:
+          OPENAI_API_KEY: ""
+          OPENROUTER_API_KEY: ""
+          EXA_API_KEY: ""
   SavoriaTests:
     type: bundle.unit-test
     platform: iOS

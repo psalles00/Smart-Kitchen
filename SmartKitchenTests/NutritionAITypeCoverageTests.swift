@@ -45,6 +45,66 @@ final class NutritionAITypeCoverageTests: XCTestCase {
         XCTAssertEqual(voiceTranscriptAnalysis.fat, textAnalysis.fat)
     }
 
+    func testTextAnalysisContinuesWhenRemoteFoodCacheIsUnavailable() async throws {
+        let input = "150g arroz branco"
+        let parser = MockNutritionItemParser(itemsByDescription: [
+            input: [
+                NutritionItemParser.ParsedItem(name: "arroz branco", quantity: 150, unit: "g")
+            ]
+        ])
+        let rice = NutritionAITestFixtures.rice.per100g(appName: "arroz branco")
+        let service = NutritionAIService(
+            ai: MockNutritionAIClient(),
+            usda: MockUSDANutritionLookup(foodsByName: [FoodCache.canonicalize("arroz branco"): rice]),
+            exa: EmptyExaNutritionLookup(),
+            parser: parser,
+            cache: FailingWriteFoodCache()
+        )
+
+        let analysis = try await service.analyzeText(description: input)
+
+        XCTAssertEqual(analysis.calories, 195)
+        XCTAssertEqual(analysis.protein, 4)
+        XCTAssertNil(analysis.cachedFoodIDs)
+    }
+
+    func testTextAnalysisUsesLocalFallbackWhenAIBackendCannotResolveHost() async throws {
+        let service = NutritionAIService(
+            ai: MockNutritionAIClient(),
+            usda: MockUSDANutritionLookup(foodsByName: [:]),
+            exa: EmptyExaNutritionLookup(),
+            parser: ThrowingNutritionItemParser(error: URLError(.cannotFindHost)),
+            cache: DisabledFoodCache()
+        )
+
+        let analysis = try await service.analyzeText(description: "2 ovos com 100g de arroz branco")
+
+        XCTAssertEqual(analysis.name, "2 ovos com 100g de arroz branco")
+        XCTAssertEqual(analysis.calories, 271)
+        XCTAssertEqual(analysis.protein, 15)
+        XCTAssertEqual(analysis.carbs, 29)
+        XCTAssertEqual(analysis.fat, 10)
+        XCTAssertEqual(analysis.servingSizeGrams, 200)
+    }
+
+    func testPackagedDrinkTextUsesLocalFallbackWhenAIBackendCannotResolveHost() async throws {
+        let service = NutritionAIService(
+            ai: MockNutritionAIClient(),
+            usda: MockUSDANutritionLookup(foodsByName: [:]),
+            exa: EmptyExaNutritionLookup(),
+            parser: ThrowingNutritionItemParser(error: URLError(.cannotFindHost)),
+            cache: DisabledFoodCache()
+        )
+
+        let analysis = try await service.analyzeText(description: "Coca-Cola 350ml")
+
+        XCTAssertEqual(analysis.name, "coca-cola")
+        XCTAssertEqual(analysis.calories, 147)
+        XCTAssertEqual(analysis.carbs, 37)
+        XCTAssertEqual(analysis.servingSizeGrams, 350)
+        XCTAssertEqual(analysis.sugarG ?? -1, 37.1, accuracy: 0.1)
+    }
+
     func testCameraAndGalleryPhotoContractParsesFoodAnalysis() async throws {
         let ai = MockNutritionAIClient()
         ai.imageContent = """

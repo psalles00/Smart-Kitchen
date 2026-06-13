@@ -45,6 +45,8 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>ExaAPIKey</key>
+	<string>$(EXA_API_KEY)</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>NSCameraUsageDescription</key>
@@ -55,6 +57,10 @@
 	<string>O Savoria acessa a galeria para anexar fotos às suas receitas.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>O Savoria usa reconhecimento de voz para transcrever o que você falou sobre sua refeição.</string>
+	<key>OpenAIAPIKey</key>
+	<string>$(OPENAI_API_KEY)</string>
+	<key>OpenRouterAPIKey</key>
+	<string>$(OPENROUTER_API_KEY)</string>
 	<key>SupabaseAnonKey</key>
 	<string>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmY212ZGlqdmdlYWlodnd5c3NiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4ODAwMjEsImV4cCI6MjA5MjQ1NjAyMX0.Ffpszze5umpURnzNL_Fl3u7SFmjb_opQmWVPdpUjhiI</string>
 	<key>SupabaseURL</key>

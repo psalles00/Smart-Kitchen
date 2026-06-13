@@ -2,15 +2,15 @@ import Foundation
 
 enum APIConfig {
     static var openAIAPIKey: String {
-        debugValue(for: "OPENAI_API_KEY")
+        debugProviderValue(infoKey: "OpenAIAPIKey", envKey: "OPENAI_API_KEY")
     }
 
     static var openRouterAPIKey: String {
-        debugValue(for: "OPENROUTER_API_KEY")
+        debugProviderValue(infoKey: "OpenRouterAPIKey", envKey: "OPENROUTER_API_KEY")
     }
 
     static var exaAPIKey: String {
-        debugValue(for: "EXA_API_KEY")
+        debugProviderValue(infoKey: "ExaAPIKey", envKey: "EXA_API_KEY")
     }
 
     static var supabaseURL: String {
@@ -48,9 +48,9 @@ enum APIConfig {
         return ""
     }
 
-    private static func debugValue(for key: String) -> String {
+    private static func debugProviderValue(infoKey: String, envKey: String) -> String {
 #if DEBUG
-        return ProcessInfo.processInfo.environment[key]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return bundleValue(infoKey: infoKey, envKey: envKey)
 #else
         return ""
 #endif

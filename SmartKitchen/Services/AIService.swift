@@ -10,8 +10,18 @@ final class AIService: ObservableObject {
     private let maxToolCount = 24
     private let chatEndpoint = URL(string: "https://api.openai.com/v1/chat/completions")!
     private let transcriptionEndpoint = URL(string: "https://api.openai.com/v1/audio/transcriptions")!
+    private let openRouterEndpoint = URL(string: "https://openrouter.ai/api/v1/chat/completions")!
     private let defaultModel = "gpt-4.1-mini"
-    private let supabase = SupabaseClient()
+    private let supabase: any SupabaseFunctionInvoking
+    private let urlSession: URLSession
+
+    init(
+        supabase: any SupabaseFunctionInvoking = SupabaseClient(),
+        urlSession: URLSession = .shared
+    ) {
+        self.supabase = supabase
+        self.urlSession = urlSession
+    }
 
     // MARK: - Public
 
@@ -118,24 +128,28 @@ final class AIService: ObservableObject {
 
         let responseData: Data
         if supabase.isConfigured {
-            responseData = try await supabase.invokeFunctionData(
-                name: "openai-transcription",
-                body: body,
-                contentType: "multipart/form-data; boundary=\(boundary)"
-            )
+            do {
+                responseData = try await supabase.invokeFunctionData(
+                    name: "openai-transcription",
+                    body: body,
+                    contentType: "multipart/form-data; boundary=\(boundary)",
+                    acceptLanguage: nil
+                )
+            } catch {
+                guard !apiKey.isEmpty else { throw error }
+                LLMLog.error("Supabase transcription failed; falling back to direct OpenAI: \(error.localizedDescription)")
+                responseData = try await performDirectTranscription(
+                    body: body,
+                    boundary: boundary,
+                    apiKey: apiKey
+                )
+            }
         } else {
-            guard !apiKey.isEmpty else { throw AIError.missingAPIKey }
-
-            var request = URLRequest(url: transcriptionEndpoint)
-            request.httpMethod = "POST"
-            request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-            request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-            request.timeoutInterval = 120
-            request.httpBody = body
-
-            let (data, resp) = try await URLSession.shared.data(for: request)
-            try validate(resp: resp, data: data)
-            responseData = data
+            responseData = try await performDirectTranscription(
+                body: body,
+                boundary: boundary,
+                apiKey: apiKey
+            )
         }
 
         guard let transcript = String(data: responseData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -156,13 +170,60 @@ final class AIService: ObservableObject {
         let sanitizedBody = sanitizeRequestBody(body)
 
         if supabase.isConfigured {
-            return try await supabase.invokeFunctionData(
-                name: functionName,
-                body: sanitizedBody,
-                acceptLanguage: acceptLanguage
-            )
+            do {
+                return try await supabase.invokeFunctionData(
+                    name: functionName,
+                    body: sanitizedBody,
+                    acceptLanguage: acceptLanguage
+                )
+            } catch {
+                guard hasDirectChatBackend(apiKey: apiKey) else { throw error }
+                LLMLog.error("Supabase \(functionName) failed; falling back to direct provider: \(error.localizedDescription)")
+            }
         }
 
+        return try await performDirectJSONRequest(
+            directURL: directURL,
+            body: sanitizedBody,
+            apiKey: apiKey,
+            acceptLanguage: acceptLanguage
+        )
+    }
+
+    private func performDirectJSONRequest(
+        directURL: URL,
+        body: [String: Any],
+        apiKey: String,
+        acceptLanguage: String? = nil
+    ) async throws -> Data {
+        if !apiKey.isEmpty {
+            do {
+                return try await performOpenAIJSONRequest(
+                    directURL: directURL,
+                    body: body,
+                    apiKey: apiKey,
+                    acceptLanguage: acceptLanguage
+                )
+            } catch {
+                guard !APIConfig.openRouterAPIKey.isEmpty else { throw error }
+                LLMLog.error("Direct OpenAI request failed; falling back to OpenRouter: \(error.localizedDescription)")
+            }
+        }
+
+        guard !APIConfig.openRouterAPIKey.isEmpty else { throw AIError.missingAPIKey }
+        return try await performOpenRouterJSONRequest(
+            body: body,
+            apiKey: APIConfig.openRouterAPIKey,
+            acceptLanguage: acceptLanguage
+        )
+    }
+
+    private func performOpenAIJSONRequest(
+        directURL: URL,
+        body: [String: Any],
+        apiKey: String,
+        acceptLanguage: String? = nil
+    ) async throws -> Data {
         guard !apiKey.isEmpty else { throw AIError.missingAPIKey }
 
         var request = URLRequest(url: directURL)
@@ -172,12 +233,65 @@ final class AIService: ObservableObject {
         if let acceptLanguage, !acceptLanguage.isEmpty {
             request.setValue(acceptLanguage, forHTTPHeaderField: "Accept-Language")
         }
-        request.httpBody = try JSONSerialization.data(withJSONObject: sanitizedBody)
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
         request.timeoutInterval = 60
 
-        let (data, resp) = try await URLSession.shared.data(for: request)
+        let (data, resp) = try await urlSession.data(for: request)
         try validate(resp: resp, data: data)
         return data
+    }
+
+    private func performOpenRouterJSONRequest(
+        body: [String: Any],
+        apiKey: String,
+        acceptLanguage: String? = nil
+    ) async throws -> Data {
+        var openRouterBody = body
+        if let model = openRouterBody["model"] as? String,
+           model.hasPrefix("gpt-") || model.hasPrefix("o") {
+            openRouterBody["model"] = OpenRouterModel.default
+        } else if openRouterBody["model"] == nil {
+            openRouterBody["model"] = OpenRouterModel.default
+        }
+
+        var request = URLRequest(url: openRouterEndpoint)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("https://smartkitchen.app", forHTTPHeaderField: "HTTP-Referer")
+        request.setValue("Savoria", forHTTPHeaderField: "X-Title")
+        if let acceptLanguage, !acceptLanguage.isEmpty {
+            request.setValue(acceptLanguage, forHTTPHeaderField: "Accept-Language")
+        }
+        request.httpBody = try JSONSerialization.data(withJSONObject: openRouterBody)
+        request.timeoutInterval = 60
+
+        let (data, resp) = try await urlSession.data(for: request)
+        try validate(resp: resp, data: data)
+        return data
+    }
+
+    private func performDirectTranscription(
+        body: Data,
+        boundary: String,
+        apiKey: String
+    ) async throws -> Data {
+        guard !apiKey.isEmpty else { throw AIError.missingAPIKey }
+
+        var request = URLRequest(url: transcriptionEndpoint)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 120
+        request.httpBody = body
+
+        let (data, resp) = try await urlSession.data(for: request)
+        try validate(resp: resp, data: data)
+        return data
+    }
+
+    private func hasDirectChatBackend(apiKey: String) -> Bool {
+        !apiKey.isEmpty || !APIConfig.openRouterAPIKey.isEmpty
     }
 
     private func sanitizeTools(_ tools: [[String: Any]]?) -> [[String: Any]]? {

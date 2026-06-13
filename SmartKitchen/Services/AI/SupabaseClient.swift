@@ -1,5 +1,23 @@
 import Foundation
 
+@MainActor
+protocol SupabaseFunctionInvoking {
+    var isConfigured: Bool { get }
+
+    func invokeFunctionData(
+        name: String,
+        body: [String: Any],
+        acceptLanguage: String?
+    ) async throws -> Data
+
+    func invokeFunctionData(
+        name: String,
+        body: Data,
+        contentType: String,
+        acceptLanguage: String?
+    ) async throws -> Data
+}
+
 /// Lightweight Supabase REST client (PostgREST + RPC) over `URLSession`.
 ///
 /// We deliberately avoid the official `supabase-swift` SDK to keep dependencies
@@ -9,7 +27,7 @@ import Foundation
 /// gated by Row Level Security policies on the server. **Never embed the
 /// service_role key in this client.**
 @MainActor
-final class SupabaseClient {
+final class SupabaseClient: SupabaseFunctionInvoking {
     enum SupabaseError: LocalizedError {
         case notConfigured
         case invalidResponse
@@ -29,12 +47,14 @@ final class SupabaseClient {
 
     private let baseURL: URL?
     private let anonKey: String
+    private static var temporarilyDisabledUntil: Date?
+    private static let disableDuration: TimeInterval = 5 * 60
 
     /// `true` when both URL and anon key are present in `APIConfig`. When false,
     /// callers should silently skip Supabase (cache disabled) and proceed with
     /// the direct Exa/LLM path.
     var isConfigured: Bool {
-        baseURL != nil && !anonKey.isEmpty
+        baseURL != nil && !anonKey.isEmpty && !Self.isTemporarilyDisabled
     }
 
     init() {
@@ -78,9 +98,14 @@ final class SupabaseClient {
         }
         request.httpBody = body
 
-        let (data, resp) = try await URLSession.shared.data(for: request)
-        try validate(resp: resp, data: data)
-        return data
+        do {
+            let (data, resp) = try await URLSession.shared.data(for: request)
+            try validate(resp: resp, data: data)
+            return data
+        } catch {
+            Self.noteFailureIfTransient(error)
+            throw error
+        }
     }
 
     // MARK: - Generic helpers
@@ -103,9 +128,14 @@ final class SupabaseClient {
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.timeoutInterval = 15
 
-        let (data, resp) = try await URLSession.shared.data(for: request)
-        try validate(resp: resp, data: data)
-        return try JSONDecoder.supabase.decode(T.self, from: data)
+        do {
+            let (data, resp) = try await URLSession.shared.data(for: request)
+            try validate(resp: resp, data: data)
+            return try JSONDecoder.supabase.decode(T.self, from: data)
+        } catch {
+            Self.noteFailureIfTransient(error)
+            throw error
+        }
     }
 
     /// PostgREST RPC (`POST /rest/v1/rpc/<name>` with JSON body of named args).
@@ -127,8 +157,15 @@ final class SupabaseClient {
         request.timeoutInterval = 15
         request.httpBody = try JSONSerialization.data(withJSONObject: params)
 
-        let (data, resp) = try await URLSession.shared.data(for: request)
-        try validate(resp: resp, data: data)
+        let data: Data
+        let resp: URLResponse
+        do {
+            (data, resp) = try await URLSession.shared.data(for: request)
+            try validate(resp: resp, data: data)
+        } catch {
+            Self.noteFailureIfTransient(error)
+            throw error
+        }
 
         if T.self == VoidResult.self {
             // Safe by construction: only reached when T == VoidResult.
@@ -151,8 +188,13 @@ final class SupabaseClient {
         request.timeoutInterval = 15
         request.httpBody = try JSONEncoder().encode(body)
 
-        let (data, resp) = try await URLSession.shared.data(for: request)
-        try validate(resp: resp, data: data)
+        do {
+            let (data, resp) = try await URLSession.shared.data(for: request)
+            try validate(resp: resp, data: data)
+        } catch {
+            Self.noteFailureIfTransient(error)
+            throw error
+        }
     }
 
     // MARK: - Internal
@@ -168,6 +210,42 @@ final class SupabaseClient {
             let msg = String(data: data, encoding: .utf8) ?? ""
             throw SupabaseError.apiError(statusCode: http.statusCode, message: msg)
         }
+    }
+
+    private static var isTemporarilyDisabled: Bool {
+        guard let until = temporarilyDisabledUntil else { return false }
+        if until > Date() { return true }
+        temporarilyDisabledUntil = nil
+        return false
+    }
+
+    private static func noteFailureIfTransient(_ error: Error) {
+        guard shouldTemporarilyDisable(for: error) else { return }
+        temporarilyDisabledUntil = Date().addingTimeInterval(disableDuration)
+        LLMLog.error("Supabase unavailable; skipping Supabase calls temporarily: \(error.localizedDescription)")
+    }
+
+    private static func shouldTemporarilyDisable(for error: Error) -> Bool {
+        if let urlError = error as? URLError {
+            switch urlError.code {
+            case .cannotFindHost,
+                 .cannotConnectToHost,
+                 .networkConnectionLost,
+                 .notConnectedToInternet,
+                 .timedOut,
+                 .dnsLookupFailed,
+                 .secureConnectionFailed:
+                return true
+            default:
+                return false
+            }
+        }
+
+        if case SupabaseError.apiError(let statusCode, _) = error {
+            return statusCode == 404 || statusCode == 429 || (500...599).contains(statusCode)
+        }
+
+        return false
     }
 }
 

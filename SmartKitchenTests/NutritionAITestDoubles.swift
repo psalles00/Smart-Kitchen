@@ -43,6 +43,19 @@ final class MockNutritionItemParser: NutritionItemParsing {
 }
 
 @MainActor
+final class ThrowingNutritionItemParser: NutritionItemParsing {
+    private let error: Error
+
+    init(error: Error) {
+        self.error = error
+    }
+
+    func parse(_ description: String) async throws -> [NutritionItemParser.ParsedItem] {
+        throw error
+    }
+}
+
+@MainActor
 final class MockUSDANutritionLookup: NutritionUSDALookingUp {
     private let foodsByName: [String: Per100gNutrition]
 
@@ -128,5 +141,18 @@ final class DisabledFoodCache: NutritionFoodCaching {
 
     func upsert(_ food: Per100gNutrition) async throws -> UUID {
         UUID()
+    }
+}
+
+@MainActor
+final class FailingWriteFoodCache: NutritionFoodCaching {
+    var isEnabled: Bool { true }
+
+    func lookup(canonicalName: String, locale: String) async -> Per100gNutrition? {
+        nil
+    }
+
+    func upsert(_ food: Per100gNutrition) async throws -> UUID {
+        throw URLError(.cannotFindHost)
     }
 }

@@ -69,15 +69,30 @@ final class NutritionAIService {
             parsed = try await parser.parse(trimmed)
         } catch {
             // If even parsing fails, fall back to the legacy single-shot LLM
-            // estimate so the user still gets *something*.
-            LLMLog.error("Nutrition parse failed, using legacy LLM: \(error.localizedDescription)")
+            // estimate. When the backend is unavailable, use local reference
+            // data first so text logging does not collapse into a network
+            // hostname error.
+            LLMLog.error("Nutrition parse failed, using local/legacy fallback: \(error.localizedDescription)")
+            if let local = LocalNutritionFallback.analyzeText(trimmed) {
+                return local
+            }
             return try await legacyLLMEstimate(description: trimmed)
         }
-        guard !parsed.isEmpty else { return try await legacyLLMEstimate(description: trimmed) }
+        guard !parsed.isEmpty else {
+            if let local = LocalNutritionFallback.analyzeText(trimmed) {
+                return local
+            }
+            return try await legacyLLMEstimate(description: trimmed)
+        }
 
         // 2. Resolve per-100g for each item.
         let (resolved, ids) = await resolvePer100g(for: parsed)
-        guard !resolved.isEmpty else { return try await legacyLLMEstimate(description: trimmed) }
+        guard !resolved.isEmpty else {
+            if let local = LocalNutritionFallback.analyzeText(trimmed) {
+                return local
+            }
+            return try await legacyLLMEstimate(description: trimmed)
+        }
 
         // 3. Combine via pure Swift.
         var combined = NutritionCalculator.combine(items: resolved, originalDescription: trimmed)
@@ -360,8 +375,15 @@ final class NutritionAIService {
         Include a single food emoji that best represents the food. Use null for any nutrient you cannot estimate.
         Respond in Brazilian Portuguese for the "name" field when possible.
         """
-        let raw = try await callText(prompt: prompt)
-        return try Self.parseFoodAnalysis(from: raw)
+        do {
+            let raw = try await callText(prompt: prompt)
+            return try Self.parseFoodAnalysis(from: raw)
+        } catch {
+            if let local = LocalNutritionFallback.analyzeText(description) {
+                return local
+            }
+            throw error
+        }
     }
 
     private func callText(prompt: String) async throws -> String {
