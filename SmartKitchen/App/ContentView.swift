@@ -3353,31 +3353,29 @@ private struct HomeView: View {
     }
 
     private func expiringCardTextPanelColor(for date: Date?) -> Color {
-        let isExpired = date.map { expirationDaysUntil($0) < 0 } ?? false
-        if isExpired {
+        let status = expirationCardStatus(for: date)
+        if status.usesClearTextPanel {
             return .clear
         }
         return expiringCardSurfaceColor.opacity(colorScheme == .dark ? 0.60 : 0.48)
     }
 
     private func expiringCardSurface(for date: Date?) -> some View {
-        let isExpired = date.map { expirationDaysUntil($0) < 0 } ?? false
-        let accent = isExpired
-            ? Color.red
-            : Color.primary.opacity(colorScheme == .dark ? 0.58 : 0.42)
+        let status = expirationCardStatus(for: date)
 
         return RoundedRectangle(cornerRadius: 16, style: .continuous)
             .fill(expiringCardSurfaceColor)
             .overlay {
-                expiringCardSurfaceGradient(isExpired: isExpired)
+                expiringCardSurfaceGradient(for: status)
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
-            .expiringGlassReflectionBorder(cornerRadius: 16, accentColor: accent, isColored: true)
+            .expiringGlassReflectionBorder(cornerRadius: 16, accentColor: status.borderAccent(colorScheme: colorScheme), isColored: true)
             .shadow(color: .black.opacity(0.03), radius: 4, x: 0, y: 4)
     }
 
-    private func expiringCardSurfaceGradient(isExpired: Bool) -> LinearGradient {
-        if isExpired {
+    private func expiringCardSurfaceGradient(for status: ExpirationCardStatus) -> LinearGradient {
+        switch status {
+        case .expired:
             return LinearGradient(
                 stops: [
                     .init(color: Color.red.opacity(colorScheme == .dark ? 0.46 : 0.28), location: 0.00),
@@ -3389,17 +3387,39 @@ private struct HomeView: View {
                 startPoint: .top,
                 endPoint: .bottom
             )
+        case .critical:
+            return LinearGradient(
+                stops: [
+                    .init(color: Color.yellow.opacity(colorScheme == .dark ? 0.48 : 0.32), location: 0.00),
+                    .init(color: Color.yellow.opacity(colorScheme == .dark ? 0.28 : 0.19), location: 0.24),
+                    .init(color: Color.yellow.opacity(colorScheme == .dark ? 0.15 : 0.10), location: 0.58),
+                    .init(color: Color.yellow.opacity(colorScheme == .dark ? 0.05 : 0.035), location: 0.82),
+                    .init(color: Color.yellow.opacity(0.00), location: 1.00)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        case .upcoming:
+            return LinearGradient(
+                stops: [
+                    .init(color: Color.primary.opacity(colorScheme == .dark ? 0.24 : 0.14), location: 0.00),
+                    .init(color: Color.primary.opacity(colorScheme == .dark ? 0.14 : 0.08), location: 0.24),
+                    .init(color: Color.primary.opacity(colorScheme == .dark ? 0.075 : 0.045), location: 0.58),
+                    .init(color: Color.primary.opacity(colorScheme == .dark ? 0.025 : 0.018), location: 0.82),
+                    .init(color: Color.primary.opacity(0.00), location: 1.00)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
         }
+    }
 
-        return LinearGradient(
-            stops: [
-                .init(color: Color.primary.opacity(colorScheme == .dark ? 0.12 : 0.055), location: 0.00),
-                .init(color: Color.primary.opacity(colorScheme == .dark ? 0.055 : 0.028), location: 0.48),
-                .init(color: Color.primary.opacity(0.00), location: 1.00)
-            ],
-            startPoint: .top,
-            endPoint: .bottom
-        )
+    private func expirationCardStatus(for date: Date?) -> ExpirationCardStatus {
+        guard let date else { return .upcoming }
+        let days = expirationDaysUntil(date)
+        if days < 0 { return .expired }
+        if (0...3).contains(days) { return .critical }
+        return .upcoming
     }
 
     private var dessertShelf: some View {
@@ -3820,6 +3840,27 @@ private struct HomeView: View {
 }
 
 private let homeShortcutBackgroundColor = neutralSurfaceColor
+
+private enum ExpirationCardStatus {
+    case expired
+    case critical
+    case upcoming
+
+    var usesClearTextPanel: Bool {
+        true
+    }
+
+    func borderAccent(colorScheme: ColorScheme) -> Color {
+        switch self {
+        case .expired:
+            return .red
+        case .critical:
+            return .yellow
+        case .upcoming:
+            return Color.primary.opacity(colorScheme == .dark ? 0.58 : 0.42)
+        }
+    }
+}
 
 private struct ExpiringGlassReflectionBorderModifier: ViewModifier {
     let cornerRadius: CGFloat

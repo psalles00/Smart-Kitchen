@@ -14,11 +14,20 @@ struct UtensilsView: View {
     var onPullToAdd: (() -> Void)?
     var onScrollOffsetChange: (CGFloat) -> Void = { _ in }
 
-    private var utensilCategories: [Category] {
-        allCategories.filter { $0.type == .utensil }
+    private struct UtensilsListSnapshot {
+        let groups: [(String, [UnifiedItem])]
+        let hasVisibleItems: Bool
+        let categoryIconByName: [String: String]
     }
 
-    private var filteredItems: [UnifiedItem] {
+    private func makeSnapshot() -> UtensilsListSnapshot {
+        let utensilCategories = allCategories.filter { $0.type == .utensil }
+        let categoryIconByName = Dictionary(
+            utensilCategories.compactMap { category in
+                category.iconName.map { (category.name, $0) }
+            },
+            uniquingKeysWith: { current, _ in current }
+        )
         let items: [UnifiedItem]
         if searchText.isEmpty {
             items = Array(allItems)
@@ -26,19 +35,17 @@ struct UtensilsView: View {
             items = allItems.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
         }
 
-        switch sortOption {
+        let filteredItems: [UnifiedItem] = switch sortOption {
         case .custom:
-            return items.sorted { $0.utensilSortOrder < $1.utensilSortOrder }
+            items.sorted { $0.utensilSortOrder < $1.utensilSortOrder }
         case .name:
-            return items.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+            items.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
         case .addedAt:
-            return items.sorted { $0.addedAt > $1.addedAt }
+            items.sorted { $0.addedAt > $1.addedAt }
         case .expirationDate:
-            return items.sorted { $0.utensilSortOrder < $1.utensilSortOrder }
+            items.sorted { $0.utensilSortOrder < $1.utensilSortOrder }
         }
-    }
 
-    private var groupedItems: [(String, [UnifiedItem])] {
         let cats = utensilCategories.map(\.name)
         var groups: [(String, [UnifiedItem])] = []
         for catName in cats {
@@ -48,12 +55,19 @@ struct UtensilsView: View {
         let knownCats = Set(cats)
         let uncategorized = filteredItems.filter { !knownCats.contains($0.category) }
         if !uncategorized.isEmpty { groups.append(("Outros", uncategorized)) }
-        return groups
+
+        return UtensilsListSnapshot(
+            groups: groups,
+            hasVisibleItems: !filteredItems.isEmpty,
+            categoryIconByName: categoryIconByName
+        )
     }
 
     var body: some View {
+        let snapshot = makeSnapshot()
+
         Group {
-            if filteredItems.isEmpty {
+            if !snapshot.hasVisibleItems {
                 ContentUnavailableView(
                     searchText.isEmpty ? "Nenhum utensílio" : "Sem resultados",
                     systemImage: searchText.isEmpty ? "fork.knife" : "magnifyingglass",
@@ -61,7 +75,7 @@ struct UtensilsView: View {
                 )
                 .padding(.top, 40)
             } else {
-                itemList
+                itemList(snapshot: snapshot)
             }
         }
         .sheet(item: $editingItem, onDismiss: { editingItem = nil }) { selection in
@@ -70,12 +84,18 @@ struct UtensilsView: View {
         }
     }
 
-    private var itemList: some View {
+    private func itemList(snapshot: UtensilsListSnapshot) -> some View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(spacing: 0, pinnedViews: .sectionHeaders) {
-                    ForEach(Array(groupedItems.enumerated()), id: \.1.0) { categoryIndex, group in
-                        utensilSection(categoryIndex: categoryIndex, categoryName: group.0, items: group.1)
+                    ForEach(Array(snapshot.groups.enumerated()), id: \.1.0) { categoryIndex, group in
+                        utensilSection(
+                            categoryIndex: categoryIndex,
+                            categoryName: group.0,
+                            items: group.1,
+                            showsHeader: snapshot.groups.count > 1,
+                            snapshot: snapshot
+                        )
                     }
                 }
                 .padding(.top, 0)
@@ -107,7 +127,13 @@ struct UtensilsView: View {
     }
 
     @ViewBuilder
-    private func utensilSection(categoryIndex: Int, categoryName: String, items: [UnifiedItem]) -> some View {
+    private func utensilSection(
+        categoryIndex: Int,
+        categoryName: String,
+        items: [UnifiedItem],
+        showsHeader: Bool,
+        snapshot: UtensilsListSnapshot
+    ) -> some View {
         Section {
             ForEach(Array(items.enumerated()), id: \.1.id) { itemIndex, item in
                 Button {
@@ -115,7 +141,7 @@ struct UtensilsView: View {
                 } label: {
                     UtensilItemRow(
                         item: item,
-                        categoryIconName: categoryIconName(for: item),
+                        categoryIconName: snapshot.categoryIconByName[item.category],
                         showsDivider: itemIndex > 0
                     )
                         .contentShape(Rectangle())
@@ -147,7 +173,7 @@ struct UtensilsView: View {
                 .background(highlightedItemID == item.id ? Color.accentColor.opacity(0.15) : Color.clear)
             }
         } header: {
-            if groupedItems.count > 1 {
+            if showsHeader {
                 HStack {
                     Text(categoryName)
                         .font(.subheadline.weight(.semibold))
@@ -159,10 +185,6 @@ struct UtensilsView: View {
                 .background(Color(.systemBackground))
             }
         }
-    }
-
-    private func categoryIconName(for item: UnifiedItem) -> String? {
-        utensilCategories.first { $0.name == item.category }?.iconName
     }
 
     private func deleteItem(_ item: UnifiedItem) {

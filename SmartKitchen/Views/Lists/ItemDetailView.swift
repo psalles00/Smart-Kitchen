@@ -71,7 +71,6 @@ struct ItemDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
-    @Query private var allUnifiedItems: [UnifiedItem]
     @Query(sort: \Category.sortOrder) private var allCategories: [Category]
     @Query private var settingsArray: [AppSettings]
 
@@ -111,6 +110,11 @@ struct ItemDetailView: View {
     @State private var showCategorySelection = false
     @State private var showRemoveConfirmation = false
     @State private var selectedPhoto: PhotosPickerItem?
+    @State private var duplicateCheckItems: [UnifiedItem] = []
+    @State private var duplicateNameItem: UnifiedItem?
+    #if os(iOS)
+    @State private var itemDetailDetent: PresentationDetent = .medium
+    #endif
     @FocusState private var nameFieldFocused: Bool
 
     private var settings: AppSettings? { settingsArray.first }
@@ -138,10 +142,6 @@ struct ItemDetailView: View {
     private var hasPantry: Bool { selectedLists.contains(.pantry) }
     private var hasGrocery: Bool { selectedLists.contains(.grocery) }
     private var isValid: Bool { !name.trimmingCharacters(in: .whitespaces).isEmpty }
-    private var duplicateNameItem: UnifiedItem? {
-        guard isCreateMode else { return nil }
-        return UnifiedItem.existingItem(named: name, in: allUnifiedItems)
-    }
     private var canCreate: Bool { isValid && duplicateNameItem == nil }
 
     // Edit-mode binding
@@ -220,6 +220,7 @@ struct ItemDetailView: View {
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .navigationBar)
+        .presentationDetents([.medium, .large], selection: $itemDetailDetent)
         .presentationDragIndicator(.visible)
         .presentationBackground(appPrimaryBackground)
         #endif
@@ -295,7 +296,7 @@ struct ItemDetailView: View {
 
     private var resolvedHeaderIconName: String? {
         currentIconName
-            ?? ItemDatabase.shared.preferredMatch(for: currentNameValue)?.nomeDoArquivo
+            ?? IconResolver.resolve(currentNameValue)
             ?? currentCategoryIconName
     }
 
@@ -402,6 +403,7 @@ struct ItemDetailView: View {
                 #endif
                 .onChange(of: currentNameValue) { _, newValue in
                     updateSuggestions(for: newValue)
+                    refreshDuplicateNameItem(for: newValue)
                     if !isCreateMode {
                         name = newValue
                     }
@@ -1002,6 +1004,7 @@ struct ItemDetailView: View {
             DispatchQueue.main.async {
                 nameFieldFocused = true
             }
+            refreshDuplicateNameItem(for: name)
 
         case .edit(let item):
             name = item.name
@@ -1195,9 +1198,13 @@ struct ItemDetailView: View {
 
     private func save() {
         guard isCreateMode else { return }
-        guard duplicateNameItem == nil else { return }
 
         let trimmed = name.trimmingCharacters(in: .whitespaces)
+        if let existing = findExistingItem(named: trimmed) {
+            duplicateNameItem = existing
+            return
+        }
+
         let trimmedDescription = descriptionText.trimmingCharacters(in: .whitespacesAndNewlines)
         var finalIcon = iconName
         var finalCategory = selectedCategory
@@ -1216,10 +1223,6 @@ struct ItemDetailView: View {
         let wantsGrocery = selectedLists.contains(.grocery)
         let wantsUtensil = selectedLists.contains(.utensil)
 
-        let allPantry = allUnifiedItems.filter { $0.isPantry }
-        let allGrocery = allUnifiedItems.filter { $0.isGrocery }
-        let allUtensils = allUnifiedItems.filter { $0.isUtensil }
-
         let item = UnifiedItem(
             name: trimmed,
             category: finalCategory,
@@ -1227,9 +1230,9 @@ struct ItemDetailView: View {
             isPantry: wantsPantry,
             isGrocery: wantsGrocery,
             isUtensil: wantsUtensil,
-            pantrySortOrder: wantsPantry ? (allPantry.map(\.pantrySortOrder).max() ?? -1) + 1 : 0,
-            grocerySortOrder: wantsGrocery ? (allGrocery.map(\.grocerySortOrder).max() ?? -1) + 1 : 0,
-            utensilSortOrder: wantsUtensil ? (allUtensils.map(\.utensilSortOrder).max() ?? -1) + 1 : 0
+            pantrySortOrder: wantsPantry ? nextSortOrder(for: .pantry) : 0,
+            grocerySortOrder: wantsGrocery ? nextSortOrder(for: .grocery) : 0,
+            utensilSortOrder: wantsUtensil ? nextSortOrder(for: .utensil) : 0
         )
         item.descriptionText = trimmedDescription
         item.imageData = imageData
@@ -1270,6 +1273,59 @@ struct ItemDetailView: View {
     private func openExistingItem(_ item: UnifiedItem) {
         onExistingItemRequested?(item)
         dismiss()
+    }
+
+    private func refreshDuplicateNameItem(for candidateName: String) {
+        guard isCreateMode else {
+            duplicateNameItem = nil
+            return
+        }
+        duplicateNameItem = existingItemFromCachedCreateItems(named: candidateName)
+    }
+
+    private func existingItemFromCachedCreateItems(named candidateName: String) -> UnifiedItem? {
+        let trimmed = candidateName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        loadDuplicateCheckItemsIfNeeded()
+        return UnifiedItem.existingItem(named: trimmed, in: duplicateCheckItems)
+    }
+
+    private func loadDuplicateCheckItemsIfNeeded() {
+        guard isCreateMode, duplicateCheckItems.isEmpty else { return }
+        duplicateCheckItems = (try? modelContext.fetch(FetchDescriptor<UnifiedItem>())) ?? []
+    }
+
+    private func findExistingItem(named candidateName: String) -> UnifiedItem? {
+        let trimmed = candidateName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        let items = (try? modelContext.fetch(FetchDescriptor<UnifiedItem>())) ?? []
+        duplicateCheckItems = items
+        return UnifiedItem.existingItem(named: trimmed, in: items)
+    }
+
+    private func nextSortOrder(for listType: ItemListType) -> Int {
+        let items = fetchItems(for: listType)
+        let maxSortOrder = items.map { item in
+            switch listType {
+            case .pantry: item.pantrySortOrder
+            case .grocery: item.grocerySortOrder
+            case .utensil: item.utensilSortOrder
+            }
+        }.max() ?? -1
+        return maxSortOrder + 1
+    }
+
+    private func fetchItems(for listType: ItemListType) -> [UnifiedItem] {
+        let descriptor: FetchDescriptor<UnifiedItem>
+        switch listType {
+        case .pantry:
+            descriptor = FetchDescriptor<UnifiedItem>(predicate: #Predicate { $0.isPantry })
+        case .grocery:
+            descriptor = FetchDescriptor<UnifiedItem>(predicate: #Predicate { $0.isGrocery })
+        case .utensil:
+            descriptor = FetchDescriptor<UnifiedItem>(predicate: #Predicate { $0.isUtensil })
+        }
+        return (try? modelContext.fetch(descriptor)) ?? []
     }
 
     private func closeEditor() {

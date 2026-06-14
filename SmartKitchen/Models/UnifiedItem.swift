@@ -126,7 +126,7 @@ final class UnifiedItem {
 
     func resolvedIconName(categoryIconName: String? = nil) -> String? {
         iconName
-            ?? ItemDatabase.shared.preferredMatch(for: name)?.nomeDoArquivo
+            ?? IconResolver.resolve(name)
             ?? categoryIconName
             ?? CategoryDatabase.shared.entry(for: category)?.iconFileName
     }

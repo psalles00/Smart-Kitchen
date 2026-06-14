@@ -21,24 +21,35 @@ struct GroceryListView: View {
     var onPullToAdd: (() -> Void)?
     var onScrollOffsetChange: (CGFloat) -> Void = { _ in }
 
-    private var groupingMode: ListGroupingMode { settingsArray.first?.groceryGroupingMode ?? .marketSection }
-    private var categoryOrder: [String] { allCategories.filter { $0.type == .pantry }.map(\.name) }
-
-    private var filteredItems: [UnifiedItem] {
-        let items = searchText.isEmpty
-            ? allItems
-            : allItems.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
-        return items
+    private struct GroceryListSnapshot {
+        let groups: [(String, [UnifiedItem])]
+        let hasAnyItems: Bool
+        let groupingMode: ListGroupingMode
+        let categoryIconByName: [String: String]
     }
 
-    private var groupedItems: [(String, [UnifiedItem])] {
+    private var activeGroupingMode: ListGroupingMode {
+        settingsArray.first?.groceryGroupingMode ?? .marketSection
+    }
+
+    private func makeSnapshot() -> GroceryListSnapshot {
+        let groupingMode = activeGroupingMode
+        let listCategories = allCategories.filter { $0.type == .pantry || $0.type == .grocery }
+        let categoryOrder = allCategories.filter { $0.type == .pantry }.map(\.name)
+        let categoryIconByName = Dictionary(
+            listCategories.compactMap { category in
+                category.iconName.map { (category.name, $0) }
+            },
+            uniquingKeysWith: { current, _ in current }
+        )
+        let filteredItems = searchText.isEmpty
+            ? allItems
+            : allItems.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
         let keyForItem: (UnifiedItem) -> String = groupingMode == .marketSection
             ? { ItemDatabase.marketSection(for: $0.category) }
             : { $0.category }
-
         let grouped = Dictionary(grouping: filteredItems, by: keyForItem)
-
-        return grouped
+        let groups = grouped
             .map { key, items in (key, sortedItems(items)) }
             .sorted { lhs, rhs in
                 if groupingMode == .marketSection {
@@ -52,16 +63,25 @@ struct GroceryListView: View {
                 }
                 return lhs.0.localizedCaseInsensitiveCompare(rhs.0) == .orderedAscending
             }
+
+        return GroceryListSnapshot(
+            groups: groups,
+            hasAnyItems: !allItems.isEmpty,
+            groupingMode: groupingMode,
+            categoryIconByName: categoryIconByName
+        )
     }
 
     var body: some View {
+        let snapshot = makeSnapshot()
+
         Group {
-            if allItems.isEmpty {
+            if !snapshot.hasAnyItems {
                 emptyState
-            } else if groupedItems.isEmpty {
+            } else if snapshot.groups.isEmpty {
                 searchEmptyState
             } else {
-                itemList
+                itemList(snapshot: snapshot)
             }
         }
         .sheet(item: $editingItem, onDismiss: { editingItem = nil }) { selection in
@@ -74,11 +94,11 @@ struct GroceryListView: View {
         }
     }
 
-    private var itemList: some View {
+    private func itemList(snapshot: GroceryListSnapshot) -> some View {
         ScrollViewReader { proxy in
             List {
-                ForEach(Array(groupedItems.enumerated()), id: \.element.0) { categoryIndex, entry in
-                    grocerySection(categoryIndex: categoryIndex, category: entry.0, items: entry.1)
+                ForEach(Array(snapshot.groups.enumerated()), id: \.element.0) { categoryIndex, entry in
+                    grocerySection(categoryIndex: categoryIndex, category: entry.0, items: entry.1, snapshot: snapshot)
                 }
             }
             #if os(macOS)
@@ -114,24 +134,23 @@ struct GroceryListView: View {
     }
 
     @ViewBuilder
-    private func grocerySection(categoryIndex: Int, category: String, items: [UnifiedItem]) -> some View {
+    private func grocerySection(categoryIndex: Int, category: String, items: [UnifiedItem], snapshot: GroceryListSnapshot) -> some View {
         Section {
             ForEach(Array(items.enumerated()), id: \.element.id) { itemIndex, item in
-                groceryRow(categoryIndex: categoryIndex, itemIndex: itemIndex, category: category, item: item)
+                groceryRow(categoryIndex: categoryIndex, itemIndex: itemIndex, category: category, item: item, snapshot: snapshot)
             }
         } header: {
-            groceryHeader(for: category)
+            groceryHeader(for: category, groupingMode: snapshot.groupingMode)
         }
         .listSectionSeparator(.hidden)
     }
 
     @ViewBuilder
-    private func groceryRow(categoryIndex: Int, itemIndex: Int, category: String, item: UnifiedItem) -> some View {
+    private func groceryRow(categoryIndex: Int, itemIndex: Int, category: String, item: UnifiedItem, snapshot: GroceryListSnapshot) -> some View {
         Button {
             editingItem = UnifiedItemSelection(id: item.id)
         } label: {
-            let categoryIconName = allCategories.first(where: { $0.name == category && $0.type == .grocery })?.iconName
-            GroceryItemRow(item: item, categoryIconName: categoryIconName, isAlsoInPantry: item.isPantry, showsDivider: itemIndex > 0) {
+            GroceryItemRow(item: item, categoryIconName: snapshot.categoryIconByName[item.category], isAlsoInPantry: item.isPantry, showsDivider: itemIndex > 0) {
                 acquireItem(item)
             }
             .contentShape(Rectangle())
@@ -201,9 +220,9 @@ struct GroceryListView: View {
         .id(item.id)
     }
 
-    private func groceryHeader(for category: String) -> some View {
+    private func groceryHeader(for category: String, groupingMode: ListGroupingMode) -> some View {
         HStack(spacing: 6) {
-            Text(displayName(for: category))
+            Text(displayName(for: category, groupingMode: groupingMode))
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.primary.opacity(0.72))
             Spacer()
@@ -234,7 +253,7 @@ struct GroceryListView: View {
             .listRowBackground(Color.clear)
     }
 
-    private func displayName(for category: String) -> String {
+    private func displayName(for category: String, groupingMode: ListGroupingMode) -> String {
         switch groupingMode {
         case .category, .validade:
             return CategoryMutationService.localizedDisplayName(for: category, type: .pantry)
@@ -329,7 +348,7 @@ struct GroceryListView: View {
 
     private func handleDrop(_ payload: ListsDragPayload, targetCategory: String, targetItem: UnifiedItem?) -> Bool {
         let resolvedCategory: (String) -> String = { original in
-            groupingMode == .marketSection ? original : targetCategory
+            activeGroupingMode == .marketSection ? original : targetCategory
         }
 
         switch payload.sourceList {

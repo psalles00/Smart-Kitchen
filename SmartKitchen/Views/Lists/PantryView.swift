@@ -21,12 +21,31 @@ struct PantryView: View {
     var onPullToAdd: (() -> Void)?
     var onScrollOffsetChange: (CGFloat) -> Void = { _ in }
 
-    private var settings: AppSettings? { settingsArray.first }
-    private var isDetailed: Bool { settings?.pantryDetailLevel == .detailed }
-    private var groupingMode: ListGroupingMode { settings?.pantryGroupingMode ?? .category }
-    private var categoryOrder: [String] { allCategories.filter { $0.type == .pantry }.map(\.name) }
+    private struct PantryListSnapshot {
+        let groups: [(String, [UnifiedItem])]
+        let hasAnyItems: Bool
+        let isDetailed: Bool
+        let groupingMode: ListGroupingMode
+        let categoryIconByName: [String: String]
+    }
 
-    private var filteredItems: [UnifiedItem] {
+    private var activeGroupingMode: ListGroupingMode {
+        settingsArray.first?.pantryGroupingMode ?? .category
+    }
+
+    private func makeSnapshot() -> PantryListSnapshot {
+        let settings = settingsArray.first
+        let isDetailed = settings?.pantryDetailLevel == .detailed
+        let groupingMode = activeGroupingMode
+        let pantryCategories = allCategories.filter { $0.type == .pantry }
+        let categoryOrder = pantryCategories.map(\.name)
+        let categoryIconByName = Dictionary(
+            pantryCategories.compactMap { category in
+                category.iconName.map { (category.name, $0) }
+            },
+            uniquingKeysWith: { current, _ in current }
+        )
+
         var items = searchText.isEmpty
             ? allItems
             : allItems.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
@@ -46,19 +65,29 @@ struct PantryView: View {
             }
         }
 
-        return items
+        let groups = groupingMode == .validade
+            ? expirationGroupedItems(from: items)
+            : categoryGroupedItems(from: items, groupingMode: groupingMode, categoryOrder: categoryOrder)
+
+        return PantryListSnapshot(
+            groups: groups,
+            hasAnyItems: !allItems.isEmpty,
+            isDetailed: isDetailed,
+            groupingMode: groupingMode,
+            categoryIconByName: categoryIconByName
+        )
     }
 
-    private var groupedItems: [(String, [UnifiedItem])] {
-        if groupingMode == .validade {
-            return expirationGroupedItems
-        }
-
+    private func categoryGroupedItems(
+        from items: [UnifiedItem],
+        groupingMode: ListGroupingMode,
+        categoryOrder: [String]
+    ) -> [(String, [UnifiedItem])] {
         let keyForItem: (UnifiedItem) -> String = groupingMode == .marketSection
             ? { ItemDatabase.marketSection(for: $0.category) }
             : { $0.category }
 
-        let grouped = Dictionary(grouping: filteredItems, by: keyForItem)
+        let grouped = Dictionary(grouping: items, by: keyForItem)
 
         return grouped
             .map { key, items in (key, sortedItems(items)) }
@@ -76,7 +105,7 @@ struct PantryView: View {
             }
     }
 
-    private var expirationGroupedItems: [(String, [UnifiedItem])] {
+    private func expirationGroupedItems(from filteredItems: [UnifiedItem]) -> [(String, [UnifiedItem])] {
         let now = Calendar.current.startOfDay(for: .now)
         let threeDays = Calendar.current.date(byAdding: .day, value: 3, to: now)!
         let twoWeeks = Calendar.current.date(byAdding: .day, value: 14, to: now)!
@@ -114,13 +143,15 @@ struct PantryView: View {
     }
 
     var body: some View {
+        let snapshot = makeSnapshot()
+
         Group {
-            if allItems.isEmpty {
+            if !snapshot.hasAnyItems {
                 emptyState
-            } else if groupedItems.isEmpty {
+            } else if snapshot.groups.isEmpty {
                 searchEmptyState
             } else {
-                itemList
+                itemList(snapshot: snapshot)
             }
         }
         .sheet(item: $editingItem, onDismiss: { editingItem = nil }) { selection in
@@ -129,11 +160,11 @@ struct PantryView: View {
         }
     }
 
-    private var itemList: some View {
+    private func itemList(snapshot: PantryListSnapshot) -> some View {
         ScrollViewReader { proxy in
             List {
-                ForEach(Array(groupedItems.enumerated()), id: \.element.0) { categoryIndex, entry in
-                    pantrySection(categoryIndex: categoryIndex, category: entry.0, items: entry.1)
+                ForEach(Array(snapshot.groups.enumerated()), id: \.element.0) { categoryIndex, entry in
+                    pantrySection(categoryIndex: categoryIndex, category: entry.0, items: entry.1, snapshot: snapshot)
                 }
             }
             .listRowInsets(EdgeInsets())
@@ -170,27 +201,26 @@ struct PantryView: View {
     }
 
     @ViewBuilder
-    private func pantrySection(categoryIndex: Int, category: String, items: [UnifiedItem]) -> some View {
+    private func pantrySection(categoryIndex: Int, category: String, items: [UnifiedItem], snapshot: PantryListSnapshot) -> some View {
         Section {
             ForEach(Array(items.enumerated()), id: \.element.id) { itemIndex, item in
-                pantryRow(categoryIndex: categoryIndex, itemIndex: itemIndex, category: category, item: item)
+                pantryRow(categoryIndex: categoryIndex, itemIndex: itemIndex, category: category, item: item, snapshot: snapshot)
             }
         } header: {
-            pantryHeader(for: category)
+            pantryHeader(for: category, groupingMode: snapshot.groupingMode)
         }
         .listSectionSeparator(.hidden)
     }
 
     @ViewBuilder
-    private func pantryRow(categoryIndex: Int, itemIndex: Int, category: String, item: UnifiedItem) -> some View {
+    private func pantryRow(categoryIndex: Int, itemIndex: Int, category: String, item: UnifiedItem, snapshot: PantryListSnapshot) -> some View {
         Button {
             editingItem = UnifiedItemSelection(id: item.id)
         } label: {
-            let categoryIconName = allCategories.first(where: { $0.name == category && $0.type == .pantry })?.iconName
             PantryItemRow(
                 item: item,
-                categoryIconName: categoryIconName,
-                isDetailed: isDetailed,
+                categoryIconName: snapshot.categoryIconByName[item.category],
+                isDetailed: snapshot.isDetailed,
                 isAlsoInGrocery: item.isGrocery,
                 onSendToGrocery: { sendToGrocery(item) },
                 showsDivider: itemIndex > 0
@@ -279,9 +309,9 @@ struct PantryView: View {
         .id(item.id)
     }
 
-    private func pantryHeader(for category: String) -> some View {
+    private func pantryHeader(for category: String, groupingMode: ListGroupingMode) -> some View {
         HStack(spacing: 6) {
-            Text(displayName(for: category))
+            Text(displayName(for: category, groupingMode: groupingMode))
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.secondary)
             Spacer()
@@ -320,7 +350,7 @@ struct PantryView: View {
         }
     }
 
-    private func displayName(for category: String) -> String {
+    private func displayName(for category: String, groupingMode: ListGroupingMode) -> String {
         switch groupingMode {
         case .category:
             return CategoryMutationService.localizedDisplayName(for: category, type: .pantry)
@@ -384,7 +414,7 @@ struct PantryView: View {
 
     private func handleDrop(_ payload: ListsDragPayload, targetCategory: String, targetItem: UnifiedItem?) -> Bool {
         let resolvedCategory: (String) -> String = { original in
-            groupingMode == .marketSection ? original : targetCategory
+            activeGroupingMode == .marketSection ? original : targetCategory
         }
 
         switch payload.sourceList {
