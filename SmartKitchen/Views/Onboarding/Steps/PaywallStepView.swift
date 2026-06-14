@@ -71,7 +71,7 @@ struct PaywallStepView: View {
 
     private var backgroundLayer: some View {
         ZStack {
-            NebulaShaderView(theme: .lists, progress: 1.0)
+            ThemedBackgroundView(theme: .lists, progress: 1.0)
                 .ignoresSafeArea()
 
             LinearGradient(

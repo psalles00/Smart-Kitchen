@@ -16,17 +16,6 @@ extension EnvironmentValues {
     }
 }
 
-private struct SuspendAnimatedPageBackgroundKey: EnvironmentKey {
-    nonisolated(unsafe) static let defaultValue = false
-}
-
-extension EnvironmentValues {
-    var suspendAnimatedPageBackground: Bool {
-        get { self[SuspendAnimatedPageBackgroundKey.self] }
-        set { self[SuspendAnimatedPageBackgroundKey.self] = newValue }
-    }
-}
-
 /// True while the foreground-burst mitigation window is active. Views that
 /// own heavy `@Query` subscribers should unmount them (after the initial
 /// load) while this is `true` so the CloudKit remote-change burst doesn't
@@ -73,22 +62,21 @@ enum ExpandedPageHeaderMetrics {
     static let iosInfoBottomGap: CGFloat = 16
     static let iosEmptyInfoHeight: CGFloat = 0
     static let iosCompactInfoHeight: CGFloat = 44
+    static let iosHomeInfoHeight: CGFloat = 47
 
-    static func iosShaderHeight(infoHeight: CGFloat) -> CGFloat {
+    static func iosHeaderDetailHeight(infoHeight: CGFloat) -> CGFloat {
         iosInfoTopPadding + infoHeight + iosInfoBottomGap
     }
 
     static func iosTotalHeight(infoHeight: CGFloat) -> CGFloat {
-        iosTitleHeight + iosShaderHeight(infoHeight: infoHeight)
+        iosTitleHeight + iosHeaderDetailHeight(infoHeight: infoHeight)
     }
 }
 
 // MARK: - Expanded Page Layout
 
-/// Layout with a fixed animated background, a floating header, and a
+/// Layout with a fixed page background, a floating header, and a
 /// content area that manages its own scrolling.
-/// The shader zone now hosts a UnifiedSearchBar that is revealed by
-/// dragging down anywhere on the page or pressing the search button.
 struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View {
     let pageTheme: PageTheme
     let header: (_ isInverted: Bool) -> Header
@@ -97,16 +85,12 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
     let startsWithInfoCollapsed: Bool
     let backgroundOverride: AnyView?
 
-    private var backgroundManager = BackgroundManager.shared
-
     @Environment(\.backgroundTheme) private var backgroundTheme
     @Environment(\.usesGlobalPageBackground) private var usesGlobalPageBackground
     @Environment(\.visiblePageTheme) private var visiblePageTheme
     @Environment(\.searchOverlay) private var searchOverlay
-    @Environment(\.suspendAnimatedPageBackground) private var suspendAnimatedPageBackground
     @EnvironmentObject private var searchBarState: SearchBarState
 
-    /// Use the animated background theme from environment if available, otherwise fall back to the page's own theme.
     private var effectiveBgTheme: PageTheme { backgroundTheme ?? pageTheme }
 
     private let headerHeight: CGFloat = ExpandedPageHeaderMetrics.iosTitleHeight
@@ -129,17 +113,6 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
     // Drag-to-reveal state
     @State private var dragOffset: CGFloat = 0
     private let revealThreshold: CGFloat = 40
-
-    private var shouldAnimateShaderBackground: Bool {
-        #if os(macOS)
-        true
-        #else
-        guard !suspendAnimatedPageBackground else { return false }
-        guard !usesGlobalPageBackground else { return false }
-        guard let visiblePageTheme else { return true }
-        return visiblePageTheme == pageTheme
-        #endif
-    }
 
     private var trailingPanelInset: CGFloat {
         #if os(macOS)
@@ -212,19 +185,19 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
                 // Fixed page background. Keep this inside the page even when the
                 // app also keeps global backgrounds warm: TabView/NavigationStack
                 // can draw an opaque host behind the tab content on iOS, so the
-                // shader/header area must not depend on a background behind them.
+                // background/header area must not depend on a background behind them.
                 backgroundLayer
                     .ignoresSafeArea()
                     .allowsHitTesting(false)
 
                 // LAYOUT
                 VStack(spacing: 0) {
-                    // Fixed header (transparent, over shader)
+                    // Fixed header (transparent, over background)
                     header(false)
                         .frame(height: headerHeight)
 
-                    // Shader zone: info content + search bar slot
-                    shaderZone
+                    // Header zone: info content + search bar slot
+                    headerDetailZone
 
                     // Content area
                     contentArea
@@ -239,11 +212,11 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
     #endif
 }
 
-    // MARK: - Shader Zone (iOS)
+    // MARK: - Header Detail Zone (iOS)
 
     #if !os(macOS)
     @ViewBuilder
-    private var shaderZone: some View {
+    private var headerDetailZone: some View {
         VStack(spacing: 0) {
             infoContent()
                 .padding(.horizontal, 20)
@@ -402,9 +375,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
     private func themedBackground(for theme: PageTheme) -> some View {
         ThemedBackgroundView(
             theme: theme,
-            selection: backgroundManager.background(for: theme),
-            progress: 1.0,
-            animated: shouldAnimateShaderBackground
+            progress: 1.0
         )
     }
 }
@@ -420,6 +391,20 @@ struct DeferredTabPage<Loaded: View, Placeholder: View>: View {
     @Environment(\.activeAppTab) private var activeAppTab
     @State private var isReady = false
     @State private var loadTask: Task<Void, Never>?
+
+    init(
+        tab: AppTab,
+        delay: Duration = .milliseconds(320),
+        initiallyReady: Bool = false,
+        @ViewBuilder loaded: @escaping () -> Loaded,
+        @ViewBuilder placeholder: @escaping () -> Placeholder
+    ) {
+        self.tab = tab
+        self.delay = delay
+        self.loaded = loaded
+        self.placeholder = placeholder
+        _isReady = State(initialValue: initiallyReady)
+    }
 
     var body: some View {
         #if os(iOS)
@@ -517,6 +502,10 @@ struct PageSkeletonGrid: View {
                 ForEach(0..<itemCount, id: \.self) { index in
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
                         .fill(skeletonBaseColor)
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .stroke(skeletonStrokeColor, lineWidth: 0.6)
+                        }
                         .aspectRatio(0.78, contentMode: .fit)
                         .overlay(alignment: .bottomLeading) {
                             VStack(alignment: .leading, spacing: 8) {
@@ -567,6 +556,10 @@ private struct SkeletonNotebookCard: View {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(skeletonBaseColor)
                 .frame(height: 118)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(skeletonStrokeColor, lineWidth: 0.6)
+                }
                 .overlay(alignment: .topLeading) {
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
                         .fill(skeletonHighlightColor.opacity(0.86))
@@ -593,6 +586,10 @@ private struct SkeletonNotebookCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(12)
         .background(skeletonBaseColor.opacity(0.55), in: .rect(cornerRadius: 18))
+        .overlay {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(skeletonStrokeColor, lineWidth: 0.6)
+        }
     }
 }
 
@@ -609,14 +606,26 @@ struct NutritionPageSkeleton: View {
 
                     RoundedRectangle(cornerRadius: 22, style: .continuous)
                         .fill(skeletonBaseColor)
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                                .stroke(skeletonStrokeColor, lineWidth: 0.6)
+                        }
                         .frame(width: contentWidth, height: 176)
 
                     HStack(spacing: 12) {
                         RoundedRectangle(cornerRadius: 18, style: .continuous)
                             .fill(skeletonBaseColor)
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                    .stroke(skeletonStrokeColor, lineWidth: 0.6)
+                            }
                             .frame(height: 108)
                         RoundedRectangle(cornerRadius: 18, style: .continuous)
                             .fill(skeletonBaseColor)
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                    .stroke(skeletonStrokeColor, lineWidth: 0.6)
+                            }
                             .frame(height: 108)
                     }
                     .frame(width: contentWidth)
@@ -625,6 +634,10 @@ struct NutritionPageSkeleton: View {
                         SkeletonListRow(index: index)
                             .frame(width: contentWidth)
                             .background(skeletonBaseColor.opacity(0.55), in: .rect(cornerRadius: 16))
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                    .stroke(skeletonStrokeColor, lineWidth: 0.6)
+                            }
                     }
                 }
                 .frame(width: geometry.size.width, alignment: .top)
@@ -645,7 +658,7 @@ private struct NutritionDateStripeSkeleton: View {
     var body: some View {
         HStack(alignment: .center, spacing: 0) {
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .stroke(skeletonBaseColor, lineWidth: 1)
+                .stroke(skeletonStrokeColor, lineWidth: 1)
                 .background(
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
                         .fill(skeletonBaseColor.opacity(0.36))
@@ -677,16 +690,73 @@ struct NutritionInfoSkeleton: View {
     var body: some View {
         HStack(spacing: 12) {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(.white.opacity(0.24))
+                .fill(skeletonHeaderBaseColor)
                 .frame(height: 28)
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(.white.opacity(0.18))
+                .fill(skeletonHeaderBaseColor.opacity(0.82))
                 .frame(width: 92, height: 32)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .frame(height: ExpandedPageHeaderMetrics.iosCompactInfoHeight)
         .skeletonShimmer()
         .clipped()
+        .allowsHitTesting(false)
+    }
+}
+
+struct AssistantInfoSkeleton: View {
+    var body: some View {
+        GeometryReader { proxy in
+            let primaryWidth = max(min(proxy.size.width * 0.7, 240), 170)
+            let secondaryWidth = primaryWidth * 0.78
+
+            HStack(alignment: .center, spacing: 12) {
+                VStack(alignment: .leading, spacing: 8) {
+                    RoundedRectangle(cornerRadius: 9, style: .continuous)
+                        .fill(skeletonHeaderBaseColor)
+                        .frame(width: primaryWidth, height: 18)
+
+                    HStack(spacing: 10) {
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .fill(skeletonHeaderBaseColor.opacity(0.86))
+                            .frame(width: 72, height: 12)
+
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .fill(skeletonHeaderBaseColor.opacity(0.86))
+                            .frame(width: 70, height: 12)
+
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .fill(skeletonHeaderBaseColor.opacity(0.86))
+                            .frame(width: secondaryWidth * 0.32, height: 12)
+                    }
+                }
+
+                Spacer(minLength: 0)
+
+                ZStack {
+                    Circle()
+                        .stroke(skeletonHeaderBaseColor.opacity(0.62), lineWidth: 5)
+
+                    Circle()
+                        .trim(from: 0, to: 0.68)
+                        .stroke(skeletonHeaderHighlightColor.opacity(0.72), style: StrokeStyle(lineWidth: 5, lineCap: .round))
+                        .rotationEffect(.degrees(-90))
+
+                    VStack(spacing: 4) {
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .fill(skeletonHeaderBaseColor)
+                            .frame(width: 28, height: 12)
+
+                        RoundedRectangle(cornerRadius: 3.5, style: .continuous)
+                            .fill(skeletonHeaderBaseColor.opacity(0.82))
+                            .frame(width: 20, height: 7)
+                    }
+                }
+                .frame(width: 54, height: 54)
+            }
+        }
+        .frame(height: ExpandedPageHeaderMetrics.iosHomeInfoHeight)
+        .skeletonShimmer()
         .allowsHitTesting(false)
     }
 }
@@ -726,7 +796,7 @@ private struct SkeletonListRow: View {
             Spacer()
 
             Circle()
-                .stroke(skeletonBaseColor, lineWidth: 4)
+                .stroke(skeletonStrokeColor, lineWidth: 4)
                 .frame(width: 42, height: 42)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -742,52 +812,28 @@ private struct SkeletonListRow: View {
     }
 }
 
-private struct SkeletonShimmerModifier: ViewModifier {
-    @State private var phase: CGFloat = -1
-
-    func body(content: Content) -> some View {
-        content
-            .overlay {
-                GeometryReader { geometry in
-                    LinearGradient(
-                        colors: [.clear, .white.opacity(0.34), .clear],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                    .rotationEffect(.degrees(18))
-                    .frame(width: geometry.size.width * 0.55, height: geometry.size.height * 1.6)
-                    .offset(x: geometry.size.width * phase, y: -geometry.size.height * 0.25)
-                    .blendMode(.plusLighter)
-                }
-                .allowsHitTesting(false)
-            }
-            .clipped()
-            .onAppear {
-                withAnimation(.linear(duration: 1.15).repeatForever(autoreverses: false)) {
-                    phase = 2.1
-                }
-            }
-    }
-}
-
 private extension View {
     func skeletonShimmer() -> some View {
-        modifier(SkeletonShimmerModifier())
+        appSkeletonShimmer()
     }
 }
 
 private var skeletonBaseColor: Color {
-    #if os(iOS)
-    Color(.systemGray5)
-    #else
-    Color.secondary.opacity(0.15)
-    #endif
+    appSkeletonSurfaceBaseColor
 }
 
 private var skeletonHighlightColor: Color {
-    #if os(iOS)
-    Color(.systemBackground).opacity(0.92)
-    #else
-    Color.primary.opacity(0.12)
-    #endif
+    appSkeletonSurfaceHighlightColor
+}
+
+private var skeletonStrokeColor: Color {
+    appSkeletonSurfaceStrokeColor
+}
+
+private var skeletonHeaderBaseColor: Color {
+    appSkeletonHeaderBaseColor
+}
+
+private var skeletonHeaderHighlightColor: Color {
+    appSkeletonHeaderHighlightColor
 }

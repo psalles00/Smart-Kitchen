@@ -24,7 +24,6 @@
 		111F46B36114F5ABD00E2DC2 /* TextPipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB26A2A8B6FF269608716F69 /* TextPipeline.swift */; };
 		1139162840553D9BA9E846F7 /* items_database.json in Resources */ = {isa = PBXBuildFile; fileRef = BD8EFA8D0DF90B9B35DF27A4 /* items_database.json */; };
 		1285DD1E22044AC2780E2CAE /* AIModeSuggestions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE82C062B050BC096DBDDAA2 /* AIModeSuggestions.swift */; };
-		130FF08EEE333D459026AD1D /* WavesShaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 382D66BD301AABE81FA0E3A3 /* WavesShaderView.swift */; };
 		14632222A745801631A2C9B6 /* AppLocalization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58C54AB857A19E4859861D17 /* AppLocalization.swift */; };
 		1871CA0B9A8C2E5156D1D2AB /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54E9C41052AFBFDE995CAA53 /* NotificationService.swift */; };
 		197DC838CB31BEFAD840CB9B /* PerformanceSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 923EAB77C262A6BF8D3267C6 /* PerformanceSettingsView.swift */; };
@@ -37,7 +36,6 @@
 		1D5726866411D414E263B33F /* RecipeImportPipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E175993AEAD75137D32BABC /* RecipeImportPipeline.swift */; };
 		1E3475619F4FB6AFB35474BA /* IconResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 075F230C33AAE3A5989E9EBE /* IconResolver.swift */; };
 		2369EBEDC6ED4A14F26058E9 /* BackupSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BBA1CA5A04B774EAAD63D2E /* BackupSettingsView.swift */; };
-		23881C6E7E176E3D96EC6412 /* MeshGradientShaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5BBB1362316E6604D935041 /* MeshGradientShaderView.swift */; };
 		26BB1141D6CCA12B54F10B32 /* DataSeeder.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD5ABCE32502F5BC5C5CB4DF /* DataSeeder.swift */; };
 		26E1755BA347496B606E53AE /* NutritionScore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95C7D569A1E2AF11186C7EDE /* NutritionScore.swift */; };
 		281C13C8A0215113537D0DA4 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = E5D21BC604C9FDA9E674F8BD /* InfoPlist.xcstrings */; };
@@ -121,7 +119,6 @@
 		6A1DFBCB86CAF0BACBE81C30 /* OnboardingState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8712B7297BD154DE6200893 /* OnboardingState.swift */; };
 		6A9653E75E65960CAD34B7FE /* SelectPantryStepView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A619F9A20D06A0ECB3BB94F0 /* SelectPantryStepView.swift */; };
 		6ABC664DFF8AB9BCBEED56AF /* NutritionCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0C66BFB01199545F694F384 /* NutritionCalculations.swift */; };
-		6B867DBD62801E8C985AE825 /* TexturedGradientView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 223EEEC2E6E5C6F3572B0A85 /* TexturedGradientView.swift */; };
 		6C304E1EF911DF0758EFE27A /* RecipeOptionButtonsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A1DA8CE366B34B2600E51DD /* RecipeOptionButtonsView.swift */; };
 		6CC2EC479730B019B1A633F2 /* ItemIconPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B18CA8A7141908734CA7123 /* ItemIconPickerView.swift */; };
 		6EAF28E1F1B471A31132240C /* ChatConversation.swift in Sources */ = {isa = PBXBuildFile; fileRef = F21B363D1F25116C3B95156D /* ChatConversation.swift */; };
@@ -183,7 +180,6 @@
 		A6CB25E81785FDEF318D7097 /* IngredientQuantityScaler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32C7420251B5AC99F9AB0623 /* IngredientQuantityScaler.swift */; };
 		A7B5A575280F6B2E575B7FCF /* CommandBarSuggestionChips.swift in Sources */ = {isa = PBXBuildFile; fileRef = E27D653FE356C349A8C27D88 /* CommandBarSuggestionChips.swift */; };
 		A90DC26A8E2D284BB4A615E5 /* RecipeImportOrchestrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45890FB81F05FADA6EF03881 /* RecipeImportOrchestrator.swift */; };
-		A95FF69DD26E6188F154BA96 /* NebulaShaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FE61854469F70D6D206BD52 /* NebulaShaderView.swift */; };
 		A9C44F6EBF2060DE5E429907 /* SupabaseClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75AD97696B4183C30DFFE782 /* SupabaseClient.swift */; };
 		AA23E40555E6F4D7EC9B84B3 /* AppLocalization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58C54AB857A19E4859861D17 /* AppLocalization.swift */; };
 		AB0987DB9D66611E7986CEF7 /* AssistantView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C16DA117DC717DADE1AF74 /* AssistantView.swift */; };
@@ -240,7 +236,6 @@
 		D951D5458300287BF526DB22 /* RecipeImportInbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D982D0E8D23D0F71B7049BF /* RecipeImportInbox.swift */; };
 		D951FACCAD090C7D5ECDDB21 /* images-128 in Resources */ = {isa = PBXBuildFile; fileRef = E5AEE72295DDF210EBDBBF9A /* images-128 */; };
 		DA14E726F416BAFA14B7D93E /* AddItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65B9C18EA33BF7B878D2662E /* AddItemView.swift */; };
-		DA4F377E458C1FAB95717DF0 /* BackgroundManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F314FDF85CDEEA7ECC9062D /* BackgroundManager.swift */; };
 		DA8D8FE76D720925AB6D6F76 /* Telma-Bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 45656677AD3714E163ED9011 /* Telma-Bold.otf */; };
 		DB9901168121DA936F8CF3DA /* CommandBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D3A8A7840E1C2C1529B3007 /* CommandBarView.swift */; };
 		DBAD8BEA6F66B12E3AE16102 /* SettingsButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFCEEBA0F45A1486F9EE603B /* SettingsButton.swift */; };
@@ -350,7 +345,6 @@
 		18F997273D99B1D6AD5B30BE /* EditRecipeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditRecipeView.swift; sourceTree = "<group>"; };
 		1A19BC15CBA0BBF327324E13 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		1F826826CB169B1547D1082C /* RecipeImageCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeImageCache.swift; sourceTree = "<group>"; };
-		223EEEC2E6E5C6F3572B0A85 /* TexturedGradientView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TexturedGradientView.swift; sourceTree = "<group>"; };
 		23BD6AC4B303BC43FF6948FB /* ConversationHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationHistoryView.swift; sourceTree = "<group>"; };
 		24C5CAE1B8DE2B8989D16B4E /* ActivityStepView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityStepView.swift; sourceTree = "<group>"; };
 		260E0AEB628DA774805FD554 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
@@ -371,7 +365,6 @@
 		34EDFC8006585B1EA7500849 /* meta-es.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "meta-es.json"; sourceTree = "<group>"; };
 		353C1175CD2B3C3C3D1C0DCD /* InlineSearchResultsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineSearchResultsView.swift; sourceTree = "<group>"; };
 		3788BD683F7C5CAD5A294F19 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
-		382D66BD301AABE81FA0E3A3 /* WavesShaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WavesShaderView.swift; sourceTree = "<group>"; };
 		3886CC6A6FBE18AFA70F4105 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		3975EB9E1F06E9235BC26A63 /* IngredientNormalizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IngredientNormalizer.swift; sourceTree = "<group>"; };
 		39E3D008679762441FBCD92E /* HapticManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticManager.swift; sourceTree = "<group>"; };
@@ -417,7 +410,6 @@
 		5F2855F679DBAC07AFEDF7A0 /* AITools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AITools.swift; sourceTree = "<group>"; };
 		5F54A0D5A483572DAD3CA7EF /* NutritionPaywallGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionPaywallGate.swift; sourceTree = "<group>"; };
 		5F7AA0C13D7D68541F647A78 /* Configuration.storekit */ = {isa = PBXFileReference; path = Configuration.storekit; sourceTree = "<group>"; };
-		5FE61854469F70D6D206BD52 /* NebulaShaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NebulaShaderView.swift; sourceTree = "<group>"; };
 		600EDD530C0ABD3D8C83E88F /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		60DB5C2D28F6CAD1D2ADA37E /* AddPantryItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddPantryItemView.swift; sourceTree = "<group>"; };
 		636BFE39EDDC296B5535BCDA /* NutritionSpeechRecognizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionSpeechRecognizer.swift; sourceTree = "<group>"; };
@@ -432,7 +424,6 @@
 		6CD351710E6E853F0407AB7E /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		6D3A8A7840E1C2C1529B3007 /* CommandBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandBarView.swift; sourceTree = "<group>"; };
 		6EF316580075877B807A6F91 /* BodyStepView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BodyStepView.swift; sourceTree = "<group>"; };
-		6F314FDF85CDEEA7ECC9062D /* BackgroundManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundManager.swift; sourceTree = "<group>"; };
 		71EA39E201D01426855B0453 /* ExpandedPageLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpandedPageLayout.swift; sourceTree = "<group>"; };
 		7208600E7E29C32EF7BF03C1 /* ExaNutritionLookup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExaNutritionLookup.swift; sourceTree = "<group>"; };
 		72CE4B2891F05A6C6E8CA356 /* MacroCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacroCard.swift; sourceTree = "<group>"; };
@@ -544,7 +535,6 @@
 		D3FB73DF754961AE17B60C8D /* SexStepView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SexStepView.swift; sourceTree = "<group>"; };
 		D589E4E539EC17B2EAC8C106 /* HTMLRecipeExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTMLRecipeExtractor.swift; sourceTree = "<group>"; };
 		D59BA920E5CEAEDA2B69C9F5 /* NutritionDayLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionDayLog.swift; sourceTree = "<group>"; };
-		D5BBB1362316E6604D935041 /* MeshGradientShaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeshGradientShaderView.swift; sourceTree = "<group>"; };
 		D625B8D59C3D7A090C50D3DE /* RecipeImportProcessingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeImportProcessingView.swift; sourceTree = "<group>"; };
 		D65FB6BABFB487D84E8E3FD0 /* GoalStepView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalStepView.swift; sourceTree = "<group>"; };
 		D6BE4C724AFB81764F1B248F /* AddRecipeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddRecipeView.swift; sourceTree = "<group>"; };
@@ -953,17 +943,6 @@
 			path = Nutrition;
 			sourceTree = "<group>";
 		};
-		A3B7A648AEF9EAE5E0D5F601 /* Shaders */ = {
-			isa = PBXGroup;
-			children = (
-				D5BBB1362316E6604D935041 /* MeshGradientShaderView.swift */,
-				5FE61854469F70D6D206BD52 /* NebulaShaderView.swift */,
-				223EEEC2E6E5C6F3572B0A85 /* TexturedGradientView.swift */,
-				382D66BD301AABE81FA0E3A3 /* WavesShaderView.swift */,
-			);
-			path = Shaders;
-			sourceTree = "<group>";
-		};
 		A4A418C94C753ACB59EACD3E /* Recipes */ = {
 			isa = PBXGroup;
 			children = (
@@ -1031,7 +1010,6 @@
 		B658780AFB319080C3105FE9 /* Shared */ = {
 			isa = PBXGroup;
 			children = (
-				A3B7A648AEF9EAE5E0D5F601 /* Shaders */,
 				E49E22104BD2DC190869D339 /* AssistantTriggerBar.swift */,
 				9AB1288F335CB9E41C4BCD44 /* CategoryIconView.swift */,
 				DE0267B15A323F9C43F70E31 /* CategoryManagementView.swift */,
@@ -1167,7 +1145,6 @@
 				5F2855F679DBAC07AFEDF7A0 /* AITools.swift */,
 				980285F2E9866A086F1FC846 /* APIConfig.swift */,
 				F95839547159000637E07B07 /* AssistantChatManager.swift */,
-				6F314FDF85CDEEA7ECC9062D /* BackgroundManager.swift */,
 				F9B3D291B4129B374AEF734A /* BackupManager.swift */,
 				01D405419BB692070742AF7D /* BackupSnapshotV2.swift */,
 				D73CF9864B8CB3F466CA29F4 /* CategoryDatabase.swift */,
@@ -1424,7 +1401,6 @@
 				C4752565CBB223667ACA694B /* AssistantTriggerBar.swift in Sources */,
 				AB0987DB9D66611E7986CEF7 /* AssistantView.swift in Sources */,
 				5B2D1130DAC5045B6E67BE77 /* AsymmetricCircleCanvas.swift in Sources */,
-				DA4F377E458C1FAB95717DF0 /* BackgroundManager.swift in Sources */,
 				B5F73C101C65410AEF4B5443 /* BackupManager.swift in Sources */,
 				2369EBEDC6ED4A14F26058E9 /* BackupSettingsView.swift in Sources */,
 				4A8DBB4323E8B1B3199985DA /* BackupSnapshotV2.swift in Sources */,
@@ -1496,11 +1472,9 @@
 				B613C74D56FD8B795710F5F7 /* LogWeightSheet.swift in Sources */,
 				CBD3718C35C3567FE2C9B660 /* MacCameraMediaPicker.swift in Sources */,
 				BD8ECA41B4514F3678AE8937 /* MacroCard.swift in Sources */,
-				23881C6E7E176E3D96EC6412 /* MeshGradientShaderView.swift in Sources */,
 				71E19FD8D71697BA522FF0BC /* MonthCalendarStrip.swift in Sources */,
 				5175E06D2E8DBD9D4E12E6D1 /* MultiFileZipArchive.swift in Sources */,
 				B9408D8C4CAC5557CF4CC5E2 /* MultimodalLoggingStepView.swift in Sources */,
-				A95FF69DD26E6188F154BA96 /* NebulaShaderView.swift in Sources */,
 				1871CA0B9A8C2E5156D1D2AB /* NotificationService.swift in Sources */,
 				FF221A2BB996A7C7C86EEB24 /* NotificationSettingsView.swift in Sources */,
 				01D2DDC6C13E33CA9B920D76 /* NutrientsInfoContent.swift in Sources */,
@@ -1606,7 +1580,6 @@
 				61B01C204AF67531BB9A820D /* SuggestionChipsView.swift in Sources */,
 				A9C44F6EBF2060DE5E429907 /* SupabaseClient.swift in Sources */,
 				111F46B36114F5ABD00E2DC2 /* TextPipeline.swift in Sources */,
-				6B867DBD62801E8C985AE825 /* TexturedGradientView.swift in Sources */,
 				4727E27033C6C7D3C6B0BA5B /* Theme.swift in Sources */,
 				FA8CD60A97F57CA13CD75E21 /* ThemedBackgroundView.swift in Sources */,
 				04FFD51C55F19981F10C0552 /* TimeRange.swift in Sources */,
@@ -1617,7 +1590,6 @@
 				02718BDDB645C27889F70727 /* UniversalSearchService.swift in Sources */,
 				1C84DFF76147886F5BB6C5D7 /* UtensilItem.swift in Sources */,
 				28D09C04BA69B6A03DC313C2 /* UtensilsView.swift in Sources */,
-				130FF08EEE333D459026AD1D /* WavesShaderView.swift in Sources */,
 				CA91FDA7C7DF4C766649EDE8 /* WavyPanelBorder.swift in Sources */,
 				909F2F3D789823F66A4D9DDE /* WebURLPipeline.swift in Sources */,
 				745360AD6390EF97894128C9 /* WeekEnergyStrip.swift in Sources */,

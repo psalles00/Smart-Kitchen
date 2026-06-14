@@ -77,6 +77,7 @@ private struct HomeInfoContentLive: View {
                 .padding(.bottom, 6)
         }
         .padding(.bottom, -3)
+        .frame(height: ExpandedPageHeaderMetrics.iosHomeInfoHeight)
         .onAppear {
             if !didRunInitialRefresh {
                 didRunInitialRefresh = true

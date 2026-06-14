@@ -446,7 +446,7 @@ extension View {
 
 /// Settings page used by the macOS sidebar. Wraps the settings UI inside
 /// `ExpandedPageLayout(pageTheme: .settings, ...)` — i.e. the same shell as
-/// Listas / Nutrição, with the gray-tinted nebula shader as background.
+/// Listas / Nutrição, with the gray-tinted page background.
 ///
 /// Unlike the sheet variant (`SettingsView`), this view does NOT embed a
 /// `NavigationSplitView` nor force a 1240pt minimum width — both of which
@@ -677,4 +677,3 @@ struct AboutSettingsRows: View {
         #endif
     }
 }
-

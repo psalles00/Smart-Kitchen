@@ -45,7 +45,7 @@ struct FullscreenAssistantView: View {
 
     var presentation: Presentation = .overlay
     var chromeStyle: ChromeStyle = .fullscreen
-    var usesDarkShaderBackground: Bool = false
+    var usesDarkThemedBackground: Bool = false
     /// When set, the idle "Pergunte à SavorIA" / "Ideias de receitas" buttons call
     /// this closure (with the desired preset) instead of mutating the global
     /// `searchBarState.mode`. Used by the search-tab to push the AI page.
@@ -99,7 +99,7 @@ struct FullscreenAssistantView: View {
         ]
     }
     private var headerBackgroundStyle: AnyShapeStyle {
-        if usesDarkShaderBackground {
+        if usesDarkThemedBackground {
             return AnyShapeStyle(
                 LinearGradient(
                     colors: [
@@ -266,16 +266,16 @@ struct FullscreenAssistantView: View {
 
             if searchBarState.mode == .aiChat {
                 #if os(macOS)
-                if usesDarkShaderBackground {
+                if usesDarkThemedBackground {
                     Menu {
                         Button {
-                            searchBarState.requestAIHistory(source: "macOS dark header menu")
+                            searchBarState.requestAIHistory(source: "macOS themed header menu")
                         } label: {
                             Label("Histórico", systemImage: "clock.arrow.circlepath")
                         }
 
                         Button {
-                            searchBarState.requestAINewConversation(source: "macOS dark header menu")
+                            searchBarState.requestAINewConversation(source: "macOS themed header menu")
                         } label: {
                             Label("Nova conversa", systemImage: "square.and.pencil")
                         }
@@ -754,8 +754,8 @@ struct FullscreenAssistantView: View {
 
     @ViewBuilder
     private var pageBackground: some View {
-        if usesDarkShaderBackground {
-            AssistantModeShaderBackground()
+        if usesDarkThemedBackground {
+            AssistantModeBackground()
         } else {
             Rectangle()
                 .fill(appPrimaryBackground)
@@ -763,66 +763,9 @@ struct FullscreenAssistantView: View {
     }
 }
 
-private struct AssistantModeShaderBackground: View {
-    @AppStorage(PerformancePreferences.backgroundShadersEnabledKey)
-    private var backgroundShadersEnabled = true
-
+private struct AssistantModeBackground: View {
     var body: some View {
-        ZStack {
-            Color(red: 0.06, green: 0.065, blue: 0.075)
-
-            if backgroundShadersEnabled {
-                TexturedGradientSceneView(
-                    color1: Color(red: 0.30, green: 0.31, blue: 0.34),
-                    color2: Color(red: 0.18, green: 0.19, blue: 0.21),
-                    color3: Color(red: 0.09, green: 0.10, blue: 0.12),
-                    grainIntensity: 0.10,
-                    shapeType: 5
-                )
-                .opacity(0.94)
-            } else {
-                MeshGradient(
-                    width: 3,
-                    height: 3,
-                    points: [
-                        [0.0, 0.0], [0.5, 0.0], [1.0, 0.0],
-                        [0.0, 0.5], [0.5, 0.5], [1.0, 0.5],
-                        [0.0, 1.0], [0.5, 1.0], [1.0, 1.0]
-                    ],
-                    colors: [
-                        Color(red: 0.25, green: 0.26, blue: 0.29),
-                        Color(red: 0.19, green: 0.20, blue: 0.22),
-                        Color(red: 0.15, green: 0.16, blue: 0.18),
-                        Color(red: 0.14, green: 0.15, blue: 0.17),
-                        Color(red: 0.10, green: 0.11, blue: 0.13),
-                        Color(red: 0.08, green: 0.09, blue: 0.10),
-                        Color(red: 0.07, green: 0.08, blue: 0.09),
-                        Color(red: 0.05, green: 0.055, blue: 0.065),
-                        Color.black
-                    ]
-                )
-            }
-
-            LinearGradient(
-                colors: [
-                    Color.black.opacity(0.26),
-                    Color.black.opacity(0.12),
-                    Color.black.opacity(0.42)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-
-            LinearGradient(
-                colors: [
-                    Color.white.opacity(0.04),
-                    Color.clear,
-                    Color.black.opacity(0.28)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-        }
+        ThemedBackgroundView(theme: .assistant, progress: 1.0)
     }
 }
 
@@ -859,7 +802,7 @@ struct MacAssistantExpandedPage: View {
     var body: some View {
         ExpandedPageLayout(
             pageTheme: .home,
-            backgroundOverride: AnyView(AssistantModeShaderBackground()),
+            backgroundOverride: AnyView(AssistantModeBackground()),
             header: { isInverted in
                 PageHeader(title: mode.title, isInverted: isInverted) {
                     if mode == .aiMode {
@@ -896,7 +839,7 @@ struct MacAssistantExpandedPage: View {
                     pendingShowHistory: $pendingShowHistory,
                     presentation: .tab,
                     chromeStyle: .embeddedPanel,
-                    usesDarkShaderBackground: false,
+                    usesDarkThemedBackground: false,
                     onRequestAIMode: mode == .assistant ? onRequestAIMode : nil,
                     showsBackButton: false
                 )
@@ -937,7 +880,7 @@ struct AssistantSearchTabContent: View {
 
     @Binding var path: [AssistantTabAIDestination]
 
-    var usesDarkShaderBackground: Bool = false
+    var usesDarkThemedBackground: Bool = false
     var aiPageShowsBackButton: Bool = true
 
     var body: some View {
@@ -953,7 +896,7 @@ struct AssistantSearchTabContent: View {
                 pendingNewConversation: $pendingNewConversation,
                 pendingShowHistory: $pendingShowHistory,
                 presentation: .tab,
-                usesDarkShaderBackground: usesDarkShaderBackground,
+                usesDarkThemedBackground: usesDarkThemedBackground,
                 onRequestAIMode: { preset, prefill in
                     path.append(AssistantTabAIDestination(preset: preset, prefill: prefill))
                 }
@@ -973,7 +916,7 @@ struct AssistantSearchTabContent: View {
                     pendingOpenChat: $pendingOpenChat,
                     pendingNewConversation: $pendingNewConversation,
                     pendingShowHistory: $pendingShowHistory,
-                    usesDarkShaderBackground: usesDarkShaderBackground,
+                    usesDarkThemedBackground: usesDarkThemedBackground,
                     showsBackButton: aiPageShowsBackButton
                 )
             }
@@ -998,7 +941,7 @@ private struct AssistantSearchTabAIPage: View {
     @Binding var pendingNewConversation: Bool
     @Binding var pendingShowHistory: Bool
 
-    var usesDarkShaderBackground: Bool = false
+    var usesDarkThemedBackground: Bool = false
     var showsBackButton: Bool = true
 
     /// Tracks whether the initial AI-mode configuration has been applied.
@@ -1019,7 +962,7 @@ private struct AssistantSearchTabAIPage: View {
             pendingNewConversation: $pendingNewConversation,
             pendingShowHistory: $pendingShowHistory,
             presentation: .tab,
-            usesDarkShaderBackground: usesDarkShaderBackground,
+            usesDarkThemedBackground: usesDarkThemedBackground,
             onRequestAIMode: nil,
             showsBackButton: showsBackButton
         )

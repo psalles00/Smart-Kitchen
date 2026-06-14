@@ -2,14 +2,11 @@ import SwiftUI
 import SwiftData
 
 /// Página unificada que reúne preferências visuais (modo claro/escuro)
-/// e de performance (fundos animados).
+/// e de performance.
 struct AppearanceSettingsView: View {
     @Environment(\.modelContext) private var modelContext
 
     @Query private var settingsArray: [AppSettings]
-
-    @AppStorage(PerformancePreferences.backgroundShadersEnabledKey)
-    private var backgroundShadersEnabled = true
 
     @AppStorage(PerformancePreferences.recipeIllustratedPlaceholdersEnabledKey)
     private var recipeIllustratedPlaceholdersEnabled = true
@@ -24,6 +21,7 @@ struct AppearanceSettingsView: View {
                         get: { settings.appearanceMode },
                         set: { newMode in
                             settings.appearanceMode = newMode
+                            newMode.persistForLaunch()
                             try? modelContext.save()
                             #if os(iOS)
                             NotificationCenter.default.post(name: .appearanceModeChanged, object: nil)
@@ -42,12 +40,9 @@ struct AppearanceSettingsView: View {
             }
 
             Section {
-                Toggle("Fundos animados", isOn: $backgroundShadersEnabled)
                 Toggle("Capas ilustradas das receitas", isOn: $recipeIllustratedPlaceholdersEnabled)
             } header: {
                 Text("Performance")
-            } footer: {
-                Text("Ao desativar, Home, Listas, Receitas e Nutrição passam a usar degradês estáticos. Desativar as capas ilustradas faz receitas sem foto usarem uma capa simples, útil para testar uma navegação mais leve em Receitas.")
             }
 
             Section {

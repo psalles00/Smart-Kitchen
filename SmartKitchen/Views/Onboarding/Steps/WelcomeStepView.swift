@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Phase 1 — Step 1. Hero welcome screen with the Nebula shader as backdrop
+/// Phase 1 — Step 1. Hero welcome screen with the Savoria backdrop
 /// and an orbital search motif rendered around the new Liquid Glass center.
 struct WelcomeStepView: View {
     let onContinue: () -> Void
@@ -32,7 +32,7 @@ struct WelcomeStepView: View {
 
     var body: some View {
         ZStack {
-            NebulaShaderView(theme: .home, progress: 1.0)
+            ThemedBackgroundView(theme: .home, progress: 1.0)
                 .ignoresSafeArea()
                 .overlay(
                     LinearGradient(

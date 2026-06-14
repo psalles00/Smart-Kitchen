@@ -8,41 +8,117 @@ import SwiftUI
 struct SplashView: View {
     var body: some View {
         let _ = PerformanceLogger.event(.launch, "SplashView body evaluated")
-        return Group {
+        return ZStack {
+            ThemedBackgroundView(
+                theme: .home,
+                progress: 1.0
+            )
+            .ignoresSafeArea()
+            .allowsHitTesting(false)
+
             #if os(iOS)
-            LaunchSkeletonHomeView()
-                .forceLightStatusBar()
+            AppLaunchSkeletonPage(kind: .assistant)
+                .launchSkeletonStatusBar()
             #else
-            LaunchSkeletonHomeView()
+            AppLaunchSkeletonPage(kind: .assistant)
             #endif
         }
-        .transition(.opacity)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Savoria")
     }
 }
 
-private struct LaunchSkeletonHomeView: View {
+enum AppSkeletonKind {
+    case assistant
+    case lists
+    case recipes
+    case nutrition
+
+    var title: String {
+        switch self {
+        case .assistant:
+            return "Savoria"
+        case .lists:
+            return String(localized: "Listas")
+        case .recipes:
+            return String(localized: "Receitas")
+        case .nutrition:
+            return String(localized: "Nutrição")
+        }
+    }
+
+    var showsHeaderDetail: Bool {
+        switch self {
+        case .assistant, .nutrition:
+            return true
+        case .lists, .recipes:
+            return false
+        }
+    }
+
+    var pageTheme: PageTheme {
+        switch self {
+        case .assistant:
+            return .home
+        case .lists:
+            return .lists
+        case .recipes:
+            return .recipes
+        case .nutrition:
+            return .nutrients
+        }
+    }
+}
+
+enum AppSkeletonPresentation {
+    case fullPage
+    case contentOnly
+}
+
+struct AppLaunchSkeletonPage: View {
+    @Environment(\.colorScheme) private var colorScheme
     @State private var shimmerPhase: CGFloat = 0
     @State private var shortcutDeckWidth: CGFloat = 0
 
+    let kind: AppSkeletonKind
+    let title: String
+    let presentation: AppSkeletonPresentation
+
     private let cornerRadius: CGFloat = 24
 
-    var body: some View {
-        let _ = PerformanceLogger.event(.launch, "LaunchSkeletonHomeView body evaluated")
-        return ZStack(alignment: .top) {
-            NebulaShaderView(theme: .home)
-                .ignoresSafeArea()
-                .allowsHitTesting(false)
+    init(kind: AppSkeletonKind = .assistant, title: String? = nil, presentation: AppSkeletonPresentation = .fullPage) {
+        self.kind = kind
+        self.title = title ?? kind.title
+        self.presentation = presentation
+    }
 
+    var body: some View {
+        let _ = PerformanceLogger.event(.launch, "AppLaunchSkeletonPage body evaluated")
+        return skeletonBody
+        .allowsHitTesting(false)
+        .onAppear(perform: startShimmer)
+    }
+
+    @ViewBuilder
+    private var skeletonBody: some View {
+        switch presentation {
+        case .fullPage:
             #if os(macOS)
             macLayout
             #else
             iosLayout
             #endif
+        case .contentOnly:
+            contentOnlyLayout
         }
-        .allowsHitTesting(false)
-        .onAppear(perform: startShimmer)
+    }
+
+    private var contentOnlyLayout: some View {
+        ScrollView {
+            contentStack
+                .padding(.top, 12)
+        }
+        .scrollIndicators(.hidden)
     }
 
     #if os(macOS)
@@ -53,20 +129,20 @@ private struct LaunchSkeletonHomeView: View {
 
     private var macLayout: some View {
         VStack(spacing: 0) {
-            PageHeader(title: "Savoria", isInverted: false) {
-                SkeletonBlock(width: 34, height: 34, cornerRadius: 17, palette: .shader, phase: shimmerPhase)
+            PageHeader(title: title, isInverted: false) {
+                SkeletonBlock(width: 34, height: 34, cornerRadius: 17, palette: .header, phase: shimmerPhase)
             }
             .frame(height: macHeaderHeight)
             .padding(.top, macHeaderTopInset)
 
-            homeInfoContent
+            headerDetailContent
                 .padding(.horizontal, 20)
                 .padding(.top, 4)
                 .padding(.bottom, 10)
 
             ZStack {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(appPrimaryBackground)
+                    .fill(skeletonContentBackground)
 
                 VStack(spacing: 0) {
                     Color.clear.frame(height: 10)
@@ -92,13 +168,13 @@ private struct LaunchSkeletonHomeView: View {
 
     private var iosLayout: some View {
         VStack(spacing: 0) {
-            PageHeader(title: "Savoria", isInverted: false) {
-                SkeletonBlock(width: 34, height: 36, cornerRadius: 18, palette: .shader, phase: shimmerPhase)
+            PageHeader(title: title, isInverted: false) {
+                SkeletonBlock(width: 34, height: 36, cornerRadius: 18, palette: .header, phase: shimmerPhase)
             }
             .frame(height: headerHeight)
 
             VStack(spacing: 0) {
-                homeInfoContent
+                headerDetailContent
                     .padding(.horizontal, 20)
                     .padding(.top, 4)
 
@@ -118,7 +194,7 @@ private struct LaunchSkeletonHomeView: View {
             .safeAreaInset(edge: .bottom) {
                 Color.clear.frame(height: bottomTabBarContentInset)
             }
-            .background(appPrimaryBackground)
+            .background(skeletonContentBackground)
             .clipShape(
                 UnevenRoundedRectangle(
                     topLeadingRadius: cornerRadius,
@@ -134,19 +210,31 @@ private struct LaunchSkeletonHomeView: View {
     }
     #endif
 
-    private var homeInfoContent: some View {
+    @ViewBuilder
+    private var headerDetailContent: some View {
+        switch kind {
+        case .assistant:
+            assistantInfoContent
+        case .nutrition:
+            nutritionInfoContent
+        case .lists, .recipes:
+            Color.clear.frame(height: ExpandedPageHeaderMetrics.iosEmptyInfoHeight)
+        }
+    }
+
+    private var assistantInfoContent: some View {
         GeometryReader { proxy in
             let primaryWidth = max(min(proxy.size.width * 0.7, 240), 170)
             let secondaryWidth = primaryWidth * 0.78
 
             HStack(alignment: .center, spacing: 12) {
                 VStack(alignment: .leading, spacing: 8) {
-                    SkeletonBlock(width: primaryWidth, height: 18, cornerRadius: 9, palette: .shader, phase: shimmerPhase)
+                    SkeletonBlock(width: primaryWidth, height: 18, cornerRadius: 9, palette: .header, phase: shimmerPhase)
 
                     HStack(spacing: 10) {
-                        SkeletonBlock(width: 72, height: 12, cornerRadius: 6, palette: .shader, phase: shimmerPhase)
-                        SkeletonBlock(width: 70, height: 12, cornerRadius: 6, palette: .shader, phase: shimmerPhase)
-                        SkeletonBlock(width: secondaryWidth * 0.32, height: 12, cornerRadius: 6, palette: .shader, phase: shimmerPhase)
+                        SkeletonBlock(width: 72, height: 12, cornerRadius: 6, palette: .header, phase: shimmerPhase)
+                        SkeletonBlock(width: 70, height: 12, cornerRadius: 6, palette: .header, phase: shimmerPhase)
+                        SkeletonBlock(width: secondaryWidth * 0.32, height: 12, cornerRadius: 6, palette: .header, phase: shimmerPhase)
                     }
                 }
 
@@ -158,25 +246,50 @@ private struct LaunchSkeletonHomeView: View {
         .frame(height: 60)
     }
 
+    private var nutritionInfoContent: some View {
+        HStack(spacing: 12) {
+            SkeletonBlock(width: nil, height: 28, cornerRadius: 14, palette: .header, phase: shimmerPhase)
+                .frame(maxWidth: .infinity)
+            SkeletonBlock(width: 92, height: 32, cornerRadius: 16, palette: .header, phase: shimmerPhase)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(height: ExpandedPageHeaderMetrics.iosCompactInfoHeight)
+    }
+
     private var calorieRingPlaceholder: some View {
         ZStack {
             Circle()
-                .stroke(Color.white.opacity(0.22), lineWidth: 4)
+                .stroke(headerRingTrackColor, lineWidth: 4)
 
             Circle()
                 .trim(from: 0, to: 0.68)
-                .stroke(Color.white.opacity(0.55), style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                .stroke(headerRingProgressColor, style: StrokeStyle(lineWidth: 4, lineCap: .round))
                 .rotationEffect(.degrees(-90))
 
             VStack(spacing: 4) {
-                SkeletonBlock(width: 26, height: 12, cornerRadius: 6, palette: .shader, phase: shimmerPhase)
-                SkeletonBlock(width: 18, height: 7, cornerRadius: 3.5, palette: .shader, phase: shimmerPhase)
+                SkeletonBlock(width: 26, height: 12, cornerRadius: 6, palette: .header, phase: shimmerPhase)
+                SkeletonBlock(width: 18, height: 7, cornerRadius: 3.5, palette: .header, phase: shimmerPhase)
             }
         }
         .frame(width: 54, height: 54)
     }
 
     private var contentStack: some View {
+        Group {
+            switch kind {
+            case .assistant:
+                assistantContentStack
+            case .lists:
+                listsContentStack
+            case .recipes:
+                recipesContentStack
+            case .nutrition:
+                nutritionContentStack
+            }
+        }
+    }
+
+    private var assistantContentStack: some View {
         VStack(alignment: .leading, spacing: 32) {
             actionDeck
             pendingNutritionSection
@@ -186,6 +299,232 @@ private struct LaunchSkeletonHomeView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 16)
         .padding(.bottom, 28)
+    }
+
+    private var listsContentStack: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            segmentedControlSkeleton(widths: [86, 92, 78])
+                .padding(.bottom, 4)
+
+            SkeletonPanel(cornerRadius: 18) {
+                VStack(spacing: 0) {
+                    ForEach(0..<9, id: \.self) { index in
+                        listRowSkeleton(index: index, showsIcon: true, showsTrailingCircle: index < 6)
+
+                        if index < 8 {
+                            ItemListDivider()
+                                .padding(.leading, 70)
+                                .padding(.trailing, 14)
+                        }
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 16)
+        .padding(.bottom, 28)
+    }
+
+    private var recipesContentStack: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    chipSkeleton(width: 74, palette: .accent)
+                    chipSkeleton(width: 86)
+                    chipSkeleton(width: 68)
+                    chipSkeleton(width: 92)
+                    chipSkeleton(width: 76)
+                }
+                .padding(.vertical, 1)
+            }
+
+            GeometryReader { proxy in
+                let spacing: CGFloat = 1
+                let cardWidth = max((proxy.size.width - spacing * 2) / 3, 0)
+                LazyVGrid(
+                    columns: Array(repeating: GridItem(.flexible(), spacing: spacing), count: 3),
+                    spacing: spacing
+                ) {
+                    ForEach(0..<12, id: \.self) { index in
+                        recipeGridCard(index: index, width: cardWidth)
+                    }
+                }
+            }
+            .frame(height: 620)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 16)
+        .padding(.bottom, 28)
+    }
+
+    private var nutritionContentStack: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            nutritionDateStripe
+
+            SkeletonPanel(cornerRadius: 22) {
+                VStack(alignment: .leading, spacing: 14) {
+                    HStack(alignment: .top) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            SkeletonBlock(width: 112, height: 16, cornerRadius: 8, palette: .surface, phase: shimmerPhase)
+                            SkeletonBlock(width: 178, height: 12, cornerRadius: 6, palette: .surface, phase: shimmerPhase)
+                        }
+
+                        Spacer(minLength: 0)
+
+                        calorieRingPlaceholder
+                            .frame(width: 62, height: 62)
+                    }
+
+                    SkeletonBlock(width: nil, height: 18, cornerRadius: 9, palette: .accent, phase: shimmerPhase)
+                        .frame(maxWidth: .infinity)
+
+                    HStack(spacing: 10) {
+                        macroPillSkeleton(width: 96)
+                        macroPillSkeleton(width: 88)
+                        macroPillSkeleton(width: 82)
+                    }
+                }
+                .padding(18)
+            }
+
+            HStack(spacing: 12) {
+                nutritionMetricCard(index: 0)
+                nutritionMetricCard(index: 1)
+            }
+
+            SkeletonPanel(cornerRadius: 18) {
+                VStack(spacing: 0) {
+                    ForEach(0..<5, id: \.self) { index in
+                        listRowSkeleton(index: index, showsIcon: true, showsTrailingCircle: false)
+
+                        if index < 4 {
+                            ItemListDivider()
+                                .padding(.leading, 70)
+                                .padding(.trailing, 14)
+                        }
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 16)
+        .padding(.bottom, 28)
+    }
+
+    private func segmentedControlSkeleton(widths: [CGFloat]) -> some View {
+        HStack(spacing: 8) {
+            ForEach(Array(widths.enumerated()), id: \.offset) { index, width in
+                SkeletonBlock(
+                    width: width,
+                    height: 32,
+                    cornerRadius: 16,
+                    palette: index == 0 ? .accent : .surface,
+                    phase: shimmerPhase
+                )
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(4)
+        .background {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(AppSkeletonPalette.surface.baseColor(for: colorScheme).opacity(0.54))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .stroke(AppSkeletonPalette.surface.strokeColor(for: colorScheme), lineWidth: 0.6)
+                }
+        }
+    }
+
+    private func listRowSkeleton(index: Int, showsIcon: Bool, showsTrailingCircle: Bool) -> some View {
+        HStack(spacing: 14) {
+            if showsIcon {
+                SkeletonBlock(width: 42, height: 42, cornerRadius: 21, palette: index.isMultiple(of: 3) ? .accent : .surface, phase: shimmerPhase)
+            }
+
+            VStack(alignment: .leading, spacing: 7) {
+                SkeletonBlock(width: index.isMultiple(of: 3) ? 136 : 190, height: 14, cornerRadius: 7, palette: .surface, phase: shimmerPhase)
+                SkeletonBlock(width: index.isMultiple(of: 2) ? 84 : 116, height: 10, cornerRadius: 5, palette: .surface, phase: shimmerPhase)
+            }
+
+            Spacer(minLength: 0)
+
+            if showsTrailingCircle {
+                ZStack {
+                    Circle()
+                        .stroke(surfaceRingTrackColor, lineWidth: 4)
+                    SkeletonBlock(width: 18, height: 10, cornerRadius: 5, palette: .surface, phase: shimmerPhase)
+                }
+                .frame(width: 42, height: 42)
+            } else {
+                SkeletonBlock(width: 10, height: 26, cornerRadius: 5, palette: .surface, phase: shimmerPhase)
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func recipeGridCard(index: Int, width: CGFloat) -> some View {
+        SkeletonPanel(cornerRadius: 14) {
+            ZStack(alignment: .bottomLeading) {
+                SkeletonBlock(
+                    width: width,
+                    height: width * 1.28,
+                    cornerRadius: 14,
+                    palette: index.isMultiple(of: 4) ? .accent : .surface,
+                    phase: shimmerPhase
+                )
+
+                VStack(alignment: .leading, spacing: 7) {
+                    SkeletonBlock(width: min(width * 0.68, 96), height: 13, cornerRadius: 6.5, palette: .header, phase: shimmerPhase)
+                    SkeletonBlock(width: min(width * 0.46, 62), height: 9, cornerRadius: 4.5, palette: .header, phase: shimmerPhase)
+                }
+                .padding(10)
+            }
+            .clipShape(.rect(cornerRadius: 14))
+        }
+    }
+
+    private var nutritionDateStripe: some View {
+        HStack(spacing: 0) {
+            SkeletonBlock(width: 38, height: 42, cornerRadius: 10, palette: .surface, phase: shimmerPhase)
+                .frame(width: 44)
+
+            HStack(spacing: 0) {
+                ForEach(0..<7, id: \.self) { index in
+                    VStack(spacing: 4) {
+                        SkeletonBlock(width: 12, height: 8, cornerRadius: 4, palette: .surface, phase: shimmerPhase)
+                        SkeletonBlock(
+                            width: 38,
+                            height: 28,
+                            cornerRadius: 10,
+                            palette: index == 5 ? .accent : .surface,
+                            phase: shimmerPhase
+                        )
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+            }
+        }
+        .frame(height: 74)
+    }
+
+    private func macroPillSkeleton(width: CGFloat) -> some View {
+        SkeletonBlock(width: width, height: 34, cornerRadius: 17, palette: .surface, phase: shimmerPhase)
+    }
+
+    private func nutritionMetricCard(index: Int) -> some View {
+        SkeletonPanel(cornerRadius: 18) {
+            VStack(alignment: .leading, spacing: 10) {
+                SkeletonBlock(width: index == 0 ? 76 : 88, height: 13, cornerRadius: 6.5, palette: .surface, phase: shimmerPhase)
+                SkeletonBlock(width: 54, height: 24, cornerRadius: 12, palette: .accent, phase: shimmerPhase)
+                SkeletonBlock(width: 112, height: 10, cornerRadius: 5, palette: .surface, phase: shimmerPhase)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(14)
+        }
+        .frame(height: 108)
     }
 
     @ViewBuilder
@@ -251,10 +590,10 @@ private struct LaunchSkeletonHomeView: View {
 
                         VStack(spacing: spacing) {
                             wideShortcutTile()
-                                .frame(height: smallSide)
+                                .frame(width: topSide, height: smallSide)
 
                             wideShortcutTile(titleWidth: 68, subtitleWidth: 84, imageWidth: 82, imageHeight: 50, imageOffset: CGSize(width: 88, height: 18))
-                                .frame(height: smallSide)
+                                .frame(width: topSide, height: smallSide)
                         }
                         .frame(width: topSide, height: topSide)
                     }
@@ -380,7 +719,7 @@ private struct LaunchSkeletonHomeView: View {
     private var miniRingPlaceholder: some View {
         ZStack {
             Circle()
-                .stroke(Color.secondary.opacity(0.18), lineWidth: 3)
+                .stroke(surfaceRingTrackColor, lineWidth: 3)
 
             Circle()
                 .trim(from: 0, to: 0.62)
@@ -390,6 +729,24 @@ private struct LaunchSkeletonHomeView: View {
             SkeletonBlock(width: 14, height: 8, cornerRadius: 4, palette: .surface, phase: shimmerPhase)
         }
         .frame(width: 34, height: 34)
+    }
+
+    private var skeletonContentBackground: Color {
+        colorScheme == .dark ? appPrimaryBackground : Color.white
+    }
+
+    private var headerRingTrackColor: Color {
+        colorScheme == .dark ? Color.white.opacity(0.22) : Color.black.opacity(0.12)
+    }
+
+    private var headerRingProgressColor: Color {
+        colorScheme == .dark ? Color.white.opacity(0.55) : Color.black.opacity(0.24)
+    }
+
+    private var surfaceRingTrackColor: Color {
+        colorScheme == .dark
+            ? Color.secondary.opacity(0.18)
+            : Color.black.opacity(0.10)
     }
 
     private var expiringRow: some View {
@@ -415,7 +772,7 @@ private struct LaunchSkeletonHomeView: View {
                 ZStack(alignment: .topLeading) {
                     SkeletonBlock(width: 210, height: 118, cornerRadius: 16, palette: .accent, phase: shimmerPhase)
 
-                    SkeletonBlock(width: 46, height: 22, cornerRadius: 11, palette: .shader, phase: shimmerPhase)
+                    SkeletonBlock(width: 46, height: 22, cornerRadius: 11, palette: .header, phase: shimmerPhase)
                         .padding(10)
                 }
 
@@ -563,7 +920,7 @@ private struct SkeletonPanel<Content: View>: View {
         content
             .background {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(neutralSurfaceColor)
+                    .fill(panelFillColor)
                     .overlay {
                         RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                             .stroke(panelBorderColor, lineWidth: 0.6)
@@ -573,6 +930,12 @@ private struct SkeletonPanel<Content: View>: View {
 
     private var panelBorderColor: Color {
         colorScheme == .dark ? Color.white.opacity(0.05) : Color.black.opacity(0.04)
+    }
+
+    private var panelFillColor: Color {
+        colorScheme == .dark
+            ? neutralSurfaceColor
+            : Color(red: 0.94, green: 0.94, blue: 0.95)
     }
 }
 
@@ -618,48 +981,7 @@ private struct SkeletonBlock: View {
     }
 }
 
-private enum LaunchSkeletonPalette {
-    case shader
-    case surface
-    case accent
-
-    func baseColor(for colorScheme: ColorScheme) -> Color {
-        switch self {
-        case .shader:
-            return Color.white.opacity(0.16)
-        case .surface:
-            return colorScheme == .dark ? Color.white.opacity(0.10) : Color.black.opacity(0.06)
-        case .accent:
-            return colorScheme == .dark
-                ? PageTheme.home.accentColor.opacity(0.30)
-                : PageTheme.home.accentColor.opacity(0.18)
-        }
-    }
-
-    func highlightColor(for colorScheme: ColorScheme) -> Color {
-        switch self {
-        case .shader:
-            return Color.white.opacity(0.58)
-        case .surface:
-            return colorScheme == .dark ? Color.white.opacity(0.22) : Color.white.opacity(0.82)
-        case .accent:
-            return colorScheme == .dark
-                ? PageTheme.home.secondaryAccentColor.opacity(0.48)
-                : PageTheme.home.secondaryAccentColor.opacity(0.36)
-        }
-    }
-
-    func strokeColor(for colorScheme: ColorScheme) -> Color {
-        switch self {
-        case .shader:
-            return Color.white.opacity(0.10)
-        case .surface:
-            return colorScheme == .dark ? Color.white.opacity(0.05) : Color.black.opacity(0.04)
-        case .accent:
-            return PageTheme.home.accentColor.opacity(colorScheme == .dark ? 0.18 : 0.12)
-        }
-    }
-}
+private typealias LaunchSkeletonPalette = AppSkeletonPalette
 
 private struct LaunchSkeletonDeckWidthKey: PreferenceKey {
     static let defaultValue: CGFloat = 0
@@ -668,6 +990,25 @@ private struct LaunchSkeletonDeckWidthKey: PreferenceKey {
         value = nextValue()
     }
 }
+
+#if os(iOS)
+private struct LaunchSkeletonStatusBarModifier: ViewModifier {
+    @Environment(\.colorScheme) private var colorScheme
+
+    func body(content: Content) -> some View {
+        content.background {
+            StatusBarStyleView(style: colorScheme == .dark ? .lightContent : .darkContent)
+                .frame(width: 0, height: 0)
+        }
+    }
+}
+
+private extension View {
+    func launchSkeletonStatusBar() -> some View {
+        modifier(LaunchSkeletonStatusBarModifier())
+    }
+}
+#endif
 
 #Preview {
     SplashView()

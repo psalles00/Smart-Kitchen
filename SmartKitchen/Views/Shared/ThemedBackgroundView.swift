@@ -2,63 +2,16 @@ import SwiftUI
 
 struct ThemedBackgroundView: View {
     let theme: PageTheme
-    let selection: BackgroundSelection
     var progress: CGFloat = 1.0
-    var animated = true
-
-    @AppStorage(PerformancePreferences.backgroundShadersEnabledKey)
-    private var backgroundShadersEnabled = true
-
-    private var shouldAnimateBackground: Bool {
-        animated && backgroundShadersEnabled
-    }
 
     var body: some View {
-        Group {
-            if shouldAnimateBackground {
-                animatedBackground
-            } else {
-                staticBackground
-                    .opacity(progress)
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    @ViewBuilder
-    private var animatedBackground: some View {
-        switch selection.type {
-        case .texturedGradient:
-            if let preset = selection.texturedPreset {
-                TexturedGradientView(preset: preset, progress: progress)
-            } else {
-                NebulaShaderView(theme: nebulaTheme, progress: progress)
-            }
-        case .original:
-            NebulaShaderView(theme: nebulaTheme, progress: progress)
-        case .waves:
-            WavesShaderView(progress: progress)
-        }
-    }
-
-    @ViewBuilder
-    private var staticBackground: some View {
-        StaticAppleOrbBackground(theme: theme)
-    }
-
-    private var nebulaTheme: NebulaTheme {
-        switch theme {
-        case .home: .home
-        case .lists: .lists
-        case .recipes: .recipes
-        case .nutrients: .nutrients
-        case .settings: .settings
-        case .assistant: .assistant
-        }
+        StaticPageBackground(theme: theme)
+            .opacity(progress)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
-private struct StaticAppleOrbBackground: View {
+struct StaticPageBackground: View {
     let theme: PageTheme
 
     var body: some View {

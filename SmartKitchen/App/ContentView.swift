@@ -108,7 +108,7 @@ struct ContentView: View {
     /// ends, which was causing a ~250ms main-thread hang from concurrent
     /// `@Query` subscriber setup. Permanent lazy-mount keeps the resume path
     /// cheap (only the active tab pays initial-fetch cost).
-    @State private var mountedTabs: Set<AppTab> = [.assistant, .lists, .recipes, .nutrients]
+    @State private var mountedTabs: Set<AppTab> = [.assistant]
 
     // Search-triggered edit sheets
     @State private var searchEditItem: UnifiedItemSelection?
@@ -369,6 +369,9 @@ struct ContentView: View {
         transaction.animation = nil
         transaction.disablesAnimations = true
         withTransaction(transaction) {
+            if let theme = tab.pageTheme {
+                displayedBgTheme = theme
+            }
             selectedTab = tab
         }
     }
@@ -718,15 +721,11 @@ struct ContentView: View {
     #if os(iOS)
     @ViewBuilder
     private var iosAppBackground: some View {
-        // Same strategy as macOS: keep the heavy SceneKit-backed shader
-        // surfaces mounted and switch by opacity. Recreating these views on
-        // each tab selection was showing up as main-thread hitches.
         ZStack {
             Color.black
             ForEach([PageTheme.home, .lists, .recipes, .nutrients], id: \.self) { theme in
                 ThemedBackgroundView(
                     theme: theme,
-                    selection: BackgroundManager.shared.background(for: theme),
                     progress: 1.0
                 )
                 .opacity(theme == displayedBgTheme ? 1 : 0)
@@ -750,7 +749,7 @@ struct ContentView: View {
                     Group {
                         if shouldMountTab(.assistant) {
                             NavigationStack {
-                                DeferredTabPage(tab: .assistant) {
+                                DeferredTabPage(tab: .assistant, initiallyReady: true) {
                                     HomeView(
                                         onSettingsTap: { showSettings = true },
                                         onOpenChat: {
@@ -1287,10 +1286,7 @@ struct ContentView: View {
 
     #if os(macOS)
     /// Returns the `PageTheme` whose pre-defined accent colors should drive
-    /// the selection pill for a given sidebar item. These constants live in
-    /// `PageTheme.accentColor` / `PageTheme.secondaryAccentColor` and were
-    /// chosen to match the per-page shader tints — they are NOT sampled from
-    /// the shader at runtime.
+    /// the selection pill for a given sidebar item.
     private func macSidebarTheme(for item: SidebarItem) -> PageTheme? {
         switch item {
         case .home: return .home
@@ -1340,8 +1336,7 @@ struct ContentView: View {
     }
 
     /// Pre-computed selection fill per page. Uses `PageTheme.accentColor` /
-    /// `secondaryAccentColor` so the active row visually matches the page's
-    /// shader without sampling the shader.
+    /// `secondaryAccentColor` so the active row visually matches the page.
     private func macSidebarSelectionFill(for theme: PageTheme?) -> LinearGradient {
         guard let theme else {
             return LinearGradient(
@@ -1598,9 +1593,8 @@ struct ContentView: View {
                 case .settings: return .settings
                 }
             }()
-            // Instant page switch: just publish the new active theme. The
-            // background ZStack toggles opacity between pre-mounted shader
-            // layers, so there is no SCNView re-instantiation flash.
+            // Instant page switch: publish the new active theme and keep the
+            // pre-mounted static backgrounds aligned with the sidebar.
             if newTheme != displayedBgTheme {
                 displayedBgTheme = newTheme
             }
@@ -1863,11 +1857,6 @@ struct ContentView: View {
 
     @ViewBuilder
     private var macAppBackground: some View {
-        // Mount one themed background per page simultaneously and gate them
-        // by opacity. Each `ThemedBackgroundView` owns its own SCNView; by
-        // keeping all four mounted we never re-instantiate the Metal/SceneKit
-        // view on page switch, which previously caused a visible flash on the
-        // first frame after a sidebar selection change.
         ZStack {
             Color.black
             ForEach(PageTheme.allCases, id: \.self) { theme in
@@ -1882,7 +1871,6 @@ struct ContentView: View {
     private func macThemedBackground(for theme: PageTheme) -> some View {
         ThemedBackgroundView(
             theme: theme,
-            selection: BackgroundManager.shared.background(for: theme),
             progress: 1.0
         )
     }
@@ -2572,6 +2560,7 @@ private struct ContentSettingsObserver: View {
 
     private func syncSnapshot() {
         let newSnapshot = ContentSettingsSnapshot(settings: settingsArray.first)
+        newSnapshot.appearanceMode.persistForLaunch()
         guard snapshot != newSnapshot else { return }
         snapshot = newSnapshot
     }
@@ -2675,163 +2664,22 @@ private struct HomeSkeletonPage: View {
             pageTheme: .home,
             header: { isInverted in
                 PageHeader(title: "Savoria", isInverted: isInverted) {
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(homeSkeletonShaderFill)
-                        .frame(width: 34, height: 36)
+                    HStack(spacing: 6) {
+                        GlassButtonGroup {
+                            GlassGroupButton(systemImage: "gearshape") {}
+                        }
+                    }
+                    .disabled(true)
                 }
             },
             content: {
-                GeometryReader { geometry in
-                    let contentWidth = max(0, geometry.size.width - 32)
-
-                    ScrollView(.vertical) {
-                        VStack(alignment: .leading, spacing: 24) {
-                            HomeShortcutDeckSkeleton()
-                                .frame(width: contentWidth)
-
-                            PageSkeletonRows(rowCount: 5, showsCategoryBar: false)
-                                .frame(width: contentWidth)
-                        }
-                        .frame(width: geometry.size.width, alignment: .top)
-                        .padding(.top, 12)
-                        .padding(.bottom, 28)
-                    }
-                    .frame(width: geometry.size.width, height: geometry.size.height, alignment: .top)
-                    .scrollIndicators(.hidden)
-                }
-                .allowsHitTesting(false)
+                AppLaunchSkeletonPage(kind: .assistant, presentation: .contentOnly)
             },
             infoContent: {
-                HStack(spacing: 12) {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(.white.opacity(0.22))
-                        .frame(height: 30)
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(.white.opacity(0.16))
-                        .frame(width: 88, height: 30)
-                }
-                .frame(height: ExpandedPageHeaderMetrics.iosCompactInfoHeight)
-                .allowsHitTesting(false)
+                AssistantInfoSkeleton()
             }
         )
         .toolbar(.hidden, for: .navigationBar)
-        .tint(PageTheme.home.accentColor)
-    }
-
-    private var homeSkeletonFill: Color {
-        #if os(iOS)
-        Color(.systemGray5)
-        #else
-        Color.secondary.opacity(0.15)
-        #endif
-    }
-
-    private var homeSkeletonAccentFill: Color {
-        #if os(iOS)
-        Color(.systemBackground).opacity(0.92)
-        #else
-        Color.primary.opacity(0.12)
-        #endif
-    }
-
-    private var homeSkeletonShaderFill: Color {
-        Color.white.opacity(0.22)
-    }
-}
-
-private struct HomeShortcutDeckSkeleton: View {
-    private let spacing: CGFloat = 8
-
-    var body: some View {
-        GeometryReader { geometry in
-            let smallSide = max((geometry.size.width - spacing * 3) / 4, 0)
-            let topSide = smallSide * 2 + spacing
-
-            VStack(spacing: spacing) {
-                HStack(spacing: spacing) {
-                    shortcutTile(index: 0, iconSize: 68)
-                        .frame(width: topSide, height: topSide)
-
-                    VStack(spacing: spacing) {
-                        shortcutTile(index: 1, iconSize: 46)
-                            .frame(height: smallSide)
-                        shortcutTile(index: 2, iconSize: 46)
-                            .frame(height: smallSide)
-                    }
-                    .frame(width: topSide, height: topSide)
-                }
-                .frame(width: geometry.size.width, alignment: .leading)
-
-                HStack(spacing: spacing) {
-                    ForEach(0..<4, id: \.self) { index in
-                        VStack(spacing: 6) {
-                            shortcutAddTile(index: index)
-                                .frame(width: smallSide, height: smallSide)
-                            RoundedRectangle(cornerRadius: 5, style: .continuous)
-                                .fill(tileAccent.opacity(0.72))
-                                .frame(width: index.isMultiple(of: 2) ? 52 : 64, height: 10)
-                        }
-                        .frame(width: smallSide)
-                    }
-                }
-                .frame(width: geometry.size.width, alignment: .leading)
-            }
-            .frame(width: geometry.size.width, alignment: .topLeading)
-        }
-        .frame(height: 294)
-        .padding(.bottom, 40)
-    }
-
-    private func shortcutTile(index: Int, iconSize: CGFloat) -> some View {
-        ZStack(alignment: .topLeading) {
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(tileFill)
-
-            VStack(alignment: .leading, spacing: 8) {
-                RoundedRectangle(cornerRadius: iconSize * 0.22, style: .continuous)
-                    .fill(tileAccent)
-                    .frame(width: iconSize, height: iconSize)
-                    .padding(.bottom, 4)
-
-                RoundedRectangle(cornerRadius: 7, style: .continuous)
-                    .fill(tileAccent)
-                    .frame(width: index == 0 ? 112 : 86, height: 14)
-
-                RoundedRectangle(cornerRadius: 5, style: .continuous)
-                    .fill(tileAccent.opacity(0.72))
-                    .frame(width: index == 0 ? 132 : 64, height: 10)
-            }
-            .padding(14)
-        }
-        .clipped()
-    }
-
-    private func shortcutAddTile(index: Int) -> some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(tileFill.opacity(0.72))
-
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(tileAccent)
-                .frame(width: index.isMultiple(of: 2) ? 46 : 54, height: index.isMultiple(of: 2) ? 46 : 54)
-        }
-        .clipped()
-    }
-
-    private var tileFill: Color {
-        #if os(iOS)
-        Color(.systemGray5)
-        #else
-        Color.secondary.opacity(0.15)
-        #endif
-    }
-
-    private var tileAccent: Color {
-        #if os(iOS)
-        Color(.systemBackground).opacity(0.92)
-        #else
-        Color.primary.opacity(0.12)
-        #endif
     }
 }
 

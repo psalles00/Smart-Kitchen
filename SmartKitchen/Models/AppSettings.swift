@@ -23,6 +23,8 @@ enum AppearanceMode: String, Codable, CaseIterable, Identifiable {
     case light
     case dark
 
+    static let launchPreferenceKey = "appearanceMode.launchPreference"
+
     var id: String { rawValue }
 
     var displayName: LocalizedStringKey {
@@ -39,6 +41,19 @@ enum AppearanceMode: String, Codable, CaseIterable, Identifiable {
         case .light:  .light
         case .dark:   .dark
         }
+    }
+
+    static var launchPreference: AppearanceMode {
+        guard let rawValue = UserDefaults.standard.string(forKey: launchPreferenceKey),
+              let mode = AppearanceMode(rawValue: rawValue) else {
+            return .system
+        }
+
+        return mode
+    }
+
+    func persistForLaunch() {
+        UserDefaults.standard.set(rawValue, forKey: Self.launchPreferenceKey)
     }
 }
 

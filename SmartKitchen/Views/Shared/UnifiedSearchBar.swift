@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - Unified Search Bar
 
-/// Liquid Glass search bar displayed in the shader area.
+/// Liquid Glass search bar displayed in the header detail area.
 /// Uses `.glassEffect()` on iOS 26+, falls back to `.ultraThinMaterial`.
 struct UnifiedSearchBar: View {
     @ObservedObject var state: SearchBarState

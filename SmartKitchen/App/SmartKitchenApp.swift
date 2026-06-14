@@ -147,6 +147,7 @@ struct SmartKitchenApp: App {
     /// finished its post-launch bootstrap. While `false`, the user cannot
     /// interact with the app — they see the centered logo splash instead.
     @State private var isAppReady = false
+    @State private var launchAppearanceMode: AppearanceMode = .launchPreference
     /// Last time we ran the on-foreground maintenance work
     /// (`syncNow` + reschedule expiry notifications). Used to throttle that
     /// work so brief background hops don't repeatedly hit the model
@@ -197,20 +198,25 @@ struct SmartKitchenApp: App {
                         .modelContainer(cloudSync.container)
                         .id(cloudSync.containerID)
                         .environment(subscriptionManager)
-                        .transition(.opacity)
                         .onAppear {
                             PerformanceLogger.event(.launch, "ContentView onAppear (first frame visible)")
                         }
                 } else {
                     SplashView()
-                        .transition(.opacity)
                         .zIndex(1)
                         .onAppear {
                             PerformanceLogger.event(.launch, "SplashView appeared (ContentView not mounted yet)")
                         }
                 }
             }
-            .animation(.easeOut(duration: 0.25), value: isAppReady)
+            .transaction { transaction in
+                transaction.animation = nil
+                transaction.disablesAnimations = true
+            }
+            .preferredColorScheme(launchAppearanceMode.colorScheme)
+            .onReceive(NotificationCenter.default.publisher(for: .appearanceModeChanged)) { _ in
+                launchAppearanceMode = .launchPreference
+            }
             #if os(macOS)
             .frame(
                 minWidth: Self.macMinimumWindowSize.width,
@@ -249,6 +255,7 @@ struct SmartKitchenApp: App {
                 }
                 .task {
                     _ = SharedImportInbox.shared.claimPendingFromBridge()
+                    syncLaunchAppearanceFromSettings()
                     FeatureGate.shared.subscriptionManager = subscriptionManager
                     PerformanceLogger.event(.subscriptions, "subscriptionManager.loadProducts begin")
                     let loadStart = Date()
@@ -418,6 +425,7 @@ struct SmartKitchenApp: App {
 
         PerformanceLogger.event(.launch, "runPostLaunchBootstrap begin")
         let bootstrapStart = Date()
+        syncLaunchAppearanceFromSettings()
 
         // Let the splash render its first frame before doing heavy work.
         try? await Task.sleep(for: .milliseconds(50))
@@ -439,6 +447,7 @@ struct SmartKitchenApp: App {
         PerformanceLogger.measure(.dataSeeder, "DataSeeder.seedIfNeeded") {
             DataSeeder.seedIfNeeded(context: context)
         }
+        syncLaunchAppearanceFromSettings()
         PerformanceLogger.measure(.migration, "UnifiedItemMigration.migrateIfNeeded") {
             UnifiedItemMigration.migrateIfNeeded(context: context)
         }
@@ -461,6 +470,16 @@ struct SmartKitchenApp: App {
         // can render with all SwiftData stores fully prepared.
         isAppReady = true
         PerformanceLogger.event(.launch, "runPostLaunchBootstrap end (splash lifted)", metadata: String(format: "tookMs=%.1f", Date().timeIntervalSince(bootstrapStart) * 1000))
+    }
+
+    @MainActor
+    private func syncLaunchAppearanceFromSettings() {
+        let context = ModelContext(cloudSync.container)
+        var descriptor = FetchDescriptor<AppSettings>()
+        descriptor.fetchLimit = 1
+        guard let settings = try? context.fetch(descriptor).first else { return }
+        settings.appearanceMode.persistForLaunch()
+        launchAppearanceMode = settings.appearanceMode
     }
 
     // MARK: - Appearance

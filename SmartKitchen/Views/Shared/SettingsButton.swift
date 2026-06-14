@@ -58,10 +58,10 @@ extension EnvironmentValues {
     }
 }
 
-// MARK: - Environment key for animated background theme
+// MARK: - Environment key for page background theme
 
 /// When set, ExpandedPageLayout uses this theme (with cross-fade) for its background
-/// instead of its own fixed pageTheme, enabling the shader to fade independently of tab content.
+/// instead of its own fixed pageTheme.
 private struct BackgroundThemeKey: EnvironmentKey {
     static let defaultValue: PageTheme? = nil
 }

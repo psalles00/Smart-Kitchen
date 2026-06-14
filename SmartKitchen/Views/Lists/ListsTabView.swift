@@ -100,13 +100,7 @@ struct ListsTabView: View {
 
 #if os(iOS)
 private struct ListsSkeletonPage: View {
-    @State private var selectedSubtab: ListSubtab
-    @State private var showAddPantry = false
-    @State private var showAddGrocery = false
-    @State private var showAddUtensil = false
-
     init(initialSubtab: ListSubtab = .pantry) {
-        _selectedSubtab = State(initialValue: initialSubtab)
     }
 
     var body: some View {
@@ -116,40 +110,26 @@ private struct ListsSkeletonPage: View {
                 PageHeader(title: String(localized: "Listas"), isInverted: isInverted) {
                     HStack(spacing: 6) {
                         GlassButtonGroup {
-                            GlassGroupButton(systemImage: "plus") {
-                                switch selectedSubtab {
-                                case .pantry: showAddPantry = true
-                                case .grocery: showAddGrocery = true
-                                case .utensils: showAddUtensil = true
-                                }
-                            }
+                            GlassGroupButton(systemImage: "plus") {}
+                        }
+
+                        GlassButtonGroup {
+                            GlassGroupButton(systemImage: "line.3.horizontal.decrease.circle") {}
                         }
 
                         SettingsButton()
                     }
+                    .disabled(true)
                 }
             },
             content: {
-                PageSkeletonRows(rowCount: 10, showsCategoryBar: true)
+                AppLaunchSkeletonPage(kind: .lists, presentation: .contentOnly)
             },
             infoContent: {
-                EmptyView()
+                Color.clear.frame(height: ExpandedPageHeaderMetrics.iosEmptyInfoHeight)
             }
         )
         .toolbar(.hidden, for: .navigationBar)
-        .tint(PageTheme.lists.accentColor)
-        .sheet(isPresented: $showAddPantry) {
-            ItemDetailView(mode: .create(destinations: [.pantry]))
-                .forceLightStatusBar()
-        }
-        .sheet(isPresented: $showAddGrocery) {
-            ItemDetailView(mode: .create(destinations: [.grocery]))
-                .forceLightStatusBar()
-        }
-        .sheet(isPresented: $showAddUtensil) {
-            ItemDetailView(mode: .create(destinations: [.utensil]))
-                .forceLightStatusBar()
-        }
     }
 }
 #endif

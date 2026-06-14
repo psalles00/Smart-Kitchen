@@ -3,7 +3,7 @@ import SwiftData
 
 /// Tela principal da aba Nutrição.
 /// - Apresenta o dashboard diário dentro do `ExpandedPageLayout`
-/// - Expõe o botão de progresso (chart) e o menu "+" na área de shader
+/// - Expõe o botão de progresso (chart) e o menu "+" na área de detalhe do cabeçalho
 /// - Apresenta o onboarding na primeira abertura
 struct NutrientsView: View {
     var body: some View {
@@ -21,38 +21,6 @@ struct NutrientsView: View {
 
 #if os(iOS)
 private struct NutrientsSkeletonPage: View {
-    @State private var activeEntrySheet: NutritionEntrySheet?
-    @State private var pushProgress = false
-    @State private var pushWeightTracker = false
-
-    private var fullscreenEntrySheetBinding: Binding<NutritionEntrySheet?> {
-        Binding(
-            get: {
-                guard let sheet = activeEntrySheet,
-                      sheet.prefersFullScreenPresentation else {
-                    return nil
-                }
-
-                return sheet
-            },
-            set: { activeEntrySheet = $0 }
-        )
-    }
-
-    private var sheetEntrySheetBinding: Binding<NutritionEntrySheet?> {
-        Binding(
-            get: {
-                guard let sheet = activeEntrySheet,
-                      !sheet.prefersFullScreenPresentation else {
-                    return nil
-                }
-
-                return sheet
-            },
-            set: { activeEntrySheet = $0 }
-        )
-    }
-
     var body: some View {
         ExpandedPageLayout(
             pageTheme: .nutrients,
@@ -60,79 +28,27 @@ private struct NutrientsSkeletonPage: View {
                 PageHeader(title: String(localized: "Nutrição"), isInverted: isInverted) {
                     HStack(spacing: 6) {
                         GlassButtonGroup {
-                            GlassGroupButton(systemImage: "plus") {
-                                activeEntrySheet = .manual()
-                            }
+                            GlassGroupButton(systemImage: "plus") {}
                         }
                         GlassButtonGroup {
-                            GlassGroupButton(systemImage: "chart.line.uptrend.xyaxis") {
-                                pushProgress = true
-                            }
+                            GlassGroupButton(systemImage: "chart.line.uptrend.xyaxis") {}
                         }
                         GlassButtonGroup {
-                            GlassGroupButton(systemImage: "scalemass") {
-                                pushWeightTracker = true
-                            }
+                            GlassGroupButton(systemImage: "scalemass") {}
                         }
                         SettingsButton()
                     }
+                    .disabled(true)
                 }
             },
             content: {
-                NutritionPageSkeleton()
+                AppLaunchSkeletonPage(kind: .nutrition, presentation: .contentOnly)
             },
             infoContent: {
                 NutritionInfoSkeleton()
             }
         )
         .toolbar(.hidden, for: .navigationBar)
-        .tint(PageTheme.nutrients.accentColor)
-        .fullScreenCover(item: fullscreenEntrySheetBinding) { sheet in
-            sheetContent(for: sheet)
-        }
-        .sheet(item: sheetEntrySheetBinding) { sheet in
-            sheetContent(for: sheet)
-        }
-        .navigationDestination(isPresented: $pushProgress) {
-            NutritionProgressView()
-        }
-        .navigationDestination(isPresented: $pushWeightTracker) {
-            WeightTrackerView()
-        }
-    }
-
-    @ViewBuilder
-    private func sheetContent(for sheet: NutritionEntrySheet) -> some View {
-        switch sheet {
-        case .manual(let prefillName, let prefillMealType):
-            FoodEntryFormView(
-                mode: .create(onDate: Calendar.current.startOfDay(for: .now)),
-                prefillName: prefillName,
-                prefillMealType: prefillMealType
-            )
-        case .recents:
-            RecentsView(logDate: Calendar.current.startOfDay(for: .now))
-        case .capturePhotoCamera:
-            FoodCaptureHostView(mode: .photo, logDate: Calendar.current.startOfDay(for: .now), initialInput: .camera)
-        case .capturePhotoGallery:
-            FoodCaptureHostView(mode: .photo, logDate: Calendar.current.startOfDay(for: .now), initialInput: .gallery)
-        case .captureLabel:
-            FoodCaptureHostView(mode: .nutritionLabel, logDate: Calendar.current.startOfDay(for: .now))
-        case .captureText(let prefillText, let autoAnalyze):
-            FoodCaptureHostView(
-                mode: .text,
-                logDate: Calendar.current.startOfDay(for: .now),
-                initialText: prefillText ?? "",
-                shouldAutoAnalyzeTextOnAppear: autoAnalyze
-            )
-        case .captureVoice:
-            FoodCaptureHostView(mode: .voice, logDate: Calendar.current.startOfDay(for: .now))
-        case .comingSoon(let title):
-            NavigationStack {
-                Text(title)
-                    .font(.sectionTitle)
-            }
-        }
     }
 }
 #endif

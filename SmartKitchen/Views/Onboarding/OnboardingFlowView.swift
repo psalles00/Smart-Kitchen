@@ -33,7 +33,7 @@ struct OnboardingFlowView: View {
     var body: some View {
         ZStack {
             // Soft adaptive backdrop. Specific steps may overlay their own
-            // shaders / hero graphics on top.
+            // full-screen hero graphics on top.
             backgroundLayer
                 .ignoresSafeArea()
 
@@ -77,8 +77,8 @@ struct OnboardingFlowView: View {
 
     @ViewBuilder
     private var backgroundLayer: some View {
-        // Subtle adaptive gradient background. Hero/welcome step can opt-in
-        // to the Nebula shader by overlaying its own background.
+        // Subtle adaptive gradient background. Hero/welcome step can opt into
+        // its own full-screen background.
         LinearGradient(
             colors: colorScheme == .dark
                 ? [Color(white: 0.06), Color(white: 0.10)]
@@ -158,8 +158,8 @@ struct OnboardingFlowView: View {
         return Double(state.stepIndex) / Double(total)
     }
 
-    /// Hide the progress bar on the very first hero/welcome step (Nebula
-    /// shader takes the whole screen) and on the final paywall step (which
+    /// Hide the progress bar on the very first hero/welcome step and on the
+    /// final paywall step (which
     /// renders its own full-bleed chrome). Also hidden on the goal projection
     /// reveal so the result animation can take the whole screen.
     private var showsProgressBar: Bool {

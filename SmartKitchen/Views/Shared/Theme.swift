@@ -11,19 +11,19 @@ import AppKit
 /// Superfície neutra adaptativa usada por cards, chips, barras de filtro,
 /// botões da Home, etc.
 /// - Light: `#F8F8FA`
-/// - Dark:  `#2C2C2E`
+/// - Dark:  `#343437`
 let neutralSurfaceColor: Color = {
     #if canImport(UIKit)
     return Color(uiColor: UIColor { trait in
         trait.userInterfaceStyle == .dark
-            ? UIColor(red: 0x2C / 255.0, green: 0x2C / 255.0, blue: 0x2E / 255.0, alpha: 1)
+            ? UIColor(red: 0x34 / 255.0, green: 0x34 / 255.0, blue: 0x37 / 255.0, alpha: 1)
             : UIColor(red: 248 / 255.0, green: 248 / 255.0, blue: 250 / 255.0, alpha: 1)
     })
     #elseif canImport(AppKit)
     return Color(nsColor: NSColor(name: nil) { appearance in
         let isDark = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
         return isDark
-            ? NSColor(srgbRed: 0x2C / 255.0, green: 0x2C / 255.0, blue: 0x2E / 255.0, alpha: 1)
+            ? NSColor(srgbRed: 0x34 / 255.0, green: 0x34 / 255.0, blue: 0x37 / 255.0, alpha: 1)
             : NSColor(srgbRed: 248 / 255.0, green: 248 / 255.0, blue: 250 / 255.0, alpha: 1)
     } ?? NSColor.controlBackgroundColor)
     #else
@@ -33,19 +33,19 @@ let neutralSurfaceColor: Color = {
 
 /// Fundo principal das telas (área onde antes era branco).
 /// - Light: `#FFFFFF`
-/// - Dark:  `#19191A`
+/// - Dark:  `#202023`
 let appPrimaryBackground: Color = {
     #if canImport(UIKit)
     return Color(uiColor: UIColor { trait in
         trait.userInterfaceStyle == .dark
-            ? UIColor(red: 0x19 / 255.0, green: 0x19 / 255.0, blue: 0x1A / 255.0, alpha: 1)
+            ? UIColor(red: 0x20 / 255.0, green: 0x20 / 255.0, blue: 0x23 / 255.0, alpha: 1)
             : UIColor.white
     })
     #elseif canImport(AppKit)
     return Color(nsColor: NSColor(name: nil) { appearance in
         let isDark = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
         return isDark
-            ? NSColor(srgbRed: 0x19 / 255.0, green: 0x19 / 255.0, blue: 0x1A / 255.0, alpha: 1)
+            ? NSColor(srgbRed: 0x20 / 255.0, green: 0x20 / 255.0, blue: 0x23 / 255.0, alpha: 1)
             : NSColor.white
     } ?? NSColor.windowBackgroundColor)
     #else
@@ -58,6 +58,136 @@ let appPrimaryBackground: Color = {
 let listItemDividerDarkColor = Color(red: 0x54 / 255.0, green: 0x54 / 255.0, blue: 0x58 / 255.0)
 let listItemDividerDarkPrimaryOpacity = 0.48
 let listItemDividerDarkSecondaryOpacity = 0.24
+
+enum AppSkeletonPalette {
+    case header
+    case surface
+    case accent
+
+    func baseColor(for colorScheme: ColorScheme) -> Color {
+        switch self {
+        case .header:
+            return Color.white.opacity(colorScheme == .dark ? 0.13 : 0.18)
+        case .surface:
+            return colorScheme == .dark
+                ? Color.white.opacity(0.075)
+                : Color.black.opacity(0.055)
+        case .accent:
+            return colorScheme == .dark
+                ? PageTheme.home.accentColor.opacity(0.22)
+                : Color.black.opacity(0.075)
+        }
+    }
+
+    func highlightColor(for colorScheme: ColorScheme) -> Color {
+        switch self {
+        case .header:
+            return Color.white.opacity(colorScheme == .dark ? 0.40 : 0.70)
+        case .surface:
+            return colorScheme == .dark ? Color.white.opacity(0.15) : Color.white.opacity(0.82)
+        case .accent:
+            return colorScheme == .dark
+                ? PageTheme.home.secondaryAccentColor.opacity(0.34)
+                : Color.white.opacity(0.74)
+        }
+    }
+
+    func strokeColor(for colorScheme: ColorScheme) -> Color {
+        switch self {
+        case .header:
+            return Color.white.opacity(colorScheme == .dark ? 0.07 : 0.10)
+        case .surface:
+            return colorScheme == .dark ? Color.white.opacity(0.035) : Color.black.opacity(0.04)
+        case .accent:
+            return PageTheme.home.accentColor.opacity(colorScheme == .dark ? 0.12 : 0.10)
+        }
+    }
+}
+
+let appSkeletonSurfaceBaseColor = adaptiveColor(
+    dark: .white(alpha: 0.075),
+    light: .black(alpha: 0.055)
+)
+let appSkeletonSurfaceHighlightColor = adaptiveColor(dark: .white(alpha: 0.15), light: .white(alpha: 0.82))
+let appSkeletonSurfaceStrokeColor = adaptiveColor(
+    dark: .white(alpha: 0.035),
+    light: .black(alpha: 0.04)
+)
+let appSkeletonHeaderBaseColor = adaptiveColor(
+    dark: .white(alpha: 0.13),
+    light: .white(alpha: 0.18)
+)
+let appSkeletonHeaderHighlightColor = adaptiveColor(dark: .white(alpha: 0.40), light: .white(alpha: 0.70))
+
+private struct SkeletonRGBA {
+    let red: CGFloat
+    let green: CGFloat
+    let blue: CGFloat
+    let alpha: CGFloat
+
+    static func white(alpha: CGFloat) -> SkeletonRGBA {
+        SkeletonRGBA(red: 1, green: 1, blue: 1, alpha: alpha)
+    }
+
+    static func black(alpha: CGFloat) -> SkeletonRGBA {
+        SkeletonRGBA(red: 0, green: 0, blue: 0, alpha: alpha)
+    }
+}
+
+private func adaptiveColor(dark: SkeletonRGBA, light: SkeletonRGBA) -> Color {
+    #if canImport(UIKit)
+    return Color(uiColor: UIColor { trait in
+        let color = trait.userInterfaceStyle == .dark ? dark : light
+        return UIColor(red: color.red, green: color.green, blue: color.blue, alpha: color.alpha)
+    })
+    #elseif canImport(AppKit)
+    return Color(nsColor: NSColor(name: nil) { appearance in
+        let isDark = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        let color = isDark ? dark : light
+        return NSColor(srgbRed: color.red, green: color.green, blue: color.blue, alpha: color.alpha)
+    } ?? NSColor.controlBackgroundColor)
+    #else
+    return Color(
+        red: light.red,
+        green: light.green,
+        blue: light.blue
+    ).opacity(light.alpha)
+    #endif
+}
+
+struct AppSkeletonShimmerModifier: ViewModifier {
+    @State private var phase: CGFloat = -1
+
+    func body(content: Content) -> some View {
+        content
+            .overlay {
+                GeometryReader { geometry in
+                    LinearGradient(
+                        colors: [.clear, appSkeletonSurfaceHighlightColor, .clear],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .rotationEffect(.degrees(18))
+                    .frame(width: geometry.size.width * 0.55, height: geometry.size.height * 1.6)
+                    .offset(x: geometry.size.width * phase, y: -geometry.size.height * 0.25)
+                    .blendMode(.screen)
+                }
+                .allowsHitTesting(false)
+            }
+            .clipped()
+            .onAppear {
+                withAnimation(.linear(duration: 1.15).repeatForever(autoreverses: false)) {
+                    phase = 2.1
+                }
+            }
+    }
+}
+
+extension View {
+    func appSkeletonShimmer() -> some View {
+        modifier(AppSkeletonShimmerModifier())
+    }
+}
 
 // MARK: - Typography
 

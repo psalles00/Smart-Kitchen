@@ -46,8 +46,6 @@ struct RecipesView: View {
 
 #if os(iOS)
 private struct RecipesSkeletonPage: View {
-    @State private var showAddRecipe = false
-
     var body: some View {
         ExpandedPageLayout(
             pageTheme: .recipes,
@@ -55,33 +53,112 @@ private struct RecipesSkeletonPage: View {
                 PageHeader(title: String(localized: "Receitas"), isInverted: isInverted) {
                     HStack(spacing: 6) {
                         GlassButtonGroup {
-                            GlassGroupButton(systemImage: "plus") {
-                                showAddRecipe = true
-                            }
+                            GlassGroupButton(systemImage: "plus") {}
                         }
-
+                        GlassButtonGroup {
+                            GlassGroupButton(systemImage: "line.3.horizontal.decrease.circle") {}
+                        }
+                        GlassButtonGroup {
+                            GlassGroupButton(systemImage: "books.vertical") {}
+                        }
                         SettingsButton()
                     }
+                    .disabled(true)
                 }
             },
             content: {
-                PageSkeletonGrid(columns: 3, itemCount: 12, showsCategoryBar: true)
+                AppLaunchSkeletonPage(kind: .recipes, presentation: .contentOnly)
             },
             infoContent: {
-                EmptyView()
+                Color.clear.frame(height: ExpandedPageHeaderMetrics.iosEmptyInfoHeight)
             }
         )
         .toolbar(.hidden, for: .navigationBar)
-        .tint(PageTheme.recipes.accentColor)
-        .sheet(isPresented: $showAddRecipe) {
-            NavigationStack {
-                AddRecipeView()
-            }
-            .forceLightStatusBar()
-        }
     }
 }
 #endif
+
+private struct NotebookLoadingSkeleton: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    private let columns = [
+        GridItem(.flexible(), spacing: 12),
+        GridItem(.flexible(), spacing: 12)
+    ]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 8) {
+                skeletonBlock(width: 138, height: 18, cornerRadius: 9, palette: .surface)
+                skeletonBlock(width: 18, height: 18, cornerRadius: 9, palette: .surface)
+                Spacer(minLength: 0)
+                skeletonBlock(width: 42, height: 26, cornerRadius: 13, palette: .surface)
+            }
+
+            LazyVGrid(columns: columns, spacing: 12) {
+                ForEach(0..<6, id: \.self) { index in
+                    notebookCard(index: index)
+                }
+            }
+        }
+        .appSkeletonShimmer()
+        .allowsHitTesting(false)
+    }
+
+    private func notebookCard(index: Int) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            ZStack(alignment: .bottomTrailing) {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(panelFillColor)
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .stroke(AppSkeletonPalette.surface.strokeColor(for: colorScheme), lineWidth: 0.6)
+                    }
+
+                skeletonBlock(
+                    width: index.isMultiple(of: 2) ? 76 : 88,
+                    height: index.isMultiple(of: 2) ? 62 : 70,
+                    cornerRadius: 20,
+                    palette: .accent
+                )
+                .offset(x: 12, y: 10)
+
+                VStack(alignment: .leading, spacing: 7) {
+                    skeletonBlock(width: index.isMultiple(of: 2) ? 92 : 118, height: 14, cornerRadius: 7, palette: .surface)
+                    skeletonBlock(width: 68, height: 10, cornerRadius: 5, palette: .surface)
+                }
+                .padding(14)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            }
+            .frame(height: 128)
+            .clipShape(.rect(cornerRadius: 16))
+
+            skeletonBlock(width: index.isMultiple(of: 2) ? 78 : 94, height: 11, cornerRadius: 5.5, palette: .surface)
+                .padding(.leading, 6)
+        }
+    }
+
+    private func skeletonBlock(
+        width: CGFloat,
+        height: CGFloat,
+        cornerRadius: CGFloat,
+        palette: AppSkeletonPalette
+    ) -> some View {
+        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+            .fill(palette.baseColor(for: colorScheme))
+            .overlay {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .stroke(palette.strokeColor(for: colorScheme), lineWidth: 0.6)
+            }
+            .frame(width: width, height: height)
+    }
+
+    private var panelFillColor: Color {
+        colorScheme == .dark
+            ? neutralSurfaceColor
+            : Color(red: 0.94, green: 0.94, blue: 0.95)
+    }
+}
 
 private struct RecipesLoadedView: View {
     @Environment(\.scrollToTopTrigger) private var scrollToTopTrigger
@@ -1330,7 +1407,7 @@ private struct RecipesLoadedView: View {
 
                 Group {
                     if isNotebookLoading {
-                        PageSkeletonNotebooks(columns: 2, itemCount: 8)
+                        NotebookLoadingSkeleton()
                             .padding(.horizontal, 16)
                     } else if notebookSummaries.isEmpty {
                         if searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
