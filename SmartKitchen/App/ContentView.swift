@@ -364,14 +364,37 @@ struct ContentView: View {
         )
     }
 
+    private func selectTab(_ tab: AppTab, withoutAnimation: Bool = true) {
+        if withoutAnimation {
+            setSelectedTabWithoutAnimation(tab)
+        } else {
+            setSelectedTab(tab)
+        }
+    }
+
+    private func setSelectedTab(_ tab: AppTab) {
+        if let theme = tab.pageTheme {
+            setDisplayedBackgroundTheme(theme)
+        }
+        selectedTab = tab
+    }
+
     private func setSelectedTabWithoutAnimation(_ tab: AppTab) {
+        if let theme = tab.pageTheme {
+            setDisplayedBackgroundTheme(theme)
+        }
+
         var transaction = Transaction()
         transaction.animation = nil
         withTransaction(transaction) {
-            if let theme = tab.pageTheme {
-                displayedBgTheme = theme
-            }
             selectedTab = tab
+        }
+    }
+
+    private func setDisplayedBackgroundTheme(_ theme: PageTheme) {
+        guard theme != displayedBgTheme else { return }
+        withAnimation(.easeInOut(duration: 0.35)) {
+            displayedBgTheme = theme
         }
     }
 
@@ -487,7 +510,7 @@ struct ContentView: View {
                         initialName: addItemPrefill,
                         onCreated: { id, _ in
                             scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "pantryItem")
-                            selectedTab = .lists
+                            selectTab(.lists)
                         },
                         onExistingItemRequested: { item in
                             openExistingItemFromCreateFlow(item)
@@ -504,7 +527,7 @@ struct ContentView: View {
                         initialName: addItemPrefill,
                         onCreated: { id, _ in
                             scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "groceryItem")
-                            selectedTab = .lists
+                            selectTab(.lists)
                         },
                         onExistingItemRequested: { item in
                             openExistingItemFromCreateFlow(item)
@@ -544,13 +567,13 @@ struct ContentView: View {
                             switch destination {
                             case .pantry:
                                 scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "pantryItem")
-                                selectedTab = .lists
+                                selectTab(.lists)
                             case .grocery:
                                 scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "groceryItem")
-                                selectedTab = .lists
+                                selectTab(.lists)
                             case .utensil:
                                 scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "utensil")
-                                selectedTab = .lists
+                                selectTab(.lists)
                             }
                         },
                         onExistingItemRequested: { item in
@@ -661,13 +684,13 @@ struct ContentView: View {
                     openNutritionLogFromWidget(action)
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .openNutritionAtDate)) { _ in
-                    if selectedTab != .nutrients { selectedTab = .nutrients }
+                    if selectedTab != .nutrients { selectTab(.nutrients) }
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .shareImportRouteToNutrients)) { _ in
                     #if os(macOS)
                     selectedSidebar = .nutrients
                     #else
-                    if selectedTab != .nutrients { selectedTab = .nutrients }
+                    if selectedTab != .nutrients { selectTab(.nutrients) }
                     #endif
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .shareImportOpenAssistant)) { note in
@@ -721,7 +744,12 @@ struct ContentView: View {
     @ViewBuilder
     private var iosAppBackground: some View {
         ZStack {
-            Color.black
+            ThemedBackgroundView(
+                theme: displayedBgTheme,
+                progress: 1.0
+            )
+            .allowsHitTesting(false)
+
             ForEach([PageTheme.home, .lists, .recipes, .nutrients], id: \.self) { theme in
                 ThemedBackgroundView(
                     theme: theme,
@@ -731,9 +759,7 @@ struct ContentView: View {
                 .allowsHitTesting(false)
             }
         }
-        .transaction { transaction in
-            transaction.animation = nil
-        }
+        .animation(.easeInOut(duration: 0.35), value: displayedBgTheme)
     }
     #endif
 
@@ -911,7 +937,7 @@ struct ContentView: View {
             // that case we always switch to the assistant (search) tab so the
             // user sees the assistant content above the bar.
             if newValue && selectedTab != .commandBar {
-                selectedTab = .commandBar
+                selectTab(.commandBar)
             }
         }
     }
@@ -1909,7 +1935,7 @@ struct ContentView: View {
 
         // Animate background theme change with a fade, independently of content swap
         if let newTheme = newValue.pageTheme, newTheme != displayedBgTheme {
-            displayedBgTheme = newTheme
+            setDisplayedBackgroundTheme(newTheme)
         }
 
         // Ao entrar na aba Nutrição, sempre voltar para o dia de hoje.
@@ -2029,7 +2055,7 @@ struct ContentView: View {
             guard !Task.isCancelled else { return }
             if tab != selectedTab {
                 beginTabSwitch(to: tab, source: "autorun")
-                selectedTab = tab
+                selectTab(tab)
             }
             try? await Task.sleep(for: .milliseconds(700))
         }
@@ -2056,15 +2082,15 @@ struct ContentView: View {
         switch action {
         case .openPantryItem(let id):
             scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "pantryItem")
-            selectedTab = .lists
+            selectTab(.lists)
         case .openGroceryItem(let id):
             scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "groceryItem")
-            selectedTab = .lists
+            selectTab(.lists)
         case .openRecipe(let id):
             openRecipeInRecipesTab(id)
         case .openUtensil(let id):
             scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "utensil")
-            selectedTab = .lists
+            selectTab(.lists)
         case .editPantryItem(let id), .editGroceryItem(let id), .editUtensil(let id):
             searchEditItem = UnifiedItemSelection(id: id)
         case .editRecipe(let id):
@@ -2134,7 +2160,7 @@ struct ContentView: View {
         }
 
         if selectedTab != .recipes {
-            selectedTab = .recipes
+            selectTab(.recipes)
         }
         Task { @MainActor in
             navigateToRecipe()
@@ -2200,7 +2226,7 @@ struct ContentView: View {
             assistantTabPath = []
         }
         if selectedTab != .commandBar {
-            selectedTab = .commandBar
+            selectTab(.commandBar)
         }
         #endif
     }
@@ -2307,7 +2333,7 @@ struct ContentView: View {
         }
 
         scrollToItemRequest = ScrollToItemRequest(itemID: item.id, type: "groceryItem")
-        selectedTab = .lists
+        selectTab(.lists)
         searchService.clear()
         NotificationCenter.default.post(name: .homeDataShouldRefresh, object: nil)
 

@@ -342,11 +342,8 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
             backgroundOverride
         } else {
             ZStack {
-                Color.black
-                if backgroundTransitionProgress < 0.999 {
-                    themedBackground(for: backgroundFromTheme)
-                        .opacity(1.0 - backgroundTransitionProgress)
-                }
+                themedBackground(for: backgroundFromTheme)
+
                 themedBackground(for: backgroundToTheme)
                     .opacity(backgroundTransitionProgress)
             }
@@ -437,7 +434,6 @@ struct DeferredTabPage<Loaded: View, Placeholder: View>: View {
         guard activeTab == tab else {
             loadTask?.cancel()
             loadTask = nil
-            isReady = false
             return
         }
 
