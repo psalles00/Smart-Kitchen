@@ -367,7 +367,6 @@ struct ContentView: View {
     private func setSelectedTabWithoutAnimation(_ tab: AppTab) {
         var transaction = Transaction()
         transaction.animation = nil
-        transaction.disablesAnimations = true
         withTransaction(transaction) {
             if let theme = tab.pageTheme {
                 displayedBgTheme = theme
@@ -883,7 +882,6 @@ struct ContentView: View {
             }
             .transaction { transaction in
                 transaction.animation = nil
-                transaction.disablesAnimations = true
             }
             .environment(\.usesGlobalPageBackground, true)
             #if os(iOS)

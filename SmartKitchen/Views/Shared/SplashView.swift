@@ -951,27 +951,7 @@ private struct SkeletonBlock: View {
     var body: some View {
         RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
             .fill(palette.baseColor(for: colorScheme))
-            .overlay {
-                GeometryReader { proxy in
-                    let sweepWidth = max(proxy.size.width * 0.7, 48)
-                    let travel = proxy.size.width + sweepWidth * 2
-
-                    LinearGradient(
-                        colors: [
-                            palette.highlightColor(for: colorScheme).opacity(0),
-                            palette.highlightColor(for: colorScheme),
-                            palette.highlightColor(for: colorScheme).opacity(0)
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                    .frame(width: sweepWidth, height: proxy.size.height * 1.8)
-                    .rotationEffect(.degrees(18))
-                    .offset(x: -sweepWidth + phase * travel)
-                    .blendMode(.screen)
-                }
-                .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-            }
+            .appSkeletonReflection()
             .overlay {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .stroke(palette.strokeColor(for: colorScheme), lineWidth: 0.6)

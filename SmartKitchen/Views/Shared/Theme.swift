@@ -155,37 +155,59 @@ private func adaptiveColor(dark: SkeletonRGBA, light: SkeletonRGBA) -> Color {
     #endif
 }
 
-struct AppSkeletonShimmerModifier: ViewModifier {
-    @State private var phase: CGFloat = -1
+struct AppSkeletonReflectionModifier: ViewModifier {
+    @Environment(\.colorScheme) private var colorScheme
+
+    let duration: TimeInterval = 1.15
 
     func body(content: Content) -> some View {
         content
             .overlay {
-                GeometryReader { geometry in
-                    LinearGradient(
-                        colors: [.clear, appSkeletonSurfaceHighlightColor, .clear],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                    .rotationEffect(.degrees(18))
-                    .frame(width: geometry.size.width * 0.55, height: geometry.size.height * 1.6)
-                    .offset(x: geometry.size.width * phase, y: -geometry.size.height * 0.25)
-                    .blendMode(.screen)
+                TimelineView(.animation(minimumInterval: 1.0 / 60.0)) { timeline in
+                    GeometryReader { geometry in
+                        let phase = CGFloat(timeline.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: duration) / duration)
+                        let sweepWidth = max(geometry.size.width * 0.55, 48)
+                        let travel = geometry.size.width + sweepWidth * 2
+
+                        LinearGradient(
+                            colors: reflectionColors,
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                        .rotationEffect(.degrees(18))
+                        .frame(width: sweepWidth, height: geometry.size.height * 1.6)
+                        .offset(x: -sweepWidth + phase * travel, y: -geometry.size.height * 0.25)
+                        .blendMode(.plusLighter)
+                    }
+                    .mask(content)
                 }
                 .allowsHitTesting(false)
             }
             .clipped()
-            .onAppear {
-                withAnimation(.linear(duration: 1.15).repeatForever(autoreverses: false)) {
-                    phase = 2.1
-                }
-            }
+    }
+
+    private var reflectionColors: [Color] {
+        if colorScheme == .dark {
+            return [.clear, .white.opacity(0.34), .clear]
+        }
+
+        return [
+            .clear,
+            .black.opacity(0.07),
+            .white.opacity(0.95),
+            .black.opacity(0.05),
+            .clear
+        ]
     }
 }
 
 extension View {
     func appSkeletonShimmer() -> some View {
-        modifier(AppSkeletonShimmerModifier())
+        modifier(AppSkeletonReflectionModifier())
+    }
+
+    func appSkeletonReflection() -> some View {
+        modifier(AppSkeletonReflectionModifier())
     }
 }
 
