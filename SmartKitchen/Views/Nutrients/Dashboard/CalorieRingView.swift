@@ -30,6 +30,10 @@ struct CalorieRingView: View {
         Color(red: 0.31, green: 0.74, blue: 0.46)
     }
 
+    private var calorieProgressRingColor: Color {
+        Color.secondary
+    }
+
     private var titleFont: Font {
         .custom("Bricolage Grotesque", size: 82, relativeTo: .largeTitle).weight(.bold)
     }
@@ -39,8 +43,7 @@ struct CalorieRingView: View {
             NutrientGlassCardSurface(
                 cornerRadius: 26,
                 accentColor: Color.primary.opacity(colorScheme == .dark ? 0.58 : 0.40),
-                isColored: false,
-                progress: progress
+                isColored: false
             )
             .padding(.top, 34)
 
@@ -88,10 +91,17 @@ struct CalorieRingView: View {
 
     private var calorieTrackerIcon: some View {
         ZStack {
+            NutrientIconProgressRing(
+                progress: progress,
+                tint: calorieProgressRingColor,
+                lineWidth: 3.6
+            )
+            .frame(width: 79, height: 79)
+
             Image("nutrientes")
                 .resizable()
                 .scaledToFit()
-                .frame(width: 82, height: 82)
+                .frame(width: 90, height: 90)
         }
         .frame(width: 58, height: 58)
         .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.14 : 0.08), radius: 6, x: 0, y: 5)

@@ -75,12 +75,12 @@ struct WeekEnergyStrip: View {
             ZStack {
                 Image(systemName: isMonthExpanded ? "calendar.badge.minus" : "calendar")
                     .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(Color(red: 0.31, green: 0.74, blue: 0.46))
+                    .foregroundStyle(.secondary)
             }
             .frame(width: 38, height: 42)
             .overlay(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .stroke(Color(red: 0.31, green: 0.74, blue: 0.46), lineWidth: 1)
+                    .stroke(Color.secondary.opacity(0.45), lineWidth: 1)
             )
             .frame(maxWidth: .infinity)
             .frame(width: 44)

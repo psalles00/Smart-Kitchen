@@ -11,5 +11,12 @@ struct SmartKitchenWidgetsBundle: WidgetBundle {
     var body: some Widget {
         AssistantWidget()
         AIChatWidget()
+        FoodLogMenuWidget()
+        FoodLogTextWidget()
+        FoodLogVoiceWidget()
+        FoodLogCameraWidget()
+        FoodLogGalleryWidget()
+        FoodLogLabelWidget()
+        FoodLogManualWidget()
     }
 }

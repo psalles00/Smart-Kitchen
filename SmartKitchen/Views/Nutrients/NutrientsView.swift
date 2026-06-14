@@ -8,7 +8,11 @@ import SwiftData
 struct NutrientsView: View {
     var body: some View {
         #if os(iOS)
-        NutrientsLoadedView()
+        DeferredTabPage(tab: .nutrients) {
+            NutrientsLoadedView()
+        } placeholder: {
+            NutrientsSkeletonPage()
+        }
         #else
         NutrientsLoadedView()
         #endif

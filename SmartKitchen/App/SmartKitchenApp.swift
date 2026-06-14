@@ -18,6 +18,9 @@ extension Notification.Name {
     /// Posted when the user taps the AI Chat widget. Reveals the fullscreen assistant
     /// in AI chat mode (conversation interface, keyboard open).
     static let openAIChatFromWidget = Notification.Name("com.smartkitchen.openAIChatFromWidget")
+    /// Posted when the user taps a nutrition logging widget.
+    /// `userInfo["action"]` carries one of the `NutritionLogWidgetAction` raw values.
+    static let openNutritionLogFromWidget = Notification.Name("com.smartkitchen.openNutritionLogFromWidget")
     /// Posted when the user taps a pending day on the Home page.
     /// `userInfo["date"]` carries the `Date` (startOfDay) to focus on Nutrição.
     static let openNutritionAtDate = Notification.Name("com.smartkitchen.openNutritionAtDate")
@@ -29,6 +32,26 @@ extension Notification.Name {
     /// Posted on iOS when the Appearance setting changes so the root view can
     /// update its preferred color scheme immediately.
     static let appearanceModeChanged = Notification.Name("com.smartkitchen.appearanceModeChanged")
+}
+
+@MainActor
+enum WidgetDeepLinkStore {
+    private static var pendingNutritionLogAction: String?
+
+    static func postNutritionLogAction(_ action: String) {
+        pendingNutritionLogAction = action
+        NotificationCenter.default.post(
+            name: .openNutritionLogFromWidget,
+            object: nil,
+            userInfo: ["action": action]
+        )
+    }
+
+    static func consumePendingNutritionLogAction() -> String? {
+        let action = pendingNutritionLogAction
+        pendingNutritionLogAction = nil
+        return action
+    }
 }
 
 // MARK: - App Delegate for CloudKit Share Acceptance
@@ -212,6 +235,11 @@ struct SmartKitchenApp: App {
                     }
                     if url.scheme == "smartkitchen", url.host == "aichat" {
                         NotificationCenter.default.post(name: .openAIChatFromWidget, object: nil)
+                        return
+                    }
+                    if Self.isNutritionLogDeepLink(url) {
+                        let action = Self.nutritionLogAction(from: url)
+                        WidgetDeepLinkStore.postNutritionLogAction(action)
                         return
                     }
                     if SharedImportInbox.shared.ingest(url: url) {
@@ -469,5 +497,23 @@ struct SmartKitchenApp: App {
         #if DEBUG
         print("SmartKitchen build configuration: DEBUG")
         #endif
+    }
+
+    private static func isNutritionLogDeepLink(_ url: URL) -> Bool {
+        guard url.scheme == "smartkitchen" else { return false }
+        let host = url.host ?? ""
+        return host == "foodlog" || host == "nutrition-log"
+    }
+
+    private static func nutritionLogAction(from url: URL) -> String {
+        if let queryAction = URLComponents(url: url, resolvingAgainstBaseURL: false)?
+            .queryItems?
+            .first(where: { $0.name == "action" })?
+            .value,
+           !queryAction.isEmpty {
+            return queryAction
+        }
+
+        return url.pathComponents.dropFirst().first ?? "menu"
     }
 }

@@ -45,6 +45,25 @@ enum SidebarItem: String, CaseIterable, Identifiable {
 
 }
 
+private enum NutritionLogWidgetAction: String {
+    case menu
+    case text
+    case voice
+    case camera
+    case gallery
+    case label
+    case manual
+    case recents
+
+    static func resolve(_ rawValue: String?) -> NutritionLogWidgetAction {
+        guard let rawValue, let action = NutritionLogWidgetAction(rawValue: rawValue) else {
+            return .menu
+        }
+
+        return action
+    }
+}
+
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var selectedTab: AppTab = .assistant
@@ -56,6 +75,7 @@ struct ContentView: View {
     @State private var showAddUtensil = false
     @State private var showAddItem = false
     @State private var showWeightTracker = false
+    @State private var showNutritionLogOptions = false
     @State private var addItemPrefill = ""
     @State private var addItemIconFileName: String?
     @State private var addItemCategory: String?
@@ -595,9 +615,19 @@ struct ContentView: View {
                     }
                     .forceLightStatusBar()
                 }
+                .confirmationDialog(
+                    "Registrar Alimento",
+                    isPresented: $showNutritionLogOptions,
+                    titleVisibility: .visible
+                ) {
+                    nutritionLogOptionsDialogButtons
+                } message: {
+                    Text("Escolha como registrar seu alimento.")
+                }
                 .onAppear {
                     syncOnboardingFlag()
                     scheduleInitialTabPrewarmIfNeeded()
+                    consumePendingNutritionLogWidgetActionIfNeeded()
                 }
                 .onDisappear {
                     stagedTabPrewarmTask?.cancel()
@@ -623,6 +653,10 @@ struct ContentView: View {
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .openAIChatFromWidget)) { _ in
                     openAIMode()
+                }
+                .onReceive(NotificationCenter.default.publisher(for: .openNutritionLogFromWidget)) { note in
+                    let action = NutritionLogWidgetAction.resolve(note.userInfo?["action"] as? String)
+                    openNutritionLogFromWidget(action)
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .openNutritionAtDate)) { _ in
                     if selectedTab != .nutrients { selectedTab = .nutrients }
@@ -716,21 +750,25 @@ struct ContentView: View {
                     Group {
                         if shouldMountTab(.assistant) {
                             NavigationStack {
-                                HomeView(
-                                    onSettingsTap: { showSettings = true },
-                                    onOpenChat: {
-                                        openAIMode()
-                                    },
-                                    onOpenRecipeIdeas: {
-                                        openAIMode(preset: .recipeIdeas)
-                                    },
-                                    onOpenSearch: {
-                                        openAssistantTab()
-                                    },
-                                    onOpenRecipeImport: openQuickRecipeImport,
-                                    onOpenFoodCameraDirect: openDirectFoodCamera,
-                                    onOpenFoodGalleryDirect: openDirectFoodGallery
-                                )
+                                DeferredTabPage(tab: .assistant) {
+                                    HomeView(
+                                        onSettingsTap: { showSettings = true },
+                                        onOpenChat: {
+                                            openAIMode()
+                                        },
+                                        onOpenRecipeIdeas: {
+                                            openAIMode(preset: .recipeIdeas)
+                                        },
+                                        onOpenSearch: {
+                                            openAssistantTab()
+                                        },
+                                        onOpenRecipeImport: openQuickRecipeImport,
+                                        onOpenFoodCameraDirect: openDirectFoodCamera,
+                                        onOpenFoodGalleryDirect: openDirectFoodGallery
+                                    )
+                                } placeholder: {
+                                    HomeSkeletonPage()
+                                }
                             }
                             .toolbar(.hidden, for: .navigationBar)
                         } else {
@@ -963,6 +1001,88 @@ struct ContentView: View {
         directFoodAnalysisLogDate = Date()
         directFoodGalleryItem = nil
         directFoodGalleryActive = true
+    }
+
+    private func routeToNutritionTab() {
+        #if os(macOS)
+        if selectedSidebar != .nutrients {
+            selectedSidebar = .nutrients
+        }
+        #else
+        if selectedTab != .nutrients {
+            setSelectedTabWithoutAnimation(.nutrients)
+        }
+        #endif
+    }
+
+    private func openNutritionLogFromWidget(_ action: NutritionLogWidgetAction) {
+        scheduleNutritionLogAction(action)
+    }
+
+    private func consumePendingNutritionLogWidgetActionIfNeeded() {
+        guard let action = WidgetDeepLinkStore.consumePendingNutritionLogAction() else { return }
+        openNutritionLogFromWidget(NutritionLogWidgetAction.resolve(action))
+    }
+
+    private func scheduleNutritionLogAction(_ action: NutritionLogWidgetAction) {
+        routeToNutritionTab()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+            performNutritionLogAction(action)
+        }
+    }
+
+    private func performNutritionLogAction(_ action: NutritionLogWidgetAction) {
+        switch action {
+        case .menu:
+            showNutritionLogOptions = true
+        case .text:
+            presentNutritionEntrySheet(.captureText(prefillText: nil, autoAnalyze: false))
+        case .voice:
+            presentNutritionEntrySheet(.captureVoice)
+        case .camera:
+            openDirectFoodCamera()
+        case .gallery:
+            openDirectFoodGallery()
+        case .label:
+            presentNutritionEntrySheet(.captureLabel)
+        case .manual:
+            presentNutritionEntrySheet(.manual())
+        case .recents:
+            presentNutritionEntrySheet(.recents)
+        }
+    }
+
+    private func presentNutritionEntrySheet(_ sheet: NutritionEntrySheet) {
+        searchBarState.pendingNutritionSheet = nil
+        DispatchQueue.main.async {
+            searchBarState.pendingNutritionSheet = sheet
+        }
+    }
+
+    @ViewBuilder
+    private var nutritionLogOptionsDialogButtons: some View {
+        Button("Texto", systemImage: "character.cursor.ibeam") {
+            scheduleNutritionLogAction(.text)
+        }
+        Button("Voz", systemImage: "waveform") {
+            scheduleNutritionLogAction(.voice)
+        }
+        Button("Câmera", systemImage: "camera") {
+            scheduleNutritionLogAction(.camera)
+        }
+        Button("Galeria", systemImage: "photo") {
+            scheduleNutritionLogAction(.gallery)
+        }
+        Button("Rótulo", systemImage: "doc.text.viewfinder") {
+            scheduleNutritionLogAction(.label)
+        }
+        Button("Registrar manualmente", systemImage: "square.and.pencil") {
+            scheduleNutritionLogAction(.manual)
+        }
+        Button("Alimentos salvos", systemImage: "clock.arrow.circlepath") {
+            scheduleNutritionLogAction(.recents)
+        }
+        Button("Cancelar", role: .cancel) {}
     }
 
     // MARK: - Nutrition entry sheet (disparado pelo menu "+" da barra global)
@@ -2546,6 +2666,172 @@ private struct HomeLiveInputsObserver: View {
         }
         pendingDebouncedRefreshWork = workItem
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.25, execute: workItem)
+    }
+}
+
+private struct HomeSkeletonPage: View {
+    var body: some View {
+        ExpandedPageLayout(
+            pageTheme: .home,
+            header: { isInverted in
+                PageHeader(title: "Savoria", isInverted: isInverted) {
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .fill(homeSkeletonShaderFill)
+                        .frame(width: 34, height: 36)
+                }
+            },
+            content: {
+                GeometryReader { geometry in
+                    let contentWidth = max(0, geometry.size.width - 32)
+
+                    ScrollView(.vertical) {
+                        VStack(alignment: .leading, spacing: 24) {
+                            HomeShortcutDeckSkeleton()
+                                .frame(width: contentWidth)
+
+                            PageSkeletonRows(rowCount: 5, showsCategoryBar: false)
+                                .frame(width: contentWidth)
+                        }
+                        .frame(width: geometry.size.width, alignment: .top)
+                        .padding(.top, 12)
+                        .padding(.bottom, 28)
+                    }
+                    .frame(width: geometry.size.width, height: geometry.size.height, alignment: .top)
+                    .scrollIndicators(.hidden)
+                }
+                .allowsHitTesting(false)
+            },
+            infoContent: {
+                HStack(spacing: 12) {
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(.white.opacity(0.22))
+                        .frame(height: 30)
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(.white.opacity(0.16))
+                        .frame(width: 88, height: 30)
+                }
+                .frame(height: ExpandedPageHeaderMetrics.iosCompactInfoHeight)
+                .allowsHitTesting(false)
+            }
+        )
+        .toolbar(.hidden, for: .navigationBar)
+        .tint(PageTheme.home.accentColor)
+    }
+
+    private var homeSkeletonFill: Color {
+        #if os(iOS)
+        Color(.systemGray5)
+        #else
+        Color.secondary.opacity(0.15)
+        #endif
+    }
+
+    private var homeSkeletonAccentFill: Color {
+        #if os(iOS)
+        Color(.systemBackground).opacity(0.92)
+        #else
+        Color.primary.opacity(0.12)
+        #endif
+    }
+
+    private var homeSkeletonShaderFill: Color {
+        Color.white.opacity(0.22)
+    }
+}
+
+private struct HomeShortcutDeckSkeleton: View {
+    private let spacing: CGFloat = 8
+
+    var body: some View {
+        GeometryReader { geometry in
+            let smallSide = max((geometry.size.width - spacing * 3) / 4, 0)
+            let topSide = smallSide * 2 + spacing
+
+            VStack(spacing: spacing) {
+                HStack(spacing: spacing) {
+                    shortcutTile(index: 0, iconSize: 68)
+                        .frame(width: topSide, height: topSide)
+
+                    VStack(spacing: spacing) {
+                        shortcutTile(index: 1, iconSize: 46)
+                            .frame(height: smallSide)
+                        shortcutTile(index: 2, iconSize: 46)
+                            .frame(height: smallSide)
+                    }
+                    .frame(width: topSide, height: topSide)
+                }
+                .frame(width: geometry.size.width, alignment: .leading)
+
+                HStack(spacing: spacing) {
+                    ForEach(0..<4, id: \.self) { index in
+                        VStack(spacing: 6) {
+                            shortcutAddTile(index: index)
+                                .frame(width: smallSide, height: smallSide)
+                            RoundedRectangle(cornerRadius: 5, style: .continuous)
+                                .fill(tileAccent.opacity(0.72))
+                                .frame(width: index.isMultiple(of: 2) ? 52 : 64, height: 10)
+                        }
+                        .frame(width: smallSide)
+                    }
+                }
+                .frame(width: geometry.size.width, alignment: .leading)
+            }
+            .frame(width: geometry.size.width, alignment: .topLeading)
+        }
+        .frame(height: 294)
+        .padding(.bottom, 40)
+    }
+
+    private func shortcutTile(index: Int, iconSize: CGFloat) -> some View {
+        ZStack(alignment: .topLeading) {
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(tileFill)
+
+            VStack(alignment: .leading, spacing: 8) {
+                RoundedRectangle(cornerRadius: iconSize * 0.22, style: .continuous)
+                    .fill(tileAccent)
+                    .frame(width: iconSize, height: iconSize)
+                    .padding(.bottom, 4)
+
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .fill(tileAccent)
+                    .frame(width: index == 0 ? 112 : 86, height: 14)
+
+                RoundedRectangle(cornerRadius: 5, style: .continuous)
+                    .fill(tileAccent.opacity(0.72))
+                    .frame(width: index == 0 ? 132 : 64, height: 10)
+            }
+            .padding(14)
+        }
+        .clipped()
+    }
+
+    private func shortcutAddTile(index: Int) -> some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(tileFill.opacity(0.72))
+
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(tileAccent)
+                .frame(width: index.isMultiple(of: 2) ? 46 : 54, height: index.isMultiple(of: 2) ? 46 : 54)
+        }
+        .clipped()
+    }
+
+    private var tileFill: Color {
+        #if os(iOS)
+        Color(.systemGray5)
+        #else
+        Color.secondary.opacity(0.15)
+        #endif
+    }
+
+    private var tileAccent: Color {
+        #if os(iOS)
+        Color(.systemBackground).opacity(0.92)
+        #else
+        Color.primary.opacity(0.12)
+        #endif
     }
 }
 

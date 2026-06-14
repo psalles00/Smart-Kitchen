@@ -59,6 +59,14 @@ struct ContentPanelCutoutKey: PreferenceKey {
     }
 }
 
+struct ContentPanelWavyBorderKey: PreferenceKey {
+    nonisolated(unsafe) static var defaultValue: Color?
+
+    static func reduce(value: inout Color?, nextValue: () -> Color?) {
+        value = nextValue() ?? value
+    }
+}
+
 enum ExpandedPageHeaderMetrics {
     static let iosTitleHeight: CGFloat = 60
     static let iosInfoTopPadding: CGFloat = 4
@@ -276,6 +284,13 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
                 topTrailingRadius: cornerRadius
             )
         )
+        .overlayPreferenceValue(ContentPanelWavyBorderKey.self) { borderColor in
+            if let borderColor {
+                WavyPanelBorder(inset: -2)
+                    .stroke(borderColor, lineWidth: 1.4)
+                    .allowsHitTesting(false)
+            }
+        }
         .ignoresSafeArea(edges: .bottom)
         .padding(.leading, leadingPanelInset)
         .padding(.trailing, trailingPanelInset)
@@ -583,36 +598,78 @@ private struct SkeletonNotebookCard: View {
 
 struct NutritionPageSkeleton: View {
     var body: some View {
-        ScrollView(.vertical) {
-            VStack(spacing: 14) {
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .fill(skeletonBaseColor)
-                    .frame(height: 176)
+        GeometryReader { geometry in
+            let contentWidth = max(0, geometry.size.width - 32)
 
-                HStack(spacing: 12) {
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(skeletonBaseColor)
-                        .frame(height: 108)
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(skeletonBaseColor)
-                        .frame(height: 108)
-                }
+            ScrollView(.vertical) {
+                VStack(spacing: 14) {
+                    NutritionDateStripeSkeleton()
+                        .frame(width: contentWidth)
+                        .padding(.bottom, -2)
 
-                ForEach(0..<5, id: \.self) { index in
-                    SkeletonListRow(index: index)
-                        .background(skeletonBaseColor.opacity(0.55), in: .rect(cornerRadius: 16))
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .fill(skeletonBaseColor)
+                        .frame(width: contentWidth, height: 176)
+
+                    HStack(spacing: 12) {
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .fill(skeletonBaseColor)
+                            .frame(height: 108)
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .fill(skeletonBaseColor)
+                            .frame(height: 108)
+                    }
+                    .frame(width: contentWidth)
+
+                    ForEach(0..<5, id: \.self) { index in
+                        SkeletonListRow(index: index)
+                            .frame(width: contentWidth)
+                            .background(skeletonBaseColor.opacity(0.55), in: .rect(cornerRadius: 16))
+                    }
                 }
+                .frame(width: geometry.size.width, alignment: .top)
+                .padding(.top, 4)
+                .padding(.bottom, 24)
             }
-            .frame(maxWidth: .infinity, alignment: .top)
-            .padding(.horizontal, 16)
-            .padding(.top, 12)
-            .padding(.bottom, 24)
+            .frame(width: geometry.size.width, height: geometry.size.height, alignment: .top)
+            .scrollIndicators(.hidden)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .scrollIndicators(.hidden)
         .skeletonShimmer()
         .clipped()
         .allowsHitTesting(false)
+    }
+}
+
+private struct NutritionDateStripeSkeleton: View {
+    var body: some View {
+        HStack(alignment: .center, spacing: 0) {
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .stroke(skeletonBaseColor, lineWidth: 1)
+                .background(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(skeletonBaseColor.opacity(0.36))
+                )
+                .frame(width: 38, height: 42)
+                .frame(width: 44)
+
+            HStack(spacing: 0) {
+                ForEach(0..<7, id: \.self) { index in
+                    VStack(spacing: 4) {
+                        Capsule()
+                            .fill(skeletonBaseColor.opacity(index == 5 ? 0.78 : 0.55))
+                            .frame(width: 12, height: 8)
+
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .fill(index == 5 ? skeletonHighlightColor : skeletonBaseColor.opacity(0.72))
+                            .frame(width: 38, height: 28)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .frame(height: 74)
     }
 }
 

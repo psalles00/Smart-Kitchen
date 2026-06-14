@@ -87,7 +87,7 @@ struct NutritionDashboardView: View {
         VStack(spacing: 0) {
             ScrollView {
                 VStack(spacing: 18) {
-                    VStack(spacing: 18) {
+                    VStack(spacing: 8) {
                         WeekEnergyStrip(
                             selectedDate: $selectedDate,
                             caloriesForDate: caloriesFor,
@@ -99,7 +99,7 @@ struct NutritionDashboardView: View {
                         .padding(.horizontal, 12)
 
                         Button(action: onOpenProgress) {
-                            VStack(spacing: 12) {
+                            VStack(spacing: 6) {
                                 CalorieRingView(consumed: caloriesConsumed, goal: profile.effectiveCalories)
                                     .padding(.top, 0)
 
@@ -116,11 +116,6 @@ struct NutritionDashboardView: View {
                             .padding(.bottom, 24)
                     }
                     .padding(.top, -5)
-                    .overlay(alignment: .top) {
-                        wavyStateBorder
-                            .padding(.top, -5)
-                            .allowsHitTesting(false)
-                    }
 
                     Color.clear.frame(height: 88)
                 }
@@ -131,23 +126,20 @@ struct NutritionDashboardView: View {
                 .padding(.leading, 16)
                 .padding(.bottom, 8)
         }
+        .preference(key: ContentPanelWavyBorderKey.self, value: wavyStateBorderColor)
     }
 
-    /// Borda ondulada que aparece como overlay sobre o bloco principal do
-    /// conteúdo da Nutrição. Como fica dentro do scroll, acompanha o fundo
-    /// branco ao rolar, mas termina logo abaixo de "Refeições do dia" — sem
-    /// incluir o spacer final da página.
-    @ViewBuilder
-    private var wavyStateBorder: some View {
+    /// Cor da borda ondulada fixa no painel principal da Nutrição. A shape é
+    /// desenhada pelo `ExpandedPageLayout`, fora do `ScrollView`, para não ser
+    /// reposicionada pela rolagem do dashboard.
+    private var wavyStateBorderColor: Color? {
         switch selectedDayState {
         case .todayInProgress, .pastInProgress:
-            WavyPanelBorder()
-                .stroke(Color(red: 0.96, green: 0.78, blue: 0.26), lineWidth: 1.4)
+            Color(red: 0.96, green: 0.78, blue: 0.26)
         case .completed:
-            WavyPanelBorder()
-                .stroke(Color(red: 0.31, green: 0.74, blue: 0.46), lineWidth: 1.4)
+            Color(red: 0.31, green: 0.74, blue: 0.46)
         default:
-            EmptyView()
+            nil
         }
     }
 
@@ -177,7 +169,7 @@ struct NutritionDashboardView: View {
                     .tag(2)
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
-            .frame(height: 146)
+            .frame(height: 138)
 
             // Indicador customizado para garantir aparência neutra.
             HStack(spacing: 6) {
@@ -205,16 +197,17 @@ struct NutritionDashboardView: View {
                 unit: "g",
                 iconFileName: "protein-powder.png",
                 fallbackSymbol: "bolt.fill",
-                tint: Color(red: 0.91, green: 0.37, blue: 0.31)
+                tint: Color(red: 0.24, green: 0.64, blue: 0.72)
             )
             MacroCard(
                 label: String(localized: "Carbos"),
                 current: Double(carbsConsumed),
                 goal: Double(profile.effectiveCarbsG),
                 unit: "g",
-                iconFileName: "bread-white.png",
+                iconFileName: "baguette.png",
                 fallbackSymbol: "leaf.fill",
-                tint: Color(red: 0.34, green: 0.68, blue: 0.36)
+                iconSize: 82,
+                tint: Color(red: 0.96, green: 0.52, blue: 0.18)
             )
             MacroCard(
                 label: String(localized: "Gordura"),
@@ -223,10 +216,11 @@ struct NutritionDashboardView: View {
                 unit: "g",
                 iconFileName: "olive-oil.png",
                 fallbackSymbol: "drop.fill",
-                tint: Color(red: 0.95, green: 0.63, blue: 0.22)
+                iconSize: 80,
+                tint: Color(red: 0.32, green: 0.72, blue: 0.36)
             )
         }
-        .padding(.top, 14)
+        .padding(.top, 6)
         .padding(.horizontal, 0)
     }
 
@@ -241,7 +235,7 @@ struct NutritionDashboardView: View {
                 current: fiberConsumed,
                 goal: 25,
                 unit: "g",
-                iconFileName: "salad.png",
+                iconFileName: "oats.png",
                 fallbackSymbol: "leaf.fill",
                 tint: Color(red: 0.24, green: 0.58, blue: 0.40)
             )
@@ -252,6 +246,7 @@ struct NutritionDashboardView: View {
                 unit: "g",
                 iconFileName: "sugar-cube.png",
                 fallbackSymbol: "cube.fill",
+                iconSize: 84,
                 tint: Color(red: 0.63, green: 0.48, blue: 0.86)
             )
             MacroCard(
@@ -261,10 +256,11 @@ struct NutritionDashboardView: View {
                 unit: "mg",
                 iconFileName: "salt.png",
                 fallbackSymbol: "sparkles",
+                iconSize: 84,
                 tint: Color(red: 0.36, green: 0.58, blue: 0.86)
             )
         }
-        .padding(.top, 18)
+        .padding(.top, 6)
         .padding(.horizontal, 0)
     }
 
@@ -287,6 +283,7 @@ struct NutritionDashboardView: View {
                 unit: "mg",
                 iconFileName: "egg.png",
                 fallbackSymbol: "heart.fill",
+                iconSize: 92,
                 tint: Color(red: 0.86, green: 0.30, blue: 0.46)
             )
             MacroCard(
@@ -296,10 +293,11 @@ struct NutritionDashboardView: View {
                 unit: "mg",
                 iconFileName: "banana.png",
                 fallbackSymbol: "bolt.fill",
+                iconSize: 80,
                 tint: Color(red: 0.73, green: 0.58, blue: 0.24)
             )
         }
-        .padding(.top, 18)
+        .padding(.top, 6)
         .padding(.horizontal, 0)
     }
 
@@ -402,8 +400,8 @@ struct NutritionDashboardView: View {
         }
     }
 
-    /// Botão do header do card “Refeições do dia”. Outline-only com verde
-    /// discreto aplicado tanto no texto quanto na borda.
+    /// Botão do header do card “Refeições do dia”. Outline-only e neutro,
+    /// acompanhando a cor do título da seção.
     @ViewBuilder
     private var addRegistroMenu: some View {
         Menu {
@@ -413,9 +411,9 @@ struct NutritionDashboardView: View {
                 .font(.caption.weight(.semibold))
                 .padding(.horizontal, 12)
                 .padding(.vertical, 7)
-                .foregroundStyle(Color(red: 0.31, green: 0.74, blue: 0.46))
+                .foregroundStyle(.primary)
                 .overlay(
-                    Capsule().stroke(Color(red: 0.31, green: 0.74, blue: 0.46), lineWidth: 1)
+                    Capsule().stroke(Color.secondary.opacity(0.45), lineWidth: 1)
                 )
         }
         .menuOrder(.fixed)
