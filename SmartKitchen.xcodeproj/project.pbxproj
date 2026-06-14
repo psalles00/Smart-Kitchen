@@ -78,6 +78,7 @@
 		479F2A65604850F60CFB724D /* CloudSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11B3CB2DD186ABB8A9CA1D36 /* CloudSyncService.swift */; };
 		480E7106C61B27A5D6CD0DE5 /* CategoryIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AB1288F335CB9E41C4BCD44 /* CategoryIconView.swift */; };
 		481F9CB62428FDC5E6B3F7BA /* AddRecipeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6BE4C724AFB81764F1B248F /* AddRecipeView.swift */; };
+		486AF61D5E11D7D9A92C8C10 /* LocalPageSearchBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84C015E6F4E2A419B6B9581D /* LocalPageSearchBar.swift */; };
 		4911E87CDD2781253619EBDC /* AIChatWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E74389E6DBB6C57ABD1D15D /* AIChatWidget.swift */; };
 		49CE636DC479BA7C276C104F /* FoodImageStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C758332A037C07A7DF37C53C /* FoodImageStore.swift */; };
 		4A20E21739F4938606727E42 /* AddPantryItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60DB5C2D28F6CAD1D2ADA37E /* AddPantryItemView.swift */; };
@@ -443,6 +444,7 @@
 		80D2CBBBCC49CA560D36DA31 /* RecentActionsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentActionsStore.swift; sourceTree = "<group>"; };
 		82E9D0FE6BE410235DA570CF /* PendingNutritionDaysCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingNutritionDaysCard.swift; sourceTree = "<group>"; };
 		82FB6F8A2D7A9D059FB30D1C /* WavyPanelBorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WavyPanelBorder.swift; sourceTree = "<group>"; };
+		84C015E6F4E2A419B6B9581D /* LocalPageSearchBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalPageSearchBar.swift; sourceTree = "<group>"; };
 		8553574E6585FF064B4CDA62 /* PageTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageTheme.swift; sourceTree = "<group>"; };
 		8563DC5FB3F28A03B91FEE4C /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		85EAF5921660EEAB83572103 /* UtensilItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UtensilItem.swift; sourceTree = "<group>"; };
@@ -1022,6 +1024,7 @@
 				353C1175CD2B3C3C3D1C0DCD /* InlineSearchResultsView.swift */,
 				7B18CA8A7141908734CA7123 /* ItemIconPickerView.swift */,
 				DB768039F88F9878E87FABA4 /* ItemSearchField.swift */,
+				84C015E6F4E2A419B6B9581D /* LocalPageSearchBar.swift */,
 				CE3D1EB5B18D19836B0A5C38 /* MacCameraMediaPicker.swift */,
 				B970691AA2D626F97231E533 /* PageHeader.swift */,
 				03D3A921192A6B45D0277413 /* PaywallSheet.swift */,
@@ -1584,6 +1587,7 @@
 				FA8CD60A97F57CA13CD75E21 /* ThemedBackgroundView.swift in Sources */,
 				04FFD51C55F19981F10C0552 /* TimeRange.swift in Sources */,
 				57AE96EF10E9440DF8C48362 /* USDANutritionLookup.swift in Sources */,
+				486AF61D5E11D7D9A92C8C10 /* LocalPageSearchBar.swift in Sources */,
 				3A46C9A42EBF6F794A190B43 /* UnifiedItem.swift in Sources */,
 				646C3DEB40EF46513EF4C4C1 /* UnifiedItemMigration.swift in Sources */,
 				464EEDE4D3E04A589F109ED3 /* UnifiedSearchBar.swift in Sources */,

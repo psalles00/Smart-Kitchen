@@ -145,7 +145,6 @@ private struct ListsLoadedTabView: View {
     @State private var showAddGrocery = false
     @State private var showAddUtensil = false
     @State private var existingItemFromCreateFlow: UnifiedItemSelection?
-    @EnvironmentObject private var searchBarState: SearchBarState
     @State private var showsInlineTitle = false
     @State private var sortOption: ListsSortOption = .custom
     @State private var pantryFilter: PantryListFilterOption = .all
@@ -153,6 +152,8 @@ private struct ListsLoadedTabView: View {
     @State private var targetedTab: ListSubtab?
     @State private var currentScrollOffset: CGFloat = 0
     @State private var contentResetToken: Int = 0
+    @State private var isLocalSearchVisible = false
+    @State private var localSearchText = ""
 
     @State private var pantryBadge: Int = 0
     @State private var groceryBadge: Int = 0
@@ -190,6 +191,13 @@ private struct ListsLoadedTabView: View {
                         }
 
                         GlassButtonGroup {
+                            GlassGroupButton(systemImage: "magnifyingglass") {
+                                toggleLocalSearch()
+                            }
+                            .accessibilityLabel(Text(isLocalSearchVisible ? "Fechar" : "Buscar"))
+                        }
+
+                        GlassButtonGroup {
                             optionsMenu
                         }
 
@@ -210,7 +218,7 @@ private struct ListsLoadedTabView: View {
                         switch selectedSubtab {
                         case .pantry:
                             PantryView(
-                                searchText: searchBarState.debouncedSearchText,
+                                searchText: localSearchText,
                                 sortOption: sortOption,
                                 filterOption: pantryFilter,
                                 expiringLeadDays: settings?.expiringItemsLeadDays ?? 30,
@@ -227,7 +235,7 @@ private struct ListsLoadedTabView: View {
                             )
                         case .grocery:
                             GroceryListView(
-                                searchText: searchBarState.debouncedSearchText,
+                                searchText: localSearchText,
                                 sortOption: sortOption,
                                 filterOption: groceryFilter,
                                 onAcquired: {
@@ -243,7 +251,7 @@ private struct ListsLoadedTabView: View {
                             )
                         case .utensils:
                             UtensilsView(
-                                searchText: searchBarState.debouncedSearchText,
+                                searchText: localSearchText,
                                 sortOption: sortOption,
                                 onPullToAdd: { showAddUtensil = true },
                                 onScrollOffsetChange: updateInlineTitle
@@ -255,7 +263,7 @@ private struct ListsLoadedTabView: View {
                 }
             },
             infoContent: {
-                EmptyView()
+                localSearchHeader
             }
         )
         #if os(iOS)
@@ -263,7 +271,7 @@ private struct ListsLoadedTabView: View {
         #endif
         .tint(PageTheme.lists.accentColor)
         .onChange(of: selectedSubtab) {
-            searchBarState.searchText = ""
+            localSearchText = ""
             showsInlineTitle = false
             currentScrollOffset = 0
         }
@@ -320,6 +328,23 @@ private struct ListsLoadedTabView: View {
             NewItemCommandAction(title: selectedSubtab.newItemTitle, perform: openNewItemSheet)
         )
         #endif
+    }
+
+    @ViewBuilder
+    private var localSearchHeader: some View {
+        if isLocalSearchVisible {
+            LocalPageSearchBar(text: $localSearchText, placeholder: "Buscar nesta lista")
+                .transition(.move(edge: .top).combined(with: .opacity))
+        }
+    }
+
+    private func toggleLocalSearch() {
+        withAnimation(.snappy(duration: 0.22, extraBounce: 0.02)) {
+            isLocalSearchVisible.toggle()
+            if !isLocalSearchVisible {
+                localSearchText = ""
+            }
+        }
     }
 
     private var optionsMenu: some View {

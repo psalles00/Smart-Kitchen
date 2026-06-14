@@ -175,8 +175,6 @@ private struct RecipesLoadedView: View {
     @Query private var settingsArray: [AppSettings]
     @Query(sort: \Category.sortOrder) private var allCategories: [Category]
 
-    @EnvironmentObject private var searchBarState: SearchBarState
-
     @State private var selectedCategory: String? = nil
     @State private var sortOption: RecipeSortOption = .dateAdded
     @State private var showAddRecipe = false
@@ -195,6 +193,8 @@ private struct RecipesLoadedView: View {
     @State private var pendingRecipeScrollID: UUID?
     @State private var selectedRecipeID: UUID?
     @State private var categoryBarCenterToken: Int = 0
+    @State private var isLocalSearchVisible = false
+    @State private var localSearchText = ""
     #if os(macOS)
     @State private var macGalleryAvailableWidth: CGFloat = 0
     #endif
@@ -271,7 +271,7 @@ private struct RecipesLoadedView: View {
                 hasher.combine(tag)
             }
         }
-        hasher.combine(searchBarState.searchText)
+        hasher.combine(localSearchText)
         hasher.combine(selectedCategory ?? "")
         hasher.combine(showCompatibleOnly)
         hasher.combine(showFavoritesOnly)
@@ -295,7 +295,7 @@ private struct RecipesLoadedView: View {
                 hasher.combine(tag)
             }
         }
-        hasher.combine(searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines))
+        hasher.combine(localSearchText.trimmingCharacters(in: .whitespacesAndNewlines))
         hasher.combine(lastCompatibilityInputsKey)
         hasher.combine(recipeCategoriesDisplaySignature)
         return hasher.finalize()
@@ -389,7 +389,7 @@ private struct RecipesLoadedView: View {
                 #endif
             },
             infoContent: {
-                EmptyView()
+                localSearchHeader
             }
         )
         #if os(iOS)
@@ -492,7 +492,7 @@ private struct RecipesLoadedView: View {
             refreshRecipeProjectionsIfNeeded()
             invalidateNotebookSummaries()
         }
-        .onChange(of: searchBarState.searchText) { _, _ in
+        .onChange(of: localSearchText) { _, _ in
             refreshRecipeProjectionsIfNeeded()
             invalidateNotebookSummaries(showSkeleton: isShowingCadernos && cachedNotebookSummaries.isEmpty)
         }
@@ -584,6 +584,13 @@ private struct RecipesLoadedView: View {
                 }
 
                 GlassButtonGroup {
+                    GlassGroupButton(systemImage: "magnifyingglass") {
+                        toggleLocalSearch()
+                    }
+                    .accessibilityLabel(Text(isLocalSearchVisible ? "Fechar" : "Buscar"))
+                }
+
+                GlassButtonGroup {
                     GlassGroupButton(systemImage: isShowingCadernos ? "book.closed" : "books.vertical") {
                         toggleNotebookPage()
                     }
@@ -592,6 +599,23 @@ private struct RecipesLoadedView: View {
                 #if !os(macOS)
                 SettingsButton()
                 #endif
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var localSearchHeader: some View {
+        if isLocalSearchVisible {
+            LocalPageSearchBar(text: $localSearchText, placeholder: isShowingCadernos ? "Buscar cadernos" : "Buscar receitas")
+                .transition(.move(edge: .top).combined(with: .opacity))
+        }
+    }
+
+    private func toggleLocalSearch() {
+        withAnimation(.snappy(duration: 0.22, extraBounce: 0.02)) {
+            isLocalSearchVisible.toggle()
+            if !isLocalSearchVisible {
+                localSearchText = ""
             }
         }
     }
@@ -756,8 +780,8 @@ private struct RecipesLoadedView: View {
         ) {
             var result = allRecipes
 
-            if !searchBarState.searchText.isEmpty {
-                let searchText = searchBarState.searchText
+            if !localSearchText.isEmpty {
+                let searchText = localSearchText
                 result = result.filter {
                     $0.name.localizedCaseInsensitiveContains(searchText) ||
                     $0.tags.contains(where: { $0.localizedCaseInsensitiveContains(searchText) }) ||
@@ -829,7 +853,7 @@ private struct RecipesLoadedView: View {
             "Recipes.refreshNotebookSummaries",
             metadata: "trace=recipes-notebooks recipes=\(allRecipes.count) notebooks=\(cachedNotebookSummaries.count)"
         ) {
-            let searchText = searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+            let searchText = localSearchText.trimmingCharacters(in: .whitespacesAndNewlines)
             var accumulators: [String: RecipeNotebookAccumulator] = [:]
             accumulators.reserveCapacity(recipeCategories.count)
 
@@ -1399,7 +1423,7 @@ private struct RecipesLoadedView: View {
         VStack(spacing: 0) {
             categoryFilter
 
-            ContentUnavailableView.search(text: searchBarState.searchText)
+            ContentUnavailableView.search(text: localSearchText)
         }
     }
 
@@ -1415,7 +1439,7 @@ private struct RecipesLoadedView: View {
                         NotebookLoadingSkeleton()
                             .padding(.horizontal, 16)
                     } else if notebookSummaries.isEmpty {
-                        if searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        if localSearchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                             ContentUnavailableView {
                                 Label("Sem Cadernos", systemImage: "books.vertical")
                             } description: {
@@ -1423,7 +1447,7 @@ private struct RecipesLoadedView: View {
                             }
                             .padding(.top, 36)
                         } else {
-                            ContentUnavailableView.search(text: searchBarState.searchText)
+                            ContentUnavailableView.search(text: localSearchText)
                                 .padding(.top, 36)
                         }
                     } else {
