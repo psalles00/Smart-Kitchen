@@ -133,29 +133,98 @@ struct AIModeSuggestionsList: View {
     let suggestions: [AIModeSuggestion]
     let onTap: (AIModeSuggestion) -> Void
 
+    private let columns = [
+        GridItem(.flexible(), spacing: 10),
+        GridItem(.flexible(), spacing: 10)
+    ]
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            ForEach(suggestions) { suggestion in
-                Button {
-                    onTap(suggestion)
-                } label: {
-                    HStack(spacing: 10) {
-                        Text(suggestion.emoji)
-                            .font(.title3)
-                        Text(suggestion.label)
-                            .font(.subheadline)
-                            .foregroundStyle(.primary)
-                            .lineLimit(2)
-                            .multilineTextAlignment(.leading)
-                        Spacer(minLength: 0)
-                    }
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 10)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(neutralSurfaceColor, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            if let primary = suggestions.first {
+                suggestionButton(primary, style: .primary)
+            }
+
+            LazyVGrid(columns: columns, alignment: .leading, spacing: 10) {
+                ForEach(suggestions.dropFirst()) { suggestion in
+                    suggestionButton(suggestion, style: .compact)
                 }
-                .buttonStyle(.plain)
             }
         }
+    }
+
+    private func suggestionButton(_ suggestion: AIModeSuggestion, style: SuggestionButtonStyle) -> some View {
+        Button {
+            onTap(suggestion)
+        } label: {
+            switch style {
+            case .primary:
+                HStack(spacing: 12) {
+                    emojiBadge(suggestion.emoji, size: 40, font: .title3)
+
+                    Text(suggestion.label)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.primary)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+
+                    Spacer(minLength: 0)
+
+                    Image(systemName: "arrow.up.right")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(.tertiary)
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 13)
+                .frame(maxWidth: .infinity, minHeight: 64, alignment: .leading)
+                .background(primarySurface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .strokeBorder(Color.primary.opacity(0.06), lineWidth: 1)
+                }
+
+            case .compact:
+                VStack(alignment: .leading, spacing: 10) {
+                    emojiBadge(suggestion.emoji, size: 32, font: .body)
+
+                    Text(suggestion.label)
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(.primary)
+                        .lineLimit(3)
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .padding(12)
+                .frame(maxWidth: .infinity, minHeight: 98, alignment: .topLeading)
+                .background(neutralSurfaceColor, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .strokeBorder(Color.primary.opacity(0.05), lineWidth: 1)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func emojiBadge(_ emoji: String, size: CGFloat, font: Font) -> some View {
+        Text(emoji)
+            .font(font)
+            .frame(width: size, height: size)
+            .background(Color.primary.opacity(0.055), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+    }
+
+    private var primarySurface: some ShapeStyle {
+        LinearGradient(
+            colors: [
+                PageTheme.home.accentColor.opacity(0.16),
+                neutralSurfaceColor
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+
+    private enum SuggestionButtonStyle {
+        case primary
+        case compact
     }
 }

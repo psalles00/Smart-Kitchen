@@ -95,6 +95,7 @@ struct AppLaunchSkeletonPage: View {
     var body: some View {
         let _ = PerformanceLogger.event(.launch, "AppLaunchSkeletonPage body evaluated")
         return skeletonBody
+        .environment(\.visiblePageTheme, kind.pageTheme)
         .allowsHitTesting(false)
         .onAppear(perform: startShimmer)
     }
@@ -947,14 +948,15 @@ private struct SkeletonBlock: View {
     let phase: CGFloat
 
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.visiblePageTheme) private var visiblePageTheme
 
     var body: some View {
         RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-            .fill(palette.baseColor(for: colorScheme))
+            .fill(palette.baseColor(for: colorScheme, pageTheme: visiblePageTheme ?? .home))
             .appSkeletonReflection()
             .overlay {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .stroke(palette.strokeColor(for: colorScheme), lineWidth: 0.6)
+                    .stroke(palette.strokeColor(for: colorScheme, pageTheme: visiblePageTheme ?? .home), lineWidth: 0.6)
             }
             .frame(width: width, height: height)
             .accessibilityHidden(true)

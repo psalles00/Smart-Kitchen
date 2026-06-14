@@ -416,9 +416,6 @@ struct DeferredTabPage<Loaded: View, Placeholder: View>: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .transaction { transaction in
-            transaction.animation = nil
-        }
         .toolbar(.hidden, for: .navigationBar)
         .onAppear {
             updateReadiness(for: activeAppTab)

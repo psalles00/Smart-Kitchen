@@ -209,9 +209,6 @@ struct SmartKitchenApp: App {
                         }
                 }
             }
-            .transaction { transaction in
-                transaction.animation = nil
-            }
             .preferredColorScheme(launchAppearanceMode.colorScheme)
             .onReceive(NotificationCenter.default.publisher(for: .appearanceModeChanged)) { _ in
                 launchAppearanceMode = .launchPreference

@@ -880,9 +880,6 @@ struct ContentView: View {
                     Label("Buscar", systemImage: AppTab.commandBar.icon)
                 }
             }
-            .transaction { transaction in
-                transaction.animation = nil
-            }
             .environment(\.usesGlobalPageBackground, true)
             #if os(iOS)
             // Hide the tab bar only while the keyboard is up; otherwise the

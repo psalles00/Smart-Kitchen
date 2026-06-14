@@ -112,18 +112,12 @@ private struct HomeInfoContentLive: View {
             if statusFacts.isEmpty {
                 readyStatusPhrase
             } else {
-                VStack(alignment: .leading, spacing: 1) {
-                    ForEach(statusPhraseLines) { line in
-                        HStack(spacing: 4) {
-                            ForEach(line.tokens) { token in
-                                statusPhraseTokenView(token)
-                            }
-                        }
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.76)
-                        .allowsTightening(true)
-                    }
-                }
+                statusPhraseText
+                    .font(.system(size: 14.5, weight: .semibold, design: .rounded))
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.82)
+                    .allowsTightening(true)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -150,6 +144,30 @@ private struct HomeInfoContentLive: View {
             .foregroundColor(.white)
         + Text(" " + String(localized: "na sua cozinha!"))
             .foregroundColor(.white.opacity(0.55))
+    }
+
+    private var statusPhraseText: Text {
+        statusFacts.enumerated().reduce(
+            Text(greetingText + " " + String(localized: "Você possui") + " ")
+                .foregroundColor(.white.opacity(0.55))
+        ) { partial, indexedFact in
+            let prefix: Text = indexedFact.offset == 0
+                ? Text("")
+                : Text(" " + String(localized: "e") + " ")
+                    .font(.system(size: 14.5, weight: .semibold, design: .rounded))
+                    .foregroundColor(.white.opacity(0.55))
+
+            let fact = indexedFact.element
+            return partial
+                + prefix
+                + Text(Image(systemName: fact.icon))
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(.white)
+                + Text(" ")
+                + Text(fact.text)
+                    .font(.system(size: 15, weight: .heavy, design: .rounded))
+                    .foregroundColor(.white)
+        }
     }
 
     private func refreshSnapshot() {

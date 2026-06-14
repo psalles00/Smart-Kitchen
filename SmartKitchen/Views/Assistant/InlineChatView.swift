@@ -142,6 +142,10 @@ struct InlineChatView: View {
         isAIMode ? .callout : .body
     }
 
+    private var aiModeEmptyStateDescriptionBottomSpacing: CGFloat {
+        34
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             // Hide own header when the parent panel provides one
@@ -497,7 +501,7 @@ struct InlineChatView: View {
                     sendMessage(suggestion.prompt)
                 }
                 .padding(.horizontal, 32)
-                .padding(.top, 4)
+                .padding(.top, aiModeEmptyStateDescriptionBottomSpacing)
 
                 Spacer()
             }

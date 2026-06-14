@@ -64,7 +64,7 @@ enum AppSkeletonPalette {
     case surface
     case accent
 
-    func baseColor(for colorScheme: ColorScheme) -> Color {
+    func baseColor(for colorScheme: ColorScheme, pageTheme: PageTheme = .home) -> Color {
         switch self {
         case .header:
             return Color.white.opacity(colorScheme == .dark ? 0.13 : 0.18)
@@ -74,12 +74,12 @@ enum AppSkeletonPalette {
                 : Color.black.opacity(0.055)
         case .accent:
             return colorScheme == .dark
-                ? PageTheme.home.accentColor.opacity(0.22)
-                : Color.black.opacity(0.075)
+                ? pageTheme.accentColor.opacity(0.22)
+                : pageTheme.accentColor.opacity(0.14)
         }
     }
 
-    func highlightColor(for colorScheme: ColorScheme) -> Color {
+    func highlightColor(for colorScheme: ColorScheme, pageTheme: PageTheme = .home) -> Color {
         switch self {
         case .header:
             return Color.white.opacity(colorScheme == .dark ? 0.40 : 0.70)
@@ -87,19 +87,19 @@ enum AppSkeletonPalette {
             return colorScheme == .dark ? Color.white.opacity(0.15) : Color.white.opacity(0.82)
         case .accent:
             return colorScheme == .dark
-                ? PageTheme.home.secondaryAccentColor.opacity(0.34)
-                : Color.white.opacity(0.74)
+                ? pageTheme.secondaryAccentColor.opacity(0.34)
+                : pageTheme.secondaryAccentColor.opacity(0.22)
         }
     }
 
-    func strokeColor(for colorScheme: ColorScheme) -> Color {
+    func strokeColor(for colorScheme: ColorScheme, pageTheme: PageTheme = .home) -> Color {
         switch self {
         case .header:
             return Color.white.opacity(colorScheme == .dark ? 0.07 : 0.10)
         case .surface:
             return colorScheme == .dark ? Color.white.opacity(0.035) : Color.black.opacity(0.04)
         case .accent:
-            return PageTheme.home.accentColor.opacity(colorScheme == .dark ? 0.12 : 0.10)
+            return pageTheme.accentColor.opacity(colorScheme == .dark ? 0.12 : 0.16)
         }
     }
 }

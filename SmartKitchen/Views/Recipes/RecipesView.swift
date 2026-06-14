@@ -80,6 +80,7 @@ private struct RecipesSkeletonPage: View {
 
 private struct NotebookLoadingSkeleton: View {
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.visiblePageTheme) private var visiblePageTheme
 
     private let columns = [
         GridItem(.flexible(), spacing: 12),
@@ -112,7 +113,7 @@ private struct NotebookLoadingSkeleton: View {
                     .fill(panelFillColor)
                     .overlay {
                         RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .stroke(AppSkeletonPalette.surface.strokeColor(for: colorScheme), lineWidth: 0.6)
+                            .stroke(AppSkeletonPalette.surface.strokeColor(for: colorScheme, pageTheme: skeletonPageTheme), lineWidth: 0.6)
                     }
 
                 skeletonBlock(
@@ -145,12 +146,16 @@ private struct NotebookLoadingSkeleton: View {
         palette: AppSkeletonPalette
     ) -> some View {
         RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-            .fill(palette.baseColor(for: colorScheme))
+            .fill(palette.baseColor(for: colorScheme, pageTheme: skeletonPageTheme))
             .overlay {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .stroke(palette.strokeColor(for: colorScheme), lineWidth: 0.6)
+                    .stroke(palette.strokeColor(for: colorScheme, pageTheme: skeletonPageTheme), lineWidth: 0.6)
             }
             .frame(width: width, height: height)
+    }
+
+    private var skeletonPageTheme: PageTheme {
+        visiblePageTheme ?? .recipes
     }
 
     private var panelFillColor: Color {
