@@ -26,6 +26,7 @@ enum CommandBarAction {
     case openWeightTracker
     case askAssistant(prefill: String)
     case openAssistant
+    case openAIMode
     case movePantryToGrocery(UUID)
     case moveGroceryToPantry(UUID)
     case movePantryToGroceryByName(String)
@@ -522,7 +523,7 @@ struct CommandBarView: View {
                         dismiss()
                     }
                     CommandBarHelpers.quickActionRow(title: "Conversar com IA", icon: "sparkles", tint: .blue) {
-                        onAction(.openAssistant)
+                        onAction(.openAIMode)
                         dismiss()
                     }
                 }

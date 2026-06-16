@@ -3,7 +3,7 @@ options:
   bundleIdPrefix: com.smartkitchen
   developmentLanguage: en
   deploymentTarget:
-    iOS: "26.0"
+    iOS: "17.0"
     macOS: "26.0"
   createIntermediateGroups: true
   groupSortPosition: top
@@ -158,7 +158,7 @@ targets:
   SavoriaTests:
     type: bundle.unit-test
     platform: iOS
-    deploymentTarget: "26.0"
+    deploymentTarget: "17.0"
     sources:
       - path: SmartKitchenTests
     dependencies:
@@ -176,7 +176,7 @@ targets:
   SavoriaShareExtension:
     type: app-extension
     platform: iOS
-    deploymentTarget: "26.0"
+    deploymentTarget: "17.0"
     sources:
       - path: Shared
       - path: SmartKitchenShareExtension
@@ -225,7 +225,7 @@ targets:
   SavoriaWidgets:
     type: app-extension
     platform: iOS
-    deploymentTarget: "26.0"
+    deploymentTarget: "17.0"
     sources:
       - path: Shared
       - path: SmartKitchenWidgets

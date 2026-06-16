@@ -275,6 +275,7 @@ struct AddPantryItemView: View {
             }
         }
 
+        let allUnifiedItems = fetchAllUnifiedItems()
         let item = UnifiedItem(
             name: trimmed,
             descriptionText: descriptionText.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -286,14 +287,31 @@ struct AddPantryItemView: View {
             isPantry: true,
             isGrocery: false,
             isUtensil: false,
-            pantrySortOrder: (allItems.map(\.pantrySortOrder).max() ?? -1) + 1,
+            pantrySortOrder: (allUnifiedItems.filter(\.isPantry).map(\.pantrySortOrder).max() ?? -1) + 1,
             isLinkedToGrocery: false,
             expirationDate: hasExpirationDate ? expirationDate : nil,
             defaultExpiryDays: hasExpirationDate && keepExpiryOnAcquire ? computeExpiryDays() : nil
         )
-        modelContext.insert(item)
-        onCreated?(item.id)
+        let savedItem = insertOrMerge(item, in: allUnifiedItems)
+        try? modelContext.save()
+        NotificationCenter.default.post(name: .homeDataShouldRefresh, object: nil)
+        onCreated?(savedItem.id)
         dismiss()
+    }
+
+    private func fetchAllUnifiedItems() -> [UnifiedItem] {
+        var descriptor = FetchDescriptor<UnifiedItem>()
+        descriptor.includePendingChanges = true
+        return (try? modelContext.fetch(descriptor)) ?? []
+    }
+
+    private func insertOrMerge(_ item: UnifiedItem, in allItems: [UnifiedItem]) -> UnifiedItem {
+        if let existing = UnifiedItem.mergedExistingItem(named: item.name, in: allItems, context: modelContext) {
+            existing.mergeDetails(from: item)
+            return existing
+        }
+        modelContext.insert(item)
+        return item
     }
 
     private func syncDurationFromDate(_ date: Date) {

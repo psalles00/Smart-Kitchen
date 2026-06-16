@@ -638,6 +638,9 @@ final class CloudSyncService: @unchecked Sendable {
         }
 
         dedupByUUID(UnifiedItem.self, keyPath: \.id)
+        if let unifiedItems = try? context.fetch(FetchDescriptor<UnifiedItem>()) {
+            _ = UnifiedItem.mergeDuplicateNames(in: unifiedItems, context: context)
+        }
         dedupByUUID(PantryItem.self, keyPath: \.id)
         dedupByUUID(GroceryItem.self, keyPath: \.id)
         dedupByUUID(UtensilItem.self, keyPath: \.id)
@@ -1016,6 +1019,10 @@ final class CloudSyncService: @unchecked Sendable {
             return false
         }
         if anyDuplicate(UnifiedItem.self, idKeyPath: \.id) { return true }
+        if let items = try? context.fetch(FetchDescriptor<UnifiedItem>()),
+           UnifiedItem.containsDuplicateNames(in: items) {
+            return true
+        }
         if anyDuplicate(PantryItem.self, idKeyPath: \.id) { return true }
         if anyDuplicate(GroceryItem.self, idKeyPath: \.id) { return true }
         if anyDuplicate(UtensilItem.self, idKeyPath: \.id) { return true }
@@ -1054,6 +1061,7 @@ final class CloudSyncService: @unchecked Sendable {
 
         var totalDeleted = 0
         totalDeleted += deduplicateByID(UnifiedItem.self, keyPath: \.id, context: context)
+        totalDeleted += (try? UnifiedItem.mergeDuplicateNames(in: context)) ?? 0
         totalDeleted += deduplicateByID(PantryItem.self, keyPath: \.id, context: context)
         totalDeleted += deduplicateByID(GroceryItem.self, keyPath: \.id, context: context)
         totalDeleted += deduplicateByID(UtensilItem.self, keyPath: \.id, context: context)

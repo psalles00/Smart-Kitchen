@@ -54548,6 +54548,47 @@
         }
       }
     },
+    "SavorIA oferece orientações gerais sobre alimentação e organização. Não substitui avaliação, diagnóstico ou tratamento de um profissional de saúde." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SavorAI bietet allgemeine Hinweise zu Ernährung und Organisation. Es ersetzt keine Bewertung, Diagnose oder Behandlung durch medizinisches Fachpersonal."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SavorAI provides general guidance about food and organization. It does not replace evaluation, diagnosis, or treatment by a health professional."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SavorAI ofrece orientación general sobre alimentación y organización. No sustituye la evaluación, el diagnóstico ni el tratamiento de un profesional de la salud."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SavorAI fournit des conseils généraux sur l'alimentation et l'organisation. Il ne remplace pas l'évaluation, le diagnostic ni le traitement par un professionnel de santé."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SavorAI offre indicazioni generali su alimentazione e organizzazione. Non sostituisce valutazione, diagnosi o trattamento da parte di un professionista sanitario."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SavorAI は食事と整理に関する一般的な案内を提供します。医療専門家による評価、診断、治療の代わりにはなりません。"
+          }
+        }
+      }
+    },
     "SavorIA" : {
       "extractionState" : "manual",
       "localizations" : {

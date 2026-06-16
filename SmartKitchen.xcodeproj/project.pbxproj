@@ -259,6 +259,7 @@
 		EABE4295D095EADD5EB10F6C /* FoodResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2E66DFA5CB4E6DFF6E28A72 /* FoodResultView.swift */; };
 		EB305891D955BF792DBB6A80 /* RecipeImportCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE18FC2D6D66792CEDE3E8EA /* RecipeImportCoordinator.swift */; };
 		EB48AFB6177D617A32F33A81 /* NutritionAITestFixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FD39D5CF6BCD236C35FCDC9 /* NutritionAITestFixtures.swift */; };
+		EC731D5A2DF14E10B043672B /* UnifiedItemMergeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC731D592DF14E10B043672B /* UnifiedItemMergeTests.swift */; };
 		EFFBC8EDCC8EBADE335AD808 /* NutritionRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = A68268E63443BD1566AB536A /* NutritionRoute.swift */; };
 		F0CE2BAA3F0F5CFD578ED78F /* meta-it.json in Resources */ = {isa = PBXBuildFile; fileRef = 7387F4D918F7B1429792DB78 /* meta-it.json */; };
 		F12B64538C5BB34184B1FECE /* AddGroceryItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD63B6313209711B5CC7C9BC /* AddGroceryItemView.swift */; };
@@ -379,6 +380,7 @@
 		3F57F27B8FA704D0DDEFDE46 /* NutritionProfileStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionProfileStore.swift; sourceTree = "<group>"; };
 		41340DD47388F9AEF5B06243 /* meta-en.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "meta-en.json"; sourceTree = "<group>"; };
 		42C957C161706DEDC7C9E7F2 /* AIServiceFallbackTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIServiceFallbackTests.swift; sourceTree = "<group>"; };
+		EC731D592DF14E10B043672B /* UnifiedItemMergeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnifiedItemMergeTests.swift; sourceTree = "<group>"; };
 		431593D600C41201D213FA71 /* FoodCameraPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodCameraPicker.swift; sourceTree = "<group>"; };
 		45656677AD3714E163ED9011 /* Telma-Bold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Telma-Bold.otf"; sourceTree = "<group>"; };
 		45890FB81F05FADA6EF03881 /* RecipeImportOrchestrator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeImportOrchestrator.swift; sourceTree = "<group>"; };
@@ -640,6 +642,7 @@
 				019A8D5CCB169B9909C7F98A /* NutritionAITestDoubles.swift */,
 				0FD39D5CF6BCD236C35FCDC9 /* NutritionAITestFixtures.swift */,
 				B41EF838C77C7A9EE305E260 /* NutritionAITypeCoverageTests.swift */,
+				EC731D592DF14E10B043672B /* UnifiedItemMergeTests.swift */,
 			);
 			path = SmartKitchenTests;
 			sourceTree = "<group>";
@@ -1614,6 +1617,7 @@
 				C9395A0C9CA3A803C0D42774 /* NutritionAITestDoubles.swift in Sources */,
 				EB48AFB6177D617A32F33A81 /* NutritionAITestFixtures.swift in Sources */,
 				4E5B77C37DFF3B80E2C02342 /* NutritionAITypeCoverageTests.swift in Sources */,
+				EC731D5A2DF14E10B043672B /* UnifiedItemMergeTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1702,7 +1706,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -1722,7 +1726,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 44K57HQAP9;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1781,7 +1785,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -1801,7 +1805,7 @@
 				DEVELOPMENT_TEAM = 44K57HQAP9;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = SmartKitchenWidgets/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1823,7 +1827,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 44K57HQAP9;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1844,7 +1848,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 44K57HQAP9;
 				INFOPLIST_FILE = SmartKitchenShareExtension/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1867,7 +1871,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 44K57HQAP9;
 				INFOPLIST_FILE = SmartKitchenShareExtension/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1890,7 +1894,7 @@
 				DEVELOPMENT_TEAM = 44K57HQAP9;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = SmartKitchenWidgets/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

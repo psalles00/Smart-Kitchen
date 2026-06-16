@@ -297,10 +297,17 @@ struct OnboardingFlowView: View {
         // Merge pantry selections into existing items when possible.
         for (index, id) in state.selectedPantryItemIDs.enumerated() {
             guard let template = OnboardingCatalog.pantryItems.first(where: { $0.id == id }) else { continue }
-            if let existingItem = UnifiedItem.existingItem(named: template.displayName, in: allItems) {
-                if !existingItem.isPantry {
-                    existingItem.isPantry = true
-                    existingItem.pantrySortOrder = nextPantrySortOrder
+            if let existingItem = UnifiedItem.mergedExistingItem(named: template.displayName, in: allItems, context: modelContext) {
+                let wasPantry = existingItem.isPantry
+                let templateItem = UnifiedItem(
+                    name: template.displayName,
+                    category: template.category,
+                    iconName: template.iconFileName,
+                    isPantry: true,
+                    pantrySortOrder: wasPantry ? existingItem.pantrySortOrder : nextPantrySortOrder
+                )
+                existingItem.mergeDetails(from: templateItem)
+                if !wasPantry {
                     nextPantrySortOrder += 1
                 }
                 selectedPantryItems.append(existingItem)
@@ -331,10 +338,17 @@ struct OnboardingFlowView: View {
         // Merge grocery selections into existing items when possible.
         for (index, id) in state.selectedGroceryItemIDs.enumerated() {
             guard let template = OnboardingCatalog.groceryItems.first(where: { $0.id == id }) else { continue }
-            if let existingItem = UnifiedItem.existingItem(named: template.displayName, in: allItems) {
-                if !existingItem.isGrocery {
-                    existingItem.isGrocery = true
-                    existingItem.grocerySortOrder = nextGrocerySortOrder
+            if let existingItem = UnifiedItem.mergedExistingItem(named: template.displayName, in: allItems, context: modelContext) {
+                let wasGrocery = existingItem.isGrocery
+                let templateItem = UnifiedItem(
+                    name: template.displayName,
+                    category: template.category,
+                    iconName: template.iconFileName,
+                    isGrocery: true,
+                    grocerySortOrder: wasGrocery ? existingItem.grocerySortOrder : nextGrocerySortOrder
+                )
+                existingItem.mergeDetails(from: templateItem)
+                if !wasGrocery {
                     nextGrocerySortOrder += 1
                 }
                 continue

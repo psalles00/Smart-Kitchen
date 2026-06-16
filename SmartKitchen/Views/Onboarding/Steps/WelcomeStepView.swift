@@ -64,7 +64,7 @@ struct WelcomeStepView: View {
 
                 VStack(spacing: 12) {
                     localizedTitle
-                        .textRenderer(WelcomeTitleUnderlineRenderer(color: .gray.opacity(0.85)))
+                        .welcomeTitleUnderline(color: .gray.opacity(0.85))
                         .multilineTextAlignment(.center)
                         .lineLimit(3)
                         .lineSpacing(2)
@@ -159,7 +159,7 @@ struct WelcomeStepView: View {
                 styledText = baseText
                     .italic()
                     .foregroundColor(.white)
-                    .customAttribute(WelcomeTitleUnderlineAttribute())
+                    .welcomeTitleUnderlineAttribute()
             } else {
                 styledText = baseText.foregroundColor(.white)
             }
@@ -308,6 +308,28 @@ struct WelcomeStepView: View {
     }
 }
 
+private extension Text {
+    func welcomeTitleUnderlineAttribute() -> Text {
+        if #available(iOS 18.0, macOS 15.0, *) {
+            return customAttribute(WelcomeTitleUnderlineAttribute())
+        }
+
+        return self
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func welcomeTitleUnderline(color: Color) -> some View {
+        if #available(iOS 18.0, macOS 15.0, *) {
+            textRenderer(WelcomeTitleUnderlineRenderer(color: color))
+        } else {
+            self
+        }
+    }
+}
+
+@available(iOS 18.0, macOS 15.0, *)
 private struct WelcomeTitleUnderlineAttribute: TextAttribute {}
 
 private struct TitleSegment {
@@ -315,6 +337,7 @@ private struct TitleSegment {
     let isEmphasized: Bool
 }
 
+@available(iOS 18.0, macOS 15.0, *)
 private struct WelcomeTitleUnderlineRenderer: TextRenderer {
     let color: Color
 

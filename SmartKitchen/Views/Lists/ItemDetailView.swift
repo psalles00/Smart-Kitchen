@@ -1200,11 +1200,6 @@ struct ItemDetailView: View {
         guard isCreateMode else { return }
 
         let trimmed = name.trimmingCharacters(in: .whitespaces)
-        if let existing = findExistingItem(named: trimmed) {
-            duplicateNameItem = existing
-            return
-        }
-
         let trimmedDescription = descriptionText.trimmingCharacters(in: .whitespacesAndNewlines)
         var finalIcon = iconName
         var finalCategory = selectedCategory
@@ -1246,8 +1241,8 @@ struct ItemDetailView: View {
             item.defaultExpiryDays = computeExpiryDays()
         }
 
-        modelContext.insert(item)
-        createdID = item.id
+        let savedItem = insertOrMerge(item)
+        createdID = savedItem.id
         createdType = wantsPantry ? .pantry : (wantsGrocery ? .grocery : .utensil)
 
         if wantsUtensil {
@@ -1259,6 +1254,8 @@ struct ItemDetailView: View {
         if let id = createdID {
             onCreated?(id, createdType)
         }
+        try? modelContext.save()
+        NotificationCenter.default.post(name: .homeDataShouldRefresh, object: nil)
         dismiss()
     }
 
@@ -1295,12 +1292,17 @@ struct ItemDetailView: View {
         duplicateCheckItems = (try? modelContext.fetch(FetchDescriptor<UnifiedItem>())) ?? []
     }
 
-    private func findExistingItem(named candidateName: String) -> UnifiedItem? {
-        let trimmed = candidateName.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return nil }
-        let items = (try? modelContext.fetch(FetchDescriptor<UnifiedItem>())) ?? []
+    private func insertOrMerge(_ item: UnifiedItem) -> UnifiedItem {
+        var descriptor = FetchDescriptor<UnifiedItem>()
+        descriptor.includePendingChanges = true
+        let items = (try? modelContext.fetch(descriptor)) ?? []
         duplicateCheckItems = items
-        return UnifiedItem.existingItem(named: trimmed, in: items)
+        if let existing = UnifiedItem.mergedExistingItem(named: item.name, in: items, context: modelContext) {
+            existing.mergeDetails(from: item)
+            return existing
+        }
+        modelContext.insert(item)
+        return item
     }
 
     private func nextSortOrder(for listType: ItemListType) -> Int {

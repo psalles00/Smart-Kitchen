@@ -156,7 +156,8 @@ struct AddUtensilItemView: View {
             }
         }
 
-        let nextOrder = (allItems.map(\.utensilSortOrder).max() ?? -1) + 1
+        let allUnifiedItems = fetchAllUnifiedItems()
+        let nextOrder = (allUnifiedItems.filter(\.isUtensil).map(\.utensilSortOrder).max() ?? -1) + 1
         let item = UnifiedItem(
             name: trimmed,
             descriptionText: descriptionText.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -168,8 +169,25 @@ struct AddUtensilItemView: View {
             isUtensil: true,
             utensilSortOrder: nextOrder
         )
-        modelContext.insert(item)
+        _ = insertOrMerge(item, in: allUnifiedItems)
+        try? modelContext.save()
+        NotificationCenter.default.post(name: .homeDataShouldRefresh, object: nil)
         dismiss()
+    }
+
+    private func fetchAllUnifiedItems() -> [UnifiedItem] {
+        var descriptor = FetchDescriptor<UnifiedItem>()
+        descriptor.includePendingChanges = true
+        return (try? modelContext.fetch(descriptor)) ?? []
+    }
+
+    private func insertOrMerge(_ item: UnifiedItem, in allItems: [UnifiedItem]) -> UnifiedItem {
+        if let existing = UnifiedItem.mergedExistingItem(named: item.name, in: allItems, context: modelContext) {
+            existing.mergeDetails(from: item)
+            return existing
+        }
+        modelContext.insert(item)
+        return item
     }
 
     private func loadPhoto() {

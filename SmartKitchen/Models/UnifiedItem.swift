@@ -169,6 +169,68 @@ final class UnifiedItem {
 }
 
 extension UnifiedItem {
+    @discardableResult
+    static func mergeDuplicateNames(in context: ModelContext) throws -> Int {
+        let items = try context.fetch(FetchDescriptor<UnifiedItem>())
+        return mergeDuplicateNames(in: items, context: context)
+    }
+
+    @discardableResult
+    static func mergeDuplicateNames(in items: [UnifiedItem], context: ModelContext) -> Int {
+        var grouped: [String: [UnifiedItem]] = [:]
+        for item in items {
+            let key = normalizedName(item.name)
+            guard !key.isEmpty else { continue }
+            grouped[key, default: []].append(item)
+        }
+
+        var deleted = 0
+        for duplicates in grouped.values where duplicates.count > 1 {
+            let survivor = preferredMergeSurvivor(from: duplicates)
+            for duplicate in duplicates where duplicate.id != survivor.id {
+                survivor.mergeDetails(from: duplicate)
+                relinkItems(from: duplicate.id, to: survivor.id, in: items)
+                context.delete(duplicate)
+                deleted += 1
+            }
+        }
+        return deleted
+    }
+
+    static func containsDuplicateNames(in items: [UnifiedItem]) -> Bool {
+        var seen = Set<String>()
+        for item in items {
+            let key = normalizedName(item.name)
+            guard !key.isEmpty else { continue }
+            if !seen.insert(key).inserted { return true }
+        }
+        return false
+    }
+
+    static func mergedExistingItem(
+        named name: String,
+        in items: [UnifiedItem],
+        context: ModelContext,
+        excluding excludedID: UUID? = nil
+    ) -> UnifiedItem? {
+        let normalized = normalizedName(name)
+        guard !normalized.isEmpty else { return nil }
+
+        let matches = items.filter { item in
+            if let excludedID, item.id == excludedID { return false }
+            return normalizedName(item.name) == normalized
+        }
+        guard !matches.isEmpty else { return nil }
+
+        let survivor = preferredMergeSurvivor(from: matches)
+        for duplicate in matches where duplicate.id != survivor.id {
+            survivor.mergeDetails(from: duplicate)
+            relinkItems(from: duplicate.id, to: survivor.id, in: items)
+            context.delete(duplicate)
+        }
+        return survivor
+    }
+
     static func normalizedName(_ name: String) -> String {
         name
             .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -196,6 +258,156 @@ extension UnifiedItem {
                 return false
             }
             return normalizedName(item.name) == normalized
+        }
+    }
+
+    func mergeDetails(from source: UnifiedItem) {
+        let hadPantry = isPantry
+        let hadGrocery = isGrocery
+        let hadUtensil = isUtensil
+
+        if name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            name = source.name
+        }
+        descriptionText = Self.mergedDescription(descriptionText, source.descriptionText)
+        if imageData == nil {
+            imageData = source.imageData
+        }
+        if Self.shouldReplaceCategory(category, with: source.category) {
+            category = source.category
+        }
+        if quantity == nil {
+            quantity = source.quantity
+        }
+        if (unit?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true),
+           let sourceUnit = source.unit,
+           !sourceUnit.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            unit = sourceUnit
+        }
+        if iconName == nil {
+            iconName = source.iconName
+        }
+        addedAt = min(addedAt, source.addedAt)
+
+        if source.isPantry {
+            isPantry = true
+            if !hadPantry {
+                pantrySortOrder = source.pantrySortOrder
+            } else {
+                pantrySortOrder = min(pantrySortOrder, source.pantrySortOrder)
+            }
+            isLinkedToGrocery = isLinkedToGrocery || source.isLinkedToGrocery
+            expirationDate = Self.earliestDate(expirationDate, source.expirationDate)
+        }
+
+        if source.isGrocery {
+            isGrocery = true
+            if !hadGrocery {
+                grocerySortOrder = source.grocerySortOrder
+                isChecked = source.isChecked
+            } else {
+                grocerySortOrder = min(grocerySortOrder, source.grocerySortOrder)
+                isChecked = isChecked && source.isChecked
+            }
+            isFixed = isFixed || source.isFixed
+        }
+
+        if source.isUtensil {
+            isUtensil = true
+            if !hadUtensil {
+                utensilSortOrder = source.utensilSortOrder
+            } else {
+                utensilSortOrder = min(utensilSortOrder, source.utensilSortOrder)
+            }
+        }
+
+        defaultExpiryDays = Self.shortestDuration(defaultExpiryDays, source.defaultExpiryDays)
+        if linkedPantryItemId == nil {
+            linkedPantryItemId = source.linkedPantryItemId
+        }
+        if linkedPantryItemId == id || linkedPantryItemId == source.id {
+            linkedPantryItemId = nil
+        }
+    }
+
+    private static func preferredMergeSurvivor(from items: [UnifiedItem]) -> UnifiedItem {
+        items.max { lhs, rhs in
+            let lhsScore = mergeScore(lhs)
+            let rhsScore = mergeScore(rhs)
+            if lhsScore != rhsScore { return lhsScore < rhsScore }
+            return lhs.addedAt > rhs.addedAt
+        } ?? items[0]
+    }
+
+    private static func mergeScore(_ item: UnifiedItem) -> Int {
+        var score = item.activeFlags.count * 100
+        if !item.descriptionText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { score += 12 }
+        if item.imageData != nil { score += 10 }
+        if item.quantity != nil { score += 8 }
+        if item.unit?.isEmpty == false { score += 6 }
+        if item.iconName != nil { score += 5 }
+        if !isGenericCategory(item.category) { score += 4 }
+        if item.expirationDate != nil { score += 3 }
+        if item.defaultExpiryDays != nil { score += 2 }
+        if item.isFixed || item.isLinkedToGrocery { score += 1 }
+        return score
+    }
+
+    private static func relinkItems(from oldID: UUID, to newID: UUID, in items: [UnifiedItem]) {
+        for item in items where item.linkedPantryItemId == oldID {
+            item.linkedPantryItemId = item.id == newID ? nil : newID
+        }
+    }
+
+    private static func mergedDescription(_ current: String, _ incoming: String) -> String {
+        let currentTrimmed = current.trimmingCharacters(in: .whitespacesAndNewlines)
+        let incomingTrimmed = incoming.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !currentTrimmed.isEmpty else { return incomingTrimmed }
+        guard !incomingTrimmed.isEmpty else { return currentTrimmed }
+
+        var seen = Set<String>()
+        var lines: [String] = []
+        for value in [currentTrimmed, incomingTrimmed] {
+            let key = value.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .lowercased()
+            guard seen.insert(key).inserted else { continue }
+            lines.append(value)
+        }
+        return lines.joined(separator: "\n\n")
+    }
+
+    private static func shouldReplaceCategory(_ current: String, with incoming: String) -> Bool {
+        let currentTrimmed = current.trimmingCharacters(in: .whitespacesAndNewlines)
+        let incomingTrimmed = incoming.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !incomingTrimmed.isEmpty, incomingTrimmed != currentTrimmed else { return false }
+        return currentTrimmed.isEmpty || isGenericCategory(currentTrimmed)
+    }
+
+    private static func isGenericCategory(_ value: String) -> Bool {
+        let normalized = normalizedName(value)
+        return normalized.isEmpty || normalized == normalizedName("Outros")
+    }
+
+    private static func earliestDate(_ lhs: Date?, _ rhs: Date?) -> Date? {
+        switch (lhs, rhs) {
+        case (nil, nil):
+            return nil
+        case let (date?, nil), let (nil, date?):
+            return date
+        case let (left?, right?):
+            return min(left, right)
+        }
+    }
+
+    private static func shortestDuration(_ lhs: Int?, _ rhs: Int?) -> Int? {
+        switch (lhs, rhs) {
+        case (nil, nil):
+            return nil
+        case let (days?, nil), let (nil, days?):
+            return days
+        case let (left?, right?):
+            return min(left, right)
         }
     }
 }

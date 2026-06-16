@@ -769,154 +769,18 @@ struct ContentView: View {
                 .ignoresSafeArea()
                 .allowsHitTesting(false)
 
-            TabView(selection: tabSelectionBinding) {
-                Tab(value: AppTab.assistant) {
-                    Group {
-                        if shouldMountTab(.assistant) {
-                            NavigationStack {
-                                DeferredTabPage(tab: .assistant, initiallyReady: true) {
-                                    HomeView(
-                                        onSettingsTap: { showSettings = true },
-                                        onOpenChat: {
-                                            openAIMode()
-                                        },
-                                        onOpenRecipeIdeas: {
-                                            openAIMode(preset: .recipeIdeas)
-                                        },
-                                        onOpenSearch: {
-                                            openAssistantTab()
-                                        },
-                                        onOpenRecipeImport: openQuickRecipeImport,
-                                        onOpenFoodCameraDirect: openDirectFoodCamera,
-                                        onOpenFoodGalleryDirect: openDirectFoodGallery
-                                    )
-                                } placeholder: {
-                                    HomeSkeletonPage()
-                                }
-                            }
-                            .toolbar(.hidden, for: .navigationBar)
-                        } else {
-                            inactiveTabPlaceholder
-                        }
-                    }
-                    .background {
-                        TabActivationProbe(
-                            tab: .assistant,
-                            selectedTab: selectedTab,
-                            trace: pendingTabSwitchTrace
-                        )
-                    }
-                } label: {
-                    Label("Savoria", systemImage: AppTab.assistant.icon)
+            nativeTabContainer
+                .environment(\.usesGlobalPageBackground, true)
+                #if os(iOS)
+                // Hide the tab bar only while the keyboard is up; otherwise the
+                // assistant bar always shows alongside the tab bar.
+                .toolbar(isKeyboardVisible ? .hidden : .visible, for: .tabBar)
+                #endif
+                .onChange(of: searchBarState.debouncedSearchText) { _, newValue in
+                    guard searchBarState.mode != .aiChat else { return }
+                    searchService.search(query: newValue, context: modelContext, showUtensils: settingsSnapshot.showUtensils)
                 }
-
-                Tab(value: AppTab.lists) {
-                    Group {
-                        if shouldMountTab(.lists) {
-                            NavigationStack {
-                                ListsTabView()
-                            }
-                            .toolbar(.hidden, for: .navigationBar)
-                        } else {
-                            inactiveTabPlaceholder
-                        }
-                    }
-                    .background {
-                        TabActivationProbe(
-                            tab: .lists,
-                            selectedTab: selectedTab,
-                            trace: pendingTabSwitchTrace
-                        )
-                    }
-                } label: {
-                    Label("Listas", systemImage: AppTab.lists.icon)
-                }
-
-                Tab(value: AppTab.recipes) {
-                    Group {
-                        if shouldMountTab(.recipes) {
-                            NavigationStack(path: $recipeNavigationPath) {
-                                RecipesView()
-                            }
-                            .toolbar(.hidden, for: .navigationBar)
-                        } else {
-                            inactiveTabPlaceholder
-                        }
-                    }
-                    .background {
-                        TabActivationProbe(
-                            tab: .recipes,
-                            selectedTab: selectedTab,
-                            trace: pendingTabSwitchTrace
-                        )
-                    }
-                } label: {
-                    Label("Receitas", systemImage: AppTab.recipes.icon)
-                }
-
-                Tab(value: AppTab.nutrients) {
-                    Group {
-                        if shouldMountTab(.nutrients) {
-                            NavigationStack {
-                                NutrientsView()
-                            }
-                            .toolbar(.hidden, for: .navigationBar)
-                        } else {
-                            inactiveTabPlaceholder
-                        }
-                    }
-                    .background {
-                        TabActivationProbe(
-                            tab: .nutrients,
-                            selectedTab: selectedTab,
-                            trace: pendingTabSwitchTrace
-                        )
-                    }
-                } label: {
-                    Label("Nutrição", systemImage: AppTab.nutrients.icon)
-                }
-
-                Tab(value: AppTab.commandBar, role: .search) {
-                    Group {
-                        if shouldMountTab(.commandBar) {
-                            AssistantSearchTabContent(
-                                searchBarState: searchBarState,
-                                searchService: searchService,
-                                onAction: { handleCommandBarAction($0) },
-                                onOpenFoodCameraDirect: openDirectFoodCamera,
-                                onOpenFoodGalleryDirect: openDirectFoodGallery,
-                                pendingChatQuery: $pendingChatQuery,
-                                pendingOpenChat: $pendingOpenChat,
-                                pendingNewConversation: $pendingNewConversation,
-                                pendingShowHistory: $pendingShowHistory,
-                                path: $assistantTabPath
-                            )
-                        } else {
-                            inactiveTabPlaceholder
-                        }
-                    }
-                    .background {
-                        TabActivationProbe(
-                            tab: .commandBar,
-                            selectedTab: selectedTab,
-                            trace: pendingTabSwitchTrace
-                        )
-                    }
-                } label: {
-                    Label("Buscar", systemImage: AppTab.commandBar.icon)
-                }
-            }
-            .environment(\.usesGlobalPageBackground, true)
-            #if os(iOS)
-            // Hide the tab bar only while the keyboard is up; otherwise the
-            // assistant bar always shows alongside the tab bar.
-            .toolbar(isKeyboardVisible ? .hidden : .visible, for: .tabBar)
-            #endif
-            .onChange(of: searchBarState.debouncedSearchText) { _, newValue in
-                guard searchBarState.mode != .aiChat else { return }
-                searchService.search(query: newValue, context: modelContext, showUtensils: settingsSnapshot.showUtensils)
-            }
-            .environment(\.searchOverlay, searchOverlayView)
+                .environment(\.searchOverlay, searchOverlayView)
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             persistentAssistantBar
@@ -939,6 +803,200 @@ struct ContentView: View {
             if newValue && selectedTab != .commandBar {
                 selectTab(.commandBar)
             }
+        }
+    }
+
+    @ViewBuilder
+    private var nativeTabContainer: some View {
+        if #available(iOS 18.0, macOS 15.0, *) {
+            modernNativeTabContainer
+        } else {
+            legacyNativeTabContainer
+        }
+    }
+
+    @available(iOS 18.0, macOS 15.0, *)
+    private var modernNativeTabContainer: some View {
+            TabView(selection: tabSelectionBinding) {
+                Tab(value: AppTab.assistant) {
+                    assistantTabContent
+                } label: {
+                    Label("Savoria", systemImage: AppTab.assistant.icon)
+                }
+
+                Tab(value: AppTab.lists) {
+                    listsTabContent
+                } label: {
+                    Label("Listas", systemImage: AppTab.lists.icon)
+                }
+
+                Tab(value: AppTab.recipes) {
+                    recipesTabContent
+                } label: {
+                    Label("Receitas", systemImage: AppTab.recipes.icon)
+                }
+
+                Tab(value: AppTab.nutrients) {
+                    nutrientsTabContent
+                } label: {
+                    Label("Nutrição", systemImage: AppTab.nutrients.icon)
+                }
+
+                Tab(value: AppTab.commandBar, role: .search) {
+                    commandBarTabContent
+                } label: {
+                    Label("Buscar", systemImage: AppTab.commandBar.icon)
+                }
+            }
+    }
+
+    private var legacyNativeTabContainer: some View {
+        TabView(selection: tabSelectionBinding) {
+            assistantTabContent
+                .tabItem { Label("Savoria", systemImage: AppTab.assistant.icon) }
+                .tag(AppTab.assistant)
+
+            listsTabContent
+                .tabItem { Label("Listas", systemImage: AppTab.lists.icon) }
+                .tag(AppTab.lists)
+
+            recipesTabContent
+                .tabItem { Label("Receitas", systemImage: AppTab.recipes.icon) }
+                .tag(AppTab.recipes)
+
+            nutrientsTabContent
+                .tabItem { Label("Nutrição", systemImage: AppTab.nutrients.icon) }
+                .tag(AppTab.nutrients)
+
+            commandBarTabContent
+                .tabItem { Label("Buscar", systemImage: AppTab.commandBar.icon) }
+                .tag(AppTab.commandBar)
+        }
+    }
+
+    private var assistantTabContent: some View {
+        Group {
+            if shouldMountTab(.assistant) {
+                NavigationStack {
+                    DeferredTabPage(tab: .assistant, initiallyReady: true) {
+                        HomeView(
+                            onSettingsTap: { showSettings = true },
+                            onOpenChat: {
+                                openAIMode()
+                            },
+                            onOpenRecipeIdeas: {
+                                openAIMode(preset: .recipeIdeas)
+                            },
+                            onOpenSearch: {
+                                openAssistantTab()
+                            },
+                            onOpenRecipeImport: openQuickRecipeImport,
+                            onOpenFoodCameraDirect: openDirectFoodCamera,
+                            onOpenFoodGalleryDirect: openDirectFoodGallery
+                        )
+                    } placeholder: {
+                        HomeSkeletonPage()
+                    }
+                }
+                .toolbar(.hidden, for: .navigationBar)
+            } else {
+                inactiveTabPlaceholder
+            }
+        }
+        .background {
+            TabActivationProbe(
+                tab: .assistant,
+                selectedTab: selectedTab,
+                trace: pendingTabSwitchTrace
+            )
+        }
+    }
+
+    private var listsTabContent: some View {
+        Group {
+            if shouldMountTab(.lists) {
+                NavigationStack {
+                    ListsTabView()
+                }
+                .toolbar(.hidden, for: .navigationBar)
+            } else {
+                inactiveTabPlaceholder
+            }
+        }
+        .background {
+            TabActivationProbe(
+                tab: .lists,
+                selectedTab: selectedTab,
+                trace: pendingTabSwitchTrace
+            )
+        }
+    }
+
+    private var recipesTabContent: some View {
+        Group {
+            if shouldMountTab(.recipes) {
+                NavigationStack(path: $recipeNavigationPath) {
+                    RecipesView()
+                }
+                .toolbar(.hidden, for: .navigationBar)
+            } else {
+                inactiveTabPlaceholder
+            }
+        }
+        .background {
+            TabActivationProbe(
+                tab: .recipes,
+                selectedTab: selectedTab,
+                trace: pendingTabSwitchTrace
+            )
+        }
+    }
+
+    private var nutrientsTabContent: some View {
+        Group {
+            if shouldMountTab(.nutrients) {
+                NavigationStack {
+                    NutrientsView()
+                }
+                .toolbar(.hidden, for: .navigationBar)
+            } else {
+                inactiveTabPlaceholder
+            }
+        }
+        .background {
+            TabActivationProbe(
+                tab: .nutrients,
+                selectedTab: selectedTab,
+                trace: pendingTabSwitchTrace
+            )
+        }
+    }
+
+    private var commandBarTabContent: some View {
+        Group {
+            if shouldMountTab(.commandBar) {
+                AssistantSearchTabContent(
+                    searchBarState: searchBarState,
+                    searchService: searchService,
+                    onAction: { handleCommandBarAction($0) },
+                    onOpenFoodCameraDirect: openDirectFoodCamera,
+                    onOpenFoodGalleryDirect: openDirectFoodGallery,
+                    pendingChatQuery: $pendingChatQuery,
+                    pendingOpenChat: $pendingOpenChat,
+                    pendingNewConversation: $pendingNewConversation,
+                    pendingShowHistory: $pendingShowHistory,
+                    path: $assistantTabPath
+                )
+            } else {
+                inactiveTabPlaceholder
+            }
+        }
+        .background {
+            TabActivationProbe(
+                tab: .commandBar,
+                selectedTab: selectedTab,
+                trace: pendingTabSwitchTrace
+            )
         }
     }
 
@@ -974,7 +1032,11 @@ struct ContentView: View {
 
         let workItem = DispatchWorkItem {
             pendingForegroundHomeRefreshWork = nil
-            NotificationCenter.default.post(name: .homeDataShouldRefresh, object: nil)
+            NotificationCenter.default.post(
+                name: .homeDataShouldRefresh,
+                object: nil,
+                userInfo: ["reason": "foreground"]
+            )
         }
         pendingForegroundHomeRefreshWork = workItem
         PerformanceLogger.event(
@@ -2124,6 +2186,8 @@ struct ContentView: View {
         case .askAssistant(let prefill):
             openAIMode(prefill: prefill)
         case .openAssistant:
+            openAssistantTab()
+        case .openAIMode:
             openAIMode()
         case .movePantryToGrocery(let id):
             movePantryItemToGrocery(id: id)
@@ -2229,6 +2293,12 @@ struct ContentView: View {
             assistantTabPath = [destination]
         } else {
             assistantTabPath = []
+            pendingChatQuery = nil
+            pendingOpenChat = false
+            pendingNewConversation = false
+            pendingShowHistory = false
+            searchBarState.mode = .idle
+            searchBarState.aiChatPreset = .nutritionCoach
         }
         if selectedTab != .commandBar {
             selectTab(.commandBar)
@@ -2311,7 +2381,7 @@ struct ContentView: View {
 
         let item: UnifiedItem
         let didCreate: Bool
-        if let existing = UnifiedItem.existingItem(named: trimmed, in: allItems) {
+        if let existing = UnifiedItem.mergedExistingItem(named: trimmed, in: allItems, context: modelContext) {
             item = existing
             didCreate = false
             if !item.isGrocery {
@@ -2337,6 +2407,7 @@ struct ContentView: View {
             didCreate = true
         }
 
+        try? modelContext.save()
         scrollToItemRequest = ScrollToItemRequest(itemID: item.id, type: "groceryItem")
         selectTab(.lists)
         searchService.clear()
@@ -2623,44 +2694,51 @@ private struct HomeLiveInputsObserver: View {
     let store: HomeLiveInputsStore
     @Binding var settingsSnapshot: HomeSettingsSnapshot
     let onInitialInputsReady: () -> Void
-    let onDebouncedInputsChanged: () -> Void
+    let onDebouncedInputsChanged: (_ refreshCompatibility: Bool, _ refreshNutrition: Bool) -> Void
 
     @State private var didDeliverInitialInputs = false
     @State private var pendingDebouncedRefreshWork: DispatchWorkItem?
+    @State private var pendingCompatibilityInputsChanged = false
+    @State private var pendingNutritionInputsChanged = false
 
     var body: some View {
         Color.clear
             .frame(width: 0, height: 0)
             .onAppear {
-                syncLiveInputs(triggerDebouncedRefresh: false)
+                syncLiveInputs(triggerDebouncedRefresh: false, compatibilityInputsChanged: true, nutritionInputsChanged: true)
             }
             .onChange(of: pantryItems) { _, _ in
-                syncLiveInputs(triggerDebouncedRefresh: true)
+                syncLiveInputs(triggerDebouncedRefresh: true, compatibilityInputsChanged: true, nutritionInputsChanged: false)
             }
             .onChange(of: recipes) { _, _ in
-                syncLiveInputs(triggerDebouncedRefresh: true)
+                syncLiveInputs(triggerDebouncedRefresh: true, compatibilityInputsChanged: true, nutritionInputsChanged: false)
             }
             .onChange(of: categories) { _, _ in
-                syncLiveInputs(triggerDebouncedRefresh: true)
+                syncLiveInputs(triggerDebouncedRefresh: true, compatibilityInputsChanged: false, nutritionInputsChanged: false)
             }
             .onChange(of: foodEntries) { _, _ in
-                syncLiveInputs(triggerDebouncedRefresh: true)
+                syncLiveInputs(triggerDebouncedRefresh: true, compatibilityInputsChanged: false, nutritionInputsChanged: true)
             }
             .onChange(of: dayLogs) { _, _ in
-                syncLiveInputs(triggerDebouncedRefresh: true)
+                syncLiveInputs(triggerDebouncedRefresh: true, compatibilityInputsChanged: false, nutritionInputsChanged: true)
             }
             .onChange(of: profiles) { _, _ in
-                syncLiveInputs(triggerDebouncedRefresh: true)
+                syncLiveInputs(triggerDebouncedRefresh: true, compatibilityInputsChanged: false, nutritionInputsChanged: true)
             }
             .onChange(of: settingsArray) { _, _ in
-                syncLiveInputs(triggerDebouncedRefresh: true)
+                syncLiveInputs(triggerDebouncedRefresh: true, compatibilityInputsChanged: true, nutritionInputsChanged: false)
             }
-            .onReceive(NotificationCenter.default.publisher(for: .homeDataShouldRefresh)) { _ in
-                syncLiveInputs(triggerDebouncedRefresh: true)
+            .onReceive(NotificationCenter.default.publisher(for: .homeDataShouldRefresh)) { note in
+                let isForegroundRefresh = (note.userInfo?["reason"] as? String) == "foreground"
+                syncLiveInputs(
+                    triggerDebouncedRefresh: true,
+                    compatibilityInputsChanged: !isForegroundRefresh,
+                    nutritionInputsChanged: !isForegroundRefresh
+                )
             }
     }
 
-    private func syncLiveInputs(triggerDebouncedRefresh: Bool) {
+    private func syncLiveInputs(triggerDebouncedRefresh: Bool, compatibilityInputsChanged: Bool, nutritionInputsChanged: Bool) {
         store.pantryItems = pantryItems
         store.recipes = recipes
         store.categories = categories
@@ -2681,9 +2759,19 @@ private struct HomeLiveInputsObserver: View {
 
         guard triggerDebouncedRefresh else { return }
 
+        if compatibilityInputsChanged {
+            pendingCompatibilityInputsChanged = true
+        }
+        if nutritionInputsChanged {
+            pendingNutritionInputsChanged = true
+        }
         pendingDebouncedRefreshWork?.cancel()
         let workItem = DispatchWorkItem {
-            onDebouncedInputsChanged()
+            let refreshCompatibility = pendingCompatibilityInputsChanged
+            let refreshNutrition = pendingNutritionInputsChanged
+            pendingCompatibilityInputsChanged = false
+            pendingNutritionInputsChanged = false
+            onDebouncedInputsChanged(refreshCompatibility, refreshNutrition)
         }
         pendingDebouncedRefreshWork = workItem
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.25, execute: workItem)
@@ -2745,6 +2833,8 @@ private struct HomeView: View {
     @State private var settingsSnapshot = HomeSettingsSnapshot()
     @StateObject private var liveInputs = HomeLiveInputsStore()
     @State private var hasLoadedInitialInputs = false
+    @State private var compatibleMatchesNeedRefresh = true
+    @State private var pendingNutritionDaysNeedRefresh = true
     
     let onSettingsTap: () -> Void
     let onOpenChat: () -> Void
@@ -2796,9 +2886,17 @@ private struct HomeView: View {
                 settingsSnapshot: $settingsSnapshot,
                 onInitialInputsReady: {
                     hasLoadedInitialInputs = true
+                    compatibleMatchesNeedRefresh = true
+                    pendingNutritionDaysNeedRefresh = true
                     refreshHomeDerivedState(logEvent: false)
                 },
-                onDebouncedInputsChanged: {
+                onDebouncedInputsChanged: { refreshCompatibility, refreshNutrition in
+                    if refreshCompatibility {
+                        compatibleMatchesNeedRefresh = true
+                    }
+                    if refreshNutrition {
+                        pendingNutritionDaysNeedRefresh = true
+                    }
                     refreshHomeDerivedState(logEvent: true)
                 }
             )
@@ -2868,6 +2966,7 @@ private struct HomeView: View {
         }
         .onChange(of: selectedCompatibleCategory) { _, _ in
             // User-driven changes feel best with no perceptible delay.
+            compatibleMatchesNeedRefresh = true
             updateCompatibleMatches()
         }
         .onChange(of: scrollToTopTrigger) { _, _ in
@@ -2914,6 +3013,15 @@ private struct HomeView: View {
         recipeCategoriesState = liveInputs.categories.filter { $0.type == .recipe }
     }
     private func updateCompatibleMatches() {
+        guard compatibleMatchesNeedRefresh else {
+            PerformanceLogger.event(
+                .cloudSync,
+                "HomeView.updateCompatibleMatches skipped",
+                metadata: "reason=cleanInputs"
+            )
+            return
+        }
+
         let pantryNames = liveInputs.pantryItems.map { normalized($0.name) }
         let threshold = Double(settingsSnapshot.recipeCompatibilityThresholdPercent) / 100.0
         let applyTimeFilter = selectedCompatibleCategory == nil
@@ -2944,12 +3052,12 @@ private struct HomeView: View {
                 if $0.recipe.isFavorite != $1.recipe.isFavorite { return $0.recipe.isFavorite && !$1.recipe.isFavorite }
                 return $0.recipe.name.localizedCaseInsensitiveCompare($1.recipe.name) == .orderedAscending
             }
+        compatibleMatchesNeedRefresh = false
     }
 
     /// Returns keywords that match the current time-of-day meal.
     private static func mealKeywordsForCurrentTime() -> [String] {
-        let hour = Calendar.current.component(.hour, from: .now)
-        switch hour {
+        switch mealWindowKeyForCurrentTime() {
         case 5..<10:
             return ["café da manhã", "café", "breakfast", "desjejum", "matinal"]
         case 10..<14:
@@ -2961,6 +3069,10 @@ private struct HomeView: View {
         default:
             return ["lanche", "snack", "noturna"]
         }
+    }
+
+    private static func mealWindowKeyForCurrentTime() -> Int {
+        Calendar.current.component(.hour, from: .now)
     }
 
     /// Checks if a recipe's category or tags match meal-time keywords.
@@ -2988,11 +3100,21 @@ private struct HomeView: View {
     }
 
     private func updatePendingNutritionDays() {
+        guard pendingNutritionDaysNeedRefresh else {
+            PerformanceLogger.event(
+                .cloudSync,
+                "HomeView.updatePendingNutritionDays skipped",
+                metadata: "reason=cleanInputs"
+            )
+            return
+        }
+
         calorieGoalState = liveInputs.profiles.first?.effectiveCalories ?? 0
         let today = Calendar.current.startOfDay(for: .now)
         guard let cutoff = Calendar.current.date(byAdding: .day, value: -60, to: today) else {
             hasPendingNutritionDays = false
             pendingNutritionDaysState = []
+            pendingNutritionDaysNeedRefresh = false
             return
         }
 
@@ -3022,6 +3144,7 @@ private struct HomeView: View {
 
         pendingNutritionDaysState = results
         hasPendingNutritionDays = !results.isEmpty
+        pendingNutritionDaysNeedRefresh = false
     }
 
     private func updateHomeInfoSnapshot() {

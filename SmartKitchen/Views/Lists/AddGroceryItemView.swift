@@ -220,6 +220,7 @@ struct AddGroceryItemView: View {
             }
         }
 
+        let allUnifiedItems = fetchAllUnifiedItems()
         let item = UnifiedItem(
             name: trimmed,
             descriptionText: descriptionText.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -231,13 +232,30 @@ struct AddGroceryItemView: View {
             isPantry: false,
             isGrocery: true,
             isUtensil: false,
-            grocerySortOrder: (allItems.map(\.grocerySortOrder).max() ?? -1) + 1,
+            grocerySortOrder: (allUnifiedItems.filter(\.isGrocery).map(\.grocerySortOrder).max() ?? -1) + 1,
             defaultExpiryDays: hasDefaultExpiry ? computeGroceryExpiryDays() : nil,
             isFixed: false
         )
-        modelContext.insert(item)
-        onCreated?(item.id)
+        let savedItem = insertOrMerge(item, in: allUnifiedItems)
+        try? modelContext.save()
+        NotificationCenter.default.post(name: .homeDataShouldRefresh, object: nil)
+        onCreated?(savedItem.id)
         dismiss()
+    }
+
+    private func fetchAllUnifiedItems() -> [UnifiedItem] {
+        var descriptor = FetchDescriptor<UnifiedItem>()
+        descriptor.includePendingChanges = true
+        return (try? modelContext.fetch(descriptor)) ?? []
+    }
+
+    private func insertOrMerge(_ item: UnifiedItem, in allItems: [UnifiedItem]) -> UnifiedItem {
+        if let existing = UnifiedItem.mergedExistingItem(named: item.name, in: allItems, context: modelContext) {
+            existing.mergeDetails(from: item)
+            return existing
+        }
+        modelContext.insert(item)
+        return item
     }
 
     private func computeGroceryExpiryDays() -> Int {

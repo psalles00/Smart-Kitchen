@@ -575,7 +575,7 @@ struct AITools {
         let descriptor = FetchDescriptor<UnifiedItem>()
         let allItems = (try? context.fetch(descriptor)) ?? []
 
-        if let existingItem = UnifiedItem.existingItem(named: name, in: allItems) {
+        if let existingItem = UnifiedItem.mergedExistingItem(named: name, in: allItems, context: context) {
             if !existingItem.isPantry {
                 existingItem.isPantry = true
                 existingItem.pantrySortOrder = (allItems.filter { $0.isPantry }.map(\.pantrySortOrder).max() ?? -1) + 1
@@ -655,7 +655,7 @@ struct AITools {
         let descriptor = FetchDescriptor<UnifiedItem>()
         let allItems = (try? context.fetch(descriptor)) ?? []
 
-        if let existingItem = UnifiedItem.existingItem(named: name, in: allItems) {
+        if let existingItem = UnifiedItem.mergedExistingItem(named: name, in: allItems, context: context) {
             if !existingItem.isGrocery {
                 existingItem.isGrocery = true
                 existingItem.grocerySortOrder = (allItems.filter { $0.isGrocery }.map(\.grocerySortOrder).max() ?? -1) + 1

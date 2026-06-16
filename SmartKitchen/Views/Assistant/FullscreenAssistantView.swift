@@ -566,7 +566,7 @@ struct FullscreenAssistantView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .top)
                 .padding(.top, topPinnedInset)
-                .padding(.bottom, 20)
+                .padding(.bottom, 112)
             }
             .coordinateSpace(name: "AssistantIdleScroll")
             .onScrollOffsetChange { offset in

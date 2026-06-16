@@ -16,6 +16,11 @@ struct UnifiedItemMigration {
         // missing UnifiedItem and only deletes legacy rows that were successfully reconciled.
         do {
             try reconcileLegacyItemsIntoUnified(context: context)
+            let mergedDuplicates = try UnifiedItem.mergeDuplicateNames(in: context)
+            if mergedDuplicates > 0 {
+                try context.save()
+                NSLog("[Migration] Merged %d duplicate unified item(s) by name", mergedDuplicates)
+            }
         } catch {
             NSLog("[Migration] Unified item reconciliation failed: %@", error.localizedDescription)
         }

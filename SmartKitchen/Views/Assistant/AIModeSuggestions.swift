@@ -127,104 +127,75 @@ enum AIModeSuggestions {
 
 // MARK: - Reusable list view
 
-/// Lista vertical de sugestões em formato pílula com emoji + texto.
-/// Usada no estado vazio do SavorIA.
+/// Carrossel horizontal de sugestões em formato compacto.
+/// Usado no estado vazio do SavorIA.
 struct AIModeSuggestionsList: View {
     let suggestions: [AIModeSuggestion]
     let onTap: (AIModeSuggestion) -> Void
 
-    private let columns = [
-        GridItem(.flexible(), spacing: 10),
-        GridItem(.flexible(), spacing: 10)
-    ]
+    private let visibleSuggestionCount: CGFloat = 4.25
+    private let horizontalSpacing: CGFloat = 8
+    private let leadingContentInset: CGFloat = 18
+    private let trailingContentInset: CGFloat = 18
+    private let minimumCardWidth: CGFloat = 72
+    private let carouselHeight: CGFloat = 82
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            if let primary = suggestions.first {
-                suggestionButton(primary, style: .primary)
-            }
-
-            LazyVGrid(columns: columns, alignment: .leading, spacing: 10) {
-                ForEach(suggestions.dropFirst()) { suggestion in
-                    suggestionButton(suggestion, style: .compact)
+        GeometryReader { proxy in
+            let cardWidth = suggestionCardWidth(for: proxy.size.width)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: horizontalSpacing) {
+                    ForEach(suggestions) { suggestion in
+                        suggestionButton(suggestion)
+                            .frame(width: cardWidth)
+                    }
                 }
+                .padding(.leading, leadingContentInset)
+                .padding(.trailing, trailingContentInset)
             }
         }
+        .frame(height: carouselHeight)
     }
 
-    private func suggestionButton(_ suggestion: AIModeSuggestion, style: SuggestionButtonStyle) -> some View {
+    private func suggestionCardWidth(for availableWidth: CGFloat) -> CGFloat {
+        let visibleGaps = max(visibleSuggestionCount - 1, 0) * horizontalSpacing
+        let availableContentWidth = max(availableWidth - leadingContentInset, 0)
+        return max((availableContentWidth - visibleGaps) / visibleSuggestionCount, minimumCardWidth)
+    }
+
+    private func suggestionButton(_ suggestion: AIModeSuggestion) -> some View {
         Button {
             onTap(suggestion)
         } label: {
-            switch style {
-            case .primary:
-                HStack(spacing: 12) {
-                    emojiBadge(suggestion.emoji, size: 40, font: .title3)
-
-                    Text(suggestion.label)
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.primary)
-                        .lineLimit(2)
-                        .multilineTextAlignment(.leading)
-
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(alignment: .center, spacing: 6) {
+                    emojiBadge(suggestion.emoji)
                     Spacer(minLength: 0)
-
                     Image(systemName: "arrow.up.right")
-                        .font(.caption.weight(.bold))
+                        .font(.caption2.weight(.bold))
                         .foregroundStyle(.tertiary)
                 }
-                .padding(.horizontal, 14)
-                .padding(.vertical, 13)
-                .frame(maxWidth: .infinity, minHeight: 64, alignment: .leading)
-                .background(primarySurface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .strokeBorder(Color.primary.opacity(0.06), lineWidth: 1)
-                }
 
-            case .compact:
-                VStack(alignment: .leading, spacing: 10) {
-                    emojiBadge(suggestion.emoji, size: 32, font: .body)
-
-                    Text(suggestion.label)
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(.primary)
-                        .lineLimit(3)
-                        .multilineTextAlignment(.leading)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .padding(12)
-                .frame(maxWidth: .infinity, minHeight: 98, alignment: .topLeading)
-                .background(neutralSurfaceColor, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .strokeBorder(Color.primary.opacity(0.05), lineWidth: 1)
-                }
+                Text(suggestion.label)
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.primary)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.82)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 9)
+            .frame(maxWidth: .infinity, minHeight: carouselHeight, maxHeight: carouselHeight, alignment: .topLeading)
+            .background(neutralSurfaceColor, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
         .buttonStyle(.plain)
     }
 
-    private func emojiBadge(_ emoji: String, size: CGFloat, font: Font) -> some View {
+    private func emojiBadge(_ emoji: String) -> some View {
         Text(emoji)
-            .font(font)
-            .frame(width: size, height: size)
-            .background(Color.primary.opacity(0.055), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-    }
-
-    private var primarySurface: some ShapeStyle {
-        LinearGradient(
-            colors: [
-                PageTheme.home.accentColor.opacity(0.16),
-                neutralSurfaceColor
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    }
-
-    private enum SuggestionButtonStyle {
-        case primary
-        case compact
+            .font(.caption)
+            .frame(width: 24, height: 24)
+            .background(Color.primary.opacity(0.055), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 }

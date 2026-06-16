@@ -247,6 +247,7 @@ struct AddItemView: View {
 
         // Persist chosen destination
         settings?.lastAddItemDestinationRaw = destination.rawValue
+        let allItems = fetchAllUnifiedItems()
 
         switch destination {
         case .grocery:
@@ -261,12 +262,12 @@ struct AddItemView: View {
                 isPantry: false,
                 isGrocery: true,
                 isUtensil: false,
-                grocerySortOrder: (groceryItems.filter(\.isGrocery).map(\.grocerySortOrder).max() ?? -1) + 1,
+                grocerySortOrder: (allItems.filter(\.isGrocery).map(\.grocerySortOrder).max() ?? -1) + 1,
                 defaultExpiryDays: hasExpirationDate ? computeExpiryDays() : nil,
                 isFixed: false
             )
-            modelContext.insert(item)
-            onCreated?(item.id, .grocery)
+            let savedItem = insertOrMerge(item, in: allItems)
+            onCreated?(savedItem.id, .grocery)
         case .pantry:
             let item = UnifiedItem(
                 name: trimmed,
@@ -279,12 +280,12 @@ struct AddItemView: View {
                 isPantry: true,
                 isGrocery: false,
                 isUtensil: false,
-                pantrySortOrder: (pantryItems.filter(\.isPantry).map(\.pantrySortOrder).max() ?? -1) + 1,
+                pantrySortOrder: (allItems.filter(\.isPantry).map(\.pantrySortOrder).max() ?? -1) + 1,
                 expirationDate: hasExpirationDate ? expirationDate : nil,
                 defaultExpiryDays: hasExpirationDate && keepExpiryOnAcquire ? computeExpiryDays() : nil
             )
-            modelContext.insert(item)
-            onCreated?(item.id, .pantry)
+            let savedItem = insertOrMerge(item, in: allItems)
+            onCreated?(savedItem.id, .pantry)
         case .utensil:
             let item = UnifiedItem(
                 name: trimmed,
@@ -293,13 +294,30 @@ struct AddItemView: View {
                 isPantry: false,
                 isGrocery: false,
                 isUtensil: true,
-                utensilSortOrder: (utensilItems.filter(\.isUtensil).map(\.utensilSortOrder).max() ?? -1) + 1
+                utensilSortOrder: (allItems.filter(\.isUtensil).map(\.utensilSortOrder).max() ?? -1) + 1
             )
-            modelContext.insert(item)
-            onCreated?(item.id, .utensil)
+            let savedItem = insertOrMerge(item, in: allItems)
+            onCreated?(savedItem.id, .utensil)
         }
 
+        try? modelContext.save()
+        NotificationCenter.default.post(name: .homeDataShouldRefresh, object: nil)
         dismiss()
+    }
+
+    private func fetchAllUnifiedItems() -> [UnifiedItem] {
+        var descriptor = FetchDescriptor<UnifiedItem>()
+        descriptor.includePendingChanges = true
+        return (try? modelContext.fetch(descriptor)) ?? []
+    }
+
+    private func insertOrMerge(_ item: UnifiedItem, in allItems: [UnifiedItem]) -> UnifiedItem {
+        if let existing = UnifiedItem.mergedExistingItem(named: item.name, in: allItems, context: modelContext) {
+            existing.mergeDetails(from: item)
+            return existing
+        }
+        modelContext.insert(item)
+        return item
     }
 
     @ViewBuilder

@@ -143,7 +143,21 @@ struct InlineChatView: View {
     }
 
     private var aiModeEmptyStateDescriptionBottomSpacing: CGFloat {
-        34
+        10
+    }
+
+    private var aiModeEmptyStateTopPadding: CGFloat {
+        min(max(chatAreaHeight * 0.08, 24), 56)
+    }
+
+    private var shouldReserveMessageScrollLandingSpace: Bool {
+        !messages.isEmpty || activeRecipeCreation != nil || aiService.isLoading || isLoadingExaIdeas
+    }
+
+    private var messageScrollLandingSpacerHeight: CGFloat {
+        guard shouldReserveMessageScrollLandingSpace else { return 0 }
+        let visibleMessageHeightEstimate: CGFloat = isAIMode ? 112 : 80
+        return max(chatAreaHeight - visibleMessageHeightEstimate, 0)
     }
 
     var body: some View {
@@ -261,10 +275,10 @@ struct InlineChatView: View {
                                 .onAppear { showScrollToBottom = false }
                                 .onDisappear { showScrollToBottom = true }
 
-                            // Bottom spacer — allows user messages to always scroll to the top
-                            // of the chat area even when there isn't enough content below
+                            // Allows user messages to land at the top after send, but stays
+                            // collapsed in the empty state so SavorIA doesn't show dead space.
                             Color.clear
-                                .frame(height: max(chatAreaHeight - 80, 0))
+                                .frame(height: messageScrollLandingSpacerHeight)
                                 .contentShape(Rectangle())
                                 .modifier(
                                     ConditionalEmptyTapDismissModifier(
@@ -478,9 +492,7 @@ struct InlineChatView: View {
         if aiChatPreset == .recipeIdeas {
             recipeIdeasKickoffState
         } else {
-            VStack(spacing: 20) {
-                Spacer()
-
+            VStack(spacing: 16) {
                 Image(systemName: "sparkles")
                     .font(.system(size: 44))
                     .foregroundStyle(.linearGradient(
@@ -500,11 +512,13 @@ struct InlineChatView: View {
                 ) { suggestion in
                     sendMessage(suggestion.prompt)
                 }
-                .padding(.horizontal, 32)
                 .padding(.top, aiModeEmptyStateDescriptionBottomSpacing)
 
-                Spacer()
+                aiModeMedicalDisclaimer
+                    .padding(.horizontal, 32)
             }
+            .padding(.top, aiModeEmptyStateTopPadding)
+            .padding(.bottom, 24)
         }
     }
 
@@ -548,6 +562,22 @@ struct InlineChatView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.top, 12)
+    }
+
+    private var aiModeMedicalDisclaimer: some View {
+        Label {
+            Text("SavorIA oferece orientações gerais sobre alimentação e organização. Não substitui avaliação, diagnóstico ou tratamento de um profissional de saúde.")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        } icon: {
+            Image(systemName: "cross.case")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+        }
+        .labelStyle(.titleAndIcon)
+        .padding(.top, -8)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func skillCard(icon: String, title: String, description: String, prompt: String) -> some View {
@@ -1099,6 +1129,15 @@ struct InlineChatView: View {
         ## Suas capacidades
         Você gerencia a despensa, lista de compras e receitas do usuário. \
         Você pode consultar, adicionar, remover e modificar dados usando as ferramentas disponíveis.
+
+        ## Segurança médica (regra crítica)
+        - O Savoria NÃO é um profissional de saúde, dispositivo médico, nutricionista, médico ou terapeuta.
+        - Nunca forneça diagnóstico, tratamento, prescrição, ajuste de remédio/suplemento, dosagem clínica ou instrução para suspender acompanhamento profissional.
+        - Não apresente metas de peso, calorias, macros, restrições alimentares ou previsões corporais como recomendação médica individualizada ou certeza clínica.
+        - Para gravidez, diabetes, hipertensão, alergias graves, transtornos alimentares, doenças renais/cardiacas, sintomas, dor, exames, remédios ou condições médicas, responda apenas com orientação geral e recomende procurar um profissional de saúde qualificado.
+        - Se houver possível urgência médica, oriente o usuário a buscar atendimento de emergência local imediatamente.
+        - Ao falar de alimentação e nutrição, mantenha o conteúdo educacional, prudente e baseado em hábitos gerais; deixe claro que o usuário deve confirmar decisões de saúde com profissional habilitado.
+        - Se o usuário pedir conselho médico direto, recuse de forma breve e ofereça ajuda segura com organização de perguntas para levar a um profissional ou com ideias alimentares gerais sem caráter clínico.
 
         ## Regras obrigatórias
         1. Quando o usuário perguntar sobre a despensa, lista de compras ou receitas, \
