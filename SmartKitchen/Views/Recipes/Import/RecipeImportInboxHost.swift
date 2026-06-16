@@ -20,17 +20,6 @@ extension Notification.Name {
     static let shareImportRecipeSaved = Notification.Name("com.smartkitchen.shareImport.recipeSaved")
 }
 
-private struct SharedImportPresentationEnabledKey: EnvironmentKey {
-    static let defaultValue = true
-}
-
-extension EnvironmentValues {
-    var sharedImportPresentationEnabled: Bool {
-        get { self[SharedImportPresentationEnabledKey.self] }
-        set { self[SharedImportPresentationEnabledKey.self] = newValue }
-    }
-}
-
 /// View modifier that presents the Recipe Import flow automatically whenever
 /// `RecipeImportInbox.shared.pendingSource` becomes non-nil. Attach once at the
 /// scene root (applied in `SmartKitchenApp`).
@@ -96,7 +85,8 @@ struct SharedImportInboxHost: ViewModifier {
         }
     }
 
-    @Environment(\.sharedImportPresentationEnabled) private var isPresentationEnabled
+    let isPresentationEnabled: Bool
+
     @State private var inbox = SharedImportInbox.shared
     @State private var activePresentation: Presentation?
     @State private var activeToken: String?
@@ -247,8 +237,8 @@ extension View {
     /// (e.g. `cloudSync.containerID`); otherwise a container swap
     /// immediately after the share-extension deep link will dismiss the
     /// freshly presented sheet.
-    func sharedImportInboxHost() -> some View {
-        modifier(SharedImportInboxHost())
+    func sharedImportInboxHost(isPresentationEnabled: Bool = true) -> some View {
+        modifier(SharedImportInboxHost(isPresentationEnabled: isPresentationEnabled))
     }
 }
 

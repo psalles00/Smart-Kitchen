@@ -17,7 +17,7 @@ struct SplashView: View {
             .allowsHitTesting(false)
 
             #if os(iOS)
-            AppLaunchSkeletonPage(kind: .assistant)
+            LaunchHomeSkeletonPage()
                 .launchSkeletonStatusBar()
             #else
             AppLaunchSkeletonPage(kind: .assistant)
@@ -27,6 +27,30 @@ struct SplashView: View {
         .accessibilityLabel("Savoria")
     }
 }
+
+#if os(iOS)
+private struct LaunchHomeSkeletonPage: View {
+    @StateObject private var searchBarState = SearchBarState()
+
+    var body: some View {
+        ExpandedPageLayout(
+            pageTheme: .home,
+            header: { isInverted in
+                PageHeader(title: "Savoria", isInverted: isInverted) {
+                    SkeletonBlock(width: 34, height: 36, cornerRadius: 18, palette: .header, phase: 0)
+                }
+            },
+            content: {
+                AppLaunchSkeletonPage(kind: .assistant, presentation: .contentOnly)
+            },
+            infoContent: {
+                AssistantInfoSkeleton()
+            }
+        )
+        .environmentObject(searchBarState)
+    }
+}
+#endif
 
 enum AppSkeletonKind {
     case assistant

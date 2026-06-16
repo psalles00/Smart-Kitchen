@@ -1,0 +1,96 @@
+Timestamp               Ty Process[PID:TID]
+2026-06-16 12:21:00.284 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:CloudSync] [+0.0ms] CloudSyncService.init begin | syncPref=false
+2026-06-16 12:21:00.429 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:CloudSync] [+145.3ms] local container opened | tookMs=121.9
+2026-06-16 12:21:00.447 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:CloudSync] [+164.0ms] CloudSyncService.init end
+2026-06-16 12:21:00.451 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Launch] [+167.3ms] SmartKitchenApp.init body begin
+2026-06-16 12:21:00.451 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Launch] [+167.7ms] after StatusBarSwizzle.install
+2026-06-16 12:21:00.471 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Launch] [+187.9ms] after configureNavigationAppearance
+2026-06-16 12:21:00.471 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Launch] [+188.0ms] after logBuildConfiguration
+2026-06-16 12:21:00.472 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Launch] [+188.5ms] SmartKitchenApp.init body end
+2026-06-16 12:21:00.589 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:ScenePhase] [+305.4ms] lifecycle.didFinishLaunching
+2026-06-16 12:21:00.680 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Launch] [+397.0ms] SmartKitchenApp.body evaluated
+2026-06-16 12:21:00.731 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Launch] [+447.3ms] SmartKitchenApp.body evaluated
+2026-06-16 12:21:00.732 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:ScenePhase] [+448.7ms] lifecycle.willEnterForeground
+2026-06-16 12:21:00.757 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Launch] [+473.3ms] WindowGroup content building
+2026-06-16 12:21:00.774 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Launch] [+491.1ms] SplashView body evaluated
+2026-06-16 12:21:00.790 Df Savoria[90294:91414f] [com.pedrosalles.smartkitchen.perf:ScenePhase] [+507.1ms] main thread hang detected | lagMs=207
+2026-06-16 12:21:00.805 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Launch] [+521.6ms] AppLaunchSkeletonPage body evaluated
+2026-06-16 12:21:00.861 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Launch] [+577.9ms] SplashView appeared (ContentView not mounted yet)
+2026-06-16 12:21:00.863 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Launch] [+579.3ms] AppLaunchSkeletonPage body evaluated
+2026-06-16 12:21:00.865 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Launch] [+582.1ms] AppLaunchSkeletonPage body evaluated
+2026-06-16 12:21:00.936 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:ScenePhase] [+652.3ms] main thread hang ended | durationMs=352
+2026-06-16 12:21:00.994 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Subscriptions] [+710.8ms] subscriptionManager.loadProducts begin
+2026-06-16 12:21:00.998 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Launch] [+714.9ms] SmartKitchenApp.body evaluated
+2026-06-16 12:21:01.000 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:ScenePhase] [+716.6ms] lifecycle.didBecomeActive
+2026-06-16 12:21:01.000 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Launch] [+717.1ms] WindowGroup content building
+2026-06-16 12:21:01.005 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:ScenePhase] [+718.8ms] scenePhase inactive -> active
+2026-06-16 12:21:01.005 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:ScenePhase] ⏱ claimPendingFromBridge took 0.0ms | trace=fg-1
+2026-06-16 12:21:01.005 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:ScenePhase] [+721.4ms] foreground resume entered | trace=fg-1 claimedSharedImport=false
+2026-06-16 12:21:01.005 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:ScenePhase] [+721.4ms] foreground resume work skipped | trace=fg-1 entitlementElapsed=0s maintenanceElapsed=0s
+2026-06-16 12:21:01.012 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Launch] [+728.2ms] AppLaunchSkeletonPage body evaluated
+2026-06-16 12:21:01.026 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Subscriptions] [+742.3ms] subscriptionManager.loadProducts end | tookMs=31.4
+2026-06-16 12:21:01.026 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Subscriptions] [+742.3ms] subscriptionManager.refreshEntitlements (launch) begin
+2026-06-16 12:21:01.028 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Subscriptions] [+744.5ms] subscriptionManager.refreshEntitlements (launch) end | tookMs=2.2
+2026-06-16 12:21:01.028 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Launch] [+744.5ms] runPostLaunchBootstrap begin
+2026-06-16 12:21:01.092 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:DataSeeder] ⏱ DataSeeder.seedIfNeeded took 10.3ms
+2026-06-16 12:21:01.093 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Migration] ⏱ UnifiedItemMigration.migrateIfNeeded took 1.0ms
+2026-06-16 12:21:01.118 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Backup] ⏱ BackupManager.restoreLatestBackupIfCurrentStoreNeedsRecovery took 24.8ms
+2026-06-16 12:21:01.118 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:CloudSync] ⏱ activateCloudSyncIfNeededOnLaunch took 0.0ms
+2026-06-16 12:21:01.154 Df Savoria[90294:914143] [com.pedrosalles.smartkitchen.perf:Launch] ⏱ warmupDatabases took 72.5ms
+2026-06-16 12:21:01.154 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Launch] [+870.9ms] runPostLaunchBootstrap end (splash lifted) | tookMs=126.4
+2026-06-16 12:21:01.154 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Launch] [+871.0ms] SmartKitchenApp.body evaluated
+2026-06-16 12:21:01.168 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Launch] [+884.4ms] WindowGroup content building
+2026-06-16 12:21:01.377 Df Savoria[90294:914143] [com.pedrosalles.smartkitchen.perf:ScenePhase] [+1093.4ms] main thread hang detected | lagMs=295
+2026-06-16 12:21:01.595 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Launch] [+1311.3ms] ContentView onAppear (first frame visible)
+2026-06-16 12:21:02.301 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:ScenePhase] [+2017.4ms] main thread hang ended | durationMs=1219
+2026-06-16 12:21:04.957 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Launch] [+4673.2ms] SmartKitchenApp.body evaluated
+2026-06-16 12:21:04.958 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:ScenePhase] [+4674.2ms] lifecycle.willResignActive
+2026-06-16 12:21:04.959 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Launch] [+4676.0ms] WindowGroup content building
+2026-06-16 12:21:04.973 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:ScenePhase] [+4685.1ms] scenePhase active -> inactive
+2026-06-16 12:21:04.973 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:CloudSync] [+4689.5ms] scene-leave save inspection | hasChanges=false inserted=0 changed=0 deleted=0
+2026-06-16 12:21:05.811 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Launch] [+5528.0ms] SmartKitchenApp.body evaluated
+2026-06-16 12:21:05.813 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:ScenePhase] [+5530.1ms] lifecycle.didEnterBackground
+2026-06-16 12:21:05.816 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Launch] [+5532.7ms] WindowGroup content building
+2026-06-16 12:21:05.882 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:ScenePhase] [+5598.6ms] scenePhase inactive -> background
+2026-06-16 12:21:05.882 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:CloudSync] [+5598.7ms] scene-leave save inspection | hasChanges=false inserted=0 changed=0 deleted=0
+2026-06-16 12:21:07.196 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:ScenePhase] [+6912.5ms] main thread hang ended | durationMs=904
+2026-06-16 12:21:07.196 Df Savoria[90294:914143] [com.pedrosalles.smartkitchen.perf:ScenePhase] [+6912.5ms] main thread hang detected | lagMs=904
+2026-06-16 12:21:07.197 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Launch] [+6913.4ms] SmartKitchenApp.body evaluated
+2026-06-16 12:21:07.197 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:ScenePhase] [+6913.8ms] lifecycle.willEnterForeground
+2026-06-16 12:21:07.197 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:ScenePhase] [+6913.9ms] foreground Home refresh scheduled | selectedTab=assistant delayMs=1200
+2026-06-16 12:21:07.199 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Launch] [+6915.6ms] WindowGroup content building
+2026-06-16 12:21:07.206 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:ScenePhase] [+6922.9ms] scenePhase background -> inactive
+2026-06-16 12:21:07.620 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Launch] [+7336.7ms] SmartKitchenApp.body evaluated
+2026-06-16 12:21:07.621 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:ScenePhase] [+7337.8ms] lifecycle.didBecomeActive
+2026-06-16 12:21:07.622 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Launch] [+7339.0ms] WindowGroup content building
+2026-06-16 12:21:07.635 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:ScenePhase] [+7351.2ms] scenePhase inactive -> active
+2026-06-16 12:21:07.635 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:ScenePhase] ⏱ claimPendingFromBridge took 0.1ms | trace=fg-2
+2026-06-16 12:21:07.635 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:ScenePhase] [+7351.4ms] foreground resume entered | trace=fg-2 claimedSharedImport=false
+2026-06-16 12:21:07.635 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:ScenePhase] [+7351.4ms] foreground resume work skipped | trace=fg-2 entitlementElapsed=6s maintenanceElapsed=7s
+2026-06-16 12:21:08.719 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:CloudSync] [+8435.3ms] HomeView debounced refresh
+2026-06-16 12:21:12.762 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Launch] [+12478.4ms] SmartKitchenApp.body evaluated
+2026-06-16 12:21:12.765 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:ScenePhase] [+12481.7ms] lifecycle.willResignActive
+2026-06-16 12:21:12.787 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Launch] [+12503.7ms] WindowGroup content building
+2026-06-16 12:21:12.841 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:ScenePhase] [+12557.4ms] scenePhase active -> inactive
+2026-06-16 12:21:12.841 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:CloudSync] [+12557.7ms] scene-leave save inspection | hasChanges=false inserted=0 changed=0 deleted=0
+2026-06-16 12:21:13.681 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Launch] [+13397.8ms] SmartKitchenApp.body evaluated
+2026-06-16 12:21:13.686 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:ScenePhase] [+13402.4ms] lifecycle.didEnterBackground
+2026-06-16 12:21:13.688 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Launch] [+13405.1ms] WindowGroup content building
+2026-06-16 12:21:13.772 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:ScenePhase] [+13488.8ms] scenePhase inactive -> background
+2026-06-16 12:21:13.772 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:CloudSync] [+13488.8ms] scene-leave save inspection | hasChanges=false inserted=0 changed=0 deleted=0
+2026-06-16 12:21:13.891 Df Savoria[90294:91415a] [com.pedrosalles.smartkitchen.perf:ScenePhase] [+13607.9ms] main thread hang detected | lagMs=300
+2026-06-16 12:21:14.991 Df Savoria[90294:91414f] [com.pedrosalles.smartkitchen.perf:ScenePhase] [+14707.8ms] main thread hang ongoing | lagMs=1400
+2026-06-16 12:21:15.565 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:ScenePhase] [+15281.4ms] main thread hang ended | durationMs=1973
+2026-06-16 12:21:15.566 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Launch] [+15282.9ms] SmartKitchenApp.body evaluated
+2026-06-16 12:21:15.567 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:ScenePhase] [+15283.2ms] lifecycle.willEnterForeground
+2026-06-16 12:21:15.567 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:ScenePhase] [+15283.2ms] foreground Home refresh scheduled | selectedTab=assistant delayMs=1200
+2026-06-16 12:21:15.568 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Launch] [+15284.8ms] WindowGroup content building
+2026-06-16 12:21:15.575 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:ScenePhase] [+15292.1ms] scenePhase background -> inactive
+2026-06-16 12:21:15.989 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Launch] [+15705.2ms] SmartKitchenApp.body evaluated
+2026-06-16 12:21:15.989 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:ScenePhase] [+15706.1ms] lifecycle.didBecomeActive
+2026-06-16 12:21:15.999 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:Launch] [+15716.1ms] WindowGroup content building
+2026-06-16 12:21:16.008 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:ScenePhase] [+15724.4ms] scenePhase inactive -> active
+2026-06-16 12:21:16.008 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:ScenePhase] ⏱ claimPendingFromBridge took 0.0ms | trace=fg-3
+2026-06-16 12:21:16.008 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:ScenePhase] [+15724.5ms] foreground resume entered | trace=fg-3 claimedSharedImport=false
+2026-06-16 12:21:16.008 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:ScenePhase] [+15724.5ms] foreground resume work skipped | trace=fg-3 entitlementElapsed=14s maintenanceElapsed=15s
+2026-06-16 12:21:17.052 Df Savoria[90294:9140a4] [com.pedrosalles.smartkitchen.perf:CloudSync] [+16769.1ms] HomeView debounced refresh

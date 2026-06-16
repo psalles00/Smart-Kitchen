@@ -2,8 +2,18 @@ import SwiftUI
 import SwiftData
 
 struct HomeInfoContent: View {
+    private let snapshot: HomeInfoSnapshot?
+
+    init(snapshot: HomeInfoSnapshot? = nil) {
+        self.snapshot = snapshot
+    }
+
     var body: some View {
-        HomeInfoContentLive()
+        if let snapshot {
+            HomeInfoContentStatic(snapshot: snapshot)
+        } else {
+            HomeInfoContentLive()
+        }
     }
 }
 
@@ -19,6 +29,7 @@ private struct HomeInfoContentLive: View {
     @State private var refreshWorkItem: DispatchWorkItem?
 
     private var calendar: Calendar { .current }
+    private let statusTextSize: CGFloat = 14.5
 
     private var expiringSoonCount: Int {
         snapshot.expiringSoonCount
@@ -49,10 +60,10 @@ private struct HomeInfoContentLive: View {
 
     private var calorieValueFontSize: CGFloat {
         switch calorieValueText.count {
-        case 0...3: 16
-        case 4: 14.5
-        case 5: 13
-        default: 11.5
+        case 0...3: 15.2
+        case 4: 13.8
+        case 5: 12.4
+        default: 11
         }
     }
 
@@ -126,7 +137,7 @@ private struct HomeInfoContentLive: View {
 
     private var readyStatusPhrase: some View {
         readyStatusText
-            .font(.system(size: 15, weight: .semibold, design: .rounded))
+            .font(.system(size: statusTextSize, weight: .semibold, design: .rounded))
         .lineLimit(2)
         .minimumScaleFactor(0.82)
         .allowsTightening(true)
@@ -140,7 +151,7 @@ private struct HomeInfoContentLive: View {
             .foregroundColor(.white)
         + Text(" ")
         + Text(String(localized: "Tudo certo"))
-            .fontWeight(.heavy)
+            .fontWeight(.bold)
             .foregroundColor(.white)
         + Text(" " + String(localized: "na sua cozinha!"))
             .foregroundColor(.white.opacity(0.55))
@@ -154,7 +165,7 @@ private struct HomeInfoContentLive: View {
             let prefix: Text = indexedFact.offset == 0
                 ? Text("")
                 : Text(" " + String(localized: "e") + " ")
-                    .font(.system(size: 14.5, weight: .semibold, design: .rounded))
+                    .font(.system(size: statusTextSize, weight: .semibold, design: .rounded))
                     .foregroundColor(.white.opacity(0.55))
 
             let fact = indexedFact.element
@@ -165,7 +176,7 @@ private struct HomeInfoContentLive: View {
                     .foregroundColor(.white)
                 + Text(" ")
                 + Text(fact.text)
-                    .font(.system(size: 15, weight: .heavy, design: .rounded))
+                    .font(.system(size: statusTextSize, weight: .bold, design: .rounded))
                     .foregroundColor(.white)
         }
     }
@@ -300,14 +311,14 @@ private struct HomeInfoContentLive: View {
         switch token {
         case .connector(let text):
             Text(text)
-                .font(.system(size: 14.5, weight: .semibold, design: .rounded))
+                .font(.system(size: statusTextSize, weight: .semibold, design: .rounded))
                 .foregroundStyle(.white.opacity(0.55))
         case .fact(let fact):
             HStack(spacing: 3) {
                 Image(systemName: fact.icon)
                     .font(.system(size: 14, weight: .bold))
                 Text(fact.text)
-                    .font(.system(size: 15, weight: .heavy, design: .rounded))
+                    .font(.system(size: statusTextSize, weight: .bold, design: .rounded))
                     .monospacedDigit()
             }
             .foregroundStyle(.white)
@@ -319,14 +330,15 @@ private struct HomeInfoContentLive: View {
         if calorieGoal > 0 {
             ZStack {
                 Circle()
-                    .stroke(Color.white.opacity(0.22), lineWidth: 5.5)
+                    .stroke(Color.white.opacity(0.22), lineWidth: 5)
                 Circle()
                     .trim(from: 0, to: calorieProgress)
-                    .stroke(Color.white, style: StrokeStyle(lineWidth: 5.5, lineCap: .round))
+                    .stroke(Color.white, style: StrokeStyle(lineWidth: 5, lineCap: .round))
                     .rotationEffect(.degrees(-90))
                 VStack(spacing: 0) {
                     Text(calorieValueText)
-                        .font(.system(size: calorieValueFontSize, weight: .heavy, design: .rounded))
+                        .font(.system(size: calorieValueFontSize, weight: .bold, design: .rounded))
+                        .tracking(-0.7)
                         .foregroundStyle(.white)
                         .lineLimit(1)
                         .minimumScaleFactor(0.55)
@@ -337,7 +349,7 @@ private struct HomeInfoContentLive: View {
                         .foregroundStyle(.white.opacity(0.85))
                 }
             }
-            .frame(width: 50, height: 50)
+            .frame(width: 46, height: 46)
             .accessibilityLabel(Text(String(localized: "\(caloriesRemaining) kcal restantes hoje")))
         } else {
             VStack(alignment: .trailing, spacing: 2) {
@@ -352,7 +364,206 @@ private struct HomeInfoContentLive: View {
     }
 }
 
-private struct HomeInfoSnapshot {
+private struct HomeInfoContentStatic: View {
+    let snapshot: HomeInfoSnapshot
+
+    private var calendar: Calendar { .current }
+    private let statusTextSize: CGFloat = 14.5
+
+    private var expiringSoonCount: Int { snapshot.expiringSoonCount }
+    private var pendingNutritionDaysCount: Int { snapshot.pendingNutritionDaysCount }
+    private var caloriesConsumedToday: Int { snapshot.caloriesConsumedToday }
+    private var calorieGoal: Int { snapshot.calorieGoal }
+
+    private var caloriesRemaining: Int {
+        max(0, calorieGoal - caloriesConsumedToday)
+    }
+
+    private var calorieProgress: Double {
+        guard calorieGoal > 0 else { return 0 }
+        return min(1.0, Double(caloriesConsumedToday) / Double(calorieGoal))
+    }
+
+    private var calorieValueText: String {
+        String(caloriesRemaining)
+    }
+
+    private var calorieValueFontSize: CGFloat {
+        switch calorieValueText.count {
+        case 0...3: 15.2
+        case 4: 13.8
+        case 5: 12.4
+        default: 11
+        }
+    }
+
+    private var calorieValueFrameWidth: CGFloat {
+        switch calorieValueText.count {
+        case 0...3: 27
+        case 4: 31
+        case 5: 34
+        default: 36
+        }
+    }
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 12) {
+            statusPhrase
+                .layoutPriority(1)
+
+            Spacer()
+
+            calorieRing
+                .padding(.top, -6)
+                .padding(.bottom, 6)
+        }
+        .padding(.bottom, -3)
+        .frame(height: ExpandedPageHeaderMetrics.iosHomeInfoHeight)
+    }
+
+    private var statusPhrase: some View {
+        Group {
+            if statusFacts.isEmpty {
+                readyStatusPhrase
+            } else {
+                statusPhraseText
+                    .font(.system(size: 14.5, weight: .semibold, design: .rounded))
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.82)
+                    .allowsTightening(true)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.top, -8)
+    }
+
+    private var readyStatusPhrase: some View {
+        readyStatusText
+            .font(.system(size: statusTextSize, weight: .semibold, design: .rounded))
+        .lineLimit(2)
+        .minimumScaleFactor(0.82)
+        .allowsTightening(true)
+        .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private var readyStatusText: Text {
+        Text(greetingText + " ")
+            .foregroundColor(.white.opacity(0.55))
+        + Text(Image(systemName: "checkmark.circle"))
+            .foregroundColor(.white)
+        + Text(" ")
+        + Text(String(localized: "Tudo certo"))
+            .fontWeight(.bold)
+            .foregroundColor(.white)
+        + Text(" " + String(localized: "na sua cozinha!"))
+            .foregroundColor(.white.opacity(0.55))
+    }
+
+    private var statusPhraseText: Text {
+        statusFacts.enumerated().reduce(
+            Text(greetingText + " " + String(localized: "Você possui") + " ")
+                .foregroundColor(.white.opacity(0.55))
+        ) { partial, indexedFact in
+            let prefix: Text = indexedFact.offset == 0
+                ? Text("")
+                : Text(" " + String(localized: "e") + " ")
+                    .font(.system(size: statusTextSize, weight: .semibold, design: .rounded))
+                    .foregroundColor(.white.opacity(0.55))
+
+            let fact = indexedFact.element
+            return partial
+                + prefix
+                + Text(Image(systemName: fact.icon))
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(.white)
+                + Text(" ")
+                + Text(fact.text)
+                    .font(.system(size: statusTextSize, weight: .bold, design: .rounded))
+                    .foregroundColor(.white)
+        }
+    }
+
+    private var statusFacts: [KitchenStatusFact] {
+        var facts: [KitchenStatusFact] = []
+
+        if expiringSoonCount > 0 {
+            facts.append(
+                KitchenStatusFact(
+                    icon: "clock.badge.exclamationmark",
+                    text: expiringSoonCount == 1
+                        ? String(localized: "1 item expirando")
+                        : String(localized: "\(expiringSoonCount) itens expirando")
+                )
+            )
+        }
+
+        if pendingNutritionDaysCount > 0 {
+            facts.append(
+                KitchenStatusFact(
+                    icon: "chart.bar.doc.horizontal",
+                    text: pendingNutritionDaysCount == 1
+                        ? String(localized: "1 dia incompleto")
+                        : String(localized: "\(pendingNutritionDaysCount) dias incompletos")
+                )
+            )
+        }
+
+        return facts
+    }
+
+    private var greetingText: String {
+        let hour = calendar.component(.hour, from: .now)
+        switch hour {
+        case 5..<12:
+            return String(localized: "Bom dia.")
+        case 12..<18:
+            return String(localized: "Boa tarde.")
+        default:
+            return String(localized: "Boa noite.")
+        }
+    }
+
+    @ViewBuilder
+    private var calorieRing: some View {
+        if calorieGoal > 0 {
+            ZStack {
+                Circle()
+                    .stroke(Color.white.opacity(0.22), lineWidth: 5)
+                Circle()
+                    .trim(from: 0, to: calorieProgress)
+                    .stroke(Color.white, style: StrokeStyle(lineWidth: 5, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                VStack(spacing: 0) {
+                    Text(calorieValueText)
+                        .font(.system(size: calorieValueFontSize, weight: .bold, design: .rounded))
+                        .tracking(-0.7)
+                        .foregroundStyle(.white)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.55)
+                        .allowsTightening(true)
+                        .frame(maxWidth: calorieValueFrameWidth)
+                    Text("kcal")
+                        .font(.system(size: 8.5, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.85))
+                }
+            }
+            .frame(width: 46, height: 46)
+            .accessibilityLabel(Text(String(localized: "\(caloriesRemaining) kcal restantes hoje")))
+        } else {
+            VStack(alignment: .trailing, spacing: 2) {
+                Image(systemName: "fork.knife.circle")
+                    .font(.system(size: 28, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.85))
+                Text("Configurar")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.white.opacity(0.75))
+            }
+        }
+    }
+}
+
+struct HomeInfoSnapshot: Equatable {
     var expiringSoonCount: Int = 0
     var pendingNutritionDaysCount: Int = 0
     var caloriesConsumedToday: Int = 0

@@ -14,19 +14,35 @@ import SwiftData
 /// gesto de swipe horizontal é tratado nativamente pelo SwiftUI sem
 /// interferir na rolagem.
 struct PendingNutritionDaysCard: View {
-    var body: some View {
-        PendingNutritionDaysCardLive()
+    private let days: [PendingNutritionDaysCard_RowDay]?
+    private let calorieGoal: Int?
+
+    init(
+        days: [PendingNutritionDaysCard_RowDay]? = nil,
+        calorieGoal: Int? = nil
+    ) {
+        self.days = days
+        self.calorieGoal = calorieGoal
     }
+
+    var body: some View {
+        if let days, let calorieGoal {
+            PendingNutritionDaysCardContent(days: days, calorieGoal: calorieGoal)
+        } else {
+            PendingNutritionDaysCardLive()
+        }
+    }
+
+    /// Mesma cor do `homeShortcutBackgroundColor` em `ContentView` (aquele é
+    /// `fileprivate`).
+    fileprivate static let cardBackground = neutralSurfaceColor
 }
 
 private struct PendingNutritionDaysCardLive: View {
-    @Environment(\.modelContext) private var modelContext
-
     @Query(sort: \FoodEntry.timestamp, order: .reverse) private var allEntries: [FoodEntry]
     @Query(sort: \NutritionDayLog.dayStart, order: .reverse) private var allDayLogs: [NutritionDayLog]
     @Query(sort: \NutritionProfile.createdAt) private var profiles: [NutritionProfile]
 
-    @State private var pendingAction: PendingActionRequest?
     @State private var startedDaysState: [PendingNutritionDaysCard_RowDay] = []
     @State private var calorieGoalState: Int = 0
     @State private var didRunInitialRefresh = false
@@ -35,7 +51,88 @@ private struct PendingNutritionDaysCardLive: View {
     private var calendar: Calendar { .current }
 
     var body: some View {
-        let days = startedDaysState
+        PendingNutritionDaysCardContent(days: startedDaysState, calorieGoal: calorieGoalState)
+        .onAppear {
+            if !didRunInitialRefresh {
+                didRunInitialRefresh = true
+                refreshCardState()
+            }
+        }
+        .onChange(of: allEntries) { _, _ in
+            scheduleRefresh()
+        }
+        .onChange(of: allDayLogs) { _, _ in
+            scheduleRefresh()
+        }
+        .onChange(of: profiles) { _, _ in
+            scheduleRefresh()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .nutritionDayLogChanged)) { _ in
+            scheduleRefresh()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .homeDataShouldRefresh)) { _ in
+            scheduleRefresh()
+        }
+    }
+
+    private func scheduleRefresh() {
+        refreshWorkItem?.cancel()
+        let work = DispatchWorkItem {
+            refreshCardState()
+        }
+        refreshWorkItem = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25, execute: work)
+    }
+
+    private func refreshCardState() {
+        calorieGoalState = profiles.first?.effectiveCalories ?? 0
+
+        let today = calendar.startOfDay(for: .now)
+        guard let cutoff = calendar.date(byAdding: .day, value: -60, to: today) else {
+            startedDaysState = []
+            return
+        }
+
+        var results: [PendingNutritionDaysCard_RowDay] = []
+        var cursor = today
+        while cursor >= cutoff {
+            let state = NutritionDayLogStore.state(
+                for: cursor,
+                entries: allEntries,
+                logs: allDayLogs,
+                calendar: calendar
+            )
+            if state == .todayInProgress || state == .pastInProgress {
+                let entriesForDay = allEntries.filter { calendar.isDate($0.timestamp, inSameDayAs: cursor) }
+                results.append(
+                    PendingNutritionDaysCard_RowDay(
+                        id: cursor,
+                        date: cursor,
+                        entryCount: entriesForDay.count,
+                        calorieTotal: entriesForDay.reduce(0) { $0 + $1.calories }
+                    )
+                )
+            }
+            guard let prev = calendar.date(byAdding: .day, value: -1, to: cursor) else { break }
+            cursor = prev
+        }
+        startedDaysState = results
+        refreshWorkItem = nil
+    }
+}
+
+private struct PendingNutritionDaysCardContent: View {
+    @Environment(\.modelContext) private var modelContext
+
+    let days: [PendingNutritionDaysCard_RowDay]
+    let calorieGoal: Int
+
+    @State private var pendingAction: PendingActionRequest?
+
+    private var calendar: Calendar { .current }
+    private static let rowHeight: CGFloat = 60
+
+    var body: some View {
         VStack(spacing: 0) {
             Color.clear
                 .frame(height: 0)
@@ -71,7 +168,7 @@ private struct PendingNutritionDaysCardLive: View {
                                 } label: {
                                     PendingDayRow(
                                         day: day,
-                                        calorieGoal: calorieGoalState,
+                                        calorieGoal: calorieGoal,
                                         titleProvider: { titleLabel(for: day.date) },
                                         showsBottomDivider: index < visibleDays.count - 1
                                     )
@@ -120,7 +217,7 @@ private struct PendingNutritionDaysCardLive: View {
                         .environment(\.defaultMinListRowHeight, 0)
                         .frame(height: CGFloat(visibleDays.count) * Self.rowHeight)
                     }
-                    .background(Self.cardBackground, in: .rect(cornerRadius: 18))
+                    .background(PendingNutritionDaysCard.cardBackground, in: .rect(cornerRadius: 18))
                     .clipShape(.rect(cornerRadius: 18))
                     .confirmationDialog(
                         confirmationTitle(for: pendingAction),
@@ -149,76 +246,6 @@ private struct PendingNutritionDaysCardLive: View {
                 }
             }
         }
-        .onAppear {
-            if !didRunInitialRefresh {
-                didRunInitialRefresh = true
-                refreshCardState()
-            }
-        }
-        .onChange(of: allEntries) { _, _ in
-            scheduleRefresh()
-        }
-        .onChange(of: allDayLogs) { _, _ in
-            scheduleRefresh()
-        }
-        .onChange(of: profiles) { _, _ in
-            scheduleRefresh()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .nutritionDayLogChanged)) { _ in
-            scheduleRefresh()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .homeDataShouldRefresh)) { _ in
-            scheduleRefresh()
-        }
-    }
-
-    // MARK: - Helpers
-
-    private static let rowHeight: CGFloat = 60
-
-    private func scheduleRefresh() {
-        refreshWorkItem?.cancel()
-        let work = DispatchWorkItem {
-            refreshCardState()
-        }
-        refreshWorkItem = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25, execute: work)
-    }
-
-    private func refreshCardState() {
-        calorieGoalState = profiles.first?.effectiveCalories ?? 0
-
-        let today = calendar.startOfDay(for: .now)
-        guard let cutoff = calendar.date(byAdding: .day, value: -60, to: today) else {
-            startedDaysState = []
-            return
-        }
-
-        var results: [PendingNutritionDaysCard_RowDay] = []
-        var cursor = today
-        while cursor >= cutoff {
-            let state = NutritionDayLogStore.state(
-                for: cursor,
-                entries: allEntries,
-                logs: allDayLogs,
-                calendar: calendar
-            )
-            if state == .todayInProgress || state == .pastInProgress {
-                let entriesForDay = allEntries.filter { calendar.isDate($0.timestamp, inSameDayAs: cursor) }
-                results.append(
-                    PendingNutritionDaysCard_RowDay(
-                        id: cursor,
-                        date: cursor,
-                        entryCount: entriesForDay.count,
-                        calorieTotal: entriesForDay.reduce(0) { $0 + $1.calories }
-                    )
-                )
-            }
-            guard let prev = calendar.date(byAdding: .day, value: -1, to: cursor) else { break }
-            cursor = prev
-        }
-        startedDaysState = results
-        refreshWorkItem = nil
     }
 
     private var confirmationBinding: Binding<Bool> {
@@ -262,9 +289,6 @@ private struct PendingNutritionDaysCardLive: View {
         )
     }
 
-    /// Mesma cor do `homeShortcutBackgroundColor` em `ContentView` (aquele é
-    /// `fileprivate`).
-    fileprivate static let cardBackground = neutralSurfaceColor
 }
 
 // MARK: - Action request
@@ -305,7 +329,7 @@ private struct PendingDayRow: View {
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(PendingNutritionDaysCardLive.cardBackground)
+        .background(PendingNutritionDaysCard.cardBackground)
         .overlay(alignment: .bottom) {
             if showsBottomDivider {
                 ItemListDivider().padding(.horizontal, 14)

@@ -276,6 +276,7 @@ private struct RecipesLoadedView: View {
         hasher.combine(showCompatibleOnly)
         hasher.combine(showFavoritesOnly)
         hasher.combine(sortOption.rawValue)
+        hasher.combine(settings?.recipeCompatibilityThresholdPercent ?? 80)
         hasher.combine(lastCompatibilityInputsKey)
         hasher.combine(recipeCategoriesDisplaySignature)
         return hasher.finalize()
@@ -296,6 +297,7 @@ private struct RecipesLoadedView: View {
             }
         }
         hasher.combine(localSearchText.trimmingCharacters(in: .whitespacesAndNewlines))
+        hasher.combine(settings?.recipeCompatibilityThresholdPercent ?? 80)
         hasher.combine(lastCompatibilityInputsKey)
         hasher.combine(recipeCategoriesDisplaySignature)
         return hasher.finalize()
@@ -758,7 +760,7 @@ private struct RecipesLoadedView: View {
                         .map(RecipePlaceholderIconSource.init)
                 }
 
-                guard let compatibility = compatibility(for: ingredients, pantryNames: names) else { continue }
+                guard let compatibility = recipe.compatibility(against: names) else { continue }
                 nextCompatibilities[recipe.id] = compatibility
             }
 
@@ -796,7 +798,10 @@ private struct RecipesLoadedView: View {
             }
 
             if showCompatibleOnly {
-                result = result.filter { (compatibilities[$0.id]?.matchedIngredients ?? 0) > 0 }
+                result = result.filter { recipe in
+                    guard let compatibility = compatibilities[recipe.id] else { return false }
+                    return compatibility.ratio >= compatibilityThreshold
+                }
             }
 
             if showFavoritesOnly {
@@ -862,6 +867,7 @@ private struct RecipesLoadedView: View {
                     accumulators[category, default: RecipeNotebookAccumulator()].add(
                         recipe,
                         compatibility: compatibilities[recipe.id],
+                        compatibilityThreshold: compatibilityThreshold,
                         searchText: searchText
                     )
                 }
@@ -919,30 +925,6 @@ private struct RecipesLoadedView: View {
             isNotebookLoading = false
             pendingNotebookRefreshTask = nil
         }
-    }
-
-    private func compatibility(for ingredients: [RecipeIngredient], pantryNames: [String]) -> RecipeCompatibility? {
-        let normalizedIngredients = ingredients
-            .map(\.name)
-            .map(Self.normalizedIngredient)
-
-        guard !normalizedIngredients.isEmpty else { return nil }
-
-        let matchedIngredients = normalizedIngredients.reduce(into: 0) { total, ingredient in
-            if pantryNames.contains(where: { pantry in
-                pantry == ingredient || pantry.contains(ingredient) || ingredient.contains(pantry)
-            }) {
-                total += 1
-            }
-        }
-
-        return RecipeCompatibility(matchedIngredients: matchedIngredients, totalIngredients: normalizedIngredients.count)
-    }
-
-    private static func normalizedIngredient(_ text: String) -> String {
-        text
-            .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
-            .lowercased()
     }
 
     /// Debounces `recomputeCompatibilities()` so a burst of SwiftData /
@@ -1819,9 +1801,14 @@ private struct RecipeNotebookAccumulator {
     var previewRecipes: [Recipe] = []
     var recipeMatchesSearch = false
 
-    mutating func add(_ recipe: Recipe, compatibility: RecipeCompatibility?, searchText: String) {
+    mutating func add(
+        _ recipe: Recipe,
+        compatibility: RecipeCompatibility?,
+        compatibilityThreshold: Double,
+        searchText: String
+    ) {
         recipeCount += 1
-        if (compatibility?.matchedIngredients ?? 0) > 0 {
+        if let compatibility, compatibility.ratio >= compatibilityThreshold {
             compatibleCount += 1
         }
         if !searchText.isEmpty,

@@ -146,6 +146,8 @@ struct SmartKitchenApp: App {
     /// (SwiftData container + seeders + migrations + backup recovery) has
     /// finished its post-launch bootstrap. While `false`, the user cannot
     /// interact with the app — they see the centered logo splash instead.
+    @State private var isLaunchContentMounted = false
+    @State private var didLaunchContentAppear = false
     @State private var isAppReady = false
     @State private var launchAppearanceMode: AppearanceMode = .launchPreference
     /// Last time we ran the on-foreground maintenance work
@@ -154,15 +156,17 @@ struct SmartKitchenApp: App {
     /// context and the notification center on the main thread, which on
     /// real devices shows up as a stutter the first time the user
     /// interacts after returning to the app.
-    @State private var lastForegroundMaintenance: Date = .distantPast
+    @State private var lastForegroundMaintenance: Date = Date()
     /// Last time we refreshed StoreKit entitlements on foreground. StoreKit
     /// calls go through `Transaction.currentEntitlements`, which can take
     /// several hundred ms on real devices the first time after a long
     /// suspension. Throttling stops short foreground hops from re-running
     /// the entire entitlement check (and the implicit JIT setup that
     /// follows) which contributes to the post-resume jank.
-    @State private var lastEntitlementRefresh: Date = .distantPast
+    @State private var lastEntitlementRefresh: Date = Date()
     @State private var pendingSceneLeaveSaveTask: Task<Void, Never>?
+    @State private var pendingForegroundResumeTask: Task<Void, Never>?
+    @State private var foregroundResumeTraceCounter = 0
 
     init() {
         // Must be called after all stored properties are initialized
@@ -193,19 +197,25 @@ struct SmartKitchenApp: App {
             // PERF DIAG: log first window-group content build.
             let _ = PerformanceLogger.event(.launch, "WindowGroup content building")
             ZStack {
-                if isAppReady {
+                if isLaunchContentMounted {
                     ContentView()
                         .modelContainer(cloudSync.container)
                         .id(cloudSync.containerID)
                         .environment(subscriptionManager)
+                        .opacity(isAppReady ? 1 : 0)
+                        .allowsHitTesting(isAppReady)
+                        .accessibilityHidden(!isAppReady)
                         .onAppear {
-                            PerformanceLogger.event(.launch, "ContentView onAppear (first frame visible)")
+                            didLaunchContentAppear = true
+                            PerformanceLogger.event(.launch, "ContentView onAppear", metadata: "visible=\(isAppReady)")
                         }
-                } else {
+                }
+
+                if !isAppReady {
                     SplashView()
                         .zIndex(1)
                         .onAppear {
-                            PerformanceLogger.event(.launch, "SplashView appeared (ContentView not mounted yet)")
+                            PerformanceLogger.event(.launch, "SplashView appeared")
                         }
                 }
             }
@@ -219,15 +229,14 @@ struct SmartKitchenApp: App {
                 minHeight: Self.macMinimumWindowSize.height
             )
             #endif
-            .environment(\.sharedImportPresentationEnabled, isAppReady && scenePhase == .active)
-                // Sheets hosted OUTSIDE `.id(cloudSync.containerID)` survive
-                // the ContentView teardown that happens when CloudKit
-                // activation swaps the `ModelContainer` shortly after launch.
-                // Attaching the share-import host here is the load-bearing
-                // fix for the recurrent "compartilhar abre e fecha o modal"
-                // bug — see `SharedImportInboxHost` for details.
-                .recipeImportInboxHost()
-                .sharedImportInboxHost()
+            // Sheets hosted OUTSIDE `.id(cloudSync.containerID)` survive
+            // the ContentView teardown that happens when CloudKit
+            // activation swaps the `ModelContainer` shortly after launch.
+            // Attaching the share-import host here is the load-bearing
+            // fix for the recurrent "compartilhar abre e fecha o modal"
+            // bug — see `SharedImportInboxHost` for details.
+            .recipeImportInboxHost()
+            .sharedImportInboxHost(isPresentationEnabled: isAppReady && scenePhase == .active)
                 .onOpenURL { url in
                     RecipeImportLogger.info("app onOpenURL received url=\(url.absoluteString)")
                     // Widget deep links
@@ -260,66 +269,16 @@ struct SmartKitchenApp: App {
                     PerformanceLogger.event(.subscriptions, "subscriptionManager.refreshEntitlements (launch) begin")
                     let refreshStart = Date()
                     await subscriptionManager.refreshEntitlements()
+                    lastEntitlementRefresh = Date()
                     PerformanceLogger.event(.subscriptions, "subscriptionManager.refreshEntitlements (launch) end", metadata: String(format: "tookMs=%.1f", Date().timeIntervalSince(refreshStart) * 1000))
                     await runPostLaunchBootstrapIfNeeded()
                 }
                 .onChange(of: scenePhase) { oldValue, newValue in
                     PerformanceLogger.event(.scenePhase, "scenePhase \(oldValue) -> \(newValue)")
                     if newValue == .active {
-                        _ = SharedImportInbox.shared.claimPendingFromBridge()
-                        // Refresh subscription state on foreground so
-                        // expirations / external upgrades land promptly.
-                        // Throttle to once per 5 min — StoreKit calls are
-                        // not free on real devices and the user's
-                        // entitlement doesn't realistically change every
-                        // 30 s of background.
-                        let now = Date()
-                        if now.timeIntervalSince(lastEntitlementRefresh) >= 300 {
-                            lastEntitlementRefresh = now
-                            PerformanceLogger.event(.subscriptions, "refreshEntitlements scheduled (throttle 300s elapsed)")
-                            Task {
-                                let t0 = Date()
-                                await subscriptionManager.refreshEntitlements()
-                                PerformanceLogger.event(.subscriptions, "refreshEntitlements end", metadata: String(format: "tookMs=%.1f", Date().timeIntervalSince(t0) * 1000))
-                            }
-                        } else {
-                            PerformanceLogger.event(.subscriptions, "refreshEntitlements skipped (throttled)", metadata: "elapsed=\(Int(now.timeIntervalSince(lastEntitlementRefresh)))s")
-                        }
-                        // Throttle: avoid running sync + notification reschedule
-                        // every time the user briefly leaves and returns. The
-                        // previous unconditional behaviour caused noticeable
-                        // jank on the first interaction after foregrounding.
-                        //
-                        // 5 min matches the entitlement refresh cooldown so the
-                        // user pays at most one heavy main-thread pass per
-                        // foreground burst.
-                        if now.timeIntervalSince(lastForegroundMaintenance) >= 300 {
-                            lastForegroundMaintenance = now
-                            PerformanceLogger.event(.cloudSync, "foreground maintenance running")
-                            // Defer to next runloop tick: the scenePhase
-                            // active transition is happening NOW; running
-                            // `syncNow()` synchronously here can add tens of
-                            // ms to the first-frame budget.
-                            Task { @MainActor in
-                                PerformanceLogger.measure(.cloudSync, "syncNow (deferred foreground)") {
-                                    cloudSync.syncNow()
-                                }
-                            }
-                            // Defer the notification reschedule one runloop tick
-                            // so it never competes with the first frame the user
-                            // sees after returning.
-                            Task { @MainActor in
-                                let ctx = cloudSync.container.mainContext
-                                let descriptor = FetchDescriptor<AppSettings>()
-                                PerformanceLogger.measure(.notifications, "rescheduleExpiryNotifications") {
-                                    if let settings = try? ctx.fetch(descriptor).first {
-                                        NotificationService.shared.rescheduleExpiryNotifications(context: ctx, settings: settings)
-                                    }
-                                }
-                            }
-                        } else {
-                            PerformanceLogger.event(.cloudSync, "foreground maintenance skipped (throttled)", metadata: "elapsed=\(Int(now.timeIntervalSince(lastForegroundMaintenance)))s")
-                        }
+                        scheduleForegroundResumeWork()
+                    } else {
+                        cancelForegroundResumeWork(reason: "\(oldValue)->\(newValue)")
                     }
                     // Autosave is disabled on the main context to avoid races
                     // with CloudKit remote-change notifications. Persist any
@@ -415,6 +374,95 @@ struct SmartKitchenApp: App {
     }
 
     @MainActor
+    private func scheduleForegroundResumeWork() {
+        foregroundResumeTraceCounter += 1
+        let traceID = "fg-\(foregroundResumeTraceCounter)"
+
+        let didClaimSharedImport = PerformanceLogger.measure(.scenePhase, "claimPendingFromBridge", metadata: "trace=\(traceID)") {
+            SharedImportInbox.shared.claimPendingFromBridge()
+        }
+        PerformanceLogger.event(.scenePhase, "foreground resume entered", metadata: "trace=\(traceID) claimedSharedImport=\(didClaimSharedImport)")
+
+        let now = Date()
+        let entitlementElapsed = now.timeIntervalSince(lastEntitlementRefresh)
+        let maintenanceElapsed = now.timeIntervalSince(lastForegroundMaintenance)
+        let shouldRefreshEntitlements = entitlementElapsed >= 300
+        let shouldRunMaintenance = maintenanceElapsed >= 300
+
+        guard shouldRefreshEntitlements || shouldRunMaintenance else {
+            PerformanceLogger.event(
+                .scenePhase,
+                "foreground resume work skipped",
+                metadata: "trace=\(traceID) entitlementElapsed=\(Int(entitlementElapsed))s maintenanceElapsed=\(Int(maintenanceElapsed))s"
+            )
+            return
+        }
+
+        pendingForegroundResumeTask?.cancel()
+        PerformanceLogger.event(
+            .scenePhase,
+            "foreground resume work scheduled",
+            metadata: "trace=\(traceID) refreshEntitlements=\(shouldRefreshEntitlements) maintenance=\(shouldRunMaintenance)"
+        )
+
+        pendingForegroundResumeTask = Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(1200))
+            guard !Task.isCancelled, scenePhase == .active else {
+                PerformanceLogger.event(.scenePhase, "foreground resume work cancelled before subscriptions", metadata: "trace=\(traceID)")
+                return
+            }
+
+            if shouldRefreshEntitlements {
+                lastEntitlementRefresh = Date()
+                PerformanceLogger.event(.subscriptions, "refreshEntitlements begin", metadata: "trace=\(traceID)")
+                let t0 = Date()
+                await subscriptionManager.refreshEntitlements()
+                PerformanceLogger.event(
+                    .subscriptions,
+                    "refreshEntitlements end",
+                    metadata: String(format: "trace=\(traceID) tookMs=%.1f", Date().timeIntervalSince(t0) * 1000)
+                )
+            } else {
+                PerformanceLogger.event(.subscriptions, "refreshEntitlements skipped (throttled)", metadata: "trace=\(traceID) elapsed=\(Int(entitlementElapsed))s")
+            }
+
+            try? await Task.sleep(for: .milliseconds(800))
+            guard !Task.isCancelled, scenePhase == .active else {
+                PerformanceLogger.event(.scenePhase, "foreground resume work cancelled before maintenance", metadata: "trace=\(traceID)")
+                return
+            }
+
+            if shouldRunMaintenance {
+                lastForegroundMaintenance = Date()
+                PerformanceLogger.event(.cloudSync, "foreground maintenance running", metadata: "trace=\(traceID)")
+                PerformanceLogger.measure(.cloudSync, "syncNow (deferred foreground)", metadata: "trace=\(traceID)") {
+                    cloudSync.syncNow()
+                }
+
+                let ctx = cloudSync.container.mainContext
+                let descriptor = FetchDescriptor<AppSettings>()
+                PerformanceLogger.measure(.notifications, "rescheduleExpiryNotifications", metadata: "trace=\(traceID)") {
+                    if let settings = try? ctx.fetch(descriptor).first {
+                        NotificationService.shared.rescheduleExpiryNotifications(context: ctx, settings: settings)
+                    }
+                }
+            } else {
+                PerformanceLogger.event(.cloudSync, "foreground maintenance skipped (throttled)", metadata: "trace=\(traceID) elapsed=\(Int(maintenanceElapsed))s")
+            }
+
+            pendingForegroundResumeTask = nil
+        }
+    }
+
+    @MainActor
+    private func cancelForegroundResumeWork(reason: String) {
+        guard pendingForegroundResumeTask != nil else { return }
+        pendingForegroundResumeTask?.cancel()
+        pendingForegroundResumeTask = nil
+        PerformanceLogger.event(.scenePhase, "foreground resume work cancelled", metadata: "reason=\(reason)")
+    }
+
+    @MainActor
     private func runPostLaunchBootstrapIfNeeded() async {
         guard !didRunPostLaunchBootstrap else { return }
         didRunPostLaunchBootstrap = true
@@ -462,8 +510,22 @@ struct SmartKitchenApp: App {
         // seeder above.
         await warmupTask.value
 
-        // Lift the splash now that the data layer is ready and ContentView
-        // can render with all SwiftData stores fully prepared.
+        // Mount ContentView behind the splash first. The first SwiftUI /
+        // SwiftData @Query subscription pass is the expensive part on real
+        // devices, so paying it while the skeleton is still visible avoids
+        // revealing a half-mounted UI that stutters for the next few frames.
+        isLaunchContentMounted = true
+        PerformanceLogger.event(.launch, "launch content prewarm mount requested")
+
+        let prewarmStart = Date()
+        while !didLaunchContentAppear && Date().timeIntervalSince(prewarmStart) < 2.0 {
+            try? await Task.sleep(for: .milliseconds(50))
+        }
+
+        try? await Task.sleep(for: .milliseconds(700))
+
+        // Lift the splash after the initial ContentView mount has had at
+        // least one frame and one short settling window.
         isAppReady = true
         PerformanceLogger.event(.launch, "runPostLaunchBootstrap end (splash lifted)", metadata: String(format: "tookMs=%.1f", Date().timeIntervalSince(bootstrapStart) * 1000))
     }

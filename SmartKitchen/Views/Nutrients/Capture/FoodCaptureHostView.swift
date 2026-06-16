@@ -55,6 +55,7 @@ struct FoodCaptureHostView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
+    @Environment(\.colorScheme) private var colorScheme
 
     let mode: Mode
     let logDate: Date
@@ -506,8 +507,13 @@ struct FoodCaptureHostView: View {
         .frame(width: analysisButtonState.isCompact ? 52 : nil)
         .frame(maxWidth: analysisButtonState.isCompact ? nil : .infinity)
         .frame(height: 52)
-        .background(analysisButtonBackground(isDisabled: isDisabled))
-        .clipShape(RoundedRectangle(cornerRadius: analysisButtonState.isCompact ? 26 : 16, style: .continuous))
+        .background {
+            analysisButtonBackground(isDisabled: isDisabled)
+        }
+        .overlay {
+            analysisButtonBorder(isDisabled: isDisabled)
+        }
+        .clipShape(analysisButtonShape)
         .shadow(
             color: analysisButtonShadowColor(isDisabled: isDisabled),
             radius: analysisButtonState.isRunning ? 18 : 10,
@@ -517,6 +523,10 @@ struct FoodCaptureHostView: View {
         .scaleEffect(analysisButtonState == .success ? 1.04 : 1)
         .animation(.spring(response: 0.42, dampingFraction: 0.82), value: analysisButtonState.animationKey)
         .accessibilityLabel(analysisAccessibilityLabel)
+    }
+
+    private var analysisButtonShape: RoundedRectangle {
+        RoundedRectangle(cornerRadius: analysisButtonState.isCompact ? 26 : 16, style: .continuous)
     }
 
     @ViewBuilder
@@ -550,27 +560,72 @@ struct FoodCaptureHostView: View {
         .frame(height: 52)
     }
 
-    private func analysisButtonBackground(isDisabled: Bool) -> Color {
+    @ViewBuilder
+    private func analysisButtonBackground(isDisabled: Bool) -> some View {
         switch analysisButtonState {
         case .idle:
-            isDisabled ? Color.primary.opacity(0.055) : neutralCaptureAccent
+            if isDisabled {
+                analysisButtonShape
+                    .fill(Color.primary.opacity(colorScheme == .dark ? 0.10 : 0.055))
+            } else if colorScheme == .dark {
+                analysisButtonShape
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(0.30),
+                                Color.white.opacity(0.20),
+                                Color.white.opacity(0.14)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+            } else {
+                analysisButtonShape
+                    .fill(neutralCaptureAccent)
+            }
         case .loading:
-            neutralCaptureAccent
+            analysisButtonShape
+                .fill(colorScheme == .dark ? Color.white.opacity(0.24) : neutralCaptureAccent)
         case .success:
-            neutralCaptureAccent
+            analysisButtonShape
+                .fill(colorScheme == .dark ? Color.white.opacity(0.24) : neutralCaptureAccent)
         case .failure:
-            Color.red
+            analysisButtonShape
+                .fill(Color.red)
+        }
+    }
+
+    @ViewBuilder
+    private func analysisButtonBorder(isDisabled: Bool) -> some View {
+        switch analysisButtonState {
+        case .failure:
+            analysisButtonShape
+                .stroke(Color.white.opacity(colorScheme == .dark ? 0.22 : 0.0), lineWidth: 1)
+        default:
+            analysisButtonShape
+                .stroke(
+                    Color.white.opacity(colorScheme == .dark ? (isDisabled ? 0.10 : 0.24) : 0.0),
+                    lineWidth: 1
+                )
+                .overlay(alignment: .top) {
+                    if colorScheme == .dark && !isDisabled {
+                        analysisButtonShape
+                            .trim(from: 0.06, to: 0.44)
+                            .stroke(Color.white.opacity(0.34), lineWidth: 1.1)
+                    }
+                }
         }
     }
 
     private func analysisButtonShadowColor(isDisabled: Bool) -> Color {
         switch analysisButtonState {
         case .idle:
-            isDisabled ? .clear : Color.primary.opacity(0.16)
+            isDisabled ? .clear : Color.black.opacity(colorScheme == .dark ? 0.32 : 0.16)
         case .loading:
-            Color.primary.opacity(0.20)
+            Color.black.opacity(colorScheme == .dark ? 0.36 : 0.20)
         case .success:
-            Color.primary.opacity(0.20)
+            Color.black.opacity(colorScheme == .dark ? 0.36 : 0.20)
         case .failure:
             Color.red.opacity(0.24)
         }

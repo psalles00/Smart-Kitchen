@@ -977,7 +977,12 @@ struct ContentView: View {
             NotificationCenter.default.post(name: .homeDataShouldRefresh, object: nil)
         }
         pendingForegroundHomeRefreshWork = workItem
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.65, execute: workItem)
+        PerformanceLogger.event(
+            .scenePhase,
+            "foreground Home refresh scheduled",
+            metadata: "selectedTab=\(selectedTab.rawValue) delayMs=1200"
+        )
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2, execute: workItem)
     }
 
     private var persistentAssistantBar: some View {
@@ -2593,6 +2598,7 @@ private final class HomeLiveInputsStore: ObservableObject {
     var categories: [Category] = []
     var foodEntries: [FoodEntry] = []
     var dayLogs: [NutritionDayLog] = []
+    var profiles: [NutritionProfile] = []
 }
 
 private struct HomeSettingsSnapshot: Equatable {
@@ -2611,6 +2617,7 @@ private struct HomeLiveInputsObserver: View {
     @Query(sort: \Category.sortOrder) private var categories: [Category]
     @Query(sort: \FoodEntry.timestamp, order: .reverse) private var foodEntries: [FoodEntry]
     @Query(sort: \NutritionDayLog.dayStart, order: .reverse) private var dayLogs: [NutritionDayLog]
+    @Query(sort: \NutritionProfile.createdAt) private var profiles: [NutritionProfile]
     @Query private var settingsArray: [AppSettings]
 
     let store: HomeLiveInputsStore
@@ -2642,6 +2649,9 @@ private struct HomeLiveInputsObserver: View {
             .onChange(of: dayLogs) { _, _ in
                 syncLiveInputs(triggerDebouncedRefresh: true)
             }
+            .onChange(of: profiles) { _, _ in
+                syncLiveInputs(triggerDebouncedRefresh: true)
+            }
             .onChange(of: settingsArray) { _, _ in
                 syncLiveInputs(triggerDebouncedRefresh: true)
             }
@@ -2656,6 +2666,7 @@ private struct HomeLiveInputsObserver: View {
         store.categories = categories
         store.foodEntries = foodEntries
         store.dayLogs = dayLogs
+        store.profiles = profiles
 
         let newSettingsSnapshot = HomeSettingsSnapshot(settings: settingsArray.first)
         if settingsSnapshot != newSettingsSnapshot {
@@ -2725,6 +2736,9 @@ private struct HomeView: View {
     @State private var recipeCategoriesState: [Category] = []
     @State private var compatibleMatchesState: [HomeRecipeMatch] = []
     @State private var expiringItemsState: [UnifiedItem] = []
+    @State private var pendingNutritionDaysState: [PendingNutritionDaysCard_RowDay] = []
+    @State private var calorieGoalState: Int = 0
+    @State private var homeInfoSnapshot = HomeInfoSnapshot()
     @State private var hasPendingNutritionDays = false
     @State private var contentResetToken: Int = 0
     @State private var shortcutDeckWidth: CGFloat = 0
@@ -2755,7 +2769,10 @@ private struct HomeView: View {
                     VStack(alignment: .leading, spacing: homeContentSpacing) {
                         actionDeck
                         if hasPendingNutritionDays {
-                            PendingNutritionDaysCard()
+                            PendingNutritionDaysCard(
+                                days: pendingNutritionDaysState,
+                                calorieGoal: calorieGoalState
+                            )
                         }
                         if !expiringItemsState.isEmpty {
                             expiringSection
@@ -2770,7 +2787,7 @@ private struct HomeView: View {
                 .id(contentResetToken)
             },
             infoContent: {
-                HomeInfoContent()
+                HomeInfoContent(snapshot: homeInfoSnapshot)
             }
         )
         .background(alignment: .topLeading) {
@@ -2874,10 +2891,23 @@ private struct HomeView: View {
         if logEvent {
             PerformanceLogger.event(.cloudSync, "HomeView debounced refresh")
         }
-        updateRecipeCategories()
-        updateCompatibleMatches()
-        updateExpiringItems()
-        updatePendingNutritionDays()
+        PerformanceLogger.measure(.cloudSync, "HomeView.refreshHomeDerivedState", metadata: "logEvent=\(logEvent)") {
+            PerformanceLogger.measure(.cloudSync, "HomeView.updateRecipeCategories") {
+                updateRecipeCategories()
+            }
+            PerformanceLogger.measure(.cloudSync, "HomeView.updateCompatibleMatches") {
+                updateCompatibleMatches()
+            }
+            PerformanceLogger.measure(.cloudSync, "HomeView.updateExpiringItems") {
+                updateExpiringItems()
+            }
+            PerformanceLogger.measure(.cloudSync, "HomeView.updatePendingNutritionDays") {
+                updatePendingNutritionDays()
+            }
+            PerformanceLogger.measure(.cloudSync, "HomeView.updateInfoSnapshot") {
+                updateHomeInfoSnapshot()
+            }
+        }
     }
 
     private func updateRecipeCategories() {
@@ -2958,12 +2988,15 @@ private struct HomeView: View {
     }
 
     private func updatePendingNutritionDays() {
+        calorieGoalState = liveInputs.profiles.first?.effectiveCalories ?? 0
         let today = Calendar.current.startOfDay(for: .now)
         guard let cutoff = Calendar.current.date(byAdding: .day, value: -60, to: today) else {
             hasPendingNutritionDays = false
+            pendingNutritionDaysState = []
             return
         }
 
+        var results: [PendingNutritionDaysCard_RowDay] = []
         var cursor = today
         while cursor >= cutoff {
             let state = NutritionDayLogStore.state(
@@ -2973,14 +3006,37 @@ private struct HomeView: View {
                 calendar: .current
             )
             if state == .todayInProgress || state == .pastInProgress {
-                hasPendingNutritionDays = true
-                return
+                let entriesForDay = liveInputs.foodEntries.filter { Calendar.current.isDate($0.timestamp, inSameDayAs: cursor) }
+                results.append(
+                    PendingNutritionDaysCard_RowDay(
+                        id: cursor,
+                        date: cursor,
+                        entryCount: entriesForDay.count,
+                        calorieTotal: entriesForDay.reduce(0) { $0 + $1.calories }
+                    )
+                )
             }
             guard let previousDay = Calendar.current.date(byAdding: .day, value: -1, to: cursor) else { break }
             cursor = previousDay
         }
 
-        hasPendingNutritionDays = false
+        pendingNutritionDaysState = results
+        hasPendingNutritionDays = !results.isEmpty
+    }
+
+    private func updateHomeInfoSnapshot() {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: .now)
+        let caloriesToday = liveInputs.foodEntries
+            .filter { calendar.isDate($0.timestamp, inSameDayAs: today) }
+            .reduce(0) { $0 + $1.calories }
+
+        homeInfoSnapshot = HomeInfoSnapshot(
+            expiringSoonCount: expiringItemsState.count,
+            pendingNutritionDaysCount: pendingNutritionDaysState.count,
+            caloriesConsumedToday: caloriesToday,
+            calorieGoal: calorieGoalState
+        )
     }
 
     private var hasHomeStatusSections: Bool {

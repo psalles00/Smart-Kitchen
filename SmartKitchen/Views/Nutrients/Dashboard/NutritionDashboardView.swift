@@ -411,7 +411,7 @@ struct NutritionDashboardView: View {
                 .font(.caption.weight(.semibold))
                 .padding(.horizontal, 12)
                 .padding(.vertical, 7)
-                .foregroundStyle(.primary)
+                .foregroundStyle(.secondary)
                 .overlay(
                     Capsule().stroke(Color.secondary.opacity(0.45), lineWidth: 1)
                 )

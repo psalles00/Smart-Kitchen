@@ -289,6 +289,10 @@ struct OnboardingFlowView: View {
         var allItems = (try? modelContext.fetch(FetchDescriptor<UnifiedItem>())) ?? []
         var nextPantrySortOrder = (allItems.filter(\.isPantry).map(\.pantrySortOrder).max() ?? -1) + 1
         var nextGrocerySortOrder = (allItems.filter(\.isGrocery).map(\.grocerySortOrder).max() ?? -1) + 1
+        let onboardingToday = Calendar.current.startOfDay(for: .now)
+        let wasOnboardingAlreadyCompleted =
+            ((try? modelContext.fetch(FetchDescriptor<AppSettings>()))?.first?.hasCompletedOnboarding == true)
+        var selectedPantryItems: [UnifiedItem] = []
 
         // Merge pantry selections into existing items when possible.
         for (index, id) in state.selectedPantryItemIDs.enumerated() {
@@ -299,6 +303,7 @@ struct OnboardingFlowView: View {
                     existingItem.pantrySortOrder = nextPantrySortOrder
                     nextPantrySortOrder += 1
                 }
+                selectedPantryItems.append(existingItem)
                 continue
             }
 
@@ -312,6 +317,15 @@ struct OnboardingFlowView: View {
             nextPantrySortOrder = item.pantrySortOrder + 1
             modelContext.insert(item)
             allItems.append(item)
+            selectedPantryItems.append(item)
+        }
+
+        if !selectedPantryItems.contains(where: { item in
+            guard let expirationDate = item.expirationDate else { return false }
+            return Calendar.current.isDate(expirationDate, inSameDayAs: onboardingToday)
+        }), let itemToExpireToday = selectedPantryItems.first(where: { $0.expirationDate == nil })
+            ?? (wasOnboardingAlreadyCompleted ? nil : selectedPantryItems.first) {
+            itemToExpireToday.expirationDate = onboardingToday
         }
 
         // Merge grocery selections into existing items when possible.

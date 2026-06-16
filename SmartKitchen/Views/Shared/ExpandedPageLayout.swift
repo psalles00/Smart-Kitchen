@@ -698,15 +698,15 @@ struct NutritionInfoSkeleton: View {
 
 struct AssistantInfoSkeleton: View {
     var body: some View {
-        GeometryReader { proxy in
-            let primaryWidth = max(min(proxy.size.width * 0.7, 240), 170)
-            let secondaryWidth = primaryWidth * 0.78
+        HStack(alignment: .center, spacing: 12) {
+            GeometryReader { proxy in
+                let primaryWidth = max(min(proxy.size.width * 0.7, 240), 170)
+                let secondaryWidth = primaryWidth * 0.78
 
-            HStack(alignment: .center, spacing: 12) {
                 VStack(alignment: .leading, spacing: 8) {
-                    RoundedRectangle(cornerRadius: 9, style: .continuous)
-                        .fill(skeletonHeaderBaseColor)
-                        .frame(width: primaryWidth, height: 18)
+                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .fill(skeletonHeaderBaseColor.opacity(0.86))
+                        .frame(width: primaryWidth, height: 14)
 
                     HStack(spacing: 10) {
                         RoundedRectangle(cornerRadius: 6, style: .continuous)
@@ -722,31 +722,37 @@ struct AssistantInfoSkeleton: View {
                             .frame(width: secondaryWidth * 0.32, height: 12)
                     }
                 }
-
-                Spacer(minLength: 0)
-
-                ZStack {
-                    Circle()
-                        .stroke(skeletonHeaderBaseColor.opacity(0.62), lineWidth: 5)
-
-                    Circle()
-                        .trim(from: 0, to: 0.68)
-                        .stroke(skeletonHeaderHighlightColor.opacity(0.72), style: StrokeStyle(lineWidth: 5, lineCap: .round))
-                        .rotationEffect(.degrees(-90))
-
-                    VStack(spacing: 4) {
-                        RoundedRectangle(cornerRadius: 6, style: .continuous)
-                            .fill(skeletonHeaderBaseColor)
-                            .frame(width: 28, height: 12)
-
-                        RoundedRectangle(cornerRadius: 3.5, style: .continuous)
-                            .fill(skeletonHeaderBaseColor.opacity(0.82))
-                            .frame(width: 20, height: 7)
-                    }
-                }
-                .frame(width: 54, height: 54)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.top, -8)
             }
+            .layoutPriority(1)
+
+            Spacer(minLength: 0)
+
+            ZStack {
+                Circle()
+                    .stroke(skeletonHeaderBaseColor.opacity(0.62), lineWidth: 5)
+
+                Circle()
+                    .trim(from: 0, to: 0.68)
+                    .stroke(skeletonHeaderHighlightColor.opacity(0.72), style: StrokeStyle(lineWidth: 5, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+
+                VStack(spacing: 4) {
+                    RoundedRectangle(cornerRadius: 5, style: .continuous)
+                        .fill(skeletonHeaderBaseColor)
+                        .frame(width: 24, height: 10)
+
+                    RoundedRectangle(cornerRadius: 3.5, style: .continuous)
+                        .fill(skeletonHeaderBaseColor.opacity(0.82))
+                        .frame(width: 20, height: 7)
+                }
+            }
+            .frame(width: 46, height: 46)
+            .padding(.top, -6)
+            .padding(.bottom, 6)
         }
+        .padding(.bottom, -3)
         .frame(height: ExpandedPageHeaderMetrics.iosHomeInfoHeight)
         .skeletonShimmer()
         .allowsHitTesting(false)
