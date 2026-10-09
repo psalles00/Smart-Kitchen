@@ -208,8 +208,16 @@ final class NutritionItemParser {
             }
         }
         let result = source.map { part -> ParsedItem in
-            if part.quantity != nil { return part }
-            return expanded.first { FoodCache.canonicalize($0.name) == FoodCache.canonicalize(part.name) } ?? part
+            let referenceName = LocalNutritionFallback.nutrition(for: part.name)?.canonicalName
+            guard var matching = expanded.first(where: {
+                FoodCache.canonicalize($0.name) == FoodCache.canonicalize(part.name)
+                    || (referenceName != nil && LocalNutritionFallback.nutrition(for: $0.name)?.canonicalName == referenceName)
+            }) else { return part }
+            if let quantity = part.quantity {
+                matching.quantity = quantity
+                matching.unit = part.unit
+            }
+            return matching
         }
         return result
     }
