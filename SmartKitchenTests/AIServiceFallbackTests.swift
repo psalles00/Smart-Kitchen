@@ -4,6 +4,53 @@ import XCTest
 
 @MainActor
 final class AIServiceFallbackTests: XCTestCase {
+    func testExplicitOpenRouterSkipsUnavailableBackendAndOpenAI() async throws {
+        try await assertOpenRouterRouting(preferred: true)
+    }
+
+    func testBackendFailureFallsBackToOpenRouterWithNoOpenAIKey() async throws {
+        try await assertOpenRouterRouting(preferred: false)
+    }
+
+    private func assertOpenRouterRouting(preferred: Bool) async throws {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [DirectChatURLProtocol.self]
+        var capturedRequest: URLRequest?
+        var capturedBody: Data?
+        DirectChatURLProtocol.requestHandler = { request in
+            capturedRequest = request
+            if let data = request.httpBody {
+                capturedBody = data
+            } else if let stream = request.httpBodyStream {
+                stream.open()
+                defer { stream.close() }
+                var data = Data()
+                var bytes = [UInt8](repeating: 0, count: 4096)
+                while true {
+                    let count = stream.read(&bytes, maxLength: bytes.count)
+                    guard count > 0 else { break }
+                    data.append(contentsOf: bytes.prefix(count))
+                }
+                capturedBody = data
+            }
+            return (HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil,
+                                    headerFields: ["Content-Type": "application/json"])!,
+                    Data("{\"choices\":[{\"message\":{\"content\":\"ok\"}}]}".utf8))
+        }
+        let backend = CountingUnavailableBackend()
+        let service = AIService(supabase: backend,
+                                urlSession: URLSession(configuration: configuration),
+                                openRouterKey: { "test-router-key" },
+                                prefersDirectOpenRouter: { preferred })
+        let response = try await service.sendNutritionChat(messages: [["role": "user", "content": "refeição de teste"]],
+                                                           tools: nil, apiKey: "", model: "gpt-4.1-mini", acceptLanguage: "pt-BR")
+        XCTAssertEqual(response.content, "ok")
+        XCTAssertEqual(backend.calls, preferred ? 0 : 1)
+        XCTAssertEqual(capturedRequest?.url?.host, "openrouter.ai")
+        XCTAssertEqual(capturedRequest?.value(forHTTPHeaderField: "Authorization"), "Bearer test-router-key")
+        let body = try JSONSerialization.jsonObject(with: XCTUnwrap(capturedBody)) as? [String: Any]
+        XCTAssertEqual(body?["model"] as? String, OpenRouterModel.default)
+    }
     override func tearDown() {
         super.tearDown()
         DirectChatURLProtocol.requestHandler = nil
@@ -46,6 +93,20 @@ final class AIServiceFallbackTests: XCTestCase {
         XCTAssertEqual(capturedRequest?.url?.absoluteString, "https://api.openai.com/v1/chat/completions")
         XCTAssertEqual(capturedRequest?.value(forHTTPHeaderField: "Authorization"), "Bearer test-openai-key")
         XCTAssertEqual(capturedRequest?.value(forHTTPHeaderField: "Accept-Language"), "pt-BR")
+    }
+}
+
+@MainActor
+private final class CountingUnavailableBackend: SupabaseFunctionInvoking {
+    var isConfigured: Bool { true }
+    private(set) var calls = 0
+    func invokeFunctionData(name: String, body: [String: Any], acceptLanguage: String?) async throws -> Data {
+        calls += 1
+        throw URLError(.cannotFindHost)
+    }
+    func invokeFunctionData(name: String, body: Data, contentType: String, acceptLanguage: String?) async throws -> Data {
+        calls += 1
+        throw URLError(.cannotFindHost)
     }
 }
 

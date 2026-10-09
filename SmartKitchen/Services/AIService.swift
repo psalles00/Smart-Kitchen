@@ -14,13 +14,19 @@ final class AIService: ObservableObject {
     private let defaultModel = "gpt-4.1-mini"
     private let supabase: any SupabaseFunctionInvoking
     private let urlSession: URLSession
+    private let openRouterKey: @MainActor () -> String
+    private let prefersDirectOpenRouter: @MainActor () -> Bool
 
     init(
         supabase: any SupabaseFunctionInvoking = SupabaseClient(),
-        urlSession: URLSession = .shared
+        urlSession: URLSession = .shared,
+        openRouterKey: @escaping @MainActor () -> String = { APIConfig.openRouterAPIKey },
+        prefersDirectOpenRouter: @escaping @MainActor () -> Bool = { APIConfig.usesLocalOpenRouter }
     ) {
         self.supabase = supabase
         self.urlSession = urlSession
+        self.openRouterKey = openRouterKey
+        self.prefersDirectOpenRouter = prefersDirectOpenRouter
     }
 
     // MARK: - Public
@@ -169,6 +175,14 @@ final class AIService: ObservableObject {
     ) async throws -> Data {
         let sanitizedBody = sanitizeRequestBody(body)
 
+        if prefersDirectOpenRouter(), !openRouterKey().isEmpty {
+            return try await performOpenRouterJSONRequest(
+                body: sanitizedBody,
+                apiKey: openRouterKey(),
+                acceptLanguage: acceptLanguage
+            )
+        }
+
         if supabase.isConfigured {
             do {
                 return try await supabase.invokeFunctionData(
@@ -205,15 +219,15 @@ final class AIService: ObservableObject {
                     acceptLanguage: acceptLanguage
                 )
             } catch {
-                guard !APIConfig.openRouterAPIKey.isEmpty else { throw error }
+                guard !openRouterKey().isEmpty else { throw error }
                 LLMLog.error("Direct OpenAI request failed; falling back to OpenRouter: \(error.localizedDescription)")
             }
         }
 
-        guard !APIConfig.openRouterAPIKey.isEmpty else { throw AIError.missingAPIKey }
+        guard !openRouterKey().isEmpty else { throw AIError.missingAPIKey }
         return try await performOpenRouterJSONRequest(
             body: body,
-            apiKey: APIConfig.openRouterAPIKey,
+            apiKey: openRouterKey(),
             acceptLanguage: acceptLanguage
         )
     }
@@ -291,7 +305,7 @@ final class AIService: ObservableObject {
     }
 
     private func hasDirectChatBackend(apiKey: String) -> Bool {
-        !apiKey.isEmpty || !APIConfig.openRouterAPIKey.isEmpty
+        !apiKey.isEmpty || !openRouterKey().isEmpty
     }
 
     private func sanitizeTools(_ tools: [[String: Any]]?) -> [[String: Any]]? {
@@ -446,7 +460,7 @@ enum AIError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .missingAPIKey:
-            return "Chave de API não configurada. Adicione sua chave OpenAI em Ajustes."
+            return APIConfig.missingAIConfigurationMessage
         case .invalidResponse:
             return "Resposta inválida do servidor."
         case .apiError(let code, let msg):

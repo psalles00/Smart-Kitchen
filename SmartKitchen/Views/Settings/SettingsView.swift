@@ -8,10 +8,48 @@ private struct SavoriaDebugCenter: View {
     @Environment(SubscriptionManager.self) private var manager
     @State private var gate = FeatureGate.shared
     @State private var previewStep: OnboardingStep?
+    @State private var openRouterDraft = ""
+    @State private var hasLocalOpenRouter = APIConfig.usesLocalOpenRouter
+    @State private var credentialMessage: String?
+    @State private var credentialFailed = false
 
     var body: some View {
         NavigationStack {
             Form {
+                Section {
+                    LabeledContent("OpenRouter", value: hasLocalOpenRouter
+                                   ? String(localized: "Chave salva neste iPhone") : String(localized: "Não configurado"))
+                    SecureField("Chave OpenRouter", text: $openRouterDraft)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .privacySensitive()
+                        .accessibilityIdentifier("debug-openrouter-key")
+                    Button("Salvar chave") {
+                        do {
+                            try DebugOpenRouterCredential.save(openRouterDraft)
+                            openRouterDraft = ""
+                            hasLocalOpenRouter = true
+                            credentialFailed = false
+                            credentialMessage = String(localized: "Chave salva. A conexão será validada na próxima solicitação.")
+                        } catch {
+                            credentialFailed = true
+                            credentialMessage = error.localizedDescription
+                        }
+                    }
+                    .disabled(openRouterDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .accessibilityIdentifier("debug-save-openrouter-key")
+                    Link("Obter chave no OpenRouter", destination: URL(string: "https://openrouter.ai/settings/keys")!)
+                    if let credentialMessage {
+                        Text(credentialMessage)
+                            .font(.caption)
+                            .foregroundStyle(credentialFailed ? Color.red : Color.secondary)
+                    }
+                } header: {
+                    Text("IA")
+                } footer: {
+                    Text("Chave local para texto e imagens. Armazenada com segurança neste iPhone, sem sincronização iCloud. Voz usa o serviço de transcrição.")
+                }
+
                 Section {
                     Picker("Plano de teste", selection: Binding(
                         get: { manager.debugMode }, set: { manager.setDebugMode($0) }

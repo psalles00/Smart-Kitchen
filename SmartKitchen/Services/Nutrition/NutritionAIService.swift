@@ -17,7 +17,7 @@ final class NutritionAIService {
         var errorDescription: String? {
             switch self {
             case .missingAPIKey:
-                return String(localized: "Chave de API não configurada. Adicione sua chave OpenAI em Ajustes.")
+                return APIConfig.missingAIConfigurationMessage
             case .emptyResponse:
                 return String(localized: "Resposta vazia da IA.")
             case .invalidJSON(let msg):
