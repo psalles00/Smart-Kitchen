@@ -23,6 +23,10 @@ final class SubscriptionManager {
     /// Connect and the local `Configuration.storekit` file.
     static let annualProductID  = "com.pedrosalles.smartkitchen.sync.premium.annual"
     static let monthlyProductID = "com.pedrosalles.smartkitchen.sync.premium.monthly"
+    // Brazil fallback for screen previews or while StoreKit is unavailable.
+    // Loaded Product.displayPrice always remains the source for actual sales.
+    static let annualFallbackPrice = "R$ 99,90"
+    static let monthlyFallbackPrice = "R$ 49,90"
 
     /// Loaded products keyed by product identifier.
     private(set) var products: [String: Product] = [:]

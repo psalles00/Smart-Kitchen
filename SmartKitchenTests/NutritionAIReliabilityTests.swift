@@ -2,8 +2,29 @@ import XCTest
 @testable import Savoria
 
 #if DEBUG && os(iOS)
+import StoreKit
+import StoreKitTest
+
 @MainActor
 final class SavoriaDebugTests: XCTestCase {
+    func testBrazilSubscriptionCatalogueMatchesAnnualAndMonthlyPlans() async throws {
+        let url = try XCTUnwrap(Bundle.main.url(forResource: "Configuration", withExtension: "storekit"))
+        let session = try SKTestSession(contentsOf: url)
+        session.disableDialogs = true
+        let products = try await Product.products(for: [SubscriptionManager.annualProductID, SubscriptionManager.monthlyProductID])
+        XCTAssertEqual(products.count, 2)
+        let annual = try XCTUnwrap(products.first { $0.id == SubscriptionManager.annualProductID })
+        let monthly = try XCTUnwrap(products.first { $0.id == SubscriptionManager.monthlyProductID })
+        XCTAssertEqual(annual.price, Decimal(string: "99.90"))
+        XCTAssertEqual(monthly.price, Decimal(string: "49.90"))
+        XCTAssertEqual(annual.priceFormatStyle.currencyCode, "BRL")
+        XCTAssertEqual(monthly.priceFormatStyle.currencyCode, "BRL")
+        XCTAssertEqual(annual.subscription?.subscriptionPeriod.unit, .year)
+        XCTAssertEqual(annual.subscription?.subscriptionPeriod.value, 1)
+        XCTAssertEqual(monthly.subscription?.subscriptionPeriod.unit, .month)
+        XCTAssertEqual(monthly.subscription?.subscriptionPeriod.value, 1)
+    }
+
     func testSimulatedPlansPersistLocallyWithoutChangingEntitlement() {
         let defaults = UserDefaults(suiteName: "SavoriaDebugTests.\(UUID().uuidString)")!
         let manager = SubscriptionManager(defaults: defaults, observesTransactions: false)

@@ -18,7 +18,8 @@ struct PaywallStepView: View {
     @State private var selectedID: String = SubscriptionManager.annualProductID
     @State private var showingErrorAlert = false
     @State private var errorMessage = ""
-    @State private var showAllPlans = false
+    @State private var showAllPlans = true
+    @State private var hasFreeTrial = false
 
 
 
@@ -59,7 +60,18 @@ struct PaywallStepView: View {
         }
         .task {
             state.selectedPlanID = selectedID
-            if !isPreview { await manager.loadProducts() }
+            if isPreview {
+                hasFreeTrial = true // Matches the local seven-day StoreKit offer.
+            } else {
+                await manager.loadProducts()
+                if let subscription = manager.annualProduct?.subscription,
+                   let offer = subscription.introductoryOffer,
+                   offer.paymentMode == .freeTrial,
+                   ((offer.period.unit == .week && offer.period.value == 1)
+                    || (offer.period.unit == .day && offer.period.value == 7)) {
+                    hasFreeTrial = await subscription.isEligibleForIntroOffer
+                }
+            }
         }
         .alert(String(localized: "Erro na compra"), isPresented: $showingErrorAlert) {
             Button("OK", role: .cancel) {}
@@ -170,10 +182,10 @@ struct PaywallStepView: View {
             planCard(
                 product: manager.annualProduct,
                 productID: SubscriptionManager.annualProductID,
-                title: String(localized: "7 dias grátis"),
+                title: String(localized: "Anual"),
                 badge: String(localized: "Mais popular"),
-                fallbackPrice: "$3.34",
-                period: String(localized: "por mês"),
+                fallbackPrice: SubscriptionManager.annualFallbackPrice,
+                period: String(localized: "por ano"),
                 subtitle: annualSubtitle,
                 isAnnual: true
             )
@@ -184,7 +196,7 @@ struct PaywallStepView: View {
                     productID: SubscriptionManager.monthlyProductID,
                     title: String(localized: "Mensal"),
                     badge: nil,
-                    fallbackPrice: "$6.99",
+                    fallbackPrice: SubscriptionManager.monthlyFallbackPrice,
                     period: String(localized: "por mês"),
                     subtitle: nil,
                     isAnnual: false
@@ -212,36 +224,12 @@ struct PaywallStepView: View {
         }
     }
 
-    /// "then $79.98 → $39.98/yr" subtitle for the annual card.
+    /// The full annual charge is on the card; only show a trial when eligible.
     private var annualSubtitle: AttributedString? {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.locale = manager.annualProduct?.priceFormatStyle.locale ?? Locale.current
-        let annualPriceStr = manager.annualProduct?.displayPrice ?? "$39.98"
-        let referenceStr: String = {
-            guard let monthly = manager.monthlyProduct else { return nil }
-            let reference = monthly.price * 12
-            return formatter.string(from: reference as NSDecimalNumber)
-        }() ?? "$79.98"
-
-        // Compose: "then $79.98 → $39.98/yr"
-        let prefix = String(localized: "depois ")
-        let arrow = "  →  "
-        let yrSuffix = String(localized: "/ano")
-
-        var attr = AttributedString(prefix)
-        attr.foregroundColor = PlatformColor.white.withAlphaComponent(0.55)
-        var ref = AttributedString(referenceStr)
-        ref.foregroundColor = PlatformColor.white.withAlphaComponent(0.55)
-        ref.strikethroughStyle = NSUnderlineStyle.single
-        attr.append(ref)
-        var arrowAttr = AttributedString(arrow)
-        arrowAttr.foregroundColor = PlatformColor.white.withAlphaComponent(0.55)
-        attr.append(arrowAttr)
-        var price = AttributedString(annualPriceStr + yrSuffix)
-        price.foregroundColor = PlatformColor.white.withAlphaComponent(0.85)
-        attr.append(price)
-        return attr
+        guard hasFreeTrial else { return nil }
+        var text = AttributedString(String(localized: "7 dias grátis"))
+        text.foregroundColor = PlatformColor.white.withAlphaComponent(0.85)
+        return text
     }
 
     @ViewBuilder
@@ -256,16 +244,7 @@ struct PaywallStepView: View {
         isAnnual: Bool
     ) -> some View {
         let isSelected = selectedID == productID
-        let priceString: String = {
-            if isAnnual, let p = product {
-                let perMonth = p.price / Decimal(12)
-                let formatter = NumberFormatter()
-                formatter.numberStyle = .currency
-                formatter.locale = p.priceFormatStyle.locale
-                return formatter.string(from: perMonth as NSDecimalNumber) ?? fallbackPrice
-            }
-            return product?.displayPrice ?? fallbackPrice
-        }()
+        let priceString = product?.displayPrice ?? fallbackPrice
 
         Button {
             withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
@@ -510,14 +489,14 @@ struct PaywallStepView: View {
     }
 
     private var footerDisclaimer: String {
-        if selectedID == SubscriptionManager.monthlyProductID {
+        if selectedID == SubscriptionManager.monthlyProductID || !hasFreeTrial {
             return String(localized: "Cancele quando quiser.")
         }
         return String(localized: "Sem cobrança agora. Cancele quando quiser.")
     }
 
     private var ctaLabel: String {
-        if selectedID == SubscriptionManager.annualProductID {
+        if selectedID == SubscriptionManager.annualProductID && hasFreeTrial {
             return String(localized: "Iniciar 7 dias grátis")
         }
         return String(localized: "Assinar agora")
