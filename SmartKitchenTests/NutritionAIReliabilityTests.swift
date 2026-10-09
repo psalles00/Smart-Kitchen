@@ -197,3 +197,64 @@ final class AssistantSuggestionTests: XCTestCase {
         UserDefaults(suiteName: "Savoria.tests.suggestions." + UUID().uuidString)!
     }
 }
+
+@MainActor
+final class NutritionHouseholdMeasureTests: XCTestCase {
+    func testExactLemonJuiceRequestPreservesDrinkAndSixTablespoonsWhenModelIsWrong() async throws {
+        let input = "suco de limao com 6cs de acucar"
+        let service = NutritionAIService(
+            ai: MockNutritionAIClient(), usda: MockUSDANutritionLookup(foodsByName: [:]),
+            exa: EmptyExaNutritionLookup(),
+            parser: MockNutritionItemParser(itemsByDescription: [input: [
+                .init(name: "6cs de acucar", quantity: 5, unit: "g")
+            ]]), cache: DisabledFoodCache()
+        )
+        let result = try await service.analyzeText(description: input)
+        XCTAssertEqual(result.name, input)
+        XCTAssertEqual(result.componentCount, 2)
+        XCTAssertEqual(result.addedSugarG, 90)
+        XCTAssertEqual(result.servingSizeGrams, 290)
+        XCTAssertEqual(result.calories, 393)
+        XCTAssertFalse(result.reviewNotes.isEmpty)
+    }
+
+    func testAbbreviatedMeasuresAreEquivalentToWrittenMeasuresAndRemainDecimalSafe() {
+        for (short, full) in [("cs", "colheres de sopa"), ("cc", "colheres de cha"), ("c.s.", "colheres de sopa"), ("tbsp", "colheres de sopa"), ("tsp", "colheres de cha")] {
+            let abbreviated = LocalNutritionFallback.analyzeText("suco de limao com 1,5\(short) de acucar")
+            let written = LocalNutritionFallback.analyzeText("suco de limao com 1,5 \(full) de acucar")
+            XCTAssertNotNil(abbreviated, short)
+            XCTAssertNotNil(written, full)
+            XCTAssertEqual(abbreviated?.calories, written?.calories, short)
+            XCTAssertEqual(abbreviated?.servingSizeGrams, written?.servingSizeGrams, short)
+        }
+    }
+
+    func testExplicitJuiceVolumeDoesNotLeakToSugar() {
+        let parsed = NutritionItemParser.expandedItems(from: [.init(name: "300ml suco de limao com 6cs de acucar", quantity: nil, unit: nil)])
+        XCTAssertEqual(parsed.count, 2)
+        XCTAssertEqual(parsed[0].name, "suco de limao")
+        XCTAssertEqual(parsed[0].quantity, 300)
+        XCTAssertEqual(parsed[0].unit, "ml")
+        XCTAssertEqual(parsed[1].name, "acucar")
+        XCTAssertEqual(parsed[1].quantity, 6)
+        XCTAssertEqual(parsed[1].unit, "colher de sopa")
+    }
+
+    func testLocalFallbackRejectsPartialMealRatherThanReturningOnlySugar() {
+        XCTAssertNil(LocalNutritionFallback.analyzeText("alimento desconhecido com 6cs de acucar"))
+    }
+
+    func testIncompleteRemoteResolutionDoesNotReturnPartialNutrition() async throws {
+        let input = "alimento desconhecido com 6cs de acucar"
+        let ai = MockNutritionAIClient()
+        ai.chatContent = """
+        {"name":"Refeição completa","calories":450,"protein":10,"carbs":90,"fat":6,"serving_size_grams":300}
+        """
+        let service = NutritionAIService(ai: ai, usda: MockUSDANutritionLookup(foodsByName: [:]), exa: EmptyExaNutritionLookup(),
+            parser: MockNutritionItemParser(itemsByDescription: [input: [.init(name: "alimento desconhecido", quantity: nil, unit: nil), .init(name: "acucar", quantity: 6, unit: "colher de sopa")]]), cache: DisabledFoodCache())
+        let result = try await service.analyzeText(description: input)
+        // Missing components require a full-request fallback, not sugar-only calories.
+        XCTAssertEqual(result.calories, 450)
+        XCTAssertEqual(result.name, "Refeição completa")
+    }
+}

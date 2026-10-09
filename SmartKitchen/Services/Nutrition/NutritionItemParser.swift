@@ -27,12 +27,23 @@ final class NutritionItemParser {
         let trimmed = description.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return [] }
 
+        let explicitItems = Self.expandedItems(from: [ParsedItem(name: trimmed, quantity: nil, unit: nil)])
+        // Unambiguous local foods with explicit measures need no remote extraction.
+        if explicitItems.contains(where: { $0.quantity != nil }),
+           explicitItems.allSatisfy({ LocalNutritionFallback.nutrition(for: $0.name) != nil }) {
+            return explicitItems
+        }
+
         let systemPrompt = """
         Você é um extrator de itens alimentares. A partir do texto do usuário em \
         português brasileiro, identifique cada alimento mencionado com sua \
         quantidade e unidade canônica. Use unidades curtas: "g", "ml", "un", \
         "xícara", "colher de sopa", "colher de chá", "fatia". Se a quantidade \
-        não estiver explícita, use null.
+        não estiver explícita, use null. "cs", "c.s." e "tbsp" significam colher \
+        de sopa; "cc", "c.c." e "tsp" significam colher de chá. Exemplo: \
+        "suco de limao com 6cs de acucar" => suco de limão (quantidade null) e \
+        açúcar (quantidade 6, unidade "colher de sopa"). Nunca inclua medida no nome \
+        do alimento nem substitua uma quantidade explícita por uma porção padrão.
 
         Regra crítica: se o texto descreve vários alimentos ligados por ";", ",", \
         "com" ou "e", emita cada alimento separadamente. Não emita um item composto \
@@ -105,14 +116,14 @@ final class NutritionItemParser {
         if items.isEmpty {
             return Self.expandedItems(from: [ParsedItem(name: trimmed, quantity: nil, unit: nil)])
         }
-        return Self.expandedItems(from: items)
+        return Self.reconciledItems(items, description: trimmed)
     }
 
     private static func numeric(_ value: Any?) -> Double? {
         if let value = value as? Double { return value }
         if let value = value as? Int { return Double(value) }
         if let value = value as? String {
-            return Double(value.trimmingCharacters(in: .whitespacesAndNewlines))
+            return Double(value.trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: ",", with: "."))
         }
         return nil
     }
@@ -141,7 +152,7 @@ final class NutritionItemParser {
 
     private static func splitCompositeName(_ value: String) -> [String] {
         let protected = protectCompositeFoodNames(value)
-        let pattern = #"(?i)\s*(?:;|,|\+|\bcom\b|\be\b)\s*"#
+        let pattern = #"(?i)\s*(?:;|(?<!\d),|,(?!\d)|\+|\bcom\b|\be\b)\s*"#
         let pieces = protected
             .replacingOccurrences(of: pattern, with: "\u{1F}", options: .regularExpression)
             .components(separatedBy: "\u{1F}")
@@ -165,21 +176,42 @@ final class NutritionItemParser {
     }
 
     private static func extractEmbeddedQuantity(from item: ParsedItem) -> ParsedItem {
-        guard item.quantity == nil else {
-            return ParsedItem(name: cleanName(item.name), quantity: item.quantity, unit: item.unit)
-        }
-
         let trimmed = item.name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard let match = firstMatch(
+        // Explicit source measures take precedence even when the model guessed a portion.
+        if let match = firstMatch(
             in: trimmed,
-            pattern: #"^(\d+(?:[\.,]\d+)?)\s*(kg|g|gramas?|ml|l|litros?|un|unidades?|und|x[ií]caras?|colheres?\s+de\s+sopa|colheres?\s+de\s+ch[aá]|fatias?|por(?:ç|c)(?:a|o|oes|ões)|copos?)\b(?:\s+de)?\s*(.+)$"#
-        ) else {
-            return ParsedItem(name: cleanName(trimmed), quantity: nil, unit: item.unit)
+            pattern: #"^(\d+(?:[\.,]\d+)?)\s*(kg|g|gramas?|ml|l|litros?|un|unidades?|und|x[ií]caras?|cs|c\.s\.|cc|c\.c\.|tbsp|tsp|colheres?\s+de\s+sopa|colheres?\s+de\s+ch[aá]|fatias?|por(?:ç|c)(?:a|o|oes|ões)|copos?)(?=\s|$)(?:\s+de)?\s*(.+)$"#
+        ) {
+            return ParsedItem(name: cleanName(match[2]), quantity: numeric(match[0]), unit: canonicalUnit(match[1]))
         }
+        if let match = firstMatch(in: trimmed, pattern: #"^(\d+(?:[\.,]\d+)?)\s+(.+)$"#),
+           LocalNutritionFallback.nutrition(for: cleanName(match[1])) != nil {
+            return ParsedItem(name: cleanName(match[1]), quantity: numeric(match[0]), unit: "un")
+        }
+        return ParsedItem(name: cleanName(trimmed), quantity: item.quantity, unit: item.unit.map(canonicalUnit))
+    }
 
-        let quantity = numeric(match[0])
-        let unit = canonicalUnit(match[1])
-        return ParsedItem(name: cleanName(match[2]), quantity: quantity, unit: unit)
+    /// Preserve explicit quantities and missing components from a simple composite request.
+    /// AI remains responsible for natural-language requests and unspecified portions.
+    static func reconciledItems(_ items: [ParsedItem], description: String) -> [ParsedItem] {
+        let expanded = expandedItems(from: items)
+        let source = expandedItems(from: [ParsedItem(name: description, quantity: nil, unit: nil)])
+        guard source.contains(where: { $0.quantity != nil && $0.unit != nil }) else { return expanded }
+        // Restrict reconstruction to complete local composites. Other AI food names
+        // may be translated, singularized or refined and must not be duplicated.
+        guard source.count > 1, source.allSatisfy({ LocalNutritionFallback.nutrition(for: $0.name) != nil }) else {
+            return expanded.map { item in
+                guard let explicit = source.first(where: {
+                    FoodCache.canonicalize($0.name) == FoodCache.canonicalize(item.name) && $0.quantity != nil
+                }) else { return item }
+                return explicit
+            }
+        }
+        let result = source.map { part -> ParsedItem in
+            if part.quantity != nil { return part }
+            return expanded.first { FoodCache.canonicalize($0.name) == FoodCache.canonicalize(part.name) } ?? part
+        }
+        return result
     }
 
     private static func firstMatch(in text: String, pattern: String) -> [String]? {
@@ -213,8 +245,8 @@ final class NutritionItemParser {
         if unit == "litro" || unit == "litros" { return "l" }
         if unit == "unidade" || unit == "unidades" || unit == "und" { return "un" }
         if unit == "xicaras" { return "xicara" }
-        if unit == "colheres de sopa" { return "colher de sopa" }
-        if unit == "colheres de cha" { return "colher de cha" }
+        if ["colheres de sopa", "cs", "c.s.", "tbsp"].contains(unit) { return "colher de sopa" }
+        if ["colheres de cha", "cc", "c.c.", "tsp"].contains(unit) { return "colher de cha" }
         if unit == "fatias" { return "fatia" }
         if unit == "porcao" || unit == "porcoes" { return "porcao" }
         if unit == "copos" { return "copo" }

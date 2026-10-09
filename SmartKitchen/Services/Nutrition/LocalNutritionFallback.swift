@@ -16,7 +16,8 @@ enum LocalNutritionFallback {
             return NutritionCalculator.Resolved(item: item, per100g: nutrition)
         }
 
-        guard !resolved.isEmpty else { return nil }
+        // A partial meal must never masquerade as a complete nutritional result.
+        guard resolved.count == parsed.count else { return nil }
         return NutritionCalculator.combine(items: resolved, originalDescription: description)
     }
 
@@ -65,23 +66,13 @@ enum LocalNutritionFallback {
 
     private static func parse(_ description: String) -> [NutritionItemParser.ParsedItem] {
         let chunks = splitItems(description)
-        return chunks.compactMap(parseItem)
+        return NutritionItemParser.expandedItems(from: chunks.compactMap(parseItem))
     }
 
     private static func splitItems(_ description: String) -> [String] {
-        let normalized = description
-            .replacingOccurrences(of: " + ", with: ",")
-            .replacingOccurrences(of: "\n", with: ",")
-            .replacingOccurrences(of: ";", with: ",")
-
-        return normalized
-            .components(separatedBy: CharacterSet(charactersIn: ","))
-            .flatMap { chunk in
-                chunk
-                    .replacingOccurrences(of: " com ", with: ",", options: [.caseInsensitive])
-                    .replacingOccurrences(of: " e ", with: ",", options: [.caseInsensitive])
-                    .components(separatedBy: ",")
-            }
+        description
+            .replacingOccurrences(of: #"(?i)\s*(?:;|(?<!\d),|,(?!\d)|\+|\n|\bcom\b|\be\b)\s*"#, with: "\u{1F}", options: .regularExpression)
+            .components(separatedBy: "\u{1F}")
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
     }
@@ -92,7 +83,7 @@ enum LocalNutritionFallback {
 
         if let match = firstMatch(
             in: trimmed,
-            pattern: #"(\d+(?:[\.,]\d+)?)\s*(kg|g|gramas?|ml|l|litros?|un|unidades?|und|xicaras?|colheres?\s+de\s+sopa|colheres?\s+de\s+cha|fatias?|por(?:ç|c)(?:a|o|oes|ões)|copos?)\b"#
+            pattern: #"(\d+(?:[\.,]\d+)?)\s*(kg|g|gramas?|ml|l|litros?|un|unidades?|und|x[ií]caras?|cs|c\.s\.|cc|c\.c\.|tbsp|tsp|colheres?\s+de\s+sopa|colheres?\s+de\s+ch[aá]|fatias?|por(?:ç|c)(?:a|o|oes|ões)|copos?)(?=\s|$)"#
         ) {
             let quantity = number(match.groups[0])
             let unit = canonicalUnit(match.groups[1])
@@ -147,8 +138,8 @@ enum LocalNutritionFallback {
         if unit == "litro" || unit == "litros" { return "l" }
         if unit == "unidade" || unit == "unidades" || unit == "und" { return "un" }
         if unit == "xicaras" { return "xicara" }
-        if unit == "colheres de sopa" { return "colher de sopa" }
-        if unit == "colheres de cha" { return "colher de cha" }
+        if ["colheres de sopa", "cs", "c s", "tbsp"].contains(unit) { return "colher de sopa" }
+        if ["colheres de cha", "cc", "c c", "tsp"].contains(unit) { return "colher de cha" }
         if unit == "fatias" { return "fatia" }
         if unit == "porcao" || unit == "porcoes" { return "porcao" }
         if unit == "copos" { return "copo" }
@@ -195,6 +186,8 @@ enum LocalNutritionFallback {
         Entry(displayName: "Pao de forma", aliases: ["pao de forma", "pao forma", "sandwich bread", "white bread"], kcal: 253, protein: 8.0, carbs: 45.0, fat: 3.3, sugar: 5.0, addedSugar: nil, fiber: 2.7, saturatedFat: 0.8, cholesterol: 0, sodium: 491, potassium: 115, servingGrams: 25, emoji: nil, citationURL: "https://tbca.net.br/"),
         Entry(displayName: "Leite integral", aliases: ["leite integral", "leite", "whole milk", "milk"], kcal: 61, protein: 3.2, carbs: 4.8, fat: 3.3, sugar: 5.1, addedSugar: nil, fiber: 0, saturatedFat: 1.9, cholesterol: 10, sodium: 43, potassium: 150, servingGrams: 200, emoji: nil, citationURL: "https://fdc.nal.usda.gov/"),
         Entry(displayName: "Cafe sem acucar", aliases: ["cafe", "cafe preto", "coffee", "black coffee"], kcal: 2, protein: 0.1, carbs: 0, fat: 0, sugar: 0, addedSugar: 0, fiber: 0, saturatedFat: 0, cholesterol: 0, sodium: 2, potassium: 49, servingGrams: 100, emoji: nil, citationURL: "https://fdc.nal.usda.gov/"),
+        // TACO ID 219, Limão galego, suco. The review screen explains the undiluted estimate.
+        Entry(displayName: "Suco de limao sem acucar", aliases: ["suco de limao", "suco de limao sem acucar", "lemon juice", "lime juice"], kcal: 22.225, protein: 0.565, carbs: 7.321, fat: 0.067, sugar: nil, addedSugar: 0, fiber: nil, saturatedFat: nil, cholesterol: 0, sodium: nil, potassium: 112.51, servingGrams: 200, emoji: nil, citationURL: "https://www.nepa.unicamp.br/taco/"),
         Entry(displayName: "Acucar", aliases: ["acucar", "sugar"], kcal: 387, protein: 0, carbs: 100, fat: 0, sugar: 100, addedSugar: 100, fiber: 0, saturatedFat: 0, cholesterol: 0, sodium: 1, potassium: 2, servingGrams: 5, emoji: nil, citationURL: "https://fdc.nal.usda.gov/"),
         Entry(displayName: "Requeijao light", aliases: ["requeijao light", "requeijao", "light cream cheese", "cream cheese light"], kcal: 185, protein: 9.0, carbs: 6.0, fat: 13.0, sugar: 3.0, addedSugar: nil, fiber: 0, saturatedFat: 8.0, cholesterol: 40, sodium: 520, potassium: nil, servingGrams: 30, emoji: nil, citationURL: "https://tbca.net.br/"),
         Entry(displayName: "Aveia", aliases: ["aveia", "oats", "oatmeal"], kcal: 389, protein: 16.9, carbs: 66.3, fat: 6.9, sugar: 1.0, addedSugar: nil, fiber: 10.6, saturatedFat: 1.2, cholesterol: 0, sodium: 2, potassium: 429, servingGrams: 40, emoji: nil, citationURL: "https://fdc.nal.usda.gov/"),

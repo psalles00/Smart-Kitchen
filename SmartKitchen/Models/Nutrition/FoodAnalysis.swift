@@ -27,6 +27,9 @@ struct FoodAnalysis: Sendable {
     /// Usado pelo botão de thumbs up/down para registrar votos. `nil` para
     /// análises legacy (foto, rótulo, ou quando o cache está desabilitado).
     var cachedFoodIDs: [UUID]? = nil
+
+    /// Transient estimation assumptions shown before saving, never part of a store schema.
+    var reviewNotes: [String] = []
 }
 
 /// Rótulo nutricional lido por imagem — valores por 100 g/ml.

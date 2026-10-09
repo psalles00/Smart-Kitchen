@@ -59,6 +59,11 @@ enum NutritionCalculator {
         }()
 
         let emoji = items.first?.per100g.emoji
+        let reviewNotes = items.compactMap { entry -> String? in
+            guard entry.item.quantity == nil else { return nil }
+            return String(format: String(localized: "Quantidade não informada para %@: estimativa de %@ g. Revise antes de registrar."), entry.item.name, String(format: "%.0f", grams(for: entry.item, nutrition: entry.per100g)))
+        }
+        let hasLemonJuice = items.contains { ["suco de limao", "suco de limao sem acucar", "lemon juice", "lime juice"].contains(FoodCache.canonicalize($0.item.name)) }
 
         return FoodAnalysis(
             name: displayName,
@@ -77,7 +82,8 @@ enum NutritionCalculator {
             polyunsaturatedFatG: hasPoly          ? round1(poly)        : nil,
             cholesterolMg:       hasCholesterol   ? round1(cholesterol) : nil,
             sodiumMg:            hasSodium        ? round1(sodium)      : nil,
-            potassiumMg:         hasPotassium     ? round1(potassium)   : nil
+            potassiumMg:         hasPotassium     ? round1(potassium)   : nil,
+            reviewNotes: reviewNotes + (hasLemonJuice ? [String(localized: "Suco estimado sem diluição. Medidas caseiras são aproximadas; revise a quantidade e o preparo.")] : [])
         )
     }
 
@@ -119,9 +125,9 @@ enum NutritionCalculator {
             return qty * (validServingGrams(servingGrams) ?? perPieceGrams(for: name))
         case "xicara", "xicaras", "xicara de cha", "xicara de cafe":
             return qty * 240
-        case "colher de sopa", "colher sopa", "colheres de sopa":
+        case "colher de sopa", "colher sopa", "colheres de sopa", "cs", "c.s.", "tbsp":
             return qty * 15
-        case "colher de cha", "colher cha", "colheres de cha":
+        case "colher de cha", "colher cha", "colheres de cha", "cc", "c.c.", "tsp":
             return qty * 5
         case "fatia", "fatias":
             return qty * sliceGrams(for: name)

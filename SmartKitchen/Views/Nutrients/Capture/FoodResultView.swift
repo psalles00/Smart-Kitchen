@@ -69,6 +69,16 @@ struct FoodResultView: View {
         Form {
                 heroSection
 
+                if !analysis.reviewNotes.isEmpty {
+                    Section {
+                        ForEach(analysis.reviewNotes, id: \.self) { note in
+                            Label(note, systemImage: "info.circle")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+
                 Section("Alimento") {
                     TextField("Nome", text: $name)
                         .autocorrectionDisabled()

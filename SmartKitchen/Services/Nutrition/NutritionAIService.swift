@@ -85,13 +85,13 @@ final class NutritionAIService {
             return try await legacyLLMEstimate(description: trimmed)
         }
         let adjustedParsed = Self.adjustPortionsForCompositeContext(
-            parsed,
+            NutritionItemParser.reconciledItems(parsed, description: trimmed),
             originalDescription: trimmed
         )
 
         // 2. Resolve per-100g for each item.
         let (resolved, ids) = await resolvePer100g(for: adjustedParsed)
-        guard !resolved.isEmpty else {
+        guard resolved.count == adjustedParsed.count else {
             if let local = LocalNutritionFallback.analyzeText(trimmed) {
                 return local
             }
@@ -267,7 +267,7 @@ final class NutritionAIService {
         let exactLocalTerms = [
             "cafe", "coffee",
             "leite", "milk",
-            "acucar", "sugar"
+            "acucar", "sugar", "suco de limao", "suco de limao sem acucar", "lemon juice", "lime juice"
         ]
         if exactLocalTerms.contains(n) {
             return true

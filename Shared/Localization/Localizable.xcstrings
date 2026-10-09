@@ -1,6 +1,100 @@
 {
   "sourceLanguage" : "pt-BR",
   "strings" : {
+    "Suco estimado sem diluição. Medidas caseiras são aproximadas; revise a quantidade e o preparo." : {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Juice estimated without dilution. Household measures are approximate; review the quantity and preparation."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suco estimado sem diluição. Medidas caseiras são aproximadas; revise a quantidade e o preparo."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zumo estimado sin diluir. Las medidas caseras son aproximadas; revisa la cantidad y la preparación."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jus estimé sans dilution. Les mesures ménagères sont approximatives ; vérifiez la quantité et la préparation."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saft ohne Verdünnung geschätzt. Haushaltsmaße sind ungefähre Angaben; Menge und Zubereitung prüfen."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Succo stimato senza diluizione. Le misure casalinghe sono approssimative; controlla quantità e preparazione."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "希釈していない果汁として推定しています。家庭用の計量は概算です。量と作り方を確認してください。"
+          }
+        }
+      }
+    },
+    "Quantidade não informada para %@: estimativa de %@ g. Revise antes de registrar." : {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quantity not specified for %@: estimated %@ g. Review before logging."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quantidade não informada para %@: estimativa de %@ g. Revise antes de registrar."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad no indicada para %@: estimación de %@ g. Revisa antes de registrar."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quantité non précisée pour %@ : estimation de %@ g. Vérifiez avant d’enregistrer."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menge für %@ nicht angegeben: geschätzt %@ g. Vor dem Eintragen prüfen."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quantità non indicata per %@: stima di %@ g. Controlla prima di registrare."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@の量が指定されていません。推定量は%@ gです。記録する前に確認してください。"
+          }
+        }
+      }
+    },
     "" : {
       "localizations" : {
         "de" : {
