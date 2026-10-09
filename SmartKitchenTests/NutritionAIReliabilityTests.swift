@@ -151,3 +151,49 @@ enum NutritionAIReport {
         try markdown.write(to: url, atomically: true, encoding: .utf8)
     }
 }
+
+@MainActor
+final class AssistantSuggestionTests: XCTestCase {
+    func testFoodDescriptionIsNotAQuestionAndQuantityPromotesFoodLogging() {
+        let ranker = AssistantSuggestionRanker(defaults: isolatedDefaults())
+        let query = "suco de limao com 6cs de acucar"
+        XCTAssertFalse(AssistantSuggestionRanker.isQuestion(query))
+        XCTAssertEqual(ranker.orderedIDs(query: query).first, "register-food-text")
+        XCTAssertEqual(ranker.orderedIDs(query: "como preparar suco de limao?").first, "ask-assistant")
+        XCTAssertEqual(ranker.orderedIDs(query: "comprar 2kg de arroz").first, "add-grocery")
+        XCTAssertEqual(ranker.orderedIDs(query: "receita de bolo de limao").first, "create-recipe")
+    }
+
+    func testSelectionsLearnKeywordsFrequencyAndPersistAcrossLaunches() {
+        let defaults = isolatedDefaults()
+        let ranker = AssistantSuggestionRanker(defaults: defaults)
+        for _ in 0..<8 { ranker.record(actionID: "register-food-text", query: "banana") }
+        XCTAssertEqual(ranker.orderedIDs(query: "banana").first, "register-food-text")
+        let reloaded = AssistantSuggestionRanker(defaults: defaults)
+        XCTAssertEqual(reloaded.orderedIDs(query: "banana").first, "register-food-text")
+        // A learned preference must not overpower an explicit shopping request.
+        XCTAssertEqual(reloaded.orderedIDs(query: "comprar banana").first, "add-grocery")
+        XCTAssertEqual(Set(reloaded.orderedIDs(query: "banana")).count, 5)
+    }
+
+    func testLongVisibleLabelIsBoundedWithoutChangingActionPayload() {
+        let query = String(repeating: "limão 🍋 ", count: 30)
+        let item = CommandBarHelpers.orderedActions(query: query, isQuestion: false)[0]
+        let visible = CommandBarHelpers.limitedSuggestionText(query, limit: 40)
+        XCTAssertLessThanOrEqual(visible.count, 40)
+        XCTAssertTrue(visible.hasSuffix("..."))
+        XCTAssertEqual(CommandBarHelpers.limitedSuggestionText("banana", limit: 40), "banana")
+        XCTAssertEqual(item.title, query)
+        var payload: String?
+        item.perform(query) { action in
+            if case .addPantryItem(let prefill) = action { payload = prefill }
+            if case .registerFood(let prefill) = action { payload = prefill }
+            if case .askAssistant(let prefill) = action { payload = prefill }
+        }
+        XCTAssertEqual(payload, query)
+    }
+
+    private func isolatedDefaults() -> UserDefaults {
+        UserDefaults(suiteName: "Savoria.tests.suggestions." + UUID().uuidString)!
+    }
+}

@@ -35,20 +35,8 @@ enum CommandBarAction {
 
 // MARK: - Phrase Detection
 
-/// Heuristic: if the query has 4+ words or contains question markers, treat it as a question.
 private func looksLikeQuestion(_ query: String) -> Bool {
-    let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
-    if trimmed.contains("?") { return true }
-    let words = trimmed.split(separator: " ")
-    if words.count >= 4 { return true }
-    let questionStarters = ["como", "qual", "quais", "onde", "quando", "porque",
-                            "por que", "o que", "quanto", "quantos", "quantas",
-                            "what", "how", "where", "when", "why", "which", "can"]
-    let lower = trimmed.lowercased()
-    for starter in questionStarters {
-        if lower.hasPrefix(starter + " ") || lower.hasPrefix(starter + ",") { return true }
-    }
-    return false
+    AssistantSuggestionRanker.isQuestion(query)
 }
 
 // MARK: - iOS Native Search Tab Content
@@ -312,13 +300,13 @@ struct CommandBarSearchContent: View {
                     .padding(.horizontal, 16)
             }
 
-            Text("Ações")
+            Text("Sugestões")
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 16)
 
             let actions = CommandBarHelpers.orderedActions(query: query, isQuestion: isQuestion)
-            let activeActionID = hasResults && !isQuestion ? nil : actions.first?.id
+            let activeActionID = actions.first?.id
 
             VStack(spacing: 4) {
                 ForEach(actions) { item in
@@ -329,6 +317,7 @@ struct CommandBarSearchContent: View {
                         isHighlighted: item.id == activeActionID
                     ) {
                         // Intercept ask-assistant to open inline chat
+                        AssistantSuggestionRanker.shared.record(actionID: item.id, query: query)
                         if item.id == "ask-assistant" {
                             openChat(initialQuery: query)
                         } else {
@@ -583,13 +572,13 @@ struct CommandBarView: View {
                     .padding(.horizontal, 16)
             }
 
-            Text("Ações")
+            Text("Sugestões")
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 16)
 
             let actions = CommandBarHelpers.orderedActions(query: query, isQuestion: isQuestion)
-            let activeActionID = hasResults && !isQuestion ? nil : actions.first?.id
+            let activeActionID = actions.first?.id
 
             VStack(spacing: 4) {
                 ForEach(actions) { item in
@@ -599,6 +588,7 @@ struct CommandBarView: View {
                         tint: item.tint,
                         isHighlighted: item.id == activeActionID
                     ) {
+                        AssistantSuggestionRanker.shared.record(actionID: item.id, query: query)
                         item.perform(query, onAction)
                         dismiss()
                     }
@@ -612,24 +602,13 @@ struct CommandBarView: View {
     private func executeTopResult() {
         let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
         let isQuestion = looksLikeQuestion(trimmedQuery)
-
         if !searchService.results.isEmpty && !isQuestion {
             let index = min(selectedIndex, searchService.results.count - 1)
             executeResult(searchService.results[index])
-        } else if isQuestion && !trimmedQuery.isEmpty {
-            onAction(.askAssistant(prefill: trimmedQuery))
-            dismiss()
-        } else if !trimmedQuery.isEmpty {
-            if let suggestion = searchService.suggestions.first ?? ItemDatabase.shared.search(query: trimmedQuery, limit: 1).first {
-                onAction(.addCatalogItemToGrocery(name: suggestion.preferredTitle(matching: trimmedQuery), iconFileName: suggestion.nomeDoArquivo, category: suggestion.categoria))
-                dismiss()
-                return
-            }
-
-            let actions = CommandBarHelpers.orderedActions(query: trimmedQuery, isQuestion: false)
-            if let first = actions.first {
-                first.perform(trimmedQuery, onAction)
-            }
+        } else if !trimmedQuery.isEmpty,
+                  let first = CommandBarHelpers.orderedActions(query: trimmedQuery, isQuestion: isQuestion).first {
+            AssistantSuggestionRanker.shared.record(actionID: first.id, query: trimmedQuery)
+            first.perform(trimmedQuery, onAction)
             dismiss()
         }
     }
@@ -743,25 +722,24 @@ enum CommandBarHelpers {
             imageOffset: CGSize(width: 14, height: 21)
         ) { q, action in action(.registerFood(prefill: q)) }
 
-        if isQuestion {
-            return [askAssistant, addPantry, addGrocery, createRecipe, registerFood]
-        } else {
-            return [addPantry, addGrocery, createRecipe, askAssistant, registerFood]
-        }
+        let actions = [addPantry, addGrocery, createRecipe, askAssistant, registerFood]
+        let orderedIDs = AssistantSuggestionRanker.shared.orderedIDs(query: query)
+        return orderedIDs.compactMap { id in actions.first { $0.id == id } }
     }
 
-    static func fullWidthActionButtonTitle(item: ActionItem) -> String {
+    static func fullWidthActionButtonTitle(item: ActionItem, truncate: Bool = true) -> String {
+        let title = truncate ? limitedSuggestionText(item.title, limit: 40) : item.title
         switch item.id {
         case "ask-assistant":
-            return String(format: String(localized: "Perguntar \"%@\" à IA"), item.title)
+            return String(format: String(localized: "Perguntar \"%@\" à IA"), title)
         case "add-pantry":
-            return String(format: String(localized: "Adicionar \"%@\" à Despensa"), item.title)
+            return String(format: String(localized: "Adicionar \"%@\" à Despensa"), title)
         case "add-grocery":
-            return String(format: String(localized: "Adicionar \"%@\" ao Mercado"), item.title)
+            return String(format: String(localized: "Adicionar \"%@\" ao Mercado"), title)
         case "create-recipe":
-            return String(format: String(localized: "Criar receita \"%@\""), item.title)
+            return String(format: String(localized: "Criar receita \"%@\""), title)
         case "register-food-text":
-            return String(format: String(localized: "Registrar alimento \"%@\""), item.title)
+            return String(format: String(localized: "Registrar alimento \"%@\""), title)
         default:
             return item.title
         }
@@ -800,7 +778,7 @@ enum CommandBarHelpers {
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(isHighlighted ? .white : tint)
 
-                Text(title)
+                Text(limitedSuggestionText(title, limit: 80))
                     .font(.subheadline.weight(isHighlighted ? .bold : .medium))
                     .foregroundStyle(isHighlighted ? .white : .primary)
                     .lineLimit(1)
@@ -826,51 +804,60 @@ enum CommandBarHelpers {
     }
 
     static func compactActionButton(item: ActionItem, isHighlighted: Bool = false, targetHeight: CGFloat? = nil, action: @escaping () -> Void) -> some View {
-        let baseHeight: CGFloat = 80
-        let resolvedHeight = max(targetHeight ?? 0, baseHeight)
-
-        return Button(action: action) {
-            HStack(alignment: .top, spacing: 4) {
+        Button(action: action) {
+            HStack(alignment: .center, spacing: 8) {
                 Image(systemName: item.icon)
-                    .font(.system(size: 13, weight: .bold))
+                    .font(.system(size: isHighlighted ? 18 : 13, weight: .bold))
                     .foregroundStyle(item.tint)
-                    .padding(.top, 1)
 
-                Text(compactActionButtonTitle(item: item))
-                    .font(.caption)
+                Text(fullWidthActionButtonTitle(item: item))
+                    .font(isHighlighted ? .subheadline.weight(.semibold) : .caption)
                     .foregroundStyle(.primary)
                     .multilineTextAlignment(.leading)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .layoutPriority(1)
+                    .lineLimit(3)
+                    .truncationMode(.tail)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding(.trailing, isHighlighted ? 64 : 54)
+            .padding(.trailing, isHighlighted ? 62 : 32)
             .padding(.horizontal, 12)
-            .frame(maxWidth: .infinity, minHeight: resolvedHeight, alignment: .center)
-            .background(isHighlighted ? item.tint.opacity(0.12) : item.tint.opacity(0.06), in: .rect(cornerRadius: 10))
+            .padding(.vertical, 16)
+            .frame(maxWidth: .infinity, minHeight: max(targetHeight ?? 0, isHighlighted ? 88 : 100), alignment: .center)
+            .background(item.tint.opacity(isHighlighted ? 0.22 : 0.06), in: .rect(cornerRadius: 12))
             .overlay(alignment: .bottomTrailing) {
                 Image(item.imageName)
                     .resizable()
                     .scaledToFit()
-                    .frame(height: item.imageHeight)
-                    .offset(item.imageOffset)
+                    .frame(height: isHighlighted ? 76 : 48)
+                    .offset(x: 8, y: 10)
                     .allowsHitTesting(false)
+                    .accessibilityHidden(true)
             }
             .overlay(alignment: .topTrailing) {
                 if isHighlighted {
-                    activeActionBadge(tint: item.tint)
+                    Image(systemName: "star.fill")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(item.tint)
+                        .padding(10)
+                        .accessibilityHidden(true)
                 }
             }
             .overlay {
-                if isHighlighted {
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .stroke(item.tint.opacity(0.35), lineWidth: 1)
-                }
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(item.tint.opacity(isHighlighted ? 0.65 : 0.12), lineWidth: isHighlighted ? 2 : 1)
             }
-            .clipShape(.rect(cornerRadius: 10))
+            .clipShape(.rect(cornerRadius: 12))
             .contentShape(.rect)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(fullWidthActionButtonTitle(item: item, truncate: false))
+        .accessibilityIdentifier("assistant-suggestion-" + item.id)
+    }
+
+    /// Limit only the visible label; the action always receives the complete request.
+    static func limitedSuggestionText(_ text: String, limit: Int) -> String {
+        let compact = text.split(whereSeparator: { $0.isWhitespace }).joined(separator: " ")
+        guard compact.count > limit else { return compact }
+        return String(compact.prefix(max(0, limit - 3))).trimmingCharacters(in: .whitespaces) + "..."
     }
 
     static func fullWidthActionButton(
@@ -994,5 +981,100 @@ enum CommandBarHelpers {
         case "utensil":     "Utensílio"
         default:            ""
         }
+    }
+}
+
+/// Local, bounded learning from actual selections. No food records or CloudKit schema changes.
+@MainActor
+final class AssistantSuggestionRanker {
+    static let shared = AssistantSuggestionRanker()
+    private static let historyKey = "Savoria.assistantSuggestionSelections.v1"
+    private let defaults: UserDefaults
+
+    private struct Selection: Codable {
+        let actionID: String
+        let keywords: [String]
+        let lengthBucket: Int
+    }
+
+    init(defaults: UserDefaults = .standard) { self.defaults = defaults }
+
+    private var history: [Selection] {
+        guard let data = defaults.data(forKey: Self.historyKey),
+              let saved = try? JSONDecoder().decode([Selection].self, from: data) else { return [] }
+        return saved
+    }
+
+    func record(actionID: String, query: String) {
+        guard Self.actionIDs.contains(actionID), !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        let selection = Selection(actionID: actionID, keywords: Array(Self.keywords(query).sorted().prefix(20)), lengthBucket: Self.lengthBucket(query))
+        if let data = try? JSONEncoder().encode(Array((history + [selection]).suffix(200))) {
+            defaults.set(data, forKey: Self.historyKey)
+        }
+    }
+
+    private static let actionIDs = ["add-pantry", "add-grocery", "create-recipe", "ask-assistant", "register-food-text"]
+
+    func orderedIDs(query: String) -> [String] {
+        let normalized = Self.normalize(query)
+        let words = Self.keywords(query)
+        let bucket = Self.lengthBucket(query)
+        let selections = history
+        var scores: [String: Double] = ["add-pantry": 20, "add-grocery": 18, "create-recipe": 8, "ask-assistant": 4, "register-food-text": 12]
+        if bucket >= 1 { scores["register-food-text", default: 0] += 18 }
+        if bucket >= 2 { scores["ask-assistant", default: 0] += 16 }
+        if normalized.range(of: #"\d\s*(?:g|kg|ml|l|cs|cc|colher|cup|tbsp|tsp)\b"#, options: .regularExpression) != nil {
+            scores["register-food-text", default: 0] += 45
+        }
+        let intents: [(String, [String])] = [
+            ("add-pantry", ["despensa", "pantry", "estoque", "stock", "vorrat", "dispensa", "garde manger", "パントリー"]),
+            ("add-grocery", ["comprar", "compra", "mercado", "shopping", "buy", "grocery", "comprar", "acheter", "courses", "einkaufen", "kaufen", "comprare", "spesa", "買う", "買い物"]),
+            ("create-recipe", ["receita", "recipe", "receta", "recette", "rezept", "ricetta", "レシピ"]),
+            ("register-food-text", ["comi", "bebi", "almocei", "jantei", "consumi", "registrar", "log", "ate", "drank", "comi", "bebi", "mange", "bu", "gegessen", "getrunken", "mangiato", "bevuto", "食べた", "飲んだ"])
+        ]
+        for (id, terms) in intents where terms.contains(where: { Self.contains(term: $0, in: normalized) }) {
+            scores[id, default: 0] += 120
+        }
+        if Self.isQuestion(query) { scores["ask-assistant", default: 0] += 160 }
+        for id in Self.actionIDs {
+            let matches = selections.filter { $0.actionID == id }
+            let keywordMatches = matches.reduce(0) { $0 + Set($1.keywords).intersection(words).count }
+            let sameLength = matches.filter { $0.lengthBucket == bucket }.count
+            scores[id, default: 0] += min(16, Double(matches.count) * 0.6)
+                + min(32, Double(keywordMatches) * 6 / Double(max(words.count, 1)))
+                + min(14, Double(sameLength) * 1.2)
+        }
+        return Self.actionIDs.enumerated().sorted { lhs, rhs in
+            let left = scores[lhs.element, default: 0], right = scores[rhs.element, default: 0]
+            return left == right ? lhs.offset < rhs.offset : left > right
+        }.map(\.element)
+    }
+
+    static func isQuestion(_ query: String) -> Bool {
+        let text = normalize(query)
+        if query.contains("?") || query.contains("？") { return true }
+        let starters = ["como", "qual", "quais", "onde", "quando", "porque", "por que", "o que", "quanto", "quantos", "quantas", "what", "how", "where", "when", "why", "which", "can", "que", "cual", "donde", "cuando", "comment", "quel", "quelle", "pourquoi", "combien", "wie", "was", "warum", "welche", "come", "quale", "quando", "perche"]
+        return starters.contains { text == $0 || text.hasPrefix($0 + " ") }
+            || ["どう", "なぜ", "何", "どこ"].contains { text.hasPrefix($0) }
+    }
+
+    private static func normalize(_ text: String) -> String {
+        text.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: Locale(identifier: "en_US_POSIX"))
+            .lowercased().split(whereSeparator: { $0.isWhitespace }).joined(separator: " ")
+    }
+
+    private static func contains(term: String, in text: String) -> Bool {
+        let tokens = text.components(separatedBy: .alphanumerics.inverted).filter { !$0.isEmpty }
+        return term.contains(" ") ? (" " + text + " ").contains(" " + term + " ") : tokens.contains(term) || (term.first?.isASCII == false && text.contains(term))
+    }
+
+    private static func keywords(_ text: String) -> Set<String> {
+        let stopwords: Set<String> = ["com", "de", "da", "do", "das", "dos", "para", "uma", "um", "the", "with", "and", "con", "avec", "und", "mit"]
+        return Set(normalize(text).components(separatedBy: .alphanumerics.inverted).filter { $0.count >= 3 && !stopwords.contains($0) && Double($0) == nil })
+    }
+
+    private static func lengthBucket(_ text: String) -> Int {
+        let count = text.split(whereSeparator: { $0.isWhitespace }).count
+        return count >= 12 || text.count > 100 ? 2 : (count >= 4 ? 1 : 0)
     }
 }

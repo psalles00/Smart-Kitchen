@@ -317,13 +317,13 @@ struct InlineSearchResultsView: View {
             }
 
             if !query.isEmpty {
-                Text("Ações")
+                Text("Sugestões")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.primary.opacity(0.6))
                     .padding(.horizontal, 16)
 
                 let actions = CommandBarHelpers.orderedActions(query: query, isQuestion: isQuestion)
-                let activeActionID = hasResults && !isQuestion ? nil : actions.first?.id
+                let activeActionID = actions.first?.id
 
                 actionPairRows(actions: actions, activeActionID: activeActionID, query: query)
                     .padding(.horizontal, 12)
@@ -338,11 +338,17 @@ struct InlineSearchResultsView: View {
         activeActionID: String?,
         query: String
     ) -> some View {
-        let rows = stride(from: 0, to: actions.count, by: 2).map { index in
-            Array(actions[index..<min(index + 2, actions.count)])
+        let remaining = Array(actions.dropFirst())
+        let rows = stride(from: 0, to: remaining.count, by: 2).map { index in
+            Array(remaining[index..<min(index + 2, remaining.count)])
         }
 
-        return VStack(spacing: 6) {
+        return VStack(spacing: 8) {
+            if let first = actions.first {
+                CommandBarHelpers.compactActionButton(item: first, isHighlighted: true) {
+                    handleActionSelection(first, query: query)
+                }
+            }
             ForEach(rows, id: \.first!.id) { pair in
                 CompactActionPairRow(items: pair, activeActionID: activeActionID) { item in
                     handleActionSelection(item, query: query)
@@ -353,6 +359,7 @@ struct InlineSearchResultsView: View {
     }
 
     private func handleActionSelection(_ item: CommandBarHelpers.ActionItem, query: String) {
+        AssistantSuggestionRanker.shared.record(actionID: item.id, query: query)
         if item.id == "ask-assistant" {
             openChat(initialQuery: query)
         } else {
@@ -493,20 +500,9 @@ struct InlineSearchResultsView: View {
 
         if !searchService.results.isEmpty && !isQuestion {
             executeResult(searchService.results[0])
-        } else if isQuestion && !trimmedQuery.isEmpty {
-            openChat(initialQuery: trimmedQuery)
-        } else if !trimmedQuery.isEmpty {
-            if let suggestion = searchService.suggestions.first ?? ItemDatabase.shared.search(query: trimmedQuery, limit: 1).first {
-                onAction(.addCatalogItemToGrocery(name: suggestion.preferredTitle(matching: trimmedQuery), iconFileName: suggestion.nomeDoArquivo, category: suggestion.categoria))
-                searchBarState.selectResult()
-                return
-            }
-
-            let actions = CommandBarHelpers.orderedActions(query: trimmedQuery, isQuestion: false)
-            if let first = actions.first {
-                first.perform(trimmedQuery, onAction)
-            }
-            searchBarState.selectResult()
+        } else if !trimmedQuery.isEmpty,
+                  let first = CommandBarHelpers.orderedActions(query: trimmedQuery, isQuestion: isQuestion).first {
+            handleActionSelection(first, query: trimmedQuery)
         }
     }
 }
@@ -562,18 +558,7 @@ private struct CompactActionRowHeightPreferenceKey: PreferenceKey {
 // MARK: - Question Detection
 
 private func looksLikeQuestion(_ query: String) -> Bool {
-    let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
-    if trimmed.contains("?") { return true }
-    let words = trimmed.split(separator: " ")
-    if words.count >= 4 { return true }
-    let questionStarters = ["como", "qual", "quais", "onde", "quando", "porque",
-                            "por que", "o que", "quanto", "quantos", "quantas",
-                            "what", "how", "where", "when", "why", "which", "can"]
-    let lower = trimmed.lowercased()
-    for starter in questionStarters {
-        if lower.hasPrefix(starter + " ") || lower.hasPrefix(starter + ",") { return true }
-    }
-    return false
+    AssistantSuggestionRanker.isQuestion(query)
 }
 
 private struct ConditionalEmptyTapDismissResultsModifier: ViewModifier {
