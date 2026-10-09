@@ -248,7 +248,9 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
         .safeAreaInset(edge: .bottom, spacing: 0) {
             Color.clear.frame(height: bottomTabBarContentInset)
         }
-        .background(appPrimaryBackground)
+        .background {
+            SavoriaColumnSurface(theme: pageTheme, cornerRadius: cornerRadius)
+        }
         .clipShape(
             UnevenRoundedRectangle(
                 topLeadingRadius: cornerRadius,
@@ -257,6 +259,9 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
                 topTrailingRadius: cornerRadius
             )
         )
+        .overlay {
+            SavoriaColumnBorder(theme: pageTheme, cornerRadius: cornerRadius)
+        }
         .overlayPreferenceValue(ContentPanelWavyBorderKey.self) { borderColor in
             if let borderColor {
                 WavyPanelBorder(inset: -2)
@@ -341,6 +346,11 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
         if let backgroundOverride {
             backgroundOverride
         } else {
+            #if os(iOS)
+            ThemedBackgroundView(theme: effectiveBgTheme,
+                                 animates: visiblePageTheme == nil || visiblePageTheme == pageTheme)
+                .animation(.easeInOut(duration: 0.35), value: effectiveBgTheme)
+            #else
             ZStack {
                 themedBackground(for: backgroundFromTheme)
 
@@ -365,6 +375,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
                 }
                 #endif
             }
+            #endif
         }
     }
 

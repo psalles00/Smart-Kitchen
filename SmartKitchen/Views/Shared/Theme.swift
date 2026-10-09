@@ -11,12 +11,12 @@ import AppKit
 /// Superfície neutra adaptativa usada por cards, chips, barras de filtro,
 /// botões da Home, etc.
 /// - Light: `#F8F8FA`
-/// - Dark:  `#343437`
+/// - Dark:  `#242428` on iOS, `#343437` on macOS
 let neutralSurfaceColor: Color = {
     #if canImport(UIKit)
     return Color(uiColor: UIColor { trait in
         trait.userInterfaceStyle == .dark
-            ? UIColor(red: 0x34 / 255.0, green: 0x34 / 255.0, blue: 0x37 / 255.0, alpha: 1)
+            ? UIColor(red: 0x24 / 255.0, green: 0x24 / 255.0, blue: 0x28 / 255.0, alpha: 1)
             : UIColor(red: 248 / 255.0, green: 248 / 255.0, blue: 250 / 255.0, alpha: 1)
     })
     #elseif canImport(AppKit)
@@ -33,12 +33,12 @@ let neutralSurfaceColor: Color = {
 
 /// Fundo principal das telas (área onde antes era branco).
 /// - Light: `#FFFFFF`
-/// - Dark:  `#202023`
+/// - Dark:  `#15161A` on iOS, `#202023` on macOS
 let appPrimaryBackground: Color = {
     #if canImport(UIKit)
     return Color(uiColor: UIColor { trait in
         trait.userInterfaceStyle == .dark
-            ? UIColor(red: 0x20 / 255.0, green: 0x20 / 255.0, blue: 0x23 / 255.0, alpha: 1)
+            ? UIColor(red: 0x15 / 255.0, green: 0x16 / 255.0, blue: 0x1A / 255.0, alpha: 1)
             : UIColor.white
     })
     #elseif canImport(AppKit)
@@ -249,6 +249,7 @@ struct GlassGroupButton: View {
         Button(action: action) {
             Image(systemName: systemImage)
                 .font(.system(size: 16, weight: .semibold))
+                .savoriaIconDepth(size: 16)
                 .frame(width: 34, height: 36)
                 .contentShape(Rectangle())
         }
@@ -267,6 +268,7 @@ struct GlassGroupMenu<Content: View>: View {
         } label: {
             Image(systemName: systemImage)
                 .font(.system(size: 16, weight: .semibold))
+                .savoriaIconDepth(size: 16)
                 .frame(width: 34, height: 36)
                 .contentShape(Rectangle())
         }

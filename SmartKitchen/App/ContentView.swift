@@ -743,22 +743,9 @@ struct ContentView: View {
     #if os(iOS)
     @ViewBuilder
     private var iosAppBackground: some View {
-        ZStack {
-            ThemedBackgroundView(
-                theme: displayedBgTheme,
-                progress: 1.0
-            )
-            .allowsHitTesting(false)
-
-            ForEach([PageTheme.home, .lists, .recipes, .nutrients], id: \.self) { theme in
-                ThemedBackgroundView(
-                    theme: theme,
-                    progress: 1.0
-                )
-                .opacity(theme == displayedBgTheme ? 1 : 0)
-                .allowsHitTesting(false)
-            }
-        }
+        // Pages render the animated layer. This fallback under the tab host is static.
+        ThemedBackgroundView(theme: displayedBgTheme, animates: false)
+        .allowsHitTesting(false)
         .animation(.easeInOut(duration: 0.35), value: displayedBgTheme)
     }
     #endif
@@ -3846,6 +3833,7 @@ private struct HomeView: View {
                     .frame(width: customSize ?? 76)
             }
         }
+        .savoriaIconDepth(size: customSize ?? (style == .featured ? 150 : 76))
         .offset(finalOffset)
         .allowsHitTesting(false)
     }
@@ -3898,6 +3886,7 @@ private struct HomeView: View {
                 .resizable()
                 .scaledToFit()
                 .frame(width: imageSize ?? 76)
+                .savoriaIconDepth(size: imageSize ?? 76)
                 .allowsHitTesting(false)
 
             // "+" badge

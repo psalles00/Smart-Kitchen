@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E51300A10000000000000001 /* SavoriaNebula.metal in Sources */ = {isa = PBXBuildFile; fileRef = E51300A10000000000000002 /* SavoriaNebula.metal */; };
 		00E90C6FAE36A7099AEE3648 /* meta-fr.json in Resources */ = {isa = PBXBuildFile; fileRef = 678AFBB472665B3EF5D72032 /* meta-fr.json */; };
 		01D2DDC6C13E33CA9B920D76 /* NutrientsInfoContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75728DA118DDAF7AFE520AFD /* NutrientsInfoContent.swift */; };
 		01FE95C9B0E04FDF24B923BF /* NutritionProfileStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F57F27B8FA704D0DDEFDE46 /* NutritionProfileStore.swift */; };
@@ -319,6 +320,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		E51300A10000000000000002 /* SavoriaNebula.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = SavoriaNebula.metal; sourceTree = "<group>"; };
 		019A8D5CCB169B9909C7F98A /* NutritionAITestDoubles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionAITestDoubles.swift; sourceTree = "<group>"; };
 		01D405419BB692070742AF7D /* BackupSnapshotV2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupSnapshotV2.swift; sourceTree = "<group>"; };
 		01EAEAF1627F23BD48B3E688 /* RecipeImportMediaFetcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeImportMediaFetcher.swift; sourceTree = "<group>"; };
@@ -1039,6 +1041,7 @@
 				0AFAA134B36C06334F7B143B /* StatusBarStyleView.swift */,
 				600EDD530C0ABD3D8C83E88F /* Theme.swift */,
 				76914732873AAE3D425B8975 /* ThemedBackgroundView.swift */,
+				E51300A10000000000000002 /* SavoriaNebula.metal */,
 				FFD9669D9EEC7E8ED456843E /* UnifiedSearchBar.swift */,
 			);
 			path = Shared;
@@ -1588,6 +1591,7 @@
 				111F46B36114F5ABD00E2DC2 /* TextPipeline.swift in Sources */,
 				4727E27033C6C7D3C6B0BA5B /* Theme.swift in Sources */,
 				FA8CD60A97F57CA13CD75E21 /* ThemedBackgroundView.swift in Sources */,
+				E51300A10000000000000001 /* SavoriaNebula.metal in Sources */,
 				04FFD51C55F19981F10C0552 /* TimeRange.swift in Sources */,
 				57AE96EF10E9440DF8C48362 /* USDANutritionLookup.swift in Sources */,
 				486AF61D5E11D7D9A92C8C10 /* LocalPageSearchBar.swift in Sources */,

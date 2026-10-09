@@ -1,5 +1,44 @@
 import SwiftUI
 
+extension View {
+    /// The soft reflection uses the icon's own pixels, silhouette and colors.
+    /// Apply to the icon only, before any enclosing button surface.
+    @ViewBuilder
+    func savoriaIconDepth(size: CGFloat) -> some View {
+        #if os(iOS)
+        modifier(SavoriaIconDepthModifier(size: size))
+        #else
+        self
+        #endif
+    }
+}
+
+#if os(iOS)
+private struct SavoriaIconDepthModifier: ViewModifier {
+    let size: CGFloat
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.colorSchemeContrast) private var contrast
+
+    func body(content: Content) -> some View {
+        let radius = min(10, max(2, size * 0.09))
+        content
+            .compositingGroup()
+            .shadow(color: .black.opacity(colorScheme == .dark ? 0.26 : 0.12),
+                    radius: radius * 0.45, y: max(1, radius * 0.35))
+            .background {
+                if contrast != .increased {
+                    content
+                        .blur(radius: radius)
+                        .opacity(colorScheme == .dark ? 0.36 : 0.14)
+                        .offset(y: radius * 0.65)
+                        .allowsHitTesting(false)
+                        .accessibilityHidden(true)
+                }
+            }
+    }
+}
+#endif
+
 /// Displays an icon from the bundled icon library, falling back to an SF Symbol.
 /// When `showBalloon` is true, wraps the icon in a circular background.
 struct IconImage: View {
@@ -18,12 +57,14 @@ struct IconImage: View {
             if showBalloon {
                 iconContent
                     .frame(width: size, height: size)
+                    .savoriaIconDepth(size: size)
                     .padding(size * 0.175)
                     .background(resolvedBalloonBackgroundColor, in: Circle())
                     .frame(width: balloonSize, height: balloonSize)
             } else {
                 iconContent
                     .frame(width: size, height: size)
+                    .savoriaIconDepth(size: size)
             }
         }
     }

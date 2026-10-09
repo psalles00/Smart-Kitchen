@@ -827,6 +827,7 @@ enum CommandBarHelpers {
                 Image(item.imageName)
                     .resizable()
                     .scaledToFit()
+                    .savoriaIconDepth(size: 60)
                     .frame(height: isHighlighted ? 76 : 48)
                     .offset(x: 8, y: 10)
                     .allowsHitTesting(false)
@@ -891,6 +892,7 @@ enum CommandBarHelpers {
                     .resizable()
                     .scaledToFit()
                     .frame(height: imageHeight)
+                    .savoriaIconDepth(size: imageHeight)
                     .offset(imageOffset)
                     .allowsHitTesting(false)
             }

@@ -677,6 +677,7 @@ struct FullscreenAssistantView: View {
                 Image(systemName: icon)
                     .font(.system(size: 13, weight: .bold))
                     .foregroundStyle(tint)
+                    .savoriaIconDepth(size: 13)
 
                 Text(title)
                     .font(.caption)
@@ -699,6 +700,7 @@ struct FullscreenAssistantView: View {
                         .resizable()
                         .scaledToFit()
                         .frame(height: imageHeight)
+                        .savoriaIconDepth(size: imageHeight)
                         .offset(imageOffset)
                         .allowsHitTesting(false)
                 } else if let trailingSystemImage {
