@@ -258,11 +258,13 @@ struct SettingsView: View {
         Group {
             #if os(iOS)
             settingsForm
+                .onAppear { ActionTrace.shared.begin(page: "settings") }
                 .settingsNavigationTitle(String(localized: "Configurações"))
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .confirmationAction) {
                         Button("OK") { dismiss() }
+                            .accessibilityIdentifier("savoria.settings.close")
                     }
                 }
             #else

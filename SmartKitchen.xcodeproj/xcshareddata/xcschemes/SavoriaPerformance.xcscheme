@@ -21,10 +21,24 @@
                ReferencedContainer = "container:SmartKitchen.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "NO"
+            buildForProfiling = "NO"
+            buildForArchiving = "NO"
+            buildForAnalyzing = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "DBF81EE6CFA0DE90F0B51881"
+               BuildableName = "SavoriaPerformanceUITests.xctest"
+               BlueprintName = "SavoriaPerformanceUITests"
+               ReferencedContainer = "container:SmartKitchen.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction
-      buildConfiguration = "Debug"
+      buildConfiguration = "Release"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES"
@@ -44,9 +58,9 @@
             parallelizable = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "B46753CB8BB8567431863F24"
-               BuildableName = "SavoriaTests.xctest"
-               BlueprintName = "SavoriaTests"
+               BlueprintIdentifier = "DBF81EE6CFA0DE90F0B51881"
+               BuildableName = "SavoriaPerformanceUITests.xctest"
+               BlueprintName = "SavoriaPerformanceUITests"
                ReferencedContainer = "container:SmartKitchen.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -55,9 +69,9 @@
       </CommandLineArguments>
    </TestAction>
    <LaunchAction
-      buildConfiguration = "Release"
-      selectedDebuggerIdentifier = ""
-      selectedLauncherIdentifier = "Xcode.IDEFoundation.Launcher.PosixSpawn"
+      buildConfiguration = "Debug"
+      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
+      selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "NO"
       ignoresPersistentStateOnLaunch = "NO"
@@ -74,11 +88,6 @@
             ReferencedContainer = "container:SmartKitchen.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
-      <CommandLineArguments>
-      </CommandLineArguments>
-      <StoreKitConfigurationFileReference
-         identifier = "../../SmartKitchen/Resources/Configuration.storekit">
-      </StoreKitConfigurationFileReference>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
@@ -96,8 +105,6 @@
             ReferencedContainer = "container:SmartKitchen.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
-      <CommandLineArguments>
-      </CommandLineArguments>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">

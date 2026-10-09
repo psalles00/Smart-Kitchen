@@ -44,6 +44,19 @@ schemes:
     management:
       shared: true
 
+  SavoriaPerformance:
+    build:
+      targets:
+        Savoria: all
+        SavoriaPerformanceUITests: [test]
+    test:
+      config: Release
+      gatherCoverageData: false
+      targets:
+        - SavoriaPerformanceUITests
+    management:
+      shared: true
+
 targets:
   Savoria:
     type: application
@@ -172,6 +185,22 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
         TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Savoria.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Savoria"
         BUNDLE_LOADER: "$(TEST_HOST)"
+
+  SavoriaPerformanceUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: SmartKitchenPerformanceUITests
+    dependencies:
+      - target: Savoria
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.pedrosalles.smartkitchen.sync.performancetests
+        DEVELOPMENT_TEAM: 44K57HQAP9
+        CODE_SIGN_STYLE: Automatic
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: Savoria
 
   SavoriaShareExtension:
     type: app-extension

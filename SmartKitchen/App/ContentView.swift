@@ -2008,6 +2008,9 @@ struct ContentView: View {
 
     private func beginTabSwitch(to newValue: AppTab, source: String) {
         guard newValue != selectedTab else { return }
+        #if os(iOS)
+        ActionTrace.shared.begin(page: newValue.rawValue)
+        #endif
 
         nextTabSwitchTraceID += 1
         let trace = TabSwitchTrace(
@@ -2570,6 +2573,7 @@ private struct TabSwitchTrace: Equatable {
 
 private enum TabSwitchDiagnostics {
     static let isEnabled = ProcessInfo.processInfo.arguments.contains("-PerfAutoTabSwitch")
+        || ProcessInfo.processInfo.arguments.contains("-SavoriaActionTrace")
 }
 
 private struct TabActivationProbe: View {
@@ -2598,6 +2602,9 @@ private struct TabActivationProbe: View {
         }
 
         let elapsed = PerformanceLogger.monotonicMillisSinceLaunch() - trace.startedAtMs
+        #if os(iOS)
+        ActionTrace.shared.mark(page: tab.rawValue, phase: "hostActive")
+        #endif
         PerformanceLogger.event(
             .tabSwitch,
             "content active",

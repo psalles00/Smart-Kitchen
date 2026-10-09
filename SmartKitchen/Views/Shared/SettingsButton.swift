@@ -109,6 +109,7 @@ struct SettingsButton: View {
                     presentAppSettings()
                 }
             }
+            .accessibilityIdentifier("savoria.settings")
         }
     }
 }

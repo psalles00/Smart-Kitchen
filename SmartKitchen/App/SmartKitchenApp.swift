@@ -187,6 +187,9 @@ struct SmartKitchenApp: App {
         PerformanceLogger.installLifecycleObservers()
         PerformanceLogger.installMainThreadHangDetector()
         PerformanceLogger.installCloudKitMirrorObserver()
+        #if os(iOS)
+        ActionTrace.shared.install()
+        #endif
         PerformanceLogger.event(.launch, "SmartKitchenApp.init body end")
     }
 

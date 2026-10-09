@@ -419,6 +419,9 @@ struct DeferredTabPage<Loaded: View, Placeholder: View>: View {
         Group {
             if isReady {
                 loaded()
+                    .onAppear {
+                        ActionTrace.shared.mark(page: tab.rawValue, phase: "loaded")
+                    }
             } else {
                 placeholder()
             }

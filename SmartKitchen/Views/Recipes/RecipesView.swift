@@ -1238,6 +1238,7 @@ private struct RecipesLoadedView: View {
         NavigationLink(value: recipe.id) {
             card
         }
+        .accessibilityIdentifier("savoria.recipe.\(recipe.id)")
         .buttonStyle(.plain)
         .contextMenu {
             recipeContextMenu(for: recipe)
@@ -1280,6 +1281,7 @@ private struct RecipesLoadedView: View {
                 NavigationLink(value: recipe.id) {
                     row
                 }
+                .accessibilityIdentifier("savoria.recipe.\(recipe.id)")
                 .buttonStyle(.plain)
                 .contextMenu {
                     recipeContextMenu(for: recipe)
