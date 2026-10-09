@@ -4,6 +4,26 @@ import XCTest
 
 @MainActor
 final class AIServiceFallbackTests: XCTestCase {
+    func testConfiguredBackendWinsOverAvailableDirectRouterKey() async throws {
+        let backend = AvailableChatBackend()
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [DirectChatURLProtocol.self]
+        var directCalls = 0
+        DirectChatURLProtocol.requestHandler = { _ in
+            directCalls += 1
+            throw URLError(.badURL)
+        }
+        let service = AIService(supabase: backend,
+                                urlSession: URLSession(configuration: configuration),
+                                openRouterKey: { "unused-local-router-key" })
+        let response = try await service.sendNutritionChat(
+            messages: [["role": "user", "content": "arroz"]],
+            tools: nil, apiKey: "", model: "gpt-4.1-mini", acceptLanguage: "pt-BR")
+        XCTAssertFalse(APIConfig.usesLocalOpenRouter)
+        XCTAssertEqual(response.content, "backend-ok")
+        XCTAssertEqual(backend.calls, 1)
+        XCTAssertEqual(directCalls, 0)
+    }
     func testExplicitOpenRouterSkipsUnavailableBackendAndOpenAI() async throws {
         try await assertOpenRouterRouting(preferred: true)
     }
@@ -93,6 +113,19 @@ final class AIServiceFallbackTests: XCTestCase {
         XCTAssertEqual(capturedRequest?.url?.absoluteString, "https://api.openai.com/v1/chat/completions")
         XCTAssertEqual(capturedRequest?.value(forHTTPHeaderField: "Authorization"), "Bearer test-openai-key")
         XCTAssertEqual(capturedRequest?.value(forHTTPHeaderField: "Accept-Language"), "pt-BR")
+    }
+}
+
+@MainActor
+private final class AvailableChatBackend: SupabaseFunctionInvoking {
+    var isConfigured: Bool { true }
+    private(set) var calls = 0
+    func invokeFunctionData(name: String, body: [String: Any], acceptLanguage: String?) async throws -> Data {
+        calls += 1
+        return Data("{\"choices\":[{\"message\":{\"content\":\"backend-ok\"}}]}".utf8)
+    }
+    func invokeFunctionData(name: String, body: Data, contentType: String, acceptLanguage: String?) async throws -> Data {
+        throw URLError(.unsupportedURL)
     }
 }
 

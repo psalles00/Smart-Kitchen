@@ -66,7 +66,9 @@ enum APIConfig {
 
     static var usesLocalOpenRouter: Bool {
         #if DEBUG && os(iOS)
-        return !(DebugOpenRouterCredential.read() ?? "").isEmpty
+        // A configured server owns provider selection and secrets, including fallback.
+        // A local debug key must never bypass that server.
+        return !hasSupabaseCredentials && !(DebugOpenRouterCredential.read() ?? "").isEmpty
         #else
         return false
         #endif
