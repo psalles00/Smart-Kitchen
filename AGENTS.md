@@ -1,4 +1,9 @@
-No final de cada alteração, compile o app e abra a versão modificada no app Simulator usando o iPhone 17 Pro.
+No final de cada alteração no app, compile e instale a versão modificada no iPhone 12 Pro físico de Pedro. Também compile e abra a versão modificada no app Simulator usando o iPhone 17 Pro.
+
+# Commits e Push
+- Sempre crie um commit ao concluir cada alteração relevante, antes de iniciar a próxima alteração relevante. Mantenha cada commit focado e inclua somente as mudanças da tarefa, preservando alterações preexistentes de outras tarefas.
+- Sempre faça push após concluir e validar grandes atualizações. Confirme a branch e o remoto de destino e verifique que o push foi concluído. Nunca use force push nem sobrescreva o histórico remoto.
+- Se commit ou push falhar, informe o bloqueio e preserve o trabalho local. Nunca use comandos destrutivos ou de reversão para resolver a falha.
 
 # Extremamente importante
 - Nunca, jamais, restaure uma versão antiga sem meu consentimento explícito. Se precisar restaurar, me avise e confirme comigo antes de executar a ação.
@@ -20,7 +25,8 @@ No final de cada alteração, compile o app e abra a versão modificada no app S
 # Procedimento e Build
 - Antes de editar: Leia containers, schemas e fluxos de bootstrap.
 - Após finalizar: Valide a integridade dos dados e garanta a capability iCloud (Documents, CloudKit e container iCloud.com.pedrosalles.smartkitchen.sync).
-- Build: Use o simulador iPhone 17 Pro. O app deve abrir automaticamente.
+- Build: Após cada alteração no app, compile para o iPhone 12 Pro físico de Pedro e instale a versão modificada nele, preservando os dados existentes. Confirme o dispositivo de destino, o Bundle ID `com.pedrosalles.smartkitchen.sync`, o Team e o container iCloud antes de instalar. Também compile e abra automaticamente no simulador iPhone 17 Pro.
+- Se o iPhone 12 Pro estiver desconectado, bloqueado ou indisponível, informe o bloqueio. A validação no simulador não substitui a instalação e validação no dispositivo físico. Nunca desinstale o app nem apague dados para viabilizar a instalação.
 - Cuidado com Bundle IDs ao rodar comandos no simulador: O Bundle ID CORRETO do app principal (Savoria) é `com.pedrosalles.smartkitchen.sync`. Existe uma versão antiga fantasma instalada com o bundle ID `com.pedrosalles.smartkitchen`. NUNCA use `com.pedrosalles.smartkitchen` nos comandos `xcrun simctl launch` ou `terminate`, pois isso abrirá a versão velha e estragará os testes do usuário!!
 - Não use `git` como mecanismo de recuperação de build, validação ou troubleshooting.
 - Nunca desinstale o app do simulador para “resolver” problemas sem minha confirmação explícita.
