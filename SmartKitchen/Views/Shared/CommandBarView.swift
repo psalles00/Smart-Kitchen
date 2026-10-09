@@ -1050,7 +1050,7 @@ final class AssistantSuggestionRanker {
         }.map(\.element)
     }
 
-    static func isQuestion(_ query: String) -> Bool {
+    nonisolated static func isQuestion(_ query: String) -> Bool {
         let text = normalize(query)
         if query.contains("?") || query.contains("？") { return true }
         let starters = ["como", "qual", "quais", "onde", "quando", "porque", "por que", "o que", "quanto", "quantos", "quantas", "what", "how", "where", "when", "why", "which", "can", "que", "cual", "donde", "cuando", "comment", "quel", "quelle", "pourquoi", "combien", "wie", "was", "warum", "welche", "come", "quale", "quando", "perche"]
@@ -1058,22 +1058,22 @@ final class AssistantSuggestionRanker {
             || ["どう", "なぜ", "何", "どこ"].contains { text.hasPrefix($0) }
     }
 
-    private static func normalize(_ text: String) -> String {
+    private nonisolated static func normalize(_ text: String) -> String {
         text.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: Locale(identifier: "en_US_POSIX"))
             .lowercased().split(whereSeparator: { $0.isWhitespace }).joined(separator: " ")
     }
 
-    private static func contains(term: String, in text: String) -> Bool {
+    private nonisolated static func contains(term: String, in text: String) -> Bool {
         let tokens = text.components(separatedBy: .alphanumerics.inverted).filter { !$0.isEmpty }
         return term.contains(" ") ? (" " + text + " ").contains(" " + term + " ") : tokens.contains(term) || (term.first?.isASCII == false && text.contains(term))
     }
 
-    private static func keywords(_ text: String) -> Set<String> {
+    private nonisolated static func keywords(_ text: String) -> Set<String> {
         let stopwords: Set<String> = ["com", "de", "da", "do", "das", "dos", "para", "uma", "um", "the", "with", "and", "con", "avec", "und", "mit"]
         return Set(normalize(text).components(separatedBy: .alphanumerics.inverted).filter { $0.count >= 3 && !stopwords.contains($0) && Double($0) == nil })
     }
 
-    private static func lengthBucket(_ text: String) -> Int {
+    private nonisolated static func lengthBucket(_ text: String) -> Int {
         let count = text.split(whereSeparator: { $0.isWhitespace }).count
         return count >= 12 || text.count > 100 ? 2 : (count >= 4 ? 1 : 0)
     }
