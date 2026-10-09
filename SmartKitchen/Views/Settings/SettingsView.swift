@@ -2,6 +2,105 @@ import StoreKit
 import SwiftUI
 import SwiftData
 
+#if DEBUG && os(iOS)
+private struct SavoriaDebugCenter: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(SubscriptionManager.self) private var manager
+    @State private var gate = FeatureGate.shared
+    @State private var previewStep: OnboardingStep?
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Picker("Plano de teste", selection: Binding(
+                        get: { manager.debugMode }, set: { manager.setDebugMode($0) }
+                    )) {
+                        ForEach(SubscriptionManager.DebugMode.allCases) { mode in
+                            Text(mode.title).tag(mode)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .accessibilityIdentifier("debug-plan-mode")
+                    LabeledContent("Assinatura real", value: manager.storeIsSubscribed
+                                   ? String(localized: "Premium") : String(localized: "Básico"))
+                } header: {
+                    Text("Onboarding e planos")
+                } footer: {
+                    Text("A simulação não realiza compras nem altera sua assinatura na App Store.")
+                }
+
+                Section {
+                    Button("Abrir onboarding") { previewStep = .welcome }
+                        .accessibilityIdentifier("debug-open-onboarding")
+                    Button("Abrir preparação") { previewStep = .preparing }
+                        .accessibilityIdentifier("debug-open-preparing")
+                    Button("Abrir paywall") { previewStep = .paywall }
+                        .accessibilityIdentifier("debug-open-paywall")
+                } header: {
+                    Text("Prévias de telas")
+                } footer: {
+                    Text("As prévias não salvam escolhas, enviam respostas ou realizam compras.")
+                }
+
+                Section {
+                    Picker("Contadores de teste", selection: Binding(
+                        get: { gate.debugUsageMode }, set: { gate.setDebugUsageMode($0) }
+                    )) {
+                        ForEach(FeatureGate.DebugUsageMode.allCases) { mode in
+                            Text(mode.title).tag(mode)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .accessibilityIdentifier("debug-usage-mode")
+                    ForEach(FeatureGate.Feature.allCases, id: \.rawValue) { feature in
+                        HStack {
+                            LabeledContent(feature.displayName, value: gate.counterLabel(feature))
+                            if gate.debugUsageMode != .actual {
+                                Button { gate.consume(feature) } label: {
+                                    Image(systemName: "plus.circle")
+                                }
+                                .buttonStyle(.borderless)
+                                .accessibilityLabel("Consumir um uso de teste")
+                                .accessibilityValue(feature.displayName)
+                                .disabled(gate.isPremium || !gate.canUse(feature))
+                            }
+                        }
+                    }
+                } header: {
+                    Text("Limites de uso")
+                } footer: {
+                    Text("Os contadores simulados preservam os reais. Requisições de IA continuam usando o serviço real.")
+                }
+
+                Section("Diagnósticos") {
+                    LabeledContent("Versão", value: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "")
+                    LabeledContent("Produtos carregados", value: String(manager.products.count))
+                    LabeledContent("iCloud", value: CloudSyncService.shared.syncEnabled
+                                   ? String(localized: "Ativo") : String(localized: "Inativo"))
+                    Button("Voltar ao estado real") {
+                        manager.setDebugMode(.appStore)
+                        gate.setDebugUsageMode(.actual)
+                    }
+                    .accessibilityIdentifier("debug-use-real-state")
+                }
+            }
+            .navigationTitle("Central de Debug")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Fechar") { dismiss() }
+                }
+            }
+        }
+        .fullScreenCover(item: $previewStep) { step in
+            OnboardingFlowView(isPreview: true, initialStep: step) { previewStep = nil }
+        }
+        .accessibilityIdentifier("savoria-debug-center")
+    }
+}
+#endif
+
 enum SettingsDestination: String, CaseIterable, Identifiable, Hashable {
     case iCloud
     case familySharing
@@ -91,6 +190,9 @@ extension EnvironmentValues {
 
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
+    #if DEBUG && os(iOS)
+    @State private var showDebugCenter = false
+    #endif
     #if os(macOS)
     @State private var selectedMacDestination: SettingsDestination? = .iCloud
     #endif
@@ -132,6 +234,9 @@ struct SettingsView: View {
                 }
             #endif
         }
+        #if DEBUG && os(iOS)
+        .sheet(isPresented: $showDebugCenter) { SavoriaDebugCenter() }
+        #endif
     }
 
     private var settingsForm: some View {
@@ -140,6 +245,14 @@ struct SettingsView: View {
             Section {
                 PlanCardView()
             }
+            #if DEBUG && os(iOS)
+            Section {
+                Button { showDebugCenter = true } label: {
+                    SettingsRowLabel("Central de Debug", systemImage: "ladybug")
+                }
+                .accessibilityIdentifier("settings-debug-center")
+            }
+            #endif
 
             // MARK: - Conta e Sincronização
             Section {

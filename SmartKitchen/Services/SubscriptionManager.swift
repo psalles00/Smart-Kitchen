@@ -30,7 +30,35 @@ final class SubscriptionManager {
     private(set) var purchaseState: PurchaseState = .idle
 
     /// True if the user currently has a valid entitlement to either plan.
-    private(set) var isSubscribed: Bool = false
+    private(set) var storeIsSubscribed: Bool = false
+    var isSubscribed: Bool {
+        #if DEBUG && os(iOS)
+        if debugMode != .appStore { return debugMode == .premium }
+        #endif
+        return storeIsSubscribed
+    }
+    #if DEBUG && os(iOS)
+    enum DebugMode: String, CaseIterable, Identifiable {
+        case appStore, basic, premium
+        var id: String { rawValue }
+        var title: String {
+            switch self {
+            case .appStore: String(localized: "App Store")
+            case .basic: String(localized: "Básico")
+            case .premium: String(localized: "Premium")
+            }
+        }
+    }
+    private(set) var debugMode: DebugMode
+    private let debugDefaults: UserDefaults
+    private static let debugModeKey = "Savoria.debug.subscriptionMode"
+
+    func setDebugMode(_ mode: DebugMode) {
+        debugMode = mode
+        debugDefaults.set(mode.rawValue, forKey: Self.debugModeKey)
+        NotificationCenter.default.post(name: .subscriptionStateChanged, object: nil)
+    }
+    #endif
     /// Identifier of the active product, if any.
     private(set) var activeProductID: String? = nil
     /// Expiration date of the active subscription, if any.
@@ -42,7 +70,12 @@ final class SubscriptionManager {
 
     nonisolated(unsafe) private var updatesTask: Task<Void, Never>? = nil
 
-    init() {
+    init(defaults: UserDefaults = .standard, observesTransactions: Bool = true) {
+        #if DEBUG && os(iOS)
+        debugDefaults = defaults
+        debugMode = DebugMode(rawValue: defaults.string(forKey: Self.debugModeKey) ?? "") ?? .appStore
+        #endif
+        guard observesTransactions else { return }
         // Listen for transactions that arrive outside of an explicit purchase
         // call (renewals, family-sharing changes, etc.).
         updatesTask = Task.detached { [weak self] in
@@ -91,6 +124,7 @@ final class SubscriptionManager {
         for await result in Transaction.currentEntitlements {
             if case .verified(let tx) = result,
                tx.productType == .autoRenewable,
+               [Self.annualProductID, Self.monthlyProductID].contains(tx.productID),
                tx.revocationDate == nil,
                (tx.expirationDate ?? .distantFuture) > .now {
                 subscribed = true
@@ -99,8 +133,8 @@ final class SubscriptionManager {
                 break
             }
         }
-        let changed = (self.isSubscribed != subscribed) || (self.activeProductID != activeID)
-        self.isSubscribed = subscribed
+        let changed = (self.storeIsSubscribed != subscribed) || (self.activeProductID != activeID)
+        self.storeIsSubscribed = subscribed
         self.activeProductID = activeID
         self.expirationDate = expiry
         if changed {
@@ -113,6 +147,12 @@ final class SubscriptionManager {
     /// Initiates a purchase. Returns `true` on a successful, verified buy.
     @discardableResult
     func purchase(_ product: Product) async -> Bool {
+        #if DEBUG && os(iOS)
+        guard debugMode == .appStore else {
+            purchaseState = .failed(String(localized: "Volte ao modo App Store para realizar uma compra real."))
+            return false
+        }
+        #endif
         purchaseState = .purchasing
         do {
             let result = try await product.purchase()
@@ -147,7 +187,7 @@ final class SubscriptionManager {
     /// entitlements. Calling `AppStore.sync()` requires user authentication.
     func restore() async {
         isRestoring = true
-        let wasSubscribed = isSubscribed
+        let wasSubscribed = storeIsSubscribed
         do {
             try await AppStore.sync()
         } catch {
@@ -157,9 +197,9 @@ final class SubscriptionManager {
         }
         await refreshEntitlements()
         isRestoring = false
-        if isSubscribed && !wasSubscribed {
+        if storeIsSubscribed && !wasSubscribed {
             lastRestoreMessage = String(localized: "Assinatura restaurada com sucesso.")
-        } else if isSubscribed {
+        } else if storeIsSubscribed {
             lastRestoreMessage = String(localized: "Sua assinatura já estava ativa.")
         } else {
             lastRestoreMessage = String(localized: "Nenhuma compra anterior encontrada.")

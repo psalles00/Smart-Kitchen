@@ -12,6 +12,7 @@ import StoreKit
 struct PaywallStepView: View {
     @Bindable var state: OnboardingState
     let onFinish: (_ subscribed: Bool) -> Void
+    var isPreview: Bool = false
 
     @State private var manager = SubscriptionManager()
     @State private var selectedID: String = SubscriptionManager.annualProductID
@@ -58,7 +59,7 @@ struct PaywallStepView: View {
         }
         .task {
             state.selectedPlanID = selectedID
-            await manager.loadProducts()
+            if !isPreview { await manager.loadProducts() }
         }
         .alert(String(localized: "Erro na compra"), isPresented: $showingErrorAlert) {
             Button("OK", role: .cancel) {}
@@ -467,8 +468,8 @@ struct PaywallStepView: View {
                 .contentShape(Capsule(style: .continuous))
             }
             .buttonStyle(.plain)
-            .disabled(manager.products.isEmpty)
-            .opacity(manager.products.isEmpty ? 0.6 : 1)
+            .disabled(!isPreview && manager.products.isEmpty)
+            .opacity(!isPreview && manager.products.isEmpty ? 0.6 : 1)
             .sensoryFeedback(.impact(weight: .medium), trigger: manager.purchaseState.isSuccess)
 
             HStack {
@@ -523,6 +524,7 @@ struct PaywallStepView: View {
     }
 
     private func handleBuy() {
+        guard !isPreview else { onFinish(true); return }
         guard let product = manager.products[selectedID] else { return }
         Task {
             let success = await manager.purchase(product)
@@ -536,6 +538,7 @@ struct PaywallStepView: View {
     }
 
     private func handleRestore() {
+        guard !isPreview else { return }
         Task {
             await manager.restore()
             if manager.isSubscribed { onFinish(true) }

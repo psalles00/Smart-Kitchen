@@ -25,9 +25,14 @@ struct OnboardingFlowView: View {
     private var cloudSync = CloudSyncService.shared
 
     let onFinish: () -> Void
+    let isPreview: Bool
 
-    init(onFinish: @escaping () -> Void) {
+    init(isPreview: Bool = false, initialStep: OnboardingStep = .welcome, onFinish: @escaping () -> Void) {
         self.onFinish = onFinish
+        self.isPreview = isPreview
+        let initialState = OnboardingState()
+        initialState.stepIndex = initialStep.rawValue
+        _state = State(initialValue: initialState)
     }
 
     var body: some View {
@@ -53,6 +58,16 @@ struct OnboardingFlowView: View {
             }
         }
         .preferredColorScheme(nil) // follow system
+        .overlay(alignment: .topTrailing) {
+            if isPreview {
+                Button("Fechar prévia", action: onFinish)
+                    .font(.caption.weight(.semibold))
+                    .padding(10)
+                    .background(.regularMaterial, in: Capsule())
+                    .padding(.trailing, 12)
+                    .accessibilityIdentifier("debug-close-onboarding-preview")
+            }
+        }
         .animation(.spring(response: 0.55, dampingFraction: 0.82), value: state.stepIndex)
         .alert(restorePromptTitle, isPresented: $showRestorePrompt) {
             Button(String(localized: "Continuar"), role: .cancel) {}
@@ -143,11 +158,11 @@ struct OnboardingFlowView: View {
         case .goalProjection:
             GoalProjectionStepView(state: state, onContinue: advance)
         case .appReview:
-            AppReviewStepView(state: state, onContinue: advance)
+            AppReviewStepView(state: state, onContinue: advance, isPreview: isPreview)
         case .paywall:
             PaywallStepView(state: state, onFinish: { subscribed in
                 finishOnboarding(subscribed: subscribed)
-            })
+            }, isPreview: isPreview)
         }
     }
 
@@ -205,6 +220,7 @@ struct OnboardingFlowView: View {
     }
 
     private func restorePurchasesFromWelcome() {
+        guard !isPreview else { return }
         guard !subscriptionManager.isRestoring else { return }
 
         Task { @MainActor in
@@ -231,6 +247,7 @@ struct OnboardingFlowView: View {
         skippingSetup: Bool = false,
         enableICloudAfterDismiss: Bool = false
     ) {
+        guard !isPreview else { onFinish(); return }
         if subscribed && state.selectedPlanID == nil {
             state.selectedPlanID = subscriptionManager.activeProductID
         }
@@ -267,6 +284,7 @@ struct OnboardingFlowView: View {
     }
 
     private func commitOnboardingChoices(subscribed: Bool) {
+        guard !isPreview else { return }
         guard !didCommitChoices else { return }
         didCommitChoices = true
 
@@ -608,6 +626,7 @@ private struct AppReviewStepView: View {
 
     @Bindable var state: OnboardingState
     let onContinue: () -> Void
+    var isPreview: Bool = false
 
     @State private var showContent = false
     @State private var showStars = false
@@ -824,7 +843,7 @@ private struct AppReviewStepView: View {
                 showFootnote = true
             }
 
-            guard !state.didRequestAppStoreReview else { return }
+            guard !isPreview, !state.didRequestAppStoreReview else { return }
             state.didRequestAppStoreReview = true
 
             try? await Task.sleep(nanoseconds: 450_000_000)

@@ -69,14 +69,39 @@ final class FeatureGate {
     /// Live entitlement source. Should be set once at app launch.
     var subscriptionManager: SubscriptionManager?
 
-    private let defaults = UserDefaults.standard
+    private let defaults: UserDefaults
+    init(defaults: UserDefaults = .standard) { self.defaults = defaults }
 
-    private init() {}
+    #if DEBUG && os(iOS)
+    enum DebugUsageMode: String, CaseIterable, Identifiable {
+        case actual, available, exhausted
+        var id: String { rawValue }
+        var title: String {
+            switch self {
+            case .actual: String(localized: "Reais")
+            case .available: String(localized: "Disponíveis")
+            case .exhausted: String(localized: "Esgotados")
+            }
+        }
+    }
+    private(set) var debugUsageMode: DebugUsageMode = .actual
+    private var debugUsage: [Feature: Int] = [:]
+
+    func setDebugUsageMode(_ mode: DebugUsageMode) {
+        debugUsageMode = mode
+        debugUsage = Dictionary(uniqueKeysWithValues: Feature.allCases.map {
+            ($0, mode == .exhausted ? $0.freeLimit : 0)
+        })
+    }
+    #endif
 
     // MARK: - Soft gates (per-day)
 
     /// Current usage count for today.
     func usage(of feature: Feature) -> Int {
+        #if DEBUG && os(iOS)
+        if debugUsageMode != .actual { return debugUsage[feature, default: 0] }
+        #endif
         rolloverIfNeeded()
         return defaults.integer(forKey: counterKey(for: feature))
     }
@@ -91,6 +116,12 @@ final class FeatureGate {
     /// On premium, this is a no-op (counters aren't tracked).
     func consume(_ feature: Feature) {
         guard !isPremium else { return }
+        #if DEBUG && os(iOS)
+        if debugUsageMode != .actual {
+            debugUsage[feature, default: 0] += 1
+            return
+        }
+        #endif
         rolloverIfNeeded()
         let current = defaults.integer(forKey: counterKey(for: feature))
         defaults.set(current + 1, forKey: counterKey(for: feature))
@@ -128,18 +159,10 @@ final class FeatureGate {
 
     /// Tied to active StoreKit entitlement.
     ///
-    /// DEBUG / Simulator override: when running in the iOS Simulator, the
-    /// StoreKit "Sign in with Apple Account" prompt cannot be completed
-    /// (pressing OK is a no-op), so `AppStore.sync()` never returns a valid
-    /// transaction. To unblock manual testing of premium-gated features in
-    /// the simulator, we treat the user as subscribed by default. Real
-    /// devices and Release builds always go through StoreKit.
+    /// DEBUG uses the explicit subscription simulation. Release always uses
+    /// verified StoreKit entitlements, including in the simulator.
     var isPremium: Bool {
-        #if targetEnvironment(simulator)
-        return true
-        #else
         return subscriptionManager?.isSubscribed ?? false
-        #endif
     }
 
     /// Generic hard-feature accessor.

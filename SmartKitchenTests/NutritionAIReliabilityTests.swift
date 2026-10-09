@@ -1,6 +1,56 @@
 import XCTest
 @testable import Savoria
 
+#if DEBUG && os(iOS)
+@MainActor
+final class SavoriaDebugTests: XCTestCase {
+    func testSimulatedPlansPersistLocallyWithoutChangingEntitlement() {
+        let defaults = UserDefaults(suiteName: "SavoriaDebugTests.\(UUID().uuidString)")!
+        let manager = SubscriptionManager(defaults: defaults, observesTransactions: false)
+        XCTAssertEqual(manager.debugMode, .appStore)
+        manager.setDebugMode(.premium)
+        XCTAssertTrue(manager.isSubscribed)
+        XCTAssertFalse(manager.storeIsSubscribed)
+        XCTAssertNil(manager.activeProductID)
+        XCTAssertNil(manager.expirationDate)
+        let reopened = SubscriptionManager(defaults: defaults, observesTransactions: false)
+        XCTAssertEqual(reopened.debugMode, .premium)
+        reopened.setDebugMode(.basic)
+        XCTAssertFalse(reopened.isSubscribed)
+        reopened.setDebugMode(.appStore)
+        XCTAssertEqual(reopened.isSubscribed, reopened.storeIsSubscribed)
+    }
+
+    func testSimulatedCountersPreserveActualUsageAndDoNotCallAI() {
+        let defaults = UserDefaults(suiteName: "SavoriaDebugTests.\(UUID().uuidString)")!
+        let manager = SubscriptionManager(defaults: defaults, observesTransactions: false)
+        let gate = FeatureGate(defaults: defaults)
+        gate.subscriptionManager = manager
+        manager.setDebugMode(.basic)
+        gate.consume(.nutritionAI)
+        XCTAssertEqual(gate.usage(of: .nutritionAI), 1)
+        let baseline = defaults.dictionaryRepresentation().filter { $0.key.hasPrefix("featureGate.") }
+        gate.setDebugUsageMode(.exhausted)
+        for feature in FeatureGate.Feature.allCases { XCTAssertFalse(gate.canUse(feature)) }
+        manager.setDebugMode(.premium)
+        for feature in FeatureGate.Feature.allCases { XCTAssertTrue(gate.canUse(feature)) }
+        gate.consume(.nutritionAI)
+        XCTAssertEqual(gate.usage(of: .nutritionAI), 2)
+        manager.setDebugMode(.basic)
+        gate.setDebugUsageMode(.available)
+        gate.consume(.nutritionAI)
+        gate.consume(.nutritionAI)
+        XCTAssertFalse(gate.canUse(.nutritionAI))
+        gate.setDebugUsageMode(.actual)
+        XCTAssertEqual(gate.usage(of: .nutritionAI), 1)
+        XCTAssertEqual(defaults.dictionaryRepresentation().filter { $0.key.hasPrefix("featureGate.") } as NSDictionary, baseline as NSDictionary)
+        XCTAssertFalse(gate.canShareWithFamily)
+        manager.setDebugMode(.premium)
+        XCTAssertTrue(gate.canShareWithFamily)
+    }
+}
+#endif
+
 @MainActor
 final class NutritionAIReliabilityTests: XCTestCase {
     func testUSDAReferenceMealsStayInsideExactTolerance() async throws {

@@ -14,6 +14,11 @@ struct PlanCardView: View {
     private var isPremium: Bool { subscriptionManager.isSubscribed }
 
     private var planLabel: String {
+        #if DEBUG && os(iOS)
+        if subscriptionManager.debugMode != .appStore {
+            return subscriptionManager.debugMode.title
+        }
+        #endif
         guard let id = subscriptionManager.activeProductID else {
             return String(localized: "Free")
         }
@@ -27,6 +32,9 @@ struct PlanCardView: View {
     }
 
     private var subtitle: String? {
+        #if DEBUG && os(iOS)
+        if subscriptionManager.debugMode != .appStore { return String(localized: "Plano simulado") }
+        #endif
         guard isPremium, let date = subscriptionManager.expirationDate else { return nil }
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
@@ -36,6 +44,12 @@ struct PlanCardView: View {
 
     var body: some View {
         Button {
+            #if DEBUG && os(iOS)
+            if subscriptionManager.debugMode != .appStore {
+                showPaywall = true
+                return
+            }
+            #endif
             if isPremium {
                 showManage = true
             } else {
@@ -105,4 +119,3 @@ struct PlanCardView: View {
         #endif
     }
 }
-
