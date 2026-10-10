@@ -13,6 +13,8 @@ struct NutritionDashboardView: View {
     var onDeleteEntry: (FoodEntry) -> Void = { _ in }
     var onPickEntry: (NutritionEntrySheet) -> Void = { _ in }
     var onOpenProgress: () -> Void = {}
+    /// Built once by the iOS data host, reused by every day/calendar lookup.
+    var historyIndex: DayHistoryIndex<FoodEntry, NutritionDayLog>? = nil
 
     @State private var isMonthExpanded = false
     @State private var isPrimaryActionHighlighted = false
@@ -21,7 +23,8 @@ struct NutritionDashboardView: View {
     private var calendar: Calendar { .current }
 
     private var entriesForSelectedDate: [FoodEntry] {
-        allEntries.filter { calendar.isDate($0.timestamp, inSameDayAs: selectedDate) }
+        historyIndex?.entries(on: selectedDate)
+            ?? allEntries.filter { calendar.isDate($0.timestamp, inSameDayAs: selectedDate) }
     }
 
     private var caloriesConsumed: Int {
@@ -65,7 +68,8 @@ struct NutritionDashboardView: View {
     }
 
     private func caloriesFor(_ date: Date) -> Int {
-        allEntries
+        if let historyIndex { return historyIndex.calories(on: date) }
+        return allEntries
             .filter { calendar.isDate($0.timestamp, inSameDayAs: date) }
             .reduce(0) { $0 + $1.calories }
     }
@@ -73,8 +77,8 @@ struct NutritionDashboardView: View {
     private func stateFor(_ date: Date) -> NutritionDayState {
         NutritionDayLogStore.state(
             for: date,
-            entries: allEntries,
-            logs: allDayLogs,
+            entries: historyIndex?.entries(on: date) ?? allEntries,
+            logs: historyIndex.map { $0.log(on: date).map { [$0] } ?? [] } ?? allDayLogs,
             calendar: calendar
         )
     }

@@ -298,14 +298,13 @@ struct SmartKitchenApp: App {
                     if isLeavingForeground {
                         let ctx = cloudSync.container.mainContext
                         let hasChanges = ctx.hasChanges
-                        let inserted = ctx.insertedModelsArray.count
-                        let changed = ctx.changedModelsArray.count
-                        let deleted = ctx.deletedModelsArray.count
-                        PerformanceLogger.event(
-                            .cloudSync,
-                            "scene-leave save inspection",
-                            metadata: "hasChanges=\(hasChanges) inserted=\(inserted) changed=\(changed) deleted=\(deleted)"
-                        )
+                        if PerformanceLogger.isEnabled {
+                            PerformanceLogger.event(
+                                .cloudSync,
+                                "scene-leave save inspection",
+                                metadata: "hasChanges=\(hasChanges) inserted=\(ctx.insertedModelsArray.count) changed=\(ctx.changedModelsArray.count) deleted=\(ctx.deletedModelsArray.count)"
+                            )
+                        }
                         if hasChanges {
                             scheduleSceneLeaveSave(
                                 reason: "\(oldValue)->\(newValue)",
@@ -378,8 +377,13 @@ struct SmartKitchenApp: App {
 
     @MainActor
     private func scheduleForegroundResumeWork() {
-        foregroundResumeTraceCounter += 1
-        let traceID = "fg-\(foregroundResumeTraceCounter)"
+        let traceID: String
+        if PerformanceLogger.isEnabled {
+            foregroundResumeTraceCounter += 1
+            traceID = "fg-\(foregroundResumeTraceCounter)"
+        } else {
+            traceID = "foreground"
+        }
 
         let didClaimSharedImport = PerformanceLogger.measure(.scenePhase, "claimPendingFromBridge", metadata: "trace=\(traceID)") {
             SharedImportInbox.shared.claimPendingFromBridge()

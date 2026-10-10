@@ -54,6 +54,7 @@ private struct NutrientsSkeletonPage: View {
 #endif
 
 private struct NutrientsLoadedView: View {
+    @Environment(\.calendar) private var calendar
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scrollToTopTrigger) private var scrollToTopTrigger
 
@@ -186,7 +187,8 @@ private struct NutrientsLoadedView: View {
                         onPickEntry: { sheet in
                             activeEntrySheet = sheet
                         },
-                        onOpenProgress: { pushProgress = true }
+                        onOpenProgress: { pushProgress = true },
+                        historyIndex: dashboardHistoryIndex
                     )
                 } else {
                     emptyState
@@ -240,6 +242,17 @@ private struct NutrientsLoadedView: View {
         .navigationDestination(isPresented: $pushWeightTracker) {
             WeightTrackerView()
         }
+    }
+
+    private var dashboardHistoryIndex: DayHistoryIndex<FoodEntry, NutritionDayLog>? {
+        #if os(iOS)
+        return DayHistoryIndex(
+            entries: allEntries, logs: allDayLogs, calendar: calendar,
+            timestamp: { $0.timestamp }, calories: { $0.calories }, logDate: { $0.dayStart }
+        )
+        #else
+        return nil
+        #endif
     }
 
     // MARK: - Computed

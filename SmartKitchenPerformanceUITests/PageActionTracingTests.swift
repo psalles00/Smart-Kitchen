@@ -13,7 +13,7 @@ final class PageActionTracingTests: XCTestCase {
         for cycle in 0..<3 {
             for name in ["Savoria", "Listas", "Receitas", "Nutrição", "Buscar"] {
                 XCTContext.runActivity(named: "\(cycle): \(name), scroll and foreground") { activity in
-                    let tab = tabs.buttons[name]
+                    let tab = tabs.buttons[name].firstMatch
                     XCTAssertTrue(tab.exists)
                     tab.tap()
                     XCTAssertTrue(tab.isSelected)
@@ -31,10 +31,18 @@ final class PageActionTracingTests: XCTestCase {
                         app.buttons["Voltar para hoje"].tap()
                         app.buttons["Recolher calendário"].tap()
                     }
+                    if app.keyboards.firstMatch.exists { app.swipeUp() }
+                    // The app's pull-to-search gesture can intentionally change
+                    // tabs during scrolling. Preserve the actual page before Home.
+                    let selectedName = tabs.buttons.allElementsBoundByIndex.first(where: \.isSelected)?.label
+                    XCTAssertNotNil(selectedName)
                     XCUIDevice.shared.press(.home)
                     app.activate()
-                    XCTAssertTrue(tab.waitForExistence(timeout: 10))
-                    XCTAssertTrue(tab.isSelected, "Foreground must preserve page selection.")
+                    if let selectedName {
+                        let selected = tabs.buttons[selectedName].firstMatch
+                        XCTAssertTrue(selected.waitForExistence(timeout: 10))
+                        XCTAssertTrue(selected.isSelected, "Foreground must preserve page selection.")
+                    }
                     if cycle == 0 {
                         let attachment = XCTAttachment(screenshot: app.screenshot())
                         attachment.lifetime = .keepAlways
@@ -43,7 +51,7 @@ final class PageActionTracingTests: XCTestCase {
                 }
             }
         }
-        tabs.buttons["Receitas"].tap()
+        tabs.buttons["Receitas"].firstMatch.tap()
         let recipe = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "savoria.recipe.")).firstMatch
         if recipe.exists {
             recipe.tap()
@@ -51,7 +59,7 @@ final class PageActionTracingTests: XCTestCase {
             app.activate()
             app.navigationBars.buttons.firstMatch.tap()
         }
-        tabs.buttons["Savoria"].tap()
+        tabs.buttons["Savoria"].firstMatch.tap()
         app.buttons["savoria.settings"].tap()
         XCTAssertTrue(app.buttons["savoria.settings.close"].waitForExistence(timeout: 10))
         // Read-only destinations; never toggle sync or perform backup/restore.

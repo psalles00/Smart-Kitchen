@@ -20,6 +20,17 @@ import AppKit
 /// easy to grep the log for slow steps without opening Instruments.
 enum PerformanceLogger {
     static let subsystem = "com.pedrosalles.smartkitchen.perf"
+    /// Diagnostics must not create timer wakeups or format metadata in normal iOS use.
+    static let isEnabled: Bool = {
+        #if os(iOS)
+        let arguments = ProcessInfo.processInfo.arguments
+        return arguments.contains("-SavoriaActionTrace")
+            || arguments.contains("-PerfAutoTabSwitch")
+            || arguments.contains("-SavoriaPerformanceLogs")
+        #else
+        return true
+        #endif
+    }()
 
     enum Category: String {
         case launch       = "Launch"
@@ -52,6 +63,7 @@ enum PerformanceLogger {
         _ message: @autoclosure () -> String,
         metadata: @autoclosure () -> String? = nil
     ) {
+        guard isEnabled else { return }
         let timestamp = monotonicMillisSinceLaunch()
         let meta = metadata()
         let body = meta.map { "\(message()) | \($0)" } ?? message()
@@ -78,6 +90,7 @@ enum PerformanceLogger {
         metadata: @autoclosure () -> String? = nil,
         _ block: () throws -> T
     ) rethrows -> T {
+        guard isEnabled else { return try block() }
         let signposter = category.signposter
         let state = signposter.beginInterval(name)
         let start = DispatchTime.now()
@@ -108,6 +121,7 @@ enum PerformanceLogger {
     /// lifecycle event the OS posts at us (not just the SwiftUI scene phase).
     /// Call once from `SmartKitchenApp.init` after the app is up.
     static func installLifecycleObservers() {
+        guard isEnabled else { return }
         _ = lifecycleInstallToken
     }
 
@@ -153,6 +167,7 @@ enum PerformanceLogger {
     // background queues but still pin main-thread locks on the SwiftData
     // model context.
     static func installCloudKitMirrorObserver() {
+        guard isEnabled else { return }
         _ = cloudKitMirrorInstallToken
     }
 
@@ -199,6 +214,7 @@ enum PerformanceLogger {
     /// only on the first call. Cheap (one async per `pollIntervalMs` to main
     /// plus a timer tick on a utility queue).
     static func installMainThreadHangDetector(thresholdMs: Int = 200, pollIntervalMs: Int = 100) {
+        guard isEnabled else { return }
         hangStateLock.lock()
         let already = hangDetectorTimer != nil
         hangStateLock.unlock()

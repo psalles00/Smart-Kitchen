@@ -85,13 +85,16 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
     let startsWithInfoCollapsed: Bool
     let backgroundOverride: AnyView?
 
+    #if !os(iOS)
     @Environment(\.backgroundTheme) private var backgroundTheme
+    #endif
     @Environment(\.usesGlobalPageBackground) private var usesGlobalPageBackground
-    @Environment(\.visiblePageTheme) private var visiblePageTheme
     @Environment(\.searchOverlay) private var searchOverlay
     @EnvironmentObject private var searchBarState: SearchBarState
 
+    #if !os(iOS)
     private var effectiveBgTheme: PageTheme { backgroundTheme ?? pageTheme }
+    #endif
 
     private let headerHeight: CGFloat = ExpandedPageHeaderMetrics.iosTitleHeight
     private let cornerRadius: CGFloat = 24
@@ -347,9 +350,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
             backgroundOverride
         } else {
             #if os(iOS)
-            ThemedBackgroundView(theme: effectiveBgTheme,
-                                 animates: visiblePageTheme == nil || visiblePageTheme == pageTheme)
-                .animation(.easeInOut(duration: 0.35), value: effectiveBgTheme)
+            ActivePageBackground(pageTheme: pageTheme)
             #else
             ZStack {
                 themedBackground(for: backgroundFromTheme)
@@ -390,25 +391,38 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
 
 // MARK: - Deferred Tab Loading
 
+#if os(iOS)
+/// Theme/visibility changes belong to the background leaf, not to page content
+/// builders that group lists or walk the nutrition history.
+private struct ActivePageBackground: View {
+    let pageTheme: PageTheme
+    @Environment(\.backgroundTheme) private var backgroundTheme
+    @Environment(\.visiblePageTheme) private var visiblePageTheme
+
+    var body: some View {
+        let theme = backgroundTheme ?? pageTheme
+        ThemedBackgroundView(theme: theme,
+                             animates: visiblePageTheme == nil || visiblePageTheme == pageTheme)
+            .animation(.easeInOut(duration: 0.35), value: theme)
+    }
+}
+#endif
+
 struct DeferredTabPage<Loaded: View, Placeholder: View>: View {
     let tab: AppTab
-    var delay: Duration = .milliseconds(320)
     @ViewBuilder var loaded: () -> Loaded
     @ViewBuilder var placeholder: () -> Placeholder
 
     @Environment(\.activeAppTab) private var activeAppTab
     @State private var isReady = false
-    @State private var loadTask: Task<Void, Never>?
 
     init(
         tab: AppTab,
-        delay: Duration = .milliseconds(320),
         initiallyReady: Bool = false,
         @ViewBuilder loaded: @escaping () -> Loaded,
         @ViewBuilder placeholder: @escaping () -> Placeholder
     ) {
         self.tab = tab
-        self.delay = delay
         self.loaded = loaded
         self.placeholder = placeholder
         _isReady = State(initialValue: initiallyReady)
@@ -434,10 +448,6 @@ struct DeferredTabPage<Loaded: View, Placeholder: View>: View {
         .onChange(of: activeAppTab) { _, newValue in
             updateReadiness(for: newValue)
         }
-        .onDisappear {
-            loadTask?.cancel()
-            loadTask = nil
-        }
         #else
         loaded()
         #endif
@@ -446,19 +456,12 @@ struct DeferredTabPage<Loaded: View, Placeholder: View>: View {
     #if os(iOS)
     private func updateReadiness(for activeTab: AppTab?) {
         guard activeTab == tab else {
-            loadTask?.cancel()
-            loadTask = nil
             return
         }
-
-        guard !isReady, loadTask == nil else { return }
-
-        loadTask = Task { @MainActor in
-            try? await Task.sleep(for: delay)
-            guard !Task.isCancelled else { return }
-            isReady = true
-            loadTask = nil
-        }
+        // Prepare content as soon as selected; retain it across tab/scene changes.
+        // A fixed sleep made even an otherwise fast first visit feel unresponsive.
+        guard !isReady else { return }
+        isReady = true
     }
     #endif
 }

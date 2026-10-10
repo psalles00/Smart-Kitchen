@@ -71,6 +71,7 @@ final class ActionTrace: NSObject {
 
     func mark(page: String, phase: String) {
         guard Self.enabled, events.count < 256 else { return }
+        if phase == "loaded" || phase == "hostActive" { self.page = page }
         events.append(Event(sequence: sequence, uptime: ProcessInfo.processInfo.systemUptime, page: page, phase: phase))
         Self.signposter.emitEvent("action phase", "sequence=\(self.sequence) page=\(page, privacy: .public) phase=\(phase, privacy: .public)")
     }

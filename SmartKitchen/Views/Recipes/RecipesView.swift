@@ -33,7 +33,7 @@ enum RecipeSortOption: String, CaseIterable {
 struct RecipesView: View {
     var body: some View {
         #if os(iOS)
-        DeferredTabPage(tab: .recipes, delay: .milliseconds(80)) {
+        DeferredTabPage(tab: .recipes) {
             RecipesLoadedView()
         } placeholder: {
             RecipesSkeletonPage()
@@ -166,6 +166,8 @@ private struct NotebookLoadingSkeleton: View {
 }
 
 private struct RecipesLoadedView: View {
+    @Environment(\.activeAppTab) private var activeAppTab
+    @Environment(\.scenePhase) private var scenePhase
     @Environment(\.scrollToTopTrigger) private var scrollToTopTrigger
     @Environment(\.scrollToItem) private var scrollToItem
     @Environment(\.openRecipeInRecipesTab) private var openRecipeInRecipesTab
@@ -217,10 +219,20 @@ private struct RecipesLoadedView: View {
     @State private var lastRecipeProjectionInputsKey: Int = 0
     @State private var lastNotebookSummaryInputsKey: Int = 0
     @State private var didRunInitialAppearWork = false
+    #if os(iOS)
+    @State private var isPageVisible = false
+    #endif
     @State private var isNotebookLoading = false
     @State private var notebookSummariesNeedRefresh = true
 
     private var settings: AppSettings? { settingsArray.first }
+    private var canPerformRecipeWork: Bool {
+        #if os(iOS)
+        return isPageVisible && (activeAppTab == nil || activeAppTab == .recipes) && scenePhase == .active
+        #else
+        return true
+        #endif
+    }
     private var viewMode: RecipeViewMode { settings?.recipeViewMode ?? .gallery }
     private var compatibilityThreshold: Double {
         Double(settings?.recipeCompatibilityThresholdPercent ?? 80) / 100
@@ -437,6 +449,9 @@ private struct RecipesLoadedView: View {
         .background(Color(.windowBackgroundColor).ignoresSafeArea())
         #endif
         .onAppear {
+            #if os(iOS)
+            isPageVisible = true
+            #endif
             let appearStart = Date()
             PerformanceLogger.event(
                 .recipes,
@@ -461,10 +476,40 @@ private struct RecipesLoadedView: View {
             )
         }
         .onDisappear {
+            #if os(iOS)
+            isPageVisible = false
+            #endif
             pendingGalleryPrefetchTask?.cancel()
             pendingGalleryPrefetchTask = nil
             pendingNotebookRefreshTask?.cancel()
             pendingNotebookRefreshTask = nil
+            #if os(iOS)
+            pendingCompatibilityRecomputeWork?.cancel()
+            pendingCompatibilityRecomputeWork = nil
+            #endif
+        }
+        .onChange(of: scenePhase) { _, phase in
+            #if os(iOS)
+            guard phase == .active, isPageVisible else {
+                pendingCompatibilityRecomputeWork?.cancel()
+                pendingCompatibilityRecomputeWork = nil
+                pendingGalleryPrefetchTask?.cancel()
+                pendingGalleryPrefetchTask = nil
+                pendingNotebookRefreshTask?.cancel()
+                pendingNotebookRefreshTask = nil
+                isNotebookLoading = false
+                return
+            }
+            // Reconcile the latest query inputs once, including edits received
+            // while hidden. Cached keys suppress unchanged compatibility work.
+            normalizeSelectedCategoryIfNeeded()
+            recomputeCompatibilities()
+            refreshRecipeProjectionsIfNeeded()
+            if isShowingCadernos {
+                scheduleNotebookRefresh(showSkeleton: cachedNotebookSummaries.isEmpty, force: false)
+            }
+            scheduleGalleryPrefetchIfNeeded()
+            #endif
         }
         // PERF: previously these used `.onChange(of: pantryItems)` /
         // `.onChange(of: allRecipes)` which fire on EVERY SwiftData @Query
@@ -726,6 +771,7 @@ private struct RecipesLoadedView: View {
     }
 
     private func recomputeCompatibilities() {
+        guard canPerformRecipeWork else { return }
         // Cancel any pending debounced recompute — we are doing it now.
         pendingCompatibilityRecomputeWork?.cancel()
         pendingCompatibilityRecomputeWork = nil
@@ -772,6 +818,7 @@ private struct RecipesLoadedView: View {
     }
 
     private func refreshRecipeProjectionsIfNeeded(force: Bool = false) {
+        guard canPerformRecipeWork else { return }
         let inputsKey = recipeProjectionInputsKey
         guard force || inputsKey != lastRecipeProjectionInputsKey else { return }
 
@@ -905,6 +952,7 @@ private struct RecipesLoadedView: View {
 
     private func scheduleNotebookRefresh(showSkeleton: Bool, force: Bool) {
         pendingNotebookRefreshTask?.cancel()
+        guard canPerformRecipeWork else { return }
 
         if showSkeleton {
             isNotebookLoading = true
@@ -917,7 +965,7 @@ private struct RecipesLoadedView: View {
             } else {
                 await Task.yield()
             }
-            guard !Task.isCancelled else { return }
+            guard !Task.isCancelled, canPerformRecipeWork else { return }
 
             let shouldForce = force || notebookSummariesNeedRefresh
             _ = refreshNotebookSummariesIfNeeded(force: shouldForce)
@@ -932,6 +980,7 @@ private struct RecipesLoadedView: View {
     /// pipeline multiple times in the same frame.
     private func scheduleCompatibilityRecompute() {
         pendingCompatibilityRecomputeWork?.cancel()
+        guard canPerformRecipeWork else { return }
         let work = DispatchWorkItem { [weak modelContext] in
             _ = modelContext // keep view alive context-side; actual work uses captured @State
             recomputeCompatibilities()
@@ -1722,11 +1771,12 @@ private struct RecipesLoadedView: View {
 
     private func scheduleGalleryPrefetchIfNeeded() {
         pendingGalleryPrefetchTask?.cancel()
+        guard canPerformRecipeWork else { return }
         guard viewMode == .gallery else { return }
 
         pendingGalleryPrefetchTask = Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(150))
-            guard !Task.isCancelled else { return }
+            guard !Task.isCancelled, canPerformRecipeWork else { return }
             prefetchGalleryThumbnails()
         }
     }

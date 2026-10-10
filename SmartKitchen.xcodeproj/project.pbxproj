@@ -280,6 +280,8 @@
 		FD85C163D0574DDC05044A4B /* Telma-Black.otf in Resources */ = {isa = PBXBuildFile; fileRef = 4FFE418BF404A910C30CECCD /* Telma-Black.otf */; };
 		FF221A2BB996A7C7C86EEB24 /* NotificationSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80D12790A5FFD5D1F1730C5C /* NotificationSettingsView.swift */; };
 		FF60AC160FD69C166D5A44FC /* LLMProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F2EA589C249BEA8EA6153BF /* LLMProvider.swift */; };
+		8D09968A607D41F5A8BEB9D5 /* DayHistoryIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D4D139190146828F6B486CD /* DayHistoryIndex.swift */; };
+		E47FDAF52883528B54EE48AB /* DayHistoryIndexTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E02ED22670CE4E137EAE55F5 /* DayHistoryIndexTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -605,6 +607,8 @@
 		FF771623AD1F947418F58497 /* SmartKitchenShareExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SmartKitchenShareExtension.entitlements; sourceTree = "<group>"; };
 		FFD9669D9EEC7E8ED456843E /* UnifiedSearchBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnifiedSearchBar.swift; sourceTree = "<group>"; };
 		FFD9A8F429B03EDF77B771FE /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
+		3D4D139190146828F6B486CD /* DayHistoryIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayHistoryIndex.swift; sourceTree = "<group>"; };
+		E02ED22670CE4E137EAE55F5 /* DayHistoryIndexTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayHistoryIndexTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -656,6 +660,7 @@
 				019A8D5CCB169B9909C7F98A /* NutritionAITestDoubles.swift */,
 				0FD39D5CF6BCD236C35FCDC9 /* NutritionAITestFixtures.swift */,
 				B41EF838C77C7A9EE305E260 /* NutritionAITypeCoverageTests.swift */,
+				E02ED22670CE4E137EAE55F5 /* DayHistoryIndexTests.swift */,
 				CD6C11A8444016682B6ECD03 /* UnifiedItemMergeTests.swift */,
 			);
 			path = SmartKitchenTests;
@@ -1012,6 +1017,7 @@
 				B0C66BFB01199545F694F384 /* NutritionCalculations.swift */,
 				58F16601767D28480F28D243 /* NutritionCalculator.swift */,
 				666404C5C00E49B47AFFC4BA /* NutritionDayLogStore.swift */,
+				3D4D139190146828F6B486CD /* DayHistoryIndex.swift */,
 				07B7FAD77E9ACBAA1DD1424E /* NutritionItemParser.swift */,
 				5F54A0D5A483572DAD3CA7EF /* NutritionPaywallGate.swift */,
 				3F57F27B8FA704D0DDEFDE46 /* NutritionProfileStore.swift */,
@@ -1547,6 +1553,7 @@
 				FB2ECC261AB38C41C8817FFE /* NutritionDashboardView.swift in Sources */,
 				CF0F11BD64DFF5A5A209DE16 /* NutritionDayLog.swift in Sources */,
 				40F75377893BD1DDC712E2E3 /* NutritionDayLogStore.swift in Sources */,
+				8D09968A607D41F5A8BEB9D5 /* DayHistoryIndex.swift in Sources */,
 				93FD24BBD039A110D07E7CEB /* NutritionDayState.swift in Sources */,
 				B919CE86B1748CDB1B19E159 /* NutritionDayTile.swift in Sources */,
 				E3E2D25FC832714F3FCD1D3C /* NutritionEnums.swift in Sources */,
@@ -1677,6 +1684,7 @@
 				C9395A0C9CA3A803C0D42774 /* NutritionAITestDoubles.swift in Sources */,
 				EB48AFB6177D617A32F33A81 /* NutritionAITestFixtures.swift in Sources */,
 				4E5B77C37DFF3B80E2C02342 /* NutritionAITypeCoverageTests.swift in Sources */,
+				E47FDAF52883528B54EE48AB /* DayHistoryIndexTests.swift in Sources */,
 				7EA0625E10701FE9400561F5 /* UnifiedItemMergeTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

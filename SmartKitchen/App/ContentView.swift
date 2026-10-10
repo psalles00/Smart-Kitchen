@@ -95,8 +95,6 @@ struct ContentView: View {
     /// bar only while the user is actively typing. Driven by UIKit keyboard
     /// notifications on iOS.
     @State private var isKeyboardVisible: Bool = false
-    @State private var stagedTabPrewarmTask: Task<Void, Never>?
-    @State private var didScheduleInitialTabPrewarm = false
     @State private var nextTabSwitchTraceID = 0
     @State private var pendingTabSwitchTrace: TabSwitchTrace?
     #if DEBUG
@@ -651,12 +649,7 @@ struct ContentView: View {
                 }
                 .onAppear {
                     syncOnboardingFlag()
-                    scheduleInitialTabPrewarmIfNeeded()
                     consumePendingNutritionLogWidgetActionIfNeeded()
-                }
-                .onDisappear {
-                    stagedTabPrewarmTask?.cancel()
-                    stagedTabPrewarmTask = nil
                 }
                 .onChange(of: settingsSnapshot.hasCompletedOnboarding) { _, _ in
                     syncOnboardingFlag()
@@ -1007,6 +1000,7 @@ struct ContentView: View {
 
     private func scheduleForegroundHomeRefreshIfNeeded() {
         pendingForegroundHomeRefreshWork?.cancel()
+        pendingForegroundHomeRefreshWork = nil
 
         guard selectedTab == .assistant else {
             PerformanceLogger.event(
@@ -2011,6 +2005,7 @@ struct ContentView: View {
         #if os(iOS)
         ActionTrace.shared.begin(page: newValue.rawValue)
         #endif
+        guard TabSwitchDiagnostics.isEnabled else { return }
 
         nextTabSwitchTraceID += 1
         let trace = TabSwitchTrace(
@@ -2026,61 +2021,6 @@ struct ContentView: View {
             "begin",
             metadata: "trace=\(trace.id) source=\(source) from=\(trace.from.rawValue) target=\(trace.target.rawValue) mountedBefore=\(trace.wasMounted)"
         )
-    }
-
-    private func scheduleInitialTabPrewarmIfNeeded() {
-        guard !didScheduleInitialTabPrewarm else { return }
-        didScheduleInitialTabPrewarm = true
-        scheduleStagedTabPrewarm(reason: "initialContentView")
-    }
-
-    private func scheduleStagedTabPrewarm(reason: String) {
-        #if os(iOS)
-        stagedTabPrewarmTask?.cancel()
-        let tabs: [AppTab] = [.lists, .recipes, .nutrients, .commandBar]
-        stagedTabPrewarmTask = Task { @MainActor in
-            if TabSwitchDiagnostics.isEnabled {
-                PerformanceLogger.event(
-                    .tabSwitch,
-                    "prewarm scheduled",
-                    metadata: "reason=\(reason) tabs=\(tabs.map(\.rawValue).joined(separator: ","))"
-                )
-            }
-            try? await Task.sleep(for: .milliseconds(1800))
-
-            for tab in tabs {
-                guard !Task.isCancelled else { return }
-                if !mountedTabs.contains(tab) {
-                    let start = PerformanceLogger.monotonicMillisSinceLaunch()
-                    mountedTabs.insert(tab)
-                    if TabSwitchDiagnostics.isEnabled {
-                        PerformanceLogger.event(
-                            .tabSwitch,
-                            "prewarm mount requested",
-                            metadata: "reason=\(reason) tab=\(tab.rawValue)"
-                        )
-                        DispatchQueue.main.async {
-                            let elapsed = PerformanceLogger.monotonicMillisSinceLaunch() - start
-                            PerformanceLogger.event(
-                                .tabSwitch,
-                                "prewarm mount next runloop",
-                                metadata: String(format: "reason=%@ tab=%@ elapsedMs=%.1f",
-                                                 reason,
-                                                 tab.rawValue,
-                                                 elapsed)
-                            )
-                        }
-                    }
-                }
-                try? await Task.sleep(for: .milliseconds(350))
-            }
-
-            if TabSwitchDiagnostics.isEnabled {
-                PerformanceLogger.event(.tabSwitch, "prewarm finished", metadata: "reason=\(reason)")
-            }
-            stagedTabPrewarmTask = nil
-        }
-        #endif
     }
 
     #if DEBUG
