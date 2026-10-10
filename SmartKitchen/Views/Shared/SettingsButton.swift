@@ -84,17 +84,6 @@ extension EnvironmentValues {
     }
 }
 
-private struct UsesGlobalPageBackgroundKey: EnvironmentKey {
-    static let defaultValue = false
-}
-
-extension EnvironmentValues {
-    var usesGlobalPageBackground: Bool {
-        get { self[UsesGlobalPageBackgroundKey.self] }
-        set { self[UsesGlobalPageBackgroundKey.self] = newValue }
-    }
-}
-
 /// Reusable toolbar button that triggers an external action when tapped.
 struct SettingsButton: View {
     var onTap: (() -> Void)? = nil

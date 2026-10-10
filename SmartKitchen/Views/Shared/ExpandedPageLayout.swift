@@ -88,7 +88,6 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
     #if !os(iOS)
     @Environment(\.backgroundTheme) private var backgroundTheme
     #endif
-    @Environment(\.usesGlobalPageBackground) private var usesGlobalPageBackground
     @Environment(\.searchOverlay) private var searchOverlay
     @EnvironmentObject private var searchBarState: SearchBarState
 
@@ -348,9 +347,9 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
             backgroundOverride
         } else {
             #if os(iOS)
-            if !usesGlobalPageBackground {
-                ActivePageBackground(pageTheme: pageTheme)
-            }
+            // Draw inside the native page host: making navigation clear
+            // alone does not make the enclosing TabView host transparent.
+            ActivePageBackground(pageTheme: pageTheme)
             #else
             ZStack {
                 themedBackground(for: backgroundFromTheme)

@@ -739,17 +739,11 @@ struct ContentView: View {
     }
 
     #if os(iOS)
-    private var usesSharedNativeBackdrop: Bool {
-        if #available(iOS 18.0, *) { return true }
-        return false
-    }
-
     @ViewBuilder
     private var iosAppBackground: some View {
-        // One persistent field; changing tabs only fades its palette.
-        ThemedBackgroundView(theme: displayedBgTheme, animates: usesSharedNativeBackdrop)
-        .allowsHitTesting(false)
-        .animation(.easeInOut(duration: 0.55), value: displayedBgTheme)
+        // Native tab/navigation hosts can obscure this layer. Render the
+        // shared shader field inside each page, not behind the tab host.
+        Color.black
     }
     #endif
 
@@ -760,7 +754,6 @@ struct ContentView: View {
                 .allowsHitTesting(false)
 
             nativeTabContainer
-                .environment(\.usesGlobalPageBackground, usesSharedNativeBackdrop)
                 #if os(iOS)
                 // Hide the tab bar only while the keyboard is up; otherwise the
                 // assistant bar always shows alongside the tab bar.
