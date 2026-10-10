@@ -108,6 +108,18 @@ final class PageActionTracingTests: XCTestCase {
         let toggle = app.switches["savoria.lists.reserve.enabled"]
         XCTAssertTrue(toggle.waitForExistence(timeout: 10))
         let originallyEnabled = toggle.value as? String == "1"
+        let info = app.buttons["savoria.lists.reserve.info"]
+        XCTAssertTrue(info.exists)
+        info.tap()
+        let explanation = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Guarde itens que acabaram")).firstMatch
+        XCTAssertTrue(explanation.waitForExistence(timeout: 5))
+        XCTAssertEqual(toggle.value as? String == "1", originallyEnabled, "Opening information must not change the preference.")
+        let infoAttachment = XCTAttachment(screenshot: app.screenshot())
+        infoAttachment.lifetime = .keepAlways
+        add(infoAttachment)
+        // The popover excludes underlying navigation elements from hit testing.
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.9)).tap()
+        XCTAssertFalse(explanation.exists)
         if !originallyEnabled {
             // iOS 27 reports the whole row as the switch frame. Tap the actual control.
             toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()

@@ -28,11 +28,29 @@ struct ListsSettingsView: View {
                         in: 1...180
                     )
 
+                    #if os(iOS)
+                    HStack(spacing: 8) {
+                        Text("Mostrar Para depois")
+                        SectionInfoButton(
+                            title: "Para depois",
+                            message: "Guarde itens que acabaram, mas que você ainda não decidiu comprar novamente. Ao marcar um item na Despensa, ele vai para Para depois; nesta lista, vai para o Mercado; no Mercado, volta à Despensa. Desativar a opção apenas oculta a lista, sem apagar seus itens."
+                        )
+                        .accessibilityIdentifier("savoria.lists.reserve.info")
+                        Spacer(minLength: 8)
+                        Toggle("Mostrar Para depois", isOn: Binding(
+                            get: { settings.showReserve },
+                            set: { settings.showReserve = $0 }
+                        ))
+                        .labelsHidden()
+                        .accessibilityIdentifier("savoria.lists.reserve.enabled")
+                    }
+                    #else
                     Toggle("Mostrar Para depois", isOn: Binding(
                         get: { settings.showReserve },
                         set: { settings.showReserve = $0 }
                     ))
                     .accessibilityIdentifier("savoria.lists.reserve.enabled")
+                    #endif
 
                     Toggle("Mostrar utensílios", isOn: Binding(
                         get: { settings.showUtensils },
@@ -42,7 +60,9 @@ struct ListsSettingsView: View {
             } header: {
                 Text("Despensa e mercado")
             } footer: {
+                #if !os(iOS)
                 Text("Itens finalizados vão para Para depois quando habilitada. Marque-os para enviar ao Mercado. Ocultar a lista preserva seus itens.")
+                #endif
             }
 
             Section {

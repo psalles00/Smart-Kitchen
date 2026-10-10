@@ -66703,6 +66703,53 @@
           }
         }
       }
+    },
+    "Guarde itens que acabaram, mas que você ainda não decidiu comprar novamente. Ao marcar um item na Despensa, ele vai para Para depois; nesta lista, vai para o Mercado; no Mercado, volta à Despensa. Desativar a opção apenas oculta a lista, sem apagar seus itens." : {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guarde itens que acabaram, mas que você ainda não decidiu comprar novamente. Ao marcar um item na Despensa, ele vai para Para depois; nesta lista, vai para o Mercado; no Mercado, volta à Despensa. Desativar a opção apenas oculta a lista, sem apagar seus itens."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep items that have run out but that you have not yet decided to buy again. Checking an item in Pantry moves it to For later; checking it there moves it to Shopping; checking it in Shopping returns it to Pantry. Turning this option off only hides the list and does not delete its items."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guarda los artículos que se han agotado y que aún no has decidido volver a comprar. Al marcar un artículo en Despensa, pasa a Para después; al marcarlo allí, pasa a Mercado; en Mercado, vuelve a Despensa. Desactivar la opción solo oculta la lista, sin eliminar sus artículos."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bewahre aufgebrauchte Artikel auf, die du vielleicht später wieder kaufen möchtest. Wenn du einen Artikel im Vorrat abhakst, wandert er zu Für später; dort abgehakt zur Einkaufsliste; dort abgehakt zurück zum Vorrat. Das Deaktivieren blendet die Liste nur aus, ohne ihre Artikel zu löschen."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gardez les articles épuisés que vous n’avez pas encore décidé de racheter. Cocher un article dans le Garde-manger le déplace vers Pour plus tard ; le cocher dans cette liste le déplace vers les Courses ; le cocher dans les Courses le ramène au Garde-manger. Désactiver cette option masque seulement la liste, sans supprimer ses articles."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conserva gli articoli esauriti che non hai ancora deciso di ricomprare. Selezionare un articolo in Dispensa lo sposta in Per dopo; selezionarlo qui lo sposta nella Spesa; selezionarlo nella Spesa lo riporta in Dispensa. Disattivare l’opzione nasconde solo la lista, senza eliminare gli articoli."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使い切ったものの、買い直すかまだ決めていないアイテムを保管します。パントリーでチェックすると「あとで」へ移動し、そこでチェックすると買い物リストへ、買い物リストでチェックするとパントリーへ戻ります。このオプションをオフにしてもリストが非表示になるだけで、アイテムは削除されません。"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"
