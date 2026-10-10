@@ -258,7 +258,7 @@ struct SettingsView: View {
         Group {
             #if os(iOS)
             settingsForm
-                .onAppear { ActionTrace.shared.begin(page: "settings") }
+                .onAppear { traceSettingsPage("settings") }
                 .settingsNavigationTitle(String(localized: "Configurações"))
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
@@ -276,6 +276,12 @@ struct SettingsView: View {
         }
         #if DEBUG && os(iOS)
         .sheet(isPresented: $showDebugCenter) { SavoriaDebugCenter() }
+        #endif
+    }
+
+    private func traceSettingsPage(_ page: String) {
+        #if os(iOS)
+        ActionTrace.shared.begin(page: page, phase: "loaded")
         #endif
     }
 
@@ -298,6 +304,7 @@ struct SettingsView: View {
             Section {
                 NavigationLink {
                     iCloudSettingsView()
+                        .onAppear { traceSettingsPage("settings_icloud") }
                 } label: {
                     SettingsRowLabel("iCloud", systemImage: "icloud")
                 }
@@ -305,6 +312,7 @@ struct SettingsView: View {
 
                 NavigationLink {
                     FamilySharingSettingsView()
+                        .onAppear { traceSettingsPage("settings_family") }
                 } label: {
                     SettingsRowLabel("Compartilhamento Familiar", systemImage: "person.2")
                 }
@@ -312,6 +320,7 @@ struct SettingsView: View {
 
                 NavigationLink {
                     NotificationSettingsView()
+                        .onAppear { traceSettingsPage("settings_notifications") }
                 } label: {
                     SettingsRowLabel("Notificações", systemImage: "bell")
                 }
@@ -319,6 +328,7 @@ struct SettingsView: View {
 
                 NavigationLink {
                     BackupSettingsView()
+                        .onAppear { traceSettingsPage("settings_backup") }
                 } label: {
                     SettingsRowLabel("Backup", systemImage: "externaldrive.badge.timemachine")
                 }
@@ -331,6 +341,7 @@ struct SettingsView: View {
             Section {
                 NavigationLink {
                     AppearanceSettingsView()
+                        .onAppear { traceSettingsPage("settings_appearance") }
                 } label: {
                     SettingsRowLabel("Aparência e Performance", systemImage: "paintbrush")
                 }
@@ -338,6 +349,7 @@ struct SettingsView: View {
 
                 NavigationLink {
                     ListsSettingsView()
+                        .onAppear { traceSettingsPage("settings_lists") }
                 } label: {
                     SettingsRowLabel("Listas e Receitas", systemImage: "list.bullet.rectangle")
                 }
@@ -345,6 +357,7 @@ struct SettingsView: View {
 
                 NavigationLink {
                     NutritionSettingsView()
+                        .onAppear { traceSettingsPage("settings_nutrition") }
                 } label: {
                     SettingsRowLabel("Nutrição", systemImage: "leaf")
                 }
@@ -357,9 +370,11 @@ struct SettingsView: View {
             Section {
                 NavigationLink {
                     DataSettingsView()
+                        .onAppear { traceSettingsPage("settings_data") }
                 } label: {
                     SettingsRowLabel("Gerenciar dados", systemImage: "externaldrive")
                 }
+                .accessibilityIdentifier("savoria.settings.data")
             } header: {
                 Text("Dados")
             }

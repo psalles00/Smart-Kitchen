@@ -62,11 +62,21 @@ final class PageActionTracingTests: XCTestCase {
             XCTAssertNotNil(back)
             back?.tap()
         }
+        XCUIDevice.shared.press(.home)
+    }
+
+    func testSettingsAndForeground() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication(bundleIdentifier: "com.pedrosalles.smartkitchen.sync")
+        app.launchArguments = ["-SavoriaActionTrace", "-AppleLanguages", "(pt-BR)", "-AppleLocale", "pt_BR"]
+        app.launch()
+        let tabs = app.tabBars.firstMatch
+        XCTAssertTrue(tabs.waitForExistence(timeout: 45))
         tabs.buttons["Savoria"].firstMatch.tap()
         app.buttons["savoria.settings"].tap()
         XCTAssertTrue(app.buttons["savoria.settings.close"].waitForExistence(timeout: 10))
         // Read-only destinations; never toggle sync or perform backup/restore.
-        for destination in ["icloud", "family", "notifications", "backup", "appearance", "lists", "nutrition"] {
+        for destination in ["icloud", "family", "notifications", "backup", "appearance", "lists", "nutrition", "data"] {
             let link = app.buttons["savoria.settings.\(destination)"].firstMatch
             if !link.exists { app.swipeUp() }
             XCTAssertTrue(link.waitForExistence(timeout: 5), "Settings destination must be exercised: \(destination)")

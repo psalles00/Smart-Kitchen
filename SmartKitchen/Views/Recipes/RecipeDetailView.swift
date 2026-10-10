@@ -310,6 +310,9 @@ struct RecipeDetailView: View {
         .scrollClipDisabled()
         #endif
         .onAppear {
+            #if os(iOS)
+            ActionTrace.shared.begin(page: "recipe_detail", phase: "loaded")
+            #endif
             PerformanceLogger.event(
                 .recipes,
                 "RecipeDetailView.onAppear",
