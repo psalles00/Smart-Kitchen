@@ -150,6 +150,11 @@ final class AppSettings {
     var openAIAPIKey: String = ""
     var hasCompletedOnboarding: Bool = false
     var showUtensils: Bool = false
+    var showReserveValue: Bool? = nil
+    var showReserve: Bool {
+        get { showReserveValue ?? false }
+        set { showReserveValue = newValue }
+    }
     var recipeGalleryColumns: Int = 3
     /// Stored as raw strings to keep persisted settings resilient to schema changes.
     var pantryGroupingModeRaw: String = ListGroupingMode.category.rawValue

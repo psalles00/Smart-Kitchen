@@ -572,6 +572,7 @@ struct ContentView: View {
                 }) {
                     ItemDetailView(
                         mode: .create(),
+                        restoresLastDestination: true,
                         initialName: addItemPrefill,
                         initialIconFileName: addItemIconFileName,
                         initialCategory: addItemCategory,
@@ -579,6 +580,9 @@ struct ContentView: View {
                             switch destination {
                             case .pantry:
                                 scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "pantryItem")
+                                selectTab(.lists)
+                            case .reserve:
+                                scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "reserveItem")
                                 selectTab(.lists)
                             case .grocery:
                                 scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "groceryItem")
@@ -2097,6 +2101,18 @@ struct ContentView: View {
         case .openPantryItem(let id):
             scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "pantryItem")
             selectTab(.lists)
+        case .openReserveItem(let id):
+            if settingsSnapshot.showReserve {
+                scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "reserveItem")
+                selectTab(.lists)
+            } else {
+                searchEditItem = UnifiedItemSelection(id: id)
+            }
+        case .moveReserveToGrocery(let id):
+            let descriptor = FetchDescriptor<UnifiedItem>(predicate: #Predicate { $0.id == id })
+            if let item = try? modelContext.fetch(descriptor).first { item.move(to: .grocery) }
+            try? modelContext.save()
+            refreshSearchAfterMove()
         case .openGroceryItem(let id):
             scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "groceryItem")
             selectTab(.lists)
@@ -2287,6 +2303,7 @@ struct ContentView: View {
                 ))
                 switch first.type {
                 case .pantryItem:  handleCommandBarAction(.editPantryItem(objectID))
+                case .reserveItem: handleCommandBarAction(.editGroceryItem(objectID))
                 case .groceryItem: handleCommandBarAction(.editGroceryItem(objectID))
                 case .recipe:      handleCommandBarAction(.editRecipe(objectID))
                 case .utensil:     handleCommandBarAction(.editUtensil(objectID))
@@ -2512,11 +2529,13 @@ private struct ContentSettingsSnapshot: Equatable {
     var appearanceMode: AppearanceMode = .system
     var hasCompletedOnboarding = true
     var showUtensils = false
+    var showReserve = false
 
     init(settings: AppSettings? = nil) {
         appearanceMode = settings?.appearanceMode ?? .system
         hasCompletedOnboarding = settings?.hasCompletedOnboarding ?? true
         showUtensils = settings?.showUtensils == true
+        showReserve = settings?.showReserve == true
     }
 }
 

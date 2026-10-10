@@ -3,6 +3,7 @@ import Foundation
 /// The type of entity a search result represents.
 enum SearchResultType: String {
     case pantryItem
+    case reserveItem
     case groceryItem
     case recipe
     case utensil
@@ -31,6 +32,7 @@ struct SearchResult: Identifiable {
     var typeLabel: String {
         switch type {
         case .pantryItem:  String(localized: "Despensa")
+        case .reserveItem: String(localized: "Para depois")
         case .groceryItem: String(localized: "Mercado")
         case .recipe:      String(localized: "Receita")
         case .utensil:     String(localized: "Utensílio")
@@ -53,6 +55,7 @@ struct SearchResult: Identifiable {
     var typeTint: String {
         switch type {
         case .pantryItem:  "orange"
+        case .reserveItem: "blue"
         case .groceryItem: "green"
         case .recipe:      "red"
         case .utensil:     "purple"

@@ -1,6 +1,6 @@
 import XCTest
 
-/// Navigates existing data only. Never buys, calls AI, seeds, deletes or edits records.
+/// Navigates existing food data without purchases, AI calls, seeding or deletion.
 @MainActor
 final class PageActionTracingTests: XCTestCase {
     func testPagesAndForeground() throws {
@@ -91,4 +91,57 @@ final class PageActionTracingTests: XCTestCase {
         app.buttons["savoria.settings.close"].tap()
         XCUIDevice.shared.press(.home) // flush bounded trace after the final interaction
     }
+    /// Changes only a reversible visibility preference; never creates or moves food records.
+    func testReserveVisibilityAndCreationDestination() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication(bundleIdentifier: "com.pedrosalles.smartkitchen.sync")
+        app.launchArguments = ["-AppleLanguages", "(pt-BR)", "-AppleLocale", "pt_BR"]
+        app.launch()
+        let tabs = app.tabBars.firstMatch
+        XCTAssertTrue(tabs.waitForExistence(timeout: 45))
+        func openListSettings() {
+            tabs.buttons["Savoria"].firstMatch.tap()
+            app.buttons["savoria.settings"].tap()
+            app.buttons["savoria.settings.lists"].tap()
+        }
+        openListSettings()
+        let toggle = app.switches["savoria.lists.reserve.enabled"]
+        XCTAssertTrue(toggle.waitForExistence(timeout: 10))
+        let originallyEnabled = toggle.value as? String == "1"
+        if !originallyEnabled {
+            // iOS 27 reports the whole row as the switch frame. Tap the actual control.
+            toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+            XCTAssertEqual(toggle.value as? String, "1")
+        }
+        app.navigationBars.buttons["Configurações"].firstMatch.tap()
+        app.buttons["savoria.settings.close"].tap()
+        tabs.buttons["Listas"].firstMatch.tap()
+        let reserve = app.buttons["Para depois"].firstMatch
+        XCTAssertTrue(reserve.waitForExistence(timeout: 10))
+        reserve.tap()
+        XCUIDevice.shared.press(.home)
+        app.activate()
+        XCTAssertTrue(reserve.waitForExistence(timeout: 10))
+        app.buttons["savoria.lists.add"].tap()
+        let destination = app.buttons["savoria.item.destination.reserve"]
+        XCTAssertTrue(destination.waitForExistence(timeout: 10))
+        XCTAssertTrue(destination.isSelected, "New item must inherit its explicit list destination.")
+        let attachment = XCTAttachment(screenshot: app.screenshot())
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        // Dismiss the unsaved sheet by dragging its handle, without modifying records.
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.08))
+            .press(forDuration: 0.1, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.95)))
+        XCTAssertTrue(tabs.waitForExistence(timeout: 10))
+        if !originallyEnabled {
+            openListSettings()
+            app.switches["savoria.lists.reserve.enabled"].coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+            app.navigationBars.buttons["Configurações"].firstMatch.tap()
+            app.buttons["savoria.settings.close"].tap()
+            tabs.buttons["Listas"].firstMatch.tap()
+            XCTAssertFalse(app.buttons["Para depois"].exists)
+        }
+        XCUIDevice.shared.press(.home)
+    }
+
 }

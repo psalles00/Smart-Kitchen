@@ -618,7 +618,7 @@ struct AITools {
         guard let item = allItems.first(where: { $0.isPantry && $0.name.lowercased().contains(q) }) else {
             return "{\"error\": \"Item not found: \(name)\"}"
         }
-        if item.isGrocery || item.isUtensil {
+        if item.isGrocery || item.isUtensil || item.isReserve {
             // Item is in other lists too, just remove the pantry flag
             item.isPantry = false
         } else {

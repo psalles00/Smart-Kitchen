@@ -222,7 +222,8 @@ struct PantryView: View {
                 categoryIconName: snapshot.categoryIconByName[item.category],
                 isDetailed: snapshot.isDetailed,
                 isAlsoInGrocery: item.isGrocery,
-                onSendToGrocery: { sendToGrocery(item) },
+                destination: settingsArray.first?.showReserve == true ? .reserve : .grocery,
+                onSendToGrocery: { completePantryItem(item) },
                 showsDivider: itemIndex > 0
             )
             .contentShape(Rectangle())
@@ -365,7 +366,7 @@ struct PantryView: View {
 
     private func deleteItem(_ item: UnifiedItem) {
         withAnimation {
-            if item.isGrocery || item.isUtensil {
+            if item.isGrocery || item.isUtensil || item.isReserve {
                 item.isPantry = false
             } else {
                 modelContext.delete(item)
@@ -373,10 +374,17 @@ struct PantryView: View {
         }
     }
 
+    private func completePantryItem(_ item: UnifiedItem) {
+        withAnimation {
+            item.deplete(reserveEnabled: settingsArray.first?.showReserve == true)
+            if !item.isReserve { onSentToGrocery?() }
+        }
+        try? modelContext.save()
+    }
+
     private func sendToGrocery(_ item: UnifiedItem) {
         withAnimation {
-            item.isGrocery = true
-            item.isPantry = false
+            item.move(to: .grocery)
             onSentToGrocery?()
         }
     }
@@ -385,6 +393,7 @@ struct PantryView: View {
         guard !item.isGrocery else { return }
         withAnimation {
             item.isGrocery = true
+            item.isReserve = false
             onSentToGrocery?()
         }
     }
@@ -426,14 +435,13 @@ struct PantryView: View {
             reorderPantryItem(sourceItem, in: newCategory, before: targetItem)
             normalizePantrySortOrder(in: previousCategory)
             return true
-        case .grocery:
+        case .grocery, .reserve:
             // Find the unified item from grocery and flip flags
-            let fd = FetchDescriptor<UnifiedItem>(predicate: #Predicate { $0.isGrocery })
+            let fd = FetchDescriptor<UnifiedItem>()
             guard let groceryItems = try? modelContext.fetch(fd),
                   let item = groceryItems.first(where: { $0.id == payload.itemID }) else { return false }
             let newCategory = resolvedCategory(item.category)
-            item.isPantry = true
-            item.isGrocery = false
+            item.move(to: .pantry)
             item.category = newCategory
             if let days = item.defaultExpiryDays, days > 0 {
                 item.expirationDate = Calendar.current.date(byAdding: .day, value: days, to: Date())
@@ -479,6 +487,7 @@ struct PantryItemRow: View {
     let categoryIconName: String?
     let isDetailed: Bool
     let isAlsoInGrocery: Bool
+    var destination: ItemListType = .grocery
     let onSendToGrocery: () -> Void
     let showsDivider: Bool
 
@@ -532,11 +541,13 @@ struct PantryItemRow: View {
 
                 AnimatedItemActionButton(
                     actionID: item.id.uuidString,
-                    systemImage: "cart",
+                    systemImage: destination.icon,
                     initialSystemImage: "xmark",
                     color: PageTheme.lists.accentColor,
                     action: onSendToGrocery
                 )
+                .accessibilityLabel(destination == .reserve ? String(localized: "Para depois") : String(localized: "Enviar ao Mercado"))
+                .accessibilityIdentifier("savoria.item.complete." + item.id.uuidString)
             }
             .padding(.vertical, 7)
             .padding(.horizontal, 16)

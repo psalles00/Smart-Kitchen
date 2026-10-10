@@ -451,6 +451,8 @@ struct InlineSearchResultsView: View {
         switch result.type {
         case .pantryItem:
             return { onAction(.movePantryToGrocery(objectID)) }
+        case .reserveItem:
+            return { onAction(.moveReserveToGrocery(objectID)) }
         case .groceryItem:
             return { onAction(.moveGroceryToPantry(objectID)) }
         default:
@@ -468,6 +470,7 @@ struct InlineSearchResultsView: View {
         guard let objectID = result.objectID else { return }
         switch result.type {
         case .pantryItem:  onAction(.editPantryItem(objectID))
+        case .reserveItem: onAction(.editGroceryItem(objectID))
         case .groceryItem: onAction(.editGroceryItem(objectID))
         case .recipe:      onAction(.openRecipe(objectID))
         case .utensil:     onAction(.editUtensil(objectID))
@@ -482,6 +485,8 @@ struct InlineSearchResultsView: View {
         switch result.type {
         case .pantryItem:
             return { onAction(.openPantryItem(objectID)); searchBarState.selectResult() }
+        case .reserveItem:
+            return { onAction(.openReserveItem(objectID)); searchBarState.selectResult() }
         case .groceryItem:
             return { onAction(.openGroceryItem(objectID)); searchBarState.selectResult() }
         case .recipe:

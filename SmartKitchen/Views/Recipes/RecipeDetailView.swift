@@ -1333,7 +1333,7 @@ struct RecipeDetailView: View {
                 modelContext.insert(item)
             } else {
                 for existing in existingItems {
-                    if existing.isPantry || existing.isGrocery {
+                    if existing.isPantry || existing.isGrocery || existing.isReserve {
                         existing.isUtensil = false
                     } else {
                         modelContext.delete(existing)

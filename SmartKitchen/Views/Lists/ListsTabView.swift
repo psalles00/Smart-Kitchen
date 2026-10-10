@@ -5,12 +5,14 @@ import UniformTypeIdentifiers
 
 enum ListSubtab: String, CaseIterable, Codable {
     case pantry
+    case reserve
     case grocery
     case utensils
 
     var title: LocalizedStringKey {
         switch self {
         case .pantry:  "Despensa"
+        case .reserve: "Para depois"
         case .grocery: "Mercado"
         case .utensils: "Utensílios"
         }
@@ -19,6 +21,7 @@ enum ListSubtab: String, CaseIterable, Codable {
     var icon: String {
         switch self {
         case .pantry:  "refrigerator"
+        case .reserve: "tray"
         case .grocery: "cart"
         case .utensils: "fork.knife"
         }
@@ -27,6 +30,7 @@ enum ListSubtab: String, CaseIterable, Codable {
     var newItemTitle: String {
         switch self {
         case .pantry: "Novo Item da Despensa"
+        case .reserve: String(localized: "Novo item para depois")
         case .grocery: "Novo Item do Mercado"
         case .utensils: "Novo Utensílio"
         }
@@ -35,6 +39,7 @@ enum ListSubtab: String, CaseIterable, Codable {
     var removalContext: ItemListType {
         switch self {
         case .pantry: .pantry
+        case .reserve: .reserve
         case .grocery: .grocery
         case .utensils: .utensil
         }
@@ -143,6 +148,7 @@ private struct ListsLoadedTabView: View {
     @State private var selectedSubtab: ListSubtab
     @State private var showAddPantry = false
     @State private var showAddGrocery = false
+    @State private var showAddReserve = false
     @State private var showAddUtensil = false
     @State private var existingItemFromCreateFlow: UnifiedItemSelection?
     @State private var showsInlineTitle = false
@@ -161,7 +167,9 @@ private struct ListsLoadedTabView: View {
     private var settings: AppSettings? { settingsArray.first }
 
     private var visibleTabs: [ListSubtab] {
-        var tabs: [ListSubtab] = [.pantry, .grocery]
+        var tabs: [ListSubtab] = [.pantry]
+        if settings?.showReserve == true { tabs.append(.reserve) }
+        tabs.append(.grocery)
         if settings?.showUtensils == true {
             tabs.append(.utensils)
         }
@@ -182,12 +190,15 @@ private struct ListsLoadedTabView: View {
                             GlassGroupButton(systemImage: "plus") {
                                 if selectedSubtab == .pantry {
                                     showAddPantry = true
+                                } else if selectedSubtab == .reserve {
+                                    showAddReserve = true
                                 } else if selectedSubtab == .utensils {
                                     showAddUtensil = true
                                 } else {
                                     showAddGrocery = true
                                 }
                             }
+                            .accessibilityIdentifier("savoria.lists.add")
                         }
 
                         GlassButtonGroup {
@@ -233,6 +244,11 @@ private struct ListsLoadedTabView: View {
                                 onPullToAdd: { showAddPantry = true },
                                 onScrollOffsetChange: updateInlineTitle
                             )
+                        case .reserve:
+                            GroceryListView(searchText: localSearchText, sortOption: sortOption,
+                                            filterOption: groceryFilter, listType: .reserve,
+                                            onPullToAdd: { showAddReserve = true },
+                                            onScrollOffsetChange: updateInlineTitle)
                         case .grocery:
                             GroceryListView(
                                 searchText: localSearchText,
@@ -270,6 +286,9 @@ private struct ListsLoadedTabView: View {
         .toolbar(.hidden, for: .navigationBar)
         #endif
         .tint(PageTheme.lists.accentColor)
+        .onChange(of: settings?.showReserve) { _, enabled in
+            if enabled != true && selectedSubtab == .reserve { selectedSubtab = .pantry }
+        }
         .onChange(of: selectedSubtab) {
             localSearchText = ""
             showsInlineTitle = false
@@ -283,6 +302,8 @@ private struct ListsLoadedTabView: View {
             switch request.type {
             case "pantryItem":
                 selectedSubtab = .pantry
+            case "reserveItem":
+                if settings?.showReserve == true { selectedSubtab = .reserve }
             case "groceryItem":
                 selectedSubtab = .grocery
             case "utensil":
@@ -298,6 +319,11 @@ private struct ListsLoadedTabView: View {
                     openExistingItemFromCreateFlow(item)
                 }
             )
+                .forceLightStatusBar()
+        }
+        .sheet(isPresented: $showAddReserve) {
+            ItemDetailView(mode: .create(destinations: [.reserve]),
+                           onExistingItemRequested: openExistingItemFromCreateFlow)
                 .forceLightStatusBar()
         }
         .sheet(isPresented: $showAddGrocery) {
@@ -406,6 +432,7 @@ private struct ListsLoadedTabView: View {
     private var availableGroupingModes: [ListGroupingMode] {
         switch selectedSubtab {
         case .pantry: ListGroupingMode.allCases
+        case .reserve: [.category]
         case .grocery: ListGroupingMode.allCases.filter { $0 != .validade }
         case .utensils: [.category]
         }
@@ -414,6 +441,7 @@ private struct ListsLoadedTabView: View {
     private var currentGroupingMode: ListGroupingMode {
         switch selectedSubtab {
         case .pantry: settings?.pantryGroupingMode ?? .category
+        case .reserve: .category
         case .grocery: settings?.groceryGroupingMode ?? .marketSection
         case .utensils: .category
         }
@@ -423,6 +451,7 @@ private struct ListsLoadedTabView: View {
         guard let settings else { return }
         switch selectedSubtab {
         case .pantry: settings.pantryGroupingMode = mode
+        case .reserve: break
         case .grocery: settings.groceryGroupingMode = mode
         case .utensils: break
         }
@@ -461,7 +490,7 @@ private struct ListsLoadedTabView: View {
             badgeValue = pantryBadge
         case .grocery:
             badgeValue = groceryBadge
-        case .utensils:
+        case .reserve, .utensils:
             badgeValue = 0
         }
         return badgeValue > 0 ? "+\(badgeValue)" : nil
@@ -469,23 +498,11 @@ private struct ListsLoadedTabView: View {
     private func moveDraggedItem(_ payload: ListsDragPayload, to destination: ListSubtab) {
         guard payload.sourceList != destination else { return }
 
-        switch (payload.sourceList, destination) {
-        case (.pantry, .grocery):
-            guard let item = item(withID: payload.itemID) else { return }
-            item.isGrocery = true
-            item.isPantry = false
-            selectedSubtab = .grocery
-        case (.grocery, .pantry):
-            guard let item = item(withID: payload.itemID) else { return }
-            item.isPantry = true
-            item.isGrocery = false
-            if let days = item.defaultExpiryDays, days > 0 {
-                item.expirationDate = Calendar.current.date(byAdding: .day, value: days, to: Date())
-            }
-            selectedSubtab = .pantry
-        default:
-            break
-        }
+        guard payload.sourceList != .utensils, destination != .utensils,
+              let item = item(withID: payload.itemID) else { return }
+        item.move(to: destination.removalContext)
+        selectedSubtab = destination
+        try? modelContext.save()
     }
 
     private func item(withID itemID: UUID) -> UnifiedItem? {
@@ -548,6 +565,8 @@ private struct ListsLoadedTabView: View {
         switch selectedSubtab {
         case .pantry:
             showAddPantry = true
+        case .reserve:
+            showAddReserve = true
         case .grocery:
             showAddGrocery = true
         case .utensils:
@@ -558,6 +577,7 @@ private struct ListsLoadedTabView: View {
     private func openExistingItemFromCreateFlow(_ item: UnifiedItem) {
         showAddPantry = false
         showAddGrocery = false
+        showAddReserve = false
         showAddUtensil = false
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
@@ -585,6 +605,8 @@ private struct ListsSubtabDropButton: View {
 
                 Text(tab.title)
                     .font(.footnote.weight(.medium))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
 
                 if let badgeText, !badgeText.isEmpty {
                     Text(badgeText)

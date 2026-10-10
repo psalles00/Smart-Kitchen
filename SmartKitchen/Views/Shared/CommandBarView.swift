@@ -9,6 +9,8 @@ import AppKit
 /// The action the user selected from the Command Bar.
 enum CommandBarAction {
     case openPantryItem(UUID)
+    case openReserveItem(UUID)
+    case moveReserveToGrocery(UUID)
     case openGroceryItem(UUID)
     case openRecipe(UUID)
     case openUtensil(UUID)
@@ -339,6 +341,7 @@ struct CommandBarSearchContent: View {
         guard let objectID = result.objectID else { return }
         switch result.type {
         case .pantryItem:  onAction(.openPantryItem(objectID))
+        case .reserveItem: onAction(.openReserveItem(objectID))
         case .groceryItem: onAction(.openGroceryItem(objectID))
         case .recipe:      onAction(.openRecipe(objectID))
         case .utensil:     onAction(.openUtensil(objectID))
@@ -352,6 +355,7 @@ struct CommandBarSearchContent: View {
               let type = SearchResultType(rawValue: recent.type) else { return }
         switch type {
         case .pantryItem:  onAction(.openPantryItem(objectID))
+        case .reserveItem: onAction(.openReserveItem(objectID))
         case .groceryItem: onAction(.openGroceryItem(objectID))
         case .recipe:      onAction(.openRecipe(objectID))
         case .utensil:     onAction(.openUtensil(objectID))
@@ -623,6 +627,7 @@ struct CommandBarView: View {
         guard let objectID = result.objectID else { return }
         switch result.type {
         case .pantryItem:  onAction(.openPantryItem(objectID))
+        case .reserveItem: onAction(.openReserveItem(objectID))
         case .groceryItem: onAction(.openGroceryItem(objectID))
         case .recipe:      onAction(.openRecipe(objectID))
         case .utensil:     onAction(.openUtensil(objectID))
@@ -643,6 +648,7 @@ struct CommandBarView: View {
               let type = SearchResultType(rawValue: recent.type) else { return }
         switch type {
         case .pantryItem:  onAction(.openPantryItem(objectID))
+        case .reserveItem: onAction(.openReserveItem(objectID))
         case .groceryItem: onAction(.openGroceryItem(objectID))
         case .recipe:      onAction(.openRecipe(objectID))
         case .utensil:     onAction(.openUtensil(objectID))
@@ -958,6 +964,7 @@ enum CommandBarHelpers {
     static func recentIcon(for type: String) -> String {
         switch type {
         case "pantryItem":  "refrigerator"
+        case "reserveItem": "tray"
         case "groceryItem": "cart"
         case "recipe":      "book.closed"
         case "utensil":     "fork.knife"
@@ -968,6 +975,7 @@ enum CommandBarHelpers {
     static func recentTint(for type: String) -> Color {
         switch type {
         case "pantryItem":  .orange
+        case "reserveItem": .blue
         case "groceryItem": .green
         case "recipe":      .red
         case "utensil":     .purple
@@ -978,6 +986,7 @@ enum CommandBarHelpers {
     static func recentTypeLabel(for type: String) -> String {
         switch type {
         case "pantryItem":  "Despensa"
+        case "reserveItem": String(localized: "Para depois")
         case "groceryItem": "Mercado"
         case "recipe":      "Receita"
         case "utensil":     "Utensílio"

@@ -5,12 +5,14 @@ import PhotosUI
 /// Destination for a new item created from search suggestions.
 enum AddItemDestination: String, CaseIterable {
     case pantry
+    case reserve
     case grocery
     case utensil
 
     var label: String {
         switch self {
         case .pantry:   String(localized: "Despensa")
+        case .reserve: String(localized: "Para depois")
         case .grocery:  String(localized: "Mercado")
         case .utensil:  String(localized: "Utensílios")
         }
@@ -57,7 +59,11 @@ struct AddItemView: View {
     private var settings: AppSettings? { settingsArray.first }
     private var showUtensils: Bool { settings?.showUtensils == true }
     private var availableDestinations: [AddItemDestination] {
-        showUtensils ? AddItemDestination.allCases : [.pantry, .grocery]
+        var destinations: [AddItemDestination] = [.pantry]
+        if settings?.showReserve == true { destinations.append(.reserve) }
+        destinations.append(.grocery)
+        if showUtensils { destinations.append(.utensil) }
+        return destinations
     }
     private var categories: [Category] { allCategories.filter { $0.type == .pantry } }
     private var isValid: Bool { !name.trimmingCharacters(in: .whitespaces).isEmpty }
@@ -286,6 +292,15 @@ struct AddItemView: View {
             )
             let savedItem = insertOrMerge(item, in: allItems)
             onCreated?(savedItem.id, .pantry)
+        case .reserve:
+            let item = UnifiedItem(name: trimmed, descriptionText: trimmedDescription,
+                                   imageData: imageData, category: finalCategory,
+                                   quantity: quantity, unit: unit.isEmpty ? nil : unit,
+                                   iconName: finalIcon, defaultExpiryDays: hasExpirationDate ? computeExpiryDays() : nil,
+                                   isReserve: true,
+                                   reserveSortOrder: (allItems.filter(\.isReserve).map(\.reserveSortOrder).max() ?? -1) + 1)
+            let savedItem = insertOrMerge(item, in: allItems)
+            onCreated?(savedItem.id, .reserve)
         case .utensil:
             let item = UnifiedItem(
                 name: trimmed,

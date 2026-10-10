@@ -4,7 +4,7 @@ import SwiftData
 struct GroceryListView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scrollToItem) private var scrollToItem
-    @Query(filter: #Predicate<UnifiedItem> { $0.isGrocery }, sort: \UnifiedItem.grocerySortOrder) private var allItems: [UnifiedItem]
+    @Query private var allItems: [UnifiedItem]
     @Query(sort: \Category.sortOrder) private var allCategories: [Category]
     @Query private var settingsArray: [AppSettings]
 
@@ -17,6 +17,34 @@ struct GroceryListView: View {
     let searchText: String
     let sortOption: ListsSortOption
     let filterOption: GroceryListFilterOption
+    let listType: ItemListType
+
+    init(searchText: String, sortOption: ListsSortOption, filterOption: GroceryListFilterOption,
+         listType: ItemListType = .grocery, onAcquired: (() -> Void)? = nil,
+         onPullToAdd: (() -> Void)? = nil, onScrollOffsetChange: @escaping (CGFloat) -> Void = { _ in }) {
+        self.searchText = searchText
+        self.sortOption = sortOption
+        self.filterOption = filterOption
+        self.listType = listType
+        self.onAcquired = onAcquired
+        self.onPullToAdd = onPullToAdd
+        self.onScrollOffsetChange = onScrollOffsetChange
+        if listType == .reserve {
+            _allItems = Query(filter: #Predicate<UnifiedItem> { $0.isReserveValue == true }, sort: \UnifiedItem.reserveSortOrderValue)
+        } else {
+            _allItems = Query(filter: #Predicate<UnifiedItem> { $0.isGrocery }, sort: \UnifiedItem.grocerySortOrder)
+        }
+    }
+
+    private var sourceSubtab: ListSubtab { listType == .reserve ? .reserve : .grocery }
+    private var nextDestination: ItemListType { listType == .reserve ? .grocery : .pantry }
+    private func itemOrder(_ item: UnifiedItem) -> Int {
+        listType == .reserve ? item.reserveSortOrder : item.grocerySortOrder
+    }
+    private func setItemOrder(_ item: UnifiedItem, _ order: Int) {
+        if listType == .reserve { item.reserveSortOrder = order }
+        else { item.grocerySortOrder = order }
+    }
     var onAcquired: (() -> Void)?
     var onPullToAdd: (() -> Void)?
     var onScrollOffsetChange: (CGFloat) -> Void = { _ in }
@@ -29,7 +57,7 @@ struct GroceryListView: View {
     }
 
     private var activeGroupingMode: ListGroupingMode {
-        settingsArray.first?.groceryGroupingMode ?? .marketSection
+        listType == .reserve ? .category : (settingsArray.first?.groceryGroupingMode ?? .marketSection)
     }
 
     private func makeSnapshot() -> GroceryListSnapshot {
@@ -85,7 +113,7 @@ struct GroceryListView: View {
             }
         }
         .sheet(item: $editingItem, onDismiss: { editingItem = nil }) { selection in
-            ItemDetailContainerView(itemID: selection.id, removalContext: .grocery)
+            ItemDetailContainerView(itemID: selection.id, removalContext: listType)
                 .forceLightStatusBar()
         }
         .sheet(item: $acquiredItem, onDismiss: { acquiredItem = nil }) { selection in
@@ -113,7 +141,7 @@ struct GroceryListView: View {
             .coordinateSpace(name: "lists_scroll")
             .onScrollOffsetChange(perform: onScrollOffsetChange)
             .onChange(of: scrollToItem, initial: true) { _, request in
-                guard let request, request.type == "groceryItem" else { return }
+                guard let request, request.type == (listType == .reserve ? "reserveItem" : "groceryItem") else { return }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                     withAnimation(.easeInOut(duration: 0.4)) {
                         proxy.scrollTo(request.itemID, anchor: .center)
@@ -150,7 +178,7 @@ struct GroceryListView: View {
         Button {
             editingItem = UnifiedItemSelection(id: item.id)
         } label: {
-            GroceryItemRow(item: item, categoryIconName: snapshot.categoryIconByName[item.category], isAlsoInPantry: item.isPantry, showsDivider: itemIndex > 0) {
+            GroceryItemRow(item: item, categoryIconName: snapshot.categoryIconByName[item.category], isAlsoInPantry: item.isPantry, showsDivider: itemIndex > 0, destination: nextDestination) {
                 acquireItem(item)
             }
             .contentShape(Rectangle())
@@ -176,7 +204,7 @@ struct GroceryListView: View {
             .tint(.red)
         }
         .swipeActions(edge: .leading, allowsFullSwipe: true) {
-            if !item.isPantry {
+            if listType != .reserve && !item.isPantry {
                 Button {
                     copyToPantry(item)
                 } label: {
@@ -192,7 +220,7 @@ struct GroceryListView: View {
             }
             .tint(item.isPantry ? Color(red: 37/255, green: 79/255, blue: 34/255) : Color(red: 160/255, green: 58/255, blue: 19/255))
         }
-        .draggable(ListsDragPayload(itemID: item.id, sourceList: .grocery)) {
+        .draggable(ListsDragPayload(itemID: item.id, sourceList: sourceSubtab)) {
             DragLiftPreviewCard(
                 title: item.name,
                 subtitle: category,
@@ -268,16 +296,18 @@ struct GroceryListView: View {
             Button("Editar", systemImage: "pencil") {
                 editingItem = UnifiedItemSelection(id: item.id)
             }
-            Button("Mover à Despensa", systemImage: "checkmark.circle") {
+            Button(listType == .reserve ? String(localized: "Enviar ao Mercado") : String(localized: "Mover à Despensa"), systemImage: nextDestination.icon) {
                 acquireItem(item)
             }
-            if !item.isPantry {
+            if listType != .reserve && !item.isPantry {
                 Button("Em Ambos", systemImage: "square.on.square") {
                     copyToPantry(item)
                 }
             }
-            Button("Adquirir e Editar", systemImage: "square.and.pencil") {
-                acquireItem(item, shouldEdit: true)
+            if listType != .reserve {
+                Button("Adquirir e Editar", systemImage: "square.and.pencil") {
+                    acquireItem(item, shouldEdit: true)
+                }
             }
             if item.isPantry {
                 Label("Também na Despensa", systemImage: "refrigerator")
@@ -291,9 +321,9 @@ struct GroceryListView: View {
 
     private var emptyState: some View {
         ContentUnavailableView {
-            Label("Lista Vazia", systemImage: "cart")
+            Label(listType == .reserve ? String(localized: "Para depois") : String(localized: "Lista Vazia"), systemImage: listType.icon)
         } description: {
-            Text("Adicione itens à lista de mercado para suas próximas compras.")
+            Text(listType == .reserve ? String(localized: "Guarde aqui o que acabou. Marque um item quando decidir comprá-lo novamente.") : String(localized: "Adicione itens à lista de mercado para suas próximas compras."))
         }
     }
 
@@ -303,12 +333,9 @@ struct GroceryListView: View {
 
     private func acquireItem(_ item: UnifiedItem, shouldEdit: Bool = false) {
         withAnimation {
-            item.isPantry = true
-            item.isGrocery = false
-            if let days = item.defaultExpiryDays, days > 0 {
-                item.expirationDate = Calendar.current.date(byAdding: .day, value: days, to: Date())
-            }
+            item.move(to: nextDestination)
         }
+        try? modelContext.save()
         if shouldEdit {
             acquiredItem = UnifiedItemSelection(id: item.id)
         }
@@ -319,14 +346,16 @@ struct GroceryListView: View {
         guard !item.isPantry else { return }
         withAnimation {
             item.isPantry = true
+            item.isReserve = false
         }
         onAcquired?()
     }
 
     private func deleteItem(_ item: UnifiedItem) {
         withAnimation {
-            if item.isPantry || item.isUtensil {
-                item.isGrocery = false
+            if item.activeFlags.count > 1 {
+                if listType == .reserve { item.isReserve = false }
+                else { item.isGrocery = false }
             } else {
                 modelContext.delete(item)
             }
@@ -336,7 +365,7 @@ struct GroceryListView: View {
     private func sortedItems(_ items: [UnifiedItem]) -> [UnifiedItem] {
         switch sortOption {
         case .custom:
-            return items.sorted { $0.grocerySortOrder < $1.grocerySortOrder }
+            return items.sorted { itemOrder($0) < itemOrder($1) }
         case .name:
             return items.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
         case .addedAt:
@@ -351,35 +380,24 @@ struct GroceryListView: View {
             activeGroupingMode == .marketSection ? original : targetCategory
         }
 
-        switch payload.sourceList {
-        case .grocery:
-            guard let sourceItem = allItems.first(where: { $0.id == payload.itemID }) else { return false }
-            let previousCategory = sourceItem.category
-            let newCategory = resolvedCategory(sourceItem.category)
-            sourceItem.category = newCategory
-            reorderGroceryItem(sourceItem, in: newCategory, before: targetItem)
-            normalizeGrocerySortOrder(in: previousCategory)
-            return true
-        case .pantry:
-            // Find the unified item from pantry and flip flags
-            let fd = FetchDescriptor<UnifiedItem>(predicate: #Predicate { $0.isPantry })
-            guard let pantryItems = try? modelContext.fetch(fd),
-                  let item = pantryItems.first(where: { $0.id == payload.itemID }) else { return false }
-            let newCategory = resolvedCategory(item.category)
-            item.isGrocery = true
-            item.isPantry = false
-            item.category = newCategory
-            reorderGroceryItem(item, in: newCategory, before: targetItem)
-            return true
-        case .utensils:
-            return false
-        }
+        guard payload.sourceList != .utensils else { return false }
+        let id = payload.itemID
+        let descriptor = FetchDescriptor<UnifiedItem>(predicate: #Predicate { $0.id == id })
+        guard let item = try? modelContext.fetch(descriptor).first else { return false }
+        let previousCategory = item.category
+        let newCategory = resolvedCategory(item.category)
+        if payload.sourceList != sourceSubtab { item.move(to: listType) }
+        item.category = newCategory
+        reorderGroceryItem(item, in: newCategory, before: targetItem)
+        normalizeGrocerySortOrder(in: previousCategory)
+        try? modelContext.save()
+        return true
     }
 
     private func reorderGroceryItem(_ movingItem: UnifiedItem, in category: String, before targetItem: UnifiedItem?) {
         var items = allItems
             .filter { $0.id != movingItem.id && $0.category == category }
-            .sorted { $0.grocerySortOrder < $1.grocerySortOrder }
+            .sorted { itemOrder($0) < itemOrder($1) }
 
         let insertIndex = if let targetItem, let targetIndex = items.firstIndex(where: { $0.id == targetItem.id }) {
             targetIndex
@@ -389,7 +407,7 @@ struct GroceryListView: View {
 
         items.insert(movingItem, at: insertIndex)
         for (index, item) in items.enumerated() {
-            if item.grocerySortOrder != index { item.grocerySortOrder = index }
+            if itemOrder(item) != index { setItemOrder(item, index) }
             if item.category != category { item.category = category }
         }
     }
@@ -397,10 +415,10 @@ struct GroceryListView: View {
     private func normalizeGrocerySortOrder(in category: String) {
         let items = allItems
             .filter { $0.category == category }
-            .sorted { $0.grocerySortOrder < $1.grocerySortOrder }
+            .sorted { itemOrder($0) < itemOrder($1) }
 
         for (index, item) in items.enumerated() {
-            if item.grocerySortOrder != index { item.grocerySortOrder = index }
+            if itemOrder(item) != index { setItemOrder(item, index) }
         }
     }
 }
@@ -410,6 +428,7 @@ struct GroceryItemRow: View {
     let categoryIconName: String?
     let isAlsoInPantry: Bool
     let showsDivider: Bool
+    var destination: ItemListType = .pantry
     let onAcquire: () -> Void
 
     private var hasExtraData: Bool {
@@ -456,11 +475,13 @@ struct GroceryItemRow: View {
 
                 AnimatedItemActionButton(
                     actionID: item.id.uuidString,
-                    systemImage: "refrigerator",
+                    systemImage: destination.icon,
                     initialSystemImage: "checkmark",
                     color: PageTheme.lists.accentColor,
                     action: onAcquire
                 )
+                .accessibilityLabel(destination == .grocery ? String(localized: "Enviar ao Mercado") : String(localized: "Mover à Despensa"))
+                .accessibilityIdentifier("savoria.item.complete." + item.id.uuidString)
             }
             .padding(.vertical, 7)
             .padding(.horizontal, 16)

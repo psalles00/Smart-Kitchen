@@ -6,6 +6,7 @@ import PhotosUI
 
 enum ItemListType: String, CaseIterable, Identifiable {
     case pantry
+    case reserve
     case grocery
     case utensil
 
@@ -14,6 +15,7 @@ enum ItemListType: String, CaseIterable, Identifiable {
     var label: String {
         switch self {
         case .pantry:  String(localized: "Despensa")
+        case .reserve: String(localized: "Para depois")
         case .grocery: String(localized: "Mercado")
         case .utensil: String(localized: "Utensílio")
         }
@@ -22,6 +24,7 @@ enum ItemListType: String, CaseIterable, Identifiable {
     var icon: String {
         switch self {
         case .pantry:  "cabinet"
+        case .reserve: "tray"
         case .grocery: "cart"
         case .utensil: "fork.knife"
         }
@@ -30,6 +33,7 @@ enum ItemListType: String, CaseIterable, Identifiable {
     var color: Color {
         switch self {
         case .pantry:  Color(red: 37/255, green: 79/255, blue: 34/255)
+        case .reserve: Color.blue
         case .grocery: Color(red: 160/255, green: 58/255, blue: 19/255)
         case .utensil: Color.purple
         }
@@ -38,6 +42,7 @@ enum ItemListType: String, CaseIterable, Identifiable {
     var listName: String {
         switch self {
         case .pantry:  String(localized: "Despensa")
+        case .reserve: String(localized: "Para depois")
         case .grocery: String(localized: "Mercado")
         case .utensil: String(localized: "Utensílios")
         }
@@ -46,13 +51,14 @@ enum ItemListType: String, CaseIterable, Identifiable {
     var removalDestinationLabel: String {
         switch self {
         case .pantry:  "da Despensa"
+        case .reserve: String(localized: "de Para depois")
         case .grocery: "do Mercado"
         case .utensil: "dos Utensílios"
         }
     }
 
     var removalButtonTitle: String {
-        "Remover \(removalDestinationLabel)"
+        self == .reserve ? String(localized: "Remover de Para depois") : "Remover \(removalDestinationLabel)"
     }
 }
 
@@ -75,6 +81,7 @@ struct ItemDetailView: View {
     @Query private var settingsArray: [AppSettings]
 
     let mode: ItemDetailMode
+    var restoresLastDestination = false
 
     // Create-mode initial data
     var initialName: String = ""
@@ -128,7 +135,7 @@ struct ItemDetailView: View {
     }
 
     private var isUtensil: Bool {
-        if let item = editingItem { return item.isUtensil && !item.isPantry && !item.isGrocery }
+        if let item = editingItem { return item.isUtensil && !item.isPantry && !item.isGrocery && !item.isReserve }
         return selectedLists == [.utensil]
     }
 
@@ -270,6 +277,7 @@ struct ItemDetailView: View {
             if let item = editingItem {
                 item.isPantry = newLists.contains(.pantry)
                 item.isGrocery = newLists.contains(.grocery)
+                item.isReserve = newLists.contains(.reserve)
                 item.isUtensil = newLists.contains(.utensil)
             }
         }
@@ -522,7 +530,29 @@ struct ItemDetailView: View {
     private var listToggleSection: some View {
         VStack(spacing: 12) {
             // Pantry + Grocery joined toggle
-            pantryGroceryToggle
+            if settings?.showReserve == true || selectedLists.contains(.reserve) {
+                HStack(spacing: 6) {
+                    ForEach([ItemListType.pantry, .reserve, .grocery]) { list in
+                        Button {
+                            selectedLists = [list]
+                        } label: {
+                            Label(list.label, systemImage: list.icon)
+                                .font(.subheadline.weight(.semibold))
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.7)
+                                .frame(maxWidth: .infinity, minHeight: 44)
+                                .background(selectedLists.contains(list) ? list.color.opacity(0.25) : Color.clear, in: .rect(cornerRadius: 12))
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityIdentifier("savoria.item.destination." + list.rawValue)
+                        .accessibilityAddTraits(selectedLists.contains(list) ? .isSelected : [])
+                    }
+                }
+                Button("Em Ambos") { selectedLists = [.pantry, .grocery] }
+                    .font(.caption)
+            } else {
+                pantryGroceryToggle
+            }
 
             // Utensil (separate, only when applicable)
             if showUtensilOption {
@@ -992,11 +1022,12 @@ struct ItemDetailView: View {
             }
 
             // Restore last destination preference
-            if let raw = settings?.lastAddItemDestinationRaw,
+            if restoresLastDestination, let raw = settings?.lastAddItemDestinationRaw,
                let saved = AddItemDestination(rawValue: raw) {
                 switch saved {
                 case .pantry:  selectedLists = [.pantry]
                 case .grocery: selectedLists = [.grocery]
+                case .reserve: if settings?.showReserve == true { selectedLists = [.reserve] }
                 case .utensil: if showUtensils { selectedLists = [.utensil] }
                 }
             }
@@ -1012,6 +1043,7 @@ struct ItemDetailView: View {
             var lists = Set<ItemListType>()
             if item.isPantry { lists.insert(.pantry) }
             if item.isGrocery { lists.insert(.grocery) }
+            if item.isReserve { lists.insert(.reserve) }
             if item.isUtensil { lists.insert(.utensil) }
             if lists.isEmpty { lists.insert(.pantry) }
             selectedLists = lists
@@ -1056,7 +1088,9 @@ struct ItemDetailView: View {
     }
 
     private func toggleList(_ listType: ItemListType) {
-        if listType == .utensil {
+        if listType == .reserve {
+            selectedLists = [.reserve]
+        } else if listType == .utensil {
             if selectedLists.contains(.utensil) {
                 if selectedLists.count > 1 {
                     selectedLists.remove(.utensil)
@@ -1217,6 +1251,7 @@ struct ItemDetailView: View {
         let wantsPantry = selectedLists.contains(.pantry)
         let wantsGrocery = selectedLists.contains(.grocery)
         let wantsUtensil = selectedLists.contains(.utensil)
+        let wantsReserve = selectedLists.contains(.reserve)
 
         let item = UnifiedItem(
             name: trimmed,
@@ -1227,7 +1262,9 @@ struct ItemDetailView: View {
             isUtensil: wantsUtensil,
             pantrySortOrder: wantsPantry ? nextSortOrder(for: .pantry) : 0,
             grocerySortOrder: wantsGrocery ? nextSortOrder(for: .grocery) : 0,
-            utensilSortOrder: wantsUtensil ? nextSortOrder(for: .utensil) : 0
+            utensilSortOrder: wantsUtensil ? nextSortOrder(for: .utensil) : 0,
+            isReserve: wantsReserve,
+            reserveSortOrder: wantsReserve ? nextSortOrder(for: .reserve) : 0
         )
         item.descriptionText = trimmedDescription
         item.imageData = imageData
@@ -1243,9 +1280,11 @@ struct ItemDetailView: View {
 
         let savedItem = insertOrMerge(item)
         createdID = savedItem.id
-        createdType = wantsPantry ? .pantry : (wantsGrocery ? .grocery : .utensil)
+        createdType = wantsReserve ? .reserve : (wantsPantry ? .pantry : (wantsGrocery ? .grocery : .utensil))
 
-        if wantsUtensil {
+        if wantsReserve {
+            settings?.lastAddItemDestinationRaw = "reserve"
+        } else if wantsUtensil {
             settings?.lastAddItemDestinationRaw = "utensil"
         } else {
             settings?.lastAddItemDestinationRaw = wantsPantry ? "pantry" : "grocery"
@@ -1310,6 +1349,7 @@ struct ItemDetailView: View {
         let maxSortOrder = items.map { item in
             switch listType {
             case .pantry: item.pantrySortOrder
+            case .reserve: item.reserveSortOrder
             case .grocery: item.grocerySortOrder
             case .utensil: item.utensilSortOrder
             }
@@ -1322,6 +1362,8 @@ struct ItemDetailView: View {
         switch listType {
         case .pantry:
             descriptor = FetchDescriptor<UnifiedItem>(predicate: #Predicate { $0.isPantry })
+        case .reserve:
+            descriptor = FetchDescriptor<UnifiedItem>(predicate: #Predicate { $0.isReserveValue == true })
         case .grocery:
             descriptor = FetchDescriptor<UnifiedItem>(predicate: #Predicate { $0.isGrocery })
         case .utensil:
@@ -1343,19 +1385,25 @@ struct ItemDetailView: View {
         withAnimation {
             switch context {
             case .pantry:
-                if item.isGrocery || item.isUtensil {
+                if item.isGrocery || item.isUtensil || item.isReserve {
                     item.isPantry = false
                 } else {
                     modelContext.delete(item)
                 }
             case .grocery:
-                if item.isPantry || item.isUtensil {
+                if item.isPantry || item.isUtensil || item.isReserve {
                     item.isGrocery = false
                 } else {
                     modelContext.delete(item)
                 }
+            case .reserve:
+                if item.isPantry || item.isGrocery || item.isUtensil {
+                    item.isReserve = false
+                } else {
+                    modelContext.delete(item)
+                }
             case .utensil:
-                if item.isPantry || item.isGrocery {
+                if item.isPantry || item.isGrocery || item.isReserve {
                     item.isUtensil = false
                 } else {
                     modelContext.delete(item)

@@ -38,6 +38,8 @@ struct CommandBarResultRow: View {
         switch result.type {
         case .pantryItem:
             return "cart.badge.plus"
+        case .reserveItem:
+            return "cart.badge.plus"
         case .groceryItem:
             return "refrigerator"
         default:
@@ -98,7 +100,7 @@ struct CommandBarResultRow: View {
 
                 // Quick action checkbox: only for single-list items
                 if let _ = onQuickAction, !result.isAlsoInOtherList,
-                   (result.type == .pantryItem || result.type == .groceryItem) {
+                   (result.type == .pantryItem || result.type == .groceryItem || result.type == .reserveItem) {
                     Button {
                         guard !isAnimating else { return }
                         performToggleAnimation()
@@ -221,6 +223,7 @@ struct CommandBarResultRow: View {
     private func typeIcon(for type: SearchResultType) -> String {
         switch type {
         case .pantryItem: return "refrigerator"
+        case .reserveItem: return "tray"
         case .groceryItem: return "cart"
         case .recipe: return "book"
         case .utensil: return "fork.knife"
@@ -284,6 +287,7 @@ struct CommandBarResultRow: View {
     private func tagLabel(for type: SearchResultType) -> String {
         switch type {
         case .pantryItem:  return String(localized: "Despensa")
+        case .reserveItem: return String(localized: "Para depois")
         case .groceryItem: return String(localized: "Mercado")
         case .recipe:      return String(localized: "Receita")
         case .utensil:     return String(localized: "Utensílio")
@@ -295,6 +299,7 @@ struct CommandBarResultRow: View {
     private func tagIcon(for type: SearchResultType) -> String {
         switch type {
         case .pantryItem:  return "refrigerator"
+        case .reserveItem: return "tray"
         case .groceryItem: return "cart"
         case .recipe:      return "book"
         case .utensil:     return "fork.knife"
@@ -306,6 +311,7 @@ struct CommandBarResultRow: View {
     private func tagTint(for type: SearchResultType) -> Color {
         switch type {
         case .pantryItem:  return Color(red: 37/255, green: 79/255, blue: 34/255)
+        case .reserveItem: return .blue
         case .groceryItem: return Color(red: 160/255, green: 58/255, blue: 19/255)
         case .recipe:      return .red
         case .utensil:     return .purple
@@ -325,7 +331,7 @@ struct CommandBarResultRow: View {
                 .clipShape(Circle())
         } else {
             switch result.type {
-            case .pantryItem, .groceryItem, .utensil, .recipe, .suggestion:
+            case .pantryItem, .reserveItem, .groceryItem, .utensil, .recipe, .suggestion:
                 IconImage(
                     name: result.title,
                     iconFileName: result.iconFilename,
@@ -342,7 +348,7 @@ struct CommandBarResultRow: View {
         }
         #else
         switch result.type {
-        case .pantryItem, .groceryItem, .utensil, .recipe, .suggestion:
+        case .pantryItem, .reserveItem, .groceryItem, .utensil, .recipe, .suggestion:
             IconImage(
                 name: result.title,
                 iconFileName: result.iconFilename,

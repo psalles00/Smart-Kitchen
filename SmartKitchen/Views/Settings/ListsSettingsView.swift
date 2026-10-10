@@ -28,6 +28,12 @@ struct ListsSettingsView: View {
                         in: 1...180
                     )
 
+                    Toggle("Mostrar Para depois", isOn: Binding(
+                        get: { settings.showReserve },
+                        set: { settings.showReserve = $0 }
+                    ))
+                    .accessibilityIdentifier("savoria.lists.reserve.enabled")
+
                     Toggle("Mostrar utensílios", isOn: Binding(
                         get: { settings.showUtensils },
                         set: { settings.showUtensils = $0 }
@@ -36,7 +42,7 @@ struct ListsSettingsView: View {
             } header: {
                 Text("Despensa e mercado")
             } footer: {
-                Text("Configura nível de detalhe da despensa, antecedência das notificações de validade e visibilidade da lista de utensílios.")
+                Text("Itens finalizados vão para Para depois quando habilitada. Marque-os para enviar ao Mercado. Ocultar a lista preserva seus itens.")
             }
 
             Section {

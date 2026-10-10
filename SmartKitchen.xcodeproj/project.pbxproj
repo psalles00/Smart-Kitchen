@@ -282,6 +282,7 @@
 		FF60AC160FD69C166D5A44FC /* LLMProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F2EA589C249BEA8EA6153BF /* LLMProvider.swift */; };
 		8D09968A607D41F5A8BEB9D5 /* DayHistoryIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D4D139190146828F6B486CD /* DayHistoryIndex.swift */; };
 		E47FDAF52883528B54EE48AB /* DayHistoryIndexTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E02ED22670CE4E137EAE55F5 /* DayHistoryIndexTests.swift */; };
+		4CD94AEBE8A74E6BA68C91AB /* ReserveListTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A83028C2E5A948F1B83FE1D2 /* ReserveListTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -609,6 +610,7 @@
 		FFD9A8F429B03EDF77B771FE /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
 		3D4D139190146828F6B486CD /* DayHistoryIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayHistoryIndex.swift; sourceTree = "<group>"; };
 		E02ED22670CE4E137EAE55F5 /* DayHistoryIndexTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayHistoryIndexTests.swift; sourceTree = "<group>"; };
+		A83028C2E5A948F1B83FE1D2 /* ReserveListTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReserveListTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -661,6 +663,7 @@
 				0FD39D5CF6BCD236C35FCDC9 /* NutritionAITestFixtures.swift */,
 				B41EF838C77C7A9EE305E260 /* NutritionAITypeCoverageTests.swift */,
 				E02ED22670CE4E137EAE55F5 /* DayHistoryIndexTests.swift */,
+				A83028C2E5A948F1B83FE1D2 /* ReserveListTests.swift */,
 				CD6C11A8444016682B6ECD03 /* UnifiedItemMergeTests.swift */,
 			);
 			path = SmartKitchenTests;
@@ -1685,6 +1688,7 @@
 				EB48AFB6177D617A32F33A81 /* NutritionAITestFixtures.swift in Sources */,
 				4E5B77C37DFF3B80E2C02342 /* NutritionAITypeCoverageTests.swift in Sources */,
 				E47FDAF52883528B54EE48AB /* DayHistoryIndexTests.swift in Sources */,
+				4CD94AEBE8A74E6BA68C91AB /* ReserveListTests.swift in Sources */,
 				7EA0625E10701FE9400561F5 /* UnifiedItemMergeTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

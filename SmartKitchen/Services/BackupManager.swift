@@ -491,6 +491,7 @@ struct AppBackupSnapshot: Codable {
             settings.openAIAPIKey = record.openAIAPIKey
             settings.hasCompletedOnboarding = record.hasCompletedOnboarding
             settings.showUtensils = record.showUtensils
+            settings.showReserve = record.showReserve
             context.insert(settings)
         }
 
@@ -531,7 +532,9 @@ struct AppBackupSnapshot: Codable {
                 defaultExpiryDays: record.defaultExpiryDays,
                 isChecked: record.isChecked,
                 isFixed: record.isFixed,
-                linkedPantryItemId: record.linkedPantryItemId
+                linkedPantryItemId: record.linkedPantryItemId,
+                isReserve: record.isReserve ?? false,
+                reserveSortOrder: record.reserveSortOrder ?? 0
             )
             item.id = record.id
             item.addedAt = record.addedAt
@@ -639,6 +642,7 @@ struct AppSettingsRecord: Codable {
     let openAIAPIKey: String
     let hasCompletedOnboarding: Bool
     let showUtensils: Bool
+    let showReserve: Bool
 
     init(_ settings: AppSettings) {
         id = settings.id
@@ -651,6 +655,7 @@ struct AppSettingsRecord: Codable {
         openAIAPIKey = settings.openAIAPIKey
         hasCompletedOnboarding = settings.hasCompletedOnboarding
         showUtensils = settings.showUtensils
+        showReserve = settings.showReserve
     }
 
     init(from decoder: any Decoder) throws {
@@ -665,6 +670,7 @@ struct AppSettingsRecord: Codable {
         openAIAPIKey = try container.decode(String.self, forKey: .openAIAPIKey)
         hasCompletedOnboarding = try container.decode(Bool.self, forKey: .hasCompletedOnboarding)
         showUtensils = try container.decodeIfPresent(Bool.self, forKey: .showUtensils) ?? false
+        showReserve = try container.decodeIfPresent(Bool.self, forKey: .showReserve) ?? false
     }
 }
 
@@ -707,6 +713,8 @@ struct UnifiedItemRecord: Codable {
     let iconName: String?
     let isPantry: Bool
     let isGrocery: Bool
+    let isReserve: Bool?
+    let reserveSortOrder: Int?
     let isUtensil: Bool
     let pantrySortOrder: Int
     let grocerySortOrder: Int
@@ -731,6 +739,8 @@ struct UnifiedItemRecord: Codable {
         isPantry = item.isPantry
         isGrocery = item.isGrocery
         isUtensil = item.isUtensil
+        isReserve = item.isReserve
+        reserveSortOrder = item.reserveSortOrder
         pantrySortOrder = item.pantrySortOrder
         grocerySortOrder = item.grocerySortOrder
         utensilSortOrder = item.utensilSortOrder
@@ -749,12 +759,14 @@ struct UnifiedItemRecord: Codable {
         isPantry: Bool, isGrocery: Bool, isUtensil: Bool,
         pantrySortOrder: Int, grocerySortOrder: Int, utensilSortOrder: Int,
         isLinkedToGrocery: Bool, expirationDate: Date?, defaultExpiryDays: Int?,
-        isChecked: Bool, isFixed: Bool, linkedPantryItemId: UUID?, addedAt: Date
+        isChecked: Bool, isFixed: Bool, linkedPantryItemId: UUID?, addedAt: Date,
+        isReserve: Bool? = nil, reserveSortOrder: Int? = nil
     ) {
         self.id = id; self.name = name; self.descriptionText = descriptionText
         self.imageData = imageData; self.category = category; self.quantity = quantity
         self.unit = unit; self.iconName = iconName
         self.isPantry = isPantry; self.isGrocery = isGrocery; self.isUtensil = isUtensil
+        self.isReserve = isReserve; self.reserveSortOrder = reserveSortOrder
         self.pantrySortOrder = pantrySortOrder; self.grocerySortOrder = grocerySortOrder
         self.utensilSortOrder = utensilSortOrder
         self.isLinkedToGrocery = isLinkedToGrocery; self.expirationDate = expirationDate

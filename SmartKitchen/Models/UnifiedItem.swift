@@ -18,6 +18,17 @@ final class UnifiedItem {
     var isPantry: Bool = false
     var isGrocery: Bool = false
     var isUtensil: Bool = false
+    // Nullable additions let existing CloudKit records migrate without inventing membership.
+    var isReserveValue: Bool? = nil
+    var reserveSortOrderValue: Int? = nil
+    var isReserve: Bool {
+        get { isReserveValue ?? false }
+        set { isReserveValue = newValue }
+    }
+    var reserveSortOrder: Int {
+        get { reserveSortOrderValue ?? 0 }
+        set { reserveSortOrderValue = newValue }
+    }
 
     // MARK: - Per-list sort order
 
@@ -59,7 +70,9 @@ final class UnifiedItem {
         defaultExpiryDays: Int? = nil,
         isChecked: Bool = false,
         isFixed: Bool = false,
-        linkedPantryItemId: UUID? = nil
+        linkedPantryItemId: UUID? = nil,
+        isReserve: Bool = false,
+        reserveSortOrder: Int = 0
     ) {
         self.id = UUID()
         self.name = name
@@ -72,6 +85,8 @@ final class UnifiedItem {
         self.isPantry = isPantry
         self.isGrocery = isGrocery
         self.isUtensil = isUtensil
+        self.isReserveValue = isReserve ? true : nil
+        self.reserveSortOrderValue = isReserve ? reserveSortOrder : nil
         self.pantrySortOrder = pantrySortOrder
         self.grocerySortOrder = grocerySortOrder
         self.utensilSortOrder = utensilSortOrder
@@ -90,6 +105,7 @@ final class UnifiedItem {
     var sortOrder: Int {
         get {
             if isPantry { return pantrySortOrder }
+            if isReserve { return reserveSortOrder }
             if isGrocery { return grocerySortOrder }
             return utensilSortOrder
         }
@@ -97,6 +113,7 @@ final class UnifiedItem {
             if isPantry { pantrySortOrder = newValue }
             if isGrocery { grocerySortOrder = newValue }
             if isUtensil { utensilSortOrder = newValue }
+            if isReserve { reserveSortOrder = newValue }
         }
     }
 
@@ -162,6 +179,7 @@ final class UnifiedItem {
     var activeFlags: [ItemListType] {
         var flags: [ItemListType] = []
         if isPantry { flags.append(.pantry) }
+        if isReserve { flags.append(.reserve) }
         if isGrocery { flags.append(.grocery) }
         if isUtensil { flags.append(.utensil) }
         return flags
@@ -321,6 +339,11 @@ extension UnifiedItem {
             }
         }
 
+        if source.isReserve {
+            reserveSortOrder = isReserve ? min(reserveSortOrder, source.reserveSortOrder) : source.reserveSortOrder
+            isReserve = true
+        }
+
         defaultExpiryDays = Self.shortestDuration(defaultExpiryDays, source.defaultExpiryDays)
         if linkedPantryItemId == nil {
             linkedPantryItemId = source.linkedPantryItemId
@@ -409,5 +432,23 @@ extension UnifiedItem {
         case let (left?, right?):
             return min(left, right)
         }
+    }
+}
+
+/// In-place list transitions preserve identity, media, quantities and shelf-life preferences.
+extension UnifiedItem {
+    func move(to destination: ItemListType, now: Date = .now, calendar: Calendar = .current) {
+        isPantry = destination == .pantry
+        isGrocery = destination == .grocery
+        isReserve = destination == .reserve
+        isUtensil = destination == .utensil
+        isChecked = false
+        if destination == .pantry, let days = defaultExpiryDays, days > 0 {
+            expirationDate = calendar.date(byAdding: .day, value: days, to: now)
+        }
+    }
+
+    func deplete(reserveEnabled: Bool) {
+        move(to: reserveEnabled ? .reserve : .grocery)
     }
 }

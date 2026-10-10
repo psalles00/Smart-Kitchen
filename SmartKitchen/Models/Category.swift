@@ -444,7 +444,7 @@ enum CategoryMutationService {
         switch category.type.canonicalType {
         case .pantry, .grocery:
             let items = (try? context.fetch(FetchDescriptor<UnifiedItem>())) ?? []
-            return items.filter { ($0.isPantry || $0.isGrocery) && matchesName($0.category, category.name) }.count
+            return items.filter { ($0.isPantry || $0.isGrocery || $0.isReserve) && matchesName($0.category, category.name) }.count
 
         case .recipe:
             let recipes = (try? context.fetch(FetchDescriptor<Recipe>())) ?? []
@@ -475,7 +475,7 @@ enum CategoryMutationService {
         switch type.canonicalType {
         case .pantry, .grocery:
             let descriptor = FetchDescriptor<UnifiedItem>()
-            for item in ((try? context.fetch(descriptor)) ?? []) where (item.isPantry || item.isGrocery) && matchesName(item.category, oldName) {
+            for item in ((try? context.fetch(descriptor)) ?? []) where (item.isPantry || item.isGrocery || item.isReserve) && matchesName(item.category, oldName) {
                 item.category = newName
             }
 

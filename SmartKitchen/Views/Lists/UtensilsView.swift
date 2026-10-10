@@ -189,7 +189,7 @@ struct UtensilsView: View {
 
     private func deleteItem(_ item: UnifiedItem) {
         withAnimation {
-            if item.isPantry || item.isGrocery {
+            if item.isPantry || item.isGrocery || item.isReserve {
                 item.isUtensil = false
             } else {
                 modelContext.delete(item)

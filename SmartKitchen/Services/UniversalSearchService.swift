@@ -75,7 +75,7 @@ final class UniversalSearchService: ObservableObject {
         let items = (try? context.fetch(itemFD)) ?? []
         for item in items {
             // Skip utensil-only items when utensils are hidden
-            if !showUtensils && item.isUtensil && !item.isPantry && !item.isGrocery { continue }
+            if !showUtensils && item.isUtensil && !item.isPantry && !item.isGrocery && !item.isReserve { continue }
 
             guard let score = Self.matchScore(normalized, against: item.name) else { continue }
             let recencyBoost = Self.recencyBoost(item.addedAt)
@@ -89,6 +89,9 @@ final class UniversalSearchService: ObservableObject {
                 icon = "refrigerator"
                 let qty = item.formattedQuantity
                 if !qty.isEmpty { subtitle = "\(item.localizedCategoryDisplayName) · \(qty)" }
+            } else if item.isReserve {
+                primaryType = .reserveItem
+                icon = "tray"
             } else if item.isGrocery {
                 primaryType = .groceryItem
                 icon = "cart"
@@ -112,6 +115,7 @@ final class UniversalSearchService: ObservableObject {
             result.isAlsoInOtherList = item.activeFlags.count > 1
             var types: [SearchResultType] = []
             if item.isPantry { types.append(.pantryItem) }
+            if item.isReserve { types.append(.reserveItem) }
             if item.isGrocery { types.append(.groceryItem) }
             if item.isUtensil { types.append(.utensil) }
             result.listTypes = types

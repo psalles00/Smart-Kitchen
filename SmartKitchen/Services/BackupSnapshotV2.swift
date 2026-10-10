@@ -162,12 +162,13 @@ enum BackupSnapshotV2 {
     }
 
     private static func itemsCSV(_ s: AppBackupSnapshot) -> String {
-        let header = ["id", "type", "name", "description", "category", "quantity", "unit", "is_pantry", "is_grocery", "is_utensil", "is_checked", "is_fixed", "expiration_date", "added_at"]
+        let header = ["id", "type", "name", "description", "category", "quantity", "unit", "is_pantry", "is_grocery", "is_utensil", "is_checked", "is_fixed", "expiration_date", "added_at", "is_reserve", "reserve_sort_order"]
         var rows: [[String]] = [header]
 
         for i in s.unifiedItems {
             let type: String
             if i.isUtensil { type = "utensil" }
+            else if i.isReserve == true { type = "reserve" }
             else if i.isPantry && i.isGrocery { type = "pantry+grocery" }
             else if i.isPantry { type = "pantry" }
             else if i.isGrocery { type = "grocery" }
@@ -187,7 +188,9 @@ enum BackupSnapshotV2 {
                 i.isChecked ? "true" : "false",
                 i.isFixed ? "true" : "false",
                 i.expirationDate.map(isoDate) ?? "",
-                isoDate(i.addedAt)
+                isoDate(i.addedAt),
+                i.isReserve == true ? "true" : "false",
+                String(i.reserveSortOrder ?? 0)
             ])
         }
         return CSV.encode(rows)
