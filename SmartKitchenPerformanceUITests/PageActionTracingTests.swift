@@ -57,21 +57,26 @@ final class PageActionTracingTests: XCTestCase {
             recipe.tap()
             XCUIDevice.shared.press(.home)
             app.activate()
-            app.navigationBars.buttons.firstMatch.tap()
+            let back = app.navigationBars.buttons.matching(identifier: "BackButton")
+                .allElementsBoundByIndex.first(where: \.isHittable)
+            XCTAssertNotNil(back)
+            back?.tap()
         }
         tabs.buttons["Savoria"].firstMatch.tap()
         app.buttons["savoria.settings"].tap()
         XCTAssertTrue(app.buttons["savoria.settings.close"].waitForExistence(timeout: 10))
         // Read-only destinations; never toggle sync or perform backup/restore.
-        for title in ["iCloud", "Compartilhamento Familiar", "Notificações", "Backup", "Aparência e Performance", "Listas e Receitas", "Nutrição"] {
-            let link = app.buttons[title]
+        for destination in ["icloud", "family", "notifications", "backup", "appearance", "lists", "nutrition"] {
+            let link = app.buttons["savoria.settings.\(destination)"].firstMatch
             if !link.exists { app.swipeUp() }
-            if link.exists {
-                link.tap()
-                XCUIDevice.shared.press(.home)
-                app.activate()
-                app.navigationBars.buttons.firstMatch.tap()
-            }
+            XCTAssertTrue(link.waitForExistence(timeout: 5), "Settings destination must be exercised: \(destination)")
+            link.tap()
+            XCUIDevice.shared.press(.home)
+            app.activate()
+            let back = app.navigationBars.buttons["Configurações"].firstMatch
+            XCTAssertTrue(back.waitForExistence(timeout: 5))
+            back.tap()
+            XCTAssertTrue(app.buttons["savoria.settings.close"].waitForExistence(timeout: 5))
         }
         app.buttons["savoria.settings.close"].tap()
         XCUIDevice.shared.press(.home) // flush bounded trace after the final interaction

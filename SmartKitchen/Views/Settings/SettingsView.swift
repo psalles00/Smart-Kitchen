@@ -301,24 +301,28 @@ struct SettingsView: View {
                 } label: {
                     SettingsRowLabel("iCloud", systemImage: "icloud")
                 }
+                .accessibilityIdentifier("savoria.settings.icloud")
 
                 NavigationLink {
                     FamilySharingSettingsView()
                 } label: {
                     SettingsRowLabel("Compartilhamento Familiar", systemImage: "person.2")
                 }
+                .accessibilityIdentifier("savoria.settings.family")
 
                 NavigationLink {
                     NotificationSettingsView()
                 } label: {
                     SettingsRowLabel("Notificações", systemImage: "bell")
                 }
+                .accessibilityIdentifier("savoria.settings.notifications")
 
                 NavigationLink {
                     BackupSettingsView()
                 } label: {
                     SettingsRowLabel("Backup", systemImage: "externaldrive.badge.timemachine")
                 }
+                .accessibilityIdentifier("savoria.settings.backup")
             } header: {
                 Text("Conta e Sincronização")
             }
@@ -330,18 +334,21 @@ struct SettingsView: View {
                 } label: {
                     SettingsRowLabel("Aparência e Performance", systemImage: "paintbrush")
                 }
+                .accessibilityIdentifier("savoria.settings.appearance")
 
                 NavigationLink {
                     ListsSettingsView()
                 } label: {
                     SettingsRowLabel("Listas e Receitas", systemImage: "list.bullet.rectangle")
                 }
+                .accessibilityIdentifier("savoria.settings.lists")
 
                 NavigationLink {
                     NutritionSettingsView()
                 } label: {
                     SettingsRowLabel("Nutrição", systemImage: "leaf")
                 }
+                .accessibilityIdentifier("savoria.settings.nutrition")
             } header: {
                 Text("Preferências")
             }
