@@ -1,6 +1,8 @@
 # Savoria: ações por página e retorno ao app
 
-Estado: otimizações compiladas e verificadas funcionalmente no simulador; instalação otimizada e A/B físico pendentes. Não há prova de ausência de microengasgos em todas as páginas.
+Estado atualizado em10/10: otimizações anteriores incluídas no build com refinamento visual 90a873f0 instalado no iPhone12Pro. Execução/conferência física e A/B continuam pendentes. Não há prova de ausência de microengasgos em todas as páginas.
+
+**A baseline d3d8a950 foi substituída pela instalação solicitada dos novos ajustes visuais.** Não executar o roteiro abaixo supondo que ela ainda esteja instalada, nem reinstalar versão antiga. Os marcos seguintes descrevem o histórico de09/10. Nova captura deve medir a versão atual como referência para mudanças futuras, sem alegar A/B anterior completo. Ver [registro visual](../visual/2026-10-10-refinement.md).
 
 ## Referências e protocolo
 
