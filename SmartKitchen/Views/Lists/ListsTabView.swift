@@ -3,6 +3,146 @@ import SwiftData
 import CoreTransferable
 import UniformTypeIdentifiers
 
+/// Transient UI selection. No persistent flags or extra item queries.
+struct ListItemSelection {
+    var isActive = false
+    var selectedIDs: Set<UUID> = []
+    var toggle: (UUID) -> Void = { _ in }
+    var updateVisibleIDs: (Set<UUID>) -> Void = { _ in }
+}
+
+private struct ListItemSelectionKey: EnvironmentKey {
+    nonisolated(unsafe) static let defaultValue = ListItemSelection()
+}
+
+extension EnvironmentValues {
+    var listItemSelection: ListItemSelection {
+        get { self[ListItemSelectionKey.self] }
+        set { self[ListItemSelectionKey.self] = newValue }
+    }
+}
+
+struct ListSelectionActiveKey: PreferenceKey {
+    nonisolated(unsafe) static var defaultValue = false
+    static func reduce(value: inout Bool, nextValue: () -> Bool) { value = value || nextValue() }
+}
+
+struct ListSelectionIndicator: View {
+    let id: UUID
+    @Environment(\.listItemSelection) private var selection
+
+    var body: some View {
+        Image(systemName: selection.selectedIDs.contains(id) ? "checkmark.circle.fill" : "circle")
+            .font(.system(size: 24))
+            .foregroundStyle(PageTheme.lists.accentColor)
+            .frame(width: 36, height: 36)
+            .accessibilityHidden(true)
+    }
+}
+
+struct ListSelectionRow<Content: View>: View {
+    let item: UnifiedItem
+    @ViewBuilder var content: () -> Content
+    @Environment(\.listItemSelection) private var selection
+
+    var body: some View {
+        Button { selection.toggle(item.id) } label: { content().contentShape(Rectangle()) }
+            .buttonStyle(.plain)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Text(item.name))
+            .accessibilityValue(Text(selection.selectedIDs.contains(item.id) ? LocalizedStringKey("Selecionado") : LocalizedStringKey("Não selecionado")))
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAddTraits(selection.selectedIDs.contains(item.id) ? .isSelected : [])
+            .accessibilityIdentifier("savoria.item.select." + item.id.uuidString)
+            .listRowInsets(EdgeInsets())
+            .listRowSeparator(.hidden)
+            .listRowBackground(selection.selectedIDs.contains(item.id) ? PageTheme.lists.accentColor.opacity(0.12) : Color.clear)
+            .id(item.id)
+    }
+}
+
+enum ListBulkAction {
+    case move(ItemListType)
+    case category(String)
+}
+
+@MainActor
+enum ListBulkMutation {
+    /// Fetch only selected IDs; stale selections never affect items in another list.
+    static func apply(_ action: ListBulkAction, selectedIDs: Set<UUID>, source: ItemListType,
+                      in context: ModelContext) throws {
+        let ids = Array(selectedIDs)
+        guard !ids.isEmpty else { return }
+        let descriptor = FetchDescriptor<UnifiedItem>(predicate: #Predicate { ids.contains($0.id) })
+        let items = try context.fetch(descriptor).filter { $0.activeFlags.contains(source) }
+        if case .move(let destination) = action {
+            guard source != .utensil, destination != .utensil, destination != source else { return }
+        }
+        let previousValues = items.map { item in
+            (item, item.isPantry, item.isGrocery, item.isUtensil, item.isReserveValue,
+             item.isChecked, item.expirationDate, item.category)
+        }
+        do {
+            try context.transaction {
+                for item in items {
+                    switch action {
+                    case .move(let destination): item.move(to: destination)
+                    case .category(let category): item.category = category
+                    }
+                }
+            }
+        } catch {
+            // Undo only this failed operation's fields, never unrelated pending edits.
+            for (item, pantry, grocery, utensil, reserve, checked, expiry, category) in previousValues {
+                item.isPantry = pantry
+                item.isGrocery = grocery
+                item.isUtensil = utensil
+                item.isReserveValue = reserve
+                item.isChecked = checked
+                item.expirationDate = expiry
+                item.category = category
+            }
+            throw error
+        }
+    }
+}
+
+#if os(iOS)
+private struct ListBulkCategorySheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @Query private var categories: [Category]
+    let type: CategoryType
+    var onChoose: (String) -> Void
+
+    init(type: CategoryType, onChoose: @escaping (String) -> Void) {
+        self.type = type
+        self.onChoose = onChoose
+        _categories = Query(filter: #Predicate<Category> { $0.type == type }, sort: \Category.sortOrder)
+    }
+
+    var body: some View {
+        NavigationStack {
+            List {
+                ForEach(categories) { category in
+                    Button(category.localizedDisplayName) { onChoose(category.name); dismiss() }
+                }
+                if !categories.contains(where: { $0.name == "Outros" }) {
+                    Button("Outros") { onChoose("Outros"); dismiss() }
+                }
+            }
+            .navigationTitle("Alterar categoria")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancelar") { dismiss() }
+                }
+            }
+        }
+        .savoriaModalBorder(theme: .lists)
+    }
+}
+#endif
+
 enum ListSubtab: String, CaseIterable, Codable {
     case pantry
     case reserve
@@ -160,6 +300,11 @@ private struct ListsLoadedTabView: View {
     @State private var contentResetToken: Int = 0
     @State private var isLocalSearchVisible = false
     @State private var localSearchText = ""
+    @State private var isSelectingItems = false
+    @State private var selectedItemIDs: Set<UUID> = []
+    @State private var visibleItemIDs: Set<UUID> = []
+    @State private var showsBulkCategories = false
+    @State private var showsBulkSaveError = false
 
     @State private var pantryBadge: Int = 0
     @State private var groceryBadge: Int = 0
@@ -284,12 +429,35 @@ private struct ListsLoadedTabView: View {
         )
         #if os(iOS)
         .toolbar(.hidden, for: .navigationBar)
+        .environment(\.listItemSelection, ListItemSelection(
+            isActive: isSelectingItems,
+            selectedIDs: selectedItemIDs,
+            toggle: toggleItemSelection,
+            updateVisibleIDs: updateVisibleItemIDs
+        ))
+        .preference(key: ListSelectionActiveKey.self, value: isSelectingItems)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if isSelectingItems {
+                selectionBar
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+            }
+        }
+        .sheet(isPresented: $showsBulkCategories) {
+            ListBulkCategorySheet(type: selectedSubtab == .utensils ? .utensil : .pantry) { category in
+                applyBulkAction(.category(category))
+            }
+        }
+        .alert("Não foi possível salvar a ação. Tente novamente.", isPresented: $showsBulkSaveError) {
+            Button("OK", role: .cancel) {}
+        }
         #endif
         .tint(PageTheme.lists.accentColor)
         .onChange(of: settings?.showReserve) { _, enabled in
             if enabled != true && selectedSubtab == .reserve { selectedSubtab = .pantry }
         }
         .onChange(of: selectedSubtab) {
+            finishItemSelection()
             localSearchText = ""
             showsInlineTitle = false
             currentScrollOffset = 0
@@ -375,6 +543,14 @@ private struct ListsLoadedTabView: View {
 
     private var optionsMenu: some View {
         GlassGroupMenu(systemImage: "line.3.horizontal.decrease.circle") {
+            #if os(iOS)
+            Button(isSelectingItems ? String(localized: "Cancelar") : String(localized: "Selecionar itens"), systemImage: "checkmark.circle") {
+                if isSelectingItems { finishItemSelection() }
+                else { isSelectingItems = true }
+            }
+            .accessibilityIdentifier("savoria.lists.select")
+            Divider()
+            #endif
             Section("Ordenar por") {
                 ForEach(ListsSortOption.allCases) { option in
                     Button {
@@ -426,6 +602,91 @@ private struct ListsLoadedTabView: View {
                     }
                 }
             }
+        }
+        .accessibilityIdentifier("savoria.lists.options")
+    }
+
+    #if os(iOS)
+    private var selectionBar: some View {
+        HStack(spacing: 8) {
+            Text("Selecionados: \(selectedItemIDs.count)")
+                .font(.subheadline.weight(.medium))
+                .monospacedDigit()
+                .lineLimit(1)
+                .accessibilityIdentifier("savoria.lists.selection.count")
+            Spacer(minLength: 0)
+            Button {
+                selectedItemIDs = selectedItemIDs == visibleItemIDs ? [] : visibleItemIDs
+            } label: {
+                Image(systemName: selectedItemIDs == visibleItemIDs && !visibleItemIDs.isEmpty ? "checkmark.circle.fill" : "checkmark.circle")
+                    .frame(minWidth: 44, minHeight: 44)
+            }
+            .disabled(visibleItemIDs.isEmpty)
+            .accessibilityLabel(Text(selectedItemIDs == visibleItemIDs ? LocalizedStringKey("Limpar seleção") : LocalizedStringKey("Selecionar todos")))
+            .accessibilityIdentifier("savoria.lists.selection.all")
+            Menu {
+                if selectedSubtab != .utensils {
+                    if selectedSubtab != .pantry {
+                        Button("Mover para Despensa", systemImage: "refrigerator") { applyBulkAction(.move(.pantry)) }
+                    }
+                    if settings?.showReserve == true && selectedSubtab != .reserve {
+                        Button("Mover para depois", systemImage: "tray") { applyBulkAction(.move(.reserve)) }
+                    }
+                    if selectedSubtab != .grocery {
+                        Button("Mover para Mercado", systemImage: "cart") { applyBulkAction(.move(.grocery)) }
+                    }
+                }
+                Button("Alterar categoria", systemImage: "square.grid.2x2") { showsBulkCategories = true }
+            } label: {
+                Label("Escolher ação", systemImage: "ellipsis.circle")
+                    .font(.subheadline.weight(.semibold))
+                    .frame(minHeight: 44)
+            }
+            .disabled(selectedItemIDs.isEmpty)
+            .accessibilityIdentifier("savoria.lists.selection.actions")
+            Button(action: finishItemSelection) {
+                Image(systemName: "xmark").frame(minWidth: 44, minHeight: 44)
+            }
+            .accessibilityLabel("Cancelar")
+            .accessibilityIdentifier("savoria.lists.selection.cancel")
+        }
+        .padding(.horizontal, 12)
+        .foregroundStyle(PageTheme.lists.accentColor)
+        .background {
+            if #available(iOS 26, *) {
+                Capsule().fill(.clear).glassEffect(.regular.interactive(), in: .capsule)
+            } else {
+                Capsule().fill(.regularMaterial)
+            }
+        }
+    }
+    #endif
+
+    private func toggleItemSelection(_ id: UUID) {
+        guard isSelectingItems, visibleItemIDs.contains(id) else { return }
+        if selectedItemIDs.contains(id) { selectedItemIDs.remove(id) }
+        else { selectedItemIDs.insert(id) }
+    }
+
+    private func updateVisibleItemIDs(_ ids: Set<UUID>) {
+        if visibleItemIDs != ids { visibleItemIDs = ids }
+        selectedItemIDs.formIntersection(ids)
+    }
+
+    private func finishItemSelection() {
+        isSelectingItems = false
+        selectedItemIDs = []
+        showsBulkCategories = false
+    }
+
+    private func applyBulkAction(_ action: ListBulkAction) {
+        guard isSelectingItems, !selectedItemIDs.isEmpty else { return }
+        do {
+            try ListBulkMutation.apply(action, selectedIDs: selectedItemIDs,
+                                       source: selectedSubtab.removalContext, in: modelContext)
+            finishItemSelection()
+        } catch {
+            showsBulkSaveError = true
         }
     }
 
@@ -496,6 +757,7 @@ private struct ListsLoadedTabView: View {
         return badgeValue > 0 ? "+\(badgeValue)" : nil
     }
     private func moveDraggedItem(_ payload: ListsDragPayload, to destination: ListSubtab) {
+        guard !isSelectingItems else { return }
         guard payload.sourceList != destination else { return }
 
         guard payload.sourceList != .utensils, destination != .utensils,

@@ -2,6 +2,7 @@ import SwiftUI
 import SwiftData
 
 struct UtensilsView: View {
+    @Environment(\.listItemSelection) private var selection
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scrollToItem) private var scrollToItem
     @Query(filter: #Predicate<UnifiedItem> { $0.isUtensil }, sort: \UnifiedItem.utensilSortOrder) private var allItems: [UnifiedItem]
@@ -78,6 +79,9 @@ struct UtensilsView: View {
                 itemList(snapshot: snapshot)
             }
         }
+        .onChange(of: snapshot.groups.flatMap { $0.1.map(\.id) }, initial: true) { _, ids in
+            selection.updateVisibleIDs(Set(ids))
+        }
         .sheet(item: $editingItem, onDismiss: { editingItem = nil }) { selection in
             ItemDetailContainerView(itemID: selection.id, removalContext: .utensil)
                 .forceLightStatusBar()
@@ -136,41 +140,49 @@ struct UtensilsView: View {
     ) -> some View {
         Section {
             ForEach(Array(items.enumerated()), id: \.1.id) { itemIndex, item in
-                Button {
-                    editingItem = UnifiedItemSelection(id: item.id)
-                } label: {
-                    UtensilItemRow(
-                        item: item,
-                        categoryIconName: snapshot.categoryIconByName[item.category],
-                        showsDivider: itemIndex > 0
-                    )
-                        .contentShape(Rectangle())
-                        .background(alignment: .top) {
-                            if categoryIndex == 0, itemIndex == 0 {
-                                ScrollOffsetReader(coordinateSpace: "lists_scroll")
-                            }
-                        }
-                }
-                .buttonStyle(.plain)
-                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                    Button(role: .destructive) {
-                        deleteItem(item)
-                    } label: {
-                        Label("Remover", systemImage: "trash")
+                if selection.isActive {
+                    ListSelectionRow(item: item) {
+                        UtensilItemRow(item: item, categoryIconName: snapshot.categoryIconByName[item.category],
+                                       showsDivider: itemIndex > 0)
                     }
-                }
-                .contextMenu {
-                    Button("Editar", systemImage: "pencil") {
+                    .background(selection.selectedIDs.contains(item.id) ? PageTheme.lists.accentColor.opacity(0.12) : Color.clear)
+                } else {
+                    Button {
                         editingItem = UnifiedItemSelection(id: item.id)
-                    }
-                    Button(role: .destructive) {
-                        deleteItem(item)
                     } label: {
-                        Label("Remover", systemImage: "trash")
+                        UtensilItemRow(
+                            item: item,
+                            categoryIconName: snapshot.categoryIconByName[item.category],
+                            showsDivider: itemIndex > 0
+                        )
+                            .contentShape(Rectangle())
+                            .background(alignment: .top) {
+                                if categoryIndex == 0, itemIndex == 0 {
+                                    ScrollOffsetReader(coordinateSpace: "lists_scroll")
+                                }
+                            }
                     }
+                    .buttonStyle(.plain)
+                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                        Button(role: .destructive) {
+                            deleteItem(item)
+                        } label: {
+                            Label("Remover", systemImage: "trash")
+                        }
+                    }
+                    .contextMenu {
+                        Button("Editar", systemImage: "pencil") {
+                            editingItem = UnifiedItemSelection(id: item.id)
+                        }
+                        Button(role: .destructive) {
+                            deleteItem(item)
+                        } label: {
+                            Label("Remover", systemImage: "trash")
+                        }
+                    }
+                    .id(item.id)
+                    .background(highlightedItemID == item.id ? Color.accentColor.opacity(0.15) : Color.clear)
                 }
-                .id(item.id)
-                .background(highlightedItemID == item.id ? Color.accentColor.opacity(0.15) : Color.clear)
             }
         } header: {
             if showsHeader {
@@ -199,6 +211,7 @@ struct UtensilsView: View {
 }
 
 struct UtensilItemRow: View {
+    @Environment(\.listItemSelection) private var selection
     let item: UnifiedItem
     let categoryIconName: String?
     let showsDivider: Bool
@@ -225,6 +238,7 @@ struct UtensilItemRow: View {
                     .lineLimit(1)
 
                 Spacer()
+                if selection.isActive { ListSelectionIndicator(id: item.id) }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 7)

@@ -2,6 +2,7 @@ import SwiftUI
 import SwiftData
 
 struct GroceryListView: View {
+    @Environment(\.listItemSelection) private var selection
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scrollToItem) private var scrollToItem
     @Query private var allItems: [UnifiedItem]
@@ -112,6 +113,9 @@ struct GroceryListView: View {
                 itemList(snapshot: snapshot)
             }
         }
+        .onChange(of: snapshot.groups.flatMap { $0.1.map(\.id) }, initial: true) { _, ids in
+            selection.updateVisibleIDs(Set(ids))
+        }
         .sheet(item: $editingItem, onDismiss: { editingItem = nil }) { selection in
             ItemDetailContainerView(itemID: selection.id, removalContext: listType)
                 .forceLightStatusBar()
@@ -175,77 +179,85 @@ struct GroceryListView: View {
 
     @ViewBuilder
     private func groceryRow(categoryIndex: Int, itemIndex: Int, category: String, item: UnifiedItem, snapshot: GroceryListSnapshot) -> some View {
-        Button {
-            editingItem = UnifiedItemSelection(id: item.id)
-        } label: {
-            GroceryItemRow(item: item, categoryIconName: snapshot.categoryIconByName[item.category], isAlsoInPantry: item.isPantry, showsDivider: itemIndex > 0, destination: nextDestination) {
-                acquireItem(item)
+        if selection.isActive {
+            ListSelectionRow(item: item) {
+                GroceryItemRow(item: item, categoryIconName: snapshot.categoryIconByName[item.category],
+                               isAlsoInPantry: item.isPantry, showsDivider: itemIndex > 0,
+                               destination: nextDestination, onAcquire: {})
             }
-            .contentShape(Rectangle())
-            .overlay {
-                DropTargetHighlight(isActive: targetedItemID == item.id)
-            }
-            .background(alignment: .top) {
-                if categoryIndex == 0, itemIndex == 0 {
-                    ScrollOffsetReader(coordinateSpace: "lists_scroll")
-                }
-            }
-        }
-        .buttonStyle(.plain)
-        .contextMenu {
-            contextMenuContent(for: item)
-        }
-        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-            Button(role: .destructive) {
-                deleteItem(item)
-            } label: {
-                Label("Excluir", systemImage: "trash")
-            }
-            .tint(.red)
-        }
-        .swipeActions(edge: .leading, allowsFullSwipe: true) {
-            if listType != .reserve && !item.isPantry {
-                Button {
-                    copyToPantry(item)
-                } label: {
-                    Label("Em Ambos", systemImage: "square.on.square")
-                }
-                .tint(Color(red: 37/255, green: 79/255, blue: 34/255))
-            }
-
+        } else {
             Button {
-                acquireItem(item)
+                editingItem = UnifiedItemSelection(id: item.id)
             } label: {
-                Label(item.isPantry ? "Remover" : "Mover", systemImage: item.isPantry ? "refrigerator.fill" : "checkmark")
-            }
-            .tint(item.isPantry ? Color(red: 37/255, green: 79/255, blue: 34/255) : Color(red: 160/255, green: 58/255, blue: 19/255))
-        }
-        .draggable(ListsDragPayload(itemID: item.id, sourceList: sourceSubtab)) {
-            DragLiftPreviewCard(
-                title: item.name,
-                subtitle: category,
-                systemImage: "cart"
-            )
-        }
-        .dropDestination(
-            for: ListsDragPayload.self,
-            action: { droppedItems, _ in
-                guard let payload = droppedItems.first else { return false }
-                return handleDrop(payload, targetCategory: category, targetItem: item)
-            },
-            isTargeted: { isTargeted in
-                if isTargeted {
-                    targetedItemID = item.id
-                    targetedCategoryName = nil
-                } else if targetedItemID == item.id {
-                    targetedItemID = nil
+                GroceryItemRow(item: item, categoryIconName: snapshot.categoryIconByName[item.category], isAlsoInPantry: item.isPantry, showsDivider: itemIndex > 0, destination: nextDestination) {
+                    acquireItem(item)
+                }
+                .contentShape(Rectangle())
+                .overlay {
+                    DropTargetHighlight(isActive: targetedItemID == item.id)
+                }
+                .background(alignment: .top) {
+                    if categoryIndex == 0, itemIndex == 0 {
+                        ScrollOffsetReader(coordinateSpace: "lists_scroll")
+                    }
                 }
             }
-        )
-        .listRowInsets(EdgeInsets())
-        .listRowSeparator(.hidden)
-        .listRowBackground(highlightedItemID == item.id ? Color.accentColor.opacity(0.15) : Color.clear)
-        .id(item.id)
+            .buttonStyle(.plain)
+            .contextMenu {
+                contextMenuContent(for: item)
+            }
+            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                Button(role: .destructive) {
+                    deleteItem(item)
+                } label: {
+                    Label("Excluir", systemImage: "trash")
+                }
+                .tint(.red)
+            }
+            .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                if listType != .reserve && !item.isPantry {
+                    Button {
+                        copyToPantry(item)
+                    } label: {
+                        Label("Em Ambos", systemImage: "square.on.square")
+                    }
+                    .tint(Color(red: 37/255, green: 79/255, blue: 34/255))
+                }
+
+                Button {
+                    acquireItem(item)
+                } label: {
+                    Label(item.isPantry ? "Remover" : "Mover", systemImage: item.isPantry ? "refrigerator.fill" : "checkmark")
+                }
+                .tint(item.isPantry ? Color(red: 37/255, green: 79/255, blue: 34/255) : Color(red: 160/255, green: 58/255, blue: 19/255))
+            }
+            .draggable(ListsDragPayload(itemID: item.id, sourceList: sourceSubtab)) {
+                DragLiftPreviewCard(
+                    title: item.name,
+                    subtitle: category,
+                    systemImage: "cart"
+                )
+            }
+            .dropDestination(
+                for: ListsDragPayload.self,
+                action: { droppedItems, _ in
+                    guard let payload = droppedItems.first else { return false }
+                    return handleDrop(payload, targetCategory: category, targetItem: item)
+                },
+                isTargeted: { isTargeted in
+                    if isTargeted {
+                        targetedItemID = item.id
+                        targetedCategoryName = nil
+                    } else if targetedItemID == item.id {
+                        targetedItemID = nil
+                    }
+                }
+            )
+            .listRowInsets(EdgeInsets())
+            .listRowSeparator(.hidden)
+            .listRowBackground(highlightedItemID == item.id ? Color.accentColor.opacity(0.15) : Color.clear)
+            .id(item.id)
+        }
     }
 
     private func groceryHeader(for category: String, groupingMode: ListGroupingMode) -> some View {
@@ -376,6 +388,7 @@ struct GroceryListView: View {
     }
 
     private func handleDrop(_ payload: ListsDragPayload, targetCategory: String, targetItem: UnifiedItem?) -> Bool {
+        guard !selection.isActive else { return false }
         let resolvedCategory: (String) -> String = { original in
             activeGroupingMode == .marketSection ? original : targetCategory
         }
@@ -424,6 +437,7 @@ struct GroceryListView: View {
 }
 
 struct GroceryItemRow: View {
+    @Environment(\.listItemSelection) private var selection
     let item: UnifiedItem
     let categoryIconName: String?
     let isAlsoInPantry: Bool
@@ -473,15 +487,19 @@ struct GroceryItemRow: View {
 
                 Spacer()
 
-                AnimatedItemActionButton(
-                    actionID: item.id.uuidString,
-                    systemImage: destination.icon,
-                    initialSystemImage: "checkmark",
-                    color: PageTheme.lists.accentColor,
-                    action: onAcquire
-                )
-                .accessibilityLabel(destination == .grocery ? String(localized: "Enviar ao Mercado") : String(localized: "Mover à Despensa"))
-                .accessibilityIdentifier("savoria.item.complete." + item.id.uuidString)
+                if selection.isActive {
+                    ListSelectionIndicator(id: item.id)
+                } else {
+                    AnimatedItemActionButton(
+                        actionID: item.id.uuidString,
+                        systemImage: destination.icon,
+                        initialSystemImage: "checkmark",
+                        color: PageTheme.lists.accentColor,
+                        action: onAcquire
+                    )
+                    .accessibilityLabel(destination == .grocery ? String(localized: "Enviar ao Mercado") : String(localized: "Mover à Despensa"))
+                    .accessibilityIdentifier("savoria.item.complete." + item.id.uuidString)
+                }
             }
             .padding(.vertical, 7)
             .padding(.horizontal, 16)

@@ -99,6 +99,7 @@ struct ContentView: View {
     /// bar only while the user is actively typing. Driven by UIKit keyboard
     /// notifications on iOS.
     @State private var isKeyboardVisible: Bool = false
+    @State private var isListSelectionActive = false
     @State private var nextTabSwitchTraceID = 0
     @State private var pendingTabSwitchTrace: TabSwitchTrace?
     #if DEBUG
@@ -787,6 +788,11 @@ struct ContentView: View {
             persistentAssistantBar
         }
         #if os(iOS)
+        .onPreferenceChange(ListSelectionActiveKey.self) { isActive in
+            if isListSelectionActive != isActive { isListSelectionActive = isActive }
+        }
+        #endif
+        #if os(iOS)
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
             isKeyboardVisible = true
         }
@@ -1049,7 +1055,19 @@ struct ContentView: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.2, execute: workItem)
     }
 
+    @ViewBuilder
     private var persistentAssistantBar: some View {
+        if selectedTab == .lists && isListSelectionActive {
+            assistantBarWithReservedSpace
+                .opacity(0)
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+        } else {
+            assistantBarWithReservedSpace
+        }
+    }
+
+    private var assistantBarWithReservedSpace: some View {
         UnifiedSearchBar(
             state: searchBarState,
             onAction: handleCommandBarAction,
@@ -1062,6 +1080,8 @@ struct ContentView: View {
             // When the keyboard opens, the tab bar hides and the safe area
             // already repositions this inset above the keyboard.
             .padding(.bottom, isKeyboardVisible ? 0 : 45)
+            // Selection occupies this floating slot. Keep its reserved geometry
+            // so hiding the assistant does not resize the shared shader viewport.
     }
 
     private func openQuickRecipeImport(_ launchMode: RecipeImportLaunchMode) {

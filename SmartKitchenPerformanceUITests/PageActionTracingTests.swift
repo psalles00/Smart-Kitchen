@@ -3,6 +3,59 @@ import XCTest
 /// Navigates existing food data without purchases, AI calls, seeding or deletion.
 @MainActor
 final class PageActionTracingTests: XCTestCase {
+    /// Selects existing rows without applying any mutation to personal items.
+    func testMultipleSelectionMenuAndCancellation() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication(bundleIdentifier: "com.pedrosalles.smartkitchen.sync")
+        app.launchArguments = ["-AppleLanguages", "(pt-BR)", "-AppleLocale", "pt_BR"]
+        app.launch()
+        let tabs = app.tabBars.firstMatch
+        XCTAssertTrue(tabs.waitForExistence(timeout: 45))
+        // iOS 27 can expose duplicate tab labels with invalid automatic hit points.
+        let listsTabFrame = tabs.buttons["Listas"].firstMatch.frame
+        if !tabs.buttons["Listas"].firstMatch.isSelected {
+            app.coordinate(withNormalizedOffset: .zero).withOffset(
+                CGVector(dx: listsTabFrame.midX - app.frame.minX, dy: listsTabFrame.midY - app.frame.minY)
+            ).tap()
+        }
+        XCTAssertTrue(app.buttons["Despensa"].firstMatch.waitForExistence(timeout: 15))
+        app.buttons["Despensa"].firstMatch.tap()
+        app.buttons["savoria.lists.options"].firstMatch.tap()
+        app.buttons["savoria.lists.select"].firstMatch.tap()
+        let cancel = app.buttons["savoria.lists.selection.cancel"]
+        XCTAssertTrue(cancel.waitForExistence(timeout: 5))
+        let rows = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", "savoria.item.select."))
+        XCTAssertTrue(rows.firstMatch.waitForExistence(timeout: 10))
+        XCTAssertGreaterThanOrEqual(rows.count, 2, "Validation needs existing pantry rows, without creating fixtures.")
+        rows.element(boundBy: 0).tap()
+        rows.element(boundBy: 1).tap()
+        XCTAssertEqual(app.staticTexts["savoria.lists.selection.count"].label, "Selecionados: 2")
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "savoria.item.complete.")).firstMatch.exists)
+        let attachment = XCTAttachment(screenshot: app.screenshot())
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        app.buttons["savoria.lists.selection.actions"].firstMatch.tap()
+        XCTAssertTrue(app.buttons["Mover para Mercado"].waitForExistence(timeout: 5))
+        app.buttons["Alterar categoria"].firstMatch.tap()
+        XCTAssertTrue(app.navigationBars["Alterar categoria"].waitForExistence(timeout: 5))
+        app.buttons["Cancelar"].firstMatch.tap()
+        XCTAssertEqual(app.staticTexts["savoria.lists.selection.count"].label, "Selecionados: 2")
+        let all = app.buttons["savoria.lists.selection.all"]
+        all.tap()
+        XCTAssertEqual(all.label, "Limpar seleção")
+        all.tap()
+        XCTAssertEqual(app.staticTexts["savoria.lists.selection.count"].label, "Selecionados: 0")
+        XCTAssertFalse(app.buttons["savoria.lists.selection.actions"].isEnabled)
+        cancel.tap()
+        XCTAssertFalse(cancel.exists)
+        app.buttons["savoria.lists.options"].firstMatch.tap()
+        app.buttons["savoria.lists.select"].firstMatch.tap()
+        rows.element(boundBy: 0).tap()
+        app.buttons["Mercado"].firstMatch.tap()
+        XCTAssertFalse(cancel.exists, "Changing lists must discard only transient selection.")
+        XCUIDevice.shared.press(.home)
+    }
+
     func testPagesAndForeground() throws {
         continueAfterFailure = false
         let app = XCUIApplication(bundleIdentifier: "com.pedrosalles.smartkitchen.sync")

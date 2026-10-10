@@ -128,6 +128,59 @@ final class ReserveListTests: XCTestCase {
 import UIKit
 
 @MainActor
+final class BulkListActionTests: XCTestCase {
+    func testMoveAppliesOnlyToSelectedItemsStillInSourceAndPreservesDetails() throws {
+        let container = try ModelContainer(for: UnifiedItem.self, configurations:
+            ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none))
+        let context = ModelContext(container)
+        let first = UnifiedItem(name: "First", descriptionText: "Details", imageData: Data([1, 2]),
+                                quantity: 2, unit: "kg", isPantry: true, defaultExpiryDays: 7, isFixed: true)
+        let second = UnifiedItem(name: "Second", isPantry: true)
+        let unselected = UnifiedItem(name: "Unselected", isPantry: true)
+        let stale = UnifiedItem(name: "Already moved", isGrocery: true)
+        for item in [first, second, unselected, stale] { context.insert(item) }
+        try context.save()
+        let ids = Set([first.id, second.id, stale.id, UUID()])
+        try ListBulkMutation.apply(.move(.reserve), selectedIDs: ids, source: .pantry, in: context)
+        XCTAssertEqual(first.activeFlags, [.reserve])
+        XCTAssertEqual(second.activeFlags, [.reserve])
+        XCTAssertEqual(unselected.activeFlags, [.pantry])
+        XCTAssertEqual(stale.activeFlags, [.grocery])
+        XCTAssertTrue(ids.contains(first.id))
+        XCTAssertEqual(first.descriptionText, "Details")
+        XCTAssertEqual(first.imageData, Data([1, 2]))
+        XCTAssertEqual(first.quantity, 2)
+        XCTAssertEqual(first.unit, "kg")
+        XCTAssertEqual(first.defaultExpiryDays, 7)
+        XCTAssertTrue(first.isFixed)
+        let saved = try ModelContext(container).fetch(FetchDescriptor<UnifiedItem>())
+        XCTAssertEqual(saved.count, 4)
+        XCTAssertEqual(Set(saved.filter(\.isReserve).map(\.id)), Set([first.id, second.id]))
+    }
+
+    func testBulkCategoryWorksForUtensilsWithoutChangingMembershipOrOtherItems() throws {
+        let container = try ModelContainer(for: UnifiedItem.self, configurations:
+            ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none))
+        let context = ModelContext(container)
+        let utensils = (0..<2).map { UnifiedItem(name: "Utensil \($0)", isUtensil: true) }
+        let pantry = UnifiedItem(name: "Pantry", isPantry: true)
+        for item in utensils + [pantry] { context.insert(item) }
+        try context.save()
+        let selected = Set((utensils + [pantry]).map(\.id))
+        try ListBulkMutation.apply(.category("Tools"), selectedIDs: selected, source: .utensil, in: context)
+        for item in utensils {
+            XCTAssertEqual(item.category, "Tools")
+            XCTAssertEqual(item.activeFlags, [.utensil])
+        }
+        XCTAssertEqual(pantry.category, "Outros")
+        try ListBulkMutation.apply(.move(.grocery), selectedIDs: selected, source: .utensil, in: context)
+        XCTAssertTrue(utensils.allSatisfy(\.isUtensil))
+        XCTAssertTrue(pantry.isPantry)
+        XCTAssertEqual(try context.fetchCount(FetchDescriptor<UnifiedItem>()), 3)
+    }
+}
+
+@MainActor
 final class RecipeCoverPaletteTests: XCTestCase {
     func testPaletteFollowsDifferentCoverColors() async throws {
         for color in [(0.2, 0.7, 0.1), (0.8, 0.2, 0.4)] {
