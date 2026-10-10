@@ -83,6 +83,10 @@ struct ContentView: View {
     @State private var scrollToItemRequest: ScrollToItemRequest?
     @State private var recipeNavigationPath = NavigationPath()
     @State private var displayedBgTheme: PageTheme = .home
+    #if os(iOS)
+    @State private var backdropPalette = SavoriaBackdropPalette()
+    @State private var backdropViewport: CGSize = .zero
+    #endif
     @State private var searchDragOffset: CGFloat = 0
     @StateObject private var searchService = UniversalSearchService()
     @StateObject private var searchBarState = SearchBarState()
@@ -392,6 +396,7 @@ struct ContentView: View {
     private func setDisplayedBackgroundTheme(_ theme: PageTheme) {
         guard theme != displayedBgTheme else { return }
         #if os(iOS)
+        backdropPalette.transition(to: theme)
         let duration = 0.55
         #else
         let duration = 0.35
@@ -435,6 +440,10 @@ struct ContentView: View {
                 .environment(\.openRecipeInRecipesTab, openRecipeInRecipesTab)
                 .environment(\.backgroundTheme, displayedBgTheme)
                 .environment(\.visiblePageTheme, activePageTheme)
+            #if os(iOS)
+            .environment(\.savoriaBackdropPalette, backdropPalette)
+            .environment(\.savoriaBackdropViewport, backdropViewport)
+            #endif
                 .environment(\.activeAppTab, selectedTab)
         )
     }
@@ -765,6 +774,11 @@ struct ContentView: View {
                 }
                 .environment(\.searchOverlay, searchOverlayView)
         }
+        #if os(iOS)
+        .onGeometryChange(for: CGSize.self) { proxy in
+            CGSize(width: proxy.size.width, height: proxy.size.height + proxy.safeAreaInsets.top + proxy.safeAreaInsets.bottom)
+        } action: { backdropViewport = $0 }
+        #endif
         .safeAreaInset(edge: .bottom, spacing: 0) {
             persistentAssistantBar
         }

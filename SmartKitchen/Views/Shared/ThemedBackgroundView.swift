@@ -19,23 +19,68 @@ struct ThemedBackgroundView: View {
 }
 
 #if os(iOS)
-/// Keep the animation in a leaf so frames never invalidate the page's queries.
+/// Every page samples the same clock, viewport and palette transition.
+struct SavoriaBackdropPalette {
+    var target: PageTheme = .home
+    private var source: SIMD3<Double> = PageTheme.home.shaderRGB
+    private var startedAt: TimeInterval = 0
+
+    func rgb(at time: TimeInterval) -> SIMD3<Double> {
+        let fraction = min(1, max(0, (time - startedAt) / 0.55))
+        let eased = fraction * fraction * (3 - 2 * fraction)
+        return source + (target.shaderRGB - source) * eased
+    }
+
+    mutating func transition(to theme: PageTheme) {
+        let now = ProcessInfo.processInfo.systemUptime
+        source = rgb(at: now)
+        startedAt = now
+        target = theme
+    }
+}
+
+private struct SavoriaBackdropPaletteKey: EnvironmentKey {
+    static let defaultValue: SavoriaBackdropPalette? = nil
+}
+private struct SavoriaBackdropViewportKey: EnvironmentKey {
+    static let defaultValue: CGSize = .zero
+}
+extension EnvironmentValues {
+    var savoriaBackdropPalette: SavoriaBackdropPalette? {
+        get { self[SavoriaBackdropPaletteKey.self] }
+        set { self[SavoriaBackdropPaletteKey.self] = newValue }
+    }
+    var savoriaBackdropViewport: CGSize {
+        get { self[SavoriaBackdropViewportKey.self] }
+        set { self[SavoriaBackdropViewportKey.self] = newValue }
+    }
+}
+
+private enum SavoriaShaderClock {
+    static let epoch = ProcessInfo.processInfo.systemUptime
+}
+
 private struct SavoriaShaderBackground: View {
     let theme: PageTheme
     let animates: Bool
-    @Environment(\.scenePhase) private var scenePhase
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorSchemeContrast) private var contrast
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.savoriaBackdropPalette) private var palette
+    @Environment(\.savoriaBackdropViewport) private var viewport
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 20,
-                                paused: !animates || reduceMotion || scenePhase != .active)) { timeline in
-            GeometryReader { geometry in
+        GeometryReader { geometry in
+            TimelineView(.animation(minimumInterval: 1.0 / 20,
+                                    paused: !animates || reduceMotion || scenePhase != .active)) { _ in
+                let now = ProcessInfo.processInfo.systemUptime
+                let tint = palette?.target == theme ? palette!.rgb(at: now) : theme.shaderRGB
                 Rectangle()
                     .fill(.white)
                     .modifier(SavoriaAnimatedShaderTint(
-                        tint: theme.shaderRGB, size: geometry.size,
-                        time: Float(reduceMotion ? 0 : timeline.date.timeIntervalSince(SavoriaShaderClock.epoch))))
+                        tint: tint,
+                        size: viewport.width > 0 ? viewport : geometry.size,
+                        time: reduceMotion ? 0 : now - SavoriaShaderClock.epoch))
                     .overlay {
                         LinearGradient(colors: [.black.opacity(contrast == .increased ? 0.60 : 0.42), .black.opacity(contrast == .increased ? 0.85 : 0.72)],
                                        startPoint: .top, endPoint: .bottom)
@@ -47,15 +92,11 @@ private struct SavoriaShaderBackground: View {
     }
 }
 
-private enum SavoriaShaderClock {
-    static let epoch = Date.now
-}
-
-/// Interpolate only RGB uniforms, keeping the field and its clock mounted.
+/// Only RGB interpolates. SwiftUI must never tween the clock or viewport uniforms.
 private struct SavoriaAnimatedShaderTint: AnimatableModifier {
     nonisolated var tint: SIMD3<Double>
     let size: CGSize
-    let time: Float
+    let time: TimeInterval
 
     nonisolated var animatableData: AnimatablePair<Double, AnimatablePair<Double, Double>> {
         get { AnimatablePair(tint.x, AnimatablePair(tint.y, tint.z)) }
@@ -66,6 +107,7 @@ private struct SavoriaAnimatedShaderTint: AnimatableModifier {
         content.colorEffect(ShaderLibrary.savoriaNebula(
             .float2(size), .float(time),
             .color(Color(red: tint.x, green: tint.y, blue: tint.z)), .float(1)))
+            .transaction { $0.animation = nil }
     }
 }
 
