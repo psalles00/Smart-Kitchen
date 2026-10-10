@@ -155,3 +155,36 @@ func pasteImageFromClipboard(completion: @escaping (Data?) -> Void) {
     completion(nil)
     #endif
 }
+
+#if os(iOS)
+import ImageIO
+
+/// Decodes a bounded thumbnail off the UI actor; never runs inside a view body.
+enum SavoriaImagePalette {
+    @concurrent
+    nonisolated static func averageRGB(from data: Data) async -> SIMD3<Double>? {
+        guard !Task.isCancelled,
+              let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceThumbnailMaxPixelSize: 48,
+            kCGImageSourceShouldCacheImmediately: true
+        ]
+        guard let image = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary),
+              !Task.isCancelled else { return nil }
+        var pixel = [UInt8](repeating: 0, count: 4)
+        let rendered = pixel.withUnsafeMutableBytes { bytes -> Bool in
+            guard let context = CGContext(data: bytes.baseAddress, width: 1, height: 1,
+                                          bitsPerComponent: 8, bytesPerRow: 4,
+                                          space: CGColorSpaceCreateDeviceRGB(),
+                                          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return false }
+            context.draw(image, in: CGRect(x: 0, y: 0, width: 1, height: 1))
+            return true
+        }
+        guard rendered, pixel[3] > 0 else { return nil }
+        let alpha = Double(pixel[3])
+        return SIMD3(Double(pixel[0]) / alpha, Double(pixel[1]) / alpha, Double(pixel[2]) / alpha)
+    }
+}
+#endif

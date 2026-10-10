@@ -230,6 +230,7 @@ struct ItemDetailView: View {
         .presentationDetents([.medium, .large], selection: $itemDetailDetent)
         .presentationDragIndicator(.visible)
         .presentationBackground(appPrimaryBackground)
+        .savoriaModalBorder(theme: .lists)
         #endif
         .tint(PageTheme.lists.accentColor)
         .sheet(isPresented: $showIconPicker) {

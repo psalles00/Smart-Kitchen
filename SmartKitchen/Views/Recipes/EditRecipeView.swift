@@ -45,6 +45,7 @@ struct EditRecipeView: View {
     var body: some View {
         editorScaffold
             .formStyle(.grouped)
+            .savoriaModalBorder(theme: .recipes)
             #if os(macOS)
             .padding(.horizontal, 20)
             .padding(.top, 10)

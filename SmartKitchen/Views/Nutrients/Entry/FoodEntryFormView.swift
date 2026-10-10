@@ -95,6 +95,7 @@ struct FoodEntryFormView: View {
                 }
             }
             .macModalFormStyle(minWidth: 680, minHeight: 620)
+            .savoriaModalBorder(theme: .nutrients)
             .platformScrollDismissesKeyboardInteractively()
             .modalNavigationTitle(isEdit ? String(localized: "Editar registro") : String(localized: "Salvar Alimento"))
             .toolbar {

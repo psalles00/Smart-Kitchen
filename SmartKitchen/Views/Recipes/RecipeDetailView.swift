@@ -35,6 +35,11 @@ struct RecipeDetailView: View {
     @State private var cachedSortedPreparationMedia: [RecipePreparationMedia]
     @State private var displayCacheSignature: Int
 
+    #if os(iOS)
+    @State private var coverAccent: Color = PageTheme.recipes.accentColor
+    @State private var coverPaletteRevision = 0
+    #endif
+
     private let heroHeight: CGFloat = 580
     private let baseContentOverlap: CGFloat = 34
     private let floatingHeroActionSize: CGFloat = 62
@@ -323,6 +328,20 @@ struct RecipeDetailView: View {
                 didInitDisplayServings = true
             }
         }
+        #if os(iOS)
+        .task(id: coverPaletteRevision) {
+            guard let data = recipe.imageData,
+                  let rgb = await SavoriaImagePalette.averageRGB(from: data),
+                  !Task.isCancelled else {
+                if !Task.isCancelled { coverAccent = PageTheme.recipes.accentColor }
+                return
+            }
+            coverAccent = Color(red: rgb.x, green: rgb.y, blue: rgb.z)
+        }
+        .onChange(of: recipe.imageData) { _, _ in
+            coverPaletteRevision &+= 1
+        }
+        #endif
         .onChange(of: recipe.updatedAt) { _, _ in
             refreshDisplayCacheIfNeeded(reason: "updatedAt")
         }
@@ -665,6 +684,11 @@ struct RecipeDetailView: View {
             .fill(mainAreaColor)
             .shadow(color: Color.black.opacity(0.12), radius: 26, x: 0, y: -8)
         }
+        #if os(iOS)
+        .overlay {
+            SavoriaLuminousBorder(accent: coverAccent, cornerRadius: 30, topCornersOnly: true)
+        }
+        #endif
         .overlay(alignment: .topTrailing) {
             HStack(spacing: 10) {
                 if hasPreparationMedia, let previewMedia = preferredPreviewMedia {

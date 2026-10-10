@@ -123,3 +123,29 @@ final class ReserveListTests: XCTestCase {
         try context.save()
     }
 }
+
+#if os(iOS)
+import UIKit
+
+@MainActor
+final class RecipeCoverPaletteTests: XCTestCase {
+    func testPaletteFollowsDifferentCoverColors() async throws {
+        for color in [(0.2, 0.7, 0.1), (0.8, 0.2, 0.4)] {
+            let data = UIGraphicsImageRenderer(size: CGSize(width: 4, height: 4)).pngData { renderer in
+                renderer.cgContext.setFillColor(UIColor(red: color.0, green: color.1, blue: color.2, alpha: 1).cgColor)
+                renderer.cgContext.fill(CGRect(x: 0, y: 0, width: 4, height: 4))
+            }
+            let result = await SavoriaImagePalette.averageRGB(from: data)
+            let rgb = try XCTUnwrap(result)
+            XCTAssertEqual(rgb.x, color.0, accuracy: 2.0 / 255)
+            XCTAssertEqual(rgb.y, color.1, accuracy: 2.0 / 255)
+            XCTAssertEqual(rgb.z, color.2, accuracy: 2.0 / 255)
+        }
+    }
+
+    func testInvalidCoverUsesFallbackInsteadOfInvalidRGB() async {
+        let result = await SavoriaImagePalette.averageRGB(from: Data([0, 1, 2]))
+        XCTAssertNil(result)
+    }
+}
+#endif

@@ -1,4 +1,7 @@
 import SwiftUI
+#if os(iOS)
+import UIKit
+#endif
 
 struct ThemedBackgroundView: View {
     let theme: PageTheme
@@ -184,18 +187,54 @@ struct SavoriaColumnBorder: View {
     }
 
     var body: some View {
-        shape.strokeBorder(
-            LinearGradient(stops: [
-                .init(color: theme.shaderHighlight.opacity(colorScheme == .dark ? 0.58 : 0.45), location: 0),
-                .init(color: theme.shaderTint.opacity(0.18), location: 0.025),
-                .init(color: theme.shaderTint.opacity(0.025), location: 0.12),
-                .init(color: .clear, location: 1)
-            ], startPoint: .top, endPoint: .bottom),
-            lineWidth: contrast == .increased ? 1.25 : 0.75)
+        SavoriaLuminousBorder(accent: theme.shaderTint, cornerRadius: cornerRadius,
+                             topCornersOnly: true, highlight: theme.shaderHighlight)
+    }
+}
+
+/// A decorative edge with a brighter top, fading into the panel's own tint.
+struct SavoriaLuminousBorder: View {
+    let accent: Color
+    var cornerRadius: CGFloat = 28
+    var topCornersOnly = false
+    var highlight: Color? = nil
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.colorSchemeContrast) private var contrast
+
+    private var topColor: Color {
+        if let highlight { return highlight }
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        guard UIColor(accent).getRed(&r, green: &g, blue: &b, alpha: &a) else { return .white }
+        return Color(red: Double(r + (1 - r) * 0.6),
+                     green: Double(g + (1 - g) * 0.6),
+                     blue: Double(b + (1 - b) * 0.6))
+    }
+
+    private var gradient: LinearGradient {
+        LinearGradient(stops: [
+            .init(color: topColor.opacity(colorScheme == .dark ? 0.58 : 0.45), location: 0),
+            .init(color: accent.opacity(0.18), location: 0.025),
+            .init(color: accent.opacity(0.025), location: 0.12),
+            .init(color: .clear, location: 1)
+        ], startPoint: .top, endPoint: .bottom)
+    }
+
+    var body: some View {
+        Group {
+            if topCornersOnly {
+                UnevenRoundedRectangle(topLeadingRadius: cornerRadius, bottomLeadingRadius: 0,
+                                       bottomTrailingRadius: 0, topTrailingRadius: cornerRadius)
+                    .strokeBorder(gradient, lineWidth: contrast == .increased ? 1.25 : 0.75)
+            } else {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .strokeBorder(gradient, lineWidth: contrast == .increased ? 1.25 : 0.75)
+            }
+        }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
     }
 }
+
 #endif
 
 struct StaticPageBackground: View {
@@ -295,5 +334,18 @@ struct StaticPageBackground: View {
         case .assistant:
             0.6667
         }
+    }
+}
+
+extension View {
+    @ViewBuilder
+    func savoriaModalBorder(theme: PageTheme, cornerRadius: CGFloat = 28) -> some View {
+        #if os(iOS)
+        overlay {
+            SavoriaLuminousBorder(accent: theme.shaderTint, cornerRadius: cornerRadius)
+        }
+        #else
+        self
+        #endif
     }
 }

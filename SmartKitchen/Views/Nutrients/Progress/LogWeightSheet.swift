@@ -101,6 +101,7 @@ struct LogWeightSheet: View {
                 Spacer(minLength: 0)
             }
             .padding()
+            .savoriaModalBorder(theme: .nutrients)
             .modalNavigationTitle(String(localized: "Registrar peso"))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
