@@ -638,7 +638,7 @@ private struct ListsLoadedTabView: View {
                 }
                 Button("Alterar categoria", systemImage: "square.grid.2x2") { showsBulkCategories = true }
             } label: {
-                Label("Escolher ação", systemImage: "ellipsis.circle")
+                Label("Ação", systemImage: "ellipsis.circle")
                     .font(.subheadline.weight(.semibold))
                     .frame(minHeight: 44)
             }
