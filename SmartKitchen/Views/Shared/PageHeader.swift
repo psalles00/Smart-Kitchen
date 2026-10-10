@@ -11,9 +11,21 @@ struct PageHeader: View {
 
     var body: some View {
         HStack(alignment: .center) {
-            Text(title)
-                .font(.pageTitle)
-                .foregroundColor(textColor)
+            #if os(iOS)
+            if title == "Savoria" {
+                Text(title)
+                    .font(.custom("Bricolage Grotesque", size: 44, relativeTo: .largeTitle).bold())
+                    .foregroundStyle(LinearGradient(
+                        colors: [.white, Color(white: 174 / 255.0)],
+                        startPoint: .topLeading, endPoint: .bottomTrailing))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.82)
+            } else {
+                Text(title).font(.pageTitle).foregroundColor(textColor)
+            }
+            #else
+            Text(title).font(.pageTitle).foregroundColor(textColor)
+            #endif
 
             Spacer()
 

@@ -391,7 +391,12 @@ struct ContentView: View {
 
     private func setDisplayedBackgroundTheme(_ theme: PageTheme) {
         guard theme != displayedBgTheme else { return }
-        withAnimation(.easeInOut(duration: 0.35)) {
+        #if os(iOS)
+        let duration = 0.55
+        #else
+        let duration = 0.35
+        #endif
+        withAnimation(.easeInOut(duration: duration)) {
             displayedBgTheme = theme
         }
     }
@@ -734,12 +739,17 @@ struct ContentView: View {
     }
 
     #if os(iOS)
+    private var usesSharedNativeBackdrop: Bool {
+        if #available(iOS 18.0, *) { return true }
+        return false
+    }
+
     @ViewBuilder
     private var iosAppBackground: some View {
-        // Pages render the animated layer. This fallback under the tab host is static.
-        ThemedBackgroundView(theme: displayedBgTheme, animates: false)
+        // One persistent field; changing tabs only fades its palette.
+        ThemedBackgroundView(theme: displayedBgTheme, animates: usesSharedNativeBackdrop)
         .allowsHitTesting(false)
-        .animation(.easeInOut(duration: 0.35), value: displayedBgTheme)
+        .animation(.easeInOut(duration: 0.55), value: displayedBgTheme)
     }
     #endif
 
@@ -750,7 +760,7 @@ struct ContentView: View {
                 .allowsHitTesting(false)
 
             nativeTabContainer
-                .environment(\.usesGlobalPageBackground, true)
+                .environment(\.usesGlobalPageBackground, usesSharedNativeBackdrop)
                 #if os(iOS)
                 // Hide the tab bar only while the keyboard is up; otherwise the
                 // assistant bar always shows alongside the tab bar.
@@ -2720,7 +2730,11 @@ private struct HomeSkeletonPage: View {
                 PageHeader(title: "Savoria", isInverted: isInverted) {
                     HStack(spacing: 6) {
                         GlassButtonGroup {
+                            #if os(iOS)
+                            Button {} label: { SavoriaSettingsMenuIcon() }
+                            #else
                             GlassGroupButton(systemImage: "gearshape") {}
+                            #endif
                         }
                     }
                     .disabled(true)

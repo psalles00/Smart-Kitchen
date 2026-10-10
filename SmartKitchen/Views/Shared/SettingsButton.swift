@@ -101,6 +101,21 @@ struct SettingsButton: View {
     @Environment(\.presentAppSettings) private var presentAppSettings
 
     var body: some View {
+        #if os(iOS)
+        Button {
+            if let onTap { onTap() } else { presentAppSettings() }
+        } label: {
+            ZStack {
+                Color.clear
+                SavoriaSettingsMenuIcon()
+            }
+            .frame(width: 46, height: 44)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(Text("Configurações"))
+        .accessibilityIdentifier("savoria.settings")
+        #else
         GlassButtonGroup {
             GlassGroupButton(systemImage: "gearshape") {
                 if let onTap {
@@ -111,5 +126,22 @@ struct SettingsButton: View {
             }
             .accessibilityIdentifier("savoria.settings")
         }
+        #endif
     }
 }
+
+#if os(iOS)
+/// Same geometry and color as Rotina's MinimalMenuIcon.
+struct SavoriaSettingsMenuIcon: View {
+    var body: some View {
+        VStack(alignment: .trailing, spacing: 6) {
+            Capsule(style: .continuous).frame(width: 20, height: 2.2)
+            Capsule(style: .continuous).frame(width: 12, height: 2.2)
+        }
+        .foregroundStyle(Color(white: 174 / 255.0))
+        .frame(width: 46, height: 44)
+        .contentShape(Rectangle())
+        .accessibilityHidden(true)
+    }
+}
+#endif

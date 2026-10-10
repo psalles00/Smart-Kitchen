@@ -26,7 +26,6 @@ private struct SavoriaShaderBackground: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorSchemeContrast) private var contrast
-    @State private var epoch = Date.now
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 20,
@@ -34,14 +33,11 @@ private struct SavoriaShaderBackground: View {
             GeometryReader { geometry in
                 Rectangle()
                     .fill(.white)
-                    .colorEffect(ShaderLibrary.savoriaNebula(
-                        .float2(geometry.size),
-                        .float(Float(reduceMotion || !animates ? 0 : timeline.date.timeIntervalSince(epoch))),
-                        .color(theme.shaderTint),
-                        .float(1)
-                    ))
+                    .modifier(SavoriaAnimatedShaderTint(
+                        tint: theme.shaderRGB, size: geometry.size,
+                        time: Float(reduceMotion ? 0 : timeline.date.timeIntervalSince(SavoriaShaderClock.epoch))))
                     .overlay {
-                        LinearGradient(colors: [.black.opacity(0.08), .black.opacity(contrast == .increased ? 0.68 : 0.48)],
+                        LinearGradient(colors: [.black.opacity(contrast == .increased ? 0.60 : 0.42), .black.opacity(contrast == .increased ? 0.85 : 0.72)],
                                        startPoint: .top, endPoint: .bottom)
                     }
             }
@@ -51,9 +47,30 @@ private struct SavoriaShaderBackground: View {
     }
 }
 
+private enum SavoriaShaderClock {
+    static let epoch = Date.now
+}
+
+/// Interpolate only RGB uniforms, keeping the field and its clock mounted.
+private struct SavoriaAnimatedShaderTint: AnimatableModifier {
+    nonisolated var tint: SIMD3<Double>
+    let size: CGSize
+    let time: Float
+
+    nonisolated var animatableData: AnimatablePair<Double, AnimatablePair<Double, Double>> {
+        get { AnimatablePair(tint.x, AnimatablePair(tint.y, tint.z)) }
+        set { tint = SIMD3(newValue.first, newValue.second.first, newValue.second.second) }
+    }
+
+    func body(content: Content) -> some View {
+        content.colorEffect(ShaderLibrary.savoriaNebula(
+            .float2(size), .float(time),
+            .color(Color(red: tint.x, green: tint.y, blue: tint.z)), .float(1)))
+    }
+}
+
 private extension PageTheme {
-    /// Preserve each existing orbital background hue rather than tinting all pages blue.
-    var shaderTint: Color {
+    var shaderRGB: SIMD3<Double> {
         let hue: Double = switch self {
         case .home: 0.9841
         case .lists: 0.5982
@@ -62,7 +79,28 @@ private extension PageTheme {
         case .settings: 0.6000
         case .assistant: 0.6667
         }
-        return Color(hue: hue, saturation: 0.86, brightness: 0.82)
+        let chroma = 0.82 * 0.86
+        let sector = hue * 6
+        let x = chroma * (1 - abs(sector.truncatingRemainder(dividingBy: 2) - 1))
+        let rgb: SIMD3<Double> = switch Int(sector) {
+        case 0: SIMD3(chroma, x, 0)
+        case 1: SIMD3(x, chroma, 0)
+        case 2: SIMD3(0, chroma, x)
+        case 3: SIMD3(0, x, chroma)
+        case 4: SIMD3(x, 0, chroma)
+        default: SIMD3(chroma, 0, x)
+        }
+        return rgb + SIMD3(repeating: 0.82 - chroma)
+    }
+
+    var shaderTint: Color {
+        let rgb = shaderRGB
+        return Color(red: rgb.x, green: rgb.y, blue: rgb.z)
+    }
+
+    var shaderHighlight: Color {
+        let rgb = shaderRGB + (SIMD3<Double>(repeating: 1) - shaderRGB) * 0.6
+        return Color(red: rgb.x, green: rgb.y, blue: rgb.z)
     }
 }
 
@@ -82,7 +120,7 @@ struct SavoriaColumnSurface: View {
         shape
             .fill(colorScheme == .dark ? Color(red: 14 / 255.0, green: 14 / 255.0, blue: 16 / 255.0) : .white)
             .overlay {
-                LinearGradient(colors: [theme.accentColor.opacity(contrast == .increased ? 0 : (colorScheme == .dark ? 0.065 : 0.025)), .clear],
+                LinearGradient(colors: [theme.shaderTint.opacity(contrast == .increased ? 0 : (colorScheme == .dark ? 0.04 : 0.015)), .clear],
                                startPoint: .topLeading, endPoint: UnitPoint(x: 0.5, y: 0.3))
                     .clipShape(shape)
             }
@@ -104,22 +142,14 @@ struct SavoriaColumnBorder: View {
     }
 
     var body: some View {
-        ZStack {
-            shape.strokeBorder(theme.secondaryAccentColor.opacity(colorScheme == .dark ? 0.32 : 0.16), lineWidth: 1.2)
-                .mask(LinearGradient(stops: [.init(color: .white, location: 0),
-                                             .init(color: .white.opacity(0.06), location: 0.08),
-                                             .init(color: .white.opacity(0.28), location: 1)],
-                                     startPoint: .top, endPoint: .bottom))
-
-            shape.strokeBorder(LinearGradient(colors: [.white.opacity(0.88),
-                                                       theme.secondaryAccentColor.opacity(0.40), .clear],
-                                              startPoint: .topLeading, endPoint: .bottomTrailing),
-                               lineWidth: contrast == .increased ? 1.5 : 1)
-                .mask(alignment: .top) {
-                    LinearGradient(colors: [.white, .white.opacity(0.5), .clear], startPoint: .top, endPoint: .bottom)
-                        .frame(height: 100)
-                }
-        }
+        shape.strokeBorder(
+            LinearGradient(stops: [
+                .init(color: theme.shaderHighlight.opacity(colorScheme == .dark ? 0.58 : 0.45), location: 0),
+                .init(color: theme.shaderTint.opacity(0.18), location: 0.025),
+                .init(color: theme.shaderTint.opacity(0.025), location: 0.12),
+                .init(color: .clear, location: 1)
+            ], startPoint: .top, endPoint: .bottom),
+            lineWidth: contrast == .increased ? 1.25 : 0.75)
         .allowsHitTesting(false)
         .accessibilityHidden(true)
     }

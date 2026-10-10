@@ -62,7 +62,7 @@ enum ExpandedPageHeaderMetrics {
     static let iosInfoBottomGap: CGFloat = 16
     static let iosEmptyInfoHeight: CGFloat = 0
     static let iosCompactInfoHeight: CGFloat = 44
-    static let iosHomeInfoHeight: CGFloat = 47
+    static let iosHomeInfoHeight: CGFloat = 64
 
     static func iosHeaderDetailHeight(infoHeight: CGFloat) -> CGFloat {
         iosInfoTopPadding + infoHeight + iosInfoBottomGap
@@ -99,7 +99,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
     private let headerHeight: CGFloat = ExpandedPageHeaderMetrics.iosTitleHeight
     private let cornerRadius: CGFloat = 24
     private let topMargin: CGFloat = 10
-    private let leadingPanelInset: CGFloat = 8
+    private let leadingPanelInset: CGFloat = 0
     #if os(macOS)
     private let macHeaderTopInset: CGFloat = -14
     private let macHeaderHeight: CGFloat = 34
@@ -185,10 +185,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
         #else
         GeometryReader { proxy in
             ZStack(alignment: .top) {
-                // Fixed page background. Keep this inside the page even when the
-                // app also keeps global backgrounds warm: TabView/NavigationStack
-                // can draw an opaque host behind the tab content on iOS, so the
-                // background/header area must not depend on a background behind them.
+                // Standalone pages keep a local backdrop. Tabs share the app field.
                 backgroundLayer
                     .ignoresSafeArea()
                     .allowsHitTesting(false)
@@ -212,6 +209,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
         .onAppear {
             searchBarState.pageContext = pageTheme.searchContext
     }
+        .modifier(SavoriaPageContainerBackground())
     #endif
 }
 
@@ -350,7 +348,9 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
             backgroundOverride
         } else {
             #if os(iOS)
-            ActivePageBackground(pageTheme: pageTheme)
+            if !usesGlobalPageBackground {
+                ActivePageBackground(pageTheme: pageTheme)
+            }
             #else
             ZStack {
                 themedBackground(for: backgroundFromTheme)
@@ -392,6 +392,17 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
 // MARK: - Deferred Tab Loading
 
 #if os(iOS)
+/// Let SwiftUI manage navigation hosting and its interaction regions.
+private struct SavoriaPageContainerBackground: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 18.0, *) {
+            content.containerBackground(.clear, for: .navigation)
+        } else {
+            content
+        }
+    }
+}
+
 /// Theme/visibility changes belong to the background leaf, not to page content
 /// builders that group lists or walk the nutrition history.
 private struct ActivePageBackground: View {
@@ -403,7 +414,7 @@ private struct ActivePageBackground: View {
         let theme = backgroundTheme ?? pageTheme
         ThemedBackgroundView(theme: theme,
                              animates: visiblePageTheme == nil || visiblePageTheme == pageTheme)
-            .animation(.easeInOut(duration: 0.35), value: theme)
+            .animation(.easeInOut(duration: 0.55), value: theme)
     }
 }
 #endif
@@ -715,6 +726,17 @@ struct NutritionInfoSkeleton: View {
 
 struct AssistantInfoSkeleton: View {
     var body: some View {
+        #if os(iOS)
+        VStack(alignment: .leading, spacing: 8) {
+            RoundedRectangle(cornerRadius: 6).fill(skeletonHeaderBaseColor).frame(height: 13)
+            RoundedRectangle(cornerRadius: 6).fill(skeletonHeaderBaseColor).frame(height: 13)
+                .padding(.trailing, 50)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(height: ExpandedPageHeaderMetrics.iosHomeInfoHeight)
+        .skeletonShimmer()
+        .allowsHitTesting(false)
+        #else
         HStack(alignment: .center, spacing: 12) {
             GeometryReader { proxy in
                 let primaryWidth = max(min(proxy.size.width * 0.7, 240), 170)
@@ -770,9 +792,10 @@ struct AssistantInfoSkeleton: View {
             .padding(.bottom, 6)
         }
         .padding(.bottom, -3)
-        .frame(height: ExpandedPageHeaderMetrics.iosHomeInfoHeight)
+        .frame(height: 47)
         .skeletonShimmer()
         .allowsHitTesting(false)
+        #endif
     }
 }
 

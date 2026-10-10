@@ -17,6 +17,20 @@ struct HomeInfoContent: View {
     }
 }
 
+private enum HomeInfoLayout {
+    #if os(iOS)
+    static let height = ExpandedPageHeaderMetrics.iosHomeInfoHeight
+    static let topInset: CGFloat = 0
+    static let bottomInset: CGFloat = 0
+    static let lineLimit = 3
+    #else
+    static let height: CGFloat = 47
+    static let topInset: CGFloat = -8
+    static let bottomInset: CGFloat = -3
+    static let lineLimit = 2
+    #endif
+}
+
 private struct HomeInfoContentLive: View {
     @Query(filter: #Predicate<UnifiedItem> { $0.isPantry }, sort: \UnifiedItem.name) private var pantryItems: [UnifiedItem]
     @Query(sort: \FoodEntry.timestamp, order: .reverse) private var foodEntries: [FoodEntry]
@@ -77,18 +91,19 @@ private struct HomeInfoContentLive: View {
     }
 
     var body: some View {
-        HStack(alignment: .center, spacing: 12) {
+        Group {
+            #if os(iOS)
             statusPhrase
-                .layoutPriority(1)
-
-            Spacer()
-
-            calorieRing
-                .padding(.top, -6)
-                .padding(.bottom, 6)
+            #else
+            HStack(alignment: .center, spacing: 12) {
+                statusPhrase.layoutPriority(1)
+                Spacer()
+                calorieRing.padding(.top, -6).padding(.bottom, 6)
+            }
+            #endif
         }
-        .padding(.bottom, -3)
-        .frame(height: ExpandedPageHeaderMetrics.iosHomeInfoHeight)
+        .padding(.bottom, HomeInfoLayout.bottomInset)
+        .frame(height: HomeInfoLayout.height)
         .onAppear {
             if !didRunInitialRefresh {
                 didRunInitialRefresh = true
@@ -125,20 +140,20 @@ private struct HomeInfoContentLive: View {
             } else {
                 statusPhraseText
                     .font(.system(size: 14.5, weight: .semibold, design: .rounded))
-                    .lineLimit(2)
+                    .lineLimit(HomeInfoLayout.lineLimit)
                     .minimumScaleFactor(0.82)
                     .allowsTightening(true)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.top, -8)
+        .padding(.top, HomeInfoLayout.topInset)
     }
 
     private var readyStatusPhrase: some View {
         readyStatusText
             .font(.system(size: statusTextSize, weight: .semibold, design: .rounded))
-        .lineLimit(2)
+        .lineLimit(HomeInfoLayout.lineLimit)
         .minimumScaleFactor(0.82)
         .allowsTightening(true)
         .fixedSize(horizontal: false, vertical: true)
@@ -284,6 +299,14 @@ private struct HomeInfoContentLive: View {
             )
         }
 
+        #if os(iOS)
+        if calorieGoal > 0 {
+            facts.append(KitchenStatusFact(
+                icon: "flame",
+                text: String(localized: "\(caloriesRemaining) kcal restantes hoje")))
+        }
+        #endif
+
         return facts
     }
 
@@ -407,18 +430,19 @@ private struct HomeInfoContentStatic: View {
     }
 
     var body: some View {
-        HStack(alignment: .center, spacing: 12) {
+        Group {
+            #if os(iOS)
             statusPhrase
-                .layoutPriority(1)
-
-            Spacer()
-
-            calorieRing
-                .padding(.top, -6)
-                .padding(.bottom, 6)
+            #else
+            HStack(alignment: .center, spacing: 12) {
+                statusPhrase.layoutPriority(1)
+                Spacer()
+                calorieRing.padding(.top, -6).padding(.bottom, 6)
+            }
+            #endif
         }
-        .padding(.bottom, -3)
-        .frame(height: ExpandedPageHeaderMetrics.iosHomeInfoHeight)
+        .padding(.bottom, HomeInfoLayout.bottomInset)
+        .frame(height: HomeInfoLayout.height)
     }
 
     private var statusPhrase: some View {
@@ -428,20 +452,20 @@ private struct HomeInfoContentStatic: View {
             } else {
                 statusPhraseText
                     .font(.system(size: 14.5, weight: .semibold, design: .rounded))
-                    .lineLimit(2)
+                    .lineLimit(HomeInfoLayout.lineLimit)
                     .minimumScaleFactor(0.82)
                     .allowsTightening(true)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.top, -8)
+        .padding(.top, HomeInfoLayout.topInset)
     }
 
     private var readyStatusPhrase: some View {
         readyStatusText
             .font(.system(size: statusTextSize, weight: .semibold, design: .rounded))
-        .lineLimit(2)
+        .lineLimit(HomeInfoLayout.lineLimit)
         .minimumScaleFactor(0.82)
         .allowsTightening(true)
         .fixedSize(horizontal: false, vertical: true)
@@ -508,6 +532,14 @@ private struct HomeInfoContentStatic: View {
                 )
             )
         }
+
+        #if os(iOS)
+        if calorieGoal > 0 {
+            facts.append(KitchenStatusFact(
+                icon: "flame",
+                text: String(localized: "\(caloriesRemaining) kcal restantes hoje")))
+        }
+        #endif
 
         return facts
     }
