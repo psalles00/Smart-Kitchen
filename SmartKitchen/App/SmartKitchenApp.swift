@@ -191,6 +191,20 @@ struct SmartKitchenApp: App {
         ActionTrace.shared.install()
         #endif
         PerformanceLogger.event(.launch, "SmartKitchenApp.init body end")
+        #if os(macOS)
+        if ProcessInfo.processInfo.arguments.contains("--agent-service") {
+            // Headless lifecycle for local agents. Same container and bootstrap,
+            // with no UI automation or alternate store configuration.
+            Task { @MainActor in
+                let sync = CloudSyncService.shared
+                let context = ModelContext(sync.container)
+                DataSeeder.seedIfNeeded(context: context)
+                UnifiedItemMigration.migrateIfNeeded(context: context)
+                sync.activateCloudSyncIfNeededOnLaunch()
+                MacAgentBackend.shared.start()
+            }
+        }
+        #endif
     }
 
     var body: some Scene {
@@ -315,6 +329,8 @@ struct SmartKitchenApp: App {
                 }
         }
         #if os(macOS)
+        .defaultLaunchBehavior(ProcessInfo.processInfo.arguments.contains("--agent-service") ? .suppressed : .automatic)
+        .restorationBehavior(ProcessInfo.processInfo.arguments.contains("--agent-service") ? .disabled : .automatic)
         .defaultSize(
             width: Self.macMinimumWindowSize.width,
             height: Self.macMinimumWindowSize.height
@@ -336,6 +352,8 @@ struct SmartKitchenApp: App {
                     minHeight: Self.macSettingsWindowSize.height
                 )
         }
+        .defaultLaunchBehavior(ProcessInfo.processInfo.arguments.contains("--agent-service") ? .suppressed : .automatic)
+        .restorationBehavior(ProcessInfo.processInfo.arguments.contains("--agent-service") ? .disabled : .automatic)
         .defaultSize(
             width: Self.macSettingsWindowSize.width,
             height: Self.macSettingsWindowSize.height
@@ -534,6 +552,9 @@ struct SmartKitchenApp: App {
         // Lift the splash after the initial ContentView mount has had at
         // least one frame and one short settling window.
         isAppReady = true
+        #if os(macOS)
+        MacAgentBackend.shared.start()
+        #endif
         PerformanceLogger.event(.launch, "runPostLaunchBootstrap end (splash lifted)", metadata: String(format: "tookMs=%.1f", Date().timeIntervalSince(bootstrapStart) * 1000))
     }
 

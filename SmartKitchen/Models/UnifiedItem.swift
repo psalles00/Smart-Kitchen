@@ -187,6 +187,14 @@ final class UnifiedItem {
 }
 
 extension UnifiedItem {
+    /// Explicit source identities from the local agent backend may share a display name.
+    /// Computed from the reserved UUID namespace; no schema/store field is added.
+    #if os(macOS)
+    var hasIndependentAgentIdentity: Bool {
+        id.uuidString.lowercased().hasPrefix("5a760a1a-") && (id.uuid.6 & 0xf0) == 0x80
+    }
+    #endif
+
     @discardableResult
     static func mergeDuplicateNames(in context: ModelContext) throws -> Int {
         let items = try context.fetch(FetchDescriptor<UnifiedItem>())
@@ -204,6 +212,9 @@ extension UnifiedItem {
 
         var deleted = 0
         for duplicates in grouped.values where duplicates.count > 1 {
+            #if os(macOS)
+            guard !duplicates.contains(where: \.hasIndependentAgentIdentity) else { continue }
+            #endif
             let survivor = preferredMergeSurvivor(from: duplicates)
             for duplicate in duplicates where duplicate.id != survivor.id {
                 survivor.mergeDetails(from: duplicate)
@@ -216,6 +227,12 @@ extension UnifiedItem {
     }
 
     static func containsDuplicateNames(in items: [UnifiedItem]) -> Bool {
+        #if os(macOS)
+        let groups = Dictionary(grouping: items, by: { normalizedName($0.name) })
+        return groups.contains { key, group in
+            !key.isEmpty && group.count > 1 && !group.contains(where: \.hasIndependentAgentIdentity)
+        }
+        #else
         var seen = Set<String>()
         for item in items {
             let key = normalizedName(item.name)
@@ -223,6 +240,7 @@ extension UnifiedItem {
             if !seen.insert(key).inserted { return true }
         }
         return false
+        #endif
     }
 
     static func mergedExistingItem(
@@ -241,6 +259,9 @@ extension UnifiedItem {
         guard !matches.isEmpty else { return nil }
 
         let survivor = preferredMergeSurvivor(from: matches)
+        #if os(macOS)
+        if matches.contains(where: \.hasIndependentAgentIdentity) { return survivor }
+        #endif
         for duplicate in matches where duplicate.id != survivor.id {
             survivor.mergeDetails(from: duplicate)
             relinkItems(from: duplicate.id, to: survivor.id, in: items)

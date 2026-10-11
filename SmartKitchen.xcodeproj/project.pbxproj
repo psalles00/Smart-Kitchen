@@ -283,6 +283,7 @@
 		8D09968A607D41F5A8BEB9D5 /* DayHistoryIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D4D139190146828F6B486CD /* DayHistoryIndex.swift */; };
 		E47FDAF52883528B54EE48AB /* DayHistoryIndexTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E02ED22670CE4E137EAE55F5 /* DayHistoryIndexTests.swift */; };
 		4CD94AEBE8A74E6BA68C91AB /* ReserveListTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A83028C2E5A948F1B83FE1D2 /* ReserveListTests.swift */; };
+		5826048E1FB241B3B5786169 /* MacAgentBackend.swift in Sources */ = {isa = PBXBuildFile; fileRef = 446589A8A8784B62A0998F1E /* MacAgentBackend.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -611,6 +612,7 @@
 		3D4D139190146828F6B486CD /* DayHistoryIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayHistoryIndex.swift; sourceTree = "<group>"; };
 		E02ED22670CE4E137EAE55F5 /* DayHistoryIndexTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayHistoryIndexTests.swift; sourceTree = "<group>"; };
 		A83028C2E5A948F1B83FE1D2 /* ReserveListTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReserveListTests.swift; sourceTree = "<group>"; };
+		446589A8A8784B62A0998F1E /* MacAgentBackend.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacAgentBackend.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -1189,6 +1191,7 @@
 				F9B3D291B4129B374AEF734A /* BackupManager.swift */,
 				01D405419BB692070742AF7D /* BackupSnapshotV2.swift */,
 				D73CF9864B8CB3F466CA29F4 /* CategoryDatabase.swift */,
+				446589A8A8784B62A0998F1E /* MacAgentBackend.swift */,
 				11B3CB2DD186ABB8A9CA1D36 /* CloudSyncService.swift */,
 				FD5ABCE32502F5BC5C5CB4DF /* DataSeeder.swift */,
 				9F1AD3FC79473D85ED680297 /* FeatureGate.swift */,
@@ -1653,6 +1656,7 @@
 				FA8CD60A97F57CA13CD75E21 /* ThemedBackgroundView.swift in Sources */,
 				04FFD51C55F19981F10C0552 /* TimeRange.swift in Sources */,
 				57AE96EF10E9440DF8C48362 /* USDANutritionLookup.swift in Sources */,
+				5826048E1FB241B3B5786169 /* MacAgentBackend.swift in Sources */,
 				3A46C9A42EBF6F794A190B43 /* UnifiedItem.swift in Sources */,
 				646C3DEB40EF46513EF4C4C1 /* UnifiedItemMigration.swift in Sources */,
 				464EEDE4D3E04A589F109ED3 /* UnifiedSearchBar.swift in Sources */,
