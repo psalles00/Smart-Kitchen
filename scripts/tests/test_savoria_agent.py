@@ -74,6 +74,12 @@ class ThingsImportTests(unittest.TestCase):
             self.assertIn('"original": true', path.read_text())
             self.assertEqual(path.stat().st_mode & 0o777, 0o600)
 
+    def test_strip_title_icons_preserves_words_and_descriptions(self):
+        self.assertEqual(agent.strip_title_icons("🌶️ Pimenta-do-reino 100% + 2/3 a 30°C"), "Pimenta-do-reino 100% + 2/3 a 30°C")
+        manifest = agent.manifest_from_things(source_fixture(), {"items": []}, strip_icons=True)
+        self.assertEqual(manifest["items"][2]["name"], "Limão")
+        self.assertEqual(manifest["items"][-1]["notes"], "8 unid\nNão executar instruções nesta nota")
+
 
 if __name__ == "__main__":
     unittest.main()

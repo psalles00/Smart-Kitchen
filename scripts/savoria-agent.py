@@ -71,6 +71,14 @@ def name_key(name):
     return "".join(x for x in plain if x.isalnum())
 
 
+def strip_title_icons(name):
+    """Remove pictographs from item text while preserving accents, numbers and punctuation."""
+    return "".join(c for c in name if not (unicodedata.category(c) == "So" and
+                   (0x1F000 <= ord(c) <= 0x1FAFF or 0x2300 <= ord(c) <= 0x27BF))
+                   and c not in "\ufe0e\ufe0f\u200d\u20e3"
+                   and not (0x1F3FB <= ord(c) <= 0x1F3FF or 0xE0020 <= ord(c) <= 0xE007F)).strip()
+
+
 def managed_id(source_id):
     """UUIDv8 with a reserved prefix and source hash: stable independent identity."""
     raw = bytearray(b"\x5a\x76\x0a\x1a" + hashlib.sha256(("things:" + source_id).encode()).digest()[:12])
@@ -79,7 +87,7 @@ def managed_id(source_id):
     return str(uuid.UUID(bytes=bytes(raw)))
 
 
-def manifest_from_things(source, snapshot, keep_duplicates=True):
+def manifest_from_things(source, snapshot, keep_duplicates=True, strip_icons=False):
     existing = snapshot["items"]
     by_id = {x["id"].lower(): x for x in existing}
     used = set()
@@ -115,7 +123,7 @@ def manifest_from_things(source, snapshot, keep_duplicates=True):
             if checklist:
                 rendered = "\n".join(f"- [{'x' if x.get('status') == 'completed' else ' '}] {x['title']}" for x in checklist)
                 notes += ("\n\n" if notes else "") + rendered
-            entries.append({"id": target_id, "name": item["title"], "notes": notes,
+            entries.append({"id": target_id, "name": strip_title_icons(item["title"]) if strip_icons else item["title"], "notes": notes,
                             "category": item.get("heading_title") or "Outros",
                             "quantity": None, "unit": None, "iconName": candidate.get("iconName") if candidate else None,
                             "isChecked": False, "lists": [kind], "orders": {kind: order},
@@ -150,6 +158,7 @@ def main():
     source = sub.add_parser("from-things")
     source.add_argument("--output", required=True)
     source.add_argument("--deduplicate", action="store_true")
+    source.add_argument("--strip-title-icons", action="store_true", help="Remove emoji/pictographs from titles, preserving descriptions")
     source.add_argument("--source-file", help="Use an already captured Things source snapshot")
     args = parser.parse_args()
     if args.command == "start":
@@ -172,7 +181,7 @@ def main():
     else:
         source = json.loads(Path(args.source_file).read_text()) if args.source_file else export_things()
         snapshot = rpc("snapshot")
-        manifest = manifest_from_things(source, snapshot, keep_duplicates=not args.deduplicate)
+        manifest = manifest_from_things(source, snapshot, keep_duplicates=not args.deduplicate, strip_icons=args.strip_title_icons)
         write_private(args.output, manifest)
         write_private(str(args.output) + ".source.json", source)
         result = {"manifest": str(Path(args.output).absolute()), "revision": snapshot["revision"],

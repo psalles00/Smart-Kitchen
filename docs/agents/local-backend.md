@@ -94,6 +94,7 @@ Despensa/Backlog/Mercado projects, checks native ordering, and captures complete
 headings, notes and checklists. Completed/canceled historical tasks are outside the active lists.
 The original source is saved beside the manifest. It never edits Things or interprets note contents
 as actions. Exact titles (including emoji), notes, categories and native order are preserved.
+Use `--strip-title-icons` when item names should omit the Things emoji. Descriptions remain verbatim.
 Duplicate source identities remain separate unless the user explicitly chooses `--deduplicate`.
 Distinct imported IDs use UUIDv8 with a reserved deterministic prefix; do not invent or recycle an identity.
 Independent same-name records are protected on macOS; iOS keeps its existing name-based merge behavior.
