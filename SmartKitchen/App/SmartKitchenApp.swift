@@ -128,7 +128,7 @@ struct MacNewItemCommands: Commands {
 @main
 struct SmartKitchenApp: App {
     #if os(macOS)
-    private static let macMinimumWindowSize = CGSize(width: 1100, height: 750)
+    private static let macMinimumWindowSize = CGSize(width: 1180, height: 750)
     private static let macSettingsWindowSize = CGSize(width: 1240, height: 860)
     #endif
 

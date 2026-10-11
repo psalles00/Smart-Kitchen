@@ -158,6 +158,7 @@ struct ContentView: View {
     @State private var macBackgroundTransitionProgress: Double = 1.0
     @FocusState private var macSearchFieldFocused: Bool
     @State private var macAssistantBarExpanded: Bool = false
+    @State private var macPendingNutritionDate: Date?
 
     private var macActivePageTheme: PageTheme {
         switch selectedSidebar ?? .home {
@@ -206,6 +207,17 @@ struct ContentView: View {
         case .nutrients:
             NavigationStack { NutrientsView() }
                 .background(Color.clear)
+                .task {
+                    // The Home notification arrives before this page is mounted.
+                    // Replay its date once Nutrição has subscribed to notifications.
+                    guard let date = macPendingNutritionDate, !Task.isCancelled else { return }
+                    macPendingNutritionDate = nil
+                    NotificationCenter.default.post(
+                        name: .openNutritionAtDate,
+                        object: nil,
+                        userInfo: ["date": date]
+                    )
+                }
 
         case .assistant:
             NavigationStack {
@@ -252,7 +264,13 @@ struct ContentView: View {
     }
     #endif
 
-    private var activePageTheme: PageTheme { selectedTab.pageTheme ?? lastContentTab.pageTheme ?? .home }
+    private var activePageTheme: PageTheme {
+        #if os(macOS)
+        macActivePageTheme
+        #else
+        selectedTab.pageTheme ?? lastContentTab.pageTheme ?? .home
+        #endif
+    }
 
     /// Mirrors `AppSettings.hasCompletedOnboarding` into `showOnboarding` so
     /// the fullscreen cover binding stays in sync. Also runs the one-shot
@@ -368,11 +386,21 @@ struct ContentView: View {
     }
 
     private func selectTab(_ tab: AppTab, withoutAnimation: Bool = true) {
+        #if os(macOS)
+        switch tab {
+        case .assistant: selectedSidebar = .home
+        case .lists: selectedSidebar = .lists
+        case .recipes: selectedSidebar = .recipes
+        case .nutrients: selectedSidebar = .nutrients
+        case .commandBar: selectedSidebar = .assistant
+        }
+        #else
         if withoutAnimation {
             setSelectedTabWithoutAnimation(tab)
         } else {
             setSelectedTab(tab)
         }
+        #endif
     }
 
     private func setSelectedTab(_ tab: AppTab) {
@@ -695,8 +723,15 @@ struct ContentView: View {
                     let action = NutritionLogWidgetAction.resolve(note.userInfo?["action"] as? String)
                     openNutritionLogFromWidget(action)
                 }
-                .onReceive(NotificationCenter.default.publisher(for: .openNutritionAtDate)) { _ in
+                .onReceive(NotificationCenter.default.publisher(for: .openNutritionAtDate)) { note in
+                    #if os(macOS)
+                    if selectedSidebar != .nutrients {
+                        macPendingNutritionDate = note.userInfo?["date"] as? Date
+                        selectedSidebar = .nutrients
+                    }
+                    #else
                     if selectedTab != .nutrients { selectTab(.nutrients) }
+                    #endif
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .shareImportRouteToNutrients)) { _ in
                     #if os(macOS)
@@ -763,9 +798,11 @@ struct ContentView: View {
 
     private var nativeTabView: some View {
         ZStack {
+            #if os(iOS)
             iosAppBackground
                 .ignoresSafeArea()
                 .allowsHitTesting(false)
+            #endif
 
             nativeTabContainer
                 #if os(iOS)
@@ -905,7 +942,9 @@ struct ContentView: View {
                         HomeSkeletonPage()
                     }
                 }
+                #if os(iOS)
                 .toolbar(.hidden, for: .navigationBar)
+                #endif
             } else {
                 inactiveTabPlaceholder
             }
@@ -925,7 +964,9 @@ struct ContentView: View {
                 NavigationStack {
                     ListsTabView()
                 }
+                #if os(iOS)
                 .toolbar(.hidden, for: .navigationBar)
+                #endif
             } else {
                 inactiveTabPlaceholder
             }
@@ -945,7 +986,9 @@ struct ContentView: View {
                 NavigationStack(path: $recipeNavigationPath) {
                     RecipesView()
                 }
+                #if os(iOS)
                 .toolbar(.hidden, for: .navigationBar)
+                #endif
             } else {
                 inactiveTabPlaceholder
             }
@@ -965,7 +1008,9 @@ struct ContentView: View {
                 NavigationStack {
                     NutrientsView()
                 }
+                #if os(iOS)
                 .toolbar(.hidden, for: .navigationBar)
+                #endif
             } else {
                 inactiveTabPlaceholder
             }
@@ -1425,6 +1470,8 @@ struct ContentView: View {
                 Text(item.title)
                     .font(.system(size: 13, weight: isSelected ? .semibold : .medium))
                     .foregroundStyle(isSelected ? Color.white : Color.white.opacity(0.86))
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 0)
             }
             .padding(.horizontal, 10)
@@ -1501,7 +1548,8 @@ struct ContentView: View {
                 Text(title)
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(Color.white.opacity(0.92))
-                    .lineLimit(1)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 0)
                 Circle()
                     .fill(tint.accentColor)
@@ -1517,6 +1565,7 @@ struct ContentView: View {
             .contentShape(.rect)
         }
         .buttonStyle(.plain)
+        .help(title)
     }
 
     @ViewBuilder
@@ -1611,6 +1660,8 @@ struct ContentView: View {
             .background(MacDarkSidebarBackground().ignoresSafeArea())
             .navigationTitle("")
             .environment(\.colorScheme, .dark)
+            .frame(minWidth: 280)
+            .navigationSplitViewColumnWidth(min: 280, ideal: 300, max: 380)
             .safeAreaInset(edge: .bottom) {
                 // Sidebar shows a button-styled trigger that looks like a
                 // search bar. The real TextField lives in the floating bar
@@ -1650,11 +1701,14 @@ struct ContentView: View {
                     .frame(maxWidth: 760)
                     .padding(.horizontal, 20)
                     .padding(.bottom, 20)
-                    .opacity(macAssistantBarFloating ? 1 : 0)
+                    .opacity(macAssistantBarFloating && !isListSelectionActive ? 1 : 0)
                     .offset(y: macAssistantBarFloating ? 0 : 30)
-                    .allowsHitTesting(macAssistantBarFloating)
+                    .allowsHitTesting(macAssistantBarFloating && !isListSelectionActive)
             }
             .animation(.spring(response: 0.32, dampingFraction: 0.86), value: macAssistantBarFloating)
+        }
+        .onPreferenceChange(ListSelectionActiveKey.self) { isActive in
+            if isListSelectionActive != isActive { isListSelectionActive = isActive }
         }
         .onChange(of: searchBarState.debouncedSearchText) { _, newValue in
             guard searchBarState.mode != .aiChat else { return }
@@ -2793,7 +2847,9 @@ private struct HomeSkeletonPage: View {
                 AssistantInfoSkeleton()
             }
         )
+        #if os(iOS)
         .toolbar(.hidden, for: .navigationBar)
+        #endif
     }
 }
 

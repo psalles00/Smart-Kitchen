@@ -107,7 +107,6 @@ enum ListBulkMutation {
     }
 }
 
-#if os(iOS)
 private struct ListBulkCategorySheet: View {
     @Environment(\.dismiss) private var dismiss
     @Query private var categories: [Category]
@@ -131,17 +130,21 @@ private struct ListBulkCategorySheet: View {
                 }
             }
             .navigationTitle("Alterar categoria")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancelar") { dismiss() }
                 }
             }
         }
+        #if os(macOS)
+        .frame(minWidth: 420, minHeight: 360)
+        #endif
         .savoriaModalBorder(theme: .lists)
     }
 }
-#endif
 
 enum ListSubtab: String, CaseIterable, Codable {
     case pantry
@@ -429,6 +432,7 @@ private struct ListsLoadedTabView: View {
         )
         #if os(iOS)
         .toolbar(.hidden, for: .navigationBar)
+        #endif
         .environment(\.listItemSelection, ListItemSelection(
             isActive: isSelectingItems,
             selectedIDs: selectedItemIDs,
@@ -451,7 +455,6 @@ private struct ListsLoadedTabView: View {
         .alert("Não foi possível salvar a ação. Tente novamente.", isPresented: $showsBulkSaveError) {
             Button("OK", role: .cancel) {}
         }
-        #endif
         .tint(PageTheme.lists.accentColor)
         .onChange(of: settings?.showReserve) { _, enabled in
             if enabled != true && selectedSubtab == .reserve { selectedSubtab = .pantry }
@@ -543,14 +546,12 @@ private struct ListsLoadedTabView: View {
 
     private var optionsMenu: some View {
         GlassGroupMenu(systemImage: "line.3.horizontal.decrease.circle") {
-            #if os(iOS)
             Button(isSelectingItems ? String(localized: "Cancelar") : String(localized: "Selecionar itens"), systemImage: "checkmark.circle") {
                 if isSelectingItems { finishItemSelection() }
                 else { isSelectingItems = true }
             }
             .accessibilityIdentifier("savoria.lists.select")
             Divider()
-            #endif
             Section("Ordenar por") {
                 ForEach(ListsSortOption.allCases) { option in
                     Button {
@@ -606,7 +607,6 @@ private struct ListsLoadedTabView: View {
         .accessibilityIdentifier("savoria.lists.options")
     }
 
-    #if os(iOS)
     private var selectionBar: some View {
         HStack(spacing: 8) {
             Text("Selecionados: \(selectedItemIDs.count)")
@@ -653,14 +653,13 @@ private struct ListsLoadedTabView: View {
         .padding(.horizontal, 12)
         .foregroundStyle(PageTheme.lists.accentColor)
         .background {
-            if #available(iOS 26, *) {
+            if #available(iOS 26, macOS 26, *) {
                 Capsule().fill(.clear).glassEffect(.regular.interactive(), in: .capsule)
             } else {
                 Capsule().fill(.regularMaterial)
             }
         }
     }
-    #endif
 
     private func toggleItemSelection(_ id: UUID) {
         guard isSelectingItems, visibleItemIDs.contains(id) else { return }

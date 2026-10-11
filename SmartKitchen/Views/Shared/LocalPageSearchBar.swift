@@ -13,7 +13,9 @@ struct LocalPageSearchBar: View {
                 .foregroundStyle(.secondary)
 
             TextField(placeholder, text: $text)
+                #if os(iOS)
                 .textInputAutocapitalization(.never)
+                #endif
                 .autocorrectionDisabled()
                 .submitLabel(.search)
                 .focused($isFocused)

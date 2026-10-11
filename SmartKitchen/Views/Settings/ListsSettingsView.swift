@@ -28,7 +28,6 @@ struct ListsSettingsView: View {
                         in: 1...180
                     )
 
-                    #if os(iOS)
                     HStack(spacing: 8) {
                         Text("Mostrar Para depois")
                         SectionInfoButton(
@@ -44,13 +43,6 @@ struct ListsSettingsView: View {
                         .labelsHidden()
                         .accessibilityIdentifier("savoria.lists.reserve.enabled")
                     }
-                    #else
-                    Toggle("Mostrar Para depois", isOn: Binding(
-                        get: { settings.showReserve },
-                        set: { settings.showReserve = $0 }
-                    ))
-                    .accessibilityIdentifier("savoria.lists.reserve.enabled")
-                    #endif
 
                     Toggle("Mostrar utensílios", isOn: Binding(
                         get: { settings.showUtensils },
@@ -60,9 +52,6 @@ struct ListsSettingsView: View {
             } header: {
                 Text("Despensa e mercado")
             } footer: {
-                #if !os(iOS)
-                Text("Itens finalizados vão para Para depois quando habilitada. Marque-os para enviar ao Mercado. Ocultar a lista preserva seus itens.")
-                #endif
             }
 
             Section {
