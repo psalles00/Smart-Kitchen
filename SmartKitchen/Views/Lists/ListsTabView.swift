@@ -651,6 +651,19 @@ private struct ListsLoadedTabView: View {
             .accessibilityIdentifier("savoria.lists.selection.cancel")
         }
         .padding(.horizontal, 12)
+        #if os(macOS)
+        .foregroundStyle(.white)
+        .tint(.white)
+        .buttonStyle(.plain)
+        .background {
+            Capsule()
+                .fill(Color(red: 0.10, green: 0.10, blue: 0.12))
+                .overlay {
+                    Capsule().strokeBorder(.white.opacity(0.14), lineWidth: 1)
+                }
+        }
+        .environment(\.colorScheme, .dark)
+        #else
         .foregroundStyle(PageTheme.lists.accentColor)
         .background {
             if #available(iOS 26, macOS 26, *) {
@@ -659,6 +672,7 @@ private struct ListsLoadedTabView: View {
                 Capsule().fill(.regularMaterial)
             }
         }
+        #endif
     }
 
     private func toggleItemSelection(_ id: UUID) {
