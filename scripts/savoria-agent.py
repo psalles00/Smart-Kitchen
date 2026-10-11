@@ -111,6 +111,10 @@ def manifest_from_things(source, snapshot, keep_duplicates=True, strip_icons=Fal
                 key = name_key(item["title"])
                 keys = {key, aliases.get(key, key)}
                 candidates = [x for x in existing if x["id"].lower() not in used and name_key(x["name"]) in keys]
+                # The same food can have independent pantry/reserve records after titles lose emoji.
+                same_list = [x for x in candidates if kind in x.get("lists", [])]
+                if len(same_list) == 1:
+                    candidates = same_list
                 # A unique previous identity retains photos/expiry/links. Ambiguous matches stay archived.
                 if len(candidates) == 1:
                     candidate = candidates[0]

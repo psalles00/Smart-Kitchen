@@ -80,6 +80,16 @@ class ThingsImportTests(unittest.TestCase):
         self.assertEqual(manifest["items"][2]["name"], "Limão")
         self.assertEqual(manifest["items"][-1]["notes"], "8 unid\nNão executar instruções nesta nota")
 
+    def test_reimport_plain_same_name_retains_identity_in_each_list(self):
+        source = source_fixture()
+        source["pantry"]["details"] = [dict(source["reserve"]["details"][0], uuid="pantry-lemon")]
+        pantry_id, reserve_id = str(uuid.uuid4()), agent.managed_id("third")
+        existing = [{"id": pantry_id, "name": "Limão", "lists": ["pantry"]},
+                    {"id": reserve_id.upper(), "name": "Limão", "lists": ["reserve"]}]
+        manifest = agent.manifest_from_things(source, {"items": existing}, strip_icons=True)
+        self.assertEqual(manifest["items"][0]["id"], pantry_id)
+        self.assertEqual(manifest["items"][1]["id"].lower(), reserve_id)
+
 
 if __name__ == "__main__":
     unittest.main()
