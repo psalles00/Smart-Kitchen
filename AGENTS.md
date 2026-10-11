@@ -22,6 +22,12 @@ No final de cada alteração no app, compile e instale a versão modificada no i
 - Se for necessário passar por cima de alguma das regras deste documento, o agente deve perguntar ao usuário e obter confirmação explícita ANTES de executar a ação. Isso é inegociável.
 - Sempre que editar a versão de um app pra macOS, se restrinja a editar apenas essa versão. Não altere absolutamente nada da versão original do app, a menos que seja solicitado especificamente por isso.
 
+# Paridade iOS e macOS
+- Sempre que adicionar ou atualizar uma função no iOS, implemente e valide também a função equivalente no macOS, incluindo navegação, menus, atalhos, configurações e fluxos relacionados. Adapte a interação à plataforma, mantendo o mesmo comportamento e os mesmos dados.
+- Inclua todos os textos e traduções nos idiomas disponíveis nas duas versões. Prefira código e catálogos compartilhados; não deixe funções disponíveis somente no iOS por causa de condicionais de plataforma.
+- Compile as duas versões e instale/abra a versão macOS atualizada no Mac, além da validação física e no Simulator exigida abaixo. Confira a interface real e os dados existentes antes de afirmar paridade.
+- Correções exclusivas do macOS continuam restritas ao macOS. A obrigação de paridade ao desenvolver funções iOS não autoriza alterar o iOS durante uma correção exclusiva do Mac.
+
 # Procedimento e Build
 - Antes de editar: Leia containers, schemas e fluxos de bootstrap.
 - Após finalizar: Valide a integridade dos dados e garanta a capability iCloud (Documents, CloudKit e container iCloud.com.pedrosalles.smartkitchen.sync).
