@@ -79,6 +79,25 @@ final class RecipeIdeaRequestTests: XCTestCase {
         XCTAssertEqual(RecipeStructurer.instructions(hints: .init()), RecipeStructurer.systemPrompt)
     }
 
+    func testStepExclusionsDoNotRejectTheValidNativeRecipe() {
+        let request = RecipeIdeaRequest(occasion: nil, refinement: nil, customQuery: original)
+        for step in ["Refogue o tomate por 2 minutos sem óleo ou manteiga.",
+                     "Não use manteiga nem leite.", "Cook without butter or milk.",
+                     "Sem óleo, manteiga ou leite, cozinhe os ovos."] {
+            XCTAssertTrue(request.accepts(ingredients: ["Arroz", "Ovos", "Tomate"], steps: [step], totalMinutes: 15, servings: 1), step)
+        }
+    }
+
+    func testStepNegationNeverHidesAnotherDairyAddition() {
+        let request = RecipeIdeaRequest(occasion: nil, refinement: nil, customQuery: original)
+        for step in ["Refogue sem manteiga; adicione leite.", "Não use leite, adicione manteiga.",
+                     "Sem óleo, use manteiga.", "Without butter, add milk.",
+                     "Refogue o tomate sem pele e adicione queijo."] {
+            XCTAssertFalse(request.accepts(ingredients: ["Arroz", "Ovos"], steps: [step], totalMinutes: 15, servings: 1), step)
+        }
+        XCTAssertFalse(request.accepts(ingredients: ["Leite"], steps: ["Não use manteiga."], totalMinutes: 15, servings: 1))
+    }
+
     func testCanonicalCardMetadataAndEnglishRequest() {
         let content = "**Omelete**\nTempo total: 15 min\nPorções: 1\n**Ingredientes**\n- 2 un de Ovos"
         XCTAssertEqual(RecipeIdeaRequest.totalMinutes(in: content), 15)

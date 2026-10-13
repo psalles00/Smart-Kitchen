@@ -68,7 +68,8 @@ struct RecipeIdeaRequest {
     }
 
     func accepts(ingredients: [String], steps: [String] = [], totalMinutes: Int?, servings: Int?) -> Bool {
-        if excludesMilk, (ingredients + steps).contains(where: Self.containsDairy) { return false }
+        if excludesMilk,
+           ingredients.contains(where: Self.containsDairy) || steps.contains(where: Self.containsDairyUse) { return false }
         if let maximumMinutes {
             guard let totalMinutes, totalMinutes > 0, totalMinutes <= maximumMinutes else { return false }
         }
@@ -104,6 +105,19 @@ struct RecipeIdeaRequest {
             of: #"\b(?:leite (?:vegetal|de (?:coco|aveia|soja|amendoas|arroz))|(?:coconut|oat|soy|almond|rice|plant) milk)\b"#,
             with: "", options: .regularExpression)
         return name.range(of: #"\b(?:leite|milk|lait|leche|milch|latte|queijo|cheese|fromage|queso|kase|formaggio|manteiga|butter|beurre|mantequilla|burro|iogurte|yogurt|yoghurt|joghurt|yaourt|yogur|nata|requeijao|cream)\b"#, options: .regularExpression) != nil
+    }
+
+    private static func containsDairyUse(_ step: String) -> Bool {
+        // A prohibition such as "sem óleo ou manteiga" is not an addition.
+        // Remove only explicit, bounded ingredient lists after a negation;
+        // "sem manteiga; adicione leite" must still fail.
+        let ingredient = #"(?:leite|milk|lait|leche|milch|latte|queijo|cheese|fromage|queso|kase|formaggio|manteiga|butter|beurre|mantequilla|burro|iogurte|yogurt|yoghurt|joghurt|yaourt|yogur|nata|requeijao|cream|oleo|oil|huile|aceite|ol|olio)\b"#
+        let separator = #"(?:\s*,\s*|\s+(?:e|ou|nem|and|or|nor|et|y|o|ni|und|oder)\s+)"#
+        let negation = #"\b(?:sem|without|sans|sin|ohne|senza|nao\s+(?:use|adicione|inclua|coloque|utilize)|do\s+not\s+(?:use|add|include))\s+"#
+        let additions = normalized(step).replacingOccurrences(
+            of: negation + ingredient + "(?:" + separator + ingredient + ")*",
+            with: "", options: .regularExpression)
+        return containsDairy(additions)
     }
 
     private static func normalized(_ text: String) -> String {
