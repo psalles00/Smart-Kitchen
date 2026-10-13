@@ -15,6 +15,7 @@ struct FoodResultView: View {
     @State private var servingText: String = ""
     @State private var mealTypeRaw: String = MealType.snack.rawValue
     @State private var showMore: Bool = false
+    @State private var hasSubmitted: Bool = false
     @State private var servingUnit: ServingUnit = .grams
     @State private var caloriesText: String = ""
     @State private var proteinText: String = ""
@@ -153,7 +154,7 @@ struct FoodResultView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Registrar") { save() }
                         .fontWeight(.semibold)
-                        .disabled(!canSave)
+                        .disabled(!canSave || hasSubmitted)
                 }
             }
             .tint(PageTheme.nutrients.accentColor)
@@ -326,6 +327,10 @@ struct FoodResultView: View {
     // MARK: - Save
 
     private func save() {
+        // Dismissal is asynchronous. Ignore additional taps before the sheet closes.
+        guard canSave, !hasSubmitted else { return }
+        hasSubmitted = true
+
         let trimmedName = name.trimmingCharacters(in: .whitespaces)
         let cal = Calendar.current
         let day = cal.dateComponents([.year, .month, .day], from: logDate)
