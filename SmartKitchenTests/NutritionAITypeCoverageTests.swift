@@ -381,6 +381,52 @@ final class NutritionAITypeCoverageTests: XCTestCase {
         XCTAssertTrue(ExaNutritionLookup.parse(answer: ["items": [impossible]], citations: [source], locale: "pt-BR").isEmpty)
     }
 
+    func testExaSearchStaysFocusedOnExactProductInsteadOfUnitExamples() {
+        let query = ExaNutritionLookup.buildQuery(names: ["Nutella vendida no Reino Unido"], locale: "pt-BR")
+        XCTAssertTrue(query.contains("Nutella vendida no Reino Unido"))
+        XCTAssertFalse(query.contains("0,1g"))
+        XCTAssertFalse(query.contains("40mg"))
+        let schema = ExaNutritionLookup.outputSchema(names: ["Nutella vendida no Reino Unido"])
+        let root = schema["properties"] as? [String: Any]
+        let items = root?["items"] as? [String: Any]
+        let item = items?["items"] as? [String: Any]
+        let properties = item?["properties"] as? [String: Any]
+        let name = properties?["name"] as? [String: Any]
+        XCTAssertEqual(name?["enum"] as? [String], ["Nutella vendida no Reino Unido"])
+    }
+
+    func testExplicitExaMicronutrientUnitsScaleToServingWithoutGramConfusion() {
+        let source = "https://www.nutella.com/uk/en/products/nutella"
+        var item: [String: Any] = [
+            "name": "Nutella UK", "citation_url": source,
+            "kcal_per_100g": 539, "protein_per_100g": 6.3, "carbs_per_100g": 57.5, "fat_per_100g": 30.9,
+            "sodium_per_100g": 0.0428, "cholesterol_per_100g": 0.01, "potassium_per_100g": 0.2
+        ]
+        let legacy = ExaNutritionLookup.parse(answer: ["items": [item]], citations: [source], locale: "pt-BR")
+        XCTAssertNil(legacy.first?.sodium)
+        XCTAssertNil(legacy.first?.cholesterol)
+        XCTAssertNil(legacy.first?.potassium)
+        item["sodium_mg_per_100g"] = 42.8
+        item["cholesterol_mg_per_100g"] = 10
+        item["potassium_mg_per_100g"] = 200
+        let foods = ExaNutritionLookup.parse(answer: ["items": [item]], citations: [source], locale: "pt-BR")
+        XCTAssertEqual(foods.count, 1)
+        guard let food = foods.first else { return }
+        let analysis = NutritionCalculator.combine(items: [.init(item: .init(name: "Nutella UK", quantity: 15, unit: "g"), per100g: food)], originalDescription: "15g Nutella UK")
+        XCTAssertEqual(analysis.calories, 81)
+        XCTAssertEqual(analysis.sodiumMg, 6.4)
+        XCTAssertEqual(analysis.cholesterolMg, 1.5)
+        XCTAssertEqual(analysis.potassiumMg, 30)
+    }
+
+    func testValidatedReferenceCacheDoesNotReuseLegacyNamespaceOrChangeFoodIdentity() {
+        let name = "Nutella UK"
+        let key = FoodCache.referenceCacheKey(for: name)
+        XCTAssertNotEqual(key, FoodCache.canonicalize(name))
+        XCTAssertEqual(FoodCache.referenceCanonicalName(from: key), FoodCache.canonicalize(name))
+        XCTAssertEqual(FoodCache.referenceCanonicalName(from: "nutella uk"), "nutella uk")
+    }
+
     func testLLMEstimatesWarnWithoutPublishingToSharedFoodCache() async throws {
         let ai = MockNutritionAIClient()
         ai.chatContent = """

@@ -46,11 +46,13 @@ final class ExaClient {
     ///     nutrition lookups).
     func answer(
         query: String,
+        systemPrompt: String? = nil,
         outputSchema: [String: Any]? = nil,
         includeDomains: [String] = [],
         apiKey: String
     ) async throws -> AnswerResult {
         var body: [String: Any] = ["query": query]
+        if let systemPrompt { body["systemPrompt"] = systemPrompt }
         if let outputSchema { body["outputSchema"] = outputSchema }
         if !includeDomains.isEmpty { body["includeDomains"] = includeDomains }
 

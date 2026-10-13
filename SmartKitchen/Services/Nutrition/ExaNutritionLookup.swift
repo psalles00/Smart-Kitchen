@@ -46,12 +46,13 @@ final class ExaNutritionLookup {
         }
 
         let query = Self.buildQuery(names: names, locale: locale)
-        let schema = Self.outputSchema()
+        let schema = Self.outputSchema(names: names)
 
         let result: ExaClient.AnswerResult
         do {
             result = try await client.answer(
                 query: query,
+                systemPrompt: Self.buildInstructions(names: names, locale: locale),
                 outputSchema: schema,
                 includeDomains: Self.domains,
                 apiKey: APIConfig.exaAPIKey
@@ -77,7 +78,12 @@ final class ExaNutritionLookup {
 
     // MARK: - Query / Schema
 
-    private static func buildQuery(names: [String], locale: String) -> String {
+    static func buildQuery(names: [String], locale: String) -> String {
+        // Search the foods, not the conversion examples or response rules.
+        "Nutrition label per 100g or 100ml: " + names.joined(separator: "; ")
+    }
+
+    private static func buildInstructions(names: [String], locale: String) -> String {
         let list = names.map { "- \($0)" }.joined(separator: "\n")
         return """
         Para cada alimento listado abaixo, retorne os valores nutricionais por 100g \
@@ -89,13 +95,17 @@ final class ExaNutritionLookup {
         porção com valores por 100g/100ml. Copie exatamente o nome da lista no \
         campo name e inclua citation_url da fonte de cada item. Se não houver \
         rótulo compatível ou fonte verificável, omita o item, sem inventar números.
+        Açúcares, fibra e gorduras são em gramas. Colesterol, sódio e potássio \
+        usam os campos *_mg_per_100g, sempre em miligramas: 0,1g de sódio = \
+        100mg. Sal não é sódio: converta sal em sódio dividindo por 2,5; \
+        0,1g de sal = 40mg de sódio. Use null se a unidade não estiver confirmada.
 
         Alimentos:
         \(list)
         """
     }
 
-    private static func outputSchema() -> [String: Any] {
+    static func outputSchema(names: [String]) -> [String: Any] {
         [
             "type": "object",
             "properties": [
@@ -104,7 +114,7 @@ final class ExaNutritionLookup {
                     "items": [
                         "type": "object",
                         "properties": [
-                            "name":              ["type": "string"],
+                            "name":              ["type": "string", "enum": names],
                             "display_name":      ["type": "string"],
                             "citation_url":      ["type": "string"],
                             "kcal_per_100g":     ["type": "number"],
@@ -117,9 +127,9 @@ final class ExaNutritionLookup {
                             "saturated_fat_per_100g": ["type": ["number", "null"]],
                             "monounsaturated_fat_per_100g": ["type": ["number", "null"]],
                             "polyunsaturated_fat_per_100g": ["type": ["number", "null"]],
-                            "cholesterol_per_100g":   ["type": ["number", "null"]],
-                            "sodium_per_100g":        ["type": ["number", "null"]],
-                            "potassium_per_100g":     ["type": ["number", "null"]],
+                            "cholesterol_mg_per_100g": ["type": ["number", "null"], "description": "Cholesterol in milligrams per 100g, never grams"],
+                            "sodium_mg_per_100g":      ["type": ["number", "null"], "description": "Sodium in milligrams per 100g; salt grams / 2.5 * 1000"],
+                            "potassium_mg_per_100g":   ["type": ["number", "null"], "description": "Potassium in milligrams per 100g, never grams"],
                             "emoji":                  ["type": ["string", "null"]]
                         ],
                         "required": ["name", "citation_url", "kcal_per_100g", "protein_per_100g", "carbs_per_100g", "fat_per_100g"]
@@ -170,9 +180,10 @@ final class ExaNutritionLookup {
                 saturatedFat:       numeric(entry["saturated_fat_per_100g"]),
                 monounsaturatedFat: numeric(entry["monounsaturated_fat_per_100g"]),
                 polyunsaturatedFat: numeric(entry["polyunsaturated_fat_per_100g"]),
-                cholesterol:        numeric(entry["cholesterol_per_100g"]),
-                sodium:             numeric(entry["sodium_per_100g"]),
-                potassium:          numeric(entry["potassium_per_100g"]),
+                // Legacy keys did not declare units and could contain grams.
+                cholesterol:        numeric(entry["cholesterol_mg_per_100g"]),
+                sodium:             numeric(entry["sodium_mg_per_100g"]),
+                potassium:          numeric(entry["potassium_mg_per_100g"]),
                 emoji: entry["emoji"] as? String,
                 servingGrams: nil,
                 source: "exa",

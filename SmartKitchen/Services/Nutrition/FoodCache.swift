@@ -85,6 +85,18 @@ final class FoodCache {
 
     private let deviceIDKey = "ai.smartkitchen.foodCache.deviceID"
 
+    // New references cannot reuse entries written before explicit micronutrient
+    // units and identity validation. Keep legacy rows and their votes intact.
+    private static let referenceRevision = "nutrition-ref-v2:"
+
+    static func referenceCacheKey(for name: String) -> String {
+        referenceRevision + canonicalize(name)
+    }
+
+    static func referenceCanonicalName(from key: String) -> String {
+        key.hasPrefix(referenceRevision) ? String(key.dropFirst(referenceRevision.count)) : key
+    }
+
     var isEnabled: Bool { supabase.isConfigured }
 
     // MARK: - Device ID
@@ -108,7 +120,7 @@ final class FoodCache {
     func lookup(canonicalName: String, locale: String = AppLocalization.current().nutritionCacheLocaleIdentifier) async -> Per100gNutrition? {
         guard isEnabled else { return nil }
 
-        let escapedName = urlEncode(canonicalName)
+        let escapedName = urlEncode(Self.referenceCacheKey(for: canonicalName))
         // Server-side RLS already filters `invalidated_at IS NULL`, but we add
         // it client-side for clarity.
         let query = "canonical_name=eq.\(escapedName)&locale=eq.\(locale)&invalidated_at=is.null&limit=1"
@@ -122,7 +134,9 @@ final class FoodCache {
                 return nil
             }
             LLMLog.info("FoodCache hit \(canonicalName) source=\(row.source) votes=\(row.upvotes)/\(row.downvotes)")
-            return row.toModel()
+            var food = row.toModel()
+            food.canonicalName = Self.referenceCanonicalName(from: food.canonicalName)
+            return food
         } catch {
             LLMLog.error("FoodCache lookup failed for \(canonicalName): \(error.localizedDescription)")
             return nil
@@ -139,7 +153,7 @@ final class FoodCache {
         guard isEnabled else { throw SupabaseClient.SupabaseError.notConfigured }
 
         let params: [String: Any] = [
-            "p_canonical_name": food.canonicalName,
+            "p_canonical_name": Self.referenceCacheKey(for: food.canonicalName),
             "p_locale": food.locale,
             "p_display_name": food.displayName as Any? ?? NSNull(),
             "p_kcal":           food.kcal             as Any? ?? NSNull(),
