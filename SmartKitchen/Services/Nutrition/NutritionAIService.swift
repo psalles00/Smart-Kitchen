@@ -318,6 +318,9 @@ final class NutritionAIService {
         if food.source == "usda" {
             return USDANutritionLookup.matchesIdentity(food.displayName ?? "", requestedName: name)
         }
+        if food.source == "exa" {
+            return ExaNutritionLookup.acceptsCitation(food.citationURL, for: name)
+        }
         return true
     }
 

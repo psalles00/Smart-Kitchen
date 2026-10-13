@@ -386,6 +386,7 @@ final class NutritionAITypeCoverageTests: XCTestCase {
         XCTAssertTrue(query.contains("Nutella vendida no Reino Unido"))
         XCTAssertFalse(query.contains("0,1g"))
         XCTAssertFalse(query.contains("40mg"))
+        XCTAssertTrue(query.contains("nutella.com"))
         let schema = ExaNutritionLookup.outputSchema(names: ["Nutella vendida no Reino Unido"])
         let root = schema["properties"] as? [String: Any]
         let items = root?["items"] as? [String: Any]
@@ -393,6 +394,118 @@ final class NutritionAITypeCoverageTests: XCTestCase {
         let properties = item?["properties"] as? [String: Any]
         let name = properties?["name"] as? [String: Any]
         XCTAssertEqual(name?["enum"] as? [String], ["Nutella vendida no Reino Unido"])
+    }
+
+    func testKnownBrandRejectsCommunityOrDifferentCountryCitation() {
+        let name = "Coca-Cola Original vendida nos Estados Unidos"
+        XCTAssertFalse(ExaNutritionLookup.acceptsCitation("https://world.openfoodfacts.org/product/0049000028904/coca-cola-original", for: name))
+        XCTAssertFalse(ExaNutritionLookup.acceptsCitation("https://www.coca-cola.com/gb/en/brands/coca-cola-original-taste", for: name))
+        XCTAssertFalse(ExaNutritionLookup.acceptsCitation("https://www.coca-cola.com.evil.example/us/product", for: name))
+        XCTAssertTrue(ExaNutritionLookup.acceptsCitation("https://www.coca-cola.com/us/en/brands/coca-cola/products/original", for: name))
+        XCTAssertFalse(ExaNutritionLookup.acceptsCitation("https://www.nutella.com/us/en/products/nutella", for: "Nutella UK"))
+        XCTAssertTrue(ExaNutritionLookup.acceptsCitation("https://www.nutella.com/uk/en/products/nutella", for: "Nutella UK"))
+        XCTAssertTrue(ExaNutritionLookup.acceptsCitation("https://www.nutella.com/uk/en/products/nutella", for: "Nutella"))
+        XCTAssertTrue(ExaNutritionLookup.acceptsCitation("https://www.tbca.net.br/base-dados/arroz", for: "arroz cozido"))
+    }
+
+    func testExaDoesNotAcceptCommunityValuesAlongsideOfficialCitation() {
+        let community = "https://world.openfoodfacts.org/product/0049000028904/coca-cola-original"
+        let official = "https://www.coca-cola.com/us/en/brands/coca-cola/products/original"
+        let item: [String: Any] = [
+            "name": "Coca-Cola Original USA", "citation_url": community,
+            "kcal_per_100g": 39, "protein_per_100g": 0, "carbs_per_100g": 11, "fat_per_100g": 0
+        ]
+        XCTAssertTrue(ExaNutritionLookup.parse(answer: ["items": [item]], citations: [community, official], locale: "pt-BR").isEmpty)
+    }
+
+    func testOfficialManufacturerPageStillRequiresProductVariantAndCountry() {
+        for (name, source) in [
+            ("Coca-Cola Original USA", "https://www.coca-cola.com/us/en/brands/sprite/products/sprite"),
+            ("Coca-Cola Original USA", "https://www.coca-cola.com/us/en/brands/coca-cola/products/zero-sugar"),
+            ("Coca-Cola Original USA", "https://www.coca-cola.com/us/en/brands/coca-cola/products/coca-cola-original-cherry"),
+            ("Kelloggs Cornflakes UK", "https://www.kelloggs.co.uk/products/cornflakes-special-k"),
+            ("Nutella UK", "https://www.nutella.com/uk/en/products/nutella-biscuits"),
+            ("Nutella UK", "https://www.nutella.com/uk/en/get-inspired/recipes/nutella-pancakes"),
+            ("Kelloggs Cornflakes UK", "https://www.kelloggs.co.uk/articles/cornflakes"),
+            ("Kelloggs Cornflakes UK", "https://www.kelloggs.co.uk/us/products/cornflakes"),
+            ("Kelloggs Cornflakes UK", "https://www.kelloggs.co.uk/brands/us/products/cornflakes"),
+            ("Kelloggs Cornflakes UK", "https://www.kelloggs.co.uk/brands/en_US/products/cornflakes"),
+            ("Kelloggs Cornflakes UK", "https://www.kelloggs.co.uk/brands/us-en/products/cornflakes"),
+            ("Moça Integral Brasil", "https://www.receitasnestle.com.br/marcas/uk/produtos/leite-condensado-moca-tradicional-lata"),
+            ("Moça Integral Brasil", "https://www.receitasnestle.com.br/uk/produtos/leite-condensado-moca-tradicional-lata"),
+            ("Kelloggs Cornflakes USA", "https://www.kelloggs.co.uk/us/products/cornflakes"),
+            ("Kelloggs cereal UK", "https://www.kelloggs.co.uk/products/all-bran"),
+            ("Moça Integral USA", "https://www.receitasnestle.com.br/us/produtos/leite-condensado-moca-tradicional-lata"),
+            ("Moça Semidesnatado Brasil", "https://www.receitasnestle.com.br/marcas/leite-moca-nestle/produtos/leite-condensado-moca-tradicional-lata"),
+            ("Moça Integral Brasil", "https://www.receitasnestle.com.br/marcas/leite-moca-nestle/produtos/leite-condensado-moca-semidesnatado"),
+            ("Moça Integral Brasil", "https://www.receitasnestle.com.br/receitas/brigadeiro-com-moca")
+        ] {
+            XCTAssertFalse(ExaNutritionLookup.acceptsCitation(source, for: name), name)
+        }
+        XCTAssertTrue(ExaNutritionLookup.acceptsCitation("https://www.receitasnestle.com.br/marcas/leite-moca-nestle/produtos/leite-condensado-moca-tradicional-lata", for: "Moça Integral tradicional Brasil"))
+        XCTAssertTrue(ExaNutritionLookup.acceptsCitation("https://www.receitasnestle.com.br/marcas/leite-moca-nestle/produtos/leite-condensado-moca-semidesnatado", for: "Moça Semidesnatado Brasil"))
+        XCTAssertTrue(ExaNutritionLookup.acceptsCitation("https://www.kelloggs.co.uk/products/cornflakes", for: "Kelloggs Cornflakes UK"))
+        XCTAssertTrue(ExaNutritionLookup.acceptsCitation("https://www.coca-cola.com/us/en/brands/coca-cola/products/cherry", for: "Coca-Cola Cherry USA"))
+    }
+
+    func testCachedUnrelatedOrWrongCountryManufacturerReferenceFallsThrough() async throws {
+        for (name, source) in [
+            ("Coca-Cola Original USA", "https://www.coca-cola.com/us/en/brands/sprite/products/sprite"),
+            ("Coca-Cola Original USA", "https://www.coca-cola.com/us/en/brands/coca-cola/products/coca-cola-original-cherry"),
+            ("Kelloggs Cornflakes UK", "https://www.kelloggs.co.uk/products/cornflakes-special-k"),
+            ("Nutella UK", "https://www.nutella.com/uk/en/get-inspired/recipes/nutella-pancakes"),
+            ("Kelloggs Cornflakes UK", "https://www.kelloggs.co.uk/articles/cornflakes"),
+            ("Kelloggs Cornflakes UK", "https://www.kelloggs.co.uk/us/products/cornflakes"),
+            ("Kelloggs Cornflakes UK", "https://www.kelloggs.co.uk/brands/us/products/cornflakes"),
+            ("Kelloggs Cornflakes UK", "https://www.kelloggs.co.uk/brands/en_US/products/cornflakes"),
+            ("Kelloggs Cornflakes UK", "https://www.kelloggs.co.uk/brands/us-en/products/cornflakes"),
+            ("Moça Integral Brasil", "https://www.receitasnestle.com.br/marcas/uk/produtos/leite-condensado-moca-tradicional-lata"),
+            ("Moça Integral Brasil", "https://www.receitasnestle.com.br/uk/produtos/leite-condensado-moca-tradicional-lata"),
+            ("Kelloggs Cornflakes USA", "https://www.kelloggs.co.uk/us/products/cornflakes"),
+            ("Moça Integral USA", "https://www.receitasnestle.com.br/us/produtos/leite-condensado-moca-tradicional-lata"),
+            ("Moça Semidesnatado Brasil", "https://www.receitasnestle.com.br/marcas/leite-moca-nestle/produtos/leite-condensado-moca-tradicional-lata"),
+            ("Moça Integral Brasil", "https://www.receitasnestle.com.br/marcas/leite-moca-nestle/produtos/leite-condensado-moca-semidesnatado")
+        ] {
+            let input = "20g " + name
+            let cache = TrackingFoodCache()
+            var unrelated = NutritionAITestFixtures.rice.per100g(appName: name)
+            unrelated.source = "exa"
+            unrelated.citationURL = source
+            cache.hit = unrelated
+            let ai = MockNutritionAIClient()
+            ai.chatContent = """
+            {"kcal_per_100g":40,"protein_per_100g":0,"carbs_per_100g":11,"fat_per_100g":0}
+            """
+            let result = try await NutritionAIService(
+                ai: ai, usda: MockUSDANutritionLookup(foodsByName: [:]), exa: EmptyExaNutritionLookup(),
+                parser: MockNutritionItemParser(itemsByDescription: [input: [.init(name: name, quantity: 20, unit: "g")]]), cache: cache
+            ).analyzeText(description: input)
+            XCTAssertEqual(ai.chatCallCount, 1, name)
+            XCTAssertFalse(result.reviewNotes.isEmpty, name)
+            XCTAssertTrue(cache.writes.isEmpty, name)
+            XCTAssertEqual(cache.hit?.citationURL, source, name)
+        }
+    }
+
+    func testCachedCommunityBrandReferenceFallsThroughWithoutChangingCache() async throws {
+        let input = "20 fl oz Coca-Cola Original USA"
+        let cache = TrackingFoodCache()
+        var community = NutritionAITestFixtures.rice.per100g(appName: "Coca-Cola Original USA")
+        community.source = "exa"
+        community.citationURL = "https://world.openfoodfacts.org/product/0049000028904/coca-cola-original"
+        cache.hit = community
+        let ai = MockNutritionAIClient()
+        ai.chatContent = """
+        {"kcal_per_100g":40,"protein_per_100g":0,"carbs_per_100g":11,"fat_per_100g":0}
+        """
+        let result = try await NutritionAIService(
+            ai: ai, usda: MockUSDANutritionLookup(foodsByName: [:]), exa: EmptyExaNutritionLookup(),
+            parser: MockNutritionItemParser(itemsByDescription: [input: [.init(name: "Coca-Cola Original USA", quantity: 20, unit: "fl oz")]]), cache: cache
+        ).analyzeText(description: input)
+        XCTAssertEqual(ai.chatCallCount, 1)
+        XCTAssertFalse(result.reviewNotes.isEmpty)
+        XCTAssertTrue(cache.writes.isEmpty)
+        XCTAssertEqual(cache.hit?.citationURL, community.citationURL)
     }
 
     func testExplicitExaMicronutrientUnitsScaleToServingWithoutGramConfusion() {

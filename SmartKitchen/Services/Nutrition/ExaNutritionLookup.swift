@@ -1,7 +1,8 @@
 import Foundation
 
 /// Asks Exa for canonical per-100g nutritional facts of a batch of items in
-/// a single `/answer` call, restricted to authoritative sources.
+/// a single `/answer` call. Source restrictions are checked locally because
+/// `/answer` does not document a domain-filter parameter.
 ///
 /// Exa returns a JSON object matching our schema (`items[]`), each element
 /// covering one input name. The orchestrator then matches the response back to
@@ -54,7 +55,6 @@ final class ExaNutritionLookup {
                 query: query,
                 systemPrompt: Self.buildInstructions(names: names, locale: locale),
                 outputSchema: schema,
-                includeDomains: Self.domains,
                 apiKey: APIConfig.exaAPIKey
             )
         } catch {
@@ -80,17 +80,27 @@ final class ExaNutritionLookup {
 
     static func buildQuery(names: [String], locale: String) -> String {
         // Search the foods, not the conversion examples or response rules.
-        "Nutrition label per 100g or 100ml: " + names.joined(separator: "; ")
+        "Official nutrition label per 100g or 100ml: " + names.map { name in
+            let manufacturers = manufacturerDomains(for: name)
+            return manufacturers.isEmpty ? name : name + " (" + manufacturers.joined(separator: ", ") + ")"
+        }.joined(separator: "; ")
     }
 
     private static func buildInstructions(names: [String], locale: String) -> String {
-        let list = names.map { "- \($0)" }.joined(separator: "\n")
+        let list = names.map { name in
+            let manufacturers = manufacturerDomains(for: name)
+            let sourceRule = manufacturers.isEmpty ? "" : " [fonte obrigatória: " + manufacturers.joined(separator: ", ") + "]"
+            return "- \(name)\(sourceRule)"
+        }.joined(separator: "\n")
         return """
         Para cada alimento listado abaixo, retorne os valores nutricionais por 100g \
         (ou por 100ml para líquidos). Responda em \(locale). Priorize o rótulo \
         oficial do fabricante para a marca, variante e país informados. Para \
         alimentos comuns, use USDA FoodData Central ou TBCA/TACO Unicamp; \
-        Open Food Facts é uma alternativa de rótulo. Nunca substitua marca, \
+        Open Food Facts é uma alternativa apenas quando o item não exige uma \
+        fonte de fabricante. Para fonte obrigatória, use somente os domínios \
+        indicados e a página do país solicitado; omita o item se não encontrar. \
+        Nunca substitua marca, \
         país ou variante por um produto semelhante. Nunca confunda valores por \
         porção com valores por 100g/100ml. Copie exatamente o nome da lista no \
         campo name e inclua citation_url da fonte de cada item. Se não houver \
@@ -158,6 +168,7 @@ final class ExaNutritionLookup {
         return items.compactMap { entry -> Per100gNutrition? in
             guard let name = entry["name"] as? String,
                   let citation = entry["citation_url"] as? String,
+                  acceptsCitation(citation, for: name),
                   let citationKey = trustedCitationKey(citation),
                   citations.contains(where: { trustedCitationKey($0) == citationKey }) else { return nil }
             let kcal     = numeric(entry["kcal_per_100g"])
@@ -194,6 +205,101 @@ final class ExaNutritionLookup {
             )
             return food.hasReliableMacros ? food : nil
         }
+    }
+
+    /// A community entry is not a substitute for a known manufacturer's label.
+    /// The same rule also applies to cached references from older analyses.
+    static func acceptsCitation(_ raw: String?, for name: String) -> Bool {
+        guard let raw, trustedCitationKey(raw) != nil,
+              let url = URL(string: raw), let host = url.host?.lowercased() else { return false }
+        let manufacturers = manufacturerDomains(for: name)
+        guard !manufacturers.isEmpty else { return true }
+        guard manufacturers.contains(where: { host == $0 || host.hasSuffix("." + $0) }) else { return false }
+        let normalized = sourceIdentity(name)
+        let words = Set(normalized.components(separatedBy: " "))
+        let path = url.path.lowercased()
+        guard matchesProductPath(path, requested: normalized) else { return false }
+        let regionalCodes: Set<String> = ["us", "uk", "gb", "br", "mx", "ca", "au", "fr", "de", "es", "it"]
+        let pathRegions = Set(path.split(separator: "/").compactMap { component -> String? in
+            let value = String(component)
+            if regionalCodes.contains(value) { return value }
+            // Manufacturers use both language-region (en_US) and region-language (us-en).
+            guard value.range(of: #"^[a-z]{2}[_-][a-z]{2}$"#, options: .regularExpression) != nil else { return nil }
+            let parts = value.split(whereSeparator: { $0 == "_" || $0 == "-" }).map(String.init)
+            if let last = parts.last, regionalCodes.contains(last) { return last }
+            if let first = parts.first, regionalCodes.contains(first) { return first }
+            return nil
+        })
+        if words.contains("uk") || normalized.contains("reino unido") || normalized.contains("united kingdom") {
+            guard !host.hasSuffix(".br") else { return false }
+            guard pathRegions.isSubset(of: ["uk", "gb"]) else { return false }
+            return path.hasPrefix("/uk/") || path == "/uk" || host.hasSuffix(".co.uk") || path.hasPrefix("/gb/")
+        }
+        if words.contains("eua") || words.contains("usa") || words.contains("us") || normalized.contains("estados unidos") || normalized.contains("united states") {
+            guard !host.hasSuffix(".co.uk"), !host.hasSuffix(".br") else { return false }
+            guard pathRegions.isSubset(of: ["us"]) else { return false }
+            return path.hasPrefix("/us/") || path == "/us"
+        }
+        if !words.isDisjoint(with: ["brasil", "brazil", "brazilian", "brasileiro", "brasileira"]) {
+            guard !host.hasSuffix(".co.uk") else { return false }
+            guard pathRegions.isSubset(of: ["br"]) else { return false }
+            return host.hasSuffix(".br") || path.hasPrefix("/br/") || path == "/br"
+        }
+        return true
+    }
+
+    private static func matchesProductPath(_ path: String, requested name: String) -> Bool {
+        let sections = Set(path.split(separator: "/").map(String.init))
+        let editorialSections: Set<String> = ["recipes", "receitas", "recetas", "recettes", "rezepte", "ricette", "get-inspired", "articles", "artigos", "news", "noticias", "stories", "blog"]
+        guard sections.isDisjoint(with: editorialSections),
+              !sections.isDisjoint(with: ["products", "produtos", "productos", "produits", "produkte", "prodotti"]) else { return false }
+        let identity = sourceIdentity(path)
+        if name.contains("coca cola") {
+            guard identity.contains("coca cola") else { return false }
+            for aliases in [["original"], ["zero"], ["diet"], ["light"], ["vanilla", "baunilha"], ["cherry", "cereja"], ["caffeine free", "sem cafeina"]] {
+                if aliases.contains(where: { name.contains($0) }) != aliases.contains(where: { identity.contains($0) }) { return false }
+            }
+            return true
+        }
+        if name.contains("nutella") {
+            guard identity.contains("nutella") else { return false }
+            for variant in ["biscuits", "b ready", "plant based", "ice cream"] {
+                if name.contains(variant) != identity.contains(variant) { return false }
+            }
+            return true
+        }
+        if name.components(separatedBy: " ").contains("moca") {
+            guard identity.contains("moca"), path.contains("/produtos/") || path.contains("/products/") else { return false }
+            if name.contains("tradicional") || name.contains("traditional") {
+                guard identity.contains("tradicional") || identity.contains("traditional") else { return false }
+            }
+            if name.contains("integral"), !identity.contains("integral"), !identity.contains("tradicional") { return false }
+            if name.contains("semidesnatado") != identity.contains("semidesnatado") { return false }
+            return true
+        }
+        if name.contains("kellogg") {
+            // A brand and "cereal" alone cannot identify one of its many products.
+            let variants = [["corn flakes", "cornflakes"], ["sucrilhos", "frosted flakes"], ["all bran"], ["special k"], ["nutri grain"], ["froot loops"]]
+            let requestedVariants = variants.indices.filter { index in variants[index].contains(where: { name.contains($0) }) }
+            let sourceVariants = variants.indices.filter { index in variants[index].contains(where: { identity.contains($0) }) }
+            return requestedVariants.count == 1 && requestedVariants == sourceVariants
+        }
+        return false
+    }
+
+    private static func manufacturerDomains(for name: String) -> [String] {
+        let normalized = sourceIdentity(name)
+        if normalized.contains("coca cola") { return ["coca-cola.com"] }
+        if normalized.contains("nutella") { return ["nutella.com", "ferrero.com"] }
+        if normalized.components(separatedBy: " ").contains("moca") { return ["receitasnestle.com.br", "nestle.com.br"] }
+        if normalized.contains("kellogg") { return ["kelloggs.com", "kelloggs.co.uk"] }
+        return []
+    }
+
+    private static func sourceIdentity(_ name: String) -> String {
+        FoodCache.canonicalize(name)
+            .replacingOccurrences(of: #"[^a-z0-9]+"#, with: " ", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     private static func trustedCitationKey(_ raw: String) -> String? {
