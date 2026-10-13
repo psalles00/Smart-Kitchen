@@ -23,20 +23,12 @@ enum LocalNutritionFallback {
 
     static func nutrition(for rawName: String) -> Per100gNutrition? {
         let normalized = normalize(rawName)
-        let candidates = entries
-            .flatMap { entry in entry.aliases.map { (alias: $0, entry: entry) } }
-
-        let exactMatch = candidates
-            .filter { alias, _ in normalized == alias }
-            .max { lhs, rhs in lhs.alias.count < rhs.alias.count }
-
-        let fuzzyMatch = candidates
-            .filter { alias, _ in
-                normalized.contains(alias) || alias.contains(normalized)
-            }
-            .max { lhs, rhs in lhs.alias.count < rhs.alias.count }
-
-        guard let entry = (exactMatch ?? fuzzyMatch)?.entry else { return nil }
+        // A partial word match can silently replace a branded product, variant
+        // or preparation with a different food (e.g. condensed milk with milk).
+        guard !normalized.isEmpty,
+              let entry = entries.first(where: { entry in
+                  entry.aliases.contains(normalized)
+              }) else { return nil }
         return Per100gNutrition(
             canonicalName: FoodCache.canonicalize(entry.aliases[0]),
             locale: AppLocalization.current().nutritionCacheLocaleIdentifier,
@@ -65,85 +57,11 @@ enum LocalNutritionFallback {
     }
 
     private static func parse(_ description: String) -> [NutritionItemParser.ParsedItem] {
-        let chunks = splitItems(description)
-        return NutritionItemParser.expandedItems(from: chunks.compactMap(parseItem))
-    }
-
-    private static func splitItems(_ description: String) -> [String] {
-        description
-            .replacingOccurrences(of: #"(?i)\s*(?:;|(?<!\d),|,(?!\d)|\+|\n|\bcom\b|\be\b)\s*"#, with: "\u{1F}", options: .regularExpression)
-            .components(separatedBy: "\u{1F}")
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-    }
-
-    private static func parseItem(_ raw: String) -> NutritionItemParser.ParsedItem? {
-        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return nil }
-
-        if let match = firstMatch(
-            in: trimmed,
-            pattern: #"(\d+(?:[\.,]\d+)?)\s*(kg|g|gramas?|ml|l|litros?|un|unidades?|und|x[ií]caras?|cs|c\.s\.|cc|c\.c\.|tbsp|tsp|colheres?\s+de\s+sopa|colheres?\s+de\s+ch[aá]|fatias?|por(?:ç|c)(?:a|o|oes|ões)|copos?)(?=\s|$)"#
-        ) {
-            let quantity = number(match.groups[0])
-            let unit = canonicalUnit(match.groups[1])
-            var name = (trimmed as NSString).replacingCharacters(in: match.range, with: " ")
-            name = cleanName(name)
-            guard !name.isEmpty else { return nil }
-            return NutritionItemParser.ParsedItem(name: name, quantity: quantity, unit: unit)
+        NutritionItemParser.expandedItems(from: [
+            NutritionItemParser.ParsedItem(name: description, quantity: nil, unit: nil)
+        ]).map { item in
+            NutritionItemParser.ParsedItem(name: normalize(item.name), quantity: item.quantity, unit: item.unit)
         }
-
-        if let match = firstMatch(in: trimmed, pattern: #"^(\d+(?:[\.,]\d+)?)\s+(.+)$"#),
-           let quantity = number(match.groups[0]) {
-            let name = cleanName(match.groups[1])
-            guard !name.isEmpty else { return nil }
-            return NutritionItemParser.ParsedItem(name: name, quantity: quantity, unit: "un")
-        }
-
-        let name = cleanName(trimmed)
-        guard !name.isEmpty else { return nil }
-        return NutritionItemParser.ParsedItem(name: name, quantity: nil, unit: nil)
-    }
-
-    private static func firstMatch(in text: String, pattern: String) -> (range: NSRange, groups: [String])? {
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else {
-            return nil
-        }
-        let nsText = text as NSString
-        let range = NSRange(location: 0, length: nsText.length)
-        guard let result = regex.firstMatch(in: text, range: range) else { return nil }
-
-        let groups = (1..<result.numberOfRanges).compactMap { index -> String? in
-            let groupRange = result.range(at: index)
-            guard groupRange.location != NSNotFound else { return nil }
-            return nsText.substring(with: groupRange)
-        }
-        return (result.range, groups)
-    }
-
-    private static func cleanName(_ value: String) -> String {
-        normalize(value)
-            .replacingOccurrences(of: #"^(de|da|do|das|dos)\s+"#, with: "", options: .regularExpression)
-            .replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
-    private static func number(_ value: String) -> Double? {
-        Double(value.replacingOccurrences(of: ",", with: "."))
-    }
-
-    private static func canonicalUnit(_ raw: String) -> String {
-        let unit = normalize(raw)
-        if unit == "grama" || unit == "gramas" { return "g" }
-        if unit == "litro" || unit == "litros" { return "l" }
-        if unit == "unidade" || unit == "unidades" || unit == "und" { return "un" }
-        if unit == "xicaras" { return "xicara" }
-        if ["colheres de sopa", "cs", "c s", "tbsp"].contains(unit) { return "colher de sopa" }
-        if ["colheres de cha", "cc", "c c", "tsp"].contains(unit) { return "colher de cha" }
-        if unit == "fatias" { return "fatia" }
-        if unit == "porcao" || unit == "porcoes" { return "porcao" }
-        if unit == "copos" { return "copo" }
-        return unit
     }
 
     private static func normalize(_ value: String) -> String {

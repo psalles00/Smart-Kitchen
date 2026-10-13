@@ -121,6 +121,14 @@ enum NutritionCalculator {
             return qty
         case "l", "litro", "litros":
             return qty * 1000
+        case "oz", "ounce", "ounces":
+            return qty * 28.349523125
+        case "fl oz", "fl. oz", "us fl oz", "fluid ounce", "fluid ounces":
+            // US liquid volume, using the same water-equivalent density as ml.
+            // Weight ounces and imperial fluid ounces are different measures.
+            return qty * 29.5735295625
+        case "imperial fl oz", "uk fl oz":
+            return qty * 28.4130625
         case "un", "unidade", "unidades", "und":
             return qty * (validServingGrams(servingGrams) ?? perPieceGrams(for: name))
         case "xicara", "xicaras", "xicara de cha", "xicara de cafe":

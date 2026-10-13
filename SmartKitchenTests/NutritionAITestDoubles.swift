@@ -6,6 +6,8 @@ final class MockNutritionAIClient: NutritionAIClient {
     var chatContent: String?
     var toolCalls: [ToolCallRequest] = []
     var imageContent: String = "{}"
+    private(set) var chatCallCount = 0
+    private(set) var lastChatMessages: [[String: Any]] = []
 
     func sendNutritionChat(
         messages: [[String: Any]],
@@ -14,7 +16,9 @@ final class MockNutritionAIClient: NutritionAIClient {
         model: String?,
         acceptLanguage: String?
     ) async throws -> ChatCompletionResponse {
-        ChatCompletionResponse(content: chatContent, toolCalls: toolCalls)
+        chatCallCount += 1
+        lastChatMessages = messages
+        return ChatCompletionResponse(content: chatContent, toolCalls: toolCalls)
     }
 
     func analyzeNutritionImage(

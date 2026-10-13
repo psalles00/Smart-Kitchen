@@ -36,14 +36,20 @@ final class NutritionItemParser {
 
         let systemPrompt = """
         Você é um extrator de itens alimentares. A partir do texto do usuário em \
-        português brasileiro, identifique cada alimento mencionado com sua \
+        qualquer idioma, identifique cada alimento mencionado com sua \
         quantidade e unidade canônica. Use unidades curtas: "g", "ml", "un", \
-        "xícara", "colher de sopa", "colher de chá", "fatia". Se a quantidade \
+        "oz", "fl oz", "imperial fl oz", "xícara", "colher de sopa", "colher de chá", "fatia". Se a quantidade \
         não estiver explícita, use null. "cs", "c.s." e "tbsp" significam colher \
         de sopa; "cc", "c.c." e "tsp" significam colher de chá. Exemplo: \
         "suco de limao com 6cs de acucar" => suco de limão (quantidade null) e \
         açúcar (quantidade 6, unidade "colher de sopa"). Nunca inclua medida no nome \
         do alimento nem substitua uma quantidade explícita por uma porção padrão.
+        Escreva os nomes em \(AppLocalization.current().language.aiModelLanguageName), \
+        preservando marca, variante, preparo e país quando informados. "fl oz" \
+        é volume dos EUA; "oz" é peso. Preserve a unidade indicada na embalagem. \
+        Uma medida no final do texto também é explícita. "Coca-Cola Original \
+        dos EUA, uma garrafa de 20 fl oz" é um único alimento de 20 fl oz; \
+        garrafa, lata, pote e porção não são alimentos separados.
 
         Regra crítica: se o texto descreve vários alimentos ligados por ";", ",", \
         "com" ou "e", emita cada alimento separadamente. Não emita um item composto \
@@ -152,7 +158,7 @@ final class NutritionItemParser {
 
     private static func splitCompositeName(_ value: String) -> [String] {
         let protected = protectCompositeFoodNames(value)
-        let pattern = #"(?i)\s*(?:;|(?<!\d),|,(?!\d)|\+|\bcom\b|\be\b)\s*"#
+        let pattern = #"(?i)\s*(?:;|(?<!\d),|,(?!\d)|\+|\n|\bcom\b|\be\b)\s*"#
         let pieces = protected
             .replacingOccurrences(of: pattern, with: "\u{1F}", options: .regularExpression)
             .components(separatedBy: "\u{1F}")
@@ -163,6 +169,8 @@ final class NutritionItemParser {
 
     private static func protectCompositeFoodNames(_ value: String) -> String {
         value
+            // A comma introducing packaging describes the preceding product.
+            .replacingOccurrences(of: #"(?i),\s*(?=(?:(?:uma?|one|an?)\s+)?(?:garrafa|bottle|lata|can|pote|jar|porção|porcao|serving)\b)"#, with: " ", options: .regularExpression)
             .replacingOccurrences(of: #"(?i)\bpão\s+de\s+forma\b"#, with: "pao_de_forma", options: .regularExpression)
             .replacingOccurrences(of: #"(?i)\bpao\s+de\s+forma\b"#, with: "pao_de_forma", options: .regularExpression)
             .replacingOccurrences(of: #"(?i)\bpão\s+de\s+queijo\b"#, with: "pao_de_queijo", options: .regularExpression)
@@ -178,11 +186,14 @@ final class NutritionItemParser {
     private static func extractEmbeddedQuantity(from item: ParsedItem) -> ParsedItem {
         let trimmed = item.name.trimmingCharacters(in: .whitespacesAndNewlines)
         // Explicit source measures take precedence even when the model guessed a portion.
-        if let match = firstMatch(
-            in: trimmed,
-            pattern: #"^(\d+(?:[\.,]\d+)?)\s*(kg|g|gramas?|ml|l|litros?|un|unidades?|und|x[ií]caras?|cs|c\.s\.|cc|c\.c\.|tbsp|tsp|colheres?\s+de\s+sopa|colheres?\s+de\s+ch[aá]|fatias?|por(?:ç|c)(?:a|o|oes|ões)|copos?)(?=\s|$)(?:\s+de)?\s*(.+)$"#
-        ) {
-            return ParsedItem(name: cleanName(match[2]), quantity: numeric(match[0]), unit: canonicalUnit(match[1]))
+        if let regex = try? NSRegularExpression(pattern: measurePattern, options: [.caseInsensitive]),
+           let match = regex.firstMatch(in: trimmed, range: NSRange(trimmed.startIndex..., in: trimmed)) {
+            let text = trimmed as NSString
+            let name = cleanName(text.replacingCharacters(in: match.range, with: " "))
+            if !name.isEmpty {
+                return ParsedItem(name: name, quantity: numeric(text.substring(with: match.range(at: 1))),
+                                  unit: canonicalUnit(text.substring(with: match.range(at: 2))))
+            }
         }
         if let match = firstMatch(in: trimmed, pattern: #"^(\d+(?:[\.,]\d+)?)\s+(.+)$"#),
            LocalNutritionFallback.nutrition(for: cleanName(match[1])) != nil {
@@ -197,6 +208,14 @@ final class NutritionItemParser {
         let expanded = expandedItems(from: items)
         let source = expandedItems(from: [ParsedItem(name: description, quantity: nil, unit: nil)])
         guard source.contains(where: { $0.quantity != nil && $0.unit != nil }) else { return expanded }
+        // A translated/refined single product still has the source's explicit
+        // measure. Keep the model's identity rather than reintroducing raw prose.
+        if source.count == 1, expanded.count == 1, let quantity = source[0].quantity {
+            var item = expanded[0]
+            item.quantity = quantity
+            item.unit = source[0].unit
+            return [item]
+        }
         // Restrict reconstruction to complete local composites. Other AI food names
         // may be translated, singularized or refined and must not be duplicated.
         guard source.count > 1, source.allSatisfy({ LocalNutritionFallback.nutrition(for: $0.name) != nil }) else {
@@ -239,10 +258,14 @@ final class NutritionItemParser {
 
     private static func cleanName(_ value: String) -> String {
         value
-            .replacingOccurrences(of: #"^(de|da|do|das|dos)\s+"#, with: "", options: [.regularExpression, .caseInsensitive])
             .replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
             .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: #"^(de|da|do|das|dos|of)\s+"#, with: "", options: [.regularExpression, .caseInsensitive])
+            .replacingOccurrences(of: #"(?:[,\s]+)(?:(?:uma?|one|an?)\s+)?(?:garrafa|bottle|lata|can|pote|jar|porção|porcao|serving)(?:\s+(?:de|of))?\s*$"#, with: "", options: [.regularExpression, .caseInsensitive])
+            .trimmingCharacters(in: .whitespacesAndNewlines.union(CharacterSet(charactersIn: ",;")))
     }
+
+    private static let measurePattern = #"(?<![\p{L}\d])(\d+(?:[\.,]\d+)?)\s*((?:imperial|uk)\s+fl\.?\s*oz|(?:us\s+)?fl\.?\s*oz|fluid\s+ounces?|ounces?|oz|kg|mg|g|gramas?|grams?|ml|millilit(?:er|re)s?|l|litros?|lit(?:er|re)s?|un|unidades?|und|x[ií]caras?|cs|c\.s\.|cc|c\.c\.|tbsp|tsp|colheres?\s+de\s+sopa|colheres?\s+de\s+ch[aá]|fatias?|por(?:ç|c)(?:a|o|oes|ões)|copos?)(?=\s|$|[,;)])"#
 
     private static func canonicalUnit(_ raw: String) -> String {
         let unit = raw
@@ -250,7 +273,14 @@ final class NutritionItemParser {
             .lowercased()
             .trimmingCharacters(in: .whitespacesAndNewlines)
         if unit == "grama" || unit == "gramas" { return "g" }
+        if unit == "gram" || unit == "grams" { return "g" }
         if unit == "litro" || unit == "litros" { return "l" }
+        if ["liter", "liters", "litre", "litres"].contains(unit) { return "l" }
+        if ["milliliter", "milliliters", "millilitre", "millilitres"].contains(unit) { return "ml" }
+        if ["ounce", "ounces"].contains(unit) { return "oz" }
+        let compact = unit.replacingOccurrences(of: ".", with: "").replacingOccurrences(of: " ", with: "")
+        if ["floz", "usfloz", "fluidounce", "fluidounces"].contains(compact) { return "fl oz" }
+        if ["imperialfloz", "ukfloz"].contains(compact) { return "imperial fl oz" }
         if unit == "unidade" || unit == "unidades" || unit == "und" { return "un" }
         if unit == "xicaras" { return "xicara" }
         if ["colheres de sopa", "cs", "c.s.", "tbsp"].contains(unit) { return "colher de sopa" }

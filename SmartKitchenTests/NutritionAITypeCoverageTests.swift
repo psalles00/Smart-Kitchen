@@ -196,4 +196,86 @@ final class NutritionAITypeCoverageTests: XCTestCase {
         XCTAssertEqual(analysis.sugarG, 19.0)
         XCTAssertEqual(analysis.fiberG, 2.0)
     }
+
+    func testPackagedVolumeRetainsExplicitMeasureWhenAITranslatesProduct() async throws {
+        let ai = MockNutritionAIClient()
+        ai.toolCalls = [ToolCallRequest(id: "test", name: "emit_items", argumentsJSON: """
+        {"items":[{"name":"Coca-Cola Original dos EUA","quantity":1,"unit":"un"}]}
+        """)]
+        let items = try await NutritionItemParser(ai: ai).parse(
+            "Coca-Cola Original USA, one bottle of 20 fl oz"
+        )
+
+        XCTAssertEqual(ai.chatCallCount, 1)
+        XCTAssertEqual(items.count, 1)
+        let item = try XCTUnwrap(items.first)
+        XCTAssertEqual(item.name, "Coca-Cola Original dos EUA")
+        XCTAssertEqual(item.quantity, 20)
+        XCTAssertEqual(item.unit, "fl oz")
+        XCTAssertEqual(NutritionCalculator.grams(for: item, name: item.name), 591.47059125, accuracy: 0.001)
+    }
+
+    func testWeightAndRegionalFluidOuncesAreDistinct() {
+        for (text, unit, grams) in [
+            ("2 oz chocolate", "oz", 56.69904625),
+            ("20 US fl. oz juice", "fl oz", 591.47059125),
+            ("juice 20 fluid ounces", "fl oz", 591.47059125),
+            ("juice 20 UK fl oz", "imperial fl oz", 568.26125)
+        ] {
+            let items = NutritionItemParser.expandedItems(from: [.init(name: text, quantity: nil, unit: nil)])
+            XCTAssertEqual(items.count, 1, text)
+            guard let item = items.first else { continue }
+            XCTAssertEqual(item.unit, unit, text)
+            XCTAssertEqual(NutritionCalculator.grams(for: item, name: item.name), grams, accuracy: 0.001, text)
+        }
+    }
+
+    func testEnglishBrandDoesNotUseGenericMilkFastPath() async throws {
+        let ai = MockNutritionAIClient()
+        ai.toolCalls = [ToolCallRequest(id: "test", name: "emit_items", argumentsJSON: """
+        {"items":[{"name":"Leite Moça Integral Nestlé do Brasil","quantity":100,"unit":"g"}]}
+        """)]
+        let items = try await NutritionItemParser(ai: ai).parse(
+            "20g of Nestle Moça Integral condensed milk sold in Brazil"
+        )
+
+        XCTAssertEqual(ai.chatCallCount, 1)
+        XCTAssertEqual(items.count, 1)
+        XCTAssertEqual(items.first?.name, "Leite Moça Integral Nestlé do Brasil")
+        XCTAssertEqual(items.first?.quantity, 20)
+        XCTAssertEqual(items.first?.unit, "g")
+        let prompt = ai.lastChatMessages.first?["content"] as? String
+        XCTAssertTrue(prompt?.contains(AppLocalization.current().language.aiModelLanguageName) == true)
+    }
+
+    func testLocalReferenceRequiresCompleteKnownIdentity() {
+        for name in ["", " ", "milk chocolate", "coca cola zero", "Nutella UK", "Kelloggs cereal", "Nestle Moça Integral condensed milk"] {
+            XCTAssertNil(LocalNutritionFallback.nutrition(for: name), name)
+        }
+        XCTAssertNotNil(LocalNutritionFallback.nutrition(for: "leite integral"))
+        XCTAssertNotNil(LocalNutritionFallback.nutrition(for: "coca-cola"))
+    }
+
+    func testExactLemonJuiceRequestStillAvoidsNetworkExtraction() async throws {
+        let ai = MockNutritionAIClient()
+        let input = "suco de limao com 6cs de acucar"
+        let items = try await NutritionItemParser(ai: ai).parse(input)
+        let analysis = try XCTUnwrap(LocalNutritionFallback.analyzeText(input))
+
+        XCTAssertEqual(ai.chatCallCount, 0)
+        XCTAssertEqual(items.count, 2)
+        XCTAssertEqual(items.last?.quantity, 6)
+        XCTAssertEqual(items.last?.unit, "colher de sopa")
+        XCTAssertEqual(analysis.calories, 393)
+        XCTAssertEqual(analysis.servingSizeGrams, 290)
+    }
+
+    func testExplicitMeasuresDoNotLeakAcrossMealComponents() {
+        let items = NutritionItemParser.expandedItems(from: [.init(
+            name: "150g de arroz branco, 100g de feijao carioca e 120g de peito de frango", quantity: nil, unit: nil
+        )])
+        XCTAssertEqual(items.map(\.name), ["arroz branco", "feijao carioca", "peito de frango"])
+        XCTAssertEqual(items.map(\.quantity), [150, 100, 120])
+        XCTAssertEqual(items.map(\.unit), ["g", "g", "g"])
+    }
 }
