@@ -92,6 +92,51 @@ final class RecipeIdeaRequestTests: XCTestCase {
         }
     }
 
+    func testQuotedWebRecipeMetadataConfirmsTimeAndServings() throws {
+        let payload = #"{"name":"Arroz com ovo e tomate","prep_time_minutes":"5","cook_time_minutes":"15","servings":"1","ingredients":[{"name":"Arroz"},{"name":"Ovos"},{"name":"Tomate"}],"steps":[{"instruction":"Misture e cozinhe os ovos."}]}"#
+        let dict = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(payload.utf8)) as? [String: Any])
+        let draft = RecipeStructurer.parse(dict: dict)
+        XCTAssertEqual(draft.prepTime, 5)
+        XCTAssertEqual(draft.cookTime, 15)
+        XCTAssertEqual(draft.servings, 1)
+        let request = RecipeIdeaRequest(occasion: nil, refinement: nil, customQuery: original)
+        XCTAssertTrue(request.accepts(draft))
+    }
+
+    func testAmbiguousWebMetadataCannotConfirmRestrictions() {
+        let request = RecipeIdeaRequest(occasion: nil, refinement: nil, customQuery: original)
+        let invalidValues: [Any] = ["20 min", "1-2", "5.5", "NaN", "999999999999999999999999999", true, 5.5, Double.infinity, NSNull(), -1]
+        for invalid in invalidValues {
+            let draft = RecipeStructurer.parse(dict: ["prep_time_minutes": invalid, "cook_time_minutes": invalid, "servings": invalid])
+            XCTAssertFalse(request.accepts(draft), "Invalid metadata: \(invalid)")
+        }
+        let known = RecipeStructurer.parse(dict: ["prep_time_minutes": 0, "cook_time_minutes": 15, "servings": 1])
+        XCTAssertTrue(request.accepts(known), "JSON integer one must not be confused with a boolean")
+        let explicitZero = RecipeStructurer.parse(dict: ["prep_time_minutes": "0", "cook_time_minutes": "15", "servings": "1"])
+        XCTAssertTrue(request.accepts(explicitZero))
+        let unknown = RecipeStructurer.parse(dict: [:])
+        XCTAssertFalse(request.accepts(unknown))
+    }
+
+    func testJSONIntegerMetadataIsPreservedWithoutFloatingPointRounding() throws {
+        let payload = #"{"prep_time_minutes":9007199254740993,"cook_time_minutes":0,"servings":1}"#
+        let dict = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(payload.utf8)) as? [String: Any])
+        let draft = RecipeStructurer.parse(dict: dict)
+        XCTAssertEqual(draft.prepTime, 9_007_199_254_740_993)
+        XCTAssertEqual(draft.cookTime, 0)
+        XCTAssertEqual(draft.servings, 1)
+    }
+
+    func testRoundedJSONFractionCannotConfirmRecipeMetadata() throws {
+        let payload = #"{"prep_time_minutes":1.0000000000000001,"cook_time_minutes":15,"servings":1.0000000000000001}"#
+        let dict = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(payload.utf8)) as? [String: Any])
+        let draft = RecipeStructurer.parse(dict: dict)
+        XCTAssertEqual(draft.prepTimeConfidence, .low)
+        XCTAssertEqual(draft.servingsConfidence, .low)
+        let request = RecipeIdeaRequest(occasion: nil, refinement: nil, customQuery: original)
+        XCTAssertFalse(request.accepts(draft))
+    }
+
     func testStepNegationNeverHidesAnotherDairyAddition() {
         let request = RecipeIdeaRequest(occasion: nil, refinement: nil, customQuery: original)
         for step in ["Refogue sem manteiga; adicione leite.", "Não use leite, adicione manteiga.",

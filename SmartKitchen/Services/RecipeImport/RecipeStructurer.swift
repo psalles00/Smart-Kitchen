@@ -1,4 +1,5 @@
 import Foundation
+import CoreFoundation
 import AVFoundation
 
 /// Transforms unstructured text (pasted, OCR'd, scraped) into a `RecipeDraft`
@@ -141,8 +142,9 @@ struct RecipeStructurer {
            }) {
             d.difficulty = matched
         }
-        applyTimeAndServings(to: &d, prep: dict["prep_time_minutes"] as? Int,
-                             cook: dict["cook_time_minutes"] as? Int, servings: dict["servings"] as? Int)
+        applyTimeAndServings(to: &d, prep: explicitInteger(dict["prep_time_minutes"]),
+                             cook: explicitInteger(dict["cook_time_minutes"]),
+                             servings: explicitInteger(dict["servings"]))
         if let v = dict["calories"] as? Int { d.calories = v }
         if let nutrition = dict["nutrition_per_serving"] as? [String: Any] {
             func num(_ k: String) -> Double? {
@@ -263,6 +265,24 @@ struct RecipeStructurer {
         if let prep, prep >= 0 { draft.prepTime = prep; draft.prepTimeConfidence = .high }
         if let cook, cook >= 0 { draft.cookTime = cook; draft.cookTimeConfidence = .high }
         if let servings, servings > 0 { draft.servings = servings; draft.servingsConfidence = .high }
+    }
+
+    private static func explicitInteger(_ value: Any?) -> Int? {
+        if let text = value as? String {
+            let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard trimmed.range(of: #"^[0-9]+$"#, options: .regularExpression) != nil else { return nil }
+            return Int(trimmed)
+        }
+        // JSON booleans also bridge to NSNumber; they never confirm a duration or yield.
+        guard let number = value as? NSNumber,
+              CFGetTypeID(number) != CFBooleanGetTypeID() else { return nil }
+        // A decoded fraction may already have rounded to a whole Double. Keep
+        // only integer-backed representations, without a floating-point round trip.
+        switch String(cString: number.objCType) {
+        case "c", "s", "i", "l", "q", "C", "S", "I", "L", "Q": break
+        default: return nil
+        }
+        return number as? Int
     }
 
     // MARK: - Merge hints
