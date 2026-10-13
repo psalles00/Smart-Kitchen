@@ -13,6 +13,7 @@ import unicodedata
 import urllib.parse
 import urllib.request
 import uuid
+import time
 
 ROOT = Path.home() / "Library/Application Support/SmartKitchen/Agent"
 PROJECTS = {"pantry": "EkM2RWfGfqwi9UWk6cTr3r", "reserve": "XvLVUvoV8SQDtG5xjsrFso", "grocery": "UCATLPsfbWV4ZMQQ2AKTrb"}
@@ -22,7 +23,22 @@ def rpc(method, **payload):
     request = {"requestID": str(uuid.uuid4()), "method": method, **payload}
     with socket.socket(socket.AF_UNIX) as client:
         client.settimeout(90)
-        client.connect(str(ROOT / "backend.sock"))
+        try:
+            client.connect(str(ROOT / "backend.sock"))
+        except (FileNotFoundError, ConnectionRefusedError):
+            if method == "shutdown":
+                raise
+            # Connect-only retry: never resend a mutation whose result is uncertain.
+            subprocess.run(["open", "-g", "-a", "/Applications/Savoria.app", "--args", "--agent-service"], check=True)
+            deadline = time.monotonic() + 20
+            while True:
+                try:
+                    client.connect(str(ROOT / "backend.sock"))
+                    break
+                except (FileNotFoundError, ConnectionRefusedError):
+                    if time.monotonic() >= deadline:
+                        raise RuntimeError("Headless backend did not become ready; no request was sent")
+                    time.sleep(.2)
         client.sendall(json.dumps(request, ensure_ascii=False, allow_nan=False).encode() + b"\n")
         chunks = bytearray()
         while b"\n" not in chunks:
@@ -147,7 +163,7 @@ def write_private(path, value):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
-    for name in ["health", "snapshot", "shutdown", "start", "self-test"]:
+    for name in ["health", "snapshot", "backup", "shutdown", "start", "self-test"]:
         sub.add_parser(name)
     plan = sub.add_parser("plan")
     plan.add_argument("manifest")
@@ -164,12 +180,24 @@ def main():
     source.add_argument("--deduplicate", action="store_true")
     source.add_argument("--strip-title-icons", action="store_true", help="Remove emoji/pictographs from titles, preserving descriptions")
     source.add_argument("--source-file", help="Use an already captured Things source snapshot")
+    vault = sub.add_parser("from-vault", help="Capture local recipe notes and build an additive reviewed manifest")
+    vault.add_argument("--output", required=True)
+    vault.add_argument("--vault", default="/Volumes/PS-Externo/PS Vault")
+    vault.add_argument("--snapshot-file")
     args = parser.parse_args()
     if args.command == "start":
         subprocess.run(["open", "-g", "-a", "/Applications/Savoria.app", "--args", "--agent-service"], check=True)
         print("Backend start requested; confirm with health.")
         return
-    if args.command in ["health", "snapshot", "shutdown", "self-test"]:
+    if args.command == "from-vault":
+        from savoria_vault import manifest_from_vault
+        snapshot = json.loads(Path(args.snapshot_file).read_text()) if args.snapshot_file else rpc("snapshot")
+        manifest, capture = manifest_from_vault(Path(args.vault), snapshot)
+        write_private(args.output, manifest)
+        write_private(str(args.output) + ".source.json", capture)
+        print(json.dumps({"manifest": str(Path(args.output).absolute()), "revision": snapshot["revision"], "recipes": len(manifest["recipes"]), "covers": sum("coverPath" in x for x in manifest["recipes"]), "warnings": capture["warnings"]}, ensure_ascii=False, indent=2))
+        return
+    if args.command in ["health", "snapshot", "backup", "shutdown", "self-test"]:
         result = rpc(args.command)
     elif args.command == "plan":
         payload = {"manifest": json.loads(Path(args.manifest).read_text()),

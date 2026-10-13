@@ -1,0 +1,4 @@
+interface:
+  display_name: "Savoria por agentes"
+  short_description: "Listas e receitas pelo backend local do Savoria"
+  default_prompt: "Use $savoria-backend para consultar ou alterar os dados solicitados no Savoria."

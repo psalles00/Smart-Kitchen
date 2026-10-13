@@ -4,6 +4,7 @@ import SwiftData
 import CryptoKit
 import AppKit
 import Darwin
+import ImageIO
 
 /// Local JSON RPC over a private Unix socket. All model work stays on MainActor,
 /// in the app's existing container; clients never open or write its SQLite stores.
@@ -56,6 +57,11 @@ final class MacAgentBackend {
             switch request.method {
             case "health":
                 return try encode(AgentReply(ok: true, result: .health(pid: Int(getpid()), visibleWindows: NSApplication.shared.windows.filter(\.isVisible).count)))
+            case "backup":
+                let url = root.appendingPathComponent("backups/\(id.uuidString).zip")
+                let archive = try BackupSnapshotV2.makeArchive(context: context, includeMedia: true)
+                try privateWrite(archive, to: url)
+                return try encode(AgentReply(ok: true, result: .backup(url.path)))
             case "snapshot":
                 return try encode(AgentReply(ok: true, result: .snapshot(try snapshot(context))))
             case "self-test":
@@ -94,7 +100,7 @@ final class MacAgentBackend {
                     if matches(plan.manifest, snapshot: before), FileManager.default.fileExists(atPath: backup.path) {
                         let receipt = AgentReceipt(requestID: id, planID: plan.id, beforeRevision: plan.beforeRevision,
                                                    afterRevision: before.revision, backup: backup.path,
-                                                   counts: counts(before.items), appliedAt: Date())
+                                                   counts: before.counts, appliedAt: Date())
                         try write(receipt, to: receiptURL)
                         return try encode(AgentReply(ok: true, result: .receipt(receipt, replayed: true)))
                     }
@@ -123,7 +129,7 @@ final class MacAgentBackend {
                 }
                 let receipt = AgentReceipt(requestID: id, planID: plan.id, beforeRevision: before.revision,
                                            afterRevision: after.revision, backup: backup.path,
-                                           counts: counts(after.items), appliedAt: Date())
+                                           counts: after.counts, appliedAt: Date())
                 try write(receipt, to: receiptURL)
                 NotificationCenter.default.post(name: .homeDataShouldRefresh, object: nil)
                 return try encode(AgentReply(ok: true, result: .receipt(receipt, replayed: false)))
@@ -145,10 +151,11 @@ final class MacAgentBackend {
         let settings = try context.fetch(FetchDescriptor<AppSettings>()).first
         let grouping = ["pantry": settings?.pantryGroupingMode.rawValue ?? "category",
                         "grocery": settings?.groceryGroupingMode.rawValue ?? "marketSection"]
-        let state = AgentState(items: items, categories: categories, showReserve: settings?.showReserve ?? false, grouping: grouping)
+        let recipes = try context.fetch(FetchDescriptor<Recipe>()).map(AgentRecipe.init).sorted { $0.id.uuidString < $1.id.uuidString }
+        let state = AgentState(items: items, categories: categories, recipes: recipes, showReserve: settings?.showReserve ?? false, grouping: grouping)
         let digest = SHA256.hash(data: try encode(state)).map { String(format: "%02x", $0) }.joined()
         return AgentSnapshot(revision: digest, items: items, categories: categories,
-                             showReserve: state.showReserve, counts: counts(items), grouping: grouping)
+                             showReserve: state.showReserve, counts: counts(items).merging(["recipes": recipes.count]) { _, new in new }, grouping: grouping, recipes: recipes)
     }
 
     /// Uses an isolated in-memory model container; never edits production data or syncs fixtures.
@@ -180,12 +187,41 @@ final class MacAgentBackend {
         guard try UnifiedItem.mergeDuplicateNames(in: context) == 0 else { throw AgentError.invalid("Sandbox independent identities were merged") }
         context.insert(UnifiedItem(name: "Legacy Duplicate")); context.insert(UnifiedItem(name: "Legacy Duplicate")); try context.save()
         guard try UnifiedItem.mergeDuplicateNames(in: context) == 1 else { throw AgentError.invalid("Sandbox legacy deduplication regressed") }
-        return ["memberships and order", "retained records and IDs", "retained photos/expiry/utensils", "idempotent upsert", "duplicate-ID rejection", "independent and legacy identity handling"]
+        let recipe = Recipe(name: "Existing recipe", imageData: Data([4, 5, 6]), isFavorite: true)
+        recipe.proteinG = 12; context.insert(recipe); try context.save()
+        var recipeEntry = AgentRecipe(id: recipe.id, name: "Edited recipe")
+        recipeEntry.descriptionText = "Verbatim vault data"
+        var recipeManifest = AgentManifest(mode: "upsert", source: "isolated recipe test", items: [], categories: [], showReserve: false)
+        recipeManifest.recipes = [recipeEntry]
+        try validate(recipeManifest); try mutate(recipeManifest, context: context); try context.save()
+        guard recipe.isFavorite, recipe.proteinG == 12, recipe.imageData == Data([4, 5, 6]),
+              matches(recipeManifest, snapshot: try snapshot(context)) else { throw AgentError.invalid("Recipe preservation test failed") }
+        let revision = try snapshot(context).revision
+        try mutate(recipeManifest, context: context); try context.save()
+        guard try snapshot(context).revision == revision else { throw AgentError.invalid("Recipe idempotence test failed") }
+        let structured = """
+        {"mode":"upsert","source":"fixture","items":[],"categories":[],"showReserve":false,"recipes":[{
+        "id":"00000000-0000-4000-8000-000000000001","name":"Structured fixture",
+        "sections":[{"id":"00000000-0000-4000-8000-000000000002","title":"Main","subtitle":"","sortOrder":0}],
+        "ingredients":[{"id":"00000000-0000-4000-8000-000000000003","name":"Rice","quantity":100,"unit":"g","preparationState":"","sortOrder":0,"sectionID":"00000000-0000-4000-8000-000000000002"}],
+        "steps":[{"id":"00000000-0000-4000-8000-000000000004","order":1,"instruction":"Cook rice"}]}]}
+        """
+        let structuredManifest = try JSONDecoder().decode(AgentManifest.self, from: Data(structured.utf8))
+        try validate(structuredManifest); try mutate(structuredManifest, context: context); try context.save()
+        guard matches(structuredManifest, snapshot: try snapshot(context)),
+              try context.fetch(FetchDescriptor<RecipeIngredient>()).count == 1,
+              try context.fetch(FetchDescriptor<RecipeStep>()).count == 1 else { throw AgentError.invalid("Recipe relationships failed") }
+        let structuredRevision = try snapshot(context).revision
+        try mutate(structuredManifest, context: context); try context.save()
+        guard try snapshot(context).revision == structuredRevision else { throw AgentError.invalid("Structured recipe replay failed") }
+        return ["memberships and order", "retained records and IDs", "retained photos/expiry/utensils", "idempotent upsert", "duplicate-ID rejection", "independent and legacy identity handling", "recipe metadata preservation", "recipe idempotence", "structured recipe relationships", "structured replay"]
     }
 
     private func validate(_ manifest: AgentManifest) throws {
-        guard ["replaceLists", "upsert"].contains(manifest.mode), !manifest.items.isEmpty, manifest.items.count <= 2000,
+        guard ["replaceLists", "upsert"].contains(manifest.mode),
+              (!manifest.items.isEmpty || (manifest.mode == "upsert" && !(manifest.recipes ?? []).isEmpty)), manifest.items.count <= 2000,
               manifest.categories.count <= 100 else { throw AgentError.invalid("Invalid mode or manifest size") }
+        try validateRecipes(manifest.recipes ?? [])
         var ids = Set<UUID>()
         for item in manifest.items {
             guard ids.insert(item.id).inserted, !item.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
@@ -237,6 +273,7 @@ final class MacAgentBackend {
             if let checked = entry.isChecked { item.isChecked = checked }
             // Expiry, images, fixed/linked flags, utensil membership and relationships are intentionally retained.
         }
+        try mutateRecipes(manifest.recipes ?? [], context: context)
         for (index, name) in manifest.categories.enumerated() {
             let category = CategoryMutationService.ensureCategory(named: name, type: .pantry, context: context)
             category.sortOrder = index
@@ -249,6 +286,7 @@ final class MacAgentBackend {
     }
 
     private func matches(_ manifest: AgentManifest, snapshot: AgentSnapshot) -> Bool {
+        guard matchesRecipes(manifest.recipes ?? [], actual: snapshot.recipes) else { return false }
         let byID = Dictionary(uniqueKeysWithValues: snapshot.items.map { ($0.id, $0) })
         for entry in manifest.items {
             guard let item = byID[entry.id], item.name == entry.name, item.notes == entry.notes,
@@ -271,6 +309,137 @@ final class MacAgentBackend {
         return true
     }
 
+    private func coverData(_ entry: AgentRecipe) throws -> Data? {
+        guard let path = entry.coverPath else { return nil }
+        guard path.hasPrefix("/"), let expected = entry.coverSHA256,
+              (try URL(fileURLWithPath: path).resourceValues(forKeys: [.fileSizeKey]).fileSize ?? Int.max) <= 20 * 1024 * 1024 else {
+            throw AgentError.invalid("Cover requires absolute path, SHA256 and size <=20MiB")
+        }
+        let data = try Data(contentsOf: URL(fileURLWithPath: path))
+        guard AgentRecipe.digest(data) == expected,
+              let source = CGImageSourceCreateWithData(data as CFData, nil), CGImageSourceGetCount(source) > 0 else {
+            throw AgentError.conflict("Cover changed or is not an image; create a fresh plan")
+        }
+        return data
+    }
+
+    private func validateRecipes(_ entries: [AgentRecipe]) throws {
+        guard entries.count <= 500 else { throw AgentError.invalid("Too many recipes") }
+        var ids = Set<UUID>(), childIDs = Set<UUID>()
+        for entry in entries {
+            guard ids.insert(entry.id).inserted, !entry.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                  entry.name.count <= 300, (entry.descriptionText?.count ?? 0) <= 200000,
+                  entry.servings.map({ $0 > 0 && $0 <= 10000 }) ?? true,
+                  entry.prepTime.map({ $0 >= 0 }) ?? true, entry.cookTime.map({ $0 >= 0 }) ?? true,
+                  entry.difficulty.map({ Difficulty(rawValue: $0) != nil }) ?? true,
+                  entry.imageSHA256 == nil, entry.createdAt == nil, entry.updatedAt == nil,
+                  entry.media == nil, entry.nutrition == nil,
+                  entry.coverPath != nil || entry.coverSHA256 == nil else {
+                throw AgentError.invalid("Invalid recipe fields or read-only metadata supplied")
+            }
+            for ingredients in [entry.ingredients ?? []] {
+                guard ingredients.count <= 1000, Set(ingredients.map(\.id)).count == ingredients.count,
+                      ingredients.allSatisfy({ !$0.name.isEmpty && $0.sortOrder >= 0 && ($0.quantity.map { $0.isFinite && $0 >= 0 } ?? true) }) else {
+                    throw AgentError.invalid("Invalid ingredients")
+                }
+            }
+            let steps = entry.steps ?? [], sections = entry.sections ?? []
+            guard steps.count <= 1000, Set(steps.map(\.id)).count == steps.count,
+                  steps.allSatisfy({ !$0.instruction.isEmpty && $0.order >= 0 && ($0.durationMinutes.map { $0 >= 0 } ?? true) }),
+                  sections.count <= 100, Set(sections.map(\.id)).count == sections.count else {
+                throw AgentError.invalid("Invalid recipe steps or sections")
+            }
+            for childID in (entry.ingredients ?? []).map(\.id) + sections.map(\.id) + steps.map(\.id) {
+                guard childIDs.insert(childID).inserted else { throw AgentError.invalid("Duplicate child identity in manifest") }
+            }
+            _ = try coverData(entry)
+        }
+    }
+
+    private func mutateRecipes(_ entries: [AgentRecipe], context: ModelContext) throws {
+        let recipes = try context.fetch(FetchDescriptor<Recipe>())
+        let grouped = Dictionary(grouping: recipes, by: \.id)
+        guard grouped.values.allSatisfy({ $0.count == 1 }) else { throw AgentError.conflict("Duplicate recipe IDs") }
+        let byID = grouped.mapValues { $0[0] }
+        // Child IDs belong to one recipe. Never reparent another recipe's data.
+        let ingredientOwners = try context.fetch(FetchDescriptor<RecipeIngredient>())
+        let sectionOwners = try context.fetch(FetchDescriptor<RecipeIngredientSection>())
+        let stepOwners = try context.fetch(FetchDescriptor<RecipeStep>())
+        for entry in entries {
+            if let existing = byID[entry.id], matchesRecipes([entry], actual: [AgentRecipe(existing)]) { continue }
+            let sectionIDs = Set((byID[entry.id]?.ingredientSections ?? []).map(\.id) + (entry.sections ?? []).map(\.id))
+            guard (entry.ingredients ?? []).allSatisfy({ $0.sectionID.map { sectionIDs.contains($0) } ?? true }) else {
+                throw AgentError.invalid("Ingredient section is not part of this recipe")
+            }
+            for child in entry.ingredients ?? [] where ingredientOwners.contains(where: { $0.id == child.id && $0.recipe?.id != entry.id }) {
+                throw AgentError.conflict("Ingredient identity belongs to another recipe")
+            }
+            for child in entry.sections ?? [] where sectionOwners.contains(where: { $0.id == child.id && $0.recipe?.id != entry.id }) {
+                throw AgentError.conflict("Section identity belongs to another recipe")
+            }
+            for child in entry.steps ?? [] where stepOwners.contains(where: { $0.id == child.id && $0.recipe?.id != entry.id }) {
+                throw AgentError.conflict("Step identity belongs to another recipe")
+            }
+            let recipe = byID[entry.id] ?? Recipe(name: entry.name)
+            if byID[entry.id] == nil { recipe.id = entry.id; context.insert(recipe) }
+            recipe.name = entry.name
+            if let value = entry.descriptionText { recipe.descriptionText = value }
+            if let value = entry.externalURLString { recipe.externalURLString = value }
+            if let value = entry.category { recipe.category = value }
+            if let value = entry.tags { recipe.tags = value }
+            if let value = entry.prepTime { recipe.prepTime = value }
+            if let value = entry.cookTime { recipe.cookTime = value }
+            if let value = entry.servings { recipe.servings = value }
+            if let value = entry.difficulty, let difficulty = Difficulty(rawValue: value) { recipe.difficulty = difficulty }
+            if let value = entry.isFavorite { recipe.isFavorite = value }
+            if let value = entry.requiredUtensils { recipe.requiredUtensils = value }
+            if let data = try coverData(entry) { recipe.imageData = data }
+            for entry in entry.sections ?? [] {
+                let section = (recipe.ingredientSections ?? []).first { $0.id == entry.id } ?? RecipeIngredientSection()
+                if section.recipe == nil { section.id = entry.id; context.insert(section); section.recipe = recipe; if !(recipe.ingredientSections ?? []).contains(where: { $0.id == section.id }) { recipe.ingredientSections = (recipe.ingredientSections ?? []) + [section] } }
+                section.title = entry.title; section.subtitle = entry.subtitle; section.sortOrder = entry.sortOrder
+            }
+            for entry in entry.ingredients ?? [] {
+                let ingredient = (recipe.ingredients ?? []).first { $0.id == entry.id } ?? RecipeIngredient(name: entry.name)
+                if ingredient.recipe == nil { ingredient.id = entry.id; context.insert(ingredient); ingredient.recipe = recipe; if !(recipe.ingredients ?? []).contains(where: { $0.id == ingredient.id }) { recipe.ingredients = (recipe.ingredients ?? []) + [ingredient] } }
+                ingredient.name = entry.name; ingredient.quantity = entry.quantity; ingredient.unit = entry.unit
+                if let icon = entry.iconName { ingredient.iconName = icon }
+                ingredient.preparationState = entry.preparationState; ingredient.sortOrder = entry.sortOrder; ingredient.sectionID = entry.sectionID
+            }
+            for entry in entry.steps ?? [] {
+                let step = (recipe.steps ?? []).first { $0.id == entry.id } ?? RecipeStep(order: entry.order, instruction: entry.instruction)
+                if step.recipe == nil { step.id = entry.id; context.insert(step); step.recipe = recipe; if !(recipe.steps ?? []).contains(where: { $0.id == step.id }) { recipe.steps = (recipe.steps ?? []) + [step] } }
+                step.order = entry.order; step.instruction = entry.instruction; step.durationMinutes = entry.durationMinutes
+            }
+            recipe.updatedAt = .now
+        }
+    }
+
+    private func matchesRecipes(_ desired: [AgentRecipe], actual: [AgentRecipe]) -> Bool {
+        let byID = Dictionary(grouping: actual, by: \.id)
+        for entry in desired {
+            guard let recipe = byID[entry.id]?.first, byID[entry.id]?.count == 1 else { return false }
+            guard entry.name == recipe.name,
+                  entry.descriptionText.map({ $0 == recipe.descriptionText }) ?? true,
+                  entry.externalURLString.map({ $0 == recipe.externalURLString }) ?? true,
+                  entry.category.map({ $0 == recipe.category }) ?? true,
+                  entry.tags.map({ $0 == recipe.tags }) ?? true,
+                  entry.prepTime.map({ $0 == recipe.prepTime }) ?? true,
+                  entry.cookTime.map({ $0 == recipe.cookTime }) ?? true,
+                  entry.servings.map({ $0 == recipe.servings }) ?? true,
+                  entry.difficulty.map({ $0 == recipe.difficulty }) ?? true,
+                  entry.isFavorite.map({ $0 == recipe.isFavorite }) ?? true,
+                  entry.requiredUtensils.map({ $0 == recipe.requiredUtensils }) ?? true,
+                  entry.coverSHA256.map({ $0 == recipe.imageSHA256 }) ?? true,
+                  (entry.ingredients ?? []).allSatisfy({ wanted in
+                      recipe.ingredients?.contains(where: { got in got.id == wanted.id && got.name == wanted.name && got.quantity == wanted.quantity && got.unit == wanted.unit && got.preparationState == wanted.preparationState && got.sortOrder == wanted.sortOrder && got.sectionID == wanted.sectionID && (wanted.iconName.map { $0 == got.iconName } ?? true) }) == true
+                  }),
+                  (entry.sections ?? []).allSatisfy({ recipe.sections?.contains($0) == true }),
+                  (entry.steps ?? []).allSatisfy({ recipe.steps?.contains($0) == true }) else { return false }
+        }
+        return true
+    }
+
     private func counts(_ items: [AgentItem]) -> [String: Int] {
         Dictionary(uniqueKeysWithValues: ["pantry", "reserve", "grocery", "utensil"].map { list in
             (list, items.filter { $0.lists.contains(list) }.count)
@@ -278,7 +447,8 @@ final class MacAgentBackend {
     }
     private func summary(_ manifest: AgentManifest, before: AgentSnapshot) -> AgentSummary {
         let current = Set(before.items.map(\.id)), desired = Set(manifest.items.map(\.id))
-        return AgentSummary(created: desired.subtracting(current).count,
+        let previousRecipeIDs = Set(before.recipes.map(\.id)), recipeIDs = Set((manifest.recipes ?? []).map(\.id))
+        return AgentSummary(recipesCreated: recipeIDs.subtracting(previousRecipeIDs).count, recipesUpdated: recipeIDs.intersection(previousRecipeIDs).count, created: desired.subtracting(current).count,
                             updated: desired.intersection(current).count,
                             archived: manifest.mode == "replaceLists" ? before.items.filter {
                                 !desired.contains($0.id) && !Set($0.lists).isDisjoint(with: ["pantry", "reserve", "grocery"])
@@ -299,6 +469,10 @@ final class MacAgentBackend {
         try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: url.path)
     }
     private func privateWrite(_ data: Data, to url: URL) throws {
+        if url.pathExtension == "zip" {
+            let available = try root.resourceValues(forKeys: [.volumeAvailableCapacityKey]).volumeAvailableCapacity ?? 0
+            guard Int64(available) - Int64(data.count) > 10 * 1024 * 1024 * 1024 else { throw AgentError.invalid("Backup would leave less than 10GiB free") }
+        }
         try data.write(to: url, options: .atomic)
         try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
     }
@@ -321,6 +495,7 @@ private struct AgentRequest: Decodable {
 private struct AgentManifest: Codable {
     let mode: String; let source: String; let items: [AgentEntry]; let categories: [String]; let showReserve: Bool
     var grouping: [String: String]? = nil
+    var recipes: [AgentRecipe]? = nil
 }
 private struct AgentEntry: Codable {
     let id: UUID; let name: String; let notes: String; let category: String
@@ -349,11 +524,11 @@ private struct AgentCategory: Codable {
     let id: UUID; let name: String; let type: String; let iconName: String?; let order: Int
     init(_ category: Category) { id = category.id; name = category.name; type = category.type.rawValue; iconName = category.iconName; order = category.sortOrder }
 }
-private struct AgentState: Encodable { let items: [AgentItem]; let categories: [AgentCategory]; let showReserve: Bool; let grouping: [String: String] }
+private struct AgentState: Encodable { let items: [AgentItem]; let categories: [AgentCategory]; let recipes: [AgentRecipe]; let showReserve: Bool; let grouping: [String: String] }
 private struct AgentSnapshot: Codable {
-    let revision: String; let items: [AgentItem]; let categories: [AgentCategory]; let showReserve: Bool; let counts: [String: Int]; let grouping: [String: String]
+    let revision: String; let items: [AgentItem]; let categories: [AgentCategory]; let showReserve: Bool; let counts: [String: Int]; let grouping: [String: String]; let recipes: [AgentRecipe]
 }
-private struct AgentSummary: Codable { let created: Int; let updated: Int; let archived: Int; let desiredCounts: [String: Int] }
+private struct AgentSummary: Codable { let recipesCreated: Int; let recipesUpdated: Int; let created: Int; let updated: Int; let archived: Int; let desiredCounts: [String: Int] }
 private struct AgentPlan: Codable { let id: UUID; let beforeRevision: String; let manifest: AgentManifest; let summary: AgentSummary }
 private struct AgentReceipt: Codable {
     let requestID: UUID; let planID: UUID; let beforeRevision: String; let afterRevision: String
@@ -363,12 +538,13 @@ private struct AgentReply: Encodable {
     var ok: Bool; var result: AgentResult? = nil; var error: String? = nil; var status: Int = 200
 }
 private enum AgentResult: Encodable {
-    case health(pid: Int, visibleWindows: Int), snapshot(AgentSnapshot), plan(AgentPlan), receipt(AgentReceipt, replayed: Bool), tests([String])
+    case backup(String), health(pid: Int, visibleWindows: Int), snapshot(AgentSnapshot), plan(AgentPlan), receipt(AgentReceipt, replayed: Bool), tests([String])
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: Key.self)
         switch self {
         case .health(let pid, let visibleWindows):
             try container.encode(pid, forKey: .pid); try container.encode(visibleWindows, forKey: .visibleWindows)
+        case .backup(let path): try container.encode(path, forKey: .backup)
         case .tests(let passed): try container.encode(passed, forKey: .passed)
         case .snapshot(let snapshot): try snapshot.encode(to: encoder)
         case .plan(let plan): try plan.encode(to: encoder)
@@ -376,7 +552,56 @@ private enum AgentResult: Encodable {
             try container.encode(receipt, forKey: .receipt); try container.encode(replayed, forKey: .replayed)
         }
     }
-    private enum Key: CodingKey { case pid, visibleWindows, receipt, replayed, passed }
+    private enum Key: CodingKey { case pid, visibleWindows, receipt, replayed, passed, backup }
+}
+
+private struct AgentRecipe: Codable {
+    var id: UUID; var name: String
+    var descriptionText: String? = nil; var externalURLString: String? = nil
+    var category: String? = nil; var tags: [String]? = nil
+    var prepTime: Int? = nil; var cookTime: Int? = nil; var servings: Int? = nil
+    var difficulty: String? = nil; var isFavorite: Bool? = nil; var requiredUtensils: [String]? = nil
+    var ingredients: [AgentRecipeIngredient]? = nil; var sections: [AgentRecipeSection]? = nil; var steps: [AgentRecipeStep]? = nil
+    var coverPath: String? = nil; var coverSHA256: String? = nil
+    // Snapshot-only fields, never accepted as mutation authority.
+    var imageSHA256: String? = nil; var media: [AgentRecipeMedia]? = nil
+    var nutrition: [String: Double]? = nil; var createdAt: Date? = nil; var updatedAt: Date? = nil
+    init(id: UUID, name: String) { self.id = id; self.name = name }
+    init(_ recipe: Recipe) {
+        id = recipe.id; name = recipe.name; descriptionText = recipe.descriptionText; externalURLString = recipe.externalURLString
+        category = recipe.category; tags = recipe.tags; prepTime = recipe.prepTime; cookTime = recipe.cookTime; servings = recipe.servings
+        difficulty = recipe.difficulty.rawValue; isFavorite = recipe.isFavorite; requiredUtensils = recipe.requiredUtensils
+        imageSHA256 = recipe.imageData.map(Self.digest); createdAt = recipe.createdAt; updatedAt = recipe.updatedAt
+        ingredients = (recipe.ingredients ?? []).map(AgentRecipeIngredient.init).sorted { $0.id.uuidString < $1.id.uuidString }
+        sections = (recipe.ingredientSections ?? []).map(AgentRecipeSection.init).sorted { $0.id.uuidString < $1.id.uuidString }
+        steps = (recipe.steps ?? []).map(AgentRecipeStep.init).sorted { $0.id.uuidString < $1.id.uuidString }
+        media = (recipe.preparationMedia ?? []).map(AgentRecipeMedia.init).sorted { $0.id.uuidString < $1.id.uuidString }
+        nutrition = [:]
+        if let value = recipe.calories { nutrition?["calories"] = Double(value) }
+        for (key, value) in [("proteinG", recipe.proteinG), ("carbsG", recipe.carbsG), ("fatG", recipe.fatG), ("fiberG", recipe.fiberG), ("sugarG", recipe.sugarG), ("sodiumMg", recipe.sodiumMg)] {
+            if let value { nutrition?[key] = value }
+        }
+        if let value = recipe.nutritionEstimated { nutrition?["estimated"] = value ? 1 : 0 }
+        if let value = recipe.nutritionUpdatedAt { nutrition?["updatedAt"] = value.timeIntervalSinceReferenceDate }
+    }
+    static func digest(_ data: Data) -> String { SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined() }
+}
+private struct AgentRecipeIngredient: Codable, Equatable {
+    var id: UUID; var name: String; var quantity: Double?; var unit: String; var preparationState: String
+    var sortOrder: Int; var sectionID: UUID?; var iconName: String? = nil
+    init(_ value: RecipeIngredient) { id = value.id; name = value.name; quantity = value.quantity; unit = value.unit; preparationState = value.preparationState; sortOrder = value.sortOrder; sectionID = value.sectionID; iconName = value.iconName }
+}
+private struct AgentRecipeSection: Codable, Equatable {
+    var id: UUID; var title: String; var subtitle: String; var sortOrder: Int
+    init(_ value: RecipeIngredientSection) { id = value.id; title = value.title; subtitle = value.subtitle; sortOrder = value.sortOrder }
+}
+private struct AgentRecipeStep: Codable, Equatable {
+    var id: UUID; var order: Int; var instruction: String; var durationMinutes: Int?
+    init(_ value: RecipeStep) { id = value.id; order = value.order; instruction = value.instruction; durationMinutes = value.durationMinutes }
+}
+private struct AgentRecipeMedia: Codable {
+    var id: UUID; var type: String; var sha256: String; var fileExtension: String; var sortOrder: Int; var sourceOriginal: Bool
+    init(_ value: RecipePreparationMedia) { id = value.id; type = value.mediaTypeRaw; sha256 = AgentRecipe.digest(value.data); fileExtension = value.fileExtension; sortOrder = value.sortOrder; sourceOriginal = value.sourceOriginal }
 }
 
 private enum AgentSocket {
