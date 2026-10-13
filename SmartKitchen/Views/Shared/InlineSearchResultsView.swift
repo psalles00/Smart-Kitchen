@@ -107,8 +107,8 @@ struct InlineSearchResultsView: View {
             }
         }
         .onChange(of: searchBarState.pendingChatMessageRequest) { _, newValue in
-            if let request = newValue {
-                searchBarState.pendingChatMessageRequest = nil
+            if let newValue,
+               let request = searchBarState.takeChatMessageRequest(id: newValue.id) {
                 if showInlineChat {
                     // Chat already open — relay via @State Binding
                     pendingExternalChatRequest = request

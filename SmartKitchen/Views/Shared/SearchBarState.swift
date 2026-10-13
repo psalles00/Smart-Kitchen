@@ -193,6 +193,14 @@ final class SearchBarState: ObservableObject {
         #endif
     }
 
+    /// SwiftUI can deliver the same onChange value to more than one mounted
+    /// view. Claim the current request synchronously so it is relayed once.
+    func takeChatMessageRequest(id: UUID) -> PendingChatMessageRequest? {
+        guard let request = pendingChatMessageRequest, request.id == id else { return nil }
+        pendingChatMessageRequest = nil
+        return request
+    }
+
     private func scheduleFocusRetry(after delay: TimeInterval, session: Int) {
         DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
             guard let self, self.isVisible, self.focusRequestSession == session else { return }

@@ -54,6 +54,9 @@ struct FullscreenAssistantView: View {
     /// the SwiftUI `\.dismiss` environment to pop. Used only by the pushed AI
     /// page inside the search-tab navigation stack.
     var showsBackButton: Bool = false
+    /// NavigationStack retains its root while the AI page is pushed. Only the
+    /// current page may mount a chat consumer for the shared search-bar events.
+    var isCurrentPage: Bool = true
 
     @Environment(\.dismiss) private var environmentDismiss
 
@@ -352,7 +355,7 @@ struct FullscreenAssistantView: View {
         let hasText = !searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         let showResults = hasText || searchBarState.mode == .aiChat || pendingOpenChat || pendingChatQuery != nil
 
-        if showResults {
+        if isCurrentPage && showResults {
             InlineSearchResultsView(
                 searchBarState: searchBarState,
                 searchService: searchService,
@@ -901,7 +904,8 @@ struct AssistantSearchTabContent: View {
                 usesDarkThemedBackground: usesDarkThemedBackground,
                 onRequestAIMode: { preset, prefill in
                     path.append(AssistantTabAIDestination(preset: preset, prefill: prefill))
-                }
+                },
+                isCurrentPage: path.isEmpty
             )
             #if os(iOS)
             .toolbar(.hidden, for: .navigationBar)
@@ -975,11 +979,11 @@ private struct AssistantSearchTabAIPage: View {
             // Always make sure the AI chat mode is active when this page is on
             // screen — but only configure prefill/openChat ONCE so subsequent
             // tab returns preserve the existing conversation.
-            searchBarState.aiChatPreset = destination.preset
             searchBarState.mode = .aiChat
 
             guard !didConfigureOnce else { return }
             didConfigureOnce = true
+            searchBarState.aiChatPreset = destination.preset
 
             if let prefill = destination.prefill, !prefill.isEmpty {
                 pendingOpenChat = false
