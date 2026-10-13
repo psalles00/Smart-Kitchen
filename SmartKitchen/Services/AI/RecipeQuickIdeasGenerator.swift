@@ -15,6 +15,94 @@ struct RecipeQuickIdea: Identifiable, Codable, Equatable {
     }
 }
 
+/// Keeps the original request attached to an idea after it is selected.
+/// Deterministic checks cover explicit milk exclusions, minute limits and serving counts;
+/// other restrictions remain in the full prompt rather than being silently discarded.
+struct RecipeIdeaRequest {
+    let text: String
+
+    init(occasion: String?, refinement: String?, customQuery: String?) {
+        text = [occasion, refinement, customQuery].compactMap { $0 }
+            .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+            .joined(separator: "\n")
+    }
+
+    var prompt: String {
+        guard !text.isEmpty else { return "" }
+        return """
+        Pedido original do usuário, incluindo todas as restrições:
+        \(text)
+        As restrições deste pedido têm prioridade sobre o título sugerido, a receita da fonte e os itens da despensa.
+        Respeite o tempo total e as porções solicitadas. Se não for possível, não ofereça uma receita incompatível.
+        """
+    }
+
+    var maximumMinutes: Int? {
+        Self.firstNumber(in: Self.normalized(text), pattern: #"(?<![0-9])(\d+)\s*(?:min(?:uto[s]?)?|minutes?|minuten|minuti)\b"#)
+    }
+
+    var requestedServings: Int? {
+        let normalized = Self.normalized(text)
+        if let number = Self.firstNumber(in: normalized, pattern: #"\b(\d+)\s*(?:pessoas?|persons?|people|porcoes|servings?|portions?|raciones?|personen|persone)\b"#) { return number }
+        if normalized.range(of: #"\b(?:uma pessoa|one person|une personne|una persona|eine person)\b"#, options: .regularExpression) != nil { return 1 }
+        return nil
+    }
+
+    var excludesMilk: Bool {
+        Self.normalized(text).range(of: #"\b(?:sem leite|sem (?:nenhum )?laticinio[s]?|without milk|no milk|milk free|dairy free|no dairy|without dairy|sans lait|sin leche|ohne milch|senza latte)\b"#, options: .regularExpression) != nil
+    }
+
+    func accepts(ingredients: [String], totalMinutes: Int?, servings: Int?) -> Bool {
+        if excludesMilk, ingredients.contains(where: Self.containsDairy) { return false }
+        if let maximumMinutes {
+            guard let totalMinutes, totalMinutes > 0, totalMinutes <= maximumMinutes else { return false }
+        }
+        if let requestedServings, servings != requestedServings { return false }
+        return true
+    }
+
+    func accepts(_ draft: RecipeDraft) -> Bool {
+        let knownTime = draft.prepTimeConfidence == .high && draft.cookTimeConfidence == .high
+        return accepts(ingredients: draft.ingredients.map(\.name),
+                       totalMinutes: knownTime ? Self.totalMinutes(in: draft) : nil,
+                       servings: draft.servingsConfidence == .high ? draft.servings : nil)
+    }
+
+    static func totalMinutes(in draft: RecipeDraft) -> Int? {
+        let (total, overflow) = draft.prepTime.addingReportingOverflow(draft.cookTime)
+        return !overflow && total > 0 ? total : nil
+    }
+
+    static func totalMinutes(in content: String) -> Int? {
+        firstNumber(in: normalized(content), pattern: #"(?m)^tempo total:\s*(\d+)\s*min\b"#)
+    }
+
+    static func servings(in content: String) -> Int? {
+        firstNumber(in: normalized(content), pattern: #"(?m)^porcoes:\s*(\d+)\s*$"#)
+    }
+
+    private static func containsDairy(_ ingredient: String) -> Bool {
+        // Remove only named plant alternatives, then check remaining ingredients.
+        // "Leite de coco e leite integral" must still fail.
+        let name = normalized(ingredient).replacingOccurrences(
+            of: #"\b(?:leite (?:vegetal|de (?:coco|aveia|soja|amendoas|arroz))|(?:coconut|oat|soy|almond|rice|plant) milk)\b"#,
+            with: "", options: .regularExpression)
+        return name.range(of: #"\b(?:leite|milk|lait|leche|milch|latte|queijo|cheese|fromage|queso|kase|formaggio|manteiga|butter|beurre|mantequilla|burro|iogurte|yogurt|yoghurt|joghurt|yaourt|yogur|nata|requeijao|cream)\b"#, options: .regularExpression) != nil
+    }
+
+    private static func normalized(_ text: String) -> String {
+        text.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: Locale(identifier: "en_US_POSIX"))
+            .replacingOccurrences(of: "-", with: " ")
+    }
+
+    private static func firstNumber(in text: String, pattern: String) -> Int? {
+        guard let regex = try? NSRegularExpression(pattern: pattern),
+              let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
+              let range = Range(match.range(at: 1), in: text), let value = Int(text[range]), value > 0 else { return nil }
+        return value
+    }
+}
+
 /// Pede ao modelo da OpenAI uma lista enxuta de "ideias rápidas" — receitas
 /// simples, cobertas 100% pela despensa do usuário. Sem chamadas externas
 /// e sem dependência de receitas locais.

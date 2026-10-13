@@ -3,6 +3,104 @@ import XCTest
 @testable import Savoria
 
 @MainActor
+final class RecipeIdeaRequestTests: XCTestCase {
+    private let original = "Tenho arroz, ovos e tomate. Quero jantar em até 20 minutos para uma pessoa, sem leite. Não registre nem altere dados."
+
+    func testOriginalContextSurvivesExpansionAndStructuring() {
+        let request = RecipeIdeaRequest(occasion: "Jantar", refinement: "Usar arroz", customQuery: original)
+        XCTAssertTrue(request.prompt.contains(original))
+        XCTAssertTrue(request.prompt.contains("Usar arroz"))
+        XCTAssertEqual(request.maximumMinutes, 20)
+        XCTAssertEqual(RecipeIdeaRequest(occasion: nil, refinement: nil, customQuery: "jantar em até20minutos").maximumMinutes, 20)
+        XCTAssertEqual(request.requestedServings, 1)
+        let prompt = RecipeStructurer.userPrompt(text: "receita da web", hints: .init(requestContext: request.prompt))
+        XCTAssertTrue(prompt.contains(original))
+    }
+
+    func testRejectsDairyEvenWhenPantryOrSourceContainsIt() {
+        let request = RecipeIdeaRequest(occasion: nil, refinement: nil, customQuery: original)
+        for ingredient in ["Leite integral", "Queijo", "Manteiga", "Leite de coco e leite integral"] {
+            XCTAssertFalse(request.accepts(ingredients: ["Ovos", ingredient], totalMinutes: 15, servings: 1), ingredient)
+        }
+        XCTAssertTrue(request.accepts(ingredients: ["Arroz", "Ovos", "Tomate"], totalMinutes: 20, servings: 1))
+        XCTAssertTrue(request.accepts(ingredients: ["Leite de coco"], totalMinutes: 15, servings: 1))
+    }
+
+    func testMinuteLimitRequiresKnownTotalAndServingCount() {
+        let request = RecipeIdeaRequest(occasion: nil, refinement: nil, customQuery: original)
+        XCTAssertFalse(request.accepts(ingredients: ["Ovos"], totalMinutes: nil, servings: 1))
+        XCTAssertFalse(request.accepts(ingredients: ["Ovos"], totalMinutes: 21, servings: 1))
+        XCTAssertFalse(request.accepts(ingredients: ["Ovos"], totalMinutes: 20, servings: 2))
+        XCTAssertFalse(request.accepts(ingredients: ["Ovos"], totalMinutes: 20, servings: nil))
+        var draft = RecipeDraft()
+        draft.ingredients = [.init(name: "Ovos")]
+        draft.prepTime = 5; draft.cookTime = 16
+        draft.prepTimeConfidence = .high; draft.cookTimeConfidence = .high
+        draft.servingsConfidence = .high
+        XCTAssertFalse(request.accepts(draft))
+        draft.cookTime = 15
+        XCTAssertTrue(request.accepts(draft))
+        draft.servingsConfidence = .low
+        XCTAssertFalse(request.accepts(draft), "Default one serving is not an explicitly supplied serving count")
+        draft.servingsConfidence = .high; draft.cookTimeConfidence = .low
+        XCTAssertFalse(request.accepts(draft), "Missing cook time is not a known total")
+        draft.cookTimeConfidence = .high; draft.prepTime = Int.max; draft.cookTime = 1
+        XCTAssertFalse(request.accepts(draft), "Invalid time totals must not overflow")
+    }
+
+    func testCanonicalCardMetadataAndEnglishRequest() {
+        let content = "**Omelete**\nTempo total: 15 min\nPorções: 1\n**Ingredientes**\n- 2 un de Ovos"
+        XCTAssertEqual(RecipeIdeaRequest.totalMinutes(in: content), 15)
+        XCTAssertEqual(RecipeIdeaRequest.servings(in: content), 1)
+        let request = RecipeIdeaRequest(occasion: nil, refinement: nil, customQuery: "Dinner in 20 minutes for one person, dairy-free")
+        XCTAssertTrue(request.excludesMilk)
+        XCTAssertEqual(request.requestedServings, 1)
+        XCTAssertFalse(request.accepts(ingredients: ["Milk"], totalMinutes: 15, servings: 1))
+        XCTAssertTrue(request.accepts(ingredients: ["Oat milk"], totalMinutes: 15, servings: 1))
+        for text in ["no dairy", "without dairy"] {
+            let exclusion = RecipeIdeaRequest(occasion: nil, refinement: nil, customQuery: text)
+            XCTAssertFalse(exclusion.accepts(ingredients: ["Milk"], totalMinutes: nil, servings: nil), text)
+        }
+    }
+
+    func testServerMappingDistinguishesMissingMetadataFromExplicitZeroAndOne() {
+        let request = RecipeIdeaRequest(occasion: nil, refinement: nil, customQuery: original)
+        let missing = RecipeStructurer.parse(dict: ["prep_time_minutes": 15])
+        XCTAssertEqual(missing.cookTimeConfidence, .low)
+        XCTAssertEqual(missing.servingsConfidence, .low)
+        XCTAssertFalse(request.accepts(missing))
+        let null = RecipeStructurer.parse(dict: ["prep_time_minutes": 15, "cook_time_minutes": NSNull(), "servings": NSNull()])
+        XCTAssertFalse(request.accepts(null))
+        let explicit = RecipeStructurer.parse(dict: ["prep_time_minutes": 15, "cook_time_minutes": 0, "servings": 1])
+        XCTAssertEqual(explicit.cookTimeConfidence, .high)
+        XCTAssertEqual(explicit.servingsConfidence, .high)
+        XCTAssertTrue(request.accepts(explicit))
+    }
+
+    #if canImport(FoundationModels)
+    func testAppleMappingKeepsUnknownMetadataOptional() {
+        guard #available(iOS 26.0, macOS 26.0, *) else { return }
+        let request = RecipeIdeaRequest(occasion: nil, refinement: nil, customQuery: original)
+        var generated = RecipeStructurer.GeneratedRecipe(name: "Omelete", description: "", category: "Jantar", difficulty: "Fácil",
+                                                       prepTimeMinutes: 15, cookTimeMinutes: nil, servings: nil, calories: 0,
+                                                       requiredUtensils: [], ingredients: [], steps: [])
+        let missing = RecipeStructurer.draft(from: generated, hints: .init())
+        XCTAssertEqual(missing.cookTimeConfidence, .low)
+        XCTAssertEqual(missing.servingsConfidence, .low)
+        XCTAssertFalse(request.accepts(missing))
+        generated.cookTimeMinutes = 0; generated.servings = 1
+        let explicit = RecipeStructurer.draft(from: generated, hints: .init())
+        XCTAssertTrue(request.accepts(explicit))
+    }
+    #endif
+
+    func testUnconstrainedLegacyIdeasStillAcceptExistingRecipe() {
+        let request = RecipeIdeaRequest(occasion: "Jantar", refinement: nil, customQuery: nil)
+        XCTAssertTrue(request.accepts(ingredients: ["Leite"], totalMinutes: nil, servings: nil))
+    }
+}
+
+@MainActor
 final class AIServiceFallbackTests: XCTestCase {
     func testConfiguredBackendWinsOverAvailableDirectRouterKey() async throws {
         let backend = AvailableChatBackend()

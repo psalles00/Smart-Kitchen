@@ -54,14 +54,14 @@ extension RecipeStructurer {
         @Guide(description: "Dificuldade: Fácil, Médio ou Difícil.")
         var difficulty: String
 
-        @Guide(description: "Tempo de preparo em minutos. 0 se desconhecido.")
-        var prepTimeMinutes: Int
+        @Guide(description: "Tempo de preparo em minutos. nil se desconhecido; zero apenas quando explicitamente não há preparo.")
+        var prepTimeMinutes: Int?
 
-        @Guide(description: "Tempo de cozimento em minutos. 0 se desconhecido.")
-        var cookTimeMinutes: Int
+        @Guide(description: "Tempo de cozimento em minutos. nil se desconhecido; zero apenas quando explicitamente não há cozimento.")
+        var cookTimeMinutes: Int?
 
-        @Guide(description: "Número de porções. 1 se desconhecido.")
-        var servings: Int
+        @Guide(description: "Número de porções confirmado no texto ou solicitado pelo usuário. nil se desconhecido, nunca assumir uma porção.")
+        var servings: Int?
 
         @Guide(description: "Calorias por porção. 0 se desconhecido.")
         var calories: Int
@@ -111,7 +111,7 @@ extension RecipeStructurer {
 
     // MARK: - Mapping
 
-    fileprivate static func draft(from generated: GeneratedRecipe, hints: Hints) -> RecipeDraft {
+    static func draft(from generated: GeneratedRecipe, hints: Hints) -> RecipeDraft {
         var d = RecipeDraft()
         d.name = generated.name.trimmingCharacters(in: .whitespacesAndNewlines)
         if !d.name.isEmpty { d.nameConfidence = .high }
@@ -131,18 +131,8 @@ extension RecipeStructurer {
             d.difficulty = matched
         }
 
-        if generated.prepTimeMinutes > 0 {
-            d.prepTime = generated.prepTimeMinutes
-            d.prepTimeConfidence = .high
-        }
-        if generated.cookTimeMinutes > 0 {
-            d.cookTime = generated.cookTimeMinutes
-            d.cookTimeConfidence = .high
-        }
-        if generated.servings > 0 {
-            d.servings = generated.servings
-            d.servingsConfidence = .high
-        }
+        Self.applyTimeAndServings(to: &d, prep: generated.prepTimeMinutes,
+                                 cook: generated.cookTimeMinutes, servings: generated.servings)
         if generated.calories > 0 {
             d.calories = generated.calories
         }

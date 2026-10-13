@@ -31,6 +31,18 @@ struct RecipeDetailCard: View {
                         .foregroundStyle(Color.accentColor)
                         .padding(.top, 4)
                 }
+                if recipe.totalMinutes != nil || recipe.servings != nil {
+                    HStack(spacing: 12) {
+                        if let minutes = recipe.totalMinutes {
+                            Label("\(minutes) \(String(localized: "min"))", systemImage: "clock")
+                        }
+                        if let servings = recipe.servings {
+                            Label("\(String(localized: "Porções")): \(servings)", systemImage: "person.2")
+                        }
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                }
             }
             .padding(.horizontal, 16)
             .padding(.top, 16)

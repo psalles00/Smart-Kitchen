@@ -50,6 +50,7 @@ struct RecipeStructurer {
         var externalURL: URL? = nil
         var imageURL: URL? = nil
         var sourceLabel: String = ""
+        var requestContext: String? = nil
     }
 
     // MARK: - On-device (Fase 5: Apple Foundation Models)
@@ -101,7 +102,7 @@ struct RecipeStructurer {
             if let content = response.content, let data = content.data(using: .utf8),
                let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
                 RecipeImportLogger.debug("openai parsed response from content JSON")
-                return parse(dict: dict)
+                return Self.parse(dict: dict)
             }
             RecipeImportLogger.error("openai returned no tool call and no JSON content")
             throw RecipeImportError.aiFailed(String(localized: "A resposta do modelo não contém dados estruturados."))
@@ -114,12 +115,12 @@ struct RecipeStructurer {
         }
 
         RecipeImportLogger.debug("openai tool arguments parsed keys=\(dict.keys.sorted().joined(separator: ","))")
-        return parse(dict: dict)
+        return Self.parse(dict: dict)
     }
 
     // MARK: - Parsing
 
-    private func parse(dict: [String: Any]) -> RecipeDraft {
+    static func parse(dict: [String: Any]) -> RecipeDraft {
         RecipeImportLogger.debug("parse start keys=\(dict.keys.sorted().joined(separator: ","))")
         var d = RecipeDraft()
         if let s = dict["name"] as? String { d.name = s.trimmingCharacters(in: .whitespacesAndNewlines); d.nameConfidence = .high }
@@ -134,18 +135,8 @@ struct RecipeStructurer {
            }) {
             d.difficulty = matched
         }
-        if let v = dict["prep_time_minutes"] as? Int, v > 0 {
-            d.prepTime = v
-            d.prepTimeConfidence = .high
-        }
-        if let v = dict["cook_time_minutes"] as? Int, v > 0 {
-            d.cookTime = v
-            d.cookTimeConfidence = .high
-        }
-        if let v = dict["servings"] as? Int, v > 0 {
-            d.servings = v
-            d.servingsConfidence = .high
-        }
+        applyTimeAndServings(to: &d, prep: dict["prep_time_minutes"] as? Int,
+                             cook: dict["cook_time_minutes"] as? Int, servings: dict["servings"] as? Int)
         if let v = dict["calories"] as? Int { d.calories = v }
         if let nutrition = dict["nutrition_per_serving"] as? [String: Any] {
             func num(_ k: String) -> Double? {
@@ -253,13 +244,19 @@ struct RecipeStructurer {
         return d
     }
 
-    private func confidenceString(_ raw: String?) -> FieldConfidence? {
+    private static func confidenceString(_ raw: String?) -> FieldConfidence? {
         switch raw?.lowercased() {
         case "high", "alta":   return .high
         case "medium", "média", "media": return .medium
         case "low", "baixa":   return .low
         default:                return nil
         }
+    }
+
+    static func applyTimeAndServings(to draft: inout RecipeDraft, prep: Int?, cook: Int?, servings: Int?) {
+        if let prep, prep >= 0 { draft.prepTime = prep; draft.prepTimeConfidence = .high }
+        if let cook, cook >= 0 { draft.cookTime = cook; draft.cookTimeConfidence = .high }
+        if let servings, servings > 0 { draft.servings = servings; draft.servingsConfidence = .high }
     }
 
     // MARK: - Merge hints
@@ -308,6 +305,7 @@ struct RecipeStructurer {
     - Passos devem ser curtos, imperativos e numerados.
     - Categoria: prefira "Café da manhã", "Almoço", "Jantar", "Lanche", "Sobremesa", "Bebida" ou "Outros". Se nenhuma servir claramente, proponha um nome curto e natural em português.
     - Dificuldade: "Fácil", "Médio" ou "Difícil".
+    - Tempo de preparo, tempo de cozimento e porções: use null quando desconhecidos. Zero minutos significa uma etapa que explicitamente não é necessária, nunca informação ausente. Uma porção só deve ser informada quando esse rendimento estiver confirmado no texto ou solicitado pelo usuário.
     - Não invente ingredientes nem passos. Se o texto for insuficiente, devolva arrays vazios.
     - Preserve o idioma do texto original (provavelmente pt-BR).
     - Não use emojis, hashtags ou texto promocional no resultado.
@@ -329,6 +327,9 @@ struct RecipeStructurer {
         if let url = hints.externalURL {
             parts.append("URL original: \(url.absoluteString)")
         }
+        if let request = hints.requestContext, !request.isEmpty {
+            parts.append(request)
+        }
         return parts.joined(separator: "\n\n")
     }
 
@@ -339,9 +340,9 @@ struct RecipeStructurer {
             "description":    ["type": "string"],
             "category":       ["type": "string"],
             "difficulty":     ["type": "string", "enum": ["Fácil", "Médio", "Difícil"]],
-            "prep_time_minutes": ["type": "integer", "minimum": 0],
-            "cook_time_minutes": ["type": "integer", "minimum": 0],
-            "servings":       ["type": "integer", "minimum": 1],
+            "prep_time_minutes": ["type": ["integer", "null"], "minimum": 0],
+            "cook_time_minutes": ["type": ["integer", "null"], "minimum": 0],
+            "servings":       ["type": ["integer", "null"], "minimum": 1],
             "calories":       ["type": "integer", "minimum": 0, "description": "Calorias por porção (kcal). Estimar a partir dos ingredientes se não explícito."],
             "nutrition_per_serving": [
                 "type": "object",

@@ -48879,6 +48879,12 @@
             "state" : "translated",
             "value" : "人前"
           }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Porções"
+          }
         }
       }
     },
@@ -67405,6 +67411,100 @@
           "stringUnit": {
             "state": "translated",
             "value": "Não foi possível salvar a ação. Tente novamente."
+          }
+        }
+      }
+    },
+    "Esta receita não atende às restrições solicitadas. Tente outra ideia." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta receita não atende às restrições solicitadas. Tente outra ideia."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This recipe does not meet your requested restrictions. Try another idea."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta receta no cumple las restricciones solicitadas. Prueba otra idea."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cette recette ne respecte pas vos restrictions. Essayez une autre idée."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieses Rezept erfüllt Ihre Vorgaben nicht. Versuchen Sie eine andere Idee."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questa ricetta non rispetta le restrizioni richieste. Prova un’altra idea."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このレシピは指定した条件を満たしていません。別のアイデアをお試しください。"
+          }
+        }
+      }
+    },
+    "min" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Min."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "min"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "min"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "min"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "min"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "min"
           }
         }
       }

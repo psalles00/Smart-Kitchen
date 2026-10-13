@@ -2131,7 +2131,9 @@ struct InlineChatView: View {
             heroImageURL: heroImageURL,
             mainIngredient: mainIngredient,
             ingredients: ingredients,
-            steps: steps
+            steps: steps,
+            totalMinutes: RecipeIdeaRequest.totalMinutes(in: content),
+            servings: RecipeIdeaRequest.servings(in: content)
         )
     }
 
@@ -2175,7 +2177,7 @@ struct InlineChatView: View {
             return dict
         }
 
-        let args: [String: Any] = [
+        var args: [String: Any] = [
             "name": card.title,
             "description": card.subtitle ?? "",
             "category": card.category?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
@@ -2185,6 +2187,8 @@ struct InlineChatView: View {
             "ingredients": ingredientArgs,
             "steps": card.steps
         ]
+        if let minutes = card.totalMinutes { args["prepTime"] = minutes }
+        if let servings = card.servings { args["servings"] = servings }
 
         let result = AITools.createRecipeFromArgs(args, context: modelContext)
 
@@ -2514,7 +2518,7 @@ struct InlineChatView: View {
                     ExpandingFlowLayout(spacing: 8) {
                         ForEach(payload.quickIdeas) { idea in
                             Button {
-                                handleQuickIdeaTap(idea)
+                                handleQuickIdeaTap(idea, payload: payload)
                             } label: {
                                 quickIdeaChip(idea)
                             }
@@ -2705,8 +2709,9 @@ struct InlineChatView: View {
     /// Tap em uma "Nova ideia" da web: chama o estruturador (LLM), baixa a imagem
     /// hero em paralelo e exibe um RecipeDetailCard inline na conversa com botão
     /// de salvar. O usuário decide se quer adicionar ao app.
-    private func handleNewIdeaTap(_ idea: RecipeIdeaResult, payload _: ResultsPayload) {
+    private func handleNewIdeaTap(_ idea: RecipeIdeaResult, payload: ResultsPayload) {
         let convId = ensureConversation()
+        let request = payload.request
         let loadingId = beginRecipeCreation(title: idea.title, sourceLabel: String(localized: "Receitas da Web"))
 
         Task {
@@ -2722,7 +2727,8 @@ struct InlineChatView: View {
                 description: idea.summary.isEmpty ? nil : idea.summary,
                 externalURL: idea.sourceURL.flatMap(URL.init(string:)),
                 imageURL: idea.heroImageURL.flatMap(URL.init(string:)),
-                sourceLabel: idea.sourceHost ?? "EXA"
+                sourceLabel: idea.sourceHost ?? "EXA",
+                requestContext: request.prompt
             )
 
             async let structuredTask: RecipeDraft? = {
@@ -2750,6 +2756,11 @@ struct InlineChatView: View {
                     return
                 }
 
+                guard request.accepts(draft) else {
+                    insertRecipeRestrictionError(conversationId: convId)
+                    return
+                }
+
                 if draft.imageData == nil, let data = imageData, !data.isEmpty {
                     draft.imageData = data
                 }
@@ -2772,8 +2783,9 @@ struct InlineChatView: View {
 
     /// Tap em uma Ideia Rápida (gerada pela LLM, só com itens da despensa).
     /// Pede ao modelo a receita completa estruturada e exibe inline na conversa.
-    private func handleQuickIdeaTap(_ idea: RecipeQuickIdea) {
+    private func handleQuickIdeaTap(_ idea: RecipeQuickIdea, payload: ResultsPayload) {
         let convId = ensureConversation()
+        let request = payload.request
         let loadingId = beginRecipeCreation(title: idea.title, sourceLabel: String(localized: "Ideias Rápidas"))
 
         let pantryItems = (try? modelContext.fetch(FetchDescriptor<UnifiedItem>())) ?? []
@@ -2783,6 +2795,7 @@ struct InlineChatView: View {
         let instruction = """
         Monte a receita completa "\(idea.title)" usando APENAS ingredientes desta despensa: \(pantryList).
         Não inclua nenhum ingrediente fora da lista. Use medidas realistas, passos curtos e claros.
+        \(request.prompt)
 
         Responda EXATAMENTE neste formato (sem texto antes ou depois):
 
@@ -2790,6 +2803,8 @@ struct InlineChatView: View {
         _Descrição curta_
         Categoria: Nome do caderno
         Ingrediente principal: \(idea.mainIngredient.isEmpty ? "(ingrediente principal)" : idea.mainIngredient)
+        Tempo total: N min
+        Porções: N
 
         **Ingredientes**
         - 200g de Ingrediente
@@ -2810,7 +2825,8 @@ struct InlineChatView: View {
             await performQuickIdeaExpansion(
                 instruction: instruction,
                 loadingId: loadingId,
-                conversationId: convId
+                conversationId: convId,
+                request: request
             )
         }
     }
@@ -2820,7 +2836,8 @@ struct InlineChatView: View {
     private func performQuickIdeaExpansion(
         instruction: String,
         loadingId: UUID,
-        conversationId: UUID
+        conversationId: UUID,
+        request: RecipeIdeaRequest
     ) async {
         // Não exigir `apiKey` local: em Release a OpenAI key direta é vazia
         // por design — o backend de IA roda via Supabase Edge Function
@@ -2861,6 +2878,12 @@ struct InlineChatView: View {
                     content: content,
                     conversationId: conversationId
                 )
+                guard let card = parseRecipeDetailCard(from: message),
+                      request.accepts(ingredients: card.ingredients.map(\.name),
+                                      totalMinutes: card.totalMinutes, servings: card.servings) else {
+                    insertRecipeRestrictionError(conversationId: conversationId)
+                    return
+                }
                 pendingRecipeResultMessageID = message.id
                 insertMessage(message)
             }
@@ -2873,6 +2896,14 @@ struct InlineChatView: View {
         let id = UUID()
         activeRecipeCreation = RecipeCreationProgressState(id: id, title: title, sourceLabel: sourceLabel)
         return id
+    }
+
+    private func insertRecipeRestrictionError(conversationId: UUID) {
+        let message = ChatMessage(role: .assistant,
+                                  content: String(localized: "Esta receita não atende às restrições solicitadas. Tente outra ideia."),
+                                  conversationId: conversationId)
+        pendingRecipeResultMessageID = message.id
+        insertMessage(message)
     }
 
     private func finishRecipeCreation(id: UUID) {
@@ -2915,6 +2946,10 @@ struct InlineChatView: View {
         if let mainIngredient, !mainIngredient.isEmpty {
             lines.append("Ingrediente principal: \(mainIngredient)")
         }
+        if let minutes = RecipeIdeaRequest.totalMinutes(in: draft) {
+            lines.append("Tempo total: \(minutes) min")
+        }
+        lines.append("Porções: \(draft.servings)")
         lines.append("")
         lines.append("**Ingredientes**")
         for ing in draft.ingredients {
@@ -2958,6 +2993,11 @@ struct InlineChatView: View {
         var occasionRaw: String?
         var refinement: String?
         var customQuery: String?
+
+        var request: RecipeIdeaRequest {
+            RecipeIdeaRequest(occasion: occasionRaw.flatMap(RecipeIdeaOccasion.init(rawValue:))?.label,
+                              refinement: refinement, customQuery: customQuery)
+        }
 
         init(
             ideas: [RecipeIdeaResult],
@@ -3020,6 +3060,8 @@ struct RecipeCardData {
     let mainIngredient: String?
     let ingredients: [(name: String, detail: String)]
     let steps: [String]
+    var totalMinutes: Int? = nil
+    var servings: Int? = nil
 }
 
 private extension String {
