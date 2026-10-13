@@ -69,7 +69,7 @@ struct RecipeStructurer {
     // MARK: - OpenAI
 
     private func structureWithOpenAI(text: String, hints: Hints) async throws -> RecipeDraft {
-        let systemPrompt = Self.systemPrompt
+        let systemPrompt = Self.instructions(hints: hints)
         let userPrompt = Self.userPrompt(text: text, hints: hints)
         RecipeImportLogger.debug("openai prompts systemChars=\(systemPrompt.count) userChars=\(userPrompt.count)")
 
@@ -119,6 +119,12 @@ struct RecipeStructurer {
     }
 
     // MARK: - Parsing
+
+    static func instructions(hints: Hints) -> String {
+        guard let context = hints.requestContext?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !context.isEmpty else { return systemPrompt }
+        return systemPrompt + "\n\n" + context + "\nAdapte a receita da fonte quando necessário para cumprir o pedido. As restrições do pedido têm prioridade sobre a preservação dos ingredientes e das quantidades da fonte; aplique a adaptação também em todos os passos."
+    }
 
     static func parse(dict: [String: Any]) -> RecipeDraft {
         RecipeImportLogger.debug("parse start keys=\(dict.keys.sorted().joined(separator: ","))")

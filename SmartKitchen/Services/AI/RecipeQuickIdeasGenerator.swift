@@ -34,7 +34,22 @@ struct RecipeIdeaRequest {
         \(text)
         As restrições deste pedido têm prioridade sobre o título sugerido, a receita da fonte e os itens da despensa.
         Respeite o tempo total e as porções solicitadas. Se não for possível, não ofereça uma receita incompatível.
+        \(generationRules)
         """
+    }
+
+    var generationRules: String {
+        var rules = ["Restrições obrigatórias para ingredientes E passos do preparo:"]
+        if excludesMilk {
+            rules.append("Não use leite animal, queijo, manteiga, iogurte, nata, requeijão ou creme de leite, mesmo se constarem na despensa ou na receita original. Não acrescente esses ingredientes nos passos. Alternativas vegetais explicitamente identificadas são permitidas.")
+        }
+        if let maximumMinutes { rules.append("Tempo total máximo: \(maximumMinutes) minutos, incluindo preparo e cozimento.") }
+        if let requestedServings { rules.append("Número exato de porções: \(requestedServings). Ajuste todas as quantidades para essas porções.") }
+        return rules.joined(separator: "\n")
+    }
+
+    func allowedPantryItems(_ names: [String]) -> [String] {
+        excludesMilk ? names.filter { !Self.containsDairy($0) } : names
     }
 
     var maximumMinutes: Int? {
@@ -52,8 +67,8 @@ struct RecipeIdeaRequest {
         Self.normalized(text).range(of: #"\b(?:sem leite|sem (?:nenhum )?laticinio[s]?|without milk|no milk|milk free|dairy free|no dairy|without dairy|sans lait|sin leche|ohne milch|senza latte)\b"#, options: .regularExpression) != nil
     }
 
-    func accepts(ingredients: [String], totalMinutes: Int?, servings: Int?) -> Bool {
-        if excludesMilk, ingredients.contains(where: Self.containsDairy) { return false }
+    func accepts(ingredients: [String], steps: [String] = [], totalMinutes: Int?, servings: Int?) -> Bool {
+        if excludesMilk, (ingredients + steps).contains(where: Self.containsDairy) { return false }
         if let maximumMinutes {
             guard let totalMinutes, totalMinutes > 0, totalMinutes <= maximumMinutes else { return false }
         }
@@ -64,6 +79,7 @@ struct RecipeIdeaRequest {
     func accepts(_ draft: RecipeDraft) -> Bool {
         let knownTime = draft.prepTimeConfidence == .high && draft.cookTimeConfidence == .high
         return accepts(ingredients: draft.ingredients.map(\.name),
+                       steps: draft.steps.map(\.instruction),
                        totalMinutes: knownTime ? Self.totalMinutes(in: draft) : nil,
                        servings: draft.servingsConfidence == .high ? draft.servings : nil)
     }

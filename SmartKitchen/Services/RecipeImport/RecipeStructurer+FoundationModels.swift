@@ -20,7 +20,7 @@ extension RecipeStructurer {
         }
         RecipeImportLogger.info("FoundationModels available, generating draft")
 
-        let instructions = Self.systemPrompt
+        let instructions = Self.instructions(hints: hints)
         let session = LanguageModelSession(instructions: instructions)
         let prompt = Self.userPrompt(text: text, hints: hints)
 

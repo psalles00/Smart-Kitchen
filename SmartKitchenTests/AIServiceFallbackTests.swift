@@ -48,6 +48,37 @@ final class RecipeIdeaRequestTests: XCTestCase {
         XCTAssertFalse(request.accepts(draft), "Invalid time totals must not overflow")
     }
 
+    func testExcludedPantryFoodIsRemovedBeforeGenerationWithoutChangingOriginalInventory() {
+        let request = RecipeIdeaRequest(occasion: nil, refinement: nil, customQuery: original)
+        let pantry = ["Arroz", "Leite integral", "Ovos", "Tomate", "Leite de coco", "Manteiga"]
+        XCTAssertEqual(request.allowedPantryItems(pantry), ["Arroz", "Ovos", "Tomate", "Leite de coco"])
+        XCTAssertEqual(pantry.count, 6)
+        XCTAssertEqual(RecipeIdeaRequest(occasion: nil, refinement: nil, customQuery: nil).allowedPantryItems(pantry), pantry)
+    }
+
+    func testRejectsDairyAddedOnlyInInstructionsForQuickAndWebRecipes() {
+        let request = RecipeIdeaRequest(occasion: nil, refinement: nil, customQuery: original)
+        XCTAssertFalse(request.accepts(ingredients: ["Arroz", "Ovos"], steps: ["Adicione leite para cremosidade."], totalMinutes: 15, servings: 1))
+        XCTAssertTrue(request.accepts(ingredients: ["Arroz", "Ovos"], steps: ["Sirva o arroz com os ovos."], totalMinutes: 15, servings: 1))
+        var draft = RecipeStructurer.parse(dict: ["prep_time_minutes": 5, "cook_time_minutes": 10, "servings": 1])
+        draft.ingredients = [.init(name: "Ovos")]
+        draft.steps = [.init(order: 1, instruction: "Bata os ovos com leite.")]
+        XCTAssertFalse(request.accepts(draft))
+        draft.steps = [.init(order: 1, instruction: "Bata os ovos.")]
+        XCTAssertTrue(request.accepts(draft))
+    }
+
+    func testRecipeStructuringPromotesAdaptationConstraintsToBothModelInstructions() {
+        let request = RecipeIdeaRequest(occasion: nil, refinement: nil, customQuery: original)
+        let instructions = RecipeStructurer.instructions(hints: .init(requestContext: request.prompt))
+        XCTAssertTrue(instructions.contains(original))
+        XCTAssertTrue(instructions.contains("Não use leite animal"))
+        XCTAssertTrue(instructions.contains("Tempo total máximo: 20"))
+        XCTAssertTrue(instructions.contains("Número exato de porções: 1"))
+        XCTAssertTrue(instructions.contains("Adapte a receita da fonte"))
+        XCTAssertEqual(RecipeStructurer.instructions(hints: .init()), RecipeStructurer.systemPrompt)
+    }
+
     func testCanonicalCardMetadataAndEnglishRequest() {
         let content = "**Omelete**\nTempo total: 15 min\nPorções: 1\n**Ingredientes**\n- 2 un de Ovos"
         XCTAssertEqual(RecipeIdeaRequest.totalMinutes(in: content), 15)

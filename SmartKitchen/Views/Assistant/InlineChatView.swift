@@ -2789,7 +2789,7 @@ struct InlineChatView: View {
         let loadingId = beginRecipeCreation(title: idea.title, sourceLabel: String(localized: "Ideias Rápidas"))
 
         let pantryItems = (try? modelContext.fetch(FetchDescriptor<UnifiedItem>())) ?? []
-        let pantryNames = pantryItems.filter { $0.isPantry }.map(\.name)
+        let pantryNames = request.allowedPantryItems(pantryItems.filter { $0.isPantry }.map(\.name))
         let pantryList = pantryNames.isEmpty ? "(despensa vazia)" : pantryNames.joined(separator: ", ")
 
         let instruction = """
@@ -2849,9 +2849,10 @@ struct InlineChatView: View {
         }
 
         var msgs: [[String: Any]] = []
-        let systemPrompt = buildSystemPrompt(includeInventoryContext: true)
+        let systemPrompt = buildSystemPrompt(includeInventoryContext: false)
         msgs.append(["role": "system", "content": systemPrompt])
         msgs.append(["role": "system", "content": responseLanguageSystemMessage(for: latestConversationUserText())])
+        msgs.append(["role": "system", "content": request.prompt])
         msgs.append(["role": "user", "content": instruction])
 
         do {
@@ -2880,6 +2881,7 @@ struct InlineChatView: View {
                 )
                 guard let card = parseRecipeDetailCard(from: message),
                       request.accepts(ingredients: card.ingredients.map(\.name),
+                                      steps: card.steps,
                                       totalMinutes: card.totalMinutes, servings: card.servings) else {
                     insertRecipeRestrictionError(conversationId: conversationId)
                     return
