@@ -160,3 +160,17 @@ final class FailingWriteFoodCache: NutritionFoodCaching {
         throw URLError(.cannotFindHost)
     }
 }
+
+@MainActor
+final class TrackingFoodCache: NutritionFoodCaching {
+    var isEnabled = true
+    var hit: Per100gNutrition?
+    private(set) var writes: [Per100gNutrition] = []
+
+    func lookup(canonicalName: String, locale: String) async -> Per100gNutrition? { hit }
+
+    func upsert(_ food: Per100gNutrition) async throws -> UUID {
+        writes.append(food)
+        return UUID()
+    }
+}

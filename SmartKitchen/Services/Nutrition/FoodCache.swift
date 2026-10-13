@@ -44,6 +44,26 @@ struct Per100gNutrition: Codable, Sendable {
     var hasMacros: Bool {
         kcal != nil && protein != nil && carbs != nil && fat != nil
     }
+
+    /// Conservative physical consistency checks for a per-100g reference.
+    /// These reject corrupt mappings; they do not certify a product identity.
+    var hasReliableMacros: Bool {
+        guard let kcal, let protein, let carbs, let fat,
+              kcal.isFinite, (0...950).contains(kcal),
+              [protein, carbs, fat].allSatisfy({ $0.isFinite && (0...100).contains($0) }),
+              protein + carbs + fat <= 110 else { return false }
+        let energy = 4 * protein + 4 * carbs + 9 * fat
+        guard abs(kcal - energy) <= max(40, energy * 0.3) else { return false }
+        let fattyAcids = [saturatedFat, monounsaturatedFat, polyunsaturatedFat].compactMap { $0 }
+        guard fattyAcids.allSatisfy({ $0.isFinite && $0 >= 0 && $0 <= fat + 1.5 }),
+              fattyAcids.reduce(0, +) <= fat + 2 else { return false }
+        let optionalGrams = [sugar, addedSugar, fiber].compactMap { $0 }
+        guard optionalGrams.allSatisfy({ $0.isFinite && (0...100).contains($0) }),
+              [cholesterol, sodium, potassium].compactMap({ $0 }).allSatisfy({ $0.isFinite && (0...100_000).contains($0) }) else { return false }
+        if let sugar, sugar > carbs + 1.5 { return false }
+        if let addedSugar, addedSugar > (sugar ?? carbs) + 1.5 { return false }
+        return true
+    }
 }
 
 /// Shared remote cache of canonical foods (per-100g) backed by Supabase.

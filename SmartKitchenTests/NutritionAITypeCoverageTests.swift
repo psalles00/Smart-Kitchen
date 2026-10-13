@@ -278,4 +278,142 @@ final class NutritionAITypeCoverageTests: XCTestCase {
         XCTAssertEqual(items.map(\.quantity), [150, 100, 120])
         XCTAssertEqual(items.map(\.unit), ["g", "g", "g"])
     }
+
+    func testReferenceRejectsImpossibleCaloriesAndFatSubtotals() {
+        var food = NutritionAITestFixtures.rice.per100g(appName: "arroz branco")
+        XCTAssertTrue(food.hasReliableMacros)
+        food.kcal = 1
+        XCTAssertFalse(food.hasReliableMacros)
+        food.kcal = 130
+        food.fat = 1.99
+        food.saturatedFat = 1.99
+        food.monounsaturatedFat = 1.99
+        food.polyunsaturatedFat = 4.54
+        XCTAssertFalse(food.hasReliableMacros)
+        food.protein = .infinity
+        XCTAssertFalse(food.hasReliableMacros)
+    }
+
+    func testUSDARawResponseCannotSubstituteBrandOrFoodForm() throws {
+        for (name, display) in [
+            ("Coca Cola Original US", "Carbonated beverage cola Mexico"),
+            ("Nestle Moça Integral condensed milk Brazil", "Milk canned condensed sweetened"),
+            ("Kelloggs cereal", "Kelloggs Nutri Grain cereal bars"),
+            ("Nutella", "Nutella sandwich on wheat bread"),
+            ("Nutella", "Nutella hazelnut spread with cocoa"),
+            ("arroz branco", "Rice white with chicken soup")
+        ] {
+            let data = try JSONSerialization.data(withJSONObject: ["items": [[
+                "name": name, "display_name": display,
+                "kcal_per_100g": 130, "protein_per_100g": 2.69, "carbs_per_100g": 28.17, "fat_per_100g": 0.28
+            ]]])
+            XCTAssertTrue(USDANutritionLookup.parse(data: data, locale: "pt-BR").isEmpty, name)
+        }
+        XCTAssertTrue(USDANutritionLookup.matchesIdentity("Rice white long grain cooked", requestedName: "arroz branco cozido"))
+        XCTAssertFalse(USDANutritionLookup.matchesIdentity("Rice white raw", requestedName: "arroz branco cozido"))
+        XCTAssertTrue(USDANutritionLookup.matchesIdentity("Nutella", requestedName: "Nutella"))
+    }
+
+    func testLocalizedProductRetainsSourceVariantAndCountryForLookup() {
+        let items = NutritionItemParser.reconciledItems(
+            [.init(name: "Nutella", quantity: 100, unit: "g")],
+            description: "15g de Nutella vendida no Reino Unido"
+        )
+        XCTAssertEqual(items.count, 1)
+        XCTAssertEqual(items.first?.name, "Nutella")
+        XCTAssertEqual(items.first?.referenceName, "Nutella vendida no Reino Unido")
+        XCTAssertEqual(items.first?.quantity, 15)
+        XCTAssertEqual(items.first?.unit, "g")
+        let unmeasured = NutritionItemParser.reconciledItems(
+            [.init(name: "Nutella", quantity: nil, unit: nil)], description: "Nutella vendida no Reino Unido"
+        )
+        XCTAssertEqual(unmeasured.first?.referenceName, "Nutella vendida no Reino Unido")
+        XCTAssertNil(unmeasured.first?.quantity)
+    }
+
+    func testBrandedComponentsKeepOriginalContextWithoutAssumingModelOrder() {
+        let items = NutritionItemParser.reconciledItems(
+            [.init(name: "Coca-Cola", quantity: nil, unit: nil), .init(name: "Nutella", quantity: nil, unit: nil)],
+            description: "15g Nutella UK e 20 fl oz Coca-Cola Original EUA"
+        )
+        XCTAssertEqual(items.map(\.referenceName), ["Coca-Cola Original EUA", "Nutella UK"])
+        XCTAssertEqual(items.map(\.quantity), [20, 15])
+        XCTAssertEqual(items.map(\.unit), ["fl oz", "g"])
+        let ambiguous = NutritionItemParser.reconciledItems(
+            [.init(name: "Nutella", quantity: nil, unit: nil), .init(name: "Nutella", quantity: nil, unit: nil)],
+            description: "15g Nutella UK e 15g Nutella EUA"
+        )
+        XCTAssertTrue(ambiguous.isEmpty)
+    }
+
+    func testGenericLocalNameCannotBypassBrandedSourceReference() async throws {
+        let input = "20g Nestle Moça Integral Brazil"
+        let cache = TrackingFoodCache()
+        let ai = MockNutritionAIClient()
+        ai.chatContent = """
+        {"display_name":"Moça Integral","kcal_per_100g":325,"protein_per_100g":7,"carbs_per_100g":55,"fat_per_100g":8}
+        """
+        let result = try await NutritionAIService(
+            ai: ai, usda: MockUSDANutritionLookup(foodsByName: [:]), exa: EmptyExaNutritionLookup(),
+            parser: MockNutritionItemParser(itemsByDescription: [input: [.init(name: "leite", quantity: 20, unit: "g")]]), cache: cache
+        ).analyzeText(description: input)
+        XCTAssertEqual(ai.chatCallCount, 1)
+        XCTAssertEqual(result.calories, 65)
+        XCTAssertEqual(result.name, "Nestle Moça Integral Brazil")
+        XCTAssertFalse(result.reviewNotes.isEmpty)
+        XCTAssertTrue(cache.writes.isEmpty)
+        XCTAssertTrue(String(describing: ai.lastChatMessages).contains("Nestle Moça Integral Brazil"))
+    }
+
+    func testExaRequiresEachFoodsOwnReturnedManufacturerCitation() {
+        let source = "https://www.nutella.com/uk/en/products/nutella"
+        let item: [String: Any] = [
+            "name": "Nutella UK", "citation_url": source,
+            "kcal_per_100g": 539, "protein_per_100g": 6.3, "carbs_per_100g": 57.5, "fat_per_100g": 30.9
+        ]
+        XCTAssertEqual(ExaNutritionLookup.parse(answer: ["items": [item]], citations: [source], locale: "pt-BR").count, 1)
+        XCTAssertTrue(ExaNutritionLookup.parse(answer: ["items": [item]], citations: ["https://fdc.nal.usda.gov/unrelated"], locale: "pt-BR").isEmpty)
+        var missingSource = item
+        missingSource.removeValue(forKey: "citation_url")
+        XCTAssertTrue(ExaNutritionLookup.parse(answer: ["items": [missingSource]], citations: [source], locale: "pt-BR").isEmpty)
+        var impossible = item
+        impossible["kcal_per_100g"] = 1
+        XCTAssertTrue(ExaNutritionLookup.parse(answer: ["items": [impossible]], citations: [source], locale: "pt-BR").isEmpty)
+    }
+
+    func testLLMEstimatesWarnWithoutPublishingToSharedFoodCache() async throws {
+        let ai = MockNutritionAIClient()
+        ai.chatContent = """
+        {"display_name":"Nutella UK estimada","kcal_per_100g":539,"protein_per_100g":6.3,"carbs_per_100g":57.5,"fat_per_100g":30.9}
+        """
+        let input = "15g Nutella UK"
+        let cache = TrackingFoodCache()
+        let service = NutritionAIService(
+            ai: ai, usda: MockUSDANutritionLookup(foodsByName: [:]), exa: EmptyExaNutritionLookup(),
+            parser: MockNutritionItemParser(itemsByDescription: [input: [.init(name: "Nutella UK", quantity: 15, unit: "g")]]), cache: cache
+        )
+        let result = try await service.analyzeText(description: input)
+        XCTAssertEqual(result.calories, 81)
+        XCTAssertEqual(result.servingSizeGrams, 15)
+        XCTAssertFalse(result.reviewNotes.isEmpty)
+        XCTAssertTrue(cache.writes.isEmpty)
+        XCTAssertNil(result.cachedFoodIDs)
+    }
+
+    func testInvalidCacheReferenceFallsThroughToValidLookup() async throws {
+        let rice = NutritionAITestFixtures.rice.per100g(appName: "arroz branco")
+        let cache = TrackingFoodCache()
+        var corrupt = rice
+        corrupt.kcal = 1
+        cache.hit = corrupt
+        let input = "150g arroz branco"
+        let service = NutritionAIService(
+            ai: MockNutritionAIClient(), usda: MockUSDANutritionLookup(foodsByName: [FoodCache.canonicalize("arroz branco"): rice]), exa: EmptyExaNutritionLookup(),
+            parser: MockNutritionItemParser(itemsByDescription: [input: [.init(name: "arroz branco", quantity: 150, unit: "g")]]), cache: cache
+        )
+        let result = try await service.analyzeText(description: input)
+        XCTAssertEqual(result.calories, 195)
+        XCTAssertEqual(cache.writes.count, 1)
+        XCTAssertEqual(cache.writes.first?.kcal, 130)
+    }
 }

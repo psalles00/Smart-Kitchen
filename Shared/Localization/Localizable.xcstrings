@@ -2116,6 +2116,53 @@
         }
       }
     },
+    "Valores estimados pela IA, sem rótulo confirmado. Confira marca, variante, país e porção antes de registrar." : {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valores estimados pela IA, sem rótulo confirmado. Confira marca, variante, país e porção antes de registrar."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI estimates without a verified label. Check the brand, variant, country and portion before logging."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valores estimados por la IA sin una etiqueta confirmada. Comprueba la marca, variante, país y porción antes de registrar."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valeurs estimées par l’IA sans étiquette vérifiée. Vérifiez la marque, la variante, le pays et la portion avant d’enregistrer."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KI-Schätzwerte ohne bestätigtes Etikett. Prüfe Marke, Variante, Land und Portion vor dem Eintragen."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valori stimati dall’IA senza etichetta verificata. Controlla marca, variante, paese e porzione prima di registrare."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "確認済みの栄養表示がないAI推定値です。記録前にブランド、種類、国、分量を確認してください。"
+          }
+        }
+      }
+    },
     "Suco estimado sem diluição. Medidas caseiras são aproximadas; revise a quantidade e o preparo." : {
       "extractionState": "manual",
       "localizations": {

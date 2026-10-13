@@ -13,6 +13,8 @@ final class NutritionItemParser {
         var name: String       // free-form, e.g. "ovo"
         var quantity: Double?  // nil when unspecified
         var unit: String?      // free-form unit ("g", "ml", "un", "xícara")
+        var referenceContext: String? = nil
+        var referenceName: String { referenceContext ?? name }
     }
 
     private let ai: any NutritionAIClient
@@ -45,7 +47,9 @@ final class NutritionItemParser {
         açúcar (quantidade 6, unidade "colher de sopa"). Nunca inclua medida no nome \
         do alimento nem substitua uma quantidade explícita por uma porção padrão.
         Escreva os nomes em \(AppLocalization.current().language.aiModelLanguageName), \
-        preservando marca, variante, preparo e país quando informados. "fl oz" \
+        preservando marca, variante, preparo e país quando informados. \
+        Copie em source_text o trecho original completo de cada alimento, incluindo \
+        sua marca, variante e país, sem traduzir esse campo. "fl oz" \
         é volume dos EUA; "oz" é peso. Preserve a unidade indicada na embalagem. \
         Uma medida no final do texto também é explícita. "Coca-Cola Original \
         dos EUA, uma garrafa de 20 fl oz" é um único alimento de 20 fl oz; \
@@ -75,10 +79,11 @@ final class NutritionItemParser {
                                 "type": "object",
                                 "properties": [
                                     "name":     ["type": "string"],
+                                    "source_text": ["type": "string"],
                                     "quantity": ["type": ["number", "null"]],
                                     "unit":     ["type": ["string", "null"]]
                                 ],
-                                "required": ["name"]
+                                "required": ["name", "source_text"]
                             ]
                         ]
                     ],
@@ -116,7 +121,14 @@ final class NutritionItemParser {
                   !name.isEmpty else { continue }
             let qty = Self.numeric(entry["quantity"])
             let unit = (entry["unit"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
-            items.append(ParsedItem(name: name, quantity: qty, unit: unit))
+            var item = ParsedItem(name: name, quantity: qty, unit: unit)
+            if let original = entry["source_text"] as? String,
+               !original.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+               trimmed.range(of: original, options: [.caseInsensitive, .diacriticInsensitive]) != nil {
+                let references = Self.expandedItems(from: [.init(name: original, quantity: nil, unit: nil)])
+                if references.count == 1 { item.referenceContext = references[0].name }
+            }
+            items.append(item)
         }
 
         if items.isEmpty {
@@ -192,14 +204,18 @@ final class NutritionItemParser {
             let name = cleanName(text.replacingCharacters(in: match.range, with: " "))
             if !name.isEmpty {
                 return ParsedItem(name: name, quantity: numeric(text.substring(with: match.range(at: 1))),
-                                  unit: canonicalUnit(text.substring(with: match.range(at: 2))))
+                                  unit: canonicalUnit(text.substring(with: match.range(at: 2))), referenceContext: item.referenceContext)
             }
         }
         if let match = firstMatch(in: trimmed, pattern: #"^(\d+(?:[\.,]\d+)?)\s+(.+)$"#),
-           LocalNutritionFallback.nutrition(for: cleanName(match[1])) != nil {
-            return ParsedItem(name: cleanName(match[1]), quantity: numeric(match[0]), unit: "un")
+           LocalNutritionFallback.nutrition(for: cleanName(match[1])) != nil
+            || cleanName(match[1]).range(of: #"(?i)^(?:ovos?|eggs?)\b"#, options: .regularExpression) != nil {
+            return ParsedItem(name: cleanName(match[1]), quantity: numeric(match[0]), unit: "un", referenceContext: item.referenceContext)
         }
-        return ParsedItem(name: cleanName(trimmed), quantity: item.quantity, unit: item.unit.map(canonicalUnit))
+        var cleaned = item
+        cleaned.name = cleanName(trimmed)
+        cleaned.unit = item.unit.map(canonicalUnit)
+        return cleaned
     }
 
     /// Preserve explicit quantities and missing components from a simple composite request.
@@ -207,24 +223,51 @@ final class NutritionItemParser {
     static func reconciledItems(_ items: [ParsedItem], description: String) -> [ParsedItem] {
         let expanded = expandedItems(from: items)
         let source = expandedItems(from: [ParsedItem(name: description, quantity: nil, unit: nil)])
-        guard source.contains(where: { $0.quantity != nil && $0.unit != nil }) else { return expanded }
-        // A translated/refined single product still has the source's explicit
-        // measure. Keep the model's identity rather than reintroducing raw prose.
-        if source.count == 1, expanded.count == 1, let quantity = source[0].quantity {
+        // Keep the localized display name and the source product context for
+        // lookups. Extraction must not silently drop a brand, variant or country.
+        if source.count == 1, expanded.count == 1 {
             var item = expanded[0]
-            item.quantity = quantity
-            item.unit = source[0].unit
+            if let quantity = source[0].quantity {
+                item.quantity = quantity
+                item.unit = source[0].unit
+            }
+            item.referenceContext = source[0].name
+            if LocalNutritionFallback.nutrition(for: item.name) != nil,
+               LocalNutritionFallback.nutrition(for: source[0].name) == nil {
+                item.name = source[0].name
+            }
             return [item]
         }
         // Restrict reconstruction to complete local composites. Other AI food names
         // may be translated, singularized or refined and must not be duplicated.
         guard source.count > 1, source.allSatisfy({ LocalNutritionFallback.nutrition(for: $0.name) != nil }) else {
-            return expanded.map { item in
-                guard let explicit = source.first(where: {
-                    FoodCache.canonicalize($0.name) == FoodCache.canonicalize(item.name) && $0.quantity != nil
-                }) else { return item }
-                return explicit
+            var unmatched = Set(source.indices)
+            var result: [ParsedItem] = []
+            for var item in expanded {
+                let nameTokens = identityTokens(item.name)
+                let localIdentity = LocalNutritionFallback.nutrition(for: item.name)?.canonicalName
+                let scores = unmatched.map { index -> (Int, Int) in
+                    let part = source[index]
+                    if item.referenceContext.map(FoodCache.canonicalize) == FoodCache.canonicalize(part.name) { return (index, 10_000) }
+                    if let localIdentity, LocalNutritionFallback.nutrition(for: part.name)?.canonicalName == localIdentity { return (index, 1_000) }
+                    return (index, nameTokens.intersection(identityTokens(part.name)).count)
+                }
+                guard let score = scores.map(\.1).max(), score > 0,
+                      scores.filter({ $0.1 == score }).count == 1,
+                      let index = scores.first(where: { $0.1 == score })?.0 else {
+                    // Ambiguous extraction must use the explicitly labelled
+                    // single-shot estimate, never publish a guessed reference.
+                    return []
+                }
+                unmatched.remove(index)
+                let part = source[index]
+                item.referenceContext = part.name
+                if LocalNutritionFallback.nutrition(for: item.name) != nil,
+                   LocalNutritionFallback.nutrition(for: part.name) == nil { item.name = part.name }
+                if let quantity = part.quantity { item.quantity = quantity; item.unit = part.unit }
+                result.append(item)
             }
+            return unmatched.isEmpty ? result : []
         }
         let result = source.map { part -> ParsedItem in
             let referenceName = LocalNutritionFallback.nutrition(for: part.name)?.canonicalName
@@ -239,6 +282,11 @@ final class NutritionItemParser {
             return matching
         }
         return result
+    }
+
+    private static func identityTokens(_ text: String) -> Set<String> {
+        let stopWords: Set<String> = ["de", "da", "do", "das", "dos", "of", "the", "no", "na", "in", "vendida", "vendido", "sold"]
+        return Set(FoodCache.canonicalize(text).split(whereSeparator: { !$0.isLetter && !$0.isNumber }).map(String.init)).subtracting(stopWords)
     }
 
     private static func firstMatch(in text: String, pattern: String) -> [String]? {
@@ -265,7 +313,7 @@ final class NutritionItemParser {
             .trimmingCharacters(in: .whitespacesAndNewlines.union(CharacterSet(charactersIn: ",;")))
     }
 
-    private static let measurePattern = #"(?<![\p{L}\d])(\d+(?:[\.,]\d+)?)\s*((?:imperial|uk)\s+fl\.?\s*oz|(?:us\s+)?fl\.?\s*oz|fluid\s+ounces?|ounces?|oz|kg|mg|g|gramas?|grams?|ml|millilit(?:er|re)s?|l|litros?|lit(?:er|re)s?|un|unidades?|und|x[ií]caras?|cs|c\.s\.|cc|c\.c\.|tbsp|tsp|colheres?\s+de\s+sopa|colheres?\s+de\s+ch[aá]|fatias?|por(?:ç|c)(?:a|o|oes|ões)|copos?)(?=\s|$|[,;)])"#
+    private static let measurePattern = #"(?<![\p{L}\d])(\d+(?:[\.,]\d+)?)\s*((?:imperial|uk)\s+fl\.?\s*oz|(?:us\s+)?fl\.?\s*oz|fluid\s+ounces?|ounces?|oz|kg|mg|g|gramas?|grams?|ml|millilit(?:er|re)s?|l|litros?|lit(?:er|re)s?|un|unidades?|und|x[ií]caras?|cs|c\.s\.|cc|c\.c\.|tbsp|tsp|colheres?\s+de\s+sopa|colheres?\s+de\s+ch[aá]|fatias?|por(?:ç|c)(?:ão|ao|ões|oes)|copos?|latas?|garrafas?|potes?|cans?|bottles?|jars?)(?=\s|$|[,;)])"#
 
     private static func canonicalUnit(_ raw: String) -> String {
         let unit = raw
@@ -282,6 +330,7 @@ final class NutritionItemParser {
         if ["floz", "usfloz", "fluidounce", "fluidounces"].contains(compact) { return "fl oz" }
         if ["imperialfloz", "ukfloz"].contains(compact) { return "imperial fl oz" }
         if unit == "unidade" || unit == "unidades" || unit == "und" { return "un" }
+        if ["lata", "latas", "garrafa", "garrafas", "pote", "potes", "can", "cans", "bottle", "bottles", "jar", "jars"].contains(unit) { return "un" }
         if unit == "xicaras" { return "xicara" }
         if ["colheres de sopa", "cs", "c.s.", "tbsp"].contains(unit) { return "colher de sopa" }
         if ["colheres de cha", "cc", "c.c.", "tsp"].contains(unit) { return "colher de cha" }

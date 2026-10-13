@@ -83,7 +83,9 @@ enum NutritionCalculator {
             cholesterolMg:       hasCholesterol   ? round1(cholesterol) : nil,
             sodiumMg:            hasSodium        ? round1(sodium)      : nil,
             potassiumMg:         hasPotassium     ? round1(potassium)   : nil,
-            reviewNotes: reviewNotes + (hasLemonJuice ? [String(localized: "Suco estimado sem diluição. Medidas caseiras são aproximadas; revise a quantidade e o preparo.")] : [])
+            reviewNotes: reviewNotes
+                + (hasLemonJuice ? [String(localized: "Suco estimado sem diluição. Medidas caseiras são aproximadas; revise a quantidade e o preparo.")] : [])
+                + (items.contains(where: { $0.per100g.source == "llm" }) ? [String(localized: "Valores estimados pela IA, sem rótulo confirmado. Confira marca, variante, país e porção antes de registrar.")] : [])
         )
     }
 
@@ -144,7 +146,7 @@ enum NutritionCalculator {
         case "copo", "copos":
             return qty * 200
         case "porcao", "porcoes":
-            return qty * defaultPortionGrams
+            return qty * (validServingGrams(servingGrams) ?? defaultPortionGrams)
         default:
             return qty * defaultPortionGrams
         }

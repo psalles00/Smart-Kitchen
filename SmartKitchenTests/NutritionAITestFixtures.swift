@@ -263,7 +263,7 @@ enum NutritionAITestFixtures {
             channel: "Voice transcript",
             input: "2 ovos cozidos",
             foods: [
-                ReliabilityFoodInput(name: "ovo", quantity: 2, unit: "un", reference: egg)
+                ReliabilityFoodInput(name: "ovos cozidos", quantity: 2, unit: "un", reference: egg)
             ],
             expected: ExpectedFoodAnalysis(
                 calories: 155, protein: 13, carbs: 1, fat: 11, grams: 100,
@@ -400,7 +400,7 @@ enum NutritionAITestFixtures {
             channel: "Voice transcript",
             input: "2 ovos cozidos e 1 banana",
             foods: [
-                ReliabilityFoodInput(name: "ovo", quantity: 2, unit: "un", reference: egg),
+                ReliabilityFoodInput(name: "ovos cozidos", quantity: 2, unit: "un", reference: egg),
                 ReliabilityFoodInput(name: "banana", quantity: 1, unit: "un", reference: banana)
             ],
             expected: ExpectedFoodAnalysis(

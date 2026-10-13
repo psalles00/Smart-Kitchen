@@ -57,7 +57,7 @@ final class NutritionAIService {
     /// Text-based nutrition analysis. Pipeline:
     /// 1. Parse `description` into discrete items (`{name, qty, unit}`).
     /// 2. For each item: Supabase cache → USDA FoodData Central → Exa → LLM fallback.
-    /// 3. Cache hits/misses are written back to Supabase (write-through).
+    /// 3. Validated references are written back; model estimates remain local.
     /// 4. `NutritionCalculator` does the final scaling+sum in pure Swift.
     func analyzeText(description: String) async throws -> FoodAnalysis {
         let trimmed = description.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -88,6 +88,9 @@ final class NutritionAIService {
             NutritionItemParser.reconciledItems(parsed, description: trimmed),
             originalDescription: trimmed
         )
+        guard !adjustedParsed.isEmpty else {
+            return try await legacyLLMEstimate(description: trimmed)
+        }
 
         // 2. Resolve per-100g for each item.
         let (resolved, ids) = await resolvePer100g(for: adjustedParsed)
@@ -146,7 +149,7 @@ final class NutritionAIService {
     // MARK: - Networking primitives
 
     /// Resolves per-100g data for each parsed item, going cache → USDA → Exa → LLM.
-    /// Successful USDA, Exa, or LLM lookups are written back to Supabase and the
+    /// Validated USDA and Exa lookups are written back to Supabase and the
     /// returned IDs are surfaced so the UI can attach votes.
     private func resolvePer100g(
         for items: [NutritionItemParser.ParsedItem]
@@ -159,21 +162,21 @@ final class NutritionAIService {
         let locale = AppLocalization.current().nutritionCacheLocaleIdentifier
 
         for (i, item) in items.enumerated() {
-            if Self.shouldUseLocalReferenceFirst(item.name),
-               let local = LocalNutritionFallback.nutrition(for: item.name) {
+            if Self.shouldUseLocalReferenceFirst(item.referenceName),
+               let local = LocalNutritionFallback.nutrition(for: item.referenceName) {
                 slots[i] = local
                 continue
             }
-            if Self.shouldResolveWithLLMOnly(item.name) {
+            if Self.shouldResolveWithLLMOnly(item.referenceName) {
                 pendingLLMOnly.append((i, item))
                 continue
             }
-            let canonical = FoodCache.canonicalize(item.name)
+            let canonical = FoodCache.canonicalize(item.referenceName)
             if let hit = await cache.lookup(canonicalName: canonical, locale: locale),
-               Self.shouldTrustCachedNutrition(hit, for: item.name) {
+               Self.shouldTrustCachedNutrition(hit, for: item.referenceName) {
                 slots[i] = hit
             } else {
-                pendingUSDA.append((i, item.name))
+                pendingUSDA.append((i, item.referenceName))
             }
         }
 
@@ -183,7 +186,7 @@ final class NutritionAIService {
             let usdaResults = await usda.fetchPer100g(for: names, locale: locale)
             for (offset, usdaItem) in usdaResults.enumerated() {
                 let slot = pendingUSDA[offset].index
-                if usdaItem.hasMacros {
+                if usdaItem.hasReliableMacros {
                     var copy = usdaItem
                     if cache.isEnabled {
                         do {
@@ -210,7 +213,7 @@ final class NutritionAIService {
                 let exaResults = try await exa.fetchPer100g(for: names, locale: locale)
                 for (offset, exaItem) in exaResults.enumerated() {
                     let slot = pendingExa[offset].index
-                    if exaItem.hasMacros {
+                    if exaItem.hasReliableMacros {
                         var copy = exaItem
                         if cache.isEnabled {
                             do {
@@ -237,16 +240,9 @@ final class NutritionAIService {
 
         for (i, item) in items.enumerated() where slots[i]?.hasMacros != true {
             if let llmEntry = await llmPer100gEstimate(for: item) {
-                var copy = llmEntry
-                if cache.isEnabled {
-                    do {
-                        let id = try await cache.upsert(llmEntry)
-                        copy.id = id
-                    } catch {
-                        LLMLog.error("FoodCache upsert (llm) failed: \(error.localizedDescription)")
-                    }
-                }
-                slots[i] = copy
+                // Model estimates stay local to this analysis. They must not
+                // become a shared reference for other users or later products.
+                slots[i] = llmEntry
             }
         }
 
@@ -314,18 +310,13 @@ final class NutritionAIService {
     }
 
     private static func shouldTrustCachedNutrition(_ food: Per100gNutrition, for name: String) -> Bool {
-        guard food.hasMacros else { return false }
+        guard food.hasReliableMacros else { return false }
         if shouldResolveWithLLMOnly(name) {
             return food.source == "llm"
         }
 
-        let display = normalizedFoodName(food.displayName ?? "")
-        let query = normalizedFoodName(name)
-        if food.source == "usda",
-           display.contains("strawberr"),
-           !query.contains("strawberr"),
-           !query.contains("morango") {
-            return false
+        if food.source == "usda" {
+            return USDANutritionLookup.matchesIdentity(food.displayName ?? "", requestedName: name)
         }
         return true
     }
@@ -352,7 +343,7 @@ final class NutritionAIService {
         serving_size_grams é a porção típica inteira desse alimento quando o usuário não informa quantidade.
         Use null para o que não souber estimar com confiança.
 
-        Alimento: \(item.name)
+        Alimento: \(item.referenceName)
         """
         let messages: [[String: Any]] = [["role": "user", "content": prompt]]
         do {
@@ -364,7 +355,7 @@ final class NutritionAIService {
                 acceptLanguage: AppLocalization.current().acceptLanguageHeader
             )
             guard let content = response.content, !content.isEmpty else { return nil }
-            return Self.parsePer100g(rawJSON: content, name: item.name)
+            return Self.parsePer100g(rawJSON: content, name: item.referenceName)
         } catch {
             LLMLog.error("LLM per-100g failed for \(item.name): \(error.localizedDescription)")
             return nil
@@ -389,7 +380,7 @@ final class NutritionAIService {
               let fat = d("fat_per_100g") else {
             return nil
         }
-        return Per100gNutrition(
+        let food = Per100gNutrition(
             canonicalName: FoodCache.canonicalize(name),
             locale: AppLocalization.current().nutritionCacheLocaleIdentifier,
             displayName: (obj["display_name"] as? String) ?? name,
@@ -411,6 +402,7 @@ final class NutritionAIService {
             upvotes: 0,
             downvotes: 0
         )
+        return food.hasReliableMacros ? food : nil
     }
 
     /// Last-ditch fallback when even item parsing fails: fire the original
@@ -428,7 +420,9 @@ final class NutritionAIService {
         """
         do {
             let raw = try await callText(prompt: prompt)
-            return try Self.parseFoodAnalysis(from: raw)
+            var estimate = try Self.parseFoodAnalysis(from: raw)
+            estimate.reviewNotes.append(String(localized: "Valores estimados pela IA, sem rótulo confirmado. Confira marca, variante, país e porção antes de registrar."))
+            return estimate
         } catch {
             if let local = LocalNutritionFallback.analyzeText(description) {
                 return local
