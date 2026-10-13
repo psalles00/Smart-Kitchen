@@ -111,7 +111,7 @@ struct RecipeIdeaRequest {
         // A prohibition such as "sem óleo ou manteiga" is not an addition.
         // Remove only explicit, bounded ingredient lists after a negation;
         // "sem manteiga; adicione leite" must still fail.
-        let ingredient = #"(?:leite|milk|lait|leche|milch|latte|queijo|cheese|fromage|queso|kase|formaggio|manteiga|butter|beurre|mantequilla|burro|iogurte|yogurt|yoghurt|joghurt|yaourt|yogur|nata|requeijao|cream|oleo|oil|huile|aceite|ol|olio)\b"#
+        let ingredient = #"(?:leite|milk|lait|leche|milch|latte|queijo|cheese|fromage|queso|kase|formaggio|manteiga|butter|beurre|mantequilla|burro|iogurte|yogurt|yoghurt|joghurt|yaourt|yogur|nata|requeijao|cream|oleo|oil|huile|aceite|ol|olio|gordura|fat|grasa|grasas|matiere grasse|matieres grasses|fett|grassi)\b"#
         let separator = #"(?:\s*,\s*|\s+(?:e|ou|nem|and|or|nor|et|y|o|ni|und|oder)\s+)"#
         let negation = #"\b(?:sem|without|sans|sin|ohne|senza|nao\s+(?:use|adicione|inclua|coloque|utilize)|do\s+not\s+(?:use|add|include))\s+"#
         let additions = normalized(step).replacingOccurrences(

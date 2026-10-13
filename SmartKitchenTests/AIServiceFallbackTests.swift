@@ -82,6 +82,10 @@ final class RecipeIdeaRequestTests: XCTestCase {
     func testStepExclusionsDoNotRejectTheValidNativeRecipe() {
         let request = RecipeIdeaRequest(occasion: nil, refinement: nil, customQuery: original)
         for step in ["Refogue o tomate por 2 minutos sem óleo ou manteiga.",
+                     "Frite os ovos mexidos sem gordura ou manteiga.",
+                     "Cook without fat or butter.", "Cocine sin grasa o mantequilla.",
+                     "Cuire sans matière grasse ou beurre.",
+                     "Ohne Fett oder Butter kochen.", "Cuocere senza grassi o burro.",
                      "Não use manteiga nem leite.", "Cook without butter or milk.",
                      "Sem óleo, manteiga ou leite, cozinhe os ovos."] {
             XCTAssertTrue(request.accepts(ingredients: ["Arroz", "Ovos", "Tomate"], steps: [step], totalMinutes: 15, servings: 1), step)
@@ -91,6 +95,7 @@ final class RecipeIdeaRequestTests: XCTestCase {
     func testStepNegationNeverHidesAnotherDairyAddition() {
         let request = RecipeIdeaRequest(occasion: nil, refinement: nil, customQuery: original)
         for step in ["Refogue sem manteiga; adicione leite.", "Não use leite, adicione manteiga.",
+                     "Sem gordura ou manteiga, adicione leite.", "Without fat or butter, add cream.",
                      "Sem óleo, use manteiga.", "Without butter, add milk.",
                      "Refogue o tomate sem pele e adicione queijo."] {
             XCTAssertFalse(request.accepts(ingredients: ["Arroz", "Ovos"], steps: [step], totalMinutes: 15, servings: 1), step)
