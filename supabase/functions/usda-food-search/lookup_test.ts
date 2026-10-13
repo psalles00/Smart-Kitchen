@@ -124,3 +124,47 @@ Deno.test("lookup keeps the requested identity on a valid complete match", async
   equal(result?.sodium_per_100g, 500)
   equal(result?.citation_url, "https://fdc.nal.usda.gov/fdc-app.html#/food-details/168862/nutrients")
 })
+
+Deno.test("unrequested compositions and competing brands cannot win by source score", async () => {
+  for (const [query, description] of [
+    ["rice cooked", "Rice cooked with squid"],
+    ["arroz cozido", "Rice cooked with squid"],
+    ["rice cooked", "Rice cooked squid"],
+    ["Nutella", "Nutella sandwich"],
+    ["Coke", "Minute Maid Coke fruit juice"],
+    ["Coke", "Pepsi Coke cola soft drink"],
+    ["egg", "Egg meat"],
+  ]) {
+    const wrong = { ...cerealFood(), description, dataType: "Foundation" }
+    equal(hasMeaningfulMatch(wrong, query), false)
+    const queries: string[] = []
+    const fakeFetch: typeof fetch = async (_input, init) => {
+      queries.push(JSON.parse(init!.body as string).query)
+      return Response.json({ foods: [wrong] })
+    }
+    equal(await lookupName(query, "TEST_KEY_NOT_REAL", fakeFetch), null)
+    equal(queries, candidateQueries(query))
+  }
+})
+
+Deno.test("ordinary food descriptors remain valid without relaxing explicit identity", () => {
+  equal(hasMeaningfulMatch({ description: "Rice white long grain enriched cooked" }, "rice cooked"), true)
+  equal(hasMeaningfulMatch({ description: "Nutella chocolate hazelnut spread Ferrero" }, "Nutella"), true)
+  equal(hasMeaningfulMatch({ description: "Coke cola soft drink carbonated" }, "Coke"), true)
+  equal(hasMeaningfulMatch({ description: "Rice white brown cooked" }, "rice white cooked"), false)
+  equal(hasMeaningfulMatch({ description: "Milk whole nonfat fluid" }, "milk whole"), false)
+  equal(hasMeaningfulMatch({ description: "Chicken raw cooked grilled" }, "chicken grilled"), false)
+  equal(hasMeaningfulMatch({ description: "Chicken raw cooked" }, "chicken raw"), false)
+  equal(hasMeaningfulMatch({ description: "Rice cooked with squid" }, "rice cooked with squid"), true)
+})
+
+Deno.test("USDA cooking, salt and milkfat fortification qualifiers preserve the food identity", () => {
+  equal(hasMeaningfulMatch({ description: "Egg, whole, cooked, hard-boiled" }, "egg"), true)
+  equal(hasMeaningfulMatch({ description: "Milk, whole, 3.25% milkfat, with added vitamin D" }, "milk whole"), true)
+  equal(hasMeaningfulMatch({ description: "Rice, white, long-grain, regular, enriched, cooked without salt" }, "rice cooked"), true)
+  equal(hasMeaningfulMatch({ description: "Rice white cooked without added salt and squid" }, "rice cooked"), false)
+  equal(hasMeaningfulMatch({ description: "Milk whole 3.25% milkfat with added vitamin D and Nutella" }, "milk whole"), false)
+  equal(hasMeaningfulMatch({ description: "Milk whole 15% milkfat with added vitamin D" }, "milk whole"), false)
+  equal(hasMeaningfulMatch({ description: "Rice white cooked with added salt" }, "rice cooked"), false)
+  equal(hasMeaningfulMatch({ description: "Egg whole raw hard-boiled" }, "egg raw"), false)
+})

@@ -96,21 +96,63 @@ function tokenSet(value: string) {
 }
 
 export function hasMeaningfulMatch(food: USDAFood, rawName: string) {
-  const queryTokens = [...tokenSet(rawName)]
-  if (queryTokens.length === 0) return false
+  const queryTokens = tokenSet(rawName)
+  if (queryTokens.size === 0) return false
 
-  const descriptionTokens = tokenSet(food.description ?? "")
-  if (!queryTokens.every((token) => descriptionTokens.has(token))) return false
+  const description = food.description ?? ""
+  const descriptionTokens = tokenSet(description)
+  if (![...queryTokens].every((token) => descriptionTokens.has(token))) return false
   // Shared brand/ingredient words do not make a cereal bar a breakfast cereal,
   // or powdered/condensed milk the requested plain milk.
   const distinctForms = [
     ["bar", "bars"], ["powder", "powdered"], ["condensed"],
     ["dehydrated", "dried"], ["formula", "babyfood"],
   ]
-  return distinctForms.every((forms) =>
+  if (!distinctForms.every((forms) =>
     !forms.some((form) => descriptionTokens.has(form)) ||
-    forms.some((form) => queryTokens.includes(form))
-  )
+    forms.some((form) => queryTokens.has(form))
+  )) return false
+
+  // A high-ranked USDA recipe is not an equivalent ingredient. Only allow
+  // ordinary descriptors of the requested food; an unknown extra ingredient,
+  // recipe form or brand must produce a lookup miss rather than a false match.
+  const descriptors = new Set([
+    "raw", "cooked", "regular", "fresh", "frozen", "enriched", "unenriched",
+    "whole", "sliced", "chopped", "peeled", "unpeeled", "unsalted",
+  ])
+  const families: Array<[string[], string[]]> = [
+    [["rice"], ["white", "brown", "long", "medium", "short", "grain", "parboiled"]],
+    [["chicken", "turkey", "beef", "pork", "fish"],
+      ["breast", "thigh", "leg", "drumstick", "wing", "meat", "only", "skin", "boneless", "lean", "ground"]],
+    [["apple", "apples"], ["with", "skin"]],
+    [["milk"], ["fluid", "nonfat", "skim"]],
+    [["egg", "eggs"], ["hard", "soft", "boiled", "poached", "scrambled"]],
+    [["coke", "coca"], ["coca", "cola", "coke", "soft", "drink", "carbonated", "beverage", "original", "classic"]],
+    [["nutella"], ["chocolate", "cocoa", "hazelnut", "spread", "ferrero", "original", "classic"]],
+  ]
+  for (const [foods, words] of families) {
+    if (foods.some((name) => queryTokens.has(name))) {
+      for (const word of words) descriptors.add(word)
+    }
+  }
+  const cookingMethods = ["grilled", "roasted", "boiled", "baked", "fried", "broiled", "steamed"]
+  if (queryTokens.has("raw") &&
+    ["cooked", ...cookingMethods].some((word) => descriptionTokens.has(word))) return false
+  if ((queryTokens.has("cooked") || cookingMethods.some((word) => queryTokens.has(word))) &&
+    descriptionTokens.has("raw")) return false
+  for (const variants of [["white", "brown"], ["whole", "nonfat", "skim"]]) {
+    const requested = variants.filter((word) => queryTokens.has(word))
+    if (requested.length && variants.some((word) => !requested.includes(word) && descriptionTokens.has(word))) return false
+  }
+  // USDA uses explicit neutral qualifiers as well as single-word descriptors.
+  // Remove only bounded phrases, never their following ingredient/brand text.
+  let qualifiedDescription = description.replace(/\bwithout\s+(?:added\s+)?(?:salt|fat|sugar)\b/gi, "")
+  if (queryTokens.has("milk")) {
+    qualifiedDescription = qualifiedDescription
+      .replace(/\b3[.,]25\s*%\s*milkfat\b/gi, "")
+      .replace(/\b(?:with|without)\s+(?:added\s+)?vitamins?\s+[abcdek](?:\d{1,2})?(?:\s+and\s+[abcdek](?:\d{1,2})?)?\b/gi, "")
+  }
+  return [...tokenSet(qualifiedDescription)].every((token) => queryTokens.has(token) || descriptors.has(token))
 }
 
 export function candidateQueries(rawName: string) {
