@@ -7,7 +7,7 @@ struct CalorieRingView: View {
     let goal: Int
 
     @Environment(\.colorScheme) private var colorScheme
-    @State private var displayedCalorieGoal = 0
+    private var remainingCalories: Int { max(goal - consumed, 0) }
 
     private var titleColor: Color {
         #if canImport(UIKit)
@@ -50,11 +50,12 @@ struct CalorieRingView: View {
             VStack(spacing: -8) {
                 Spacer(minLength: 74)
 
-                Text("\(displayedCalorieGoal)")
+                Text("\(remainingCalories)")
                     .font(titleFont)
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
                     .contentTransition(.numericText())
+                    .animation(.snappy(duration: 0.25), value: remainingCalories)
                     .foregroundStyle(titleColor)
 
                 remainingCaption
@@ -73,20 +74,6 @@ struct CalorieRingView: View {
         .frame(maxWidth: .infinity)
         .frame(minHeight: 206)
         .contentShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
-        .onAppear {
-            displayedCalorieGoal = 0
-
-            DispatchQueue.main.async {
-                withAnimation(.snappy(duration: 0.25)) {
-                    displayedCalorieGoal = goal
-                }
-            }
-        }
-        .onChange(of: goal) { _, newValue in
-            withAnimation(.snappy(duration: 0.25)) {
-                displayedCalorieGoal = newValue
-            }
-        }
     }
 
     private var calorieTrackerIcon: some View {
@@ -110,7 +97,7 @@ struct CalorieRingView: View {
     @ViewBuilder
     private var remainingCaption: some View {
         let format = String(localized: "de **%lld kcal** restantes")
-        let localizedText = String.localizedStringWithFormat(format, displayedCalorieGoal)
+        let localizedText = String.localizedStringWithFormat(format, goal)
         if let attributed = try? AttributedString(
             markdown: localizedText,
             options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)
