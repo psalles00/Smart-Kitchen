@@ -137,6 +137,27 @@ final class RecipeIdeaRequestTests: XCTestCase {
         XCTAssertFalse(request.accepts(draft))
     }
 
+    func testStructuredIngredientAmountSurvivesCardReload() throws {
+        for quantity in [-0.0, 0.0, 0.25, 0.125, 1.75, 200.0, 0.000001, 1e20] {
+            let encoded = try XCTUnwrap(AssistantRecipeIngredientAmount.encode(quantity))
+            let amount = AssistantRecipeIngredientAmount.decode(encoded + "Xícara")
+            let draft = RecipeStructurer.parse(dict: ["ingredients": [["name": "Arroz", "quantity": try XCTUnwrap(amount.quantity), "unit": try XCTUnwrap(amount.unit)]]])
+            XCTAssertEqual(draft.ingredients.first?.quantity, quantity)
+            XCTAssertEqual(draft.ingredients.first?.unit, "Xícara")
+        }
+        XCTAssertEqual(AssistantRecipeIngredientAmount.decode("0,25 xícara").quantity, 0.25)
+        XCTAssertEqual(AssistantRecipeIngredientAmount.encode(2), "2")
+        XCTAssertEqual(AssistantRecipeIngredientAmount.encode(-0.0), "0")
+    }
+
+    func testInvalidCardAmountNeverBecomesAQuantity() {
+        XCTAssertNil(AssistantRecipeIngredientAmount.encode(.nan))
+        XCTAssertNil(AssistantRecipeIngredientAmount.encode(.infinity))
+        XCTAssertNil(AssistantRecipeIngredientAmount.encode(-1))
+        XCTAssertNil(AssistantRecipeIngredientAmount.decode("1e999 g").quantity)
+        XCTAssertNil(AssistantRecipeIngredientAmount.decode("NaN g").quantity)
+    }
+
     func testStepNegationNeverHidesAnotherDairyAddition() {
         let request = RecipeIdeaRequest(occasion: nil, refinement: nil, customQuery: original)
         for step in ["Refogue sem manteiga; adicione leite.", "Não use leite, adicione manteiga.",

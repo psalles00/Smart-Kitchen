@@ -2,6 +2,30 @@ import Foundation
 import SwiftUI
 import SwiftData
 
+/// Canonical Markdown amounts must survive displaying, reopening and saving a card.
+enum AssistantRecipeIngredientAmount {
+    static func encode(_ quantity: Double) -> String? {
+        guard quantity.isFinite, quantity >= 0 else { return nil }
+        if quantity == 0 { return "0" }
+        let raw = String(quantity)
+        return raw.hasSuffix(".0") ? String(raw.dropLast(2)) : raw
+    }
+
+    static func decode(_ detail: String) -> (quantity: Double?, unit: String?) {
+        let pattern = #"^([\d.,/]+(?:[eE][+-]?\d+)?)\s*(.*)$"#
+        guard let regex = try? NSRegularExpression(pattern: pattern),
+              let match = regex.firstMatch(in: detail, range: NSRange(detail.startIndex..., in: detail)) else {
+            return (nil, nil)
+        }
+        let text = detail as NSString
+        let raw = text.substring(with: match.range(at: 1)).replacingOccurrences(of: ",", with: ".")
+        let parsed = Double(raw)
+        let quantity = parsed.flatMap { $0.isFinite && $0 >= 0 ? $0 : nil }
+        let unit = text.substring(with: match.range(at: 2)).trimmingCharacters(in: .whitespaces)
+        return (quantity, unit.isEmpty ? nil : unit)
+    }
+}
+
 enum AssistantRecipeCardTextSanitizer {
     private static let optionPattern = #"^\s*(?:[-*•]\s*)?\*\*(.+?)\*\*\s*[—–\-]\s*(.+)$"#
 

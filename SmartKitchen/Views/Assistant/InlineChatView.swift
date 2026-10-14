@@ -2162,18 +2162,9 @@ struct InlineChatView: View {
 
         let ingredientArgs: [[String: Any]] = card.ingredients.map { ing in
             var dict: [String: Any] = ["name": ing.name]
-            // Try to parse quantity and unit from detail (e.g. "200g" or "2 un")
-            let detailPattern = #"^([\d.,/]+)\s*(.*)$"#
-            if let regex = try? NSRegularExpression(pattern: detailPattern),
-               let match = regex.firstMatch(in: ing.detail, range: NSRange(location: 0, length: (ing.detail as NSString).length)),
-               match.numberOfRanges >= 3 {
-                let qtyStr = (ing.detail as NSString).substring(with: match.range(at: 1)).replacingOccurrences(of: ",", with: ".")
-                if let qty = Double(qtyStr) {
-                    dict["quantity"] = qty
-                }
-                let unit = (ing.detail as NSString).substring(with: match.range(at: 2)).trimmingCharacters(in: .whitespaces)
-                if !unit.isEmpty { dict["unit"] = unit }
-            }
+            let amount = AssistantRecipeIngredientAmount.decode(ing.detail)
+            if let quantity = amount.quantity { dict["quantity"] = quantity }
+            if let unit = amount.unit { dict["unit"] = unit }
             return dict
         }
 
@@ -2956,8 +2947,7 @@ struct InlineChatView: View {
         lines.append("**Ingredientes**")
         for ing in draft.ingredients {
             var line = "- "
-            if let qty = ing.quantity {
-                let qtyStr = qty.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(qty))" : String(format: "%.1f", qty)
+            if let qty = ing.quantity, let qtyStr = AssistantRecipeIngredientAmount.encode(qty) {
                 line += qtyStr
             }
             if !ing.unit.isEmpty {
