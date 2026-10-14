@@ -192,6 +192,25 @@ final class RecipeIdeaRequestTests: XCTestCase {
         XCTAssertNil(AssistantRecipeIngredientAmount.decode("NaN g").quantity)
     }
 
+    func testOpeningRecipeAndImportEditorsPreservesFractionalAmounts() {
+        let section = RecipeIngredientSection(title: "Mistura")
+        for quantity in [0.25, 0.125, 1.75, 0.000001, 1e20] {
+            for sectionID in [nil, section.id] {
+                let ingredient = RecipeIngredient(name: "Aveia", quantity: quantity, unit: "xic", sectionID: sectionID)
+                let rows = [RecipeIngredientEditorItem].fromRecipe(sections: [section], ingredients: [ingredient])
+                let row = rows.first { !$0.isSection }
+                XCTAssertEqual(row.flatMap { Double($0.quantity) }, quantity)
+                XCTAssertEqual(row?.existingIngredientID, ingredient.id)
+                XCTAssertEqual(row?.unit, "xic")
+            }
+            let draft = IngredientDraft(name: "Aveia", quantity: quantity, unit: "xic")
+            let imported = [RecipeIngredientEditorItem].fromDrafts(sections: [], ingredients: [draft])
+            XCTAssertEqual(imported.first.flatMap { Double($0.quantity) }, quantity)
+        }
+        XCTAssertEqual(RecipeIngredientEditorItem.quantityText(nil), "")
+        XCTAssertEqual(RecipeIngredientEditorItem.quantityText(-1.25), "-1.25")
+    }
+
     func testStepNegationNeverHidesAnotherDairyAddition() {
         let request = RecipeIdeaRequest(occasion: nil, refinement: nil, customQuery: original)
         for step in ["Refogue sem manteiga; adicione leite.", "Não use leite, adicione manteiga.",

@@ -53,6 +53,12 @@ struct RecipeIngredientEditorItem: Identifiable {
         self.iconName = iconName
     }
 
+    /// Editable amounts must round-trip without presentation rounding.
+    static func quantityText(_ quantity: Double?) -> String {
+        guard let quantity else { return "" }
+        return AssistantRecipeIngredientAmount.encode(quantity) ?? String(quantity)
+    }
+
     var resolvedIconName: String? {
         if let iconName, !iconName.isEmpty {
             return iconName
@@ -275,11 +281,7 @@ extension Array where Element == RecipeIngredientEditorItem {
                 .ingredient(
                     existingID: ing.id,
                     name: ing.name,
-                    quantity: ing.quantity.map {
-                        $0.truncatingRemainder(dividingBy: 1) == 0
-                            ? String(format: "%.0f", $0)
-                            : String(format: "%.1f", $0)
-                    } ?? "",
+                    quantity: RecipeIngredientEditorItem.quantityText(ing.quantity),
                     unit: ing.unit,
                     preparationState: ing.preparationState,
                     category: ItemDatabase.shared.entry(forFilename: ing.iconName ?? "")?.categoria
@@ -303,11 +305,7 @@ extension Array where Element == RecipeIngredientEditorItem {
                     .ingredient(
                         existingID: ing.id,
                         name: ing.name,
-                        quantity: ing.quantity.map {
-                            $0.truncatingRemainder(dividingBy: 1) == 0
-                                ? String(format: "%.0f", $0)
-                                : String(format: "%.1f", $0)
-                        } ?? "",
+                        quantity: RecipeIngredientEditorItem.quantityText(ing.quantity),
                         unit: ing.unit,
                         preparationState: ing.preparationState,
                         category: ItemDatabase.shared.entry(forFilename: ing.iconName ?? "")?.categoria
@@ -343,10 +341,7 @@ extension Array where Element == RecipeIngredientEditorItem {
         let sortedSections = sections.sorted { $0.sortOrder < $1.sortOrder }
 
         func formatQuantity(_ q: Double?) -> String {
-            guard let q else { return "" }
-            return q.truncatingRemainder(dividingBy: 1) == 0
-                ? String(format: "%.0f", q)
-                : String(format: "%.1f", q)
+            RecipeIngredientEditorItem.quantityText(q)
         }
 
         var result: [RecipeIngredientEditorItem] = []
