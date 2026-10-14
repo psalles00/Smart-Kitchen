@@ -18,5 +18,35 @@ Depois abra o paywall na Central de Debug e confira ambos os planos sem comprar.
 Esta configuração e o teste local não alteram nem comprovam os preços publicados
 no App Store Connect. Confira os produtos correspondentes antes de enviar o app.
 
+## Evidência de 14/10/2026 no Xcode 27 beta
+
+O teste do catálogo real carregou os dois produtos, mas `Product.price` continuou
+retornando `99` e `49`, inclusive com idioma de teste inglês e região EUA.
+O teste original mantém as expectativas `99.90` / `49.90` e permanece reprovado
+nesse ambiente; os dois testes de simulação Básico/Premium passaram.
+
+`testStoreKitDecimalParsingWithIsolatedCatalogues` é um diagnóstico optativo,
+ativado com `SAVORIA_STOREKIT_DECIMAL_PROBE=1` no ambiente do processo de teste,
+configurado no Test action do scheme. Ele usa IDs e arquivos
+temporários próprios, sem comprar nem limpar transações.
+
+Com catálogo `en_US` e ponto decimal, a resposta bruta continha
+`priceFormatted: "R$99.90"` e `priceString: "99,9"`; `displayPrice` mostrava
+`R$99.90`, enquanto `price` era `99`. O plano mensal apresentou o mesmo padrão:
+`R$49.90`, `49,9` e `49`. Com `pt_BR` e vírgula no campo numérico, ambos os campos
+já vinham truncados. Portanto, não troque os valores do catálogo por vírgulas.
+Essa diferença sugere um problema de serialização ou interpretação no ambiente
+StoreKit de testes; não comprova um defeito da API de produção.
+
+Resultados preservados fora do repositório:
+`basic-label-storekit-retry-20261014.xcresult`,
+`storekit-us-test-region-20261014.xcresult` e
+`storekit-decimal-probes-v3-20261014.xcresult`.
+
+O cadastro de produção foi conferido no App Store Connect: app `6771525885`,
+Bundle ID `com.pedrosalles.smartkitchen.sync`. Não havia grupos ou produtos de
+assinatura cadastrados. O grupo `Savoria Premium` (`22478308`) foi criado;
+os preços dos produtos ainda precisam ser configurados e conferidos ali.
+
 Referências oficiais: [StoreKit Testing](https://developer.apple.com/documentation/storekittest/sktestsession)
 e [Product.displayPrice](https://developer.apple.com/documentation/storekit/product/displayprice).

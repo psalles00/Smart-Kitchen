@@ -7,6 +7,54 @@ import StoreKitTest
 
 @MainActor
 final class SavoriaDebugTests: XCTestCase {
+    func testStoreKitDecimalParsingWithIsolatedCatalogues() async throws {
+        // Diagnostic only: this creates temporary, isolated catalogues and exposes
+        // SDK serialization differences. The real catalogue assertion below
+        // remains part of the normal suite and must not be weakened.
+        guard ProcessInfo.processInfo.environment["SAVORIA_STOREKIT_DECIMAL_PROBE"] == "1" else {
+            throw XCTSkip("Set SAVORIA_STOREKIT_DECIMAL_PROBE=1 to investigate StoreKit decimal parsing.")
+        }
+        let originalURL = try XCTUnwrap(Bundle.main.url(forResource: "Configuration", withExtension: "storekit"))
+        let original = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: originalURL)) as? [String: Any])
+        for (locale, separator) in [("en_US", "."), ("pt_BR", ",")] {
+            var catalogue = original
+            catalogue["identifier"] = UUID().uuidString
+            var settings = try XCTUnwrap(catalogue["settings"] as? [String: Any])
+            settings["_locale"] = locale
+            catalogue["settings"] = settings
+            var groups = try XCTUnwrap(catalogue["subscriptionGroups"] as? [[String: Any]])
+            var subscriptions = try XCTUnwrap(groups[0]["subscriptions"] as? [[String: Any]])
+            let groupID = String(Int.random(in: 30_000_000...39_999_999))
+            groups[0]["id"] = groupID
+            var productIDs: [String] = []
+            for index in subscriptions.indices {
+                let id = "com.pedrosalles.smartkitchen.sync.decimal-probe.\(locale).\(index)"
+                subscriptions[index]["productID"] = id
+                subscriptions[index]["internalID"] = String(Int.random(in: 40_000_000...49_999_999))
+                subscriptions[index]["subscriptionGroupID"] = groupID
+                subscriptions[index]["displayPrice"] = (index == 0 ? "99" : "49") + separator + "90"
+                productIDs.append(id)
+            }
+            groups[0]["subscriptions"] = subscriptions
+            catalogue["subscriptionGroups"] = groups
+            let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathExtension("storekit")
+            try JSONSerialization.data(withJSONObject: catalogue).write(to: url)
+            let session = try SKTestSession(contentsOf: url)
+            session.disableDialogs = true
+            let products = try await Product.products(for: productIDs)
+            let prices = products.map { "\($0.id):\($0.price)" }
+            print("STOREKIT_DECIMAL_PROBE locale=\(locale) separator=\(separator) prices=\(prices)")
+            for product in products {
+                print("STOREKIT_DECIMAL_JSON \(String(decoding: product.jsonRepresentation, as: UTF8.self))")
+                print("STOREKIT_DECIMAL_DISPLAY \(product.id) \(product.displayPrice)")
+            }
+            XCTAssertEqual(products.count, 2)
+            XCTAssertEqual(products.first { $0.id == productIDs[0] }?.price, Decimal(string: "99.90"))
+            XCTAssertEqual(products.first { $0.id == productIDs[1] }?.price, Decimal(string: "49.90"))
+            withExtendedLifetime(session) {}
+        }
+    }
+
     func testBrazilSubscriptionCatalogueMatchesAnnualAndMonthlyPlans() async throws {
         let url = try XCTUnwrap(Bundle.main.url(forResource: "Configuration", withExtension: "storekit"))
         let session = try SKTestSession(contentsOf: url)
