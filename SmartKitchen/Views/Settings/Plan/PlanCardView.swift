@@ -20,7 +20,7 @@ struct PlanCardView: View {
         }
         #endif
         guard let id = subscriptionManager.activeProductID else {
-            return String(localized: "Free")
+            return String(localized: "Básico")
         }
         if id == SubscriptionManager.annualProductID {
             return String(localized: "Premium Anual")
