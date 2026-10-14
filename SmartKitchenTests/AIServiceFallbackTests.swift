@@ -1,10 +1,44 @@
 import Foundation
+import SwiftData
 import XCTest
 @testable import Savoria
 
 @MainActor
 final class RecipeIdeaRequestTests: XCTestCase {
     private let original = "Tenho arroz, ovos e tomate. Quero jantar em até 20 minutos para uma pessoa, sem leite. Não registre nem altere dados."
+
+    func testConversationSurvivesReopeningStoreWithAutosaveDisabled() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let configuration = ModelConfiguration(url: directory.appendingPathComponent("Chat.store"), cloudKitDatabase: .none)
+        let conversationID: UUID
+        let messageID: UUID
+        let content = "**Mingau**\n**Ingredientes**\n- 0.25 xícara de Aveia\n- 0.125 xícara de Leite\n- 1.75 g de Canela"
+        do {
+            let container = try ModelContainer(for: ChatConversation.self, ChatMessage.self, configurations: configuration)
+            let context = ModelContext(container)
+            context.autosaveEnabled = false
+            let conversation = ChatConversation()
+            context.insert(conversation)
+            conversationID = conversation.id
+            try ChatConversation.persist(ChatMessage(role: .user, content: "Receita de teste", conversationId: conversationID), in: context)
+            let response = ChatMessage(role: .assistant, content: content, conversationId: conversationID)
+            messageID = response.id
+            try ChatConversation.persist(response, in: context)
+            XCTAssertFalse(context.hasChanges)
+        }
+        let reopened = try ModelContainer(for: ChatConversation.self, ChatMessage.self, configurations: configuration)
+        let context = ModelContext(reopened)
+        let conversations = try context.fetch(FetchDescriptor<ChatConversation>())
+        XCTAssertEqual(conversations.count, 1)
+        XCTAssertEqual(conversations.first?.id, conversationID)
+        XCTAssertEqual(conversations.first?.title, "Receita de teste")
+        let messages = try context.fetch(FetchDescriptor<ChatMessage>())
+        XCTAssertEqual(messages.count, 2)
+        let response = try XCTUnwrap(messages.first { $0.id == messageID })
+        XCTAssertEqual(response.conversationId, conversationID)
+        XCTAssertEqual(response.content, content)
+    }
 
     func testOriginalContextSurvivesExpansionAndStructuring() {
         let request = RecipeIdeaRequest(occasion: "Jantar", refinement: "Usar arroz", customQuery: original)

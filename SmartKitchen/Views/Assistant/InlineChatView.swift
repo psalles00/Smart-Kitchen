@@ -735,21 +735,12 @@ struct InlineChatView: View {
     }
 
     private func insertMessage(_ message: ChatMessage) {
-        modelContext.insert(message)
         messages.append(message)
-
-        // Update conversation timestamp
-        if let conversationId,
-           let descriptor = Optional(FetchDescriptor<ChatConversation>(
-               predicate: #Predicate<ChatConversation> { $0.id == conversationId }
-           )),
-           let conversation = try? modelContext.fetch(descriptor).first {
-            conversation.updatedAt = .now
-
-            // Auto-title from first user message
-            if conversation.title == nil && message.role == .user {
-                conversation.generateTitle(from: message.content)
-            }
+        do {
+            try ChatConversation.persist(message, in: modelContext)
+        } catch {
+            // Keep unsaved records in memory; never discard them on save failure.
+            errorMessage = String(localized: "Não foi possível salvar a conversa. Tente novamente.")
         }
     }
 
@@ -813,10 +804,10 @@ struct InlineChatView: View {
 
         let convId = ensureConversation()
         let userMessage = ChatMessage(role: .user, content: trimmedText, conversationId: convId)
+        errorMessage = nil
         insertMessage(userMessage)
         pinnedUserMessageID = userMessage.id
         inputText = ""
-        errorMessage = nil
 
         // Free-tier daily AI gate. `.recipeIdeas` and the standard chat both
         // count against the same `.ai` bucket. Counter consumed on success.
@@ -2008,10 +1999,10 @@ struct InlineChatView: View {
 
         // Show clean user message (no technical instructions)
         let userMessage = ChatMessage(role: .user, content: action.prompt, conversationId: convId)
+        errorMessage = nil
         insertMessage(userMessage)
         pinnedUserMessageID = userMessage.id
         inputText = ""
-        errorMessage = nil
 
         Task {
             await performAIChat(latestUserMessageID: userMessage.id, latestUserText: action.prompt)

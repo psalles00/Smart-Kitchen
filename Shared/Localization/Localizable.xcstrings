@@ -1,6 +1,53 @@
 {
   "sourceLanguage" : "pt-BR",
   "strings" : {
+    "Não foi possível salvar a conversa. Tente novamente.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível salvar a conversa. Tente novamente."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not save the conversation. Please try again."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Gespräch konnte nicht gespeichert werden. Bitte versuche es erneut."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo guardar la conversación. Inténtalo de nuevo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible d’enregistrer la conversation. Réessayez."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile salvare la conversazione. Riprova."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "会話を保存できませんでした。もう一度お試しください。"
+          }
+        }
+      }
+    },
     "Para depois": {
       "extractionState": "manual",
       "localizations": {
