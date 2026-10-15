@@ -466,3 +466,191 @@ private final class DirectChatURLProtocol: URLProtocol {
 
     override func stopLoading() {}
 }
+
+@MainActor
+final class RecipeIdeasPantryModeTests: XCTestCase {
+    func testUnrestrictedEmptyPantryStillGeneratesIdeasWithActualIngredients() async throws {
+        let backend = RecipeIdeasFixtureBackend(ideas: [("Risoto de cogumelos", "Cogumelos"), ("Sopa de abóbora", "Abóbora")])
+        let generator = RecipeQuickIdeasGenerator(aiService: AIService(supabase: backend))
+        let ideas = await generator.generate(pantryItems: [], occasion: nil, refinement: nil, customQuery: "Quero ideias novas", language: .ptBR, filterByPantry: false)
+        XCTAssertEqual(Set(ideas.map(\.mainIngredient)), ["Cogumelos", "Abóbora"])
+        XCTAssertEqual(backend.bodies.count, 1)
+        let system = try XCTUnwrap(backend.messages.first?["content"] as? String)
+        XCTAssertTrue(system.contains("not requirements"))
+        XCTAssertTrue(system.contains("Pode incluir ingredientes de fora"))
+        XCTAssertFalse(system.contains("Every recipe must use ONLY"))
+    }
+
+    func testStrictEmptyPantryDoesNotDispatchAndCannotInventAvailability() async {
+        let backend = RecipeIdeasFixtureBackend(ideas: [("Omelete", "Ovos")])
+        let generator = RecipeQuickIdeasGenerator(aiService: AIService(supabase: backend))
+        let ideas = await generator.generate(pantryItems: [], occasion: nil, refinement: nil, customQuery: nil, language: .ptBR)
+        XCTAssertTrue(ideas.isEmpty)
+        XCTAssertTrue(backend.bodies.isEmpty)
+    }
+
+    func testStrictPantryRejectsUnavailableIconIngredientAndPreservesDairyExclusion() async throws {
+        let backend = RecipeIdeasFixtureBackend(ideas: [("Omelete simples", "Ovos"), ("Frango grelhado", "Frango"), ("Omelete com queijo", "Ovos"), ("Omelete sem manteiga", "Ovos")])
+        let generator = RecipeQuickIdeasGenerator(aiService: AIService(supabase: backend))
+        let ideas = await generator.generate(pantryItems: ["Ovos", "Leite integral"], occasion: nil, refinement: nil, customQuery: "Sem leite, em 20 minutos para uma pessoa", language: .ptBR)
+        XCTAssertEqual(Set(ideas.map(\.title)), ["Omelete simples", "Omelete sem manteiga"])
+        XCTAssertTrue(ideas.allSatisfy { $0.mainIngredient == "Ovos" })
+        let user = try XCTUnwrap(backend.messages.last?["content"] as? String)
+        XCTAssertFalse(user.contains("Leite integral"))
+        let system = try XCTUnwrap(backend.messages.first?["content"] as? String)
+        XCTAssertTrue(system.contains("Tempo total máximo: 20"))
+        XCTAssertTrue(system.contains("Número exato de porções: 1"))
+    }
+
+    func testTopSuggestionsVaryIngredientsBeforeRepeatingPopularIngredient() async {
+        let backend = RecipeIdeasFixtureBackend(ideas: [("Omelete A", "Ovos"), ("Omelete B", "Ovos"), ("Omelete C", "Ovos"), ("Salada", "Tomate"), ("Tapioca", "Goma de tapioca")])
+        let generator = RecipeQuickIdeasGenerator(aiService: AIService(supabase: backend))
+        let ideas = await generator.generate(pantryItems: ["Ovos", "Tomate", "Goma de tapioca"], occasion: nil, refinement: nil, customQuery: nil, language: .ptBR, limit: 3)
+        XCTAssertEqual(ideas.count, 3)
+        XCTAssertEqual(Set(ideas.map(\.mainIngredient)).count, 3)
+    }
+
+    func testIngredientModesSurviveResultReopenAndLegacyResultsKeepStrictBehavior() throws {
+        let payload = InlineChatView.ResultsPayload(ideas: [], quickIdeas: [.init(title: "Risoto", mainIngredient: "Cogumelos")], localRecipeIDs: [], occasionRaw: nil, refinement: nil, customQuery: "Jantar", filterByPantry: false)
+        let reopened = InlineChatView.ResultsPayload.decode(payload.encoded())
+        XCTAssertEqual(reopened.filterByPantry, false)
+        XCTAssertEqual(reopened.quickIdeas, payload.quickIdeas)
+        let unknownMode = InlineChatView.ResultsPayload.decode(payload.encoded().replacingOccurrences(of: "false", with: "\"future-mode\""))
+        XCTAssertEqual(unknownMode.quickIdeas, payload.quickIdeas)
+        XCTAssertTrue(unknownMode.filterByPantry ?? true)
+        let legacy = InlineChatView.ResultsPayload.decode(#"{"ideas":[],"quickIdeas":[],"localRecipeIDs":[]}"#)
+        XCTAssertTrue(legacy.filterByPantry ?? true)
+        let request = RecipeIdeaRequest(occasion: nil, refinement: nil, customQuery: nil)
+        XCTAssertTrue(request.ingredientPrompt(pantryItems: [], filterByPantry: true).contains("APENAS"))
+        XCTAssertFalse(request.ingredientPrompt(pantryItems: [], filterByPantry: false).contains("APENAS"))
+    }
+
+    func testEverySupportedLanguageReachesProviderPromptInBothModes() async throws {
+        for language in AppLanguage.allCases {
+            for strict in [true, false] {
+                let backend = RecipeIdeasFixtureBackend(ideas: [("Omelete", "Ovos")])
+                let generator = RecipeQuickIdeasGenerator(aiService: AIService(supabase: backend))
+                let ideas = await generator.generate(pantryItems: ["Ovos"], occasion: nil, refinement: nil, customQuery: nil, language: language, filterByPantry: strict)
+                XCTAssertEqual(ideas.count, 1)
+                let system = try XCTUnwrap(backend.messages.first?["content"] as? String)
+                XCTAssertTrue(system.contains(language.aiModelLanguageName))
+                XCTAssertEqual(backend.acceptLanguage, AppLocalization(language: language).acceptLanguageHeader)
+            }
+        }
+    }
+}
+
+@MainActor
+private final class RecipeIdeasFixtureBackend: SupabaseFunctionInvoking {
+    var isConfigured: Bool { true }
+    let ideas: [(String, String)]
+    var bodies: [[String: Any]] = []
+    var acceptLanguage: String?
+    var messages: [[String: Any]] { bodies.last?["messages"] as? [[String: Any]] ?? [] }
+    init(ideas: [(String, String)]) { self.ideas = ideas }
+    func invokeFunctionData(name: String, body: [String: Any], acceptLanguage: String?) async throws -> Data {
+        bodies.append(body)
+        self.acceptLanguage = acceptLanguage
+        let content = try JSONSerialization.data(withJSONObject: ["ideas": ideas.map { ["title": $0.0, "mainIngredient": $0.1] }])
+        return try JSONSerialization.data(withJSONObject: ["choices": [["message": ["content": String(decoding: content, as: UTF8.self)]]]])
+    }
+    func invokeFunctionData(name: String, body: Data, contentType: String, acceptLanguage: String?) async throws -> Data {
+        throw URLError(.unsupportedURL)
+    }
+}
+
+/// Opt-in native provider smoke test. Normal test runs never dispatch paid calls.
+@MainActor
+final class RecipeIdeasLiveProviderTests: XCTestCase {
+    func testNativeProviderHonorsBothPantryModesWithinReservedBudget() async throws {
+        guard ProcessInfo.processInfo.environment["SAVORIA_LIVE_RECIPE_TESTS"] == "1" else {
+            throw XCTSkip("Live provider validation requires an explicitly prepared budget reservation.")
+        }
+        continueAfterFailure = false
+        let backend = try ReservedRecipeValidationBackend()
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [DirectChatURLProtocol.self]
+        DirectChatURLProtocol.requestHandler = { _ in throw URLError(.unsupportedURL) }
+        let service = AIService(supabase: backend, urlSession: URLSession(configuration: configuration),
+                                openRouterKey: { "" }, prefersDirectOpenRouter: { false })
+        let generator = RecipeQuickIdeasGenerator(aiService: service)
+        let pantry = ["Ovos", "Arroz", "Tomate", "Cenoura", "Feijão"]
+        let strict = await generator.generate(pantryItems: pantry, occasion: .jantar, refinement: nil,
+                                             customQuery: "Jantar sem leite em 20 minutos para uma pessoa", language: .ptBR, limit: 6)
+        try backend.saveIdeas(strict, name: "strict")
+        XCTAssertGreaterThanOrEqual(strict.count, 3)
+        XCTAssertGreaterThanOrEqual(Set(strict.map(\.mainIngredient)).count, 3)
+        XCTAssertTrue(strict.allSatisfy { pantry.contains($0.mainIngredient) })
+        let unrestricted = await generator.generate(pantryItems: [], occasion: .jantar, refinement: nil,
+                                                    customQuery: "Quero quatro jantares diferentes, sem depender de uma despensa", language: .ptBR,
+                                                    filterByPantry: false, limit: 4)
+        try backend.saveIdeas(unrestricted, name: "unrestricted")
+        XCTAssertEqual(unrestricted.count, 4)
+        XCTAssertEqual(Set(unrestricted.map(\.title)).count, 4)
+        XCTAssertTrue(unrestricted.allSatisfy { !$0.mainIngredient.isEmpty })
+        XCTAssertEqual(backend.calls, 2)
+    }
+}
+
+@MainActor
+private final class ReservedRecipeValidationBackend: SupabaseFunctionInvoking {
+    var isConfigured: Bool { true }
+    private(set) var calls = 0
+    private let actual = SupabaseClient()
+    private let directory: URL
+    private var receipt: [String: Any]
+
+    init() throws {
+        directory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("LiveRecipeValidation", isDirectory: true)
+        receipt = try JSONSerialization.jsonObject(with: Data(contentsOf: directory.appendingPathComponent("reservation.json"))) as? [String: Any] ?? [:]
+        guard receipt["id"] as? String == "pantry-modes-20261015",
+              receipt["maximumCalls"] as? Int == 2,
+              receipt["reservedUSD"] as? Double == 0.20,
+              receipt["status"] as? String == "prepared" else { throw URLError(.userAuthenticationRequired) }
+        receipt["requests"] = [[String: Any]]()
+        receipt["status"] = "started"
+        try persist()
+    }
+
+    private func persist() throws {
+        try JSONSerialization.data(withJSONObject: receipt, options: [.prettyPrinted, .sortedKeys])
+            .write(to: directory.appendingPathComponent("reservation.json"), options: .atomic)
+    }
+
+    func saveIdeas(_ ideas: [RecipeQuickIdea], name: String) throws {
+        try JSONEncoder().encode(ideas).write(to: directory.appendingPathComponent("\(name)-ideas.json"), options: .atomic)
+    }
+
+    func invokeFunctionData(name: String, body: [String: Any], acceptLanguage: String?) async throws -> Data {
+        try await invokeFunctionData(name: name, body: JSONSerialization.data(withJSONObject: body),
+                                     contentType: "application/json", acceptLanguage: acceptLanguage)
+    }
+
+    func invokeFunctionData(name: String, body: Data, contentType: String, acceptLanguage: String?) async throws -> Data {
+        guard name == "openai-chat", contentType == "application/json", body.count <= 65536, calls < 2 else {
+            throw URLError(.unsupportedURL)
+        }
+        let reserve = 3 * ((Double(body.count) + 4096) * 0.0000004 + 8192 * 0.0000016)
+        var requests = receipt["requests"] as? [[String: Any]] ?? []
+        let used = requests.reduce(0.0) { $0 + ($1["reserved_usd"] as? Double ?? 0.20) }
+        guard used + reserve <= 0.20 else { throw URLError(.dataLengthExceedsMaximum) }
+        let index = requests.count
+        requests.append(["function": name, "request_body_bytes": body.count, "reserved_usd": reserve, "status": "dispatched-reserved"])
+        receipt["requests"] = requests
+        try persist() // Reservation is durable before the real network dispatch.
+        calls += 1
+        let response = try await actual.invokeFunctionData(name: name, body: body, contentType: contentType, acceptLanguage: acceptLanguage)
+        let json = try JSONSerialization.jsonObject(with: response) as? [String: Any] ?? [:]
+        requests[index]["status"] = "response-reserve-retained"
+        requests[index]["usage"] = json["usage"]
+        requests[index]["model"] = json["model"]
+        requests[index]["response_id"] = json["id"]
+        let messages = (json["choices"] as? [[String: Any]])?.first?["message"] as? [String: Any]
+        requests[index]["response_content"] = messages?["content"]
+        receipt["requests"] = requests
+        receipt["status"] = calls == 2 ? "completed" : "in-progress"
+        try persist()
+        return response
+    }
+}

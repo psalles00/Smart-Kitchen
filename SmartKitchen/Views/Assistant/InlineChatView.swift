@@ -2371,6 +2371,7 @@ struct InlineChatView: View {
             refinement: refinement,
             customQuery: customQuery,
             language: targetLanguage,
+            filterByPantry: filterEnabled,
             limit: 10
         )
 
@@ -2401,7 +2402,8 @@ struct InlineChatView: View {
             localRecipeIDs: localMatchedRecipeIDs,
             occasionRaw: occasion?.rawValue,
             refinement: refinement,
-            customQuery: customQuery
+            customQuery: customQuery,
+            filterByPantry: filterEnabled
         )
 
         insertMessage(ChatMessage(
@@ -2772,11 +2774,12 @@ struct InlineChatView: View {
 
         let pantryItems = (try? modelContext.fetch(FetchDescriptor<UnifiedItem>())) ?? []
         let pantryNames = request.allowedPantryItems(pantryItems.filter { $0.isPantry }.map(\.name))
-        let pantryList = pantryNames.isEmpty ? "(despensa vazia)" : pantryNames.joined(separator: ", ")
+        let ingredientPrompt = request.ingredientPrompt(pantryItems: pantryNames, filterByPantry: payload.filterByPantry ?? true)
 
         let instruction = """
-        Monte a receita completa "\(idea.title)" usando APENAS ingredientes desta despensa: \(pantryList).
-        Não inclua nenhum ingrediente fora da lista. Use medidas realistas, passos curtos e claros.
+        Monte a receita completa "\(idea.title)".
+        \(ingredientPrompt)
+        Use medidas realistas, passos curtos e claros.
         \(request.prompt)
 
         Responda EXATAMENTE neste formato (sem texto antes ou depois):
@@ -2969,13 +2972,14 @@ struct InlineChatView: View {
 
     // MARK: - Results Payload (serialized into ChatMessage.content)
 
-    private struct ResultsPayload: Codable {
+    struct ResultsPayload: Codable {
         var ideas: [RecipeIdeaResult]
         var quickIdeas: [RecipeQuickIdea]
         var localRecipeIDs: [UUID]
         var occasionRaw: String?
         var refinement: String?
         var customQuery: String?
+        var filterByPantry: Bool?
 
         var request: RecipeIdeaRequest {
             RecipeIdeaRequest(occasion: occasionRaw.flatMap(RecipeIdeaOccasion.init(rawValue:))?.label,
@@ -2988,8 +2992,10 @@ struct InlineChatView: View {
             localRecipeIDs: [UUID],
             occasionRaw: String?,
             refinement: String?,
-            customQuery: String?
+            customQuery: String?,
+            filterByPantry: Bool? = nil
         ) {
+            self.filterByPantry = filterByPantry
             self.ideas = ideas
             self.quickIdeas = quickIdeas
             self.localRecipeIDs = localRecipeIDs
@@ -3006,6 +3012,7 @@ struct InlineChatView: View {
             self.occasionRaw = try? c.decodeIfPresent(String.self, forKey: .occasionRaw)
             self.refinement = try? c.decodeIfPresent(String.self, forKey: .refinement)
             self.customQuery = try? c.decodeIfPresent(String.self, forKey: .customQuery)
+            self.filterByPantry = try? c.decodeIfPresent(Bool.self, forKey: .filterByPantry)
         }
 
         func encoded() -> String {

@@ -1,0 +1,49 @@
+# Conversa e descoberta de receitas
+
+## Validação de 15/10/2026: modo da despensa
+
+A preferência de usar apenas a despensa agora acompanha as ideias rápidas e sua
+expansão. Resultados serializados guardam a preferência usada na busca; mensagens
+antigas ou com campo desconhecido continuam legíveis e usam o padrão restrito.
+No modo livre, uma despensa vazia não impede sugestões. No modo restrito, o
+ingrediente principal precisa corresponder à despensa, sem usar a existência de
+um ícone como prova de disponibilidade. Sugestões relevantes alternam ingredientes
+principais antes de repetir o mesmo ingrediente.
+
+`RecipeIdeasPantryModeTests`, `RecipeIdeaRequestTests` e `AIServiceFallbackTests`:
+30 testes passaram. Incluem sete idiomas no prompt/cabeçalho, restrição de leite,
+prioridade do pedido original e reabertura de resultados legados.
+
+`RecipeIdeasLiveProviderTests` é optativo. O teste nativo usa o cliente real e uma
+reserva financeira durável preparada pelo operador, limitada a duas requisições;
+a execução normal não faz chamadas pagas. O teste bloqueia fallback direto de
+rede fora do backend controlado. Na execução de 15/10, os dois pedidos passaram
+pelo backend e retornaram `qwen/qwen3.5-flash-02-23`. O custo informado pelo
+provedor foi US$ 0,0001365; o registro conserva reservas maiores para tentativas
+internas incertas. Isso não é recibo de cobrança nem prova do provedor primário.
+
+A leitura humana encontrou sugestões triviais (tomate picado e cenoura cozida).
+Portanto, o resultado acima comprova a correção dos modos, mas não encerra a
+melhoria de qualidade, o fluxo da web ou a avaliação completa da conversa.
+
+Compilações iOS e macOS aprovadas; instalação no Simulator e Mac realizada.
+O snapshot do Mac permaneceu idêntico. A instalação física está pendente porque
+o iPhone 12 Pro está indisponível no CoreDevice. Não houve desinstalação,
+alteração de stores, iCloud, Team ou App Groups.
+
+## Roteiro manual desta correção
+
+1. Com ingredientes na despensa, ative a preferência de usar somente a despensa
+   e peça ideias de jantar. Confira que os ingredientes principais existem nela.
+2. Desative a preferência e faça um pedido que exija outros ingredientes.
+   Abra uma ideia e confira que a receita completa mantém o modo livre.
+3. Repita o modo livre com despensa vazia, em um destino de teste autorizado.
+4. Reabra a conversa após sair do app. Abra o resultado anterior e confira que
+   ele mantém a preferência da busca, mesmo após alterar a preferência atual.
+5. Peça um jantar sem leite. Confira títulos, ingredientes e preparo da receita
+   completa; rejeite queijo, manteiga e outros laticínios.
+6. Confira diversidade, viabilidade, tempo e porções. Preparações triviais não
+   devem ser aceitas como prova de boa qualidade.
+
+Os roteiros da web, biblioteca, mídias, performance e produção continuam no
+contrato E2E. Builds, mocks e este registro não substituem essas jornadas.

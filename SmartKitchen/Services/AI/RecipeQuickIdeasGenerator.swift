@@ -1,7 +1,7 @@
 import Foundation
 
 /// Resultado curto produzido pelo modelo para a seção "Ideias Rápidas":
-/// receitas simples cujos ingredientes estão TODOS na despensa do usuário.
+/// receitas simples, com ingredientes restritos à despensa quando essa opção está ativa.
 struct RecipeQuickIdea: Identifiable, Codable, Equatable {
     let id: UUID
     let title: String
@@ -50,6 +50,19 @@ struct RecipeIdeaRequest {
 
     func allowedPantryItems(_ names: [String]) -> [String] {
         excludesMilk ? names.filter { !Self.containsDairy($0) } : names
+    }
+
+    func acceptsIdea(title: String, mainIngredient: String) -> Bool {
+        !excludesMilk || (!Self.containsDairy(mainIngredient) && !Self.containsDairyUse(title))
+    }
+
+    func ingredientPrompt(pantryItems: [String], filterByPantry: Bool) -> String {
+        let names = allowedPantryItems(pantryItems)
+        let list = names.isEmpty ? "(despensa vazia)" : names.joined(separator: ", ")
+        if filterByPantry {
+            return "Use APENAS ingredientes desta despensa: \(list). Não inclua ingredientes fora da lista."
+        }
+        return "Priorize os ingredientes disponíveis quando combinarem com o pedido: \(list). Pode incluir ingredientes de fora da despensa; não os apresente como disponíveis. Uma despensa vazia não impede sugerir receitas."
     }
 
     var maximumMinutes: Int? {
@@ -134,12 +147,16 @@ struct RecipeIdeaRequest {
 }
 
 /// Pede ao modelo da OpenAI uma lista enxuta de "ideias rápidas" — receitas
-/// simples, cobertas 100% pela despensa do usuário. Sem chamadas externas
-/// e sem dependência de receitas locais.
+/// simples, respeitando a preferência de despensa, sem depender de receitas locais
+/// nem de uma busca na web.
 @MainActor
 final class RecipeQuickIdeasGenerator {
     static let shared = RecipeQuickIdeasGenerator()
-    private let aiService = AIService()
+    private let aiService: AIService
+
+    init(aiService: AIService = AIService()) {
+        self.aiService = aiService
+    }
 
     /// Retorna até `limit` ideias rápidas. Lança erro silenciado se faltar API key.
     func generate(
@@ -148,9 +165,12 @@ final class RecipeQuickIdeasGenerator {
         refinement: String?,
         customQuery: String?,
         language: AppLanguage,
+        filterByPantry: Bool = true,
         limit: Int = 10
     ) async -> [RecipeQuickIdea] {
-        guard !pantryItems.isEmpty else { return [] }
+        let request = RecipeIdeaRequest(occasion: occasion?.label, refinement: refinement, customQuery: customQuery)
+        let pantryItems = request.allowedPantryItems(pantryItems).filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        guard !filterByPantry || !pantryItems.isEmpty else { return [] }
 
         let apiKey = APIConfig.openAIAPIKey
         let generationLimit = max(limit + 6, limit)
@@ -171,11 +191,12 @@ final class RecipeQuickIdeasGenerator {
 
         let system = buildSystemPrompt(
             generationLimit: generationLimit,
+            filterByPantry: filterByPantry,
             occasion: occasion,
             refinement: refinement,
             customQuery: customQuery,
             language: language
-        )
+        ) + "\n" + request.ingredientPrompt(pantryItems: pantryItems, filterByPantry: filterByPantry) + "\n" + request.prompt
 
         let user = """
         Pantry items: \(pantryList)\(context)
@@ -211,7 +232,10 @@ final class RecipeQuickIdeasGenerator {
                     pantryItems: pantryItems
                 )
 
-                ideas.append(RecipeQuickIdea(title: title, mainIngredient: resolvedMainIngredient))
+                let mainIngredient = filterByPantry ? resolvedMainIngredient : suggestedMainIngredient
+                guard !filterByPantry || !mainIngredient.isEmpty else { continue }
+                guard request.acceptsIdea(title: title, mainIngredient: mainIngredient) else { continue }
+                ideas.append(RecipeQuickIdea(title: title, mainIngredient: mainIngredient))
                 if ideas.count >= generationLimit { break }
             }
 
@@ -230,6 +254,7 @@ final class RecipeQuickIdeasGenerator {
 
     private func buildSystemPrompt(
         generationLimit: Int,
+        filterByPantry: Bool,
         occasion: RecipeIdeaOccasion?,
         refinement: String?,
         customQuery: String?,
@@ -240,12 +265,16 @@ final class RecipeQuickIdeasGenerator {
             "{\"ideas\": [{\"title\": \"...\", \"mainIngredient\": \"...\"}]}",
             "Rules:",
             "- Generate up to \(generationLimit) ideas. Prefer a diverse set.",
-            "- Every recipe must use ONLY ingredients from the user's pantry. Never include any ingredient outside the pantry.",
+            filterByPantry
+                ? "- Every recipe must use ONLY ingredients from the user's pantry. Never include any ingredient outside the pantry."
+                : "- Pantry ingredients are preferences, not requirements. Suggest useful new recipes even with an empty pantry.",
             "- Match the user's requested dish type and eating occasion, not just pantry popularity.",
             "- The target language for every title is \(language.aiModelLanguageName).",
             "- Keep titles short (max 4 words) and write them only in \(language.aiModelLanguageName).",
             "- Pick simple, fast recipes.",
-            "- \"mainIngredient\" must be a single pantry item name from the list (used to render an icon).",
+            filterByPantry
+                ? "- \"mainIngredient\" must be a single pantry item name from the list."
+                : "- \"mainIngredient\" must name the actual main ingredient of the dish, even when it is not in the pantry.",
             "- No extra commentary, no markdown, no code fences."
         ]
 
@@ -352,12 +381,25 @@ final class RecipeQuickIdeasGenerator {
                 return $0.idea.title.localizedCaseInsensitiveCompare($1.idea.title) == .orderedAscending
             }
 
-        let preferred = filtered.filter { $0.score >= 0 }.map(\.idea)
-        if preferred.count >= min(limit, 4) {
-            return Array(preferred.prefix(limit))
+        guard limit > 0 else { return [] }
+        let preferred = filtered.filter { $0.score >= 0 }
+        var remaining = (preferred.count >= min(limit, 4) ? preferred : filtered).map(\.idea)
+        var selected: [RecipeQuickIdea] = []
+        // Round-robin ingredients within relevance order so one popular item
+        // cannot occupy the entire first row when other good options exist.
+        while !remaining.isEmpty && selected.count < limit {
+            var roundIngredients = Set<String>()
+            var deferred: [RecipeQuickIdea] = []
+            for idea in remaining {
+                if selected.count < limit && roundIngredients.insert(normalized(idea.mainIngredient)).inserted {
+                    selected.append(idea)
+                } else {
+                    deferred.append(idea)
+                }
+            }
+            remaining = deferred
         }
-
-        return Array(filtered.map(\.idea).prefix(limit))
+        return selected
     }
 
     private func assessIdea(
@@ -467,31 +509,13 @@ final class RecipeQuickIdeasGenerator {
         title: String,
         pantryItems: [String]
     ) -> String {
-        let normalizedTitle = normalized(title)
-        let pantryWithIcons = pantryItems.filter { IconResolver.resolve($0) != nil }
-        let titleMatches = pantryItems.filter { pantryItem in
-            let normalizedPantryItem = normalized(pantryItem)
-            guard !normalizedPantryItem.isEmpty else { return false }
-            if normalizedTitle.contains(normalizedPantryItem) {
-                return true
-            }
-
-            let tokens = normalizedPantryItem.split(separator: " ").map(String.init)
-            return tokens.contains { token in
-                token.count >= 3 && normalizedTitle.contains(token)
-            }
-        }
-
-        let candidates = [suggestedMainIngredient, title] + titleMatches + pantryWithIcons + pantryItems
-        for candidate in candidates {
-            let trimmed = candidate.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !trimmed.isEmpty else { continue }
-            if IconResolver.resolve(trimmed) != nil {
-                return trimmed
-            }
-        }
-
-        return pantryWithIcons.first ?? pantryItems.first ?? suggestedMainIngredient
+        let suggested = normalized(suggestedMainIngredient)
+        if let exact = pantryItems.first(where: { normalized($0) == suggested }) { return exact }
+        let titleTokens = Set(normalized(title).components(separatedBy: CharacterSet.alphanumerics.inverted).filter { !$0.isEmpty })
+        return pantryItems.first { item in
+            let tokens = normalized(item).components(separatedBy: CharacterSet.alphanumerics.inverted).filter { $0.count >= 3 }
+            return !tokens.isEmpty && tokens.allSatisfy { titleTokens.contains($0) }
+        } ?? ""
     }
 
     private func normalized(_ text: String) -> String {
