@@ -2779,6 +2779,8 @@ struct InlineChatView: View {
         let instruction = """
         Monte a receita completa "\(idea.title)".
         \(ingredientPrompt)
+        \(idea.ingredientNames.map { "Ingredientes planejados para esta ideia: " + $0.joined(separator: ", ") } ?? "")
+        \(idea.precookedIngredientNames.map { $0.isEmpty ? "" : "A ideia exige estes ingredientes já cozidos: " + $0.joined(separator: ", ") + ". Deixe essa condição explícita e não conte com cozimento prévio não informado." } ?? "")
         Use medidas realistas, passos curtos e claros.
         \(request.prompt)
 

@@ -7,11 +7,16 @@ struct RecipeQuickIdea: Identifiable, Codable, Equatable {
     let title: String
     /// Ingrediente principal — usado para resolver um ícone do banco de imagens.
     let mainIngredient: String
+    /// Optional for older conversation cards; new ideas include their planned ingredients.
+    let ingredientNames: [String]?
+    let precookedIngredientNames: [String]?
 
-    init(id: UUID = UUID(), title: String, mainIngredient: String) {
+    init(id: UUID = UUID(), title: String, mainIngredient: String, ingredientNames: [String]? = nil, precookedIngredientNames: [String]? = nil) {
         self.id = id
         self.title = title
         self.mainIngredient = mainIngredient
+        self.ingredientNames = ingredientNames
+        self.precookedIngredientNames = precookedIngredientNames
     }
 }
 
@@ -208,7 +213,9 @@ final class RecipeQuickIdeasGenerator {
         ]
 
         do {
-            let response = try await sendJSONChat(messages: messages, apiKey: apiKey, language: language)
+            let response = try await sendJSONChat(messages: messages, apiKey: apiKey, language: language,
+                                                  responseFormat: responseFormat(pantryItems: pantryItems, filterByPantry: filterByPantry,
+                                                                                 request: request, limit: generationLimit))
             guard let content = response.content,
                   let data = content.data(using: .utf8),
                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
@@ -232,10 +239,33 @@ final class RecipeQuickIdeasGenerator {
                     pantryItems: pantryItems
                 )
 
-                let mainIngredient = filterByPantry ? resolvedMainIngredient : suggestedMainIngredient
-                guard !filterByPantry || !mainIngredient.isEmpty else { continue }
-                guard request.acceptsIdea(title: title, mainIngredient: mainIngredient) else { continue }
-                ideas.append(RecipeQuickIdea(title: title, mainIngredient: mainIngredient))
+                var mainIngredient = filterByPantry ? resolvedMainIngredient : suggestedMainIngredient
+                guard !mainIngredient.isEmpty,
+                      let ingredients = dict["ingredients"] as? [String] else { continue }
+                let names = ingredients.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+                let normalizedNames = Set(names.map(normalized))
+                // Free-mode names may describe the cut or packaging ("frango" /
+                // "peito de frango"). Resolve only an unambiguous whole phrase;
+                // this is never evidence that an ingredient exists in the pantry.
+                if !filterByPantry, !normalizedNames.contains(normalized(mainIngredient)) {
+                    let phrase = " " + normalized(mainIngredient) + " "
+                    let matches = names.filter { (" " + normalized($0) + " ").contains(phrase) }
+                    guard matches.count == 1, let match = matches.first else { continue }
+                    mainIngredient = match
+                }
+                let minimumIngredients = pantryItems.count == 1 ? 1 : 2
+                guard normalizedNames.count >= minimumIngredients,
+                      normalizedNames.contains(normalized(mainIngredient)) else { continue }
+                let precooked = dict["requiresPrecooked"] as? [String] ?? []
+                guard Set(precooked.map(normalized)).isSubset(of: normalizedNames) else { continue }
+                if filterByPantry {
+                    let allowed = Set(pantryItems.map(normalized))
+                    guard normalizedNames.isSubset(of: allowed),
+                          precooked.allSatisfy(Self.isAlreadyCookedName) else { continue }
+                }
+                guard request.acceptsIdea(title: title, mainIngredient: mainIngredient),
+                      request.accepts(ingredients: names, totalMinutes: dict["totalMinutes"] as? Int, servings: dict["servings"] as? Int) else { continue }
+                ideas.append(RecipeQuickIdea(title: title, mainIngredient: mainIngredient, ingredientNames: names, precookedIngredientNames: precooked))
                 if ideas.count >= generationLimit { break }
             }
 
@@ -252,6 +282,38 @@ final class RecipeQuickIdeasGenerator {
         }
     }
 
+    static func isAlreadyCookedName(_ name: String) -> Bool {
+        let text = name.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: Locale(identifier: "en_US_POSIX"))
+        if ["cru", "raw", "uncooked", "nao", "not cooked", "not ready", "ungekocht", "nicht gekocht", "non cuit", "pas cuit", "no cocid", "sin cocer", "non cott", "未調理", "未加熱", "炊いていない", "茹でていない"].contains(where: text.contains) { return false }
+        return ["cozid", "cooked", "cuit", "gekocht", "cocid", "cott", "pront", "ready", "pret a", "enlatado", "canned", "conserva", "em lata", "炊いた", "茹でた", "調理済", "炊飯済", "加熱済"].contains(where: text.contains)
+    }
+
+    private func responseFormat(pantryItems: [String], filterByPantry: Bool, request: RecipeIdeaRequest, limit: Int) -> [String: Any] {
+        var ingredient: [String: Any] = ["type": "string", "description": "Exact ingredient name, without quantities or instructions"]
+        let uniqueNames = Array(Set(pantryItems)).sorted()
+        if filterByPantry, !uniqueNames.isEmpty, uniqueNames.count <= 1000, uniqueNames.joined().utf8.count <= 12000 {
+            ingredient["enum"] = uniqueNames
+        }
+        var minutes: [String: Any] = ["type": "integer", "minimum": 1]
+        if let max = request.maximumMinutes { minutes["maximum"] = max }
+        var servings: [String: Any] = ["type": "integer", "minimum": 1]
+        if let count = request.requestedServings { servings["enum"] = [count] }
+        let reference: [String: Any] = ["$ref": "#/$defs/ingredientName"]
+        let properties: [String: Any] = [
+            "title": ["type": "string"], "mainIngredient": reference,
+            "ingredients": ["type": "array", "minItems": pantryItems.count == 1 ? 1 : 2, "items": reference],
+            "totalMinutes": minutes, "servings": servings,
+            "requiresPrecooked": ["type": "array", "items": reference]
+        ]
+        let idea: [String: Any] = ["type": "object", "properties": properties,
+                                   "required": ["title", "mainIngredient", "ingredients", "totalMinutes", "servings", "requiresPrecooked"],
+                                   "additionalProperties": false]
+        let schema: [String: Any] = ["type": "object", "$defs": ["ingredientName": ingredient],
+                                     "properties": ["ideas": ["type": "array", "maxItems": limit, "items": idea]],
+                                     "required": ["ideas"], "additionalProperties": false]
+        return ["type": "json_schema", "json_schema": ["name": "recipe_ideas", "strict": true, "schema": schema]]
+    }
+
     private func buildSystemPrompt(
         generationLimit: Int,
         filterByPantry: Bool,
@@ -262,9 +324,16 @@ final class RecipeQuickIdeasGenerator {
     ) -> String {
         var rules: [String] = [
             "You generate quick recipe ideas. Reply ONLY with a JSON object of the form:",
-            "{\"ideas\": [{\"title\": \"...\", \"mainIngredient\": \"...\"}]}",
+            "{\"ideas\": [{\"title\": \"...\", \"mainIngredient\": \"...\", \"ingredients\": [\"...\"], \"totalMinutes\": 15, \"servings\": 1, \"requiresPrecooked\": []}]}",
             "Rules:",
-            "- Generate up to \(generationLimit) ideas. Prefer a diverse set.",
+            "- Generate up to \(generationLimit) ideas. Prefer a diverse set of recognizable dishes, using different combinations and cooking methods.",
+            "- Do not fill the list with plain chopped, boiled or heated single ingredients. Prefer fewer worthwhile dishes over trivial preparations or renamed duplicates.",
+            "- Combine at least two distinct ingredients when possible. If only one pantry item exists, offer a real dish only when viable.",
+            "- ingredients contains ONLY ingredient names, never quantities, units, cuts or preparation instructions. In pantry-only mode copy the exact pantry names, including their stated condition.",
+            "- List ALL actual ingredients, including oils, seasoning and dairy. Never assume salt, water, oil or other unlisted items in pantry-only mode.",
+            "- requiresPrecooked lists ingredient names that must ALREADY be cooked to achieve totalMinutes. Do not pretend dry rice or beans are cooked; omit such ideas unless the pantry name explicitly says cooked/canned/ready.",
+            "- If there are no viable dishes, return an empty ideas array rather than inventing availability or preparation time.",
+            "- totalMinutes includes preparation AND cooking from the available ingredients' stated condition; servings is the actual portion count.",
             filterByPantry
                 ? "- Every recipe must use ONLY ingredients from the user's pantry. Never include any ingredient outside the pantry."
                 : "- Pantry ingredients are preferences, not requirements. Suggest useful new recipes even with an empty pantry.",
@@ -529,14 +598,16 @@ final class RecipeQuickIdeasGenerator {
     private func sendJSONChat(
         messages: [[String: Any]],
         apiKey: String,
-        language: AppLanguage
+        language: AppLanguage,
+        responseFormat: [String: Any]
     ) async throws -> ChatCompletionResponse {
         try await aiService.sendChat(
             messages: messages,
             apiKey: apiKey,
             model: "gpt-4.1-mini",
             temperature: 0.35,
-            responseFormat: ["type": "json_object"],
+            responseFormat: responseFormat,
+            maxTokens: 4096,
             acceptLanguage: AppLocalization(language: language).acceptLanguageHeader
         )
     }

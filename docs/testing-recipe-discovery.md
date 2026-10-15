@@ -47,3 +47,29 @@ alteração de stores, iCloud, Team ou App Groups.
 
 Os roteiros da web, biblioteca, mídias, performance e produção continuam no
 contrato E2E. Builds, mocks e este registro não substituem essas jornadas.
+
+## Ingredientes e viabilidade: segunda etapa de 15/10/2026
+
+As ideias agora pedem JSON Schema com ingredientes explícitos, tempo, porções e
+condições de pré-cozimento. O app valida o retorno mesmo quando o provedor não
+cumpre o contrato: rejeita ingredientes fora da despensa, preparações unitárias
+usadas como preenchimento e dependência de itens cozidos que não estejam
+identificados assim. Isso não comprova a viabilidade culinária de todo preparo.
+
+Na chamada real com a nova estrutura, o app aceitou omelete com tomate e cenoura
+com tomate e rejeitou arroz com feijão que dependia de feijão previamente cozido.
+O modo livre revelou outro defeito: “frango” não correspondia a “peito de frango”
+e “atum” não correspondia a “atum em lata”. A correção resolve apenas uma frase
+inteira e inequívoca no modo livre; nunca usa essa aproximação para provar a
+disponibilidade na despensa. Testes gratuitos cobrem também sal/salmão e nomes
+ambíguos. O teste real anterior permanece registrado como falho; não foi
+reclassificado após a correção nem repetido automaticamente.
+
+36 testes direcionados passaram após a correção. Cards antigos continuam
+legíveis sem os novos campos opcionais. O código é compartilhado entre iOS e
+macOS. Não houve alteração nos stores, schemas SwiftData ou capabilities.
+
+Teste manual adicional: no modo livre, abra sugestões com cortes/embalagens
+específicos; no modo restrito, confirme que esses mesmos nomes não passam como
+itens disponíveis quando a despensa não os contém. Confira também a receita
+completa: a validação ponta a ponta da expansão ainda está em andamento.

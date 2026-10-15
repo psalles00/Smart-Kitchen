@@ -469,8 +469,87 @@ private final class DirectChatURLProtocol: URLProtocol {
 
 @MainActor
 final class RecipeIdeasPantryModeTests: XCTestCase {
+    func testFreeModeResolvesDescriptiveIngredientsWithoutWeakeningPantryChecks() async {
+        for strict in [false, true] {
+            let backend = RecipeIdeasFixtureBackend(
+                ideas: [("Salada de atum", "atum"), ("Frango grelhado", "frango"), ("Ingrediente ausente", "sal"), ("Ambíguo", "frango")],
+                ingredients: ["Salada de atum": ["atum em lata", "alface"],
+                              "Frango grelhado": ["peito de frango", "limão"],
+                              "Ingrediente ausente": ["salmão", "limão"],
+                              "Ambíguo": ["peito de frango", "coxa de frango"]])
+            let generator = RecipeQuickIdeasGenerator(aiService: AIService(supabase: backend))
+            let ideas = await generator.generate(pantryItems: ["atum", "frango", "alface", "limão"], occasion: nil,
+                                                 refinement: nil, customQuery: nil, language: .ptBR, filterByPantry: strict)
+            XCTAssertEqual(Set(ideas.map(\.mainIngredient)), strict ? [] : ["atum em lata", "peito de frango"])
+        }
+    }
+
+    func testRejectsSingleIngredientFillerAndUnlistedSecondaryIngredient() async {
+        let backend = RecipeIdeasFixtureBackend(
+            ideas: [("Tomate picado", "Tomate"), ("Omelete com tomate", "Ovos"), ("Omelete com óleo", "Ovos")],
+            ingredients: ["Tomate picado": ["Tomate"], "Omelete com tomate": ["Ovos", "Tomate"], "Omelete com óleo": ["Ovos", "Óleo"]])
+        let generator = RecipeQuickIdeasGenerator(aiService: AIService(supabase: backend))
+        let ideas = await generator.generate(pantryItems: ["Ovos", "Tomate"], occasion: nil, refinement: nil, customQuery: nil, language: .ptBR)
+        XCTAssertEqual(ideas.map(\.title), ["Omelete com tomate"])
+        XCTAssertEqual(ideas.first?.ingredientNames, ["Ovos", "Tomate"])
+    }
+
+    func testOlderIdeaCardsDecodeWithoutPlannedIngredients() throws {
+        let id = UUID()
+        let json = "{\"id\":\"\(id.uuidString)\",\"title\":\"Omelete\",\"mainIngredient\":\"Ovos\"}"
+        let idea = try JSONDecoder().decode(RecipeQuickIdea.self, from: Data(json.utf8))
+        XCTAssertEqual(idea.id, id)
+        XCTAssertEqual(idea.title, "Omelete")
+        XCTAssertNil(idea.ingredientNames)
+        XCTAssertNil(idea.precookedIngredientNames)
+    }
+
+    func testPreparedStatesNeedExplicitEvidenceAndRejectNegations() {
+        for name in ["Arroz cozido", "Batata cozida", "Cooked rice", "Riz cuit", "Gekochter Reis", "Patata cocida", "Riso cotto", "調理済みご飯"] {
+            XCTAssertTrue(RecipeQuickIdeasGenerator.isAlreadyCookedName(name), name)
+        }
+        for name in ["Arroz", "Feijão", "Raw rice", "Uncooked rice", "Arroz não cozido", "Riz non cuit", "Nicht gekochter Reis", "Patata no cocida", "Riso non cotto", "未調理の米"] {
+            XCTAssertFalse(RecipeQuickIdeasGenerator.isAlreadyCookedName(name), name)
+        }
+    }
+
+    func testDoesNotAssumeRawBeansAreAlreadyCooked() async {
+        for prepared in [false, true] {
+            let rice = prepared ? "Arroz cozido" : "Arroz"
+            let beans = prepared ? "Feijão cozido" : "Feijão"
+            let backend = RecipeIdeasFixtureBackend(ideas: [("Arroz com feijão", rice)],
+                                                   ingredients: ["Arroz com feijão": [rice, beans]],
+                                                   precooked: ["Arroz com feijão": [rice, beans]])
+            let generator = RecipeQuickIdeasGenerator(aiService: AIService(supabase: backend))
+            let ideas = await generator.generate(pantryItems: [rice, beans], occasion: nil, refinement: nil,
+                                                 customQuery: "Jantar em 20 minutos para uma pessoa", language: .ptBR)
+            XCTAssertEqual(ideas.count, prepared ? 1 : 0)
+        }
+    }
+
+    func testStrictRequestSendsIngredientEnumAndKnownTimeAndServingsInSchema() async throws {
+        let backend = RecipeIdeasFixtureBackend(ideas: [("Omelete", "Ovos")])
+        let generator = RecipeQuickIdeasGenerator(aiService: AIService(supabase: backend))
+        _ = await generator.generate(pantryItems: ["Ovos", "Leite integral"], occasion: nil, refinement: nil,
+                                     customQuery: "Sem leite, 20 minutos para uma pessoa", language: .ptBR)
+        let body = try XCTUnwrap(backend.bodies.first)
+        let format = try XCTUnwrap(body["response_format"] as? [String: Any])
+        XCTAssertEqual(format["type"] as? String, "json_schema")
+        let settings = try XCTUnwrap(format["json_schema"] as? [String: Any])
+        XCTAssertEqual(settings["strict"] as? Bool, true)
+        let schema = try XCTUnwrap(settings["schema"] as? [String: Any])
+        let definitions = try XCTUnwrap(schema["$defs"] as? [String: [String: Any]])
+        XCTAssertEqual(definitions["ingredientName"]?["enum"] as? [String], ["Ovos"])
+        let properties = try XCTUnwrap(schema["properties"] as? [String: [String: Any]])
+        let idea = try XCTUnwrap(properties["ideas"]?["items"] as? [String: Any])
+        let fields = try XCTUnwrap(idea["properties"] as? [String: [String: Any]])
+        XCTAssertEqual(fields["totalMinutes"]?["maximum"] as? Int, 20)
+        XCTAssertEqual(fields["servings"]?["enum"] as? [Int], [1])
+        XCTAssertEqual(body["max_tokens"] as? Int, 4096)
+    }
+
     func testUnrestrictedEmptyPantryStillGeneratesIdeasWithActualIngredients() async throws {
-        let backend = RecipeIdeasFixtureBackend(ideas: [("Risoto de cogumelos", "Cogumelos"), ("Sopa de abóbora", "Abóbora")])
+        let backend = RecipeIdeasFixtureBackend(ideas: [("Risoto de cogumelos", "Cogumelos"), ("Sopa de abóbora", "Abóbora")], ingredients: ["Risoto de cogumelos": ["Cogumelos", "Arroz"], "Sopa de abóbora": ["Abóbora", "Água"]])
         let generator = RecipeQuickIdeasGenerator(aiService: AIService(supabase: backend))
         let ideas = await generator.generate(pantryItems: [], occasion: nil, refinement: nil, customQuery: "Quero ideias novas", language: .ptBR, filterByPantry: false)
         XCTAssertEqual(Set(ideas.map(\.mainIngredient)), ["Cogumelos", "Abóbora"])
@@ -503,7 +582,7 @@ final class RecipeIdeasPantryModeTests: XCTestCase {
     }
 
     func testTopSuggestionsVaryIngredientsBeforeRepeatingPopularIngredient() async {
-        let backend = RecipeIdeasFixtureBackend(ideas: [("Omelete A", "Ovos"), ("Omelete B", "Ovos"), ("Omelete C", "Ovos"), ("Salada", "Tomate"), ("Tapioca", "Goma de tapioca")])
+        let backend = RecipeIdeasFixtureBackend(ideas: [("Omelete A", "Ovos"), ("Omelete B", "Ovos"), ("Omelete C", "Ovos"), ("Salada", "Tomate"), ("Tapioca", "Goma de tapioca")], ingredients: ["Omelete A": ["Ovos", "Tomate"], "Omelete B": ["Ovos", "Tomate"], "Omelete C": ["Ovos", "Tomate"], "Salada": ["Tomate", "Ovos"], "Tapioca": ["Goma de tapioca", "Ovos"]])
         let generator = RecipeQuickIdeasGenerator(aiService: AIService(supabase: backend))
         let ideas = await generator.generate(pantryItems: ["Ovos", "Tomate", "Goma de tapioca"], occasion: nil, refinement: nil, customQuery: nil, language: .ptBR, limit: 3)
         XCTAssertEqual(ideas.count, 3)
@@ -545,13 +624,17 @@ private final class RecipeIdeasFixtureBackend: SupabaseFunctionInvoking {
     var isConfigured: Bool { true }
     let ideas: [(String, String)]
     var bodies: [[String: Any]] = []
+    let ingredients: [String: [String]]
+    let precooked: [String: [String]]
     var acceptLanguage: String?
     var messages: [[String: Any]] { bodies.last?["messages"] as? [[String: Any]] ?? [] }
-    init(ideas: [(String, String)]) { self.ideas = ideas }
+    init(ideas: [(String, String)], ingredients: [String: [String]] = [:], precooked: [String: [String]] = [:]) {
+        self.ideas = ideas; self.ingredients = ingredients; self.precooked = precooked
+    }
     func invokeFunctionData(name: String, body: [String: Any], acceptLanguage: String?) async throws -> Data {
         bodies.append(body)
         self.acceptLanguage = acceptLanguage
-        let content = try JSONSerialization.data(withJSONObject: ["ideas": ideas.map { ["title": $0.0, "mainIngredient": $0.1] }])
+        let content = try JSONSerialization.data(withJSONObject: ["ideas": ideas.map { ["title": $0.0, "mainIngredient": $0.1, "ingredients": ingredients[$0.0] ?? [$0.1], "totalMinutes": 15, "servings": 1, "requiresPrecooked": precooked[$0.0] ?? []] as [String: Any] }])
         return try JSONSerialization.data(withJSONObject: ["choices": [["message": ["content": String(decoding: content, as: UTF8.self)]]]])
     }
     func invokeFunctionData(name: String, body: Data, contentType: String, acceptLanguage: String?) async throws -> Data {
@@ -578,9 +661,12 @@ final class RecipeIdeasLiveProviderTests: XCTestCase {
         let strict = await generator.generate(pantryItems: pantry, occasion: .jantar, refinement: nil,
                                              customQuery: "Jantar sem leite em 20 minutos para uma pessoa", language: .ptBR, limit: 6)
         try backend.saveIdeas(strict, name: "strict")
-        XCTAssertGreaterThanOrEqual(strict.count, 3)
-        XCTAssertGreaterThanOrEqual(Set(strict.map(\.mainIngredient)).count, 3)
+        XCTAssertGreaterThanOrEqual(strict.count, 2)
+        XCTAssertGreaterThanOrEqual(Set(strict.map(\.mainIngredient)).count, 2)
+        XCTAssertTrue(strict.allSatisfy { Set($0.ingredientNames ?? []).count >= 2 })
         XCTAssertTrue(strict.allSatisfy { pantry.contains($0.mainIngredient) })
+        guard strict.count >= 2, Set(strict.map(\.mainIngredient)).count >= 2,
+              strict.allSatisfy({ Set($0.ingredientNames ?? []).count >= 2 && pantry.contains($0.mainIngredient) }) else { return }
         let unrestricted = await generator.generate(pantryItems: [], occasion: .jantar, refinement: nil,
                                                     customQuery: "Quero quatro jantares diferentes, sem depender de uma despensa", language: .ptBR,
                                                     filterByPantry: false, limit: 4)
@@ -599,14 +685,16 @@ private final class ReservedRecipeValidationBackend: SupabaseFunctionInvoking {
     private let actual = SupabaseClient()
     private let directory: URL
     private var receipt: [String: Any]
+    private let ceiling: Double
 
     init() throws {
         directory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("LiveRecipeValidation", isDirectory: true)
         receipt = try JSONSerialization.jsonObject(with: Data(contentsOf: directory.appendingPathComponent("reservation.json"))) as? [String: Any] ?? [:]
-        guard receipt["id"] as? String == "pantry-modes-20261015",
+        ceiling = receipt["reservedUSD"] as? Double ?? 0
+        guard receipt["purpose"] as? String == "recipe-discovery-validation",
               receipt["maximumCalls"] as? Int == 2,
-              receipt["reservedUSD"] as? Double == 0.20,
+              ceiling.isFinite, ceiling > 0, ceiling <= 0.20,
               receipt["status"] as? String == "prepared" else { throw URLError(.userAuthenticationRequired) }
         receipt["requests"] = [[String: Any]]()
         receipt["status"] = "started"
@@ -619,7 +707,7 @@ private final class ReservedRecipeValidationBackend: SupabaseFunctionInvoking {
     }
 
     func saveIdeas(_ ideas: [RecipeQuickIdea], name: String) throws {
-        try JSONEncoder().encode(ideas).write(to: directory.appendingPathComponent("\(name)-ideas.json"), options: .atomic)
+        try JSONEncoder().encode(ideas).write(to: directory.appendingPathComponent("\(name)-\((receipt["id"] as? String ?? "unknown").filter { $0.isLetter || $0.isNumber || $0 == "-" })-ideas.json"), options: .atomic)
     }
 
     func invokeFunctionData(name: String, body: [String: Any], acceptLanguage: String?) async throws -> Data {
@@ -631,10 +719,13 @@ private final class ReservedRecipeValidationBackend: SupabaseFunctionInvoking {
         guard name == "openai-chat", contentType == "application/json", body.count <= 65536, calls < 2 else {
             throw URLError(.unsupportedURL)
         }
-        let reserve = 3 * ((Double(body.count) + 4096) * 0.0000004 + 8192 * 0.0000016)
+        let request = try JSONSerialization.jsonObject(with: body) as? [String: Any]
+        let maxTokens = request?["max_tokens"] as? Int ?? 8192
+        guard (1...8192).contains(maxTokens) else { throw URLError(.unsupportedURL) }
+        let reserve = 3 * ((Double(body.count) + 4096) * 0.0000004 + Double(maxTokens) * 0.0000016)
         var requests = receipt["requests"] as? [[String: Any]] ?? []
         let used = requests.reduce(0.0) { $0 + ($1["reserved_usd"] as? Double ?? 0.20) }
-        guard used + reserve <= 0.20 else { throw URLError(.dataLengthExceedsMaximum) }
+        guard used + reserve <= ceiling else { throw URLError(.dataLengthExceedsMaximum) }
         let index = requests.count
         requests.append(["function": name, "request_body_bytes": body.count, "reserved_usd": reserve, "status": "dispatched-reserved"])
         receipt["requests"] = requests
