@@ -31,23 +31,6 @@ extension EnvironmentValues {
     }
 }
 
-struct ContentPanelCutoutDescriptor {
-    let bounds: Anchor<CGRect>
-    let style: ContentPanelCutoutStyle
-}
-
-enum ContentPanelCutoutStyle {
-    case nutritionCalories(text: String)
-}
-
-struct ContentPanelCutoutKey: PreferenceKey {
-    nonisolated(unsafe) static var defaultValue: [ContentPanelCutoutDescriptor] = []
-
-    static func reduce(value: inout [ContentPanelCutoutDescriptor], nextValue: () -> [ContentPanelCutoutDescriptor]) {
-        value.append(contentsOf: nextValue())
-    }
-}
-
 struct ContentPanelWavyBorderKey: PreferenceKey {
     nonisolated(unsafe) static var defaultValue: Color?
 
@@ -272,35 +255,9 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
         .ignoresSafeArea(edges: .bottom)
         .padding(.leading, leadingPanelInset)
         .padding(.trailing, trailingPanelInset)
-        .overlayPreferenceValue(ContentPanelCutoutKey.self) { cutouts in
-            GeometryReader { proxy in
-                ForEach(Array(cutouts.enumerated()), id: \.offset) { _, cutout in
-                    cutoutView(for: cutout, in: proxy)
-                }
-            }
-            .allowsHitTesting(false)
-        }
-        .compositingGroup()
         .animation(.spring(response: 0.38, dampingFraction: 0.78), value: searchBarState.isVisible)
     }
 
-    @ViewBuilder
-    private func cutoutView(for cutout: ContentPanelCutoutDescriptor, in proxy: GeometryProxy) -> some View {
-        let rect = proxy[cutout.bounds]
-
-        switch cutout.style {
-        case .nutritionCalories(let text):
-            Text(text)
-                .font(.custom("Bricolage Grotesque", size: 96, relativeTo: .largeTitle).weight(.bold))
-                .lineLimit(1)
-                .minimumScaleFactor(0.5)
-                .frame(width: rect.width, height: rect.height)
-                .position(x: rect.midX, y: rect.midY)
-                .blendMode(.destinationOut)
-                .allowsHitTesting(false)
-                .accessibilityHidden(true)
-        }
-    }
     #endif
 
     // MARK: - Drag to Reveal Gesture

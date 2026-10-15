@@ -642,3 +642,29 @@ https://developer.apple.com/documentation/metal/mtlcommandbuffer/gpuendtime.
 Após os testes das cinco páginas, quick_check dos dois stores físicos passou.
 Todas as linhas, IDs, hashes de BLOBs e os mesmos 151 arquivos de mídia permaneceram
 idênticos ao backup completo anterior. O diagnóstico não executou chamadas de IA.
+
+### Composição obsoleta da coluna
+
+Não havia produtores de `ContentPanelCutoutKey` no app. O recorte de calorias já
+removido ainda mantinha um overlay, GeometryReader, preferência e compositingGroup
+envolvendo toda a coluna. Esse caminho sem uso foi retirado; clip, superfície,
+borda luminosa, shader, relógio e fade continuam existentes.
+
+Os três builds passaram, e as cinco páginas/retorno ao app passaram novamente
+no Simulator. Na primeira comparação física sem espelhamento, a Home registrou
+39,97 quadros/s (três amostras: 45,36/37,17/37,37), contra 16,14 da rodada anterior.
+É uma melhora no cenário medido, sem certificar 60 quadros/s ou fluidez geral.
+As outras páginas físicas ainda estão em execução nesta etapa.
+
+Time Profiler físico em repouso também obteve 4.408 linhas de amostragem em
+16,216 s. A pilha da thread principal ficou dominada por espera de drawable:
+`_dispatch_semaphore_wait_slow → CAMetalLayerPrivateNextDrawableLocked →
+MTKView.currentDrawable → SavoriaMetalBackdrop.Coordinator.draw(in:)`.
+O perfil inclui threads em espera: esses pesos não representam CPU ocupada.
+Isso identifica um bloqueio da interface apesar do custo baixo do passe na GPU.
+A próxima correção deve retirar essa aquisição de drawable da thread principal,
+preservando a animação e usando um autoreleasepool por frame, conforme a Apple:
+https://developer.apple.com/documentation/quartzcore/cametallayer.
+
+Teste manual: conferir o painel e a borda em Home/Nutrição/Listas/Receitas, rolar,
+abrir e fechar a busca, sair e voltar ao app e confirmar o fundo em movimento.
