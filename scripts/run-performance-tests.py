@@ -21,6 +21,8 @@ def main():
     action.add_argument("--page", action="append", choices=PAGES)
     action.add_argument("--profile-lists", action="store_true",
                         help="Feed Instruments with gestures without XCTest trace metrics.")
+    action.add_argument("--profile-foreground", action="store_true",
+                        help="Profile warm foreground on all five pages without trace metrics.")
     args = parser.parse_args()
     with args.xctestrun.open("rb") as stream:
         runner = plistlib.load(stream).get("SavoriaPerformanceUITests", {})
@@ -29,8 +31,8 @@ def main():
     installed = runner.get("UseDestinationArtifacts") is True
     if installed and runner.get("EnvironmentVariables", {}).get("SAVORIA_USE_INSTALLED_TARGET") != "1":
         parser.error("Prepare a new installed-mode copy with the current helper first.")
-    if installed and (not args.device or (not args.profile_lists and len(args.page or []) != 1)):
-        parser.error("Installed mode requires a physical device and one --page per invocation (or --profile-lists).")
+    if installed and (not args.device or (not (args.profile_lists or args.profile_foreground) and len(args.page or []) != 1)):
+        parser.error("Installed mode requires a physical device and one --page or one profiling action.")
     result = args.result.resolve()
     log_path = result.with_suffix(".log")
     if result.exists() or log_path.exists():
@@ -42,6 +44,8 @@ def main():
                "-collect-test-diagnostics", "never", "-resultBundlePath", str(result)]
     if args.profile_lists:
         command.append("-only-testing:SavoriaPerformanceUITests/PageActionTracingTests/testProfileListsForInstruments")
+    elif args.profile_foreground:
+        command.append("-only-testing:SavoriaPerformanceUITests/PageActionTracingTests/testProfileForegroundForInstruments")
     else:
         for page in args.page or PAGES:
             method = "testHitchesSearchAndForeground" if page == "Search" else "testHitches" + page + "ScrollAndForeground"

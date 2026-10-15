@@ -94,6 +94,31 @@ final class PageActionTracingTests: XCTestCase {
         attachDeviceConditions(thermalBefore: thermalBefore, lowPowerBefore: lowPowerBefore)
     }
 
+    /// Profiles warm foreground transitions on every tab, without trace metrics.
+    func testProfileForegroundForInstruments() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication(bundleIdentifier: "com.pedrosalles.smartkitchen.sync")
+        app.launchArguments = ["-SavoriaActionTrace", "-SavoriaKeepAwakeForValidation",
+                               "-AppleLanguages", "(pt-BR)", "-AppleLocale", "pt_BR"]
+        try openMeasurementApp(app)
+        let tabs = app.tabBars.firstMatch
+        XCTAssertTrue(tabs.waitForExistence(timeout: 45))
+        let thermalBefore = ProcessInfo.processInfo.thermalState.rawValue
+        let lowPowerBefore = ProcessInfo.processInfo.isLowPowerModeEnabled
+        for _ in 0..<2 {
+            for page in ["Savoria", "Listas", "Nutrição", "Receitas", "Buscar"] {
+                tabs.buttons[page].firstMatch.tap()
+                XCUIDevice.shared.press(.home)
+                app.activate()
+                // Sleep only the separate test-driver process. Leave the app
+                // free of AX queries for two seconds after each activation.
+                Thread.sleep(forTimeInterval: 2)
+                XCTAssertTrue(tabs.buttons[page].firstMatch.isSelected)
+            }
+        }
+        attachDeviceConditions(thermalBefore: thermalBefore, lowPowerBefore: lowPowerBefore)
+    }
+
     private func openMeasurementApp(_ app: XCUIApplication) throws {
         if ProcessInfo.processInfo.environment["SAVORIA_USE_INSTALLED_TARGET"] == "1" {
             // The CLI opens the signed, installed app before starting XCTest.

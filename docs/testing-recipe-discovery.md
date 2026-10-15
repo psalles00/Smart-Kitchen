@@ -941,3 +941,63 @@ consultado não apresentava crash/jetsam novo correspondente ao horário desta
 rodada; isso não determina a causa do encerramento nem exclui relatório tardio.
 O Device Hub foi deixado no iPhone físico e foi solicitado esfriar/desbloquear
 para a comparação térmica. Não houve reinstalação do aplicativo principal.
+
+### Retestes após intervalo e perfil de CPU finalizado
+
+Após novo desbloqueio, Listas passou com 59,42 / 59,42 / 58,61 fps
+(média 59,15), hitch ratio médio 2,27 ms/s. O estado térmico inicial foi fair,
+e o final serious; não se trata de uma rodada inteiramente nominal. O app
+principal permaneceu instalado e o Device Hub foi encerrado durante a medição.
+
+O Time Profiler exclusivo de rolagem finalizou e foi exportado: intervalo
+amostrado de 15,92 s, 5.306 amostras da thread principal e nenhuma aquisição
+de drawable nessa thread. As 26 amostras de aquisição ficaram em outras
+threads. O trabalho próprio de PantryItemRow continuou pequeno no perfil.
+
+Com o mesmo parser nos dois perfis, o peso estatístico inclusivo de render_shape
+no backboardd passou de 2.256 para 225 ms, e render_lines de 1.240 para 90 ms.
+Não são tempos de GPU nem percentuais de CPU; símbolos inclusivos se sobrepõem.
+A carga de sharingd também caiu de 25.820 para 21 ms somando suas threads.
+Portanto, a comparação é compatível com menos trabalho nas formas, mas não
+isola causalmente o efeito dos separadores da mudança na carga do sistema.
+
+Os retestes seguintes de seleção/rolagem/retorno também passaram:
+
+| Página | FPS médio da rolagem | Hitch ratio médio (ms/s) |
+| --- | ---: | ---: |
+| Inicial | 56,77 | 9,28 |
+| Listas | 59,15 | 2,27 |
+| Nutrição | 56,19 | 27,70 |
+| Receitas | 59,17 | 2,29 |
+
+Inicial/Nutrição/Receitas e o perfil de CPU registraram serious antes/depois,
+sem Low Power Mode. Busca mantém a aprovação funcional da rodada anterior;
+não possui métrica de rolagem neste roteiro. As cópias físicas posteriores
+preservaram todos os registros/IDs/BLOBs e as 151 mídias, com quick_check ok.
+
+### Isolar intervalos na retomada
+
+Os ActionTraces dessa rodada contêm intervalos entre callbacks de até 447 ms
+em sequências de retomada quentes, excluindo os eventos de lançamento inicial.
+Esses intervalos incluem a interferência da automação e não são quadros de GPU
+nem prova isolada de congelamento visível. A rolagem perto de 60 fps não os
+invalida e não aprova automaticamente toda a retomada.
+
+O novo testProfileForegroundForInstruments percorre duas vezes as cinco páginas,
+pressiona Home e reativa o app, conferindo a seleção preservada. Após cada
+ativação, deixa o app por dois segundos sem consultas AX, dormindo apenas o
+processo separado do executor. Não cria sessão XCTHitchMetric, faz chamadas
+de IA ou modifica dados. O helper expõe --profile-foreground.
+
+Os builds do runner para físico e Simulator passaram. Somente o runner físico
+foi atualizado. O preflight da captura adicional retornou Locked antes de
+iniciar os testes ou o profiler; esse perfil de retomada ainda não é evidência
+física. Os índices consultados não mostraram crash/jetsam novo do horário
+correspondente; a causa do encerramento anterior continua não comprovada.
+O Device Hub está preparado e foi solicitado novo desbloqueio.
+
+O teste novo passou no iPhone 17 Pro do Simulator: dois ciclos completos pelas
+cinco páginas, seleção retida após cada retomada e zero falhas. O readback
+posterior preservou todos os registros/IDs/BLOBs dos dois stores, quick_check
+ok. Isso valida o roteiro e sua execução normal; não substitui a atribuição
+dos intervalos observados no iPhone físico.
