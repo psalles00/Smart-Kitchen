@@ -92,6 +92,66 @@ final class RecipeListCache {
     }
 }
 
+/// Save notifications cover the entire store, including settings and nutrition.
+/// Inspect identifiers before debouncing so unrelated saves neither fetch all
+/// recipes nor postpone a pending recipe refresh. Unknown/remote changes remain
+/// conservative: they must still refresh imports from CloudKit or extensions.
+enum RecipeListInvalidation {
+    private static let entities: Set<String> = [
+        "Recipe", "RecipeIngredient", "RecipeIngredientSection", "RecipeStep", "RecipePreparationMedia"
+    ]
+
+    // A function reference keeps this work on the notification's posting queue;
+    // a closure declared inside View.body inherits MainActor under Swift 6.
+    static func shouldRefresh(_ notification: Notification) -> Bool {
+        let affected = affectsRecipes(notification)
+        PerformanceLogger.event(.recipes, "recipe listing notification", metadata: "source=\(notification.name.rawValue) reload=\(affected)")
+        return affected
+    }
+
+    static func affectsRecipes(_ notification: Notification) -> Bool {
+        guard notification.name != .NSPersistentStoreRemoteChange,
+              let info = notification.userInfo else { return true }
+        if notification.name == ModelContext.didSave {
+            let invalidated = ModelContext.NotificationKey.invalidatedAllIdentifiers
+            if info[invalidated] != nil || info[invalidated.rawValue] != nil { return true }
+            var recognized = false
+            for key in [ModelContext.NotificationKey.insertedIdentifiers, .updatedIdentifiers, .deletedIdentifiers] {
+                guard let value = info[key] ?? info[key.rawValue] else { continue }
+                let identifiers: [PersistentIdentifier]
+                if let values = value as? [PersistentIdentifier] { identifiers = values }
+                else if let values = value as? Set<PersistentIdentifier> { identifiers = Array(values) }
+                else { return true }
+                recognized = true
+                if identifiers.contains(where: { isRecipeEntity($0.entityName) }) { return true }
+            }
+            return !recognized
+        }
+        if notification.name == .NSManagedObjectContextDidSave {
+            if info[NSInvalidatedAllObjectsKey] != nil { return true }
+            var recognized = false
+            for key in [NSInsertedObjectsKey, NSUpdatedObjectsKey, NSDeletedObjectsKey, NSInvalidatedObjectsKey,
+                        NSInsertedObjectIDsKey, NSUpdatedObjectIDsKey, NSDeletedObjectIDsKey] {
+                guard let value = info[key] else { continue }
+                let names: [String?]
+                if let objects = value as? Set<NSManagedObject> { names = objects.map { $0.objectID.entity.name } }
+                else if let identifiers = value as? Set<NSManagedObjectID> { names = identifiers.map { $0.entity.name } }
+                else if let objects = value as? [NSManagedObject] { names = objects.map { $0.objectID.entity.name } }
+                else if let identifiers = value as? [NSManagedObjectID] { names = identifiers.map { $0.entity.name } }
+                else { return true }
+                recognized = true
+                if names.contains(where: { $0 == nil || isRecipeEntity($0!) }) { return true }
+            }
+            return !recognized
+        }
+        return true
+    }
+
+    private static func isRecipeEntity(_ name: String) -> Bool {
+        entities.contains(name.split(separator: ".").last.map(String.init) ?? name)
+    }
+}
+
 struct RecipeListObservation: ViewModifier {
     @Environment(\.modelContext) private var modelContext
     let cache: RecipeListCache
@@ -101,6 +161,7 @@ struct RecipeListObservation: ViewModifier {
             NotificationCenter.default.publisher(for: ModelContext.didSave)
                 .merge(with: NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave),
                        NotificationCenter.default.publisher(for: .NSPersistentStoreRemoteChange))
+                .filter(RecipeListInvalidation.shouldRefresh)
                 .debounce(for: .milliseconds(150), scheduler: RunLoop.main)
         ) { _ in
             cache.reload(in: modelContext)

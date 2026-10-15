@@ -1072,6 +1072,35 @@ retornos às cinco páginas e a espera final foram executados, sem casos
 ignorados. O readback dos dois stores permaneceu idêntico. Esse resultado
 valida o roteiro, sem substituir a captura física pendente.
 
+A nova tentativa física após o resfriamento passou nos dez retornos, com
+preflight thermal=0, sem Low Power Mode, timeout ou avisos do exportador.
+Somente o PID original do Savoria aparece na amostragem; o estado térmico
+permaneceu nominal/fair, sem condição induzida. Ainda houve 18 hangs de
+263–623 ms. A recarga da listagem concentrou 2.972 ms de peso estatístico
+inclusivo na thread principal; esse número não é FPS nem latência de toque.
+Várias pausas coincidiram com essa recarga, mesmo sem mudanças nas receitas.
+
+O observador agora filtra salvamentos conhecidos de outras entidades antes
+de agrupar notificações. Alterações de Recipe e seus ingredientes, seções,
+passos e mídias continuam invalidando a listagem; notificações remotas,
+invalidações e formatos desconhecidos continuam conservadores. A inspeção
+usa uma função fora do isolamento da View, na fila que publica a notificação;
+somente a recarga é agendada na thread principal. Um teste com salvamentos
+reais detectou uma primeira tentativa incorreta com closure isolada na View;
+ela foi corrigida antes de qualquer instalação física/Mac. Os cinco testes
+isolados passaram após essa correção, incluindo configurações ignoradas,
+ingrediente atualizado, receita excluída no fixture e formatos desconhecidos.
+Os stores reais e as 151 mídias permaneceram idênticos após a captura fria.
+
+Os três builds do filtro passaram. No Simulator, os testes nativos de páginas,
+retomada e passos de receita passaram, com readback dos dois stores idêntico.
+A versão macOS foi instalada/aberta com a assinatura e os containers anteriores;
+o snapshot do backend permaneceu idêntico, na condição pós-formatação já
+conhecida. O iPhone recebeu a versão nova com Bundle ID, Team, iCloud e App
+Group conferidos, mas negou a abertura com `Locked`. A comparação física do
+filtro fica pendente de desbloqueio; a captura fria anterior não mede esta
+alteração e não autoriza afirmar ganho ou ausência de pausas nesta versão.
+
 Conferência manual da listagem:
 
 1. Abra as cinco páginas, saia do app e volte em cada uma delas; confira a

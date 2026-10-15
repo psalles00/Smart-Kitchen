@@ -1,5 +1,6 @@
 import Foundation
 import SwiftData
+import CoreData
 import XCTest
 #if canImport(Metal)
 import Metal
@@ -8,6 +9,74 @@ import Metal
 
 @MainActor
 final class RecipeMetadataQueryTests: XCTestCase {
+    private final class SaveNotifications: @unchecked Sendable {
+        private let lock = NSLock()
+        private var values: [Notification] = []
+        func append(_ value: Notification) { lock.lock(); defer { lock.unlock() }; values.append(value) }
+        func drain() -> [Notification] { lock.lock(); defer { lock.unlock() }; defer { values.removeAll() }; return values }
+    }
+
+    func testActualSaveNotificationsIgnoreSettingsButRetainRecipeAndIngredientChanges() async throws {
+        let container = try ModelContainer(for: Recipe.self, AppSettings.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none))
+        let context = ModelContext(container)
+        context.autosaveEnabled = false
+        let notifications = SaveNotifications()
+        let center = NotificationCenter.default
+        let observers = [ModelContext.didSave, .NSManagedObjectContextDidSave].map { name in
+            center.addObserver(forName: name, object: nil, queue: nil) { notifications.append($0) }
+        }
+        defer { observers.forEach(center.removeObserver) }
+
+        func savedNotifications() async throws -> [Notification] {
+            try context.save()
+            try await Task.sleep(for: .milliseconds(50))
+            let events = notifications.drain()
+            XCTAssertFalse(events.isEmpty, "Exercise actual store notifications, not fabricated userInfo alone")
+            return events
+        }
+
+        let settings = AppSettings()
+        context.insert(settings)
+        let settingsEvents = try await savedNotifications()
+        XCTAssertTrue(settingsEvents.allSatisfy { !RecipeListInvalidation.affectsRecipes($0) })
+
+        let ingredient = RecipeIngredient(name: "Arroz")
+        let recipe = Recipe(name: "Notificação", ingredients: [ingredient])
+        context.insert(recipe)
+        let recipeEvents = try await savedNotifications()
+        XCTAssertTrue(recipeEvents.contains { RecipeListInvalidation.affectsRecipes($0) })
+        ingredient.quantity = 0.125
+        let ingredientEvents = try await savedNotifications()
+        XCTAssertTrue(ingredientEvents.contains { RecipeListInvalidation.affectsRecipes($0) })
+        context.delete(recipe) // This test's isolated fixture only.
+        let deletionEvents = try await savedNotifications()
+        XCTAssertTrue(deletionEvents.contains { RecipeListInvalidation.affectsRecipes($0) })
+    }
+
+    func testRemoteAndUnknownNotificationsRemainConservativeAndIdentifierCollectionsAreAccepted() throws {
+        XCTAssertTrue(RecipeListInvalidation.affectsRecipes(Notification(name: .NSPersistentStoreRemoteChange)))
+        XCTAssertTrue(RecipeListInvalidation.affectsRecipes(Notification(name: ModelContext.didSave)))
+        let container = try ModelContainer(for: Recipe.self, AppSettings.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none))
+        let context = ModelContext(container)
+        let ingredient = RecipeIngredient(name: "Fixture")
+        let appSettings = AppSettings()
+        context.insert(ingredient)
+        context.insert(appSettings)
+        try context.save()
+        let recipe = ingredient.persistentModelID
+        let settings = appSettings.persistentModelID
+        for value: Any in [[recipe], Set([recipe])] {
+            XCTAssertTrue(RecipeListInvalidation.affectsRecipes(Notification(name: ModelContext.didSave,
+                userInfo: [ModelContext.NotificationKey.updatedIdentifiers.rawValue: value])))
+        }
+        XCTAssertFalse(RecipeListInvalidation.affectsRecipes(Notification(name: ModelContext.didSave,
+            userInfo: [ModelContext.NotificationKey.insertedIdentifiers: Set([settings]) ])))
+        XCTAssertTrue(RecipeListInvalidation.affectsRecipes(Notification(name: ModelContext.didSave,
+            userInfo: [ModelContext.NotificationKey.updatedIdentifiers: "unknown format"])))
+    }
+
     func testListingReloadIncludesRecipesSavedByAnotherContext() throws {
         let configuration = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try ModelContainer(for: Recipe.self, configurations: configuration)
