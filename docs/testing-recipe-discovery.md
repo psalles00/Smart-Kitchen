@@ -451,3 +451,45 @@ Confira todos os ingredientes e o preparo; repita com limite de tempo e sem leit
 Atualize as ideias e confira diversidade e ausência de URLs repetidas. Com uma
 despensa insuficiente, confira ausência de receitas incompatíveis; desligue a
 restrição apenas por escolha explícita, não como fallback automático do app.
+
+## Segunda correção do shader: superfície Metal delimitada
+
+A primeira otimização não foi suficiente. Fora do XCTest, com o app em primeiro
+plano, a captura posterior registrou 598 linhas de engasgo em aproximadamente
+30 segundos, com muitos avisos de GPU/renderização e até 109 passes fora da tela.
+Os intervalos superiores de GPU tiveram mediana de 26,68 ms. A navegação inicial
+e esta captura parada não são experiências equivalentes: não se calculou uma
+porcentagem de melhora nem se usou a redução do máximo como aprovação.
+
+O shader agora usa MTKView com drawable limitado a 384 pixels na maior dimensão,
+ampliado pelo compositor. A rede e seus pesos continuam os mesmos. O relógio e
+o viewport são compartilhados; o renderer amostra o fade da paleta sem atualizar
+a árvore SwiftUI a cada quadro. A apresentação solicita 60 quadros/s, sem afirmar
+que o aparelho já os mantém. Páginas inativas, app em segundo plano e Reduzir
+Movimento pausam a animação; há limite de dois comandos em voo e fallback visual
+se Metal não estiver disponível. Referência de configuração:
+https://developer.apple.com/documentation/metalkit/mtkview.
+
+Builds dos três destinos aprovados. A versão abriu no iPhone 17 Pro Simulator,
+com fundo visível, e `testPagesAndForeground` passou. Readback dos stores Private
+e Shared: quick_check ok e todas as linhas, IDs e hashes dos BLOBs idênticos.
+Mac instalado com Apple Development, entitlements preservados e snapshot
+idêntico; abertura visual final aguarda desbloqueio. A versão também foi
+instalada no físico, com Bundle ID, Team, containers ordenados e App Group
+conferidos, mas medição e readback posteriores aguardam o código do aparelho.
+
+A cópia física após o teste da primeira otimização falhou com socket fechado,
+enquanto o aparelho voltou a exigir código. A cópia parcial foi preservada; ela
+não contém todos os stores/arquivos e não foi usada para afirmar integridade.
+O backup completo anterior e a comparação física anterior permanecem válidos
+para seus respectivos instantes, sem serem promovidos a prova do novo candidato.
+
+Para a medição controlada, os argumentos explícitos `-SavoriaActionTrace` e
+`-SavoriaKeepAwakeForValidation` mantêm a tela acesa somente no processo de teste,
+sem gravar preferência de Auto-Lock ou outro dado pessoal. Execuções normais não
+ativam esse comportamento. Não houve chamada paga nesta etapa.
+
+Roteiro físico pendente: abrir a versão instalada com esses argumentos, conferir
+o fundo animado e o fade em cada página, medir Animation Hitches em repouso e em
+navegação e após retorno ao app; comparar cargas equivalentes e fazer readback
+completo. A nova arquitetura ainda não é uma certificação de fluidez ou produção.

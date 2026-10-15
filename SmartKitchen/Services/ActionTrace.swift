@@ -36,6 +36,11 @@ final class ActionTrace: NSObject {
 
     func install() {
         guard Self.enabled, observers.isEmpty else { return }
+        // Explicit operator-only launch flag. This affects this foreground app
+        // process, never Auto-Lock preferences or the user's persisted settings.
+        if ProcessInfo.processInfo.arguments.contains("-SavoriaKeepAwakeForValidation") {
+            UIApplication.shared.isIdleTimerDisabled = true
+        }
         events.reserveCapacity(256)
         frames.reserveCapacity(4096)
         let center = NotificationCenter.default

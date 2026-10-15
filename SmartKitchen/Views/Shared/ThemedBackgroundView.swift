@@ -1,6 +1,7 @@
 import SwiftUI
 #if os(iOS)
 import UIKit
+import MetalKit
 #endif
 
 struct ThemedBackgroundView: View {
@@ -73,58 +74,142 @@ private struct SavoriaShaderBackground: View {
     @Environment(\.savoriaBackdropViewport) private var viewport
 
     var body: some View {
-        GeometryReader { geometry in
-            TimelineView(.animation(minimumInterval: 1.0 / 20,
-                                    paused: !animates || reduceMotion || scenePhase != .active)) { _ in
-                let now = ProcessInfo.processInfo.systemUptime
-                let tint = palette?.target == theme ? palette!.rgb(at: now) : theme.shaderRGB
-                // This is a soft, full-screen field, not foreground detail.
-                // Rasterize the expensive CPPN at quarter dimensions, then
-                // enlarge that texture. Keep the viewport/time proportional so
-                // tab changes never restart or reshape the animated field.
-                let renderScale: CGFloat = 4
-                let fieldSize = viewport.width > 0 ? viewport : geometry.size
-                Rectangle()
-                    .fill(.white)
-                    .frame(width: geometry.size.width / renderScale,
-                           height: geometry.size.height / renderScale)
-                    .modifier(SavoriaAnimatedShaderTint(
-                        tint: tint,
-                        size: CGSize(width: fieldSize.width / renderScale,
-                                     height: fieldSize.height / renderScale),
-                        time: reduceMotion ? 0 : now - SavoriaShaderClock.epoch))
-                    .drawingGroup(opaque: true)
-                    .scaleEffect(renderScale, anchor: .topLeading)
-                    .frame(width: geometry.size.width, height: geometry.size.height,
-                           alignment: .topLeading)
-                    .clipped()
-                    .overlay {
-                        LinearGradient(colors: [.black.opacity(contrast == .increased ? 0.60 : 0.42), .black.opacity(contrast == .increased ? 0.85 : 0.72)],
-                                       startPoint: .top, endPoint: .bottom)
-                    }
+        Group {
+            if SavoriaMetalBackdropResources.shared.pipeline != nil {
+                SavoriaMetalBackdrop(theme: theme, palette: palette, viewport: viewport,
+                                     animates: animates && scenePhase == .active,
+                                     reduceMotion: reduceMotion)
+            } else {
+                StaticPageBackground(theme: theme)
             }
+        }
+        .overlay {
+            LinearGradient(colors: [.black.opacity(contrast == .increased ? 0.60 : 0.42), .black.opacity(contrast == .increased ? 0.85 : 0.72)],
+                           startPoint: .top, endPoint: .bottom)
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
     }
 }
 
-/// Only RGB interpolates. SwiftUI must never tween the clock or viewport uniforms.
-private struct SavoriaAnimatedShaderTint: AnimatableModifier {
-    nonisolated var tint: SIMD3<Double>
-    let size: CGSize
-    let time: TimeInterval
+/// The CPPN is independent of SwiftUI's update/render passes. Its drawable has
+/// a bounded pixel size; Core Animation scales the soft field to the viewport.
+@MainActor
+private final class SavoriaMetalBackdropResources {
+    static let shared = SavoriaMetalBackdropResources()
+    let device: MTLDevice?
+    let pipeline: MTLRenderPipelineState?
 
-    nonisolated var animatableData: AnimatablePair<Double, AnimatablePair<Double, Double>> {
-        get { AnimatablePair(tint.x, AnimatablePair(tint.y, tint.z)) }
-        set { tint = SIMD3(newValue.first, newValue.second.first, newValue.second.second) }
+    private init() {
+        device = MTLCreateSystemDefaultDevice()
+        guard let device, let library = device.makeDefaultLibrary() else { pipeline = nil; return }
+        let descriptor = MTLRenderPipelineDescriptor()
+        descriptor.vertexFunction = library.makeFunction(name: "savoriaBackdropVertex")
+        descriptor.fragmentFunction = library.makeFunction(name: "savoriaBackdropFragment")
+        descriptor.colorAttachments[0].pixelFormat = .bgra8Unorm
+        pipeline = try? device.makeRenderPipelineState(descriptor: descriptor)
+    }
+}
+
+private struct SavoriaMetalBackdrop: UIViewRepresentable {
+    let theme: PageTheme
+    let palette: SavoriaBackdropPalette?
+    let viewport: CGSize
+    let animates: Bool
+    let reduceMotion: Bool
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
+    func makeUIView(context: Context) -> SavoriaBackdropMetalView {
+        let view = SavoriaBackdropMetalView(frame: .zero, device: SavoriaMetalBackdropResources.shared.device)
+        view.colorPixelFormat = .bgra8Unorm
+        view.isOpaque = true
+        view.backgroundColor = .black
+        view.clearColor = MTLClearColorMake(0, 0, 0, 1)
+        view.framebufferOnly = true
+        view.autoResizeDrawable = false
+        view.preferredFramesPerSecond = 60
+        view.delegate = context.coordinator
+        view.isUserInteractionEnabled = false
+        return view
     }
 
-    func body(content: Content) -> some View {
-        content.colorEffect(ShaderLibrary.savoriaNebula(
-            .float2(size), .float(time),
-            .color(Color(red: tint.x, green: tint.y, blue: tint.z)), .float(1)))
-            .transaction { $0.animation = nil }
+    func updateUIView(_ view: SavoriaBackdropMetalView, context: Context) {
+        context.coordinator.theme = theme
+        context.coordinator.palette = palette
+        context.coordinator.viewport = viewport
+        context.coordinator.reduceMotion = reduceMotion
+        view.wantsAnimation = animates && !reduceMotion
+        view.updateRenderState()
+        if view.isPaused { view.draw() }
+    }
+
+    static func dismantleUIView(_ view: SavoriaBackdropMetalView, coordinator: Coordinator) {
+        view.isPaused = true
+        view.delegate = nil
+    }
+
+    @MainActor
+    final class Coordinator: NSObject, @preconcurrency MTKViewDelegate {
+        var theme: PageTheme = .home
+        var palette: SavoriaBackdropPalette?
+        var viewport: CGSize = .zero
+        var reduceMotion = false
+        private let queue = SavoriaMetalBackdropResources.shared.device?.makeCommandQueue()
+        private let inFlight = DispatchSemaphore(value: 2)
+
+        func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) { }
+
+        func draw(in view: MTKView) {
+            guard view.bounds.width > 0, view.bounds.height > 0,
+                  let pipeline = SavoriaMetalBackdropResources.shared.pipeline,
+                  let queue, inFlight.wait(timeout: .now()) == .success else { return }
+            guard let drawable = view.currentDrawable,
+                  let descriptor = view.currentRenderPassDescriptor,
+                  let command = queue.makeCommandBuffer(),
+                  let encoder = command.makeRenderCommandEncoder(descriptor: descriptor) else {
+                inFlight.signal()
+                return
+            }
+            let now = ProcessInfo.processInfo.systemUptime
+            let tint = !reduceMotion && palette?.target == theme ? palette!.rgb(at: now) : theme.shaderRGB
+            let field = viewport.width > 0 ? viewport : view.bounds.size
+            // Three float4s keep Swift/Metal alignment explicit.
+            var uniforms = (SIMD4<Float>(Float(view.bounds.width), Float(view.bounds.height), Float(field.width), Float(field.height)),
+                            SIMD4<Float>(Float(tint.x), Float(tint.y), Float(tint.z), 1),
+                            SIMD4<Float>(reduceMotion ? 0 : Float(now - SavoriaShaderClock.epoch), 0, 0, 0))
+            encoder.setRenderPipelineState(pipeline)
+            encoder.setFragmentBytes(&uniforms, length: MemoryLayout.size(ofValue: uniforms), index: 0)
+            encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 3)
+            encoder.endEncoding()
+            let semaphore = inFlight
+            command.addCompletedHandler { _ in semaphore.signal() }
+            command.present(drawable)
+            command.commit()
+        }
+    }
+}
+
+private final class SavoriaBackdropMetalView: MTKView {
+    var wantsAnimation = false
+
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        updateRenderState()
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        guard bounds.width > 0, bounds.height > 0 else { return }
+        let scale = min(1, 384 / max(bounds.width, bounds.height))
+        let size = CGSize(width: max(1, (bounds.width * scale).rounded()),
+                          height: max(1, (bounds.height * scale).rounded()))
+        if drawableSize != size { drawableSize = size }
+        if isPaused { draw() }
+    }
+
+    func updateRenderState() {
+        isPaused = !wantsAnimation || window == nil
     }
 }
 

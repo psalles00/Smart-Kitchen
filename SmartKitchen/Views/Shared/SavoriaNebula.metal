@@ -330,3 +330,30 @@ finalColor = min(finalColor, float3(1.0));
 
 return half4(half3(finalColor), 1.0);
 }
+
+// A bounded native Metal drawable avoids evaluating this network at the full
+// screen's pixel density through SwiftUI's offscreen compositing passes.
+struct SavoriaBackdropVertexOut {
+    float4 position [[position]];
+    float2 uv;
+};
+
+struct SavoriaBackdropUniforms {
+    float4 sizes;
+    float4 tint;
+    float4 clock;
+};
+
+vertex SavoriaBackdropVertexOut savoriaBackdropVertex(uint id [[vertex_id]]) {
+    float2 positions[] = {float2(-1, -1), float2(3, -1), float2(-1, 3)};
+    SavoriaBackdropVertexOut out;
+    out.position = float4(positions[id], 0, 1);
+    out.uv = positions[id] * float2(0.5, -0.5) + 0.5;
+    return out;
+}
+
+fragment half4 savoriaBackdropFragment(SavoriaBackdropVertexOut in [[stage_in]],
+                                      constant SavoriaBackdropUniforms &uniforms [[buffer(0)]]) {
+    return savoriaNebula(in.uv * uniforms.sizes.xy, half4(1), uniforms.sizes.zw,
+                         uniforms.clock.x, half4(uniforms.tint), 1);
+}
