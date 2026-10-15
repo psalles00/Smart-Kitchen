@@ -25,11 +25,20 @@ struct RecipeQuickIdea: Identifiable, Codable, Equatable {
 /// other restrictions remain in the full prompt rather than being silently discarded.
 struct RecipeIdeaRequest {
     let text: String
+    private let prioritySections: [String]
 
-    init(occasion: String?, refinement: String?, customQuery: String?) {
-        text = [occasion, refinement, customQuery].compactMap { $0 }
+    init(occasion: String?, refinement: String?, customQuery: String?, queryHistory: [String] = []) {
+        let queries = ([customQuery].compactMap { $0 } + queryHistory)
             .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
-            .joined(separator: "\n")
+        let metadata = [refinement, occasion].compactMap { $0 }.filter { !$0.isEmpty }
+        prioritySections = queries + metadata
+        if queries.count > 1 {
+            text = "Pedido mais recente (prioritário em conflitos):\n" + queries[0]
+                + "\nContexto anterior, do mais recente para o mais antigo:\n" + queries.dropFirst().joined(separator: "\n")
+                + (metadata.isEmpty ? "" : "\nPreferências selecionadas:\n" + metadata.joined(separator: "\n"))
+        } else {
+            text = prioritySections.joined(separator: "\n")
+        }
     }
 
     var prompt: String {
@@ -45,7 +54,18 @@ struct RecipeIdeaRequest {
 
     /// An explicit saved-library request is local search, not recipe generation.
     var onlySavedRecipes: Bool {
-        let value = Self.normalized(text)
+        for section in prioritySections {
+            let value = Self.normalized(section)
+            if Self.libraryCues.contains(where: value.contains) || Self.newSourceCues.contains(where: value.contains) {
+                return Self.savedLibraryIntent(in: value)
+            }
+        }
+        return false
+    }
+
+    private static let newSourceCues = ["novas receitas", "receitas novas", "new recipes", "nuevas recetas", "recetas nuevas", "nouvelles recettes", "neue rezepte", "nuove ricette", "新しいレシピ", "na web", "on the web", "en la web", "sur le web", "im web", "sul web", "ウェブ"]
+
+    private static func savedLibraryIntent(in value: String) -> Bool {
         guard Self.libraryCues.contains(where: value.contains) else { return false }
         let searchCues = ["sugira", "sugestoes", "mostre", "quais", "apenas", "somente", "so ", "list", "suggest", "show", "only", "just",
                           "sugiere", "muestrame", "solo", "suggere", "montre", "uniquement", "seulement", "zeige", "zeig ", "nur",
@@ -68,27 +88,63 @@ struct RecipeIdeaRequest {
     }
 
     var savedLibrarySearchTerms: [String] {
-        var value = Self.normalized(text)
+        for section in prioritySections {
+            let terms = Self.savedSearchTerms(in: section)
+            if !terms.isEmpty { return terms }
+        }
+        return []
+    }
+
+    private static func savedSearchTerms(in section: String) -> [String] {
+        var value = Self.removingNumericConstraints(Self.normalized(section))
         for cue in Self.libraryCues.sorted(by: { $0.count > $1.count }) { value = value.replacingOccurrences(of: cue, with: " ") }
         for cue in Self.unrestrictedPantryCues + Self.restrictedPantryCues { value = value.replacingOccurrences(of: cue, with: " ") }
-        for phrase in ["sem leite", "sem laticinios", "without milk", "no milk", "dairy free", "without dairy", "sans lait", "sin leche", "ohne milch", "senza latte", "提案して", "見せて", "だけ", "のみ", "を"] {
+        for phrase in ["sem leite", "sem laticinios", "without milk", "no milk", "dairy free", "without dairy", "sans lait", "sin leche", "ohne milch", "senza latte", "牛乳なし", "乳製品なし", "提案して", "見せて", "だけ", "のみ", "を"] {
             value = value.replacingOccurrences(of: phrase, with: " ")
         }
-        let generic: Set<String> = ["a", "as", "o", "os", "de", "da", "do", "das", "dos", "e", "ou", "com", "em", "na", "no", "nas", "nos", "para", "pra", "por", "uma", "um", "pessoa", "pessoas", "min", "minuto", "minutos", "me", "minha", "minhas", "meu", "meus", "sugira", "sugerir", "sugestoes", "sugestao", "mais", "opcoes", "opcao", "outras", "outros", "mostre", "mostrar", "quero", "apenas", "somente", "so", "favor", "nao", "busque", "novas", "novos", "web", "internet", "receita", "receitas",
-                                    "list", "liste", "listar", "lista", "muestrame", "mostrami", "the", "and", "or", "for", "from", "in", "to", "with", "my", "only", "just", "suggest", "suggestions", "more", "other", "options", "alternatives", "show", "please", "one", "person", "people", "minutes", "new", "recipes", "saved", "library",
+        let generic: Set<String> = ["a", "as", "o", "os", "de", "da", "do", "das", "dos", "e", "ou", "com", "em", "na", "no", "nas", "nos", "para", "pra", "por", "uma", "um", "pessoa", "pessoas", "min", "minuto", "minutos", "me", "minha", "minhas", "meu", "meus", "sugira", "sugerir", "sugestoes", "sugestao", "mais", "opcoes", "opcao", "outras", "outros", "mostre", "mostrar", "quero", "apenas", "somente", "so", "favor", "maintenant", "cette", "fois", "pour", "ahora", "esta", "jetzt", "diesmal", "fur", "ora", "stavolta", "per", "今度は", "今は", "agora", "ate", "desta", "vez", "nao", "busque", "novas", "novos", "web", "internet", "receita", "receitas",
+                                    "list", "liste", "listar", "lista", "muestrame", "mostrami", "the", "and", "or", "for", "from", "in", "to", "with", "my", "only", "just", "suggest", "suggestions", "more", "other", "options", "alternatives", "show", "now", "this", "time", "please", "one", "person", "people", "minutes", "new", "recipes", "saved", "library",
                                     "sugiere", "solo", "recetas", "guardadas", "mi", "con", "sin", "suggere", "uniquement", "seulement", "des", "ma", "recettes", "enregistrees", "bibliotheque", "zeig", "zeige", "mir", "nur", "gespeicherte", "rezepte", "aus", "meiner", "meine", "bibliothek", "suggerisci", "soltanto", "ricette", "salvate", "dalla", "mia", "libreria"]
         return value.components(separatedBy: CharacterSet.alphanumerics.inverted)
-            .filter { $0.count >= 3 && !generic.contains($0) }
+            .filter { $0.count >= 3 && Int($0) == nil && !generic.contains($0) }
     }
 
     private static let libraryCues = ["minha biblioteca", "biblioteca", "receitas salvas", "receita salva", "my library", "library", "saved recipes", "saved recipe",
                                       "recetas guardadas", "receta guardada", "recettes enregistrees", "bibliotheque", "gespeicherte rezepte", "bibliothek", "ricette salvate", "libreria", "保存したレシピ", "保存済みレシピ", "ライブラリ"]
 
     var pantryOverride: Bool? {
-        let value = Self.normalized(text)
-        if Self.unrestrictedPantryCues.contains(where: value.contains) { return false }
-        if Self.restrictedPantryCues.contains(where: value.contains) { return true }
+        for section in prioritySections {
+            let value = Self.normalized(section)
+            if Self.unrestrictedPantryCues.contains(where: value.contains) { return false }
+            if Self.restrictedPantryCues.contains(where: value.contains) { return true }
+        }
         return nil
+    }
+
+    /// Web queries keep ingredient/context words but not superseded numeric limits.
+    var searchText: String {
+        var parts = prioritySections.map { Self.removingNumericConstraints(Self.normalized($0)) }
+        if !excludesMilk {
+            parts = parts.map { Self.removingMilkExclusions($0) }
+        }
+        if let maximumMinutes { parts.append("\(maximumMinutes) min") }
+        if let requestedServings { parts.append("\(requestedServings) servings") }
+        return parts.joined(separator: " ")
+    }
+
+    private static let minutesPattern = #"(?<![0-9])(\d+)\s*(?:min(?:uto[s]?)?|minutes?|minuten|minuti)\b|(?<![0-9])(\d+)\s*分"#
+    private static let servingsPattern = #"\b(\d+)\s*(?:pessoas?|persons?|personas?|personnes?|people|porcoes|servings?|portions?|raciones?|personen|persone)\b|(?<![0-9])(\d+)\s*人"#
+    private static let oneServingPattern = #"\b(?:uma pessoa|one person|une personne|una persona|eine person)\b|(?:^|[\s、,])(?:一人|ひとり)(?:分|$|[\s、。])"#
+    private static let milkExclusionPattern = #"\b(?:sem leite|sem (?:nenhum )?laticinio[s]?|without milk|no milk|milk free|dairy free|no dairy|without dairy|sans lait|sin leche|ohne milch|senza latte)\b|牛乳なし|乳製品なし"#
+
+    private static func removingNumericConstraints(_ value: String) -> String {
+        [minutesPattern, servingsPattern, oneServingPattern].reduce(value) {
+            $0.replacingOccurrences(of: $1, with: " ", options: [.regularExpression, .caseInsensitive])
+        }
+    }
+
+    private static func removingMilkExclusions(_ value: String) -> String {
+        value.replacingOccurrences(of: milkExclusionPattern, with: " ", options: [.regularExpression, .caseInsensitive])
     }
 
     private static let unrestrictedPantryCues = ["sem restringir a despensa", "sem restricao da despensa", "sem depender da despensa", "nao limite a despensa",
@@ -137,18 +193,33 @@ struct RecipeIdeaRequest {
     }
 
     var maximumMinutes: Int? {
-        Self.firstNumber(in: Self.normalized(text), pattern: #"(?<![0-9])(\d+)\s*(?:min(?:uto[s]?)?|minutes?|minuten|minuti)\b"#)
+        prioritySections.lazy.compactMap { Self.firstNumber(in: Self.normalized($0), pattern: Self.minutesPattern) }.first
     }
 
     var requestedServings: Int? {
-        let normalized = Self.normalized(text)
-        if let number = Self.firstNumber(in: normalized, pattern: #"\b(\d+)\s*(?:pessoas?|persons?|people|porcoes|servings?|portions?|raciones?|personen|persone)\b"#) { return number }
-        if normalized.range(of: #"\b(?:uma pessoa|one person|une personne|una persona|eine person)\b"#, options: .regularExpression) != nil { return 1 }
+        for section in prioritySections {
+            let value = Self.normalized(section)
+            if let count = Self.firstNumber(in: value, pattern: Self.servingsPattern) { return count }
+            if value.range(of: Self.oneServingPattern, options: .regularExpression) != nil { return 1 }
+        }
         return nil
     }
 
+    var hasMilkDirective: Bool { prioritySections.contains { Self.milkDirective(in: $0) != nil } }
+
     var excludesMilk: Bool {
-        Self.normalized(text).range(of: #"\b(?:sem leite|sem (?:nenhum )?laticinio[s]?|without milk|no milk|milk free|dairy free|no dairy|without dairy|sans lait|sin leche|ohne milch|senza latte)\b"#, options: .regularExpression) != nil
+        prioritySections.lazy.compactMap { Self.milkDirective(in: $0) }.first ?? false
+    }
+
+    private static func milkDirective(in section: String) -> Bool? {
+        let value = normalized(section)
+        let permission = ["nao precisa ser sem leite", "leite esta permitido", "milk is allowed", "dairy is allowed", "no longer dairy free",
+                          "se permite leche", "le lait est autorise", "milch ist erlaubt", "il latte e consentito", "牛乳を使ってもよい", "乳製品を使ってもよい"]
+        if permission.contains(where: value.contains) { return false }
+        if value.range(of: milkExclusionPattern, options: .regularExpression) != nil { return true }
+        if ["pode usar leite", "you can use milk", "puedes usar leche", "tu peux utiliser du lait", "du kannst milch verwenden", "puoi usare il latte"].contains(where: value.contains),
+           !["vegetal", "coco", "aveia", "soja", "amendoa", "oat", "soy", "almond", "plant", "coconut", "avoine", "cocco", "soia"].contains(where: value.contains) { return false }
+        return nil
     }
 
     func accepts(ingredients: [String], steps: [String] = [], totalMinutes: Int?, servings: Int?) -> Bool {
@@ -188,7 +259,8 @@ struct RecipeIdeaRequest {
         let name = normalized(ingredient).replacingOccurrences(
             of: #"\b(?:leite (?:vegetal|de (?:coco|aveia|soja|amendoas|arroz))|(?:coconut|oat|soy|almond|rice|plant) milk)\b"#,
             with: "", options: .regularExpression)
-        return name.range(of: #"\b(?:leite|milk|lait|leche|milch|latte|queijo|cheese|fromage|queso|kase|formaggio|manteiga|butter|beurre|mantequilla|burro|iogurte|yogurt|yoghurt|joghurt|yaourt|yogur|nata|requeijao|cream)\b"#, options: .regularExpression) != nil
+            .replacingOccurrences(of: #"(?:ココナッツ|アーモンド|オーツ|ソイ)ミルク"#, with: "", options: .regularExpression)
+        return name.range(of: #"\b(?:leite|milk|lait|leche|milch|latte|queijo|cheese|fromage|queso|kase|formaggio|manteiga|butter|beurre|mantequilla|burro|iogurte|yogurt|yoghurt|joghurt|yaourt|yogur|nata|requeijao|cream)\b|牛乳|乳製品|チーズ|バター|ヨーグルト|生クリーム|ミルク"#, options: .regularExpression) != nil
     }
 
     private static func containsDairyUse(_ step: String) -> Bool {
@@ -201,6 +273,7 @@ struct RecipeIdeaRequest {
         let additions = normalized(step).replacingOccurrences(
             of: negation + ingredient + "(?:" + separator + ingredient + ")*",
             with: "", options: .regularExpression)
+            .replacingOccurrences(of: #"(?:牛乳|乳製品|チーズ|バター|ヨーグルト|生クリーム|ミルク)(?:なし|不使用|(?:を|は)(?:使わない|加えない))"#, with: "", options: .regularExpression)
         return containsDairy(additions)
     }
 
@@ -212,8 +285,12 @@ struct RecipeIdeaRequest {
     private static func firstNumber(in text: String, pattern: String) -> Int? {
         guard let regex = try? NSRegularExpression(pattern: pattern),
               let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
-              let range = Range(match.range(at: 1), in: text), let value = Int(text[range]), value > 0 else { return nil }
-        return value
+              match.numberOfRanges > 1 else { return nil }
+        for group in 1..<match.numberOfRanges {
+            guard let range = Range(match.range(at: group), in: text), let value = Int(text[range]), value > 0 else { continue }
+            return value
+        }
+        return nil
     }
 }
 
@@ -237,9 +314,11 @@ final class RecipeQuickIdeasGenerator {
         customQuery: String?,
         language: AppLanguage,
         filterByPantry: Bool = true,
+        requestContext: RecipeIdeaRequest? = nil,
+        excludingTitles: [String] = [],
         limit: Int = 10
     ) async -> [RecipeQuickIdea] {
-        let request = RecipeIdeaRequest(occasion: occasion?.label, refinement: refinement, customQuery: customQuery)
+        let request = requestContext ?? RecipeIdeaRequest(occasion: occasion?.label, refinement: refinement, customQuery: customQuery)
         guard !request.onlySavedRecipes else { return [] }
         let filterByPantry = request.pantryOverride ?? filterByPantry
         let pantryItems = request.allowedPantryItems(pantryItems).filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
@@ -270,6 +349,7 @@ final class RecipeQuickIdeasGenerator {
             customQuery: customQuery,
             language: language
         ) + "\n" + request.ingredientPrompt(pantryItems: pantryItems, filterByPantry: filterByPantry) + "\n" + request.prompt
+            + (excludingTitles.isEmpty ? "" : "\nDo not repeat these already shown dishes: " + excludingTitles.joined(separator: ", "))
 
         let user = """
         Pantry items: \(pantryList)\(context)
@@ -290,7 +370,7 @@ final class RecipeQuickIdeasGenerator {
                   let rawIdeas = json["ideas"] as? [[String: Any]] else {
                 return []
             }
-            var seenTitles = Set<String>()
+            var seenTitles = Set(excludingTitles.map(normalized))
             var ideas: [RecipeQuickIdea] = []
 
             for dict in rawIdeas {

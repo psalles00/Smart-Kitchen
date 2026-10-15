@@ -812,13 +812,21 @@ struct InlineChatView: View {
         inputText = ""
 
         let sourceRequest = RecipeIdeaRequest(occasion: recipeIdeasContext.occasion?.label,
-                                             refinement: recipeIdeasContext.refinement, customQuery: recipeIdeasContext.customQuery)
+                                             refinement: recipeIdeasContext.refinement, customQuery: recipeIdeasContext.customQuery,
+                                             queryHistory: recipeIdeasContext.queryHistory)
+        if let priorRecipeIdeasPayload, shouldContinueRecipeIdeas {
+            wizardPantryFilterOverride = priorRecipeIdeasPayload.filterByPantry
+        }
+        let requestingMore = priorRecipeIdeasPayload != nil && isRecipeIdeasGenerateMorePrompt(normalizedPrompt)
+        let shownResults = requestingMore ? displayedRecipeIdeasResults : []
         if sourceRequest.onlySavedRecipes {
             autoActivatedRecipeIdeasMode = true
             searchBarState?.aiChatPreset = .recipeIdeas
             Task {
                 await runRecipeIdeasSearch(occasion: recipeIdeasContext.occasion, refinement: recipeIdeasContext.refinement,
-                                           customQuery: recipeIdeasContext.customQuery, conversationId: convId)
+                                           customQuery: recipeIdeasContext.customQuery, conversationId: convId,
+                                           queryHistory: recipeIdeasContext.queryHistory,
+                                           excludingLocalIDs: Set(shownResults.flatMap(\.localRecipeIDs)))
             }
             return
         }
@@ -859,7 +867,11 @@ struct InlineChatView: View {
                     occasion: recipeIdeasContext.occasion,
                     refinement: recipeIdeasContext.refinement,
                     customQuery: recipeIdeasContext.customQuery,
-                    conversationId: convId
+                    conversationId: convId,
+                    queryHistory: recipeIdeasContext.queryHistory,
+                    excludingLocalIDs: Set(shownResults.flatMap(\.localRecipeIDs)),
+                    excludingQuickTitles: shownResults.flatMap { $0.quickIdeas.map(\.title) },
+                    excludingWebURLs: shownResults.flatMap { $0.ideas.compactMap(\.sourceURL) }
                 )
             }
             return
@@ -1477,6 +1489,7 @@ struct InlineChatView: View {
         let occasion: RecipeIdeaOccasion?
         let refinement: String?
         let customQuery: String?
+        let queryHistory: [String]
     }
 
     private func shouldAutoActivateRecipeIdeas(for text: String) -> Bool {
@@ -1518,6 +1531,11 @@ struct InlineChatView: View {
 
         if shouldAutoActivateRecipeIdeas(forNormalizedText: normalizedText) { return true }
 
+        let update = RecipeIdeaRequest(occasion: nil, refinement: nil, customQuery: normalizedText)
+        let updateCues = ["agora", "desta vez", "em vez disso", "now", "this time", "instead", "ahora", "esta vez", "maintenant", "cette fois", "jetzt", "diesmal", "ora ", "stavolta", "今度", "今は"]
+        if updateCues.contains(where: normalizedText.contains),
+           update.maximumMinutes != nil || update.requestedServings != nil || update.hasMilkDirective || update.pantryOverride != nil { return true }
+
         let searchTokens = recipeIdeaSearchKeywords(from: normalizedText)
         let isShortFollowUp = searchTokens.count <= 4
         let hasFollowUpCue = recipeIdeaFollowUpCues.contains(where: normalizedText.contains)
@@ -1534,19 +1552,14 @@ struct InlineChatView: View {
         let fallbackOccasion = fallbackPayload?.occasionRaw.flatMap(RecipeIdeaOccasion.init(rawValue:))
         let occasion = detectRecipeIdeaOccasion(in: normalizedPrompt) ?? fallbackOccasion
         let refinement = detectRecipeIdeaRefinement(in: normalizedPrompt, occasion: occasion) ?? fallbackPayload?.refinement
-        let customQuery: String?
-
-        if isRecipeIdeasGenerateMorePrompt(normalizedPrompt) {
-            let fallbackQuery = fallbackPayload?.customQuery?.trimmingCharacters(in: .whitespacesAndNewlines)
-            customQuery = fallbackQuery?.isEmpty == false ? fallbackQuery : nil
-        } else {
-            customQuery = text
-        }
+        let history = ([fallbackPayload?.customQuery].compactMap { $0 } + (fallbackPayload?.queryHistory ?? []))
+            .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
 
         return RecipeIdeasSearchContext(
             occasion: occasion,
             refinement: refinement,
-            customQuery: customQuery
+            customQuery: text,
+            queryHistory: history
         )
     }
 
@@ -1702,6 +1715,13 @@ struct InlineChatView: View {
             }
         }
         return nil
+    }
+
+    private var displayedRecipeIdeasResults: [ResultsPayload] {
+        messages.compactMap { message in
+            guard case .results? = wizardSentinelKind(for: message) else { return nil }
+            return ResultsPayload.decode(message.content)
+        }
     }
 
     private var lastReplyIsSavedLibrarySearch: Bool {
@@ -2357,15 +2377,19 @@ struct InlineChatView: View {
         occasion: RecipeIdeaOccasion?,
         refinement: String?,
         customQuery: String?,
-        conversationId: UUID
+        conversationId: UUID,
+        queryHistory: [String] = [],
+        excludingLocalIDs: Set<UUID> = [],
+        excludingQuickTitles: [String] = [],
+        excludingWebURLs: [String] = []
     ) async {
-        let request = RecipeIdeaRequest(occasion: occasion?.label, refinement: refinement, customQuery: customQuery)
+        let request = RecipeIdeaRequest(occasion: occasion?.label, refinement: refinement, customQuery: customQuery, queryHistory: queryHistory)
         if request.onlySavedRecipes {
             let filter = request.pantryOverride ?? currentPantryFilterEnabled
             let ids = matchLocalRecipes(occasion: occasion, refinement: refinement, customQuery: customQuery,
-                                        filterByPantry: filter, libraryOnly: true)
+                                        filterByPantry: filter, libraryOnly: true, excludingIDs: excludingLocalIDs, requestContext: request)
             let payload = ResultsPayload(ideas: [], quickIdeas: [], localRecipeIDs: ids, occasionRaw: occasion?.rawValue,
-                                         refinement: refinement, customQuery: customQuery, filterByPantry: filter)
+                                         refinement: refinement, customQuery: customQuery, filterByPantry: filter, queryHistory: queryHistory)
             insertMessage(ChatMessage(role: .assistant, content: payload.encoded(),
                                       quickActions: [QuickAction(label: "_wizard", prompt: RecipeIdeasSentinel.resultsPrefix)],
                                       conversationId: conversationId))
@@ -2393,6 +2417,8 @@ struct InlineChatView: View {
             pantryItems: pantryNames,
             filterByPantry: filterEnabled,
             language: targetLanguage,
+            requestContext: request,
+            excludingURLs: excludingWebURLs,
             limit: 6,
             seed: exaSearchSeed
         )) ?? []
@@ -2404,11 +2430,14 @@ struct InlineChatView: View {
             customQuery: customQuery,
             language: targetLanguage,
             filterByPantry: filterEnabled,
+            requestContext: request,
+            excludingTitles: excludingQuickTitles,
             limit: 10
         )
 
         let (exaResults, quickResults) = await (exaTask, quickTask)
-        let localMatchedRecipeIDs = matchLocalRecipes(occasion: occasion, refinement: refinement, customQuery: customQuery, filterByPantry: filterEnabled)
+        let localMatchedRecipeIDs = matchLocalRecipes(occasion: occasion, refinement: refinement, customQuery: customQuery,
+                                                      filterByPantry: filterEnabled, excludingIDs: excludingLocalIDs, requestContext: request)
 
         if exaResults.isEmpty && quickResults.isEmpty && localMatchedRecipeIDs.isEmpty {
             if filterEnabled && pantryNames.count <= 2 {
@@ -2435,7 +2464,8 @@ struct InlineChatView: View {
             occasionRaw: occasion?.rawValue,
             refinement: refinement,
             customQuery: customQuery,
-            filterByPantry: filterEnabled
+            filterByPantry: filterEnabled,
+            queryHistory: queryHistory
         )
 
         insertMessage(ChatMessage(
@@ -2458,11 +2488,13 @@ struct InlineChatView: View {
         refinement: String?,
         customQuery: String?,
         filterByPantry: Bool,
-        libraryOnly: Bool = false
+        libraryOnly: Bool = false,
+        excludingIDs: Set<UUID> = [],
+        requestContext: RecipeIdeaRequest? = nil
     ) -> [UUID] {
         let pantryItems = (try? modelContext.fetch(FetchDescriptor<UnifiedItem>())) ?? []
         let pantryNames = pantryItems.filter { $0.isPantry }.map { normalized($0.name) }
-        let request = RecipeIdeaRequest(occasion: occasion?.label, refinement: refinement, customQuery: customQuery)
+        let request = requestContext ?? RecipeIdeaRequest(occasion: occasion?.label, refinement: refinement, customQuery: customQuery)
 
         var keywords: [String] = []
         if let occasion {
@@ -2484,6 +2516,7 @@ struct InlineChatView: View {
         keywords = Array(Set(keywords.filter { $0.count >= 3 }))
 
         let scored: [(Recipe, Double, Int)] = allRecipes.compactMap { recipe in
+            guard !excludingIDs.contains(recipe.id) else { return nil }
             let category = normalized(recipe.category)
             let tags = recipe.tags.map(normalized)
             let name = normalized(recipe.name)
@@ -2707,7 +2740,7 @@ struct InlineChatView: View {
     private func lastWizardCustomContext() -> String? {
         // Heurística simples: pega as duas últimas mensagens .user e concatena.
         let userTexts = messages.filter { $0.role == .user }.suffix(2).map(\.content)
-        return userTexts.isEmpty ? nil : userTexts.joined(separator: " ")
+        return userTexts.isEmpty ? nil : userTexts.reversed().joined(separator: " ")
     }
 
     /// "Gerar mais ideias" — incrementa o seed e refaz a busca com o mesmo contexto.
@@ -2720,7 +2753,11 @@ struct InlineChatView: View {
                 occasion: occasion,
                 refinement: payload.refinement,
                 customQuery: payload.customQuery,
-                conversationId: convId
+                conversationId: convId,
+                queryHistory: payload.queryHistory ?? [],
+                excludingLocalIDs: Set(displayedRecipeIdeasResults.flatMap(\.localRecipeIDs)),
+                excludingQuickTitles: displayedRecipeIdeasResults.flatMap { $0.quickIdeas.map(\.title) },
+                excludingWebURLs: displayedRecipeIdeasResults.flatMap { $0.ideas.compactMap(\.sourceURL) }
             )
         }
     }
@@ -3027,10 +3064,11 @@ struct InlineChatView: View {
         var refinement: String?
         var customQuery: String?
         var filterByPantry: Bool?
+        var queryHistory: [String]?
 
         var request: RecipeIdeaRequest {
             RecipeIdeaRequest(occasion: occasionRaw.flatMap(RecipeIdeaOccasion.init(rawValue:))?.label,
-                              refinement: refinement, customQuery: customQuery)
+                              refinement: refinement, customQuery: customQuery, queryHistory: queryHistory ?? [])
         }
 
         init(
@@ -3040,9 +3078,11 @@ struct InlineChatView: View {
             occasionRaw: String?,
             refinement: String?,
             customQuery: String?,
-            filterByPantry: Bool? = nil
+            filterByPantry: Bool? = nil,
+            queryHistory: [String]? = nil
         ) {
             self.filterByPantry = filterByPantry
+            self.queryHistory = queryHistory
             self.ideas = ideas
             self.quickIdeas = quickIdeas
             self.localRecipeIDs = localRecipeIDs
@@ -3060,6 +3100,7 @@ struct InlineChatView: View {
             self.refinement = try? c.decodeIfPresent(String.self, forKey: .refinement)
             self.customQuery = try? c.decodeIfPresent(String.self, forKey: .customQuery)
             self.filterByPantry = try? c.decodeIfPresent(Bool.self, forKey: .filterByPantry)
+            self.queryHistory = try? c.decodeIfPresent([String].self, forKey: .queryHistory)
         }
 
         func encoded() -> String {

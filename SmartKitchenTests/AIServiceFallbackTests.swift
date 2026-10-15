@@ -5,6 +5,60 @@ import XCTest
 
 @MainActor
 final class RecipeIdeaRequestTests: XCTestCase {
+    func testLatestTurnOverridesTimeServingsAndPantryWhileKeepingLibraryAndDiet() {
+        let original = "Sugira apenas receitas salvas da minha biblioteca em 20 minutos para uma pessoa sem leite, sem restringir à despensa."
+        let request = RecipeIdeaRequest(occasion: "Jantar", refinement: "Até 30 minutos",
+                                         customQuery: "Agora em 5 minutos para 2 pessoas", queryHistory: [original])
+        XCTAssertEqual(request.maximumMinutes, 5)
+        XCTAssertEqual(request.requestedServings, 2)
+        XCTAssertTrue(request.excludesMilk)
+        XCTAssertTrue(request.onlySavedRecipes)
+        XCTAssertEqual(request.pantryOverride, false)
+        XCTAssertEqual(request.savedLibrarySearchTerms, ["jantar"])
+        XCTAssertTrue(request.prompt.contains(original))
+        XCTAssertTrue(request.prompt.contains("Agora em 5 minutos"))
+        XCTAssertFalse(request.searchText.contains("20"))
+        XCTAssertFalse(request.searchText.contains("30"))
+        let changed = RecipeIdeaRequest(occasion: nil, refinement: nil,
+                                         customQuery: "Agora leite está permitido. Use apenas ingredientes da despensa.", queryHistory: [original])
+        XCTAssertFalse(changed.excludesMilk)
+        XCTAssertTrue(changed.onlySavedRecipes)
+        XCTAssertEqual(changed.pantryOverride, true)
+        XCTAssertFalse(changed.searchText.contains("sem leite"))
+        let newSource = RecipeIdeaRequest(occasion: nil, refinement: nil, customQuery: "Agora quero novas receitas na web", queryHistory: [original])
+        XCTAssertFalse(newSource.onlySavedRecipes)
+        XCTAssertTrue(newSource.excludesMilk)
+    }
+
+    func testLatestNumericConstraintsAcrossEverySupportedLanguage() {
+        let turns = ["Agora 5 minutos para 2 pessoas sem leite", "Now 5 minutes for 2 people without milk",
+                     "Jetzt 5 Minuten für 2 Personen ohne Milch", "Ahora 5 minutos para 2 personas sin leche",
+                     "Maintenant 5 minutes pour 2 personnes sans lait", "Ora 5 minuti per 2 persone senza latte", "今度は5分、2人分、牛乳なし"]
+        for turn in turns {
+            let request = RecipeIdeaRequest(occasion: nil, refinement: "30 minutos",
+                                             customQuery: turn, queryHistory: ["20 minutos para uma pessoa"])
+            XCTAssertEqual(request.maximumMinutes, 5, turn)
+            XCTAssertEqual(request.requestedServings, 2, turn)
+            XCTAssertTrue(request.excludesMilk, turn)
+        }
+        let japanese = RecipeIdeaRequest(occasion: nil, refinement: nil, customQuery: "牛乳なし")
+        XCTAssertFalse(japanese.accepts(ingredients: ["牛乳"], totalMinutes: 5, servings: 1))
+        XCTAssertTrue(japanese.accepts(ingredients: ["オーツミルク"], totalMinutes: 5, servings: 1))
+        XCTAssertTrue(japanese.accepts(ingredients: ["トマト"], steps: ["牛乳は使わない"], totalMinutes: 5, servings: 1))
+    }
+
+    func testLatestQueryHistorySurvivesPayloadRoundtrip() {
+        let original = "Sugira apenas receitas salvas da minha biblioteca em 20 minutos, sem restringir à despensa."
+        let payload = InlineChatView.ResultsPayload(ideas: [], quickIdeas: [], localRecipeIDs: [], occasionRaw: nil,
+                                                    refinement: "30 minutos", customQuery: "Agora em 5 minutos", filterByPantry: false,
+                                                    queryHistory: [original])
+        let reopened = InlineChatView.ResultsPayload.decode(payload.encoded())
+        XCTAssertEqual(reopened.queryHistory, [original])
+        XCTAssertEqual(reopened.request.maximumMinutes, 5)
+        XCTAssertTrue(reopened.request.onlySavedRecipes)
+        XCTAssertEqual(reopened.request.pantryOverride, false)
+    }
+
     func testSavedLibraryIntentAndGenericKeywordsAcrossSupportedLanguages() {
         let prompts = ["Sugira apenas receitas salvas da minha biblioteca.", "Suggest only saved recipes from my library.",
                        "Zeige mir nur gespeicherte Rezepte aus meiner Bibliothek.", "Sugiere solo recetas guardadas de mi biblioteca.",
@@ -68,6 +122,14 @@ final class RecipeIdeaRequestTests: XCTestCase {
                             pantryItems: ["Ovos", "Tomate"], filterByPantry: true, language: .ptBR)
         XCTAssertTrue(generated.isEmpty)
         XCTAssertTrue(web.isEmpty)
+        let followUp = RecipeIdeaRequest(occasion: nil, refinement: nil, customQuery: "Agora em 5 minutos", queryHistory: [prompt])
+        let more = await RecipeQuickIdeasGenerator(aiService: service).generate(pantryItems: ["Ovos", "Tomate"],
+            occasion: nil, refinement: nil, customQuery: "Agora em 5 minutos", language: .ptBR, requestContext: followUp)
+        let moreWeb = try await EXARecipeIdeasService(supabase: backend).search(occasion: nil, refinement: nil,
+            customQuery: "Agora em 5 minutos", pantryItems: ["Ovos", "Tomate"], filterByPantry: true,
+            language: .ptBR, requestContext: followUp)
+        XCTAssertTrue(more.isEmpty)
+        XCTAssertTrue(moreWeb.isEmpty)
         XCTAssertEqual(backend.calls, 0)
     }
 
@@ -546,6 +608,16 @@ private final class DirectChatURLProtocol: URLProtocol {
 
 @MainActor
 final class RecipeIdeasPantryModeTests: XCTestCase {
+    func testMoreIdeasExcludeAlreadyShownTitles() async {
+        let backend = RecipeIdeasFixtureBackend(ideas: [("Omelete", "Ovos"), ("Salada", "Tomate")],
+            ingredients: ["Omelete": ["Ovos", "Tomate"], "Salada": ["Tomate", "Ovos"]])
+        let ideas = await RecipeQuickIdeasGenerator(aiService: AIService(supabase: backend)).generate(
+            pantryItems: ["Ovos", "Tomate"], occasion: nil, refinement: nil, customQuery: "Mais opções",
+            language: .ptBR, excludingTitles: ["OMELETE"])
+        XCTAssertEqual(ideas.map(\.title), ["Salada"])
+        XCTAssertTrue(backend.messages.contains { ($0["content"] as? String ?? "").contains("OMELETE") })
+    }
+
     func testFreeModeResolvesDescriptiveIngredientsWithoutWeakeningPantryChecks() async {
         for strict in [false, true] {
             let backend = RecipeIdeasFixtureBackend(
@@ -850,6 +922,27 @@ private final class CountingExaLookup: NutritionExaLookingUp {
 
 @MainActor
 final class RecipeWebDiscoveryTests: XCTestCase {
+    func testLatestConstraintsAndExcludedURLsSurviveRefreshAndCache() async throws {
+        let backend = RecipeWebFixtureBackend()
+        backend.results = [["title": "Já vista", "url": "https://example.com/old?utm_source=search#recipe"],
+                           ["title": "Nova", "url": "https://example.com/new"]]
+        let service = EXARecipeIdeasService(supabase: backend)
+        let request = RecipeIdeaRequest(occasion: nil, refinement: "30 minutos", customQuery: "Agora em 5 minutos",
+                                         queryHistory: ["Jantar em 20 minutos sem leite"])
+        let ideas = try await service.search(occasion: nil, refinement: nil, customQuery: "Agora em 5 minutos",
+            pantryItems: [], filterByPantry: false, language: .ptBR, requestContext: request,
+            excludingURLs: ["https://example.com/old"], limit: 6)
+        XCTAssertEqual(ideas.map(\.title), ["Nova"])
+        let query = try XCTUnwrap(backend.bodies.first?["query"] as? String)
+        XCTAssertTrue(query.contains("5 min"))
+        XCTAssertTrue(query.contains("sem leite"))
+        XCTAssertFalse(query.contains("20"))
+        XCTAssertFalse(query.contains("30"))
+        let all = try await service.search(occasion: nil, refinement: nil, customQuery: "Agora em 5 minutos",
+            pantryItems: [], filterByPantry: false, language: .ptBR, requestContext: request, limit: 6)
+        XCTAssertEqual(all.count, 2, "Exclusion lists must be part of the cache key")
+    }
+
     func testFreeRefreshChangesMeaningfulQueryAndEmptySearchDoesNotRepeatThirdCall() async throws {
         let backend = RecipeWebFixtureBackend()
         let service = EXARecipeIdeasService(supabase: backend)
@@ -902,7 +995,7 @@ final class RecipeWebDiscoveryTests: XCTestCase {
         XCTAssertNotEqual(queries[0], queries[1])
         XCTAssertFalse(queries[0].contains("Abóbora"))
         XCTAssertTrue(queries[1].contains("Abóbora"))
-        XCTAssertTrue(queries.allSatisfy { $0.contains("Sem leite em 20 minutos") && !$0.contains("v2") })
+        XCTAssertTrue(queries.allSatisfy { $0.contains("sem leite") && $0.contains("20 min") && !$0.contains("v2") })
     }
 
     func testWebCardsUseTheirOwnTitlesDeduplicateAndCacheByLimit() async throws {
@@ -938,7 +1031,7 @@ final class RecipeWebDiscoveryTests: XCTestCase {
         XCTAssertEqual(backend.bodies.count, 2)
         XCTAssertTrue(backend.bodies.allSatisfy {
             let query = $0["query"] as? String ?? ""
-            return query.contains("Tomate") && query.contains("Ovos") && query.contains("Sem leite")
+            return query.contains("Tomate") && query.contains("Ovos") && query.contains("sem leite")
         })
     }
 }

@@ -3,6 +3,46 @@ import XCTest
 /// Navigates existing food data without purchases, AI calls, seeding or deletion.
 @MainActor
 final class PageActionTracingTests: XCTestCase {
+    /// Closed-network unit tests guarantee the saved-library source survives these follow-ups.
+    func testSavedLibraryFollowUpKeepsSourceAndUpdatesTimeAfterForeground() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication(bundleIdentifier: "com.pedrosalles.smartkitchen.sync")
+        app.launchArguments = ["-AppleLanguages", "(pt-BR)", "-AppleLocale", "pt_BR"]
+        app.launch()
+        let home = app.tabBars.buttons["Savoria"].firstMatch
+        XCTAssertTrue(home.waitForExistence(timeout: 45))
+        home.tap()
+        let chat = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "SavorIA")).firstMatch
+        XCTAssertTrue(chat.waitForExistence(timeout: 10))
+        chat.tap()
+        let input = app.textFields["savoria.chat.input"]
+        XCTAssertTrue(input.waitForExistence(timeout: 15))
+        input.tap()
+        input.typeText("Me mostre apenas receitas salvas da minha biblioteca, sem restringir à despensa.")
+        app.buttons["savoria.chat.send"].tap()
+        XCTAssertTrue(app.staticTexts["Suas Receitas"].firstMatch.waitForExistence(timeout: 15))
+        XCUIDevice.shared.press(.home)
+        app.activate()
+        XCTAssertTrue(input.waitForExistence(timeout: 15))
+        input.tap()
+        input.typeText("Agora em até 5 minutos.")
+        app.buttons["savoria.chat.send"].tap()
+        XCTAssertTrue(app.staticTexts.matching(identifier: "Suas Receitas").element(boundBy: 1).waitForExistence(timeout: 15))
+        XCTAssertFalse(app.staticTexts["Receitas da Web"].exists)
+        XCTAssertFalse(app.staticTexts["Ideias Rápidas"].exists)
+        let screenshot = XCTAttachment(screenshot: app.screenshot())
+        screenshot.name = "Saved library follow-up after foreground, five-minute limit"
+        screenshot.lifetime = .keepAlways
+        self.add(screenshot)
+        input.tap()
+        input.typeText("Mais opções.")
+        app.buttons["savoria.chat.send"].tap()
+        XCTAssertTrue(app.staticTexts["Nenhum resultado encontrado"].firstMatch.waitForExistence(timeout: 15))
+        XCTAssertFalse(app.staticTexts["Receitas da Web"].exists)
+        XCTAssertFalse(app.staticTexts["Ideias Rápidas"].exists)
+        XCUIDevice.shared.press(.home)
+    }
+
     /// This request shape is covered by closed-network source-routing tests.
     func testSavedLibraryRequestUsesExistingCardsWithoutGenerating() throws {
         continueAfterFailure = false

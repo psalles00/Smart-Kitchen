@@ -93,12 +93,14 @@ final class EXARecipeIdeasService {
         pantryItems: [String],
         filterByPantry: Bool,
         language: AppLanguage,
+        requestContext: RecipeIdeaRequest? = nil,
+        excludingURLs: [String] = [],
         limit: Int = 6,
         seed: Int = 0
     ) async throws -> [RecipeIdeaResult] {
         guard limit > 0 else { return [] }
         let limit = min(limit, 10)
-        let request = RecipeIdeaRequest(occasion: occasion?.label, refinement: refinement, customQuery: customQuery)
+        let request = requestContext ?? RecipeIdeaRequest(occasion: occasion?.label, refinement: refinement, customQuery: customQuery)
         guard !request.onlySavedRecipes else { return [] }
         let filterByPantry = request.pantryOverride ?? filterByPantry
         let pantryItems = request.allowedPantryItems(pantryItems).filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
@@ -106,12 +108,13 @@ final class EXARecipeIdeasService {
         let key = cacheKey(
             occasion: occasion,
             refinement: refinement,
-            customQuery: customQuery,
+            customQuery: request.searchText,
             pantryItems: pantryItems,
             filterByPantry: filterByPantry,
             language: language,
             seed: seed,
-            limit: limit
+            limit: limit,
+            excludingURLs: excludingURLs
         )
 
         if let entry = cache[key], Date().timeIntervalSince(entry.date) < ttl {
@@ -122,8 +125,8 @@ final class EXARecipeIdeasService {
 
         let query = buildQuery(
             occasion: occasion,
-            refinement: refinement,
-            customQuery: customQuery,
+            refinement: nil,
+            customQuery: request.searchText,
             pantryItems: pantryItems,
             filterByPantry: filterByPantry,
             language: language,
@@ -135,7 +138,8 @@ final class EXARecipeIdeasService {
             limit: limit,
             apiKey: apiKey,
             preferDomains: true,
-            language: language
+            language: language,
+            excludingURLs: excludingURLs
         )
 
         // Fallback 1: tenta sem restringir domínios (broader web).
@@ -145,7 +149,8 @@ final class EXARecipeIdeasService {
                 limit: limit,
                 apiKey: apiKey,
                 preferDomains: false,
-                language: language
+                language: language,
+                excludingURLs: excludingURLs
             )
         }
 
@@ -163,7 +168,8 @@ final class EXARecipeIdeasService {
         limit: Int,
         apiKey: String,
         preferDomains: Bool,
-        language: AppLanguage
+        language: AppLanguage,
+        excludingURLs: [String]
     ) async throws -> [RecipeIdeaResult] {
         var body: [String: Any] = [
             "query": query,
@@ -225,24 +231,25 @@ final class EXARecipeIdeasService {
 
         var titles = Set<String>()
         var urls = Set<String>()
+        let excluded = Set(excludingURLs.compactMap { Self.canonicalRecipeURL($0) })
         return rawResults.compactMap { dict in
             guard let result = decodeSearchResult(dict) else { return nil }
             let title = Self.normalize(result.title)
-            let url = result.sourceURL.flatMap { URLComponents(string: $0) }.map { components -> String in
-                var canonical = components
-                canonical.fragment = nil
-                canonical.queryItems = canonical.queryItems?.filter {
-                    !$0.name.lowercased().hasPrefix("utm_") && $0.name.lowercased() != "fbclid"
-                }
-                if canonical.queryItems?.isEmpty == true { canonical.queryItems = nil }
-                return canonical.string ?? ""
-            }
+            let url = Self.canonicalRecipeURL(result.sourceURL)
             guard !titles.contains(title) else { return nil }
-            if let url, urls.contains(url) { return nil }
+            if let url, urls.contains(url) || excluded.contains(url) { return nil }
             titles.insert(title)
             if let url { urls.insert(url) }
             return result
         }
+    }
+
+    private static func canonicalRecipeURL(_ value: String?) -> String? {
+        guard let value, var url = URLComponents(string: value) else { return nil }
+        url.fragment = nil
+        url.queryItems = url.queryItems?.filter { !$0.name.lowercased().hasPrefix("utm_") && $0.name.lowercased() != "fbclid" }
+        if url.queryItems?.isEmpty == true { url.queryItems = nil }
+        return url.string
     }
 
     private func decodeSearchResult(_ dict: [String: Any]) -> RecipeIdeaResult? {
@@ -336,14 +343,15 @@ final class EXARecipeIdeasService {
         filterByPantry: Bool,
         language: AppLanguage,
         seed: Int,
-        limit: Int
+        limit: Int,
+        excludingURLs: [String]
     ) -> String {
         let pantryHash = pantryItems
             .map { Self.normalize($0) }
             .sorted()
             .joined(separator: "|")
         return [
-            "v3",
+            "v4",
             language.rawValue,
             occasion?.rawValue ?? "-",
             refinement ?? "-",
@@ -351,7 +359,8 @@ final class EXARecipeIdeasService {
             pantryHash,
             filterByPantry ? "1" : "0",
             String(seed),
-            String(limit)
+            String(limit),
+            excludingURLs.compactMap { Self.canonicalRecipeURL($0) }.sorted().joined(separator: "|")
         ].joined(separator: "::")
     }
 

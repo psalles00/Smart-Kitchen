@@ -227,3 +227,39 @@ Teste manual: peça sugestões somente da biblioteca; confira origem/nomes e abr
 um card. Repita acrescentando “sem restringir à despensa”. Depois reabra a
 conversa e confira o escopo. A variação de contexto/tempo/porções em follow-ups
 continua sendo uma etapa separada da auditoria da conversa.
+
+## Continuação da conversa, prioridade e diversidade
+
+O texto mais recente agora acompanha os pedidos anteriores em ordem de
+prioridade. Tempo, porções, leite e escopo da despensa explícitos no pedido
+recente substituem as mesmas preferências antigas, mantendo as demais. O payload
+opcional guarda esse histórico para reabrir e expandir resultados; mensagens
+antigas continuam legíveis. A consulta web remove limites numéricos superados.
+“Mais opções” e o botão equivalente excluem IDs locais, títulos de ideias e URLs
+canônicas já mostrados. Exclusões entram também na chave do cache da web.
+
+59 testes gratuitos passaram, incluindo sete idiomas, conflitos com refinamentos
+antigos, histórico serializado, exclusão de títulos/URLs e zero despacho para os
+serviços quando o histórico exige biblioteca. O teste nativo passou após sair e
+voltar do app: a busca inicial trouxe os três IDs existentes; “Agora em até 5
+minutos.” retornou apenas o Smoothie de morango e aveia; “Mais opções.” retornou
+vazio, sem resultados repetidos, geração ou web. Readback confirmou os três
+payloads. Somente a conversa de teste mudou; todos os registros compartilhados,
+IDs, metadados e hashes das imagens permaneceram iguais. A comparação ordena
+linhas pelo conteúdo para não confundir ordem de leitura SQLite com alterações.
+
+Builds iOS físico, Simulator e macOS aprovados. Mac instalado com assinatura,
+Team, containers iCloud ordenados e App Group conferidos; snapshot igual antes e
+depois. A sessão do Mac continua bloqueada e o iPhone 12 Pro indisponível; a
+validação visual no Mac e instalação física permanecem pendentes. Não houve
+chamada paga, compra, alteração de stores ou exclusão de dados nesta etapa.
+
+Roteiro manual:
+1. Peça receitas salvas e depois “Agora em até 5 minutos”; confira que continuam
+   sendo da biblioteca e que receitas sem tempo conhecido não entram nesse limite.
+2. Altere porções, restrição de leite ou escopo da despensa; confira que a nova
+   escolha prevalece e que as outras restrições são preservadas.
+3. Saia e volte ao app, reabra os resultados e confira o mesmo contexto.
+4. Peça “Mais opções” ou use o botão: confira ausência dos resultados anteriores.
+5. Em uma validação de rede com orçamento reservado, confira também as receitas
+   novas e da web; os mocks desta etapa não comprovam qualidade do provedor real.
