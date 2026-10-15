@@ -653,6 +653,118 @@ private final class RecipeIdeasFixtureBackend: SupabaseFunctionInvoking {
     }
 }
 
+@MainActor
+final class RecipeWebDiscoveryTests: XCTestCase {
+    func testFreeRefreshChangesMeaningfulQueryAndEmptySearchDoesNotRepeatThirdCall() async throws {
+        let backend = RecipeWebFixtureBackend()
+        let service = EXARecipeIdeasService(supabase: backend)
+        for seed in [0, 1] {
+            _ = try await service.search(occasion: nil, refinement: nil, customQuery: "Jantar",
+                                          pantryItems: [], filterByPantry: false, language: .ptBR, seed: seed)
+        }
+        XCTAssertNotEqual(backend.bodies[0]["query"] as? String, backend.bodies[1]["query"] as? String)
+        let empty = RecipeWebFixtureBackend()
+        empty.results = []
+        do {
+            _ = try await EXARecipeIdeasService(supabase: empty).search(occasion: nil, refinement: nil, customQuery: nil,
+                                                                      pantryItems: [], filterByPantry: false, language: .ptBR)
+            XCTFail("An empty response must stay empty")
+        } catch { }
+        XCTAssertEqual(empty.bodies.count, 2)
+    }
+
+    func testEveryLanguageKeepsLocalizedQueryAndHeader() async throws {
+        let backend = RecipeWebFixtureBackend()
+        let service = EXARecipeIdeasService(supabase: backend)
+        for language in AppLanguage.allCases {
+            _ = try await service.search(occasion: nil, refinement: nil, customQuery: "20 min",
+                                          pantryItems: [], filterByPantry: false, language: language)
+            XCTAssertTrue((backend.bodies.last?["query"] as? String ?? "").contains(language.recipeSearchKeyword))
+            XCTAssertEqual(backend.languages.last, AppLocalization(language: language).acceptLanguageHeader)
+        }
+        XCTAssertEqual(backend.bodies.count, AppLanguage.allCases.count)
+    }
+
+    func testStrictEmptyPantryDoesNotSearchEvenAfterDairyExclusion() async throws {
+        let backend = RecipeWebFixtureBackend()
+        let service = EXARecipeIdeasService(supabase: backend)
+        let ideas = try await service.search(occasion: nil, refinement: nil, customQuery: "Sem leite",
+                                             pantryItems: ["Leite"], filterByPantry: true, language: .ptBR)
+        XCTAssertTrue(ideas.isEmpty)
+        XCTAssertTrue(backend.bodies.isEmpty)
+    }
+
+    func testRefreshRotatesPantryEmphasisAndKeepsOriginalRequest() async throws {
+        let backend = RecipeWebFixtureBackend()
+        let service = EXARecipeIdeasService(supabase: backend)
+        let pantry = ["Ovos", "Tomate", "Arroz", "Feijão", "Cenoura", "Batata", "Abóbora"]
+        for seed in [0, 1] {
+            _ = try await service.search(occasion: .jantar, refinement: nil, customQuery: "Sem leite em 20 minutos",
+                                          pantryItems: pantry, filterByPantry: true, language: .ptBR, seed: seed)
+        }
+        let queries = backend.bodies.compactMap { $0["query"] as? String }
+        XCTAssertEqual(queries.count, 2)
+        XCTAssertNotEqual(queries[0], queries[1])
+        XCTAssertFalse(queries[0].contains("Abóbora"))
+        XCTAssertTrue(queries[1].contains("Abóbora"))
+        XCTAssertTrue(queries.allSatisfy { $0.contains("Sem leite em 20 minutos") && !$0.contains("v2") })
+    }
+
+    func testWebCardsUseTheirOwnTitlesDeduplicateAndCacheByLimit() async throws {
+        let backend = RecipeWebFixtureBackend()
+        backend.results = [
+            ["title": "Omelete de tomate", "url": "https://example.com/a"],
+            ["title": "Outra omelete", "url": "https://example.com/a?utm_source=search#recipe"],
+            ["title": "OMELETE DE TOMATE", "url": "https://example.com/b"],
+            ["title": "Sopa de cenoura", "url": "https://example.com/c"]]
+        let service = EXARecipeIdeasService(supabase: backend)
+        let first = try await service.search(occasion: nil, refinement: nil, customQuery: "Quero receitas diferentes",
+                                             pantryItems: [], filterByPantry: false, language: .ptBR, limit: 1)
+        XCTAssertEqual(first.count, 1)
+        XCTAssertEqual(first.first?.mainIngredient, "tomate")
+        let two = try await service.search(occasion: nil, refinement: nil, customQuery: "Quero receitas diferentes",
+                                           pantryItems: [], filterByPantry: false, language: .ptBR, limit: 2)
+        XCTAssertEqual(two.map(\.title), ["Omelete de tomate", "Sopa de cenoura"])
+        _ = try await service.search(occasion: nil, refinement: nil, customQuery: "Quero receitas diferentes",
+                                      pantryItems: [], filterByPantry: false, language: .ptBR, limit: 2)
+        XCTAssertEqual(backend.bodies.count, 2)
+        XCTAssertEqual(backend.bodies.compactMap { $0["numResults"] as? Int }, [1, 2])
+    }
+
+    func testEmptyStrictFallbackNeverDropsPantryOrRequest() async {
+        let backend = RecipeWebFixtureBackend()
+        backend.results = []
+        let service = EXARecipeIdeasService(supabase: backend)
+        do {
+            _ = try await service.search(occasion: .jantar, refinement: nil, customQuery: "Sem leite",
+                                          pantryItems: ["Tomate", "Ovos"], filterByPantry: true, language: .ptBR)
+            XCTFail("Empty search must not invent a candidate")
+        } catch { }
+        XCTAssertEqual(backend.bodies.count, 2)
+        XCTAssertTrue(backend.bodies.allSatisfy {
+            let query = $0["query"] as? String ?? ""
+            return query.contains("Tomate") && query.contains("Ovos") && query.contains("Sem leite")
+        })
+    }
+}
+
+@MainActor
+private final class RecipeWebFixtureBackend: SupabaseFunctionInvoking {
+    var isConfigured: Bool { true }
+    var bodies: [[String: Any]] = []
+    var languages: [String] = []
+    var results: [[String: Any]] = [["title": "Omelete de tomate", "url": "https://example.com/a"]]
+    func invokeFunctionData(name: String, body: [String: Any], acceptLanguage: String?) async throws -> Data {
+        guard name == "exa-search" else { throw URLError(.unsupportedURL) }
+        bodies.append(body)
+        languages.append(acceptLanguage ?? "")
+        return try JSONSerialization.data(withJSONObject: ["results": results])
+    }
+    func invokeFunctionData(name: String, body: Data, contentType: String, acceptLanguage: String?) async throws -> Data {
+        throw URLError(.unsupportedURL)
+    }
+}
+
 /// Opt-in native provider smoke test. Normal test runs never dispatch paid calls.
 @MainActor
 final class RecipeIdeasLiveProviderTests: XCTestCase {

@@ -94,3 +94,35 @@ Repita com a restrição desativada e verifique que ingredientes externos são
 permitidos. Na biblioteca, peça uma receita sem leite e confirme que receitas
 com laticínios não reaparecem como fallback. Esses roteiros ainda precisam da
 validação visual completa; testes do comparador não a substituem.
+
+## Busca web: consulta, variedade e custo
+
+A consulta de atualização passa a alternar os ingredientes priorizados na
+pesquisa, em vez de anexar “v2”, “v3” ao texto. O nome do ingrediente principal
+vem do título do próprio resultado, não da primeira palavra do pedido nem do
+primeiro item da despensa. URLs repetidas (incluindo parâmetros de campanha) e
+títulos equivalentes não ocupam vários cards. O limite solicitado faz parte da
+chave do cache e da requisição ao serviço.
+
+Uma despensa vazia, ou esvaziada pelas restrições alimentares, encerra a busca
+restrita sem chamada web. Tentativas alternativas nesse modo mantêm os mesmos
+ingredientes e o pedido original. A pesquisa web continua sendo uma descoberta
+de fontes; a confirmação de ingredientes acontece ao estruturar a receita e
+não deve ser inferida apenas do título/trecho da página.
+
+Os testes de consulta e resposta usam um backend injetado sem rede, incluindo
+os sete idiomas. Não são prova de qualidade das páginas atualmente retornadas
+pela Exa. A validação web real permanece pendente no contrato E2E e não deve
+ultrapassar o teto de gastos vigente.
+
+Roteiro manual: atualize as sugestões com mais de seis itens disponíveis e
+confira combinações diferentes; abra fontes distintas, confirme seus títulos,
+verifique que o ingrediente não aparece como “Quero” e que links com rastreio
+não duplicam cards. Abra a receita completa e repita a verificação da despensa.
+
+A versão final desta etapa passou em 43 testes direcionados e compilou nos três
+destinos. Instalada e aberta no Simulator. O Mac recebeu o app assinado e o
+snapshot permaneceu idêntico, mas a abertura visual final foi bloqueada pela
+sessão do macOS bloqueada. O iPhone físico continuou indisponível. Essas duas
+validações não estão concluídas. A busca também deixou de fazer uma terceira
+chamada idêntica; atualizar o modo livre varia o enfoque sem palavras de versão.

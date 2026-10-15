@@ -53,7 +53,11 @@ final class EXARecipeIdeasService {
     static let shared = EXARecipeIdeasService()
 
     private let endpoint = URL(string: "https://api.exa.ai/search")!
-    private let supabase = SupabaseClient()
+    private let supabase: any SupabaseFunctionInvoking
+
+    init(supabase: any SupabaseFunctionInvoking = SupabaseClient()) {
+        self.supabase = supabase
+    }
 
     /// Cache em memória por sessão.
     private struct CacheEntry {
@@ -92,6 +96,11 @@ final class EXARecipeIdeasService {
         limit: Int = 6,
         seed: Int = 0
     ) async throws -> [RecipeIdeaResult] {
+        guard limit > 0 else { return [] }
+        let limit = min(limit, 10)
+        let request = RecipeIdeaRequest(occasion: occasion?.label, refinement: refinement, customQuery: customQuery)
+        let pantryItems = request.allowedPantryItems(pantryItems).filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        guard !filterByPantry || !pantryItems.isEmpty else { return [] }
         let key = cacheKey(
             occasion: occasion,
             refinement: refinement,
@@ -99,7 +108,8 @@ final class EXARecipeIdeasService {
             pantryItems: pantryItems,
             filterByPantry: filterByPantry,
             language: language,
-            seed: seed
+            seed: seed,
+            limit: limit
         )
 
         if let entry = cache[key], Date().timeIntervalSince(entry.date) < ttl {
@@ -118,19 +128,12 @@ final class EXARecipeIdeasService {
             seed: seed
         )
 
-        let hint = mainIngredientHint(
-            pantryItems: pantryItems,
-            filterByPantry: filterByPantry,
-            customQuery: customQuery
-        )
-
         var results = try await performSearch(
             query: query,
             limit: limit,
             apiKey: apiKey,
             preferDomains: true,
-                language: language,
-            mainIngredientHint: hint
+            language: language
         )
 
         // Fallback 1: tenta sem restringir domínios (broader web).
@@ -140,31 +143,13 @@ final class EXARecipeIdeasService {
                 limit: limit,
                 apiKey: apiKey,
                 preferDomains: false,
-                language: language,
-                mainIngredientHint: hint
-            )
-        }
-
-        // Fallback 2: query mais simples (apenas ocasião/refinamento).
-        if results.isEmpty {
-            let simple = buildSimpleQuery(
-                occasion: occasion,
-                refinement: refinement,
-                customQuery: customQuery,
                 language: language
-            )
-            results = try await performSearch(
-                query: simple,
-                limit: limit,
-                apiKey: apiKey,
-                preferDomains: false,
-                language: language,
-                mainIngredientHint: nil
             )
         }
 
         guard !results.isEmpty else { throw ServiceError.empty }
 
+        results = Array(results.prefix(limit))
         cache[key] = CacheEntry(results: results, date: Date())
         return results
     }
@@ -176,13 +161,12 @@ final class EXARecipeIdeasService {
         limit: Int,
         apiKey: String,
         preferDomains: Bool,
-        language: AppLanguage,
-        mainIngredientHint: String?
+        language: AppLanguage
     ) async throws -> [RecipeIdeaResult] {
         var body: [String: Any] = [
             "query": query,
             "type": "auto",
-            "numResults": max(limit, 6),
+            "numResults": limit,
             "contents": [
                 "summary": [
                     "query": "Summarize this recipe in up to 90 characters in \(language.aiModelLanguageName), focusing on the dish and its style."
@@ -237,12 +221,29 @@ final class EXARecipeIdeasService {
             throw ServiceError.invalidResponse
         }
 
+        var titles = Set<String>()
+        var urls = Set<String>()
         return rawResults.compactMap { dict in
-            decodeSearchResult(dict, mainIngredientHint: mainIngredientHint)
+            guard let result = decodeSearchResult(dict) else { return nil }
+            let title = Self.normalize(result.title)
+            let url = result.sourceURL.flatMap { URLComponents(string: $0) }.map { components -> String in
+                var canonical = components
+                canonical.fragment = nil
+                canonical.queryItems = canonical.queryItems?.filter {
+                    !$0.name.lowercased().hasPrefix("utm_") && $0.name.lowercased() != "fbclid"
+                }
+                if canonical.queryItems?.isEmpty == true { canonical.queryItems = nil }
+                return canonical.string ?? ""
+            }
+            guard !titles.contains(title) else { return nil }
+            if let url, urls.contains(url) { return nil }
+            titles.insert(title)
+            if let url { urls.insert(url) }
+            return result
         }
     }
 
-    private func decodeSearchResult(_ dict: [String: Any], mainIngredientHint: String?) -> RecipeIdeaResult? {
+    private func decodeSearchResult(_ dict: [String: Any]) -> RecipeIdeaResult? {
         guard let title = (dict["title"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines),
               !title.isEmpty else { return nil }
         let url = (dict["url"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -252,7 +253,7 @@ final class EXARecipeIdeasService {
 
         // Ingredientes/passos são extraídos depois pela LLM (RecipeStructurer).
         // Aqui apenas detectamos o ingrediente principal a partir do título para o card de sugestão.
-        let detectedIngredient = mainIngredientHint ?? guessMainIngredient(title: title)
+        let detectedIngredient = guessMainIngredient(title: title)
 
         return RecipeIdeaResult(
             title: title,
@@ -288,47 +289,22 @@ final class EXARecipeIdeasService {
             parts.append(customQuery)
         }
         if filterByPantry, !pantryItems.isEmpty {
-            let topItems = Array(pantryItems.prefix(6)).joined(separator: ", ")
+            // Change the ingredients emphasized by a refresh, rather than
+            // appending an unrelated "v2" keyword to the search query.
+            let offset = ((seed % pantryItems.count) + pantryItems.count) % pantryItems.count
+            let rotated = Array(pantryItems[offset...]) + Array(pantryItems[..<offset])
+            let topItems = Array(rotated.prefix(6)).joined(separator: ", ")
             parts.append("\(language.recipeIngredientJoiner) \(topItems)")
         }
-        if seed > 0 {
-            parts.append("v\(seed + 1)")
-        }
-        return parts.joined(separator: " ")
-    }
-
-    private func buildSimpleQuery(
-        occasion: RecipeIdeaOccasion?,
-        refinement: String?,
-        customQuery: String?,
-        language: AppLanguage
-    ) -> String {
-        var parts: [String] = [language.recipeSearchKeyword]
-        if let occasion, occasion != .outro {
-            parts.append(occasion.label.lowercased())
-        }
-        if let refinement, !refinement.isEmpty, refinement != "Outro" {
-            parts.append(refinement.lowercased())
-        }
-        if let customQuery, !customQuery.trimmingCharacters(in: .whitespaces).isEmpty {
-            parts.append(customQuery)
+        if !filterByPantry && seed != 0 {
+            let variants = ["alternative ingredient combinations", "regional and international recipe variations", "different preparation techniques"]
+            let index = ((seed % variants.count) + variants.count) % variants.count
+            parts.append(variants[index])
         }
         return parts.joined(separator: " ")
     }
 
     // MARK: Heuristics
-
-    private func mainIngredientHint(
-        pantryItems: [String],
-        filterByPantry: Bool,
-        customQuery: String?
-    ) -> String? {
-        if let customQuery, !customQuery.isEmpty {
-            return firstWord(customQuery)
-        }
-        if filterByPantry, let first = pantryItems.first { return first }
-        return nil
-    }
 
     private func guessMainIngredient(title: String) -> String? {
         let lower = title.lowercased()
@@ -357,21 +333,23 @@ final class EXARecipeIdeasService {
         pantryItems: [String],
         filterByPantry: Bool,
         language: AppLanguage,
-        seed: Int
+        seed: Int,
+        limit: Int
     ) -> String {
         let pantryHash = pantryItems
             .map { Self.normalize($0) }
             .sorted()
             .joined(separator: "|")
         return [
-            "v2",
+            "v3",
             language.rawValue,
             occasion?.rawValue ?? "-",
             refinement ?? "-",
             customQuery ?? "-",
             pantryHash,
             filterByPantry ? "1" : "0",
-            String(seed)
+            String(seed),
+            String(limit)
         ].joined(separator: "::")
     }
 
