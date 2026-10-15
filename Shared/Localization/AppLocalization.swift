@@ -127,7 +127,31 @@ enum AppLanguage: String, CaseIterable, Sendable {
         case .it:
             return "con"
         case .ja:
-            return "with"
+            return "食材"
+        }
+    }
+
+    var recipeSourcePageHint: String {
+        switch self {
+        case .ptBR: return "receita individual com ingredientes e modo de preparo, não listas de receitas"
+        case .en: return "individual recipe with ingredients and directions, not recipe collections"
+        case .es: return "receta individual con ingredientes e instrucciones, no listas de recetas"
+        case .fr: return "recette individuelle avec ingrédients et préparation, pas de listes de recettes"
+        case .de: return "einzelnes Rezept mit Zutaten und Zubereitung, keine Rezeptsammlungen"
+        case .it: return "ricetta singola con ingredienti e preparazione, non raccolte di ricette"
+        case .ja: return "材料と作り方がある個別のレシピ、レシピまとめを除く"
+        }
+    }
+
+    var recipeSearchVariations: [String] {
+        switch self {
+        case .ptBR: return ["combinações alternativas de ingredientes", "receitas regionais e internacionais", "técnicas de preparo diferentes"]
+        case .en: return ["alternative ingredient combinations", "regional and international recipes", "different preparation techniques"]
+        case .es: return ["combinaciones alternativas de ingredientes", "recetas regionales e internacionales", "técnicas de preparación diferentes"]
+        case .fr: return ["autres associations d’ingrédients", "recettes régionales et internationales", "différentes techniques de préparation"]
+        case .de: return ["alternative Zutatenkombinationen", "regionale und internationale Rezepte", "andere Zubereitungstechniken"]
+        case .it: return ["combinazioni alternative di ingredienti", "ricette regionali e internazionali", "tecniche di preparazione diverse"]
+        case .ja: return ["食材の別の組み合わせ", "郷土料理と世界の料理", "異なる調理方法"]
         }
     }
 

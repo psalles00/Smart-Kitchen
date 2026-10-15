@@ -1003,7 +1003,7 @@ final class RecipeWebDiscoveryTests: XCTestCase {
         let backend = RecipeWebFixtureBackend()
         let service = EXARecipeIdeasService(supabase: backend)
         let pantry = ["Ovos", "Tomate", "Arroz", "Feijão", "Cenoura", "Batata", "Abóbora"]
-        for seed in [0, 1] {
+        for seed in [0, 6] {
             _ = try await service.search(occasion: .jantar, refinement: nil, customQuery: "Sem leite em 20 minutos",
                                           pantryItems: pantry, filterByPantry: true, language: .ptBR, seed: seed)
         }
@@ -1013,6 +1013,117 @@ final class RecipeWebDiscoveryTests: XCTestCase {
         XCTAssertFalse(queries[0].contains("Abóbora"))
         XCTAssertTrue(queries[1].contains("Abóbora"))
         XCTAssertTrue(queries.allSatisfy { $0.contains("sem leite") && $0.contains("20 min") && !$0.contains("v2") })
+    }
+
+    func testStrictSourceRejectsMissingFoodsCollectionsAndUnknownIngredients() async {
+        let backend = RecipeWebFixtureBackend()
+        backend.providesDefaultFacts = false
+        backend.results = [
+            ["title": "Arroz com ovo e bacon de uma panela só", "url": "https://example.com/bacon",
+             "text": "Tempo total: 20 min\nIngredientes:\n1 ovo\n1 tomate\n100 g de bacon\nModo de preparo:\nMisture e cozinhe."],
+            ["title": "6 pratos para o jantar", "url": "https://example.com/collection",
+             "text": "Ingredientes:\nOvos\nTomate\nModo de preparo:\nMisture."],
+            ["title": "Receita sem lista verificável", "url": "https://example.com/unknown"],
+            ["title": "Arroz com ovo", "url": "https://example.com/cooked",
+             "text": "Ingredientes:\n1 xícara (chá) de arroz cozido\n2 ovos\nModo de preparo:\nMisture."],
+            ["title": "Ovos temperados", "url": "https://example.com/salt",
+             "text": "Ingredientes:\n2 ovos\nSal e pimenta a gosto\nModo de preparo:\nMisture."]]
+        do {
+            _ = try await EXARecipeIdeasService(supabase: backend).search(occasion: nil, refinement: nil, customQuery: nil,
+                pantryItems: ["Arroz", "Ovos", "Tomate", "Sal"], filterByPantry: true, language: .ptBR)
+            XCTFail("No source proves all required ingredients are available")
+        } catch { }
+        XCTAssertEqual(backend.bodies.count, 2)
+    }
+
+    func testStrictSourceKeepsWholeNamesQuantitiesAndOptionalIngredients() async throws {
+        let backend = RecipeWebFixtureBackend()
+        backend.results = [["title": "Arroz com tomate", "url": "https://example.com/complete",
+            "text": "Tempo total: 5 min\nIngredientes:\n1 1/2 xícaras (chá) de arroz cozido\n1 tomate picado\n1 xícara (chá) de batata palha (opcional)\nModo de preparo:\nMisture e aqueça."]]
+        let ideas = try await EXARecipeIdeasService(supabase: backend).search(occasion: nil, refinement: nil,
+            customQuery: "Em 5 minutos", pantryItems: ["Arroz cozido", "Tomate"], filterByPantry: true, language: .ptBR)
+        XCTAssertEqual(ideas.first?.ingredients, ["Arroz cozido", "Tomate"])
+        XCTAssertEqual(ideas.first?.mainIngredient, "Tomate")
+    }
+
+    func testCompleteCompoundNameIsNeverReducedToAnAvailableSubstring() async {
+        let backend = RecipeWebFixtureBackend()
+        backend.results = [["title": "Ovos com tomate seco", "url": "https://example.com/compound",
+            "text": "Ingredientes:\n2 ovos\n1 tomate seco\nModo de preparo:\nMisture."]]
+        do {
+            _ = try await EXARecipeIdeasService(supabase: backend).search(occasion: nil, refinement: nil,
+                customQuery: nil, pantryItems: ["Tomate", "Ovos"], filterByPantry: true, language: .ptBR)
+            XCTFail("Tomato does not prove sun-dried tomato is available")
+        } catch { }
+    }
+
+    func testQueryFocusesMentionedFoodsAndCleansSupersededNumericWords() async throws {
+        let backend = RecipeWebFixtureBackend()
+        let request = RecipeIdeaRequest(occasion: "Jantar", refinement: nil,
+            customQuery: "Jantar com ovos e tomate em 20 minutos para uma pessoa")
+        _ = try await EXARecipeIdeasService(supabase: backend).search(occasion: .jantar, refinement: nil,
+            customQuery: nil, pantryItems: ["Feijão", "Arroz", "Tomate", "Ovos", "Cenoura"],
+            filterByPantry: true, language: .ptBR, requestContext: request)
+        let query = try XCTUnwrap(backend.bodies.first?["query"] as? String)
+        XCTAssertTrue(query.contains("com Tomate, Ovos"))
+        XCTAssertFalse(query.contains("Feijão"))
+        XCTAssertFalse(query.contains("em para"))
+        XCTAssertTrue(query.contains("20 min"))
+        XCTAssertTrue(query.contains("1 servings"))
+    }
+
+    func testSourceVarietyAlternatesKnownFoodsBeforeRepeating() async throws {
+        let backend = RecipeWebFixtureBackend()
+        backend.results = [
+            ["title": "Tomate recheado", "url": "https://example.com/a", "text": "Ingredientes:\nTomate\nOvos\nModo de preparo:\nMisture."],
+            ["title": "Tomate assado", "url": "https://example.com/b", "text": "Ingredientes:\nTomate\nOvos\nModo de preparo:\nMisture."],
+            ["title": "Cenoura com ovos", "url": "https://example.com/c", "text": "Ingredientes:\nCenoura\nOvos\nModo de preparo:\nMisture."]]
+        let ideas = try await EXARecipeIdeasService(supabase: backend).search(occasion: nil, refinement: nil,
+            customQuery: nil, pantryItems: ["Tomate", "Ovos", "Cenoura"], filterByPantry: true, language: .ptBR)
+        XCTAssertEqual(ideas.map(\.title), ["Tomate recheado", "Cenoura com ovos", "Tomate assado"])
+    }
+
+    func testFreeModeDoesNotInventMainIngredientFromGenericTitle() async throws {
+        let backend = RecipeWebFixtureBackend()
+        backend.providesDefaultFacts = false
+        backend.results = [["title": "Jantar de uma panela só", "url": "https://example.com/dinner"],
+                           ["title": "Bolo de 3 ingredientes", "url": "https://example.com/cake"]]
+        let ideas = try await EXARecipeIdeasService(supabase: backend).search(occasion: nil, refinement: nil,
+            customQuery: nil, pantryItems: [], filterByPantry: false, language: .ptBR)
+        XCTAssertEqual(ideas.count, 2)
+        XCTAssertTrue(ideas.allSatisfy { $0.mainIngredient == nil })
+    }
+
+    func testTimeAndMilkRestrictionsRequireCompleteSourceFacts() async {
+        let backend = RecipeWebFixtureBackend()
+        backend.providesDefaultFacts = false
+        backend.results = [
+            ["title": "Omelete", "url": "https://example.com/slow", "text": "Tempo total: 45 min\nIngredientes:\n2 ovos\nModo de preparo:\nMisture."],
+            ["title": "Omelete", "url": "https://example.com/prep", "text": "Prep time: 5 min\nIngredientes:\n2 ovos\nModo de preparo:\nMisture."],
+            ["title": "Omelete", "url": "https://example.com/milk", "text": "Tempo total: 5 min\nIngredientes:\n2 ovos\n1 colher (sopa) de manteiga\nModo de preparo:\nMisture."],
+            ["title": "Omelete", "url": "https://example.com/truncated", "text": "Tempo total: 5 min\nIngredientes:\n2 ovos"]]
+        do {
+            _ = try await EXARecipeIdeasService(supabase: backend).search(occasion: nil, refinement: nil,
+                customQuery: "Sem leite em 20 minutos", pantryItems: [], filterByPantry: false, language: .ptBR)
+            XCTFail("No source satisfies both restrictions")
+        } catch { }
+    }
+
+    func testSourceHeadingsAndQueryHintsAcrossSevenLanguages() async throws {
+        let fixtures: [(AppLanguage, String, String, String)] = [
+            (.ptBR, "Ingredientes", "Modo de preparo", "Ovos"), (.en, "Ingredients", "Directions", "Eggs"),
+            (.es, "Ingredientes", "Instrucciones", "Huevos"), (.fr, "Ingrédients", "Préparation", "Oeufs"),
+            (.de, "Zutaten", "Zubereitung", "Eier"), (.it, "Ingredienti", "Preparazione", "Uova"),
+            (.ja, "材料", "作り方", "卵")]
+        for (language, ingredients, method, food) in fixtures {
+            let backend = RecipeWebFixtureBackend()
+            backend.results = [["title": food, "url": "https://example.com/recipe",
+                                "text": "## \(ingredients)\n\(food)\n## \(method)\n✓"]]
+            let ideas = try await EXARecipeIdeasService(supabase: backend).search(occasion: nil, refinement: nil,
+                customQuery: nil, pantryItems: [food], filterByPantry: true, language: language)
+            XCTAssertEqual(ideas.first?.ingredients, [food], language.rawValue)
+            XCTAssertTrue((backend.bodies.first?["query"] as? String ?? "").contains(language.recipeSourcePageHint))
+        }
     }
 
     func testWebCardsUseTheirOwnTitlesDeduplicateAndCacheByLimit() async throws {
@@ -1058,12 +1169,20 @@ private final class RecipeWebFixtureBackend: SupabaseFunctionInvoking {
     var isConfigured: Bool { true }
     var bodies: [[String: Any]] = []
     var languages: [String] = []
+    var providesDefaultFacts = true
     var results: [[String: Any]] = [["title": "Omelete de tomate", "url": "https://example.com/a"]]
     func invokeFunctionData(name: String, body: [String: Any], acceptLanguage: String?) async throws -> Data {
         guard name == "exa-search" else { throw URLError(.unsupportedURL) }
         bodies.append(body)
         languages.append(acceptLanguage ?? "")
-        return try JSONSerialization.data(withJSONObject: ["results": results])
+        let pages = results.map { result in
+            var result = result
+            if providesDefaultFacts, result["text"] == nil {
+                result["text"] = "Tempo total: 5 min\nIngredientes:\n2 ovos\n1 tomate\nModo de preparo:\nMisture e cozinhe."
+            }
+            return result
+        }
+        return try JSONSerialization.data(withJSONObject: ["results": pages])
     }
     func invokeFunctionData(name: String, body: Data, contentType: String, acceptLanguage: String?) async throws -> Data {
         throw URLError(.unsupportedURL)

@@ -127,6 +127,18 @@ struct RecipeIdeaRequest {
         if !excludesMilk {
             parts = parts.map { Self.removingMilkExclusions($0) }
         }
+        // Removing numeric limits can leave "em ... para ..." behind. Keep
+        // complete context once, rather than repeating picker metadata in queries.
+        parts = parts.map {
+            $0.replacingOccurrences(of: #"(?:\b(?:em|para|in|for|en|pour|fur|per)\s*)+(?=$|[,.;])"#, with: " ", options: .regularExpression)
+                .replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        var unique: [String] = []
+        for part in parts where !part.isEmpty {
+            if !unique.contains(where: { $0 == part || $0.hasPrefix(part + " ") || $0.hasSuffix(" " + part) }) { unique.append(part) }
+        }
+        parts = unique
         if let maximumMinutes { parts.append("\(maximumMinutes) min") }
         if let requestedServings { parts.append("\(requestedServings) servings") }
         return parts.joined(separator: " ")
@@ -222,9 +234,14 @@ struct RecipeIdeaRequest {
         return nil
     }
 
-    func accepts(ingredients: [String], steps: [String] = [], totalMinutes: Int?, servings: Int?) -> Bool {
+    func acceptsDiet(ingredients: [String], steps: [String] = []) -> Bool {
         if excludesMilk,
            ingredients.contains(where: Self.containsDairy) || steps.contains(where: Self.containsDairyUse) { return false }
+        return true
+    }
+
+    func accepts(ingredients: [String], steps: [String] = [], totalMinutes: Int?, servings: Int?) -> Bool {
+        guard acceptsDiet(ingredients: ingredients, steps: steps) else { return false }
         if let maximumMinutes {
             guard let totalMinutes, totalMinutes > 0, totalMinutes <= maximumMinutes else { return false }
         }

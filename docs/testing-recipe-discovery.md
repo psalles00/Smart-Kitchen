@@ -414,3 +414,40 @@ Teste manual: observe o fundo em movimento, troque entre as páginas, confira o
 fade de cor sem reiniciar a forma, role listas e receitas, saia e volte ao app.
 Confira que textos continuam nítidos e o shader permanece visível. Desempenho no
 Simulator não substitui a medição física que motivou esta correção.
+
+## Validação dos ingredientes das páginas web — 15/10
+
+A busca agora exclui coleções de receitas, lê uma seção delimitada de ingredientes
+e exige um início verificável do preparo. No modo restrito, todos os ingredientes
+obrigatórios devem corresponder aos nomes completos da despensa; quantidade,
+cortes simples e formas plurais explícitas são tratados separadamente. Arroz cru
+não comprova arroz cozido, tomate não comprova tomate seco, e sal/óleo/água nunca
+são presumidos. Formatos desconhecidos ou truncados são rejeitados neste modo.
+
+Pedidos sem leite conferem ingredientes e preparo. Um limite de minutos exige
+tempo total conhecido na fonte; tempo de preparo isolado não é promovido a total.
+As porções ainda podem ser ajustadas na expansão, que mantém sua validação final.
+O parser conservador não é um certificado de qualidade culinária nem uma prova
+de que toda página da web apresenta uma lista completa e correta.
+
+O ingrediente principal vem dos ingredientes extraídos, sem transformar “uma”,
+“pressa” ou “Jantar” em alimento. A primeira sequência alterna ingredientes antes
+de repeti-los. A consulta enfatiza dois itens, prioriza os citados pelo usuário e
+varia o foco ao atualizar; remove repetições de ocasião e resíduos dos limites
+numéricos anteriores. Instruções e variações de busca estão nos sete idiomas.
+O cache mudou de versão para não reapresentar cards anteriores à conferência.
+
+61 testes passaram, com dois testes pagos ignorados por padrão. Cobrem as falhas
+reais reproduzidas, nomes compostos, pré-cozimento, opcionais explícitos, tempo,
+leite, diversidade, contexto, cabeçalhos em sete idiomas e limite de duas buscas.
+Mocks positivos são fixtures sintéticas, não novos resultados reais da Exa.
+Builds Simulator e macOS aprovados; Simulator instalado e aberto. Mac instalado
+com assinatura Apple Development e snapshot idêntico; a abertura visual desta
+iteração ficou pendente porque o Mac voltou a bloquear. A validação web real
+posterior à correção continua pendente e não foi contabilizada como aprovada.
+
+Roteiro manual: ative apenas despensa, busque receitas novas e abra um resultado.
+Confira todos os ingredientes e o preparo; repita com limite de tempo e sem leite.
+Atualize as ideias e confira diversidade e ausência de URLs repetidas. Com uma
+despensa insuficiente, confira ausência de receitas incompatíveis; desligue a
+restrição apenas por escolha explícita, não como fallback automático do app.
