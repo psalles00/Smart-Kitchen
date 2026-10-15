@@ -647,6 +647,7 @@ struct InlineChatView: View {
                     .padding(.bottom, 4)
 
                 TextField("Mensagem...", text: $inputText, axis: .vertical)
+                    .accessibilityIdentifier("savoria.chat.input")
                     .lineLimit(1...5)
                     .textFieldStyle(.plain)
                     .focused($isInputFocused)
@@ -675,6 +676,7 @@ struct InlineChatView: View {
                     .shadow(color: canSend ? Color.accentColor.opacity(0.28) : .clear, radius: 10, y: 6)
             }
             .disabled(!canSend)
+            .accessibilityIdentifier("savoria.chat.send")
         }
         .padding(.horizontal, 14)
         .padding(.top, 10)
@@ -780,7 +782,7 @@ struct InlineChatView: View {
         }
 
         let normalizedPrompt = normalized(trimmedText)
-        let hasRecipeIdeasContext = isAIMode && (autoActivatedRecipeIdeasMode || aiChatPreset == .recipeIdeas)
+        let hasRecipeIdeasContext = isAIMode && (autoActivatedRecipeIdeasMode || aiChatPreset == .recipeIdeas || lastReplyIsSavedLibrarySearch)
         // Em SavorIA, qualquer pedido reconhecido como sugestão de receita deve
         // entrar no fluxo estruturado (Suas Receitas + Ideias Rápidas + Web).
         let isRecipePromptInAIMode = isAIMode &&
@@ -808,6 +810,18 @@ struct InlineChatView: View {
         insertMessage(userMessage)
         pinnedUserMessageID = userMessage.id
         inputText = ""
+
+        let sourceRequest = RecipeIdeaRequest(occasion: recipeIdeasContext.occasion?.label,
+                                             refinement: recipeIdeasContext.refinement, customQuery: recipeIdeasContext.customQuery)
+        if sourceRequest.onlySavedRecipes {
+            autoActivatedRecipeIdeasMode = true
+            searchBarState?.aiChatPreset = .recipeIdeas
+            Task {
+                await runRecipeIdeasSearch(occasion: recipeIdeasContext.occasion, refinement: recipeIdeasContext.refinement,
+                                           customQuery: recipeIdeasContext.customQuery, conversationId: convId)
+            }
+            return
+        }
 
         // Free-tier daily AI gate. `.recipeIdeas` and the standard chat both
         // count against the same `.ai` bucket. Counter consumed on success.
@@ -1690,6 +1704,12 @@ struct InlineChatView: View {
         return nil
     }
 
+    private var lastReplyIsSavedLibrarySearch: Bool {
+        guard let message = messages.last(where: { $0.role == .assistant }),
+              case .results? = wizardSentinelKind(for: message) else { return false }
+        return ResultsPayload.decode(message.content).request.onlySavedRecipes
+    }
+
     private func responseLanguageSystemMessage(for text: String?) -> String {
         let language = detectedResponseLanguage(for: text)
         let preferredLanguage = Locale.preferredLanguages.first ?? Locale.current.identifier
@@ -2339,6 +2359,18 @@ struct InlineChatView: View {
         customQuery: String?,
         conversationId: UUID
     ) async {
+        let request = RecipeIdeaRequest(occasion: occasion?.label, refinement: refinement, customQuery: customQuery)
+        if request.onlySavedRecipes {
+            let filter = request.pantryOverride ?? currentPantryFilterEnabled
+            let ids = matchLocalRecipes(occasion: occasion, refinement: refinement, customQuery: customQuery,
+                                        filterByPantry: filter, libraryOnly: true)
+            let payload = ResultsPayload(ideas: [], quickIdeas: [], localRecipeIDs: ids, occasionRaw: occasion?.rawValue,
+                                         refinement: refinement, customQuery: customQuery, filterByPantry: filter)
+            insertMessage(ChatMessage(role: .assistant, content: payload.encoded(),
+                                      quickActions: [QuickAction(label: "_wizard", prompt: RecipeIdeasSentinel.resultsPrefix)],
+                                      conversationId: conversationId))
+            return
+        }
         // Free-tier daily AI gate (Recipe Ideas counts as `.ai`).
         guard FeatureGate.shared.canUse(.ai) else {
             pendingPaywallReason = .limitReached(.ai)
@@ -2350,7 +2382,7 @@ struct InlineChatView: View {
 
         let pantryItems = (try? modelContext.fetch(FetchDescriptor<UnifiedItem>())) ?? []
         let pantryNames = pantryItems.filter { $0.isPantry }.map { $0.name }
-        let filterEnabled = currentPantryFilterEnabled
+        let filterEnabled = request.pantryOverride ?? currentPantryFilterEnabled
         let targetLanguage = recipeIdeasTargetLanguage(for: customQuery)
 
         // EXA (web) + Quick Ideas (LLM) em paralelo.
@@ -2425,10 +2457,12 @@ struct InlineChatView: View {
         occasion: RecipeIdeaOccasion?,
         refinement: String?,
         customQuery: String?,
-        filterByPantry: Bool
+        filterByPantry: Bool,
+        libraryOnly: Bool = false
     ) -> [UUID] {
         let pantryItems = (try? modelContext.fetch(FetchDescriptor<UnifiedItem>())) ?? []
         let pantryNames = pantryItems.filter { $0.isPantry }.map { normalized($0.name) }
+        let request = RecipeIdeaRequest(occasion: occasion?.label, refinement: refinement, customQuery: customQuery)
 
         var keywords: [String] = []
         if let occasion {
@@ -2445,23 +2479,21 @@ struct InlineChatView: View {
         }
         if let refinement { keywords.append(normalized(refinement)) }
         if let customQuery {
-            keywords.append(contentsOf: recipeIdeaSearchKeywords(from: customQuery))
+            keywords.append(contentsOf: libraryOnly ? request.savedLibrarySearchTerms : recipeIdeaSearchKeywords(from: customQuery))
         }
         keywords = Array(Set(keywords.filter { $0.count >= 3 }))
-
-        let request = RecipeIdeaRequest(occasion: occasion?.label, refinement: refinement, customQuery: customQuery)
 
         let scored: [(Recipe, Double, Int)] = allRecipes.compactMap { recipe in
             let category = normalized(recipe.category)
             let tags = recipe.tags.map(normalized)
             let name = normalized(recipe.name)
+            let ingredientNames = (recipe.ingredients ?? []).map { normalized($0.name) }
             let categoryMatches = keywords.contains(where: { kw in
-                !kw.isEmpty && (category.contains(kw) || tags.contains(where: { $0.contains(kw) }) || name.contains(kw))
+                !kw.isEmpty && (category.contains(kw) || tags.contains(where: { $0.contains(kw) }) || name.contains(kw) || ingredientNames.contains(where: { $0.contains(kw) }))
             })
             // Sem keywords (ocasião nil/customQuery vazio), aceita qualquer categoria.
             if !keywords.isEmpty && !categoryMatches { return nil }
 
-            let ingredientNames = (recipe.ingredients ?? []).map { normalized($0.name) }
             guard !ingredientNames.isEmpty else { return nil }
             let (minutes, overflow) = recipe.prepTime.addingReportingOverflow(recipe.cookTime)
             guard request.acceptsPantry(ingredients: ingredientNames, pantryItems: pantryNames, filterByPantry: filterByPantry),
@@ -2557,7 +2589,7 @@ struct InlineChatView: View {
             }
 
             if payload.localRecipeIDs.isEmpty && payload.quickIdeas.isEmpty && payload.ideas.isEmpty {
-                Text("Não encontrei nenhuma ideia agora.")
+                Text(payload.request.onlySavedRecipes ? String(localized: "Nenhum resultado encontrado") : String(localized: "Não encontrei nenhuma ideia agora."))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 16)

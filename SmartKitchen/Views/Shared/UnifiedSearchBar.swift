@@ -100,6 +100,7 @@ struct UnifiedSearchBar: View {
                         text: $state.searchText,
                         prompt: searchPrompt
                     )
+                        .accessibilityIdentifier(state.mode == .aiChat ? "savoria.chat.input" : "savoria.search.input")
                         .foregroundStyle(.primary)
                         #if os(iOS)
                         .textInputAutocapitalization(.never)
@@ -184,6 +185,7 @@ struct UnifiedSearchBar: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel(Text("Enviar"))
+            .accessibilityIdentifier("savoria.chat.send")
         }
     }
 

@@ -99,6 +99,8 @@ final class EXARecipeIdeasService {
         guard limit > 0 else { return [] }
         let limit = min(limit, 10)
         let request = RecipeIdeaRequest(occasion: occasion?.label, refinement: refinement, customQuery: customQuery)
+        guard !request.onlySavedRecipes else { return [] }
+        let filterByPantry = request.pantryOverride ?? filterByPantry
         let pantryItems = request.allowedPantryItems(pantryItems).filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
         guard !filterByPantry || !pantryItems.isEmpty else { return [] }
         let key = cacheKey(

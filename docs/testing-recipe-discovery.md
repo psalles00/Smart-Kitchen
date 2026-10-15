@@ -195,3 +195,35 @@ Roteiro manual:
 3. Troque a foto ou cancele; confirme que não aparece resultado de seleção antiga.
 4. No iPhone físico, confira captura real e permissões. Análise de imagem/áudio,
    exatidão nutricional e validação física continuam pendentes no contrato E2E.
+
+## Pedidos somente da biblioteca
+
+Pedidos explícitos de receitas salvas agora usam a biblioteca local antes do
+gate de IA, sem gerar ideias, buscar na web ou consumir a cota local de IA.
+Os próprios serviços de geração e web também rejeitam esse escopo. A origem é
+preservada no payload existente da conversa, sem mudança em schemas ou stores.
+Comandos de criação/edição e pedidos mistos não são confundidos com essa busca.
+Termos de roteamento e restrições conhecidas não viram palavras positivas de
+busca; nomes de ingredientes também podem corresponder às receitas existentes.
+
+Um pedido explícito para não restringir à despensa, ou para usar só seus itens,
+tem prioridade sobre a preferência geral e acompanha o resultado e sua expansão.
+O estado recente da conversa reconhece um resultado de biblioteca reaberto.
+A interpretação natural é delimitada pelas expressões cobertas; isso não prova
+compreensão irrestrita de toda frase ou de toda restrição alimentar.
+
+54 testes direcionados passaram, incluindo escopo/termos nos sete idiomas,
+comandos/pedidos mistos, override de despensa, payload legado e zero chamadas aos
+backends injetados. O teste nativo pediu “Me mostre apenas receitas salvas da
+minha biblioteca, sem restringir à despensa.”, exibiu só Suas Receitas e abriu
+Mingau Simples na aba Receitas. Readback: os três IDs do payload correspondem
+exatamente às três receitas já existentes, sem ideias geradas ou da web.
+Somente a conversa de teste foi acrescentada; listas, receitas, metadados e
+hashes das capas permaneceram idênticos, com zero alimentos registrados.
+Mac instalado e snapshot idêntico; abertura visual bloqueada pela sessão
+bloqueada, instalação física pendente porque o iPhone está ausente do USB.
+
+Teste manual: peça sugestões somente da biblioteca; confira origem/nomes e abra
+um card. Repita acrescentando “sem restringir à despensa”. Depois reabra a
+conversa e confira o escopo. A variação de contexto/tempo/porções em follow-ups
+continua sendo uma etapa separada da auditoria da conversa.

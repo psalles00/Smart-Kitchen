@@ -5,6 +5,72 @@ import XCTest
 
 @MainActor
 final class RecipeIdeaRequestTests: XCTestCase {
+    func testSavedLibraryIntentAndGenericKeywordsAcrossSupportedLanguages() {
+        let prompts = ["Sugira apenas receitas salvas da minha biblioteca.", "Suggest only saved recipes from my library.",
+                       "Zeige mir nur gespeicherte Rezepte aus meiner Bibliothek.", "Sugiere solo recetas guardadas de mi biblioteca.",
+                       "Suggère uniquement des recettes enregistrées de ma bibliothèque.", "Suggerisci solo ricette salvate dalla mia libreria.",
+                       "保存したレシピだけを提案して", "Sugira apenas receitas salvas da minha biblioteca. Não busque novas receitas na web."]
+        for prompt in prompts {
+            let request = RecipeIdeaRequest(occasion: nil, refinement: nil, customQuery: prompt)
+            XCTAssertTrue(request.onlySavedRecipes, prompt)
+            XCTAssertEqual(request.savedLibrarySearchTerms, [], prompt)
+        }
+    }
+
+    func testLibraryIntentDoesNotHijackCreationEditingOrMixedSources() {
+        for prompt in ["Quero receitas novas para salvar na minha biblioteca.", "Não apenas a biblioteca, quero novas receitas.",
+                       "Delete saved recipes", "Edit my saved recipe", "Não use as receitas salvas, sugira novas receitas.",
+                       "Show saved recipes and new recipes", "Sugira receitas da minha biblioteca e ideias novas", "保存したレシピを編集して",
+                       "Como funciona a biblioteca?", "Explain how my library works"] {
+            XCTAssertFalse(RecipeIdeaRequest(occasion: nil, refinement: nil, customQuery: prompt).onlySavedRecipes, prompt)
+        }
+    }
+
+    func testSavedLibraryFoodTermsKeepFoodAndRemoveKnownRestrictions() {
+        let request = RecipeIdeaRequest(occasion: nil, refinement: nil,
+                                         customQuery: "Sugira apenas receitas salvas com frango em 20 minutos para uma pessoa sem leite")
+        XCTAssertEqual(request.savedLibrarySearchTerms, ["frango"])
+        XCTAssertEqual(request.maximumMinutes, 20)
+        XCTAssertEqual(request.requestedServings, 1)
+        XCTAssertTrue(request.excludesMilk)
+    }
+
+    func testExplicitPantryScopeOverridesPreferenceWithoutBecomingSearchTerms() {
+        let request = RecipeIdeaRequest(occasion: nil, refinement: nil,
+                                         customQuery: "Sugira apenas receitas salvas da minha biblioteca, sem restringir à despensa.")
+        XCTAssertTrue(request.onlySavedRecipes)
+        XCTAssertEqual(request.pantryOverride, false)
+        XCTAssertEqual(request.savedLibrarySearchTerms, [])
+        for phrase in ["apenas ingredientes da despensa", "only pantry ingredients", "solo ingredientes de la despensa",
+                       "uniquement les ingrédients du garde-manger", "nur Zutaten aus dem Vorrat", "solo ingredienti della dispensa", "パントリーの食材だけ"] {
+            XCTAssertEqual(RecipeIdeaRequest(occasion: nil, refinement: nil, customQuery: phrase).pantryOverride, true, phrase)
+        }
+        XCTAssertNil(RecipeIdeaRequest(occasion: nil, refinement: nil, customQuery: "Quero jantar").pantryOverride)
+    }
+
+    func testSavedLibrarySourceSurvivesReopenAndNeverDispatchesGenerationOrWeb() async throws {
+        let prompt = "Sugira apenas receitas salvas da minha biblioteca. Não busque novas receitas na web."
+        let id = UUID()
+        let payload = InlineChatView.ResultsPayload(ideas: [], quickIdeas: [], localRecipeIDs: [id],
+                                                    occasionRaw: nil, refinement: nil, customQuery: prompt, filterByPantry: true)
+        let reopened = InlineChatView.ResultsPayload.decode(payload.encoded())
+        XCTAssertTrue(reopened.request.onlySavedRecipes)
+        XCTAssertEqual(reopened.localRecipeIDs, [id])
+        let backend = CountingUnavailableBackend()
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [DirectChatURLProtocol.self]
+        DirectChatURLProtocol.requestHandler = { _ in throw URLError(.unsupportedURL) }
+        let service = AIService(supabase: backend, urlSession: URLSession(configuration: configuration),
+                                openRouterKey: { "" }, prefersDirectOpenRouter: { false })
+        let generated = await RecipeQuickIdeasGenerator(aiService: service).generate(pantryItems: ["Ovos", "Tomate"],
+                            occasion: nil, refinement: nil, customQuery: prompt, language: .ptBR)
+        let web = try await EXARecipeIdeasService(supabase: backend).search(occasion: nil, refinement: nil, customQuery: prompt,
+                            pantryItems: ["Ovos", "Tomate"], filterByPantry: true, language: .ptBR)
+        XCTAssertTrue(generated.isEmpty)
+        XCTAssertTrue(web.isEmpty)
+        XCTAssertEqual(backend.calls, 0)
+    }
+
     func testFinalRecipePantryCheckRejectsExtrasAndSubstringMatches() {
         let request = RecipeIdeaRequest(occasion: nil, refinement: nil, customQuery: "Sem leite")
         let pantry = ["Ovos", "Tomate", "Salmão", "Leite"]

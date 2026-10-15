@@ -3,6 +3,38 @@ import XCTest
 /// Navigates existing food data without purchases, AI calls, seeding or deletion.
 @MainActor
 final class PageActionTracingTests: XCTestCase {
+    /// This request shape is covered by closed-network source-routing tests.
+    func testSavedLibraryRequestUsesExistingCardsWithoutGenerating() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication(bundleIdentifier: "com.pedrosalles.smartkitchen.sync")
+        app.launchArguments = ["-AppleLanguages", "(pt-BR)", "-AppleLocale", "pt_BR"]
+        app.launch()
+        let home = app.tabBars.buttons["Savoria"].firstMatch
+        XCTAssertTrue(home.waitForExistence(timeout: 45))
+        home.tap()
+        let chat = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "SavorIA")).firstMatch
+        XCTAssertTrue(chat.waitForExistence(timeout: 10))
+        chat.tap()
+        let input = app.textFields["savoria.chat.input"]
+        XCTAssertTrue(input.waitForExistence(timeout: 15))
+        input.tap()
+        input.typeText("Me mostre apenas receitas salvas da minha biblioteca, sem restringir à despensa.")
+        app.buttons["savoria.chat.send"].tap()
+        XCTAssertTrue(app.staticTexts["Suas Receitas"].firstMatch.waitForExistence(timeout: 15))
+        XCTAssertFalse(app.staticTexts["Receitas da Web"].exists)
+        XCTAssertFalse(app.staticTexts["Ideias Rápidas"].exists)
+        let screenshot = XCTAttachment(screenshot: app.screenshot())
+        screenshot.name = "Saved library only, no web or generation"
+        screenshot.lifetime = .keepAlways
+        self.add(screenshot)
+        let card = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Mingau Simples")).firstMatch
+        XCTAssertTrue(card.waitForExistence(timeout: 10))
+        card.tap()
+        XCTAssertTrue(app.tabBars.buttons["Receitas"].firstMatch.isSelected)
+        XCTAssertTrue(app.staticTexts["Mingau Simples"].firstMatch.waitForExistence(timeout: 10))
+        XCUIDevice.shared.press(.home)
+    }
+
     /// Simulator camera is unavailable; exercise the recovery without selecting media.
     func testUnavailableCameraOffersGalleryAndCanCancelWithoutRegistering() throws {
         continueAfterFailure = false

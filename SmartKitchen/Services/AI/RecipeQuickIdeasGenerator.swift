@@ -43,6 +43,62 @@ struct RecipeIdeaRequest {
         """
     }
 
+    /// An explicit saved-library request is local search, not recipe generation.
+    var onlySavedRecipes: Bool {
+        let value = Self.normalized(text)
+        guard Self.libraryCues.contains(where: value.contains) else { return false }
+        let searchCues = ["sugira", "sugestoes", "mostre", "quais", "apenas", "somente", "so ", "list", "suggest", "show", "only", "just",
+                          "sugiere", "muestrame", "solo", "suggere", "montre", "uniquement", "seulement", "zeige", "zeig ", "nur",
+                          "suggerisci", "mostrami", "soltanto", "提案", "見せ", "おすすめ", "のみ", "だけ"]
+        guard searchCues.contains(where: value.contains) || Self.libraryCues.contains(value.trimmingCharacters(in: .whitespacesAndNewlines)) else { return false }
+        let exclusions = ["nao apenas", "nao so", "nao somente", "nao use minha biblioteca", "nao use a minha biblioteca", "nao use as receitas salvas",
+                          "e ideias novas", "e sugestoes novas", "and new recipes", "et de nouvelles recettes", "y nuevas recetas", "und neue rezepte", "e nuove ricette", "新しいレシピも",
+                          "not just", "not only", "do not use saved", "don't use saved", "outside my library",
+                          "no solo", "no uses mi biblioteca", "no uses recetas guardadas", "pas seulement", "ne pas utiliser ma bibliotheque",
+                          "nicht nur", "keine gespeicherten rezepte", "non solo", "non usare le ricette salvate",
+                          "ライブラリ以外", "保存したレシピ以外", "だけではなく"]
+        guard !exclusions.contains(where: value.contains) else { return false }
+        // Match verbs as words: "saved"/"salvas"/"guardadas" are not commands.
+        let verbs = #"\b(?:adicione|adicionar|crie|criar|cadastre|cadastrar|salve|salvar|edite|editar|atualize|atualizar|exclua|excluir|apague|apagar|remova|remover|add|create|save|edit|update|delete|remove|anade|anadir|agrega|agregar|crea|crear|guarda|guardar|edita|actualiza|actualizar|elimina|eliminar|borra|borrar|ajoute|ajouter|cree|creer|enregistre|enregistrer|modifie|modifier|supprime|supprimer|speichern|speichere|bearbeiten|bearbeite|loschen|losche|entfernen|aggiungi|aggiungere|creare|salva|salvare|modifica|modificare|rimuovi|rimuovere)\b"#
+        guard value.range(of: verbs, options: .regularExpression) == nil,
+              value.range(of: #"(?:追加|作成|保存|編集|更新|削除|消去)(?!(?:した|された|済み|済の))"#, options: .regularExpression) == nil else { return false }
+        let newRecipeCues = ["novas receitas", "receitas novas", "new recipes", "nuevas recetas", "recetas nuevas", "nouvelles recettes", "neue rezepte", "nuove ricette", "新しいレシピ"]
+        let exclusiveCues = ["apenas", "somente", "so ", "only", "just", "solo", "uniquement", "seulement", "nur", "soltanto", "のみ", "だけ"]
+        return !newRecipeCues.contains(where: value.contains) || exclusiveCues.contains(where: value.contains)
+    }
+
+    var savedLibrarySearchTerms: [String] {
+        var value = Self.normalized(text)
+        for cue in Self.libraryCues.sorted(by: { $0.count > $1.count }) { value = value.replacingOccurrences(of: cue, with: " ") }
+        for cue in Self.unrestrictedPantryCues + Self.restrictedPantryCues { value = value.replacingOccurrences(of: cue, with: " ") }
+        for phrase in ["sem leite", "sem laticinios", "without milk", "no milk", "dairy free", "without dairy", "sans lait", "sin leche", "ohne milch", "senza latte", "提案して", "見せて", "だけ", "のみ", "を"] {
+            value = value.replacingOccurrences(of: phrase, with: " ")
+        }
+        let generic: Set<String> = ["a", "as", "o", "os", "de", "da", "do", "das", "dos", "e", "ou", "com", "em", "na", "no", "nas", "nos", "para", "pra", "por", "uma", "um", "pessoa", "pessoas", "min", "minuto", "minutos", "me", "minha", "minhas", "meu", "meus", "sugira", "sugerir", "sugestoes", "sugestao", "mais", "opcoes", "opcao", "outras", "outros", "mostre", "mostrar", "quero", "apenas", "somente", "so", "favor", "nao", "busque", "novas", "novos", "web", "internet", "receita", "receitas",
+                                    "list", "liste", "listar", "lista", "muestrame", "mostrami", "the", "and", "or", "for", "from", "in", "to", "with", "my", "only", "just", "suggest", "suggestions", "more", "other", "options", "alternatives", "show", "please", "one", "person", "people", "minutes", "new", "recipes", "saved", "library",
+                                    "sugiere", "solo", "recetas", "guardadas", "mi", "con", "sin", "suggere", "uniquement", "seulement", "des", "ma", "recettes", "enregistrees", "bibliotheque", "zeig", "zeige", "mir", "nur", "gespeicherte", "rezepte", "aus", "meiner", "meine", "bibliothek", "suggerisci", "soltanto", "ricette", "salvate", "dalla", "mia", "libreria"]
+        return value.components(separatedBy: CharacterSet.alphanumerics.inverted)
+            .filter { $0.count >= 3 && !generic.contains($0) }
+    }
+
+    private static let libraryCues = ["minha biblioteca", "biblioteca", "receitas salvas", "receita salva", "my library", "library", "saved recipes", "saved recipe",
+                                      "recetas guardadas", "receta guardada", "recettes enregistrees", "bibliotheque", "gespeicherte rezepte", "bibliothek", "ricette salvate", "libreria", "保存したレシピ", "保存済みレシピ", "ライブラリ"]
+
+    var pantryOverride: Bool? {
+        let value = Self.normalized(text)
+        if Self.unrestrictedPantryCues.contains(where: value.contains) { return false }
+        if Self.restrictedPantryCues.contains(where: value.contains) { return true }
+        return nil
+    }
+
+    private static let unrestrictedPantryCues = ["sem restringir a despensa", "sem restricao da despensa", "sem depender da despensa", "nao limite a despensa",
+                                                "without pantry restrictions", "do not limit to my pantry", "don't limit to my pantry",
+                                                "sin limitar a mi despensa", "sans restriction du garde manger", "ohne vorratsbeschrankung",
+                                                "senza limitarmi alla dispensa", "パントリーに限定しない"]
+    private static let restrictedPantryCues = ["apenas itens da despensa", "apenas ingredientes da despensa", "somente ingredientes da despensa", "so itens da despensa",
+                                              "only pantry ingredients", "solo ingredientes de la despensa", "uniquement les ingredients du garde manger",
+                                              "nur zutaten aus dem vorrat", "solo ingredienti della dispensa", "パントリーの食材だけ"]
+
     var generationRules: String {
         var rules = ["Restrições obrigatórias para ingredientes E passos do preparo:"]
         if excludesMilk {
@@ -184,6 +240,8 @@ final class RecipeQuickIdeasGenerator {
         limit: Int = 10
     ) async -> [RecipeQuickIdea] {
         let request = RecipeIdeaRequest(occasion: occasion?.label, refinement: refinement, customQuery: customQuery)
+        guard !request.onlySavedRecipes else { return [] }
+        let filterByPantry = request.pantryOverride ?? filterByPantry
         let pantryItems = request.allowedPantryItems(pantryItems).filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
         guard !filterByPantry || !pantryItems.isEmpty else { return [] }
 
