@@ -851,3 +851,28 @@ pendente: não se atribui ganho de FPS a esta mudança até medi-lo.
 
 Teste manual: conferir o pontilhado entre itens em Listas e em ingredientes
 de receitas, nos dois temas; rolar, alternar páginas e voltar ao app.
+
+### Testar o app instalado sem reinstalação no físico
+
+O manual local de xcodebuild.xctestrun documenta UseDestinationArtifacts: o
+executor usa o app e o runner já instalados. `prepare-performance-run.py`
+aceita --use-installed, verifica IDs/caminhos do runner e produz essa cópia
+sem paths de instalação. Verifique antes se o app e o runner instalados
+correspondem à versão que deseja testar; esse modo não os atualiza.
+
+O Xcode recusou esse modo no Simulator com a mensagem explícita de que o
+destino deve ser um aparelho iOS. A tentativa não executou testes e não é
+falha do app. O helper agora rejeita essa combinação antes de criar arquivos;
+a validação normal do Simulator continua aprovada. A cópia para o iPhone
+foi preparada; sua execução real aguarda o desbloqueio já solicitado.
+
+Após a instalação dos separadores, as novas cópias físicas dos dois stores
+e das mídias confirmaram novamente todos os registros/IDs/BLOBs e os 151
+arquivos idênticos, com quick_check ok. Isso comprova a preservação após
+instalar; abertura e medição da nova versão continuam pendentes no físico.
+
+Etapas para teste manual dos separadores:
+
+1. Na Despensa e no Mercado, conferir o pontilhado entre itens e rolar a lista.
+2. Abrir uma receita e conferir os divisores entre ingredientes nos dois temas.
+3. Alternar as cinco páginas, sair e voltar ao app, conferindo a seleção e o fundo.

@@ -14,6 +14,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("source", type=Path)
     parser.add_argument("destination", type=Path)
+    parser.add_argument("--use-installed", action="store_true",
+                        help="Physical iOS only: use installed app/runner; verify their versions first.")
     args = parser.parse_args()
     source = args.source.resolve(strict=True)
     destination = args.destination.resolve()
@@ -27,6 +29,19 @@ def main():
     target["UITargetAppPerformanceAntipatternCheckerEnabled"] = False
     target["SystemAttachmentLifetime"] = "keepNever"
     target["PreferredScreenCaptureFormat"] = "screenshots"
+    if args.use_installed:
+        if "-iphoneos/" not in target.get("TestHostPath", ""):
+            parser.error("UseDestinationArtifacts requires a physical iOS device; use the normal copy for Simulator.")
+        if target.get("TestHostBundleIdentifier") != "com.pedrosalles.smartkitchen.sync.performancetests.xctrunner":
+            parser.error("Unexpected runner bundle identifier; no output was written.")
+        bundle = target.get("TestBundlePath", "")
+        if bundle != "__TESTHOST__/PlugIns/SavoriaPerformanceUITests.xctest":
+            parser.error("Unexpected test bundle path; no output was written.")
+        target["UseDestinationArtifacts"] = True
+        target["TestBundleDestinationRelativePath"] = bundle
+        target["UITargetAppBundleIdentifier"] = "com.pedrosalles.smartkitchen.sync"
+        for key in ("TestBundlePath", "TestHostPath", "UITargetAppPath"):
+            target.pop(key, None)
     for name in ("EnvironmentVariables", "UITargetAppEnvironmentVariables"):
         environment = target.get(name, {})
         for key in list(environment):
