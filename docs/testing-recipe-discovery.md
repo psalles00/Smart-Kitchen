@@ -846,8 +846,9 @@ No físico, assinatura/Team/containers e App Group foram conferidos antes da
 instalação, que terminou com sucesso. A abertura imediatamente seguinte foi
 negada pelo iOS com Locked; o processo que mantinha a tela acesa é encerrado
 pela instalação. A versão nova está instalada e o Device Hub preparado, com
-novo desbloqueio solicitado. A medição física dos separadores permanece
-pendente: não se atribui ganho de FPS a esta mudança até medi-lo.
+novo desbloqueio solicitado. Naquele ponto, a medição física dos separadores
+estava pendente; a rodada posterior está registrada abaixo. Não se atribui
+ganho causal isolado de FPS a esta mudança.
 
 Teste manual: conferir o pontilhado entre itens em Listas e em ingredientes
 de receitas, nos dois temas; rolar, alternar páginas e voltar ao app.
@@ -864,12 +865,12 @@ O Xcode recusou esse modo no Simulator com a mensagem explícita de que o
 destino deve ser um aparelho iOS. A tentativa não executou testes e não é
 falha do app. O helper agora rejeita essa combinação antes de criar arquivos;
 a validação normal do Simulator continua aprovada. A cópia para o iPhone
-foi preparada; sua execução real aguarda o desbloqueio já solicitado.
+foi preparada; a execução após o desbloqueio está registrada abaixo.
 
 Após a instalação dos separadores, as novas cópias físicas dos dois stores
 e das mídias confirmaram novamente todos os registros/IDs/BLOBs e os 151
 arquivos idênticos, com quick_check ok. Isso comprova a preservação após
-instalar; abertura e medição da nova versão continuam pendentes no físico.
+instalar; a abertura e a medição posteriores estão registradas abaixo.
 
 Etapas para teste manual dos separadores:
 
@@ -901,3 +902,42 @@ real e retorno do segundo plano, sem reinstalar o app. FPS de rolagem:
 Temperatura serious antes e depois; Low Power Mode false. A medição anterior
 com diagnósticos reduzidos teve média 39,19 fps, mas sem temperatura registrada:
 essa comparação não isola o efeito dos separadores nem comprova fluidez plena.
+
+### Cinco páginas físicas após os separadores
+
+As cinco invocações instaladas passaram, incluindo seleção da página após
+sair/voltar. O app principal não foi reinstalado; somente o runner foi atualizado.
+O Device Hub estava encerrado, sem espelhamento durante as medidas.
+
+| Página | FPS médio da rolagem | Hitch ratio médio (ms/s) |
+| --- | ---: | ---: |
+| Inicial | 56,61 | 28,91 |
+| Listas | 44,50 | 251,53 |
+| Nutrição | 51,86 | 94,84 |
+| Receitas | 46,49 | 213,49 |
+| Busca | Sem métrica de rolagem | Sem métrica de rolagem |
+
+Cada página registrou thermalBefore=2/thermalAfter=2 (serious), sem Low Power Mode.
+Busca valida navegação/retorno; o sync hitch zero não prova fluidez nem FPS.
+Os resultados ainda apresentam engasgos e não certificam 60 fps em uso normal.
+É necessária uma comparação com o aparelho sem limitação térmica.
+
+As cópias físicas após essa rodada preservam todos os registros, IDs, BLOBs
+e 151 mídias, com quick_check ok nos dois stores. O fluxo normal de Listas
+no iPhone 17 Pro do Simulator também passou com o runner novo e os mesmos
+registros/IDs/BLOBs nos dois stores. Nenhuma chamada paga ou registro de
+alimento foi realizado por estes testes.
+
+Uma captura Animation Hitches exclusiva de 15 s, alimentada pelo caso sem
+XCTHitchMetric, também ficou presa na finalização. Após o prazo limitado,
+recebeu SIGINT e o processo próprio foi encerrado; o artefato parcial foi
+preservado e excluído das conclusões. Os gestos passaram. Essa nova falha
+não permite atribuir o problema apenas a coletores de métricas concorrentes.
+
+O perfil adicional de CPU não chegou a iniciar: o preflight retornou Locked
+antes de abrir o app, sem criar trace nem executar gestos. A lista de processos
+depois desse bloqueio não continha Savoria ou o runner. O índice de diagnósticos
+consultado não apresentava crash/jetsam novo correspondente ao horário desta
+rodada; isso não determina a causa do encerramento nem exclui relatório tardio.
+O Device Hub foi deixado no iPhone físico e foi solicitado esfriar/desbloquear
+para a comparação térmica. Não houve reinstalação do aplicativo principal.
