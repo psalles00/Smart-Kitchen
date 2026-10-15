@@ -1,5 +1,18 @@
 # Checklist Manual Obrigatório — TestFlight e Publicação do Savoria
 
+Atualização verificada em 15/10/2026: as duas assinaturas já existem como
+rascunhos no App Store Connect, no grupo Savoria Premium (`22478308`), ambas no
+nível 1. Anual: `6822917042`, 1 ano, R$ 99,90 no Brasil. Mensal: `6822949625`,
+1 mês, R$ 49,90 no Brasil. Não recrie os produtos. Os passos abaixo servem para
+conferência e conclusão dos metadados. Isso não significa publicação, aprovação
+ou disponibilidade validada via Sandbox. A oferta de teste grátis em produção
+ainda precisa ser conferida; a prévia local não comprova elegibilidade real.
+
+Os links legais efetivamente usados pelo app estão no GitHub Pages e responderam
+HTTP 200 nesta verificação. As compilações locais passaram nos três destinos;
+a instalação física atual e a conferência visual macOS continuam pendentes por
+indisponibilidade do iPhone e bloqueio da sessão do Mac.
+
 Este documento transforma a checklist manual de lançamento em um passo a passo para quem nunca publicou um app antes.
 
 Objetivo: sair de um app funcionando localmente para um app testado no TestFlight e depois enviado corretamente para a App Store com assinaturas, páginas legais, testes e build de produção.
@@ -41,11 +54,11 @@ Use estes valores exatamente como referência durante a configuração:
 | Arquivo de versão/build | `project.yml` |
 | Assinatura anual | `com.pedrosalles.smartkitchen.sync.premium.annual` |
 | Assinatura mensal | `com.pedrosalles.smartkitchen.sync.premium.monthly` |
-| Preço anual | US$ 39,99 |
-| Preço mensal | US$ 6,99 |
-| Trial anual | 7 dias grátis |
-| URL de privacidade esperada | `https://savoria.app/privacy` |
-| URL de termos esperada | `https://savoria.app/terms` |
+| Preço anual no Brasil | R$ 99,90 |
+| Preço mensal no Brasil | R$ 49,90 |
+| Trial anual | 7 dias no StoreKit local; oferta de produção ainda não validada |
+| URL de privacidade esperada | `https://psalles00.github.io/Smart-Kitchen/privacy/` |
+| URL de termos esperada | `https://psalles00.github.io/Smart-Kitchen/terms/` |
 
 Arquivos úteis no repositório:
 
@@ -78,8 +91,8 @@ Publique os dois documentos em URLs públicas, sem login.
 
 Use exatamente este formato final:
 
-1. `https://savoria.app/privacy`
-2. `https://savoria.app/terms`
+1. `https://psalles00.github.io/Smart-Kitchen/privacy/`
+2. `https://psalles00.github.io/Smart-Kitchen/terms/`
 
 Pode ser no seu site, em um host estático ou em outro domínio seu. O importante é que a Apple consiga abrir o link sem autenticação.
 
@@ -235,7 +248,7 @@ Crie a primeira assinatura com estes dados:
 1. Product ID: `com.pedrosalles.smartkitchen.sync.premium.annual`
 2. Reference Name: `Savoria Premium Annual`
 3. Duração: `1 year`
-4. Preço: equivalente ao tier de US$ 39,99
+4. Preço: R$ 99,90 no território Brasil
 
 Depois configure a oferta introdutória:
 
@@ -250,7 +263,7 @@ Crie a segunda assinatura com estes dados:
 1. Product ID: `com.pedrosalles.smartkitchen.sync.premium.monthly`
 2. Reference Name: `Savoria Premium Monthly`
 3. Duração: `1 month`
-4. Preço: equivalente ao tier de US$ 6,99
+4. Preço: R$ 49,90 no território Brasil
 
 ### Passo 8.4 — Preencher metadados de cada assinatura
 

@@ -1,6 +1,6 @@
 # Política de Privacidade — Savoria
 
-_Última atualização: 15 de maio de 2026._
+_Última atualização: 15 de outubro de 2026._
 
 A Savoria ("nós", "nosso") respeita a sua privacidade. Esta política descreve
 quais dados o aplicativo Savoria (o "App") coleta, como são usados e quais
@@ -51,8 +51,8 @@ conteúdo. Consulte as políticas de privacidade dos respectivos provedores.
 
 O Savoria oferece duas assinaturas auto-renováveis:
 
-- **Premium Anual** — US$ 39,99 por 12 meses (com 7 dias de teste grátis).
-- **Premium Mensal** — US$ 6,99 por 1 mês.
+- **Premium Anual** — R$ 99,90 por 12 meses (7 dias de teste grátis quando a oferta estiver disponível para a conta).
+- **Premium Mensal** — R$ 49,90 por 1 mês.
 
 Disclosures obrigatórios da Apple:
 
