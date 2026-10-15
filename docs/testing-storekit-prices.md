@@ -60,10 +60,10 @@ Ambos os produtos estão em **Preparar para envio**. Essa configuração não
 significa que foram enviados para revisão, aprovados ou publicados, nem comprova
 que `Product.products` já os retorna no ambiente Sandbox. A divergência de
 centavos no SDK de testes local continua pendente, sem alterar as expectativas.
-O grupo atribuiu inicialmente nível 1 ao anual e nível 2 ao mensal. Como ambos
-oferecem o mesmo Premium, o ajuste para um nível comum ainda precisa ser salvo
-e conferido. Disponibilidade, metadados localizados e envio para revisão também
-não foram concluídos nesta configuração dos preços.
+Em 15/10/2026, anual e mensal foram salvos no mesmo nível 1, pois oferecem o
+mesmo serviço Premium. O grupo foi recarregado para conferir a persistência.
+Disponibilidade, metadados localizados e envio para revisão não foram concluídos
+nesta configuração dos preços.
 
 Referências oficiais: [StoreKit Testing](https://developer.apple.com/documentation/storekittest/sktestsession)
 e [Product.displayPrice](https://developer.apple.com/documentation/storekit/product/displayprice).
