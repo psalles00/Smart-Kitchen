@@ -613,3 +613,32 @@ confirme que não surgem sal/óleo fora da despensa; confira tempo e porções. 
 em modo livre e sem leite. Cancele durante a busca e confira que a operação para.
 Não salve uma receita apenas para validar a tela; o salvamento exige uma escolha
 explícita no fluxo normal.
+
+## Diagnóstico físico da renderização
+
+As cinco páginas concluíram as ações e o retorno ao app no iPhone 12 Pro. A
+primeira coleta gerou dados de rolagem apenas para Home e Nutrição: médias de
+11,44 e 10,43 quadros/s, respectivamente. Os valores `sync` ficaram em zero,
+mas não anulam os engasgos registrados pela métrica específica de rolagem. Os
+contadores de quadros também vieram zerados, uma limitação a conservar no relato.
+Listas e Receitas não haviam exercitado a rolagem nesse primeiro teste; o sucesso
+funcional não foi usado como aprovação de desempenho dessas páginas.
+
+A repetição sem janela de espelhamento registrou 16,14 quadros/s na Home, ainda
+insuficiente. O teste de Listas passou a rejeitar a ausência de uma área exercitada:
+UICollectionView existe, mas seu contêiner reporta `isHittable == false`. O harness
+agora usa a área visível do viewport para reconhecer também esse contêiner; a
+validação dessa última seleção está pendente.
+
+Uma coleta optativa lê `gpuEndTime - gpuStartTime` somente após completar comandos
+Metal, descarta 30 amostras de aquecimento e grava no máximo 180 amostras válidas,
+com limite de 300 tentativas. Não há gravação nem logging por quadro em uso normal.
+No físico, com drawable 177 × 384, mediana 0,269 ms, p95 0,511 ms e máximo 0,937 ms.
+São tempos do passe do shader em repouso, não FPS da interface nem custo total
+do compositor. A resolução de produção permaneceu em 384; não se justificou
+reduzi-la como correção para os engasgos medidos. Documentação da Apple:
+https://developer.apple.com/documentation/metal/mtlcommandbuffer/gpuendtime.
+
+Após os testes das cinco páginas, quick_check dos dois stores físicos passou.
+Todas as linhas, IDs, hashes de BLOBs e os mesmos 151 arquivos de mídia permaneceram
+idênticos ao backup completo anterior. O diagnóstico não executou chamadas de IA.

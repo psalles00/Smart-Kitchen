@@ -33,9 +33,16 @@ final class PageActionTracingTests: XCTestCase {
                 app.buttons["Despensa"].firstMatch.tap()
             }
             if name != "Buscar" {
-                let scroll = app.scrollViews.firstMatch
-                if scroll.exists { scroll.swipeUp(); scroll.swipeDown() }
-                else if app.tables.firstMatch.exists { app.tables.firstMatch.swipeUp(); app.tables.firstMatch.swipeDown() }
+                // SwiftUI List can be exposed as UICollectionView on new iOS.
+                // Never let a missing scrolling surface silently pass this test.
+                let surfaces = (app.scrollViews.allElementsBoundByIndex + app.collectionViews.allElementsBoundByIndex + app.tables.allElementsBoundByIndex)
+                    // UICollectionView may itself report non-hittable while
+                    // its cells scroll normally. Use the visible viewport.
+                    .filter { $0.frame.intersection(app.frame).height > 200 && $0.frame.intersection(app.frame).width > 200 }
+                let scroll = surfaces.max { $0.frame.height * $0.frame.width < $1.frame.height * $1.frame.width }
+                XCTAssertNotNil(scroll, "The actual vertical page content must be exercised")
+                scroll?.swipeUp()
+                scroll?.swipeDown()
                 // A downward pull can deliberately open Search. Return to the
                 // target so foreground measures and checks the intended page.
                 if !tabs.buttons[name].firstMatch.isSelected { tabs.buttons[name].firstMatch.tap() }
@@ -45,6 +52,10 @@ final class PageActionTracingTests: XCTestCase {
             XCTAssertTrue(tabs.buttons[name].firstMatch.waitForExistence(timeout: 10))
             XCTAssertTrue(tabs.buttons[name].firstMatch.isSelected)
         }
+        let tree = XCTAttachment(string: app.debugDescription)
+        tree.name = "Measured page hierarchy: \(name)"
+        tree.lifetime = .keepAlways
+        add(tree)
         XCUIDevice.shared.press(.home)
     }
 

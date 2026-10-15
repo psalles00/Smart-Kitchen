@@ -64,6 +64,68 @@ private enum SavoriaShaderClock {
     static let epoch = ProcessInfo.processInfo.systemUptime
 }
 
+@MainActor
+private enum SavoriaBackdropDiagnostics {
+    static let enabled = ActionTrace.enabled && ProcessInfo.processInfo.arguments.contains("-SavoriaBackdropGPUTrace")
+    static let maximumDimension: CGFloat = {
+        let args = ProcessInfo.processInfo.arguments
+        guard enabled, let index = args.firstIndex(of: "-SavoriaBackdropMaxDimension"),
+              args.indices.contains(index + 1), let value = Double(args[index + 1]),
+              value.isFinite, (96...384).contains(value) else { return 384 }
+        return CGFloat(value)
+    }()
+}
+
+/// GPU timestamps are read only after completion. No per-frame logging or I/O.
+/// Normal launches never allocate this probe; each probe records one bounded file.
+private final class SavoriaBackdropGPUProbe: @unchecked Sendable {
+    private let lock = NSLock()
+    private var attempts = 0
+    private var milliseconds: [Double] = []
+    private var finished = false
+    private let directory: URL
+    private let id = UUID().uuidString
+
+    struct Report: Codable, Sendable {
+        let page: String
+        let drawableWidth: Int
+        let drawableHeight: Int
+        let attempts: Int
+        let gpuMilliseconds: [Double]
+        let method: String
+    }
+
+    init() {
+        directory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("BackdropGPUTraces", isDirectory: true)
+        milliseconds.reserveCapacity(180)
+    }
+
+    func record(start: Double, end: Double, width: Int, height: Int, page: String) {
+        lock.lock()
+        guard !finished else { lock.unlock(); return }
+        attempts += 1
+        // Omit warmup, and never represent unavailable timestamps as zero cost.
+        if attempts > 30, start > 0, end >= start { milliseconds.append((end - start) * 1000) }
+        guard milliseconds.count >= 180 || attempts >= 300 else { lock.unlock(); return }
+        finished = true
+        let report = Report(page: page, drawableWidth: width, drawableHeight: height,
+                            attempts: attempts, gpuMilliseconds: milliseconds,
+                            method: "MTLCommandBuffer gpuEndTime - gpuStartTime after completion; shader pass only, not UI FPS")
+        lock.unlock()
+        let directory = directory
+        let filename = "gpu-\(page)-\(id).json"
+        DispatchQueue.global(qos: .utility).async {
+            do {
+                try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+                try JSONEncoder().encode(report).write(to: directory.appendingPathComponent(filename), options: .atomic)
+            } catch {
+                PerformanceLogger.error(.launch, "Backdrop GPU diagnostic could not be written")
+            }
+        }
+    }
+}
+
 private struct SavoriaShaderBackground: View {
     let theme: PageTheme
     let animates: Bool
@@ -163,6 +225,7 @@ private struct SavoriaMetalBackdrop: UIViewRepresentable {
         var reduceMotion = false
         private let queue = SavoriaMetalBackdropResources.shared.device?.makeCommandQueue()
         private let inFlight = DispatchSemaphore(value: 2)
+        private lazy var gpuProbe: SavoriaBackdropGPUProbe? = SavoriaBackdropDiagnostics.enabled ? SavoriaBackdropGPUProbe() : nil
 
         func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) { }
 
@@ -189,7 +252,15 @@ private struct SavoriaMetalBackdrop: UIViewRepresentable {
             encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 3)
             encoder.endEncoding()
             let semaphore = inFlight
-            command.addCompletedHandler { _ in semaphore.signal() }
+            let probe = gpuProbe
+            let width = Int(view.drawableSize.width)
+            let height = Int(view.drawableSize.height)
+            let page = theme.rawValue
+            command.addCompletedHandler { buffer in
+                semaphore.signal()
+                probe?.record(start: buffer.gpuStartTime, end: buffer.gpuEndTime,
+                              width: width, height: height, page: page)
+            }
             command.present(drawable)
             command.commit()
         }
@@ -207,7 +278,7 @@ private final class SavoriaBackdropMetalView: MTKView {
     override func layoutSubviews() {
         super.layoutSubviews()
         guard bounds.width > 0, bounds.height > 0 else { return }
-        let scale = min(1, 384 / max(bounds.width, bounds.height))
+        let scale = min(1, SavoriaBackdropDiagnostics.maximumDimension / max(bounds.width, bounds.height))
         let size = CGSize(width: max(1, (bounds.width * scale).rounded()),
                           height: max(1, (bounds.height * scale).rounded()))
         if drawableSize != size { drawableSize = size }
