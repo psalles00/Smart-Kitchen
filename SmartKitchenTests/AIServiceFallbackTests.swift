@@ -1013,8 +1013,9 @@ final class RecipeWebDiscoveryTests: XCTestCase {
         let queries = backend.bodies.compactMap { $0["query"] as? String }
         XCTAssertEqual(queries.count, 2)
         XCTAssertNotEqual(queries[0], queries[1])
-        XCTAssertFalse(queries[0].contains("Abóbora"))
-        XCTAssertTrue(queries[1].contains("Abóbora"))
+        XCTAssertTrue(queries[0].contains("com Ovos, Tomate"))
+        XCTAssertTrue(queries[1].contains("com Abóbora, Ovos"))
+        XCTAssertTrue(queries.allSatisfy { $0.contains(AppLanguage.ptBR.recipePantryConstraint(pantry)) })
         XCTAssertTrue(queries.allSatisfy { $0.contains("sem leite") && $0.contains("20 min") && !$0.contains("v2") })
     }
 
@@ -1069,10 +1070,21 @@ final class RecipeWebDiscoveryTests: XCTestCase {
             filterByPantry: true, language: .ptBR, requestContext: request)
         let query = try XCTUnwrap(backend.bodies.first?["query"] as? String)
         XCTAssertTrue(query.contains("com Tomate, Ovos"))
-        XCTAssertFalse(query.contains("Feijão"))
+        XCTAssertTrue(query.contains(AppLanguage.ptBR.recipePantryConstraint(["Feijão", "Arroz", "Tomate", "Ovos", "Cenoura"])))
         XCTAssertFalse(query.contains("em para"))
         XCTAssertTrue(query.contains("20 min"))
         XCTAssertTrue(query.contains("1 servings"))
+    }
+
+    func testQuickQueryDoesNotPrioritizeUnpreparedGrainsOverAvailableFastFoods() async throws {
+        let backend = RecipeWebFixtureBackend()
+        let pantry = ["Arroz", "Feijão", "Ovos", "Tomate"]
+        _ = try await EXARecipeIdeasService(supabase: backend).search(occasion: nil, refinement: nil,
+            customQuery: "Jantar sem leite em 20 minutos", pantryItems: pantry, filterByPantry: true, language: .ptBR)
+        let query = try XCTUnwrap(backend.bodies.first?["query"] as? String)
+        XCTAssertTrue(query.contains("com Ovos, Tomate"))
+        XCTAssertTrue(query.contains(AppLanguage.ptBR.recipePantryConstraint(pantry)))
+        XCTAssertFalse(query.contains("Arroz cozido"))
     }
 
     func testSourceVarietyAlternatesKnownFoodsBeforeRepeating() async throws {

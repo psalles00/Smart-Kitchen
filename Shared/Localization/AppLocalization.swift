@@ -143,6 +143,19 @@ enum AppLanguage: String, CaseIterable, Sendable {
         }
     }
 
+    func recipePantryConstraint(_ items: [String]) -> String {
+        let names = items.joined(separator: ", ")
+        switch self {
+        case .ptBR: return "Use somente ingredientes dentre: \(names). Não é necessário usar todos."
+        case .en: return "Use only ingredients from: \(names). You do not need to use them all."
+        case .es: return "Usa solo ingredientes de esta lista: \(names). No es necesario usarlos todos."
+        case .fr: return "Utilisez uniquement des ingrédients parmi : \(names). Il n’est pas nécessaire de tous les utiliser."
+        case .de: return "Verwende nur Zutaten aus dieser Liste: \(names). Es müssen nicht alle verwendet werden."
+        case .it: return "Usa solo ingredienti tra: \(names). Non è necessario usarli tutti."
+        case .ja: return "使用できる材料：\(names)。この中の材料だけを使い、すべて使う必要はありません。"
+        }
+    }
+
     var recipeSearchVariations: [String] {
         switch self {
         case .ptBR: return ["combinações alternativas de ingredientes", "receitas regionais e internacionais", "técnicas de preparo diferentes"]

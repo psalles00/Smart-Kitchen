@@ -517,3 +517,30 @@ Os stores do Simulator passaram quick_check e mantiveram todas as linhas, IDs e
 hashes de BLOBs. Mac instalado com snapshot idêntico e físico atualizado novamente;
 abertura visual do Mac, medição física e readback físico completo seguem pendentes
 dos desbloqueios. Não houve restauração, exclusão ou escrita direta nos stores.
+
+## Restrição explícita na consulta web
+
+Pedro autorizou elevar o teto acumulado de testes de US$ 3 para US$ 4. A repetição
+real do caso original fez duas buscas, com US$ 0,026 informados e US$ 0,038 retidos
+conservadoramente. Não encontrou receitas compatíveis: os resultados exigiam
+ingredientes ausentes ou arroz previamente cozido. O caso permanece reprovado;
+rejeitar resultados errados não equivale a oferecer boas receitas.
+
+A consulta agora explicita a lista permitida e que não é preciso usar todos os
+itens. A ênfase de dois alimentos é distinta do inventário autorizado. Para
+pedidos de até 30 minutos, alimentos citados pelo usuário continuam prioritários;
+grãos/feijões sem indicação de pré-cozimento deixam de dominar a ênfase quando
+há outros itens. Isso é ranking de busca, nunca prova de disponibilidade ou
+tempo. A restrição está traduzida nos sete idiomas, e o cache foi atualizado.
+
+59 testes passaram. Simulator e Mac foram compilados, instalados e abertos;
+snapshot do Mac idêntico. A nova consulta ainda não foi revalidada no provedor.
+No físico, o candidato Metal corrigido foi aberto, e a cópia completa confirmou
+111 itens, 64 receitas, 8 alimentos, 62 conversas, 107 mensagens e os mesmos 151
+arquivos de mídia. A captura parada apresentou tabelas vazias e um aviso CoreData
+do Instruments; não se usou isso como prova de zero engasgos. A próxima medição
+deve capturar ações reais com a métrica de hitches do XCTest.
+
+Teste manual: com modo restrito, peça jantar em 20 minutos e confira que não
+pressupõe arroz/feijão já cozidos. Cite explicitamente um alimento e confira sua
+prioridade. Repita em modo livre e confirme que não impõe o inventário restrito.

@@ -233,7 +233,8 @@ final class EXARecipeIdeasService {
             pantryItems: pantryItems,
             filterByPantry: filterByPantry,
             language: language,
-            seed: seed
+            seed: seed,
+            maximumMinutes: request.maximumMinutes
         )
 
         var results = try await performSearch(
@@ -427,7 +428,8 @@ final class EXARecipeIdeasService {
         pantryItems: [String],
         filterByPantry: Bool,
         language: AppLanguage,
-        seed: Int
+        seed: Int,
+        maximumMinutes: Int?
     ) -> String {
         var parts: [String] = [language.recipeSearchKeyword]
         if let occasion, occasion != .outro,
@@ -440,7 +442,7 @@ final class EXARecipeIdeasService {
         if let customQuery, !customQuery.trimmingCharacters(in: .whitespaces).isEmpty {
             parts.append(customQuery)
         }
-        if filterByPantry, !pantryItems.isEmpty {
+        if !pantryItems.isEmpty {
             // Change the ingredients emphasized by a refresh, rather than
             // appending an unrelated "v2" keyword to the search query.
             let offset = ((seed % pantryItems.count) + pantryItems.count) % pantryItems.count
@@ -450,9 +452,31 @@ final class EXARecipeIdeasService {
                 let name = NSRegularExpression.escapedPattern(for: RecipeWebSourceFacts.canonicalName($0))
                 return context.range(of: "\\b" + name + "\\b", options: .regularExpression) != nil
             }
-            rotated = mentioned + rotated.filter { !mentioned.contains($0) }
+            var others = rotated.filter { !mentioned.contains($0) }
+            if let maximumMinutes, maximumMinutes <= 30 {
+                // Search ranking only. A raw grain/bean is not evidence of a
+                // precooked ingredient; opening a recipe still validates it.
+                func needsLongCooking(_ name: String) -> Bool {
+                    !RecipeQuickIdeasGenerator.isAlreadyCookedName(name) &&
+                    Self.normalize(name).range(of: #"\b(?:arroz|feijao|rice|beans|riz|haricots|reis|bohnen|riso|fagioli)\b|米|豆"#, options: .regularExpression) != nil
+                }
+                others = others.filter { !needsLongCooking($0) } + others.filter(needsLongCooking)
+            }
+            rotated = mentioned + others
             let topItems = Array(rotated.prefix(2)).joined(separator: ", ")
             parts.append("\(language.recipeIngredientJoiner) \(topItems)")
+            if filterByPantry {
+                // A focus pair is not the allowed inventory. Explicitly state
+                // the actual restriction rather than asking for generic dishes.
+                var named: [String] = []
+                var bytes = 0
+                for item in pantryItems {
+                    guard bytes + item.utf8.count + 2 <= 4000 else { continue }
+                    named.append(item)
+                    bytes += item.utf8.count + 2
+                }
+                parts.append(language.recipePantryConstraint(named))
+            }
         }
         parts.append(language.recipeSourcePageHint)
         if !filterByPantry && seed != 0 {
@@ -481,7 +505,7 @@ final class EXARecipeIdeasService {
             .sorted()
             .joined(separator: "|")
         return [
-            "v5-source-facts",
+            "v6-pantry-search-scope",
             language.rawValue,
             occasion?.rawValue ?? "-",
             refinement ?? "-",
