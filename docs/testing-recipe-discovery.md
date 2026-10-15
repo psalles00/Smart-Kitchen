@@ -1001,3 +1001,71 @@ cinco páginas, seleção retida após cada retomada e zero falhas. O readback
 posterior preservou todos os registros/IDs/BLOBs dos dois stores, quick_check
 ok. Isso valida o roteiro e sua execução normal; não substitui a atribuição
 dos intervalos observados no iPhone físico.
+
+### Consultas de receitas na retomada — 15/10
+
+Após o desbloqueio, o perfil físico exclusivo finalizou sem timeout e os dez
+retornos passaram. O estado térmico foi fair durante toda a captura, sem
+condição térmica induzida. A thread principal não apresentou aquisição de
+drawable, mas apresentou consultas síncronas de receitas: peso estatístico
+inclusivo de 2.601 ms no getter de receitas da inicial e 1.131 ms no de Receitas.
+Houve 14 intervalos classificados como hangs do Savoria, entre 277 e 729 ms.
+O roteiro também contém a primeira seleção de páginas; esse perfil inteiro
+não deve ser chamado de medição exclusivamente quente.
+
+Limitar a consulta aos metadados, deixando a capa para leitura sob demanda,
+não resolveu sozinho as pausas: o reteste registrou 13 hangs, até 744 ms.
+Essa tentativa não foi considerada aprovação de desempenho.
+
+A inicial e a biblioteca agora mantêm uma listagem em memória e a atualizam
+após salvamentos/importações, com notificações agrupadas. A atualização compara
+os metadados e ingredientes relevantes antes de invalidar a listagem e
+recalcular sugestões. Retomar o app ou receber uma notificação sem mudança
+de conteúdo não deve descartar essa listagem. A implementação é compartilhada
+entre iOS e macOS; não altera modelos persistidos, stores ou opções do iCloud.
+
+Na primeira captura com a listagem em memória, os dois getters de consulta
+deixaram de aparecer, mas ainda houve 12 hangs. Também foram encontrados
+novos recálculos da inicial após notificações sem mudança nos dados; por isso
+foi acrescentada a comparação de conteúdo. Eliminar um stack de consulta não
+equivale a aprovar a responsividade inteira.
+
+Três testes isolados verificam: reaproveitamento da listagem e ausência de
+invalidação em recarga sem mudanças; inclusão/edição salva por outro contexto;
+e preservação exata de capa, ingredientes e passos ao salvar um objeto lido
+parcialmente. Todos passaram no iPhone 17 Pro do Simulator. Os fixtures usam
+stores próprios sem CloudKit, incluindo o teste em disco; não editam os dados
+pessoais nem alteram o schema de produção.
+
+Referências oficiais: [projeção da consulta](https://developer.apple.com/documentation/swiftdata/fetchdescriptor/propertiestofetch)
+e [notificações de salvamento](https://developer.apple.com/documentation/swiftdata/modelcontext/didsave).
+
+Os builds finais para físico, Simulator e Mac passaram e foram instalados/
+abertos. Os testes nativos no Simulator passaram nas cinco páginas e no fluxo
+de passos da receita, incluindo segundo plano/retorno. O readback físico
+preservou todos os registros, IDs, BLOBs e as 151 mídias; os dois stores passaram
+em quick_check. O readback do Simulator também preservou todos os registros,
+e o snapshot do backend do Mac permaneceu idêntico ao anterior (biblioteca
+local ainda vazia após a formatação, sem restauração automática).
+
+Uma captura adicional começou no sexto Home do roteiro, após carregar as
+cinco páginas. A análise deve restringir o PID ao alvo original do teste:
+o helper reabre o app após o teardown, e o lançamento novo não é retomada.
+Na versão final, o teste físico passou, mas o trace registrou estado térmico
+serious e o exportador avisou sobre sobreposição de imagens do próprio Savoria.
+Esse trace fica excluído de conclusões quantitativas de CPU/ganho. Há registros
+de hangs também nessa rodada; a ausência de aquisição de drawable ou de um
+getter específico não aprova ausência de pausas. Continua necessária uma
+captura válida com o aparelho frio; o app final já está instalado.
+
+Conferência manual da listagem:
+
+1. Abra as cinco páginas, saia do app e volte em cada uma delas; confira a
+   página selecionada, a posição e as receitas já exibidas.
+2. Abra uma receita existente e confira capa, ingredientes e passos; volte
+   à biblioteca e repita após deixar o app em segundo plano.
+3. Em uma receita de teste, salve uma alteração de nome, favorito ou
+   ingrediente; confira a biblioteca e as sugestões da inicial atualizadas.
+4. Repita a navegação no Mac com a biblioteca já configurada. A abertura do
+   Mac recém-formatado na tela de boas-vindas não comprova paridade dos dados
+   pessoais do iPhone nem autoriza restauração de backup.

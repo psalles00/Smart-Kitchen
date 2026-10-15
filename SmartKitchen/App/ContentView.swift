@@ -2727,8 +2727,10 @@ private struct HomeSettingsSnapshot: Equatable {
 }
 
 private struct HomeLiveInputsObserver: View {
+    @Environment(\.modelContext) private var modelContext
     @Query(filter: #Predicate<UnifiedItem> { $0.isPantry }, sort: \UnifiedItem.name) private var pantryItems: [UnifiedItem]
-    @Query(sort: \Recipe.name) private var recipes: [Recipe]
+    @State private var recipeList = RecipeListCache(sortBy: [SortDescriptor(\Recipe.name)])
+    private var recipes: [Recipe] { recipeList.recipes }
     @Query(sort: \Category.sortOrder) private var categories: [Category]
     @Query(sort: \FoodEntry.timestamp, order: .reverse) private var foodEntries: [FoodEntry]
     @Query(sort: \NutritionDayLog.dayStart, order: .reverse) private var dayLogs: [NutritionDayLog]
@@ -2749,12 +2751,13 @@ private struct HomeLiveInputsObserver: View {
         Color.clear
             .frame(width: 0, height: 0)
             .onAppear {
+                recipeList.loadIfNeeded(in: modelContext)
                 syncLiveInputs(triggerDebouncedRefresh: false, compatibilityInputsChanged: true, nutritionInputsChanged: true)
             }
             .onChange(of: pantryItems) { _, _ in
                 syncLiveInputs(triggerDebouncedRefresh: true, compatibilityInputsChanged: true, nutritionInputsChanged: false)
             }
-            .onChange(of: recipes) { _, _ in
+            .onChange(of: recipeList.revision) { _, _ in
                 syncLiveInputs(triggerDebouncedRefresh: true, compatibilityInputsChanged: true, nutritionInputsChanged: false)
             }
             .onChange(of: categories) { _, _ in
@@ -2780,6 +2783,7 @@ private struct HomeLiveInputsObserver: View {
                     nutritionInputsChanged: !isForegroundRefresh
                 )
             }
+            .modifier(RecipeListObservation(cache: recipeList))
     }
 
     private func syncLiveInputs(triggerDebouncedRefresh: Bool, compatibilityInputsChanged: Bool, nutritionInputsChanged: Bool) {

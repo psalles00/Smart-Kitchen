@@ -7,6 +7,101 @@ import Metal
 @testable import Savoria
 
 @MainActor
+final class RecipeMetadataQueryTests: XCTestCase {
+    func testListingReloadIncludesRecipesSavedByAnotherContext() throws {
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
+        let container = try ModelContainer(for: Recipe.self, configurations: configuration)
+        let visibleContext = ModelContext(container)
+        let cache = RecipeListCache(sortBy: [SortDescriptor(\Recipe.name)])
+        cache.loadIfNeeded(in: visibleContext)
+        XCTAssertTrue(cache.recipes.isEmpty)
+        let importingContext = ModelContext(container)
+        let imported = Recipe(name: "Importada", ingredients: [RecipeIngredient(name: "Arroz")])
+        importingContext.insert(imported)
+        try importingContext.save()
+        cache.reload(in: visibleContext)
+        XCTAssertEqual(cache.recipes.map(\.id), [imported.id])
+        XCTAssertEqual(cache.recipes.first?.ingredients?.first?.name, "Arroz")
+        imported.name = "Atualizada em outro contexto"
+        try importingContext.save()
+        cache.reload(in: visibleContext)
+        XCTAssertEqual(cache.recipes.first?.name, "Atualizada em outro contexto")
+    }
+
+    func testListingCacheReusesWarmResultsAndReloadsSavedChanges() throws {
+        let container = try ModelContainer(for: Recipe.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none))
+        let context = ModelContext(container)
+        context.autosaveEnabled = false
+        let existing = Recipe(name: "B")
+        context.insert(existing)
+        try context.save()
+        let cache = RecipeListCache(sortBy: [SortDescriptor(\Recipe.name)])
+        cache.loadIfNeeded(in: context)
+        let firstRevision = cache.revision
+        for _ in 0..<10 { cache.loadIfNeeded(in: context) }
+        cache.reload(in: context) // A no-op save/remote-change notification.
+        XCTAssertEqual(cache.revision, firstRevision)
+        XCTAssertEqual(cache.recipes.map(\.id), [existing.id])
+
+        let inserted = Recipe(name: "A")
+        context.insert(inserted)
+        existing.isFavorite = true
+        try context.save()
+        cache.reload(in: context)
+        XCTAssertEqual(cache.recipes.map(\.id), [inserted.id, existing.id])
+        XCTAssertTrue(cache.recipes[1].isFavorite)
+
+        context.delete(inserted) // Only this test's isolated in-memory fixture.
+        try context.save()
+        cache.reload(in: context)
+        XCTAssertEqual(cache.recipes.map(\.id), [existing.id])
+    }
+
+    func testPartialFetchCanSaveMetadataWithoutDiscardingUnfetchedCoverOrRelationships() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("RecipeProjection-" + UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let configuration = ModelConfiguration(url: directory.appendingPathComponent("Fixture.store"), cloudKitDatabase: .none)
+        let container = try ModelContainer(for: Recipe.self, configurations: configuration)
+        let cover = Data(repeating: 0x5A, count: 512 * 1024)
+        let id: UUID
+        do {
+            let context = ModelContext(container)
+            context.autosaveEnabled = false
+            let ingredient = RecipeIngredient(name: "Aveia", quantity: 0.125, unit: "xic")
+            let recipe = Recipe(name: "Fixture", ingredients: [ingredient],
+                                steps: [RecipeStep(order: 1, instruction: "Misture")],
+                                imageData: cover, tags: ["teste"], servings: 3)
+            id = recipe.id
+            context.insert(recipe)
+            try context.save()
+        }
+        do {
+            let context = ModelContext(container)
+            context.autosaveEnabled = false
+            let descriptor = RecipeListQuery.descriptor(sortBy: [SortDescriptor(\Recipe.name)])
+            XCTAssertFalse(descriptor.propertiesToFetch.contains(\Recipe.imageData))
+            let recipe = try XCTUnwrap(context.fetch(descriptor).first)
+            XCTAssertEqual(recipe.id, id)
+            XCTAssertEqual(recipe.servings, 3)
+            recipe.isFavorite = true
+            recipe.name = "Edited metadata"
+            // Deliberately save before ever reading the faulted cover bytes.
+            try context.save()
+        }
+        let reopened = try ModelContainer(for: Recipe.self, configurations: configuration)
+        let context = ModelContext(reopened)
+        let recipe = try XCTUnwrap(context.fetch(RecipeListQuery.descriptor(sortBy: [SortDescriptor(\Recipe.name)])).first)
+        XCTAssertEqual(recipe.id, id)
+        XCTAssertEqual(recipe.name, "Edited metadata")
+        XCTAssertTrue(recipe.isFavorite)
+        XCTAssertEqual(recipe.imageData, cover)
+        XCTAssertEqual(recipe.ingredients?.first?.quantity, 0.125)
+        XCTAssertEqual(recipe.steps?.first?.instruction, "Misture")
+        XCTAssertEqual(recipe.tags, ["teste"])
+    }
+}
+
+@MainActor
 final class RecipeIdeaRequestTests: XCTestCase {
     func testLatestTurnOverridesTimeServingsAndPantryWhileKeepingLibraryAndDiet() {
         let original = "Sugira apenas receitas salvas da minha biblioteca em 20 minutos para uma pessoa sem leite, sem restringir à despensa."

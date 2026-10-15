@@ -172,7 +172,8 @@ private struct RecipesLoadedView: View {
     @Environment(\.scrollToItem) private var scrollToItem
     @Environment(\.openRecipeInRecipesTab) private var openRecipeInRecipesTab
     @Environment(\.modelContext) private var modelContext
-    @Query(sort: \Recipe.createdAt, order: .reverse) private var allRecipes: [Recipe]
+    @State private var recipeList = RecipeListCache(sortBy: [SortDescriptor(\Recipe.createdAt, order: .reverse)])
+    private var allRecipes: [Recipe] { recipeList.recipes }
     @Query(filter: #Predicate<UnifiedItem> { $0.isPantry }, sort: \UnifiedItem.name) private var pantryItems: [UnifiedItem]
     @Query private var settingsArray: [AppSettings]
     @Query(sort: \Category.sortOrder) private var allCategories: [Category]
@@ -449,6 +450,7 @@ private struct RecipesLoadedView: View {
         .background(Color(.windowBackgroundColor).ignoresSafeArea())
         #endif
         .onAppear {
+            recipeList.loadIfNeeded(in: modelContext)
             #if os(iOS)
             isPageVisible = true
             #endif
@@ -535,7 +537,8 @@ private struct RecipesLoadedView: View {
             refreshRecipeProjectionsIfNeeded(force: true)
             invalidateNotebookSummaries(force: true)
         }
-        .onChange(of: allRecipes) { _, _ in
+        .modifier(RecipeListObservation(cache: recipeList))
+        .onChange(of: recipeList.revision) { _, _ in
             refreshRecipeProjectionsIfNeeded()
             invalidateNotebookSummaries()
         }

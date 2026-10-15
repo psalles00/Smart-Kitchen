@@ -1,5 +1,112 @@
 import Foundation
 import SwiftData
+import SwiftUI
+import CoreData
+import Combine
+
+/// Listing fetches keep cover bytes faulted until an actual image needs them.
+/// This changes only fetch projection, never the model schema or stored data.
+enum RecipeListQuery {
+    static func descriptor(sortBy: [SortDescriptor<Recipe>]) -> FetchDescriptor<Recipe> {
+        var descriptor = FetchDescriptor<Recipe>(sortBy: sortBy)
+        descriptor.propertiesToFetch = [
+            \.id, \.name, \.descriptionText, \.externalURLString, \.category, \.tags,
+            \.prepTime, \.cookTime, \.servings, \.calories,
+            \.proteinG, \.carbsG, \.fatG, \.fiberG, \.sugarG, \.sodiumMg,
+            \.nutritionEstimated, \.nutritionUpdatedAt, \.difficulty, \.isFavorite,
+            \.requiredUtensils, \.createdAt, \.updatedAt
+        ]
+        return descriptor
+    }
+}
+
+/// Keep the last listing across foreground transitions. Refresh only after an
+/// actual save/import, rather than re-running a Query from every body getter.
+@MainActor @Observable
+final class RecipeListCache {
+    private(set) var recipes: [Recipe] = []
+    private(set) var revision = 0
+    private var contextID: ObjectIdentifier?
+    private var inputsKey: Int?
+    private let sortBy: [SortDescriptor<Recipe>]
+
+    init(sortBy: [SortDescriptor<Recipe>]) { self.sortBy = sortBy }
+
+    func loadIfNeeded(in context: ModelContext) {
+        guard contextID != ObjectIdentifier(context) else { return }
+        reload(in: context)
+    }
+
+    func reload(in context: ModelContext) {
+        do {
+            let result = try context.fetch(RecipeListQuery.descriptor(sortBy: sortBy))
+            let key = Self.listingInputsKey(result)
+            guard contextID != ObjectIdentifier(context) || inputsKey != key else { return }
+            recipes = result
+            contextID = ObjectIdentifier(context)
+            inputsKey = key
+            revision += 1
+        } catch {
+            // A failed read must never replace a previously valid listing.
+            PerformanceLogger.event(.recipes, "recipe listing read failed", metadata: String(describing: error))
+        }
+    }
+
+    private static func listingInputsKey(_ recipes: [Recipe]) -> Int {
+        var hasher = Hasher()
+        hasher.combine(recipes.count)
+        for recipe in recipes {
+            hasher.combine(recipe.id)
+            hasher.combine(recipe.name)
+            hasher.combine(recipe.descriptionText)
+            hasher.combine(recipe.externalURLString)
+            hasher.combine(recipe.category)
+            hasher.combine(recipe.tags)
+            hasher.combine(recipe.createdAt)
+            hasher.combine(recipe.updatedAt)
+            hasher.combine(recipe.prepTime)
+            hasher.combine(recipe.cookTime)
+            hasher.combine(recipe.servings)
+            hasher.combine(recipe.difficulty)
+            hasher.combine(recipe.isFavorite)
+            hasher.combine(recipe.requiredUtensils)
+            hasher.combine(recipe.calories)
+            hasher.combine(recipe.proteinG)
+            hasher.combine(recipe.carbsG)
+            hasher.combine(recipe.fatG)
+            hasher.combine(recipe.fiberG)
+            hasher.combine(recipe.sugarG)
+            hasher.combine(recipe.sodiumMg)
+            hasher.combine(recipe.nutritionEstimated)
+            hasher.combine(recipe.nutritionUpdatedAt)
+            for ingredient in recipe.ingredients ?? [] {
+                hasher.combine(ingredient.id)
+                hasher.combine(ingredient.name)
+                hasher.combine(ingredient.quantity)
+                hasher.combine(ingredient.unit)
+                hasher.combine(ingredient.preparationState)
+                hasher.combine(ingredient.sortOrder)
+            }
+        }
+        return hasher.finalize()
+    }
+}
+
+struct RecipeListObservation: ViewModifier {
+    @Environment(\.modelContext) private var modelContext
+    let cache: RecipeListCache
+
+    func body(content: Content) -> some View {
+        content.onReceive(
+            NotificationCenter.default.publisher(for: ModelContext.didSave)
+                .merge(with: NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave),
+                       NotificationCenter.default.publisher(for: .NSPersistentStoreRemoteChange))
+                .debounce(for: .milliseconds(150), scheduler: RunLoop.main)
+        ) { _ in
+            cache.reload(in: modelContext)
+        }
+    }
+}
 
 // MARK: - Identified Utensil (for Form ForEach)
 
