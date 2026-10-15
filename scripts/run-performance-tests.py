@@ -17,7 +17,10 @@ def main():
     destination.add_argument("--simulator")
     destination.add_argument("--device")
     parser.add_argument("--result", type=Path, required=True)
-    parser.add_argument("--page", action="append", choices=PAGES)
+    action = parser.add_mutually_exclusive_group()
+    action.add_argument("--page", action="append", choices=PAGES)
+    action.add_argument("--profile-lists", action="store_true",
+                        help="Feed Instruments with gestures without XCTest trace metrics.")
     args = parser.parse_args()
     with args.xctestrun.open("rb") as stream:
         runner = plistlib.load(stream).get("SavoriaPerformanceUITests", {})
@@ -32,9 +35,12 @@ def main():
                "-destination", "id=" + identifier, "-parallel-testing-enabled", "NO",
                "-enableCodeCoverage", "NO", "-enablePerformanceTestsDiagnostics", "NO",
                "-collect-test-diagnostics", "never", "-resultBundlePath", str(result)]
-    for page in args.page or PAGES:
-        method = "testHitchesSearchAndForeground" if page == "Search" else "testHitches" + page + "ScrollAndForeground"
-        command.append("-only-testing:SavoriaPerformanceUITests/PageActionTracingTests/" + method)
+    if args.profile_lists:
+        command.append("-only-testing:SavoriaPerformanceUITests/PageActionTracingTests/testProfileListsForInstruments")
+    else:
+        for page in args.page or PAGES:
+            method = "testHitchesSearchAndForeground" if page == "Search" else "testHitches" + page + "ScrollAndForeground"
+            command.append("-only-testing:SavoriaPerformanceUITests/PageActionTracingTests/" + method)
     flags = ["-SavoriaActionTrace", "-SavoriaKeepAwakeForValidation"]
     launch = (["xcrun", "simctl", "launch", "--terminate-running-process", identifier, BUNDLE] + flags
               if args.simulator else

@@ -795,3 +795,31 @@ Listas/foreground passou, as duas reaberturas retornaram sucesso e screenshot
 após a exportação mostrou o Savoria efetivamente aberto. Os stores do Simulator
 continuaram idênticos e quick_check ok. O usuário desbloqueou novamente o físico;
 a comparação de Listas sem checker está em execução, com o novo wrapper.
+
+### Captura exclusiva e condições do dispositivo
+
+Listas sem checker/captura em vídeo mediu 39,19 fps (46,28/37,50/33,80),
+com razão de hitch 336,62 ms/s. Isso difere da rodada de 13,47 fps com opções
+extras, mas não isola qual opção causou a diferença nem certifica 60 fps.
+O wrapper reabriu o app com sucesso nas duas fases também no físico.
+
+Capturas simultâneas ao teste com XCTHitchMetric não finalizaram; as parciais
+foram preservadas e excluídas. O novo testProfileListsForInstruments usa seis
+pares de gestos e retorno ao app, sem abrir gravação de métricas do XCTest.
+`--profile-lists` no wrapper seleciona esse caso. Os builds físico/Simulator
+e os dois testes de gestos passaram. Uma captura exclusiva Time Profiler de
+15 s, iniciada após o primeiro swipe, finalizou e foi exportada. Não se afirma
+que a concorrência seja a causa comprovada da falha das outras capturas.
+
+O UITest runner no iPhone registrou thermalBefore=2 e thermalAfter=2 (serious),
+com Low Power Mode false. A Apple documenta redução de desempenho nesse estado:
+https://developer.apple.com/documentation/foundation/processinfo/thermalstate-swift.enum/serious.
+Não é possível inferir retroativamente a temperatura das rodadas anteriores.
+
+No perfil de rolagem, a thread principal teve 5.454 amostras de CPU e nenhuma
+aquisição de drawable. A maior parte do peso ficou em layout/commit do UIKit
+e coleta AX da automação; código próprio da linha PantryItemRow teve apenas
+7 ms inclusivos. O compositor apresentou custo elevado em render_shape e
+render_lines. sharingd e pkd também tiveram carga substancial no mesmo período;
+isso não prova origem no app. O Device Hub foi encerrado normalmente para
+retirar o espelhamento da próxima comparação, preservando preferências.

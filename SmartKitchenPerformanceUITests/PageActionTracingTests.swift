@@ -22,6 +22,8 @@ final class PageActionTracingTests: XCTestCase {
         XCTAssertTrue(tabs.waitForExistence(timeout: 45))
         let options = XCTMeasureOptions()
         options.iterationCount = 3
+        let thermalBefore = ProcessInfo.processInfo.thermalState.rawValue
+        let lowPowerBefore = ProcessInfo.processInfo.isLowPowerModeEnabled
         // Clock samples also prove the measurement block produced a report.
         // They include automation waits and must never be interpreted as FPS.
         var metrics: [any XCTMetric] = [XCTClockMetric(), XCTHitchMetric(application: app)]
@@ -56,10 +58,49 @@ final class PageActionTracingTests: XCTestCase {
         tree.name = "Measured page hierarchy: \(name)"
         tree.lifetime = .keepAlways
         add(tree)
+        attachDeviceConditions(thermalBefore: thermalBefore, lowPowerBefore: lowPowerBefore)
         // Keep the validation app foreground while Xcode exports results.
         // Going Home here re-enables system Auto-Lock before the CLI can reopen
         // the app, even though the app's validation flag disables its idle timer.
         app.activate()
+    }
+
+    /// Feed Instruments with real gestures without a competing XCTest trace.
+    /// This deliberately creates no XCTHitchMetric or OS signpost metric session.
+    func testProfileListsForInstruments() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication(bundleIdentifier: "com.pedrosalles.smartkitchen.sync")
+        app.launchArguments = ["-SavoriaActionTrace", "-SavoriaKeepAwakeForValidation",
+                               "-AppleLanguages", "(pt-BR)", "-AppleLocale", "pt_BR"]
+        app.launch()
+        let tabs = app.tabBars.firstMatch
+        XCTAssertTrue(tabs.waitForExistence(timeout: 45))
+        tabs.buttons["Listas"].firstMatch.tap()
+        if app.buttons["Despensa"].firstMatch.isHittable { app.buttons["Despensa"].firstMatch.tap() }
+        let surfaces = (app.scrollViews.allElementsBoundByIndex + app.collectionViews.allElementsBoundByIndex + app.tables.allElementsBoundByIndex)
+            .filter { $0.frame.intersection(app.frame).height > 200 && $0.frame.intersection(app.frame).width > 200 }
+        let scroll = try XCTUnwrap(surfaces.max { $0.frame.height * $0.frame.width < $1.frame.height * $1.frame.width })
+        let thermalBefore = ProcessInfo.processInfo.thermalState.rawValue
+        let lowPowerBefore = ProcessInfo.processInfo.isLowPowerModeEnabled
+        for _ in 0..<6 {
+            scroll.swipeUp()
+            scroll.swipeDown()
+            if !tabs.buttons["Listas"].firstMatch.isSelected { tabs.buttons["Listas"].firstMatch.tap() }
+        }
+        XCUIDevice.shared.press(.home)
+        app.activate()
+        XCTAssertTrue(tabs.buttons["Listas"].firstMatch.waitForExistence(timeout: 10))
+        XCTAssertTrue(tabs.buttons["Listas"].firstMatch.isSelected)
+        attachDeviceConditions(thermalBefore: thermalBefore, lowPowerBefore: lowPowerBefore)
+    }
+
+    private func attachDeviceConditions(thermalBefore: Int, lowPowerBefore: Bool) {
+        // UITest runner executes on the target iPhone, so these describe that
+        // device, not the Mac. Read outside the measurement block.
+        let context = XCTAttachment(string: "thermalBefore=\(thermalBefore) thermalAfter=\(ProcessInfo.processInfo.thermalState.rawValue) lowPowerBefore=\(lowPowerBefore) lowPowerAfter=\(ProcessInfo.processInfo.isLowPowerModeEnabled)")
+        context.name = "Device thermal and power conditions (not frame metrics)"
+        context.lifetime = .keepAlways
+        add(context)
     }
 
     /// Hardware-only preview; never captures, analyzes, or registers a photo.
