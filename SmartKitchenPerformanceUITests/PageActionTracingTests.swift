@@ -3,6 +3,49 @@ import XCTest
 /// Navigates existing food data without purchases, AI calls, seeding or deletion.
 @MainActor
 final class PageActionTracingTests: XCTestCase {
+    /// Exact local-only input is guarded by a real-parser, zero-network unit test.
+    /// Adds one synthetic food to the isolated validation Simulator; never deletes it.
+    func testExactLemonSugarRegistrationOnceAndReopen() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication(bundleIdentifier: "com.pedrosalles.smartkitchen.sync")
+        app.launchArguments = ["-AppleLanguages", "(pt-BR)", "-AppleLocale", "pt_BR"]
+        app.launch()
+        let tab = app.tabBars.buttons["Nutrição"].firstMatch
+        XCTAssertTrue(tab.waitForExistence(timeout: 45))
+        tab.tap()
+        let add = app.buttons["savoria.nutrition.add"]
+        XCTAssertTrue(add.waitForExistence(timeout: 10))
+        add.tap()
+        app.buttons["Texto"].firstMatch.tap()
+        let editor = app.textViews["savoria.nutrition.capture.text"]
+        XCTAssertTrue(editor.waitForExistence(timeout: 10))
+        editor.tap()
+        editor.typeText("suco de limao com 6cs de acucar")
+        let analyze = app.buttons["savoria.nutrition.capture.analyze"]
+        XCTAssertTrue(analyze.isEnabled)
+        analyze.tap()
+        let register = app.buttons["Registrar"].firstMatch
+        XCTAssertTrue(register.waitForExistence(timeout: 15))
+        XCTAssertTrue(app.textFields.matching(NSPredicate(format: "value == %@", "suco de limao com 6cs de acucar")).firstMatch.exists)
+        XCTAssertTrue(app.textFields.matching(NSPredicate(format: "value == %@", "393")).firstMatch.exists)
+        let screenshot = XCTAttachment(screenshot: app.screenshot())
+        screenshot.name = "Exact lemon sugar analysis, local references and review warning"
+        screenshot.lifetime = .keepAlways
+        self.add(screenshot)
+        register.tap(withNumberOfTaps: 2, numberOfTouches: 1)
+        XCTAssertTrue(add.waitForExistence(timeout: 15))
+        app.terminate()
+        app.launch()
+        XCTAssertTrue(tab.waitForExistence(timeout: 45))
+        tab.tap()
+        XCTAssertTrue(app.staticTexts["suco de limao com 6cs de acucar"].firstMatch.waitForExistence(timeout: 15))
+        let reopened = XCTAttachment(screenshot: app.screenshot())
+        reopened.name = "Lemon sugar food retained after relaunch"
+        reopened.lifetime = .keepAlways
+        self.add(reopened)
+        XCUIDevice.shared.press(.home)
+    }
+
     /// Closed-network unit tests guarantee the saved-library source survives these follow-ups.
     func testSavedLibraryFollowUpKeepsSourceAndUpdatesTimeAfterForeground() throws {
         continueAfterFailure = false

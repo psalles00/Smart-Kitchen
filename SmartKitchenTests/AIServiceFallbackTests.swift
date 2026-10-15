@@ -793,6 +793,23 @@ private final class RecipeIdeasFixtureBackend: SupabaseFunctionInvoking {
 
 @MainActor
 final class AnalysisCancellationTests: XCTestCase {
+    func testExactLemonSugarInputUsesRealParserWithoutAIOrLookups() async throws {
+        let ai = MockNutritionAIClient()
+        let exa = CountingExaLookup()
+        let service = NutritionAIService(ai: ai, usda: CancellingUSDALookup(), exa: exa, cache: DisabledFoodCache())
+        let input = "suco de limao com 6cs de acucar"
+        let result = try await service.analyzeText(description: input)
+        XCTAssertEqual(result.name, input)
+        XCTAssertEqual(result.calories, 393)
+        XCTAssertEqual(result.servingSizeGrams, 290)
+        XCTAssertEqual(result.addedSugarG, 90)
+        XCTAssertEqual(result.componentCount, 2)
+        XCTAssertFalse(result.reviewNotes.isEmpty)
+        XCTAssertEqual(ai.chatCallCount, 0)
+        XCTAssertEqual(exa.calls, 0)
+        XCTAssertFalse(Task.isCancelled, "The cancelling USDA fixture must never be invoked")
+    }
+
     func testDirectOpenAICancellationDoesNotRetryOpenRouter() async {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [DirectChatURLProtocol.self]

@@ -263,3 +263,25 @@ Roteiro manual:
 4. Peça “Mais opções” ou use o botão: confira ausência dos resultados anteriores.
 5. Em uma validação de rede com orçamento reservado, confira também as receitas
    novas e da web; os mocks desta etapa não comprovam qualidade do provedor real.
+
+## Registro local de suco e confirmação repetida
+
+O parser real e o pipeline de nutrição foram exercitados com exatamente
+“suco de limao com 6cs de acucar”. Um teste fechado prova zero chamadas de IA,
+USDA e Exa: bebida mais açúcar, seis colheres equivalentes à estimativa de 90 g,
+porção total estimada de 290 g e 393 kcal. A quantidade da bebida não foi
+informada; a interface avisa que estimou 200 g de suco sem diluição. Esses valores
+não representam uma medição da bebida de Pedro nem um rótulo certificado.
+
+O teste nativo digitou o texto exato, conferiu nome e calorias, capturou o aviso,
+fez toque duplo em Registrar e relançou o app. Readback: exatamente um novo
+FoodEntry, com nome completo, 393 kcal, 290 g e 90 g de açúcar adicionado.
+Somente Private/ZFOODENTRY mudou; todos os demais registros e hashes de imagens
+permaneceram idênticos. O alimento é sintético e fica preservado no Simulator
+isolado, com sync desligado; não foi registrado nos dados pessoais de Pedro.
+Não houve mudança no código do app nesta etapa, apenas testes e documentação.
+A validação física e a interface macOS continuam bloqueadas conforme acima.
+
+Teste manual: registre a frase exata num destino de teste, revise o aviso de
+porção/preparo, confirme uma vez e confira a mesma linha após sair e voltar.
+Não trate a ausência de quantidade do suco como uma porção exata conhecida.
