@@ -7,6 +7,64 @@ import Metal
 #endif
 @testable import Savoria
 
+final class ItemDatabaseMatchingTests: XCTestCase {
+    private func catalog() -> ItemDatabase {
+        ItemDatabase(entries: [
+            ItemEntry(titulos: ["Olive Oil", "Azeite de Oliva"], nomeDoArquivo: "fixture-olive.png", categoria: "Test"),
+            ItemEntry(titulos: ["Extra Virgin Olive Oil"], nomeDoArquivo: "fixture-extra-olive.png", categoria: "Test"),
+            ItemEntry(titulos: ["Pumpkin", "Abóbora", "南瓜"], nomeDoArquivo: "fixture-pumpkin.png", categoria: "Test"),
+            ItemEntry(titulos: ["Café com Leite"], nomeDoArquivo: "fixture-coffee.png", categoria: "Test"),
+            ItemEntry(titulos: ["Milk", "Leite"], nomeDoArquivo: "fixture-milk.png", categoria: "Test"),
+            ItemEntry(titulos: ["And", "De", "A"], nomeDoArquivo: "fixture-ignored.png", categoria: "Test"),
+            ItemEntry(titulos: ["Tie Name"], nomeDoArquivo: "fixture-first.png", categoria: "Test"),
+            ItemEntry(titulos: ["Tie Name"], nomeDoArquivo: "fixture-second.png", categoria: "Test")
+        ])
+    }
+
+    func testExactSpecificAndWholeWordMatchesSurviveLanguageSwitches() {
+        let database = catalog()
+        // Revisit every cached index after switching languages, including
+        // supported scripts with no eligible three-character inherited word.
+        for language in AppLanguage.allCases + AppLanguage.allCases.reversed() {
+            let locale = AppLocalization(language: language)
+            let examples: [(String, String?)] = [
+                ("  ABÓBORA  ", "fixture-pumpkin.png"),
+                ("purê de abóbora assada", "fixture-pumpkin.png"),
+                ("roasted (pumpkin)", "fixture-pumpkin.png"),
+                ("add extra-virgin olive oil now", "fixture-extra-olive.png"),
+                ("olive oil for roasting", "fixture-olive.png"),
+                ("Ｃａｆé com leite", "fixture-coffee.png"),
+                ("serve café com leite quente", "fixture-coffee.png"),
+                ("warm milk", "fixture-milk.png"),
+                ("tie name", "fixture-first.png"),
+                ("warm tie name now", "fixture-first.png"),
+                ("南瓜", "fixture-pumpkin.png"),
+                ("And", "fixture-ignored.png"),
+                ("pumpkinseed", nil),
+                ("milky", nil),
+                ("and de a", nil),
+                ("", nil),
+                ("unknown ingredient", nil)
+            ]
+            for (query, expected) in examples {
+                XCTAssertEqual(database.preferredMatch(for: query, localization: locale)?.nomeDoArquivo,
+                               expected, "\(language): \(query)")
+            }
+        }
+    }
+
+    func testWarmCompoundLookupOnBundledCatalog() throws {
+        let database = ItemDatabase.shared
+        let locale = AppLocalization(language: .ptBR)
+        XCTAssertEqual(database.preferredMatch(for: "purê de abóbora assada", localization: locale)?.nomeDoArquivo, "pumpkin.png")
+        measure {
+            for _ in 0..<25 {
+                XCTAssertEqual(database.preferredMatch(for: "purê de abóbora assada", localization: locale)?.nomeDoArquivo, "pumpkin.png")
+            }
+        }
+    }
+}
+
 @MainActor
 final class RecipeMetadataQueryTests: XCTestCase {
     private final class SaveNotifications: @unchecked Sendable {

@@ -19,8 +19,14 @@ final class ItemDatabase: @unchecked Sendable {
 
     private struct IndexedTitle {
         let normalized: String
+        let inherited: InheritedTitle?
         let entry: ItemEntry
         let sourceRank: Int
+    }
+
+    private struct InheritedTitle {
+        let normalized: String
+        let score: InheritedMatchScore
     }
 
     private struct InheritedMatchScore: Comparable {
@@ -52,8 +58,12 @@ final class ItemDatabase: @unchecked Sendable {
     private let byFilename: [String: ItemEntry]
     private let entries: [ItemEntry]
 
-    private init() {
-        let entries = Self.loadEntries()
+    private convenience init() {
+        self.init(entries: Self.loadEntries())
+    }
+
+    /// Also supports isolated catalogs without touching user stores.
+    init(entries: [ItemEntry]) {
         var byFile: [String: ItemEntry] = [:]
         byFile.reserveCapacity(entries.count)
         for entry in entries {
@@ -95,9 +105,18 @@ final class ItemDatabase: @unchecked Sendable {
         for entry in entries {
             let titles = entry.searchableTitles(localization: localization)
             for title in titles {
+                let normalized = Self.normalize(title.title, locale: localization.foldingLocale)
+                let inherited = Self.normalizeForInheritedMatching(normalized, locale: localization.foldingLocale)
                 built.append(
                     IndexedTitle(
-                        normalized: Self.normalize(title.title),
+                        normalized: normalized,
+                        inherited: Self.isEligibleInheritedTitle(inherited) ? InheritedTitle(
+                            normalized: inherited,
+                            score: InheritedMatchScore(
+                                wordCount: inherited.split(separator: " ").count,
+                                characterCount: inherited.count
+                            )
+                        ) : nil,
                         entry: entry,
                         sourceRank: title.sourceRank
                     )
@@ -187,9 +206,9 @@ final class ItemDatabase: @unchecked Sendable {
 
     /// Returns an entry if any of its titles match the given name exactly
     /// (case-insensitive, diacritics-insensitive).
-    func exactMatch(for name: String) -> ItemEntry? {
-        let index = index(for: AppLocalization.current().language)
-        let q = Self.normalize(name)
+    func exactMatch(for name: String, localization: AppLocalization = .current()) -> ItemEntry? {
+        let index = index(for: localization.language)
+        let q = Self.normalize(name, locale: localization.foldingLocale)
         guard !q.isEmpty else { return nil }
         for candidate in index where candidate.normalized == q {
             return candidate.entry
@@ -199,32 +218,31 @@ final class ItemDatabase: @unchecked Sendable {
 
     /// Returns the exact match for the full name, or the most specific
     /// database title contained as whole words in the name.
-    func preferredMatch(for name: String) -> ItemEntry? {
-        if let exact = exactMatch(for: name) {
+    func preferredMatch(for name: String, localization: AppLocalization = .current()) -> ItemEntry? {
+        if let exact = exactMatch(for: name, localization: localization) {
             return exact
         }
 
-        let index = index(for: AppLocalization.current().language)
-        let normalizedQuery = Self.normalizeForInheritedMatching(name)
+        let index = index(for: localization.language)
+        let normalizedQuery = Self.normalizeForInheritedMatching(name, locale: localization.foldingLocale)
         guard !normalizedQuery.isEmpty else { return nil }
 
         var bestEntry: ItemEntry?
         var bestScore: InheritedMatchScore?
 
         for candidate in index {
-            let normalized = candidate.normalized
             let entry = candidate.entry
-            let normalizedTitle = Self.normalizeForInheritedMatching(normalized)
+            // The catalog and language are stable between lookups. Normalize,
+            // tokenize and score their titles once when building the index,
+            // rather than repeating that work in every icon's view body.
+            guard let inherited = candidate.inherited else { continue }
+            let normalizedTitle = inherited.normalized
             guard normalizedTitle != normalizedQuery,
-                  Self.isEligibleInheritedTitle(normalizedTitle),
                   Self.containsWholePhrase(normalizedTitle, in: normalizedQuery) else {
                 continue
             }
 
-            let score = InheritedMatchScore(
-                wordCount: normalizedTitle.split(separator: " ").count,
-                characterCount: normalizedTitle.count
-            )
+            let score = inherited.score
 
             if let currentBestScore = bestScore {
                 if currentBestScore < score {
@@ -262,14 +280,14 @@ final class ItemDatabase: @unchecked Sendable {
 
     // MARK: - Helpers
 
-    private static func normalize(_ text: String) -> String {
+    private static func normalize(_ text: String, locale: Locale = AppLocalization.current().foldingLocale) -> String {
         text.lowercased()
-            .folding(options: [.diacriticInsensitive, .widthInsensitive], locale: AppLocalization.current().foldingLocale)
+            .folding(options: [.diacriticInsensitive, .widthInsensitive], locale: locale)
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    private static func normalizeForInheritedMatching(_ text: String) -> String {
-        normalize(text)
+    private static func normalizeForInheritedMatching(_ text: String, locale: Locale) -> String {
+        normalize(text, locale: locale)
             .split { !$0.isLetter && !$0.isNumber }
             .map(String.init)
             .joined(separator: " ")

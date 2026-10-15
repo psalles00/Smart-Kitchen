@@ -1184,3 +1184,31 @@ atual, as 151 mídias e quick_check ok nos dois stores. A referência atual
 incorpora somente uma conversa legítima adicionada pelo usuário; todos os
 registros anteriores e o backup original foram preservados. O app físico
 foi reaberto normalmente, sem manter a tela acesa por flags de teste.
+
+A busca de ícones passou a preparar a forma normalizada, a elegibilidade e
+a pontuação dos títulos compostos ao construir o índice de cada idioma.
+As consultas reutilizam esses valores e capturam a localização uma vez por
+operação. A prioridade de correspondência exata, palavras inteiras, maior
+especificidade e primeiro candidato no empate permanece igual. Nenhum texto
+visível, schema, store ou configuração de sincronização foi alterado.
+
+Nove testes passaram: os sete de histórico/listagem e dois de correspondência
+de itens. O catálogo isolado cobre acentos, largura Unicode, hífen, limites
+de palavras, títulos curtos, empate e ida/volta pelos sete idiomas. O teste
+com o catálogo embarcado confirmou o ícone de abóbora no nome composto.
+A média de 102 ms para 25 consultas no build Debug simulado é somente uma
+referência desse teste, sem baseline comparável nem alegação de ganho físico.
+
+Os três builds passaram. Os dois roteiros nativos do Simulator (cinco páginas
+e retomadas; capa e passos da receita) passaram em 144,49 s, com registros,
+IDs e BLOBs idênticos. O Mac atualizado foi aberto e teve assinatura verificada,
+capabilities e perfil de provisionamento anteriores preservados, e snapshot
+idêntico. A conferência visual continuou mostrando o onboarding e a biblioteca
+vazia já conhecidos após a formatação; isso não certifica paridade CloudKit.
+A instalação física foi confirmada com Bundle ID, Team, containers ordenados
+e App Group corretos; a abertura retornou Locked. A medição da otimização de
+ícones aguarda desbloqueio, sem necessidade de outra reinstalação.
+
+Conferência manual adicional: nas listas e ingredientes, confira ícones de
+nomes compostos (por exemplo, purê de abóbora), alterne o idioma e volte ao
+anterior; depois saia/volte ao app nas cinco páginas e confira os mesmos itens.
