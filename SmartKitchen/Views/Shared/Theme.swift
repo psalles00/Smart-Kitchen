@@ -305,6 +305,10 @@ struct ItemListDivider: View {
                     )
             )
             .frame(height: 1)
+            // Flatten the two static dashed paths into one tiny texture. During
+            // scrolling Core Animation can move it without tessellating every
+            // dash again; width and appearance changes still redraw the divider.
+            .drawingGroup(opaque: false, colorMode: .nonLinear)
             .accessibilityHidden(true)
     }
 }

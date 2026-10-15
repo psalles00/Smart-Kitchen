@@ -823,3 +823,31 @@ e coleta AX da automação; código próprio da linha PantryItemRow teve apenas
 render_lines. sharingd e pkd também tiveram carga substancial no mesmo período;
 isso não prova origem no app. O Device Hub foi encerrado normalmente para
 retirar o espelhamento da próxima comparação, preservando preferências.
+
+### Separadores pontilhados estáticos
+
+ItemListDivider agora compõe seus dois traços pontilhados numa textura pequena
+com drawingGroup, preservando o espaço de cor não linear. Mudanças de largura
+ou aparência redesenham a imagem; deslocamento de rolagem pode reutilizá-la.
+O objetivo é reduzir a tesselação repetida das formas observada no compositor,
+sem alterar os traços, cores, layout, fundo ou dados. Código compartilhado iOS/macOS.
+
+Os três builds passaram. No Simulator, navegação/retorno nas cinco páginas
+passou em três ciclos e os bancos continuam idênticos, com quick_check ok.
+A comparação visual de Listas antes/depois preserva a aparência do pontilhado;
+a faixa estreita do divisor teve delta RGB médio 0,49/255, com pequenas diferenças
+de antialiasing nas bordas (máximo local 16,12/255). Mac instalado/assinado com
+Team/containers originais; UUIDs dos binários conferem com o build, snapshot
+idêntico e GUI de boas-vindas conhecida aberta. Um guard por nome de processo
+confundiu o Savoria do Simulator com o Mac; a conferência pelo caminho exato
+confirmou o encerramento do backend Mac e permitiu a abertura correta da GUI.
+
+No físico, assinatura/Team/containers e App Group foram conferidos antes da
+instalação, que terminou com sucesso. A abertura imediatamente seguinte foi
+negada pelo iOS com Locked; o processo que mantinha a tela acesa é encerrado
+pela instalação. A versão nova está instalada e o Device Hub preparado, com
+novo desbloqueio solicitado. A medição física dos separadores permanece
+pendente: não se atribui ganho de FPS a esta mudança até medi-lo.
+
+Teste manual: conferir o pontilhado entre itens em Listas e em ingredientes
+de receitas, nos dois temas; rolar, alternar páginas e voltar ao app.
