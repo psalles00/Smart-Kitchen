@@ -1,6 +1,9 @@
 import Foundation
 import SwiftData
 import XCTest
+#if canImport(Metal)
+import Metal
+#endif
 @testable import Savoria
 
 @MainActor
@@ -1188,6 +1191,25 @@ private final class RecipeWebFixtureBackend: SupabaseFunctionInvoking {
         throw URLError(.unsupportedURL)
     }
 }
+
+#if canImport(Metal)
+/// Compilation alone does not prove the native fragment's dependencies link.
+@MainActor
+final class BackdropMetalPipelineTests: XCTestCase {
+    func testBundledNativeBackdropPipelineLinksOnActualMetalDevice() throws {
+        guard let device = MTLCreateSystemDefaultDevice() else {
+            throw XCTSkip("A Metal device is required to link the backdrop pipeline.")
+        }
+        let library = try device.makeDefaultLibrary(bundle: .main)
+        let descriptor = MTLRenderPipelineDescriptor()
+        descriptor.vertexFunction = try XCTUnwrap(library.makeFunction(name: "savoriaBackdropVertex"))
+        descriptor.fragmentFunction = try XCTUnwrap(library.makeFunction(name: "savoriaBackdropFragment"))
+        descriptor.colorAttachments[0].pixelFormat = .bgra8Unorm
+        let pipeline = try device.makeRenderPipelineState(descriptor: descriptor)
+        XCTAssertEqual(pipeline.device.registryID, device.registryID)
+    }
+}
+#endif
 
 /// Opt-in native provider smoke test. Normal test runs never dispatch paid calls.
 @MainActor

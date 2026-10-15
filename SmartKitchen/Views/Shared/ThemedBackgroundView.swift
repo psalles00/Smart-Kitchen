@@ -107,7 +107,13 @@ private final class SavoriaMetalBackdropResources {
         descriptor.vertexFunction = library.makeFunction(name: "savoriaBackdropVertex")
         descriptor.fragmentFunction = library.makeFunction(name: "savoriaBackdropFragment")
         descriptor.colorAttachments[0].pixelFormat = .bgra8Unorm
-        pipeline = try? device.makeRenderPipelineState(descriptor: descriptor)
+        do {
+            pipeline = try device.makeRenderPipelineState(descriptor: descriptor)
+            PerformanceLogger.event(.launch, "Backdrop Metal pipeline ready")
+        } catch {
+            pipeline = nil
+            PerformanceLogger.error(.launch, "Backdrop Metal pipeline failed: \(error.localizedDescription)")
+        }
     }
 }
 

@@ -1,11 +1,11 @@
 // Original Savoria CPPN / Nebula shader, from Smart Kitchen 7f2e206^.
 // The network weights and animation are unchanged; adapted from SceneKit's
-// surface modifier to SwiftUI's colorEffect. The network stays unchanged while
-// its tint follows the Savoria page palette.
+// surface modifier to SwiftUI and the bounded native Metal renderer. The network
+// stays unchanged while its tint follows the Savoria page palette.
 #include <metal_stdlib>
 using namespace metal;
 
-[[ stitchable ]] half4 savoriaNebula(float2 position, half4 color, float2 size, float iTime, half4 selectedTint, float matchesStaticPalette) {
+static half4 savoriaNebulaField(float2 position, half4 color, float2 size, float iTime, half4 selectedTint, float matchesStaticPalette) {
 float3 tintColor = float3(selectedTint.rgb);
 float tintStrength = 1.22;
 float3 tintColor2 = float3(1.0);
@@ -331,6 +331,10 @@ finalColor = min(finalColor, float3(1.0));
 return half4(half3(finalColor), 1.0);
 }
 
+[[ stitchable ]] half4 savoriaNebula(float2 position, half4 color, float2 size, float iTime, half4 selectedTint, float matchesStaticPalette) {
+    return savoriaNebulaField(position, color, size, iTime, selectedTint, matchesStaticPalette);
+}
+
 // A bounded native Metal drawable avoids evaluating this network at the full
 // screen's pixel density through SwiftUI's offscreen compositing passes.
 struct SavoriaBackdropVertexOut {
@@ -354,6 +358,6 @@ vertex SavoriaBackdropVertexOut savoriaBackdropVertex(uint id [[vertex_id]]) {
 
 fragment half4 savoriaBackdropFragment(SavoriaBackdropVertexOut in [[stage_in]],
                                       constant SavoriaBackdropUniforms &uniforms [[buffer(0)]]) {
-    return savoriaNebula(in.uv * uniforms.sizes.xy, half4(1), uniforms.sizes.zw,
+    return savoriaNebulaField(in.uv * uniforms.sizes.xy, half4(1), uniforms.sizes.zw,
                          uniforms.clock.x, half4(uniforms.tint), 1);
 }

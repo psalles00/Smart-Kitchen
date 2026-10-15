@@ -493,3 +493,27 @@ Roteiro físico pendente: abrir a versão instalada com esses argumentos, confer
 o fundo animado e o fade em cada página, medir Animation Hitches em repouso e em
 navegação e após retorno ao app; comparar cargas equivalentes e fazer readback
 completo. A nova arquitetura ainda não é uma certificação de fluidez ou produção.
+
+### Ligação Metal e movimento efetivo
+
+A conferência adicional encontrou uma falha que a compilação e a navegação não
+detectavam: a primeira pipeline nativa referenciava diretamente a função
+`stitchable`, e a criação em runtime falhava com `unresolved visible function
+reference`. O fundo observado nessa tentativa era o fallback estático. Assim,
+seus screenshots e a navegação aprovada não comprovavam animação Metal.
+
+A rede agora está numa função auxiliar comum; o fragmento nativo e o wrapper
+SwiftUI a chamam diretamente, sem alterar seus pesos ou o relógio. A criação da
+pipeline passou na GPU Apple M4 Pro e o app no Simulator registrou explicitamente
+`Backdrop Metal pipeline ready`. Um teste nativo adicional abre a biblioteca do
+próprio app e exige que a pipeline seja ligada numa GPU Metal, para detectar essa
+classe de regressão antes de confiar no fallback.
+
+A navegação e o retorno ao app passaram novamente com a pipeline corrigida.
+Capturas sucessivas da mesma Home, sem interação, confirmaram movimento: 1.152
+de 1.170 pontos amostrados numa faixa só de fundo mudaram. É evidência de animação,
+sem ser medição de FPS ou garantia de continuidade em todas as transições.
+Os stores do Simulator passaram quick_check e mantiveram todas as linhas, IDs e
+hashes de BLOBs. Mac instalado com snapshot idêntico e físico atualizado novamente;
+abertura visual do Mac, medição física e readback físico completo seguem pendentes
+dos desbloqueios. Não houve restauração, exclusão ou escrita direta nos stores.
