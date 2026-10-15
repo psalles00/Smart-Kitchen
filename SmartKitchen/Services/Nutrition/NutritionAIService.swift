@@ -60,6 +60,7 @@ final class NutritionAIService {
     /// 3. Validated references are written back; model estimates remain local.
     /// 4. `NutritionCalculator` does the final scaling+sum in pure Swift.
     func analyzeText(description: String) async throws -> FoodAnalysis {
+        try RequestCancellation.check()
         let trimmed = description.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { throw NutritionAIError.emptyResponse }
 
@@ -67,7 +68,9 @@ final class NutritionAIService {
         let parsed: [NutritionItemParser.ParsedItem]
         do {
             parsed = try await parser.parse(trimmed)
+            try RequestCancellation.check()
         } catch {
+            try RequestCancellation.check(error)
             // If even parsing fails, fall back to the legacy single-shot LLM
             // estimate. When the backend is unavailable, use local reference
             // data first so text logging does not collapse into a network
@@ -93,7 +96,8 @@ final class NutritionAIService {
         }
 
         // 2. Resolve per-100g for each item.
-        let (resolved, ids) = await resolvePer100g(for: adjustedParsed)
+        let (resolved, ids) = try await resolvePer100g(for: adjustedParsed)
+        try RequestCancellation.check()
         guard resolved.count == adjustedParsed.count else {
             if let local = LocalNutritionFallback.analyzeText(trimmed) {
                 return local
@@ -112,6 +116,7 @@ final class NutritionAIService {
     }
 
     func analyzeFoodImage(imageData: Data, description: String? = nil) async throws -> FoodAnalysis {
+        try RequestCancellation.check()
         var prompt = """
         Analyze this food image. Identify the food and estimate its nutritional content.
 
@@ -126,10 +131,12 @@ final class NutritionAIService {
             prompt += "\n\nAdditional context from the user about this meal: \(description)\nUse this context to improve accuracy of identification, portion size, and nutrition estimates."
         }
         let raw = try await callVision(prompt: prompt, imageData: imageData)
+        try RequestCancellation.check()
         return try Self.parseFoodAnalysis(from: raw)
     }
 
     func analyzeNutritionLabel(imageData: Data) async throws -> NutritionLabelAnalysis {
+        try RequestCancellation.check()
         let prompt = """
         Read this nutrition label image. Extract the nutritional values per 100g (or per 100ml).
         If the label shows per-serving values, convert them to per-100g using the serving size.
@@ -143,6 +150,7 @@ final class NutritionAIService {
         All values should be numbers. If serving size or any nutrient is not available, use null.
         """
         let raw = try await callVision(prompt: prompt, imageData: imageData)
+        try RequestCancellation.check()
         return try Self.parseNutritionLabel(from: raw)
     }
 
@@ -153,7 +161,8 @@ final class NutritionAIService {
     /// returned IDs are surfaced so the UI can attach votes.
     private func resolvePer100g(
         for items: [NutritionItemParser.ParsedItem]
-    ) async -> (resolved: [NutritionCalculator.Resolved], ids: [UUID]) {
+    ) async throws -> (resolved: [NutritionCalculator.Resolved], ids: [UUID]) {
+        try RequestCancellation.check()
         var slots: [Per100gNutrition?] = Array(repeating: nil, count: items.count)
         var pendingUSDA: [(index: Int, name: String)] = []
         var pendingLLMOnly: [(index: Int, item: NutritionItemParser.ParsedItem)] = []
@@ -162,6 +171,7 @@ final class NutritionAIService {
         let locale = AppLocalization.current().nutritionCacheLocaleIdentifier
 
         for (i, item) in items.enumerated() {
+            try RequestCancellation.check()
             if Self.shouldUseLocalReferenceFirst(item.referenceName),
                let local = LocalNutritionFallback.nutrition(for: item.referenceName) {
                 slots[i] = local
@@ -182,8 +192,10 @@ final class NutritionAIService {
 
         // 2. USDA batch for the misses.
         if !pendingUSDA.isEmpty {
+            try RequestCancellation.check()
             let names = pendingUSDA.map { $0.name }
             let usdaResults = await usda.fetchPer100g(for: names, locale: locale)
+            try RequestCancellation.check()
             for (offset, usdaItem) in usdaResults.enumerated() {
                 let slot = pendingUSDA[offset].index
                 if usdaItem.hasReliableMacros {
@@ -193,6 +205,7 @@ final class NutritionAIService {
                             let id = try await cache.upsert(usdaItem)
                             copy.id = id
                         } catch {
+                            try RequestCancellation.check(error)
                             LLMLog.error("FoodCache upsert (usda) failed: \(error.localizedDescription)")
                         }
                     }
@@ -208,9 +221,11 @@ final class NutritionAIService {
 
         // 3. Exa batch for the USDA misses.
         if !pendingExa.isEmpty {
+            try RequestCancellation.check()
             let names = pendingExa.map { $0.name }
             do {
                 let exaResults = try await exa.fetchPer100g(for: names, locale: locale)
+                try RequestCancellation.check()
                 for (offset, exaItem) in exaResults.enumerated() {
                     let slot = pendingExa[offset].index
                     if exaItem.hasReliableMacros {
@@ -220,6 +235,7 @@ final class NutritionAIService {
                                 let id = try await cache.upsert(exaItem)
                                 copy.id = id
                             } catch {
+                                try RequestCancellation.check(error)
                                 LLMLog.error("FoodCache upsert (exa) failed: \(error.localizedDescription)")
                             }
                         }
@@ -227,19 +243,22 @@ final class NutritionAIService {
                     }
                 }
             } catch {
+                try RequestCancellation.check(error)
                 LLMLog.error("Exa batch failed: \(error.localizedDescription)")
             }
         }
 
         // 4. LLM fallback for any remaining empty/incomplete slots.
         for pending in pendingLLMOnly where slots[pending.index]?.hasMacros != true {
-            if let llmEntry = await llmPer100gEstimate(for: pending.item) {
+            try RequestCancellation.check()
+            if let llmEntry = try await llmPer100gEstimate(for: pending.item) {
                 slots[pending.index] = llmEntry
             }
         }
 
         for (i, item) in items.enumerated() where slots[i]?.hasMacros != true {
-            if let llmEntry = await llmPer100gEstimate(for: item) {
+            try RequestCancellation.check()
+            if let llmEntry = try await llmPer100gEstimate(for: item) {
                 // Model estimates stay local to this analysis. They must not
                 // become a shared reference for other users or later products.
                 slots[i] = llmEntry
@@ -250,6 +269,7 @@ final class NutritionAIService {
         var resolved: [NutritionCalculator.Resolved] = []
         var ids: [UUID] = []
         for (i, item) in items.enumerated() {
+            try RequestCancellation.check()
             if let p = slots[i], p.hasMacros {
                 resolved.append(NutritionCalculator.Resolved(item: item, per100g: p))
                 if let id = p.id { ids.append(id) }
@@ -337,7 +357,8 @@ final class NutritionAIService {
     /// OpenAI, depending on `AIService` routing). Used when cache and Exa miss.
     private func llmPer100gEstimate(
         for item: NutritionItemParser.ParsedItem
-    ) async -> Per100gNutrition? {
+    ) async throws -> Per100gNutrition? {
+        try RequestCancellation.check()
         let prompt = """
         Estime os valores nutricionais por 100g para o alimento abaixo. Considere \
         valores típicos brasileiros se aplicável. Responda APENAS com JSON:
@@ -357,9 +378,11 @@ final class NutritionAIService {
                 model: nil,
                 acceptLanguage: AppLocalization.current().acceptLanguageHeader
             )
+            try RequestCancellation.check()
             guard let content = response.content, !content.isEmpty else { return nil }
             return Self.parsePer100g(rawJSON: content, name: item.referenceName)
         } catch {
+            try RequestCancellation.check(error)
             LLMLog.error("LLM per-100g failed for \(item.name): \(error.localizedDescription)")
             return nil
         }

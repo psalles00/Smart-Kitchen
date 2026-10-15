@@ -126,3 +126,47 @@ snapshot permaneceu idêntico, mas a abertura visual final foi bloqueada pela
 sessão do macOS bloqueada. O iPhone físico continuou indisponível. Essas duas
 validações não estão concluídas. A busca também deixou de fazer uma terceira
 chamada idêntica; atualizar o modo livre varia o enfoque sem palavras de versão.
+
+## Cancelamento de análise de alimentos
+
+O modal mantém a tarefa da análise e a cancela quando sai da tela. A seleção
+de foto usa uma tarefa vinculada ao ciclo da view; uma seleção antiga cancelada
+não publica resultado por cima da nova. A análise não inicia outro provedor
+quando recebe CancellationError ou URLError.cancelled. O pipeline de nutrição
+confere o cancelamento entre extração, cache, USDA, Exa e estimativa, impedindo
+que ele seja tratado como falha comum que justifique novas chamadas.
+
+A espera artificial de 620 ms antes do resultado foi removida. Isso elimina esse
+atraso imposto pelo app; não mede a latência da rede nem prova ausência de
+engasgos nas demais páginas. Respostas de tarefas canceladas não consomem a
+cota local nem atualizam a tela fechada. Chamadas já recebidas pelo servidor
+podem continuar lá; o cancelamento não promete desfazer cobrança ou execução.
+
+Se a rede cancelar uma tarefa ainda visível, o botão volta a permitir tentativa.
+Roteiro manual: iniciar análise de texto/foto/rótulo, fechar o modal durante o
+carregamento, reabrir e confirmar botão utilizável e ausência de resultado antigo.
+Repetir com seleção de foto rapidamente trocada. O teste UI real desse roteiro
+continua pendente; os testes de cancelamento usam doubles sem inferência paga.
+
+O registro por texto recebeu Cancelar, reutilizando as traduções existentes nos
+sete idiomas. A entrada de texto fica indisponível durante a análise; trocar a
+foto cancela a análise antiga. A carga de foto confere a identidade da seleção
+antes de publicar. O início automático atrasado também verifica se a tela ainda
+está ativa, para não disparar após o fechamento.
+
+55 testes direcionados passaram na versão com essas proteções. O XCTest nativo
+aprovou três aberturas/fechamentos e texto só com espaços, seguido de retorno do
+segundo plano. Outro teste aprovou a apresentação e Cancelar em pt-BR, inglês,
+alemão, espanhol, francês, italiano e japonês. Capturas alemã e japonesa foram
+inspecionadas; título, botão e campos ficam visíveis. O simulador foi devolvido
+a pt-BR. O readback não encontrou alimentos registrados. Essa evidência cobre
+entrada vazia e navegação, não o cancelamento visual de uma inferência real.
+
+Na repetição final, o XCTest registrou esperas de 60 segundos pela notificação
+de fim de animações após digitar espaços. Uma captura durante a espera já
+mostrava a Nutrição após Cancelar. Amostragem de cinco segundos: 2648/2970
+amostras da thread principal aguardavam o RunLoop (~89%). Não foi demonstrado
+um hotspot de CPU do app nesse intervalo, nem medida de GPU ou ausência de
+hitches. O shader e as animações não foram desativados para ocultar essa espera.
+O resultado terminal dessa repetição deve ser consultado no xcresult; os
+resultados funcionais anteriores não certificam performance.

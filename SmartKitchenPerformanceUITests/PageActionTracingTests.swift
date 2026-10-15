@@ -3,6 +3,78 @@ import XCTest
 /// Navigates existing food data without purchases, AI calls, seeding or deletion.
 @MainActor
 final class PageActionTracingTests: XCTestCase {
+    func testTextCaptureCancellationInEverySupportedLanguage() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication(bundleIdentifier: "com.pedrosalles.smartkitchen.sync")
+        let languages = [
+            ("pt-BR", "pt_BR", "Nutrição", "Texto", "Cancelar"),
+            ("en", "en_US", "Nutrition", "Text", "Cancel"),
+            ("de", "de_DE", "Ernährung", "Text", "Abbrechen"),
+            ("es", "es_ES", "Nutrición", "Texto", "Cancelar"),
+            ("fr", "fr_FR", "Nutrition", "Texte", "Annuler"),
+            ("it", "it_IT", "Nutrizione", "Testo", "Annulla"),
+            ("ja", "ja_JP", "栄養", "テキスト", "キャンセル")
+        ]
+        defer {
+            app.terminate()
+            app.launchArguments = ["-AppleLanguages", "(pt-BR)", "-AppleLocale", "pt_BR"]
+            app.launch()
+        }
+        for (language, locale, nutrition, text, cancel) in languages {
+            app.terminate()
+            app.launchArguments = ["-AppleLanguages", "(\(language))", "-AppleLocale", locale]
+            app.launch()
+            let tab = app.tabBars.buttons[nutrition].firstMatch
+            XCTAssertTrue(tab.waitForExistence(timeout: 45), language)
+            tab.tap()
+            let add = app.buttons["savoria.nutrition.add"]
+            XCTAssertTrue(add.waitForExistence(timeout: 10))
+            add.tap()
+            app.buttons[text].firstMatch.tap()
+            let editor = app.textViews["savoria.nutrition.capture.text"]
+            XCTAssertTrue(editor.waitForExistence(timeout: 10))
+            XCTAssertFalse(app.buttons["savoria.nutrition.capture.analyze"].isEnabled)
+            let screenshot = XCTAttachment(screenshot: app.screenshot())
+            screenshot.name = "Text capture \(language)"
+            screenshot.lifetime = .keepAlways
+            self.add(screenshot)
+            app.buttons[cancel].firstMatch.tap()
+            XCTAssertTrue(editor.waitForNonExistence(timeout: 10))
+        }
+    }
+
+    /// Empty-input/dismissal checks never press Analyze and never issue inference.
+    func testTextCaptureEmptyCancellationAndReopening() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication(bundleIdentifier: "com.pedrosalles.smartkitchen.sync")
+        app.launchArguments = ["-AppleLanguages", "(pt-BR)", "-AppleLocale", "pt_BR"]
+        app.launch()
+        let tabs = app.tabBars.firstMatch
+        XCTAssertTrue(tabs.waitForExistence(timeout: 45))
+        tabs.buttons["Nutrição"].firstMatch.tap()
+        for cycle in 0..<3 {
+            let add = app.buttons["savoria.nutrition.add"]
+            XCTAssertTrue(add.waitForExistence(timeout: 10))
+            add.tap()
+            app.buttons["Texto"].firstMatch.tap()
+            let editor = app.textViews["savoria.nutrition.capture.text"]
+            XCTAssertTrue(editor.waitForExistence(timeout: 10))
+            let analyze = app.buttons["savoria.nutrition.capture.analyze"]
+            XCTAssertFalse(analyze.isEnabled)
+            if cycle == 1 {
+                editor.tap()
+                editor.typeText("   ")
+                XCTAssertFalse(analyze.isEnabled, "Whitespace must not start an analysis")
+            }
+            app.buttons["Cancelar"].firstMatch.tap()
+            XCTAssertTrue(editor.waitForNonExistence(timeout: 10))
+            XCTAssertTrue(add.waitForExistence(timeout: 10))
+        }
+        XCUIDevice.shared.press(.home)
+        app.activate()
+        XCTAssertTrue(app.buttons["savoria.nutrition.add"].waitForExistence(timeout: 10))
+    }
+
     /// Selects existing rows without applying any mutation to personal items.
     func testMultipleSelectionMenuAndCancellation() throws {
         continueAfterFailure = false

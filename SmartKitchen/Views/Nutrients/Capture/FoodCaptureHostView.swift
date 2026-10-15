@@ -76,6 +76,9 @@ struct FoodCaptureHostView: View {
     /// is reached on free tier.
     @State private var pendingPaywallReason: PaywallSheet.Reason?
     @State private var analysisButtonState: AnalysisButtonState = .idle
+    @State private var analysisTask: Task<Void, Never>?
+    @State private var analysisID: UUID?
+    @State private var isCaptureActive = false
     @State private var showAnalysisSupportFallback: Bool = false
     @FocusState private var isTextEditorFocused: Bool
 
@@ -155,9 +158,9 @@ struct FoodCaptureHostView: View {
         }
         #endif
         .photosPicker(isPresented: $showPhotoPicker, selection: $selectedPhotoItem, matching: .images)
-        .onChange(of: selectedPhotoItem) { _, new in
-            guard let new else { return }
-            Task { await loadPhoto(new) }
+        .task(id: selectedPhotoItem) {
+            guard let selectedPhotoItem else { return }
+            await loadPhoto(selectedPhotoItem)
         }
         .onChange(of: showCamera) { _, isPresented in
             guard !isPresented, isDirectPhotoShortcut else { return }
@@ -174,8 +177,16 @@ struct FoodCaptureHostView: View {
             }
         }
         .onAppear {
+            isCaptureActive = true
             triggerInitialInputIfNeeded()
             triggerAutomaticTextAnalysisIfNeeded()
+        }
+        .onDisappear {
+            isCaptureActive = false
+            analysisTask?.cancel()
+            analysisTask = nil
+            analysisID = nil
+            analysisButtonState = .idle
         }
         .sheet(item: $pendingPaywallReason) { reason in
             PaywallSheet(reason: reason)
@@ -375,7 +386,7 @@ struct FoodCaptureHostView: View {
         hasTriggeredAutomaticTextAnalysis = true
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-            guard case .gathering = stage else { return }
+            guard isCaptureActive, case .gathering = stage else { return }
             isTextEditorFocused = false
             startTextAnalysis()
         }
@@ -400,6 +411,8 @@ struct FoodCaptureHostView: View {
 
             ZStack(alignment: .topLeading) {
                 TextEditor(text: $typedText)
+                    .accessibilityIdentifier("savoria.nutrition.capture.text")
+                    .disabled(analysisButtonState == .loading || analysisButtonState == .success)
                     .focused($isTextEditorFocused)
                     .font(.body)
                     .foregroundStyle(.primary)
@@ -429,6 +442,7 @@ struct FoodCaptureHostView: View {
                 isDisabled: isTextAnalyzeDisabled,
                 action: startTextAnalysis
             )
+            .accessibilityIdentifier("savoria.nutrition.capture.analyze")
 
             if case .failure(let message) = analysisButtonState {
                 analysisErrorPanel(message)
@@ -441,6 +455,11 @@ struct FoodCaptureHostView: View {
         .background(appPrimaryBackground)
         .scrollDismissesKeyboard(.interactively)
         .modalNavigationTitle(String(localized: "Registrar por texto"))
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancelar") { dismiss() }
+            }
+        }
         #if os(iOS)
         .presentationBackground(appPrimaryBackground)
         #endif
@@ -962,12 +981,14 @@ struct FoodCaptureHostView: View {
             if let data = try await item.loadTransferable(type: Data.self),
                let img = PlatformImage(data: data) {
                 await MainActor.run {
+                    guard !Task.isCancelled, isCaptureActive, selectedPhotoItem == item else { return }
                     capturedImage = img
                     resetAnalysisButton()
                 }
             }
         } catch {
             await MainActor.run {
+                    guard !Task.isCancelled, isCaptureActive, selectedPhotoItem == item else { return }
                 withAnimation(.spring(response: 0.36, dampingFraction: 0.82)) {
                     analysisButtonState = .failure(error.localizedDescription)
                 }
@@ -976,12 +997,16 @@ struct FoodCaptureHostView: View {
     }
 
     private func resetAnalysisButton() {
+        analysisTask?.cancel()
+        analysisTask = nil
+        analysisID = nil
         withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) {
             analysisButtonState = .idle
         }
     }
 
     private func startImageAnalysis() {
+        guard isCaptureActive else { return }
         guard let image = capturedImage else { return }
         guard analysisButtonState != .loading else { return }
         // Free-tier daily Nutrition AI gate.
@@ -995,7 +1020,17 @@ struct FoodCaptureHostView: View {
             analysisButtonState = .loading
         }
 
-        Task {
+        analysisTask?.cancel()
+        let id = UUID()
+        analysisID = id
+        analysisTask = Task {
+            defer {
+                if analysisID == id {
+                    if analysisButtonState == .loading { analysisButtonState = .idle }
+                    analysisTask = nil
+                    analysisID = nil
+                }
+            }
             do {
                 // Normaliza para ≤1024px JPEG 0.8
                 #if canImport(UIKit)
@@ -1014,15 +1049,12 @@ struct FoodCaptureHostView: View {
                 case .photo:
                     let analysis = try await ai.analyzeFoodImage(imageData: data)
                     await MainActor.run {
+                        guard !Task.isCancelled, analysisID == id else { return }
                         FeatureGate.shared.consume(.nutritionAI)
                         HapticManager.impact(style: .medium)
                         withAnimation(.spring(response: 0.34, dampingFraction: 0.7)) {
                             analysisButtonState = .success
                         }
-                    }
-                    try? await Task.sleep(for: .milliseconds(620))
-                    await MainActor.run {
-                        guard analysisButtonState == .success else { return }
                         setStage(.result(analysis))
                     }
                 case .nutritionLabel:
@@ -1030,23 +1062,22 @@ struct FoodCaptureHostView: View {
                     let serving = label.servingSizeGrams ?? 100
                     let analysis = label.scaled(to: serving)
                     await MainActor.run {
+                        guard !Task.isCancelled, analysisID == id else { return }
                         FeatureGate.shared.consume(.nutritionAI)
                         HapticManager.impact(style: .medium)
                         withAnimation(.spring(response: 0.34, dampingFraction: 0.7)) {
                             analysisButtonState = .success
                         }
-                    }
-                    try? await Task.sleep(for: .milliseconds(620))
-                    await MainActor.run {
-                        guard analysisButtonState == .success else { return }
                         setStage(.result(analysis))
                     }
                 case .text, .voice:
                     break
                 }
             } catch {
+                guard !Task.isCancelled, !(error is CancellationError), (error as? URLError)?.code != .cancelled else { return }
                 let msg = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
                 await MainActor.run {
+                    guard !Task.isCancelled, analysisID == id else { return }
                     HapticManager.impact(style: .heavy)
                     withAnimation(.spring(response: 0.36, dampingFraction: 0.82)) {
                         analysisButtonState = .failure(msg)
@@ -1061,6 +1092,7 @@ struct FoodCaptureHostView: View {
     }
 
     private func startInlineTextAnalysis() {
+        guard isCaptureActive else { return }
         let text = typedText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty, analysisButtonState != .loading else { return }
 
@@ -1077,26 +1109,33 @@ struct FoodCaptureHostView: View {
             analysisButtonState = .loading
         }
 
-        Task {
+        analysisTask?.cancel()
+        let id = UUID()
+        analysisID = id
+        analysisTask = Task {
+            defer {
+                if analysisID == id {
+                    if analysisButtonState == .loading { analysisButtonState = .idle }
+                    analysisTask = nil
+                    analysisID = nil
+                }
+            }
             do {
                 let analysis = try await ai.analyzeText(description: text)
                 await MainActor.run {
+                    guard !Task.isCancelled, analysisID == id else { return }
                     FeatureGate.shared.consume(.nutritionAI)
                     HapticManager.impact(style: .medium)
                     withAnimation(.spring(response: 0.34, dampingFraction: 0.7)) {
                         analysisButtonState = .success
                     }
-                }
-
-                try? await Task.sleep(for: .milliseconds(620))
-
-                await MainActor.run {
-                    guard analysisButtonState == .success else { return }
                     setStage(.result(analysis))
                 }
             } catch {
+                guard !Task.isCancelled, !(error is CancellationError), (error as? URLError)?.code != .cancelled else { return }
                 let msg = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
                 await MainActor.run {
+                    guard !Task.isCancelled, analysisID == id else { return }
                     HapticManager.impact(style: .heavy)
                     withAnimation(.spring(response: 0.36, dampingFraction: 0.82)) {
                         analysisButtonState = .failure(msg)
@@ -1181,7 +1220,7 @@ struct FoodCaptureHostView: View {
 
     private func requestInitialTextEditorFocus() {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {
-            guard mode == .text else { return }
+            guard isCaptureActive, mode == .text else { return }
             guard !shouldAutomaticallyAnalyzeInitialText else { return }
             guard case .gathering = stage else { return }
             isTextEditorFocused = true

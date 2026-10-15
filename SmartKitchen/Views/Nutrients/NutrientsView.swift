@@ -156,6 +156,7 @@ private struct NutrientsLoadedView: View {
                                     }
                                 }
                             }
+                            .accessibilityIdentifier("savoria.nutrition.add")
                         }
                         GlassButtonGroup {
                             GlassGroupButton(systemImage: "chart.line.uptrend.xyaxis") {

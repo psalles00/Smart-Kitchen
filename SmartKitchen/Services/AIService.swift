@@ -1,6 +1,16 @@
 import Foundation
 import SwiftData
 
+/// A cancelled operation must never become a reason to try another provider.
+enum RequestCancellation {
+    static func check(_ error: Error? = nil) throws {
+        try Task.checkCancellation()
+        if error is CancellationError || (error as? URLError)?.code == .cancelled {
+            throw CancellationError()
+        }
+    }
+}
+
 /// Lightweight Chat/Transcription client that routes provider calls through
 /// Supabase Edge Functions when available.
 @MainActor
@@ -73,6 +83,7 @@ final class AIService: ObservableObject {
             acceptLanguage: acceptLanguage
         )
 
+        try RequestCancellation.check()
         return try parseChatCompletion(from: responseData)
     }
 
@@ -112,6 +123,7 @@ final class AIService: ObservableObject {
         language: String = "pt",
         responseFormat: String = "text"
     ) async throws -> String {
+        try RequestCancellation.check()
         let boundary = "Boundary-\(UUID().uuidString)"
         let audioData = try Data(contentsOf: fileURL)
         var body = Data()
@@ -142,6 +154,7 @@ final class AIService: ObservableObject {
                     acceptLanguage: nil
                 )
             } catch {
+                try RequestCancellation.check(error)
                 guard !apiKey.isEmpty else { throw error }
                 LLMLog.error("Supabase transcription failed; falling back to direct OpenAI: \(error.localizedDescription)")
                 responseData = try await performDirectTranscription(
@@ -158,6 +171,7 @@ final class AIService: ObservableObject {
             )
         }
 
+        try RequestCancellation.check()
         guard let transcript = String(data: responseData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines),
               !transcript.isEmpty else {
             throw AIError.invalidResponse
@@ -173,6 +187,7 @@ final class AIService: ObservableObject {
         apiKey: String,
         acceptLanguage: String? = nil
     ) async throws -> Data {
+        try RequestCancellation.check()
         let sanitizedBody = sanitizeRequestBody(body)
 
         if prefersDirectOpenRouter(), !openRouterKey().isEmpty {
@@ -191,6 +206,7 @@ final class AIService: ObservableObject {
                     acceptLanguage: acceptLanguage
                 )
             } catch {
+                try RequestCancellation.check(error)
                 guard hasDirectChatBackend(apiKey: apiKey) else { throw error }
                 LLMLog.error("Supabase \(functionName) failed; falling back to direct provider: \(error.localizedDescription)")
             }
@@ -210,6 +226,7 @@ final class AIService: ObservableObject {
         apiKey: String,
         acceptLanguage: String? = nil
     ) async throws -> Data {
+        try RequestCancellation.check()
         if !apiKey.isEmpty {
             do {
                 return try await performOpenAIJSONRequest(
@@ -219,6 +236,7 @@ final class AIService: ObservableObject {
                     acceptLanguage: acceptLanguage
                 )
             } catch {
+                try RequestCancellation.check(error)
                 guard !openRouterKey().isEmpty else { throw error }
                 LLMLog.error("Direct OpenAI request failed; falling back to OpenRouter: \(error.localizedDescription)")
             }

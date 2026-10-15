@@ -654,6 +654,135 @@ private final class RecipeIdeasFixtureBackend: SupabaseFunctionInvoking {
 }
 
 @MainActor
+final class AnalysisCancellationTests: XCTestCase {
+    func testDirectOpenAICancellationDoesNotRetryOpenRouter() async {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [DirectChatURLProtocol.self]
+        var hosts: [String] = []
+        DirectChatURLProtocol.requestHandler = { request in
+            hosts.append(request.url?.host ?? "")
+            throw URLError(.cancelled)
+        }
+        let service = AIService(supabase: CountingUnavailableBackend(), urlSession: URLSession(configuration: configuration),
+                                openRouterKey: { "test-router-key" }, prefersDirectOpenRouter: { false })
+        do { _ = try await service.sendChat(messages: [], apiKey: "test-openai-key"); XCTFail("Cancellation must propagate") }
+        catch { XCTAssertTrue(error is CancellationError) }
+        XCTAssertEqual(hosts, ["api.openai.com"])
+    }
+
+    func testCancellationAfterUSDAStopsBeforeExaAndEstimation() async {
+        let ai = MockNutritionAIClient()
+        let exa = CountingExaLookup()
+        let parser = MockNutritionItemParser(itemsByDescription: ["Peito de frango": [.init(name: "Peito de frango", quantity: 100, unit: "g")]])
+        let service = NutritionAIService(ai: ai, usda: CancellingUSDALookup(), exa: exa, parser: parser, cache: DisabledFoodCache())
+        let task = Task { try await service.analyzeText(description: "Peito de frango") }
+        do { _ = try await task.value; XCTFail("Cancellation must stop after USDA") }
+        catch { XCTAssertTrue(error is CancellationError) }
+        XCTAssertEqual(exa.calls, 0)
+        XCTAssertEqual(ai.chatCallCount, 0)
+    }
+
+    func testProviderCancellationNeverStartsDirectFallback() async {
+        for error in [CancellationError() as Error, URLError(.cancelled)] {
+            let configuration = URLSessionConfiguration.ephemeral
+            configuration.protocolClasses = [DirectChatURLProtocol.self]
+            var directCalls = 0
+            DirectChatURLProtocol.requestHandler = { _ in
+                directCalls += 1
+                throw URLError(.unsupportedURL)
+            }
+            let backend = CancelledChatBackend(error: error)
+            let service = AIService(supabase: backend, urlSession: URLSession(configuration: configuration),
+                                    openRouterKey: { "test-router-key" }, prefersDirectOpenRouter: { false })
+            do {
+                _ = try await service.sendChat(messages: [], apiKey: "test-openai-key")
+                XCTFail("Cancellation must propagate")
+            } catch { XCTAssertTrue(error is CancellationError) }
+            XCTAssertEqual(backend.calls, 1)
+            XCTAssertEqual(directCalls, 0)
+        }
+    }
+
+    func testAlreadyCancelledTaskDoesNotDispatchChat() async {
+        let backend = AvailableChatBackend()
+        let service = AIService(supabase: backend)
+        let task = Task {
+            try await service.sendChat(messages: [], apiKey: "")
+        }
+        task.cancel()
+        do { _ = try await task.value; XCTFail("Cancelled task must not dispatch") }
+        catch { XCTAssertTrue(error is CancellationError) }
+        XCTAssertEqual(backend.calls, 0)
+    }
+
+    func testParserCancellationDoesNotBecomeNutritionEstimate() async {
+        for error in [CancellationError() as Error, URLError(.cancelled)] {
+            let ai = MockNutritionAIClient()
+            let service = NutritionAIService(ai: ai, usda: MockUSDANutritionLookup(foodsByName: [:]),
+                                             exa: EmptyExaNutritionLookup(), parser: ThrowingNutritionItemParser(error: error),
+                                             cache: DisabledFoodCache())
+            do {
+                _ = try await service.analyzeText(description: "Prato cancelado")
+                XCTFail("Cancellation must stop the nutrition pipeline")
+            } catch { XCTAssertTrue(error is CancellationError) }
+            XCTAssertEqual(ai.chatCallCount, 0)
+        }
+    }
+
+    func testCancellationDuringParseStopsBeforeEmptyParseFallback() async {
+        let ai = MockNutritionAIClient()
+        let service = NutritionAIService(ai: ai, usda: MockUSDANutritionLookup(foodsByName: [:]),
+                                         exa: EmptyExaNutritionLookup(), parser: CancellingNutritionParser(),
+                                         cache: DisabledFoodCache())
+        let task = Task { try await service.analyzeText(description: "Prato cancelado") }
+        do { _ = try await task.value; XCTFail("Cancelled parsing must stop") }
+        catch { XCTAssertTrue(error is CancellationError) }
+        XCTAssertEqual(ai.chatCallCount, 0)
+    }
+}
+
+@MainActor
+private final class CancelledChatBackend: SupabaseFunctionInvoking {
+    var isConfigured: Bool { true }
+    var calls = 0
+    let error: Error
+    init(error: Error) { self.error = error }
+    func invokeFunctionData(name: String, body: [String: Any], acceptLanguage: String?) async throws -> Data {
+        calls += 1
+        throw error
+    }
+    func invokeFunctionData(name: String, body: Data, contentType: String, acceptLanguage: String?) async throws -> Data {
+        calls += 1
+        throw error
+    }
+}
+
+@MainActor
+private final class CancellingNutritionParser: NutritionItemParsing {
+    func parse(_ description: String) async throws -> [NutritionItemParser.ParsedItem] {
+        withUnsafeCurrentTask { $0?.cancel() }
+        return []
+    }
+}
+
+@MainActor
+private final class CancellingUSDALookup: NutritionUSDALookingUp {
+    func fetchPer100g(for names: [String], locale: String) async -> [Per100gNutrition] {
+        withUnsafeCurrentTask { $0?.cancel() }
+        return []
+    }
+}
+
+@MainActor
+private final class CountingExaLookup: NutritionExaLookingUp {
+    var calls = 0
+    func fetchPer100g(for names: [String], locale: String) async throws -> [Per100gNutrition] {
+        calls += 1
+        return []
+    }
+}
+
+@MainActor
 final class RecipeWebDiscoveryTests: XCTestCase {
     func testFreeRefreshChangesMeaningfulQueryAndEmptySearchDoesNotRepeatThirdCall() async throws {
         let backend = RecipeWebFixtureBackend()
