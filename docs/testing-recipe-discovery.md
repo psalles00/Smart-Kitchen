@@ -720,3 +720,27 @@ A medição física da combinação com o worker Metal ainda está em andamento.
 Teste manual: rolar Listas para ocultar/exibir o título; tocar na aba perto do
 topo para alternar a categoria e longe do topo para voltar ao início; sair e
 retornar ao app.
+
+### Worker Metal: confirmação física e limite da medição
+
+A versão 32370c6b abriu no iPhone 12 Pro após o desbloqueio. Uma captura
+Time Profiler de 16,246 s, abrangendo todos os processos e depois filtrada
+para Savoria, encontrou 1.004 amostras da thread principal e nenhuma aquisição
+de drawable nela. As 641 amostras com aquisição ficaram no worker. A principal
+passou a ficar predominantemente no run loop em repouso. Pesos incluem esperas,
+não representam CPU ocupada, e repouso não comprova desempenho de rolagem.
+
+As cinco páginas/retorno passaram (5 testes, zero falhas), com as superfícies
+verticais reais. As médias OS de rolagem foram Home 27,21 fps; Listas 13,47;
+Nutrição 19,94; Receitas 18,20. Continuam baixas e não certificam fluidez. Busca
+só recebeu teste funcional/retorno; o zero de sync hitch não prova ausência
+de engasgos. Os resultados anteriores permanecem preservados.
+
+A inspeção do xctestrun encontrou o verificador de antipadrões ativo, injeção
+libRPAC/PERFC e captura automática em vídeo. Uma cópia privada do executor está
+preparada para comparação sem essas opções, sem alterar o app, assinatura ou
+dados. A Apple recomenda desativar diagnósticos e captura automática para medir
+desempenho: https://developer.apple.com/videos/play/wwdc2020/10077/. Nenhum
+resultado antigo foi reclassificado; o efeito dessas opções ainda será medido.
+Uma captura separada Animation Hitches durante Listas está sendo salva para
+atribuir o custo restante; seus números não entram no benchmark sem profiler.
