@@ -312,3 +312,18 @@ iPhone físico indisponível, sem substituir essas verificações pelo Simulator
 Roteiro manual: abra o paywall em alemão e japonês, confira os dois preços,
 leia o aviso completo e confira Restaurar compras abaixo dele. Role até o fim
 para conferir o restante do conteúdo; não faça uma compra para testar layout.
+
+## Receita existente e modo de cozinhar após retornar ao app
+
+Novo teste nativo de 15/10: abriu a receita existente Wrap de frango com homus,
+entrou no modo de cozinhar, conferiu Anterior desabilitado no passo 1, avançou
+para 2, saiu para Home e retornou mantendo 2/4. Voltou ao passo 1, percorreu
+2/3/4 e Finalizar retornou ao detalhe. Duas capturas preservadas; tela final
+inspecionada. Teste aprovado. Todos os registros e hashes de imagens dos stores
+Private e Shared permaneceram idênticos; zero chamadas pagas e nenhuma edição de
+receita, favorito, porção ou lista. A evidência é direcionada à navegação de
+cozinhar no Simulator, sem substituir testes físicos, macOS ou temporizadores
+que não façam parte da receita.
+
+Teste manual: abra uma receita com vários passos, avance até o segundo, saia e
+volte ao app, confira o mesmo passo, volte ao anterior e finalize o percurso.

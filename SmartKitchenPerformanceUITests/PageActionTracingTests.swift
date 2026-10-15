@@ -3,6 +3,48 @@ import XCTest
 /// Navigates existing food data without purchases, AI calls, seeding or deletion.
 @MainActor
 final class PageActionTracingTests: XCTestCase {
+    /// Uses the existing four-step validation recipe without editing it.
+    func testExistingRecipeCookingStepsAndForegroundPreserveData() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication(bundleIdentifier: "com.pedrosalles.smartkitchen.sync")
+        app.launchArguments = ["-AppleLanguages", "(pt-BR)", "-AppleLocale", "pt_BR"]
+        app.launch()
+        let recipes = app.tabBars.buttons["Receitas"].firstMatch
+        XCTAssertTrue(recipes.waitForExistence(timeout: 45))
+        recipes.tap()
+        let card = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Wrap de frango com homus")).firstMatch
+        XCTAssertTrue(card.waitForExistence(timeout: 10))
+        card.tap()
+        let start = app.buttons["Começar a cozinhar"].firstMatch
+        XCTAssertTrue(start.waitForExistence(timeout: 10))
+        let detail = XCTAttachment(screenshot: app.screenshot())
+        detail.name = "Existing wrap recipe detail"
+        detail.lifetime = .keepAlways
+        self.add(detail)
+        start.tap()
+        XCTAssertTrue(app.staticTexts["1/4"].waitForExistence(timeout: 10))
+        XCTAssertFalse(app.buttons["Anterior"].isEnabled)
+        app.buttons["Próximo"].tap()
+        XCTAssertTrue(app.staticTexts["2/4"].waitForExistence(timeout: 5))
+        XCUIDevice.shared.press(.home)
+        app.activate()
+        XCTAssertTrue(app.staticTexts["2/4"].waitForExistence(timeout: 10))
+        app.buttons["Anterior"].tap()
+        XCTAssertTrue(app.staticTexts["1/4"].waitForExistence(timeout: 5))
+        for step in 2...4 {
+            app.buttons["Próximo"].tap()
+            XCTAssertTrue(app.staticTexts["\(step)/4"].waitForExistence(timeout: 5))
+        }
+        XCTAssertFalse(app.buttons["Próximo"].exists)
+        let lastStep = XCTAttachment(screenshot: app.screenshot())
+        lastStep.name = "Final cooking step after foreground and back navigation"
+        lastStep.lifetime = .keepAlways
+        self.add(lastStep)
+        app.buttons["Finalizar"].tap()
+        XCTAssertTrue(start.waitForExistence(timeout: 10))
+        XCUIDevice.shared.press(.home)
+    }
+
     func testOnboardingAndPaywallPreviewsAcrossSupportedLanguages() throws {
         continueAfterFailure = false
         let app = XCUIApplication(bundleIdentifier: "com.pedrosalles.smartkitchen.sync")
