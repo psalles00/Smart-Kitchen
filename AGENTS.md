@@ -1,4 +1,4 @@
-No final de cada alteração no app, compile e instale a versão modificada no iPhone 12 Pro físico de Pedro. Também compile e abra a versão modificada no app Simulator usando o iPhone 17 Pro.
+Use SEMPRE o iPhone 17 Pro no Simulator como destino padrão de desenvolvimento e testes. Após alterações no app, compile, instale e abra a versão modificada nesse simulador, preservando seus dados. Use o iPhone 12 Pro físico de Pedro apenas quando ele for realmente necessário para a validação, como câmera/hardware real, desempenho no aparelho ou persistência e sincronização CloudKit que o simulador não comprove. Não exija instalação física a cada alteração comum nem interrompa testes possíveis no Simulator por indisponibilidade do aparelho. Preferência explícita de Pedro em 15/10/2026.
 
 # Commits e Push
 - Sempre crie um commit ao concluir cada alteração relevante, antes de iniciar a próxima alteração relevante. Mantenha cada commit focado e inclua somente as mudanças da tarefa, preservando alterações preexistentes de outras tarefas.
@@ -25,14 +25,14 @@ No final de cada alteração no app, compile e instale a versão modificada no i
 # Paridade iOS e macOS
 - Sempre que adicionar ou atualizar uma função no iOS, implemente e valide também a função equivalente no macOS, incluindo navegação, menus, atalhos, configurações e fluxos relacionados. Adapte a interação à plataforma, mantendo o mesmo comportamento e os mesmos dados.
 - Inclua todos os textos e traduções nos idiomas disponíveis nas duas versões. Prefira código e catálogos compartilhados; não deixe funções disponíveis somente no iOS por causa de condicionais de plataforma.
-- Compile as duas versões e instale/abra a versão macOS atualizada no Mac, além da validação física e no Simulator exigida abaixo. Confira a interface real e os dados existentes antes de afirmar paridade.
+- Compile as duas versões e instale/abra a versão macOS atualizada no Mac, além da validação no iPhone 17 Pro no Simulator. Faça a validação física quando realmente necessária, conforme abaixo. Confira a interface real e os dados existentes antes de afirmar paridade.
 - Correções exclusivas do macOS continuam restritas ao macOS. A obrigação de paridade ao desenvolver funções iOS não autoriza alterar o iOS durante uma correção exclusiva do Mac.
 
 # Procedimento e Build
 - Antes de editar: Leia containers, schemas e fluxos de bootstrap.
 - Após finalizar: Valide a integridade dos dados e garanta a capability iCloud (Documents, CloudKit e container iCloud.com.pedrosalles.smartkitchen.sync).
-- Build: Após cada alteração no app, compile para o iPhone 12 Pro físico de Pedro e instale a versão modificada nele, preservando os dados existentes. Confirme o dispositivo de destino, o Bundle ID `com.pedrosalles.smartkitchen.sync`, o Team e o container iCloud antes de instalar. Também compile e abra automaticamente no simulador iPhone 17 Pro.
-- Se o iPhone 12 Pro estiver desconectado, bloqueado ou indisponível, informe o bloqueio. A validação no simulador não substitui a instalação e validação no dispositivo físico. Nunca desinstale o app nem apague dados para viabilizar a instalação.
+- Build: Após cada alteração no app, compile, instale e abra automaticamente no iPhone 17 Pro no Simulator, preservando os dados existentes. Quando um teste exigir o iPhone 12 Pro físico, explique o motivo concreto, compile e instale a versão modificada nele. Antes de instalar em qualquer destino, confirme o dispositivo, o Bundle ID `com.pedrosalles.smartkitchen.sync`, o Team e o container iCloud.
+- Se o iPhone 12 Pro estiver desconectado, bloqueado ou indisponível, continue os testes possíveis no Simulator. Informe um bloqueio físico somente para a verificação que realmente depende do aparelho, sem tratar isso como impedimento geral ao desenvolvimento. Não apresente testes simulados como prova de hardware real ou migração CloudKit. Nunca desinstale o app nem apague dados para viabilizar a instalação.
 - Cuidado com Bundle IDs ao rodar comandos no simulador: O Bundle ID CORRETO do app principal (Savoria) é `com.pedrosalles.smartkitchen.sync`. Existe uma versão antiga fantasma instalada com o bundle ID `com.pedrosalles.smartkitchen`. NUNCA use `com.pedrosalles.smartkitchen` nos comandos `xcrun simctl launch` ou `terminate`, pois isso abrirá a versão velha e estragará os testes do usuário!!
 - Não use `git` como mecanismo de recuperação de build, validação ou troubleshooting.
 - Nunca desinstale o app do simulador para “resolver” problemas sem minha confirmação explícita.
