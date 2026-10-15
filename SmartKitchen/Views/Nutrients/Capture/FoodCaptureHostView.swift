@@ -80,6 +80,7 @@ struct FoodCaptureHostView: View {
     @State private var analysisID: UUID?
     @State private var isCaptureActive = false
     @State private var showAnalysisSupportFallback: Bool = false
+    @State private var showCameraUnavailable = false
     @FocusState private var isTextEditorFocused: Bool
 
     #if os(iOS)
@@ -150,9 +151,8 @@ struct FoodCaptureHostView: View {
         .presentationDragIndicator(.visible)
         .fullScreenCover(isPresented: $showCamera) {
             FoodCameraPicker { image in
-                capturedImage = image
+                showCapturedImage(image)
                 selectedPhotoItem = nil
-                resetAnalysisButton()
             }
             .ignoresSafeArea()
         }
@@ -191,10 +191,25 @@ struct FoodCaptureHostView: View {
         .sheet(item: $pendingPaywallReason) { reason in
             PaywallSheet(reason: reason)
         }
-        .alert(String(localized: "Contatar suporte"), isPresented: $showAnalysisSupportFallback) {
-            Button("OK", role: .cancel) {}
+        .alert(showCameraUnavailable ? String(localized: "Câmera indisponível") : String(localized: "Contatar suporte"),
+               isPresented: Binding(
+                get: { showCameraUnavailable || showAnalysisSupportFallback },
+                set: { if !$0 { showCameraUnavailable = false; showAnalysisSupportFallback = false } }
+               )) {
+            if showCameraUnavailable {
+                Button("Escolher da galeria") { showPhotoPicker = true }
+                Button("Cancelar", role: .cancel) {
+                    if isDirectPhotoShortcut { dismiss() }
+                }
+            } else {
+                Button("OK", role: .cancel) {}
+            }
         } message: {
-            Text(String(localized: "Envie um e-mail para \(Self.supportEmail). Nenhum app de e-mail está configurado neste dispositivo."))
+            if showCameraUnavailable {
+                Text("A câmera não está disponível neste dispositivo. Escolha uma imagem da galeria.")
+            } else {
+                Text(String(localized: "Envie um e-mail para \(Self.supportEmail). Nenhum app de e-mail está configurado neste dispositivo."))
+            }
         }
     }
 
@@ -291,7 +306,7 @@ struct FoodCaptureHostView: View {
                             HStack(spacing: 10) {
                                 #if os(iOS)
                                 Button {
-                                    showCamera = true
+                                    requestCamera()
                                 } label: {
                                     Label("Trocar foto", systemImage: "camera")
                                 }
@@ -327,7 +342,7 @@ struct FoodCaptureHostView: View {
                     capturePanel {
                         #if os(iOS)
                         Button {
-                            showCamera = true
+                            requestCamera()
                         } label: {
                             Label(mode == .photo ? "Abrir câmera" : "Fotografar agora", systemImage: "camera")
                                 .frame(maxWidth: .infinity)
@@ -360,6 +375,16 @@ struct FoodCaptureHostView: View {
         }
     }
 
+    #if os(iOS)
+    private func requestCamera() {
+        guard UIImagePickerController.isSourceTypeAvailable(.camera) else {
+            showCameraUnavailable = true
+            return
+        }
+        showCamera = true
+    }
+    #endif
+
     private func triggerInitialInputIfNeeded() {
         guard !hasTriggeredInitialInput else { return }
         guard case .gathering = stage else { return }
@@ -372,7 +397,7 @@ struct FoodCaptureHostView: View {
             break
         case .camera:
             #if os(iOS)
-            showCamera = true
+            requestCamera()
             #endif
         case .gallery:
             showPhotoPicker = true
@@ -982,8 +1007,7 @@ struct FoodCaptureHostView: View {
                let img = PlatformImage(data: data) {
                 await MainActor.run {
                     guard !Task.isCancelled, isCaptureActive, selectedPhotoItem == item else { return }
-                    capturedImage = img
-                    resetAnalysisButton()
+                    showCapturedImage(img)
                 }
             }
         } catch {
@@ -994,6 +1018,16 @@ struct FoodCaptureHostView: View {
                 }
             }
         }
+    }
+
+    private func showCapturedImage(_ image: PlatformImage) {
+        resetAnalysisButton()
+        capturedImage = image
+        #if os(iOS)
+        withAnimation(.easeInOut(duration: 0.22)) {
+            preferredDetent = .large
+        }
+        #endif
     }
 
     private func resetAnalysisButton() {

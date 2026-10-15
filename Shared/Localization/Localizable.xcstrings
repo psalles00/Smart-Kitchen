@@ -1,6 +1,53 @@
 {
   "sourceLanguage" : "pt-BR",
   "strings" : {
+    "A câmera não está disponível neste dispositivo. Escolha uma imagem da galeria.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A câmera não está disponível neste dispositivo. Escolha uma imagem da galeria."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The camera is not available on this device. Choose an image from your photo library."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Kamera ist auf diesem Gerät nicht verfügbar. Wähle ein Bild aus der Fotomediathek."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cámara no está disponible en este dispositivo. Elige una imagen de la galería."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La caméra n’est pas disponible sur cet appareil. Choisissez une image dans la galerie."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La fotocamera non è disponibile su questo dispositivo. Scegli un’immagine dalla galleria."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このデバイスではカメラを利用できません。写真ライブラリから画像を選択してください。"
+          }
+        }
+      }
+    },
     "Não foi possível salvar a conversa. Tente novamente.": {
       "extractionState": "manual",
       "localizations": {

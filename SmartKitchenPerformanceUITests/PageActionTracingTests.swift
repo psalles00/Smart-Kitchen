@@ -3,6 +3,56 @@ import XCTest
 /// Navigates existing food data without purchases, AI calls, seeding or deletion.
 @MainActor
 final class PageActionTracingTests: XCTestCase {
+    /// Simulator camera is unavailable; exercise the recovery without selecting media.
+    func testUnavailableCameraOffersGalleryAndCanCancelWithoutRegistering() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication(bundleIdentifier: "com.pedrosalles.smartkitchen.sync")
+        app.launchArguments = ["-AppleLanguages", "(pt-BR)", "-AppleLocale", "pt_BR"]
+        app.launch()
+        let tab = app.tabBars.buttons["Nutrição"].firstMatch
+        XCTAssertTrue(tab.waitForExistence(timeout: 45))
+        tab.tap()
+        let addMenu = app.buttons["savoria.nutrition.add"]
+        for useGallery in [false, true] {
+            XCTAssertTrue(addMenu.waitForExistence(timeout: 10))
+            addMenu.tap()
+            app.buttons["Câmera"].firstMatch.tap()
+            let alert = app.alerts["Câmera indisponível"]
+            XCTAssertTrue(alert.waitForExistence(timeout: 10))
+            XCTAssertTrue(alert.buttons["Escolher da galeria"].exists)
+            if useGallery {
+                alert.buttons["Escolher da galeria"].tap()
+                XCTAssertTrue(alert.waitForNonExistence(timeout: 10))
+                let cancel = app.buttons["Cancelar"].firstMatch
+                XCTAssertTrue(cancel.waitForExistence(timeout: 10))
+                let loading = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Carregando")).firstMatch
+                XCTAssertTrue(loading.waitForNonExistence(timeout: 30), "The system photo picker must finish loading")
+                let screenshot = XCTAttachment(screenshot: app.screenshot())
+                screenshot.name = "Gallery after unavailable camera"
+                screenshot.lifetime = .keepAlways
+                self.add(screenshot)
+                let hierarchy = XCTAttachment(string: app.debugDescription)
+                hierarchy.lifetime = .keepAlways
+                self.add(hierarchy)
+                let photo = app.images.matching(identifier: "PXGGridLayout-Info").firstMatch
+                XCTAssertTrue(photo.waitForExistence(timeout: 10))
+                photo.tap() // One built-in simulator landscape; never press Analyze.
+                XCTAssertTrue(app.staticTexts["Imagem selecionada"].waitForExistence(timeout: 15))
+                XCTAssertTrue(app.buttons["Analisar"].firstMatch.isEnabled)
+                XCTAssertTrue(app.buttons["Analisar"].firstMatch.isHittable, "The selected-photo preview must expose Analyze without dragging the sheet")
+                let preview = XCTAttachment(screenshot: app.screenshot())
+                preview.name = "Selected simulator photo preview without inference"
+                preview.lifetime = .keepAlways
+                self.add(preview)
+                app.buttons["Cancelar"].firstMatch.tap()
+            } else {
+                alert.buttons["Cancelar"].tap()
+            }
+            XCTAssertTrue(addMenu.waitForExistence(timeout: 10))
+            XCTAssertTrue(app.tabBars.firstMatch.exists)
+        }
+    }
+
     func testTextCaptureCancellationInEverySupportedLanguage() throws {
         continueAfterFailure = false
         let app = XCUIApplication(bundleIdentifier: "com.pedrosalles.smartkitchen.sync")

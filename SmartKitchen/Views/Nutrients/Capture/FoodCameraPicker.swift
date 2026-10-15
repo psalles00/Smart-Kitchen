@@ -9,7 +9,16 @@ struct FoodCameraPicker: UIViewControllerRepresentable {
 
     func makeCoordinator() -> Coord { Coord(self) }
 
-    func makeUIViewController(context: Context) -> UIImagePickerController {
+    func makeUIViewController(context: Context) -> UIViewController {
+        // Also guard here in case camera availability changes after the host check.
+        guard UIImagePickerController.isSourceTypeAvailable(.camera) else {
+            return UIHostingController(rootView: VStack {
+                ContentUnavailableView("Câmera indisponível", systemImage: "camera",
+                                       description: Text("A câmera não está disponível neste dispositivo. Escolha uma imagem da galeria."))
+                Button("Cancelar") { dismiss() }
+                    .padding()
+            })
+        }
         let p = UIImagePickerController()
         p.sourceType = .camera
         p.cameraCaptureMode = .photo
@@ -17,7 +26,7 @@ struct FoodCameraPicker: UIViewControllerRepresentable {
         p.delegate = context.coordinator
         return p
     }
-    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
+    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
 
     final class Coord: NSObject, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
         let parent: FoodCameraPicker

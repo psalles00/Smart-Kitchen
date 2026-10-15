@@ -170,3 +170,28 @@ um hotspot de CPU do app nesse intervalo, nem medida de GPU ou ausência de
 hitches. O shader e as animações não foram desativados para ocultar essa espera.
 O resultado terminal dessa repetição deve ser consultado no xcresult; os
 resultados funcionais anteriores não certificam performance.
+
+## Câmera indisponível e seleção de foto
+
+O host verifica a disponibilidade antes de apresentar a câmera; o representable
+verifica novamente antes de configurar a fonte UIKit. Sem câmera, o aviso nativo
+oferece a galeria ou Cancelar. O título e o botão reutilizam o catálogo existente;
+a nova explicação foi traduzida nos sete idiomas, preservando todas as entradas
+anteriores. Ao carregar uma imagem, a prévia abre expandida no iOS para deixar
+Analisar visível sem arrastar. A seleção e o cancelamento usam o mesmo host
+compartilhado; a galeria existente do Mac permanece disponível.
+
+O XCTest nativo passou no iPhone 17 Pro simulado: câmera indisponível → Cancelar;
+câmera indisponível → galeria carregada → foto padrão do simulador → prévia →
+Analisar habilitado e acessível → Cancelar. Captura final inspecionada. Nenhuma
+inferência foi disparada e nenhum alimento foi salvo. Todas as linhas dos
+stores de teste e hashes de mídia permaneceram idênticos. Builds assinados iOS e
+Mac Release aprovados; Mac instalado com snapshot idêntico, abertura visual
+bloqueada pela sessão bloqueada. Instalação física pendente: iPhone ausente do USB.
+
+Roteiro manual:
+1. Sem câmera disponível, abra Câmera e confira o aviso, Galeria e Cancelar.
+2. Escolha uma foto: confira prévia expandida, controles e Analisar visível.
+3. Troque a foto ou cancele; confirme que não aparece resultado de seleção antiga.
+4. No iPhone físico, confira captura real e permissões. Análise de imagem/áudio,
+   exatidão nutricional e validação física continuam pendentes no contrato E2E.
