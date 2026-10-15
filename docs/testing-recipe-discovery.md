@@ -352,3 +352,28 @@ concluída com prazo maior. Não houve recuperação, restauração ou limpeza.
 
 Teste manual físico: abra Nutrição > Câmera, confira os controles nativos e
 cancele. Confira que voltou à Nutrição sem uma nova refeição ou foto registrada.
+
+## Primeira busca web real: comunicação aprovada, qualidade reprovada
+
+Com o acesso proprietário ao Supabase recuperado no Chrome, exa-search foi
+baixada para auditoria sem editar a função nem ler secrets. O código encaminha
+uma chamada upstream por requisição e não tem retry interno; o cliente também
+não repete internamente. Os preços oficiais atuais permitem reserva conservadora
+de US$ 0,019 por tentativa Auto/6 resultados/texto/resumo, com duas tentativas
+no máximo. A reserva de US$ 0,038 foi escrita antes da execução, dentro do teto
+global autorizado de US$ 3. O teste é optativo e bloqueia outros endpoints,
+formatos, tipos, conteúdos e quantidades; execuções normais o ignoram.
+
+No iPhone 17 Pro Simulator, o serviço real retornou seis URLs distintas em uma
+chamada, com custo informado pela Exa de US$ 0,013. A reserva retida é US$ 0,019;
+a segunda tentativa não ocorreu e não permanece duplicada no ledger. Isso não
+é recibo de cobrança do fornecedor. Sete testes fechados passaram e o teste pago
+foi ignorado por padrão antes da ativação explícita.
+
+O teste nativo de comunicação passou, mas a revisão humana reprovou a qualidade:
+havia bacon/bife/linguiça fora da despensa solicitada, um agrupador de várias
+receitas e ingredientes principais como “uma”, “pressa” e “Jantar”. Essa resposta
+é uma reprodução real do defeito e não uma aprovação do modo restrito. Não houve
+expansão de receitas, geração de imagens, chamada OpenAI/OpenRouter ou alteração
+de dados pessoais nessa execução. A correção e a revalidação da qualidade
+continuam necessárias.

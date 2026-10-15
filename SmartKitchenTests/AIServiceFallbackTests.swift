@@ -1107,6 +1107,106 @@ final class RecipeIdeasLiveProviderTests: XCTestCase {
 }
 
 @MainActor
+final class RecipeWebLiveProviderTests: XCTestCase {
+    func testNativeWebSearchReturnsDistinctRecipesWithinReservedBudget() async throws {
+        guard ProcessInfo.processInfo.environment["SAVORIA_LIVE_WEB_RECIPE_TESTS"] == "1" else {
+            throw XCTSkip("Live web validation requires a prepared durable budget reservation.")
+        }
+        let backend = try ReservedRecipeWebValidationBackend()
+        let ideas = try await EXARecipeIdeasService(supabase: backend).search(
+            occasion: .jantar, refinement: nil,
+            customQuery: "Jantar sem leite em 20 minutos para uma pessoa",
+            pantryItems: ["Ovos", "Arroz", "Tomate", "Cenoura", "Feijão"],
+            filterByPantry: true, language: .ptBR, limit: 6)
+        try backend.finish(ideas)
+        XCTAssertGreaterThanOrEqual(ideas.count, 2)
+        XCTAssertEqual(Set(ideas.compactMap(\.sourceURL)).count, ideas.count)
+        XCTAssertTrue(ideas.allSatisfy { !$0.title.isEmpty && URL(string: $0.sourceURL ?? "")?.scheme == "https" })
+        XCTAssertTrue((1...2).contains(backend.calls))
+    }
+}
+
+/// Only the audited Exa search shape may leave the process. No inference or direct-key fallback.
+@MainActor
+private final class ReservedRecipeWebValidationBackend: SupabaseFunctionInvoking {
+    var isConfigured: Bool { true }
+    private(set) var calls = 0
+    private let actual = SupabaseClient()
+    private let directory: URL
+    private var receipt: [String: Any]
+    private let perCall = 0.019 // Auto $0.007 + six texts $0.006 + six summaries $0.006.
+
+    init() throws {
+        guard let rawID = ProcessInfo.processInfo.environment["SAVORIA_WEB_VALIDATION_ID"],
+              let id = UUID(uuidString: rawID) else { throw URLError(.userAuthenticationRequired) }
+        directory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("LiveRecipeWebValidation", isDirectory: true)
+            .appendingPathComponent(id.uuidString, isDirectory: true)
+        receipt = try JSONSerialization.jsonObject(with: Data(contentsOf: directory.appendingPathComponent("reservation.json"))) as? [String: Any] ?? [:]
+        guard actual.isConfigured,
+              receipt["purpose"] as? String == "recipe-web-discovery-validation",
+              receipt["maximumCalls"] as? Int == 2,
+              receipt["reservedUSD"] as? Double == 0.038,
+              receipt["status"] as? String == "prepared" else { throw URLError(.userAuthenticationRequired) }
+        receipt["requests"] = [[String: Any]]()
+        receipt["status"] = "started"
+        try persist()
+    }
+
+    private func persist() throws {
+        try JSONSerialization.data(withJSONObject: receipt, options: [.prettyPrinted, .sortedKeys])
+            .write(to: directory.appendingPathComponent("reservation.json"), options: .atomic)
+    }
+
+    func finish(_ ideas: [RecipeIdeaResult]) throws {
+        try JSONEncoder().encode(ideas).write(to: directory.appendingPathComponent("ideas.json"), options: .atomic)
+        receipt["status"] = "completed"
+        try persist()
+    }
+
+    func invokeFunctionData(name: String, body: [String: Any], acceptLanguage: String?) async throws -> Data {
+        try await invokeFunctionData(name: name, body: JSONSerialization.data(withJSONObject: body),
+                                     contentType: "application/json", acceptLanguage: acceptLanguage)
+    }
+
+    func invokeFunctionData(name: String, body: Data, contentType: String, acceptLanguage: String?) async throws -> Data {
+        guard name == "exa-search", contentType == "application/json", calls < 2, body.count <= 25000,
+              let request = try JSONSerialization.jsonObject(with: body) as? [String: Any],
+              Set(request.keys).isSubset(of: ["query", "type", "numResults", "contents", "includeDomains", "userLocation"]),
+              request["type"] as? String == "auto", request["numResults"] as? Int == 6,
+              let query = request["query"] as? String, !query.isEmpty,
+              let contents = request["contents"] as? [String: Any], Set(contents.keys) == ["text", "summary"],
+              let text = contents["text"] as? [String: Any], Set(text.keys) == ["maxCharacters", "includeHtmlTags"],
+              text["maxCharacters"] as? Int == 6000, text["includeHtmlTags"] as? Bool == false,
+              let summary = contents["summary"] as? [String: Any], Set(summary.keys) == ["query"],
+              let summaryQuery = summary["query"] as? String, summaryQuery.count <= 500 else { throw URLError(.unsupportedURL) }
+        var requests = receipt["requests"] as? [[String: Any]] ?? []
+        guard Double(requests.count + 1) * perCall <= 0.038 else { throw URLError(.dataLengthExceedsMaximum) }
+        let index = requests.count
+        requests.append(["function": name, "query": query, "numResults": 6, "reserved_usd": perCall, "status": "dispatched-reserved"])
+        receipt["requests"] = requests
+        try persist()
+        calls += 1
+        do {
+            let response = try await actual.invokeFunctionData(name: name, body: body, contentType: contentType, acceptLanguage: acceptLanguage)
+            try response.write(to: directory.appendingPathComponent("response-\(index).json"), options: .atomic)
+            let json = try JSONSerialization.jsonObject(with: response) as? [String: Any] ?? [:]
+            requests[index]["status"] = "response-reserve-retained"
+            requests[index]["costDollars"] = json["costDollars"]
+            requests[index]["requestId"] = json["requestId"]
+            receipt["requests"] = requests
+            try persist()
+            return response
+        } catch {
+            requests[index]["status"] = "error-reserve-retained"
+            receipt["requests"] = requests
+            try persist()
+            throw error
+        }
+    }
+}
+
+@MainActor
 private final class ReservedRecipeValidationBackend: SupabaseFunctionInvoking {
     var isConfigured: Bool { true }
     private(set) var calls = 0
