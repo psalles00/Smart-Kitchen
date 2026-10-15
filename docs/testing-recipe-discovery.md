@@ -1161,3 +1161,26 @@ Conferência manual da listagem:
 4. Repita a navegação no Mac com a biblioteca já configurada. A abertura do
    Mac recém-formatado na tela de boas-vindas não comprova paridade dos dados
    pessoais do iPhone nem autoriza restauração de backup.
+
+Após a autorização do XCTest, os dez retornos físicos passaram em 67,58 s,
+sem reinstalar o app. O Time Profiler terminou normalmente, sem timeout.
+O preflight estava fair; a captura passou de fair (18,89 s) para serious
+(12,61 s). Foram registrados sete hangs de 306–679 ms. Essa condição impede
+aprovar um ganho quantitativo geral ou ausência de pausas.
+
+O exportador de backtraces do Xcode beta falhou em BacktraceXMLExport,
+inclusive numa cópia reprocessada da captura. Os XML parciais foram excluídos
+da análise. A exportação alternativa completa de time-sample funcionou:
+o dSYM tem o mesmo UUID do binário capturado, e 1.266 endereços próprios
+foram simbolizados com o endereço de carga registrado. Nas amostras Timer
+Fired/Running do PID original, a inspeção de histórico apareceu em 24
+amostras de segundo plano e nenhuma da thread principal; não houve amostra
+de RecipeListCache.reload. Contagens de amostras não são milissegundos, FPS
+ou prova de ausência de execução. Quatro intervalos de hang incluíram
+IconResolver/ItemDatabase.preferredMatch e normalização repetida de títulos.
+
+O readback posterior manteve todos os registros, IDs e BLOBs da referência
+atual, as 151 mídias e quick_check ok nos dois stores. A referência atual
+incorpora somente uma conversa legítima adicionada pelo usuário; todos os
+registros anteriores e o backup original foram preservados. O app físico
+foi reaberto normalmente, sem manter a tela acesa por flags de teste.
