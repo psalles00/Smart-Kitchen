@@ -294,3 +294,21 @@ pt-BR; todos os registros e hashes de imagens permaneceram iguais. Isso comprova
 navegação das prévias, não disponibilidade comercial ou conclusão integral do
 onboarding em cada idioma. A inspeção das capturas identificou pouco espaço no
 rodapé do paywall em traduções longas; essa diferença exige ajuste de layout.
+
+## Rodapé do paywall em traduções longas
+
+O aviso e Restaurar compras passaram a ocupar linhas separadas, permitindo
+quebra natural do aviso, sem o limite de uma linha e a redução de texto que os
+comprimiam. O layout é compartilhado por iOS e macOS e reutiliza as traduções
+existentes. Não altera preços, ofertas, assinatura ou restauração.
+
+Nova rodada nativa: onboarding e paywall nos sete idiomas, 14 capturas, com
+asserções de aviso dentro da tela, sem sobrepor Restaurar compras, e botão de
+restauração acessível ao toque. Teste aprovado; capturas pt-BR, de e ja
+inspecionadas. Todos os registros e hashes permaneceram iguais. Builds dos três
+destinos aprovados; Mac instalado e snapshot idêntico. Mac visual bloqueado e
+iPhone físico indisponível, sem substituir essas verificações pelo Simulator.
+
+Roteiro manual: abra o paywall em alemão e japonês, confira os dois preços,
+leia o aviso completo e confira Restaurar compras abaixo dele. Role até o fim
+para conferir o restante do conteúdo; não faça uma compra para testar layout.

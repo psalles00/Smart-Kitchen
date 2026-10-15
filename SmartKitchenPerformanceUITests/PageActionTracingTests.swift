@@ -30,6 +30,15 @@ final class PageActionTracingTests: XCTestCase {
                 open.tap()
                 let close = app.buttons["debug-close-onboarding-preview"]
                 XCTAssertTrue(close.waitForExistence(timeout: 15), language)
+                if preview == "debug-open-paywall" {
+                    let disclaimer = app.staticTexts["savoria.paywall.disclaimer"]
+                    let restore = app.buttons["savoria.paywall.restore"]
+                    XCTAssertTrue(disclaimer.exists, language)
+                    XCTAssertTrue(restore.isHittable, language)
+                    XCTAssertGreaterThanOrEqual(disclaimer.frame.minX, app.frame.minX, language)
+                    XCTAssertLessThanOrEqual(disclaimer.frame.maxX, app.frame.maxX, language)
+                    XCTAssertLessThanOrEqual(disclaimer.frame.maxY, restore.frame.minY, language)
+                }
                 let screenshot = XCTAttachment(screenshot: app.screenshot())
                 screenshot.name = "\(preview) \(language), preview only"
                 screenshot.lifetime = .keepAlways

@@ -451,18 +451,19 @@ struct PaywallStepView: View {
             .opacity(!isPreview && manager.products.isEmpty ? 0.6 : 1)
             .sensoryFeedback(.impact(weight: .medium), trigger: manager.purchaseState.isSuccess)
 
-            HStack {
-                Button(String(localized: "Restaurar compras"), action: handleRestore)
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.75))
-                Spacer()
+            VStack(spacing: 8) {
                 Text(footerDisclaimer)
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(.white.opacity(0.65))
-                    .multilineTextAlignment(.trailing)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("savoria.paywall.disclaimer")
+                Button(String(localized: "Restaurar compras"), action: handleRestore)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.75))
+                    .padding(.vertical, 6)
+                    .accessibilityIdentifier("savoria.paywall.restore")
             }
-            .lineLimit(1)
-            .minimumScaleFactor(0.7)
         }
         .padding(.horizontal, 22)
         .padding(.top, 72)
