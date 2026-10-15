@@ -1058,6 +1058,20 @@ de hangs também nessa rodada; a ausência de aquisição de drawable ou de um
 getter específico não aprova ausência de pausas. Continua necessária uma
 captura válida com o aparelho frio; o app final já está instalado.
 
+O runner de CPU agora lê temperatura/Low Power Mode antes dos gestos e marca
+o caso como ignorado quando o estado é serious/critical ou há economia de
+energia. Caso ignorado não aprova desempenho. Após os gestos, mantém o alvo
+por oito segundos sem consultas AX, para permitir que a captura encerre antes
+do teardown. O binário do app principal permaneceu idêntico; somente o runner
+físico foi reinstalado. O novo preflight físico encontrou thermal=2, sem Low
+Power Mode, e ignorou o caso em 0,009 s, sem iniciar gestos nem Instruments.
+A captura fria permanece pendente, incluindo confirmar que o exportador não
+repete a sobreposição de imagens.
+O mesmo runner passou no iPhone 17 Pro do Simulator com thermal=0: os dez
+retornos às cinco páginas e a espera final foram executados, sem casos
+ignorados. O readback dos dois stores permaneceu idêntico. Esse resultado
+valida o roteiro, sem substituir a captura física pendente.
+
 Conferência manual da listagem:
 
 1. Abra as cinco páginas, saia do app e volte em cada uma delas; confira a

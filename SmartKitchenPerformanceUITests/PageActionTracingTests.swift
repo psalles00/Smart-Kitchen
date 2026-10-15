@@ -97,14 +97,19 @@ final class PageActionTracingTests: XCTestCase {
     /// Profiles warm foreground transitions on every tab, without trace metrics.
     func testProfileForegroundForInstruments() throws {
         continueAfterFailure = false
+        let thermalBefore = ProcessInfo.processInfo.thermalState.rawValue
+        let lowPowerBefore = ProcessInfo.processInfo.isLowPowerModeEnabled
+        print("Foreground profile preflight: thermal=\(thermalBefore) lowPower=\(lowPowerBefore)")
+        guard thermalBefore <= ProcessInfo.ThermalState.fair.rawValue, !lowPowerBefore else {
+            attachDeviceConditions(thermalBefore: thermalBefore, lowPowerBefore: lowPowerBefore)
+            throw XCTSkip("Foreground CPU profile needs a cool device without Low Power Mode; no gestures recorded")
+        }
         let app = XCUIApplication(bundleIdentifier: "com.pedrosalles.smartkitchen.sync")
         app.launchArguments = ["-SavoriaActionTrace", "-SavoriaKeepAwakeForValidation",
                                "-AppleLanguages", "(pt-BR)", "-AppleLocale", "pt_BR"]
         try openMeasurementApp(app)
         let tabs = app.tabBars.firstMatch
         XCTAssertTrue(tabs.waitForExistence(timeout: 45))
-        let thermalBefore = ProcessInfo.processInfo.thermalState.rawValue
-        let lowPowerBefore = ProcessInfo.processInfo.isLowPowerModeEnabled
         for _ in 0..<2 {
             for page in ["Savoria", "Listas", "Nutrição", "Receitas", "Buscar"] {
                 tabs.buttons[page].firstMatch.tap()
@@ -116,6 +121,9 @@ final class PageActionTracingTests: XCTestCase {
                 XCTAssertTrue(tabs.buttons[page].firstMatch.isSelected)
             }
         }
+        // Keep the same app process alive while a 30-second capture of the
+        // second cycle stops. XCTest teardown/relaunch is not warm foreground.
+        Thread.sleep(forTimeInterval: 8)
         attachDeviceConditions(thermalBefore: thermalBefore, lowPowerBefore: lowPowerBefore)
     }
 
