@@ -29,26 +29,84 @@ final class RecipeListCache {
     private var contextID: ObjectIdentifier?
     private var inputsKey: Int?
     private let sortBy: [SortDescriptor<Recipe>]
+    @ObservationIgnored private var pendingLocalRefresh = false
+    @ObservationIgnored private var pendingCoordinators: [ObjectIdentifier: NSPersistentStoreCoordinator] = [:]
+    @ObservationIgnored private var historyReaders: [ObjectIdentifier: RecipeRemoteHistory] = [:]
+    @ObservationIgnored private var notificationDelay: Task<Void, Never>?
+    @ObservationIgnored private var notificationWork: Task<Void, Never>?
+    @ObservationIgnored private var listingContext: ModelContext?
 
     init(sortBy: [SortDescriptor<Recipe>]) { self.sortBy = sortBy }
 
     func loadIfNeeded(in context: ModelContext) {
+        listingContext = context
         guard contextID != ObjectIdentifier(context) else { return }
         reload(in: context)
     }
 
-    func reload(in context: ModelContext) {
+    @discardableResult
+    func reload(in context: ModelContext) -> Bool {
         do {
             let result = try context.fetch(RecipeListQuery.descriptor(sortBy: sortBy))
             let key = Self.listingInputsKey(result)
-            guard contextID != ObjectIdentifier(context) || inputsKey != key else { return }
+            guard contextID != ObjectIdentifier(context) || inputsKey != key else { return true }
             recipes = result
             contextID = ObjectIdentifier(context)
             inputsKey = key
             revision += 1
+            return true
         } catch {
             // A failed read must never replace a previously valid listing.
             PerformanceLogger.event(.recipes, "recipe listing read failed", metadata: String(describing: error))
+            return false
+        }
+    }
+
+    func receive(_ notification: Notification, in context: ModelContext) {
+        listingContext = context
+        if notification.name == .NSPersistentStoreRemoteChange,
+           let coordinator = notification.object as? NSPersistentStoreCoordinator {
+            pendingCoordinators[ObjectIdentifier(coordinator)] = coordinator
+        } else {
+            // Missing history metadata must never hide a real import.
+            pendingLocalRefresh = true
+        }
+        guard notificationWork == nil else { return }
+        notificationDelay?.cancel()
+        notificationDelay = Task { @MainActor [weak self] in
+            do { try await Task.sleep(for: .milliseconds(150)) } catch { return }
+            guard let self else { return }
+            self.notificationDelay = nil
+            self.notificationWork = Task { @MainActor [weak self] in
+                await self?.drainNotifications()
+            }
+        }
+    }
+
+    private func drainNotifications() async {
+        defer { notificationWork = nil }
+        while pendingLocalRefresh || !pendingCoordinators.isEmpty {
+            var needsReload = pendingLocalRefresh
+            let coordinators = pendingCoordinators
+            pendingLocalRefresh = false
+            pendingCoordinators.removeAll(keepingCapacity: true)
+            var inspections: [(RecipeRemoteHistory, RecipeRemoteHistory.Inspection)] = []
+            for (id, coordinator) in coordinators {
+                let reader = historyReaders[id] ?? RecipeRemoteHistory(coordinator: coordinator)
+                historyReaders[id] = reader
+                let inspection = await reader.inspect()
+                inspections.append((reader, inspection))
+                needsReload = needsReload || inspection.requiresReload
+            }
+            guard let context = listingContext else { return }
+            if !needsReload || reload(in: context) {
+                // Advance only after a successful listing read. A failed read
+                // retains the old checkpoint so the next notification retries.
+                for (reader, inspection) in inspections { await reader.acknowledge(inspection) }
+            }
+            if pendingLocalRefresh || !pendingCoordinators.isEmpty {
+                try? await Task.sleep(for: .milliseconds(150))
+            }
         }
     }
 
@@ -147,8 +205,65 @@ enum RecipeListInvalidation {
         return true
     }
 
-    private static func isRecipeEntity(_ name: String) -> Bool {
+    static func isRecipeEntity(_ name: String) -> Bool {
         entities.contains(name.split(separator: ".").last.map(String.init) ?? name)
+    }
+}
+
+/// Uses the coordinator delivered by Core Data's public remote notification.
+/// Only a private-queue history context is created: no store, option, schema or
+/// sync flag is changed, and no model objects cross into the UI context.
+final class RecipeRemoteHistory: @unchecked Sendable {
+    struct Inspection: @unchecked Sendable {
+        let requiresReload: Bool
+        let checkpoint: NSPersistentHistoryToken?
+    }
+
+    private let context: NSManagedObjectContext
+    // Accessed only through context.perform, including acknowledgements.
+    private var checkpoint: NSPersistentHistoryToken?
+
+    init(coordinator: NSPersistentStoreCoordinator) {
+        context = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
+        context.persistentStoreCoordinator = coordinator
+        context.undoManager = nil
+    }
+
+    func inspect() async -> Inspection {
+        await context.perform {
+            guard let coordinator = self.context.persistentStoreCoordinator,
+                  let upperBound = coordinator.currentPersistentHistoryToken(fromStores: nil) else {
+                return Inspection(requiresReload: true, checkpoint: nil)
+            }
+            do {
+                let request = NSPersistentHistoryChangeRequest.fetchHistory(after: self.checkpoint)
+                request.resultType = .transactionsAndChanges
+                guard let result = try self.context.execute(request) as? NSPersistentHistoryResult,
+                      let transactions = result.result as? [NSPersistentHistoryTransaction] else {
+                    return Inspection(requiresReload: true, checkpoint: nil)
+                }
+                let changed = transactions.contains { transaction in
+                    guard let changes = transaction.changes else { return true }
+                    return changes.contains { change in
+                        guard let name = change.changedObjectID.entity.name else { return true }
+                        return RecipeListInvalidation.isRecipeEntity(name)
+                    }
+                }
+                PerformanceLogger.event(.recipes, "recipe remote history", metadata: "transactions=\(transactions.count) reload=\(changed)")
+                // Capture before fetching. A concurrent commit may be included
+                // by the read, but must never be skipped by a newer checkpoint.
+                return Inspection(requiresReload: changed, checkpoint: upperBound)
+            } catch {
+                self.checkpoint = nil // An expired bookmark is only in-memory state.
+                PerformanceLogger.event(.recipes, "recipe remote history unavailable")
+                return Inspection(requiresReload: true, checkpoint: nil)
+            }
+        }
+    }
+
+    func acknowledge(_ inspection: Inspection) async {
+        guard let checkpoint = inspection.checkpoint else { return }
+        await context.perform { self.checkpoint = checkpoint }
     }
 }
 
@@ -162,9 +277,9 @@ struct RecipeListObservation: ViewModifier {
                 .merge(with: NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave),
                        NotificationCenter.default.publisher(for: .NSPersistentStoreRemoteChange))
                 .filter(RecipeListInvalidation.shouldRefresh)
-                .debounce(for: .milliseconds(150), scheduler: RunLoop.main)
-        ) { _ in
-            cache.reload(in: modelContext)
+                .receive(on: RunLoop.main)
+        ) { notification in
+            cache.receive(notification, in: modelContext)
         }
     }
 }

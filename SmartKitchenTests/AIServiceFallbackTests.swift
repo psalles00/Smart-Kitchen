@@ -12,8 +12,103 @@ final class RecipeMetadataQueryTests: XCTestCase {
     private final class SaveNotifications: @unchecked Sendable {
         private let lock = NSLock()
         private var values: [Notification] = []
-        func append(_ value: Notification) { lock.lock(); defer { lock.unlock() }; values.append(value) }
+        private var observedCoordinators: [ObjectIdentifier: NSPersistentStoreCoordinator] = [:]
+        func append(_ value: Notification) {
+            // Read the context on its posting queue, never later on the test actor.
+            let coordinator = (value.object as? NSManagedObjectContext)?.persistentStoreCoordinator
+            lock.lock(); defer { lock.unlock() }
+            values.append(value)
+            if let coordinator { observedCoordinators[ObjectIdentifier(coordinator)] = coordinator }
+        }
         func drain() -> [Notification] { lock.lock(); defer { lock.unlock() }; defer { values.removeAll() }; return values }
+        func coordinators() -> [NSPersistentStoreCoordinator] { lock.lock(); defer { lock.unlock() }; return Array(observedCoordinators.values) }
+    }
+
+    func testRemoteHistorySkipsUnchangedAndSettingsButRetainsUnacknowledgedAndCrossContextRecipeChanges() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("RecipeHistory-" + UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let url = directory.appendingPathComponent("Fixture.store")
+        let container = try ModelContainer(for: Recipe.self, AppSettings.self,
+            configurations: ModelConfiguration(url: url, cloudKitDatabase: .none))
+        let context = ModelContext(container)
+        context.autosaveEnabled = false
+        let notifications = SaveNotifications()
+        let observer = NotificationCenter.default.addObserver(forName: .NSManagedObjectContextDidSave, object: nil, queue: nil) { notifications.append($0) }
+        defer { NotificationCenter.default.removeObserver(observer) }
+        let settings = AppSettings()
+        let recipe = Recipe(name: "Original", ingredients: [RecipeIngredient(name: "Arroz", quantity: 0.125)])
+        context.insert(settings)
+        context.insert(recipe)
+        try context.save()
+        let coordinator = try XCTUnwrap(notifications.coordinators().first { $0.persistentStores.contains { $0.url == url } })
+        let reader = RecipeRemoteHistory(coordinator: coordinator)
+        let first = await reader.inspect()
+        XCTAssertTrue(first.requiresReload)
+        XCTAssertNotNil(first.checkpoint)
+        let unacknowledged = await reader.inspect()
+        XCTAssertTrue(unacknowledged.requiresReload, "An unsuccessful UI read must not consume a change")
+        await reader.acknowledge(first)
+        let unchanged = await reader.inspect()
+        XCTAssertFalse(unchanged.requiresReload)
+        await reader.acknowledge(unchanged)
+
+        settings.showUtensils = true
+        try context.save()
+        let unrelated = await reader.inspect()
+        XCTAssertFalse(unrelated.requiresReload)
+        await reader.acknowledge(unrelated)
+
+        let importing = ModelContext(container)
+        let imported = try XCTUnwrap(importing.fetch(FetchDescriptor<Recipe>()).first)
+        imported.name = "Outro contexto"
+        imported.ingredients?.first?.quantity = 0.25
+        try importing.save()
+        let changed = await reader.inspect()
+        XCTAssertTrue(changed.requiresReload)
+        await reader.acknowledge(changed)
+        let afterChange = await reader.inspect()
+        XCTAssertFalse(afterChange.requiresReload)
+
+        importing.delete(imported) // Only the isolated fixture.
+        try importing.save()
+        let deleted = await reader.inspect()
+        XCTAssertTrue(deleted.requiresReload)
+    }
+
+    func testBatchedRemoteNotificationsKeepRecipeUpdatesWhenAnotherStoreNotifiesLast() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("RecipeHistoryStores-" + UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let recipeURL = directory.appendingPathComponent("Recipes.store")
+        let settingsURL = directory.appendingPathComponent("Settings.store")
+        let schema = Schema([Recipe.self, AppSettings.self])
+        let container = try ModelContainer(for: schema, configurations:
+            ModelConfiguration("Recipes", schema: Schema([Recipe.self]), url: recipeURL, cloudKitDatabase: .none),
+            ModelConfiguration("Settings", schema: Schema([AppSettings.self]), url: settingsURL, cloudKitDatabase: .none))
+        let context = ModelContext(container)
+        context.autosaveEnabled = false
+        let notifications = SaveNotifications()
+        let observer = NotificationCenter.default.addObserver(forName: .NSManagedObjectContextDidSave, object: nil, queue: nil) { notifications.append($0) }
+        defer { NotificationCenter.default.removeObserver(observer) }
+        let recipe = Recipe(name: "Antes")
+        let settings = AppSettings()
+        context.insert(recipe)
+        context.insert(settings)
+        try context.save()
+        let cache = RecipeListCache(sortBy: [SortDescriptor(\Recipe.name)])
+        cache.loadIfNeeded(in: context)
+        let revision = cache.revision
+        recipe.name = "Depois"
+        settings.showUtensils = true
+        try context.save()
+        let coordinators = notifications.coordinators()
+        let recipeCoordinator = try XCTUnwrap(coordinators.first { $0.persistentStores.contains { $0.url == recipeURL } })
+        let settingsCoordinator = try XCTUnwrap(coordinators.first { $0.persistentStores.contains { $0.url == settingsURL } })
+        cache.receive(Notification(name: .NSPersistentStoreRemoteChange, object: recipeCoordinator), in: context)
+        cache.receive(Notification(name: .NSPersistentStoreRemoteChange, object: settingsCoordinator), in: context)
+        for _ in 0..<250 where cache.revision == revision { try await Task.sleep(for: .milliseconds(20)) }
+        XCTAssertGreaterThan(cache.revision, revision)
+        XCTAssertEqual(cache.recipes.first?.name, "Depois")
+        XCTAssertEqual(cache.recipes.first?.id, recipe.id)
     }
 
     func testActualSaveNotificationsIgnoreSettingsButRetainRecipeAndIngredientChanges() async throws {

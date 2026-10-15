@@ -1101,6 +1101,55 @@ Group conferidos, mas negou a abertura com `Locked`. A comparação física do
 filtro fica pendente de desbloqueio; a captura fria anterior não mede esta
 alteração e não autoriza afirmar ganho ou ausência de pausas nesta versão.
 
+Após o desbloqueio, a versão com filtro passou nos dez retornos físicos e a
+captura terminou sem timeout, sobreposição de imagens ou avisos do exportador.
+O preflight foi nominal; durante a captura o estado permaneceu fair. Ainda
+houve 15 hangs de 252–600 ms e 2.873 ms de peso estatístico inclusivo na recarga
+da listagem. Esse resultado não comprovou ganho relevante. A análise por
+intervalo encontrou recargas também no estado ativo; outras pausas coincidiram
+com snapshots de segundo plano e consultas de acessibilidade do roteiro.
+O readback dos dois stores e das 151 mídias permaneceu idêntico.
+
+Uma captura separada com o template Logging confirmou 84 mensagens do
+observador de receitas em 20 segundos, todas de notificações remotas. Ela
+identifica a origem dos disparos, sem medir FPS/latência. As notificações de
+saída de cena registraram ausência de alterações pendentes. Receber um aviso
+remoto, portanto, não basta para justificar reler todos os ingredientes.
+
+A atualização agora inspeciona o histórico Core Data na fila privada de um
+contexto apenas de leitura, ligado ao coordinator entregue pela notificação
+pública. Nenhum store, schema ou flag de sincronização é alterado. O histórico
+é consultado para todos os stores daquele coordinator, e coordinators distintos
+são agrupados sem descartar o anterior quando chega um aviso de outro store.
+Só uma alteração de Recipe ou seus filhos solicita a releitura da listagem;
+histórico indisponível mantém a recarga conservadora. O marcador é capturado
+antes da consulta e reconhecido somente após uma leitura bem-sucedida da
+listagem, evitando consumir mudanças quando a leitura falha.
+
+Referência oficial: [consumir mudanças relevantes e consultar o histórico em
+segundo plano](https://developer.apple.com/documentation/coredata/consuming-relevant-store-changes).
+
+Os sete testes isolados passaram: histórico sem novidades, salvamento de
+configurações, atualização de nome/quantidade por outro contexto, exclusão no
+fixture, repetição antes do reconhecimento do marcador e avisos de dois stores
+com o de configurações chegando por último. Os testes usam stores próprios em
+disco/memória, sem CloudKit, e não escrevem nos dados pessoais.
+
+O roteiro nativo passou nas cinco páginas e retomadas. O primeiro teste de
+cozinha falhou ao tentar tocar a aba antes de ela ser clicável (hit point
+`-1,-1`); a hierarquia ainda estava na inicial, e o readback dos stores era
+idêntico. O teste agora espera a aba ficar clicável, confirma sua seleção e
+abre o filtro Todos antes de procurar o fixture Wrap. O reteste passou na
+capa, nos quatro passos e na preservação do passo após sair/voltar. O readback
+final do Simulator manteve todos os registros/IDs/BLOBs e quick_check ok.
+
+Os builds do iPhone, Simulator e Mac passaram. O Mac foi instalado/aberto com
+a assinatura e capabilities anteriores, e o snapshot permaneceu idêntico à
+condição pós-formatação conhecida. A versão física foi instalada após conferir
+Bundle ID, Team, containers e App Group; o aparelho exige desbloqueio para a
+abertura e a nova comparação de CPU. Os testes isolados não substituem essa
+medição nem comprovam ausência de pausas no hardware.
+
 Conferência manual da listagem:
 
 1. Abra as cinco páginas, saia do app e volte em cada uma delas; confira a

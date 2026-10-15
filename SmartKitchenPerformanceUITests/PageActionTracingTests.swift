@@ -191,7 +191,12 @@ final class PageActionTracingTests: XCTestCase {
         app.launch()
         let recipes = app.tabBars.buttons["Receitas"].firstMatch
         XCTAssertTrue(recipes.waitForExistence(timeout: 45))
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "hittable == true"), object: recipes)], timeout: 15), .completed)
         recipes.tap()
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "selected == true"), object: recipes)], timeout: 10), .completed)
+        let allCategories = app.buttons["Todos"].firstMatch
+        XCTAssertTrue(allCategories.waitForExistence(timeout: 10))
+        allCategories.tap()
         let card = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Wrap de frango com homus")).firstMatch
         XCTAssertTrue(card.waitForExistence(timeout: 10))
         card.tap()
