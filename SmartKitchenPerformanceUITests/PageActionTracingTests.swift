@@ -3,6 +3,43 @@ import XCTest
 /// Navigates existing food data without purchases, AI calls, seeding or deletion.
 @MainActor
 final class PageActionTracingTests: XCTestCase {
+    func testOnboardingAndPaywallPreviewsAcrossSupportedLanguages() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication(bundleIdentifier: "com.pedrosalles.smartkitchen.sync")
+        defer {
+            app.terminate()
+            app.launchArguments = ["-AppleLanguages", "(pt-BR)", "-AppleLocale", "pt_BR"]
+            app.launch()
+        }
+        for (language, locale) in [("pt-BR", "pt_BR"), ("en", "en_US"), ("de", "de_DE"),
+                                   ("es", "es_ES"), ("fr", "fr_FR"), ("it", "it_IT"), ("ja", "ja_JP")] {
+            app.terminate()
+            app.launchArguments = ["-AppleLanguages", "(\(language))", "-AppleLocale", locale]
+            app.launch()
+            let home = app.tabBars.buttons["Savoria"].firstMatch
+            XCTAssertTrue(home.waitForExistence(timeout: 45), language)
+            home.tap()
+            app.buttons["savoria.settings"].tap()
+            let debug = app.buttons["settings-debug-center"]
+            XCTAssertTrue(debug.waitForExistence(timeout: 10), language)
+            debug.tap()
+            for preview in ["debug-open-onboarding", "debug-open-paywall"] {
+                let open = app.buttons[preview]
+                XCTAssertTrue(open.waitForExistence(timeout: 10), language)
+                if !open.isHittable { app.swipeUp() }
+                open.tap()
+                let close = app.buttons["debug-close-onboarding-preview"]
+                XCTAssertTrue(close.waitForExistence(timeout: 15), language)
+                let screenshot = XCTAttachment(screenshot: app.screenshot())
+                screenshot.name = "\(preview) \(language), preview only"
+                screenshot.lifetime = .keepAlways
+                self.add(screenshot)
+                close.tap()
+                XCTAssertTrue(close.waitForNonExistence(timeout: 10), language)
+            }
+        }
+    }
+
     /// Exact local-only input is guarded by a real-parser, zero-network unit test.
     /// Adds one synthetic food to the isolated validation Simulator; never deletes it.
     func testExactLemonSugarRegistrationOnceAndReopen() throws {

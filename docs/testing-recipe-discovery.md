@@ -285,3 +285,12 @@ A validação física e a interface macOS continuam bloqueadas conforme acima.
 Teste manual: registre a frase exata num destino de teste, revise o aviso de
 porção/preparo, confirme uma vez e confira a mesma linha após sair e voltar.
 Não trate a ausência de quantidade do suco como uma porção exata conhecida.
+
+## Prévias em sete idiomas
+
+O teste nativo abriu e fechou onboarding e paywall em pt-BR, en, de, es, fr, it e
+ja: 14 capturas, sem compra, restauração de assinatura ou IA paga. Retornou a
+pt-BR; todos os registros e hashes de imagens permaneceram iguais. Isso comprova
+navegação das prévias, não disponibilidade comercial ou conclusão integral do
+onboarding em cada idioma. A inspeção das capturas identificou pouco espaço no
+rodapé do paywall em traduções longas; essa diferença exige ajuste de layout.
