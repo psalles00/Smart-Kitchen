@@ -744,3 +744,54 @@ desempenho: https://developer.apple.com/videos/play/wwdc2020/10077/. Nenhum
 resultado antigo foi reclassificado; o efeito dessas opções ainda será medido.
 Uma captura separada Animation Hitches durante Listas está sendo salva para
 atribuir o custo restante; seus números não entram no benchmark sem profiler.
+
+### Fluxo de medição: foreground e executor separado
+
+O teste finalizava pressionando Home e deixava o iPhone sujeito ao bloqueio
+enquanto o Xcode exportava os resultados. Agora termina com o app em primeiro
+plano. O argumento de validação continua restrito ao processo e não altera
+as preferências de bloqueio automático. Os builds dos dois executores passaram
+e o teste de Listas/foreground passou no iPhone 17 Pro virtual.
+
+`scripts/prepare-performance-run.py ORIGINAL.xctestrun COPIA.xctestrun` cria
+exclusivamente um arquivo novo, no mesmo diretório, preservando __TESTROOT__
+e os caminhos do app/teste. Desativa o checker no executor copiado, retira
+somente a injeção libRPAC e variáveis PERFC/asserções SQLite de diagnóstico,
+e evita retenção de captura automática. Não altera o executor original,
+assinatura, app ou dados. Rode a cópia com `test-without-building`,
+`-enableCodeCoverage NO -enablePerformanceTestsDiagnostics NO
+-collect-test-diagnostics never`, escolhendo o iPhone 17 Pro no Simulator por
+padrão. O físico é necessário para medir seu desempenho real.
+
+A captura Animation Hitches não concluiu a exportação: permaneceu em stopping,
+com espera DTX observada num sample do processo da ferramenta. Após SIGINT
+sem conclusão, só esse processo de diagnóstico foi encerrado. O artefato
+parcial permanece preservado e excluído das evidências. O teste funcional
+separado sob profiler passou, mas seus FPS não são comparados ao benchmark.
+A tentativa de comparação física sem checker não iniciou, pois o iOS exige
+novo desbloqueio. Não se concluiu que o checker seja a causa da lentidão.
+
+Após os testes do worker, cópias bem-sucedidas de Application Support,
+RecipeThumbnails e RecipeMediaCache confirmaram todos os registros, IDs, BLOBs
+e os mesmos 151 arquivos de mídia idênticos ao baseline, com quick_check ok
+nos dois stores. Nenhuma mudança de schema, container ou capability.
+
+A conferência por screenshot após a sessão mostrou que o XCTest também encerra
+o app automaticamente. Portanto, app.activate no final do método mantém apenas
+o foreground dentro do teste e não garante a tela acesa após o teardown.
+`scripts/run-performance-tests.py` acompanha a saída do executor: reabre o app
+com os argumentos temporários de validação ao receber a conclusão da suíte,
+antes da exportação do Xcode, e confere nova abertura ao término do comando.
+Ele só oferece os cinco testes de páginas sem mutações/IA, exige um executor
+preparado, preserva arquivos existentes e registra falhas de abertura.
+
+Uso: `DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer python3
+scripts/run-performance-tests.py --xctestrun COPIA.xctestrun --simulator UUID
+--page Lists --result CAMINHO_NOVO.xcresult`. Use `--device UUID` somente para
+validação que exija hardware real. Omita --page para as cinco páginas.
+
+Os dois helpers foram exercitados juntos no iPhone 17 Pro virtual: teste de
+Listas/foreground passou, as duas reaberturas retornaram sucesso e screenshot
+após a exportação mostrou o Savoria efetivamente aberto. Os stores do Simulator
+continuaram idênticos e quick_check ok. O usuário desbloqueou novamente o físico;
+a comparação de Listas sem checker está em execução, com o novo wrapper.

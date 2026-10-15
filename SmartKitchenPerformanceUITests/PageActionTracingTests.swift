@@ -56,7 +56,10 @@ final class PageActionTracingTests: XCTestCase {
         tree.name = "Measured page hierarchy: \(name)"
         tree.lifetime = .keepAlways
         add(tree)
-        XCUIDevice.shared.press(.home)
+        // Keep the validation app foreground while Xcode exports results.
+        // Going Home here re-enables system Auto-Lock before the CLI can reopen
+        // the app, even though the app's validation flag disables its idle timer.
+        app.activate()
     }
 
     /// Hardware-only preview; never captures, analyzes, or registers a photo.
