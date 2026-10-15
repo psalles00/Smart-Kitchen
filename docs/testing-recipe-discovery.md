@@ -572,3 +572,44 @@ Nos logs locais e unificados, houve uma falha de leitura de metadados do Keychai
 (`missing Xcode-Username`), sem prova de envio de senha incorreta à Apple. A causa
 do bloqueio da conta permanece indeterminada. Tentativas de login foram suspensas;
 nenhuma senha, conta, certificado ou item do Keychain foi removido ou redefinido.
+
+## Receita completa: ingredientes escondidos no preparo
+
+O novo teste real das ideias passou nos dois modos: duas opções restritas e
+quatro pratos diferentes em modo livre. O feijão que exigia pré-cozimento foi
+rejeitado. Isso não aprovou a expansão: uma chamada posterior retornou apenas
+ovos e tomate na lista, mas adicionou sal no preparo. O teste inicialmente passou
+porque conferia disponibilidade só na lista; a leitura humana reprovou o caso.
+
+O leitor do card e o montador do pedido agora são compartilhados com os testes.
+Seções invertidas são rejeitadas antes de formar um intervalo inválido de texto.
+A conferência da despensa também examina os passos para um vocabulário explícito
+de ingredientes comuns, nos sete idiomas, respeitando negações e nomes completos.
+É uma proteção adicional contra extras conhecidos, sem prometer compreensão
+semântica completa de qualquer ingrediente ou frase. Receitas salvas e fontes
+web passam pela mesma conferência quando o modo restrito é solicitado.
+
+O primeiro teste com essa proteção rejeitou corretamente sal e óleo ainda
+introduzidos pelo modelo. A expansão agora permite uma única correção de resposta
+incompatível, com as restrições originais e a lista permitida. Há no máximo duas
+chamadas, limitadas a 2.048 tokens cada; falhas de transporte e cancelamento não
+disparam essa correção. Uma segunda resposta incompatível é rejeitada.
+
+68 testes locais passaram e dois testes pagos foram ignorados por padrão. O
+teste nativo real seguinte, usando uma ideia do recibo real anterior, rejeitou
+uma receita com azeite/sal/pimenta e aceitou sua correção: ovos e tomate, 15 minutos,
+uma porção, frigideira antiaderente sem gordura. Foram duas chamadas; não se
+registrou receita nem alimento. É validação do cliente real, pedido, parser e
+conferência compartilhados, sem afirmar execução visual completa da conversa.
+O total conservador acumulado ficou em US$ 3,244497 do teto autorizado de US$ 4.
+
+Builds Simulator e macOS aprovados e instalados. Os dois stores do Simulator
+passaram quick_check; todas as linhas, IDs e hashes de BLOBs ficaram idênticos.
+O snapshot do backend Mac também permaneceu idêntico. A busca web restrita do
+caso anterior continua reprovada, sem ser substituída por este teste de expansão.
+
+Teste manual: selecione uma ideia com modo restrito, confira lista e preparo e
+confirme que não surgem sal/óleo fora da despensa; confira tempo e porções. Repita
+em modo livre e sem leite. Cancele durante a busca e confira que a operação para.
+Não salve uma receita apenas para validar a tela; o salvamento exige uma escolha
+explícita no fluxo normal.

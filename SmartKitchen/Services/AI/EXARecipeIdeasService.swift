@@ -394,6 +394,8 @@ final class EXARecipeIdeasService {
         if filterByPantry {
             guard let facts, let available = facts.availableIngredients(in: pantryItems) else { return nil }
             ingredients = available
+            guard request.acceptsPantry(ingredients: available, steps: [facts.preparation],
+                                        pantryItems: pantryItems, filterByPantry: true) else { return nil }
         }
         // Missing facts cannot certify dietary or time restrictions. Servings can
         // be scaled when opening the recipe, where the full draft is validated.

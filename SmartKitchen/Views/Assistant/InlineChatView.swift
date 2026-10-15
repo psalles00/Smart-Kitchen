@@ -2053,119 +2053,7 @@ struct InlineChatView: View {
     /// Format: **Title**\n_Subtitle_\n\n**Ingredientes**\n- ...\n\n**Modo de Preparo**\n1. ...
     private func parseRecipeDetailCard(from message: ChatMessage) -> RecipeCardData? {
         guard message.role == .assistant else { return nil }
-        let content = message.content
-
-        // Must have both ingredients and steps sections
-        guard content.contains("**Ingredientes**"),
-              content.contains("**Modo de Preparo**") else { return nil }
-
-        // Parse title: first **bold** line
-        let titlePattern = #"^\*\*(.+?)\*\*\s*$"#
-        guard let titleRegex = try? NSRegularExpression(pattern: titlePattern, options: .anchorsMatchLines) else { return nil }
-        let nsContent = content as NSString
-        let titleMatch = titleRegex.firstMatch(in: content, range: NSRange(location: 0, length: nsContent.length))
-        guard let titleRange = titleMatch?.range(at: 1) else { return nil }
-        let title = nsContent.substring(with: titleRange).trimmingCharacters(in: .whitespaces)
-
-        // Don't match recipe option lists (multiple **Name** — Description lines)
-        let optionPattern = #"\*\*(.+?)\*\*\s*[—–\-]\s*(.+)"#
-        if let optionRegex = try? NSRegularExpression(pattern: optionPattern) {
-            let optionMatches = optionRegex.matches(in: content, range: NSRange(location: 0, length: nsContent.length))
-            if optionMatches.count >= 2 { return nil }
-        }
-
-        // Parse subtitle (italic _text_)
-        var subtitle: String?
-        let subtitlePattern = #"^_(.+?)_\s*$"#
-        if let subRegex = try? NSRegularExpression(pattern: subtitlePattern, options: .anchorsMatchLines),
-           let subMatch = subRegex.firstMatch(in: content, range: NSRange(location: 0, length: nsContent.length)) {
-            subtitle = nsContent.substring(with: subMatch.range(at: 1)).trimmingCharacters(in: .whitespaces)
-        }
-
-        var category: String?
-        let categoryPattern = #"(?m)^Categoria:\s*(.+)$"#
-        if let categoryRegex = try? NSRegularExpression(pattern: categoryPattern),
-           let categoryMatch = categoryRegex.firstMatch(in: content, range: NSRange(location: 0, length: nsContent.length)),
-           categoryMatch.numberOfRanges >= 2 {
-            category = nsContent.substring(with: categoryMatch.range(at: 1)).trimmingCharacters(in: .whitespacesAndNewlines)
-        }
-
-        var heroImageURL: String?
-        let imagePattern = #"(?m)^(?:Imagem|Image):\s*(\S+.*)$"#
-        if let imageRegex = try? NSRegularExpression(pattern: imagePattern),
-           let imageMatch = imageRegex.firstMatch(in: content, range: NSRange(location: 0, length: nsContent.length)),
-           imageMatch.numberOfRanges >= 2 {
-            let raw = nsContent.substring(with: imageMatch.range(at: 1)).trimmingCharacters(in: .whitespacesAndNewlines)
-            if raw.hasPrefix("http") {
-                heroImageURL = raw
-            }
-        }
-
-        var mainIngredient: String?
-        let mainPattern = #"(?m)^(?:Ingrediente principal|Main ingredient):\s*(.+)$"#
-        if let mainRegex = try? NSRegularExpression(pattern: mainPattern),
-           let mainMatch = mainRegex.firstMatch(in: content, range: NSRange(location: 0, length: nsContent.length)),
-           mainMatch.numberOfRanges >= 2 {
-            mainIngredient = nsContent.substring(with: mainMatch.range(at: 1)).trimmingCharacters(in: .whitespacesAndNewlines)
-        }
-
-        // Parse ingredients section
-        var ingredients: [(name: String, detail: String)] = []
-        if let ingredientStart = content.range(of: "**Ingredientes**"),
-           let stepsStart = content.range(of: "**Modo de Preparo**") {
-            let ingredientBlock = String(content[ingredientStart.upperBound..<stepsStart.lowerBound])
-            let ingredientLines = ingredientBlock.components(separatedBy: "\n")
-                .map { $0.trimmingCharacters(in: .whitespaces) }
-                .filter { $0.hasPrefix("-") || $0.hasPrefix("•") }
-
-            for line in ingredientLines {
-                let cleaned = String(line.dropFirst()).trimmingCharacters(in: .whitespaces)
-                // Try to split: "200g de Farinha" → detail="200g", name="Farinha"
-                let dePattern = #"^(.+?)\s+de\s+(.+)$"#
-                if let deRegex = try? NSRegularExpression(pattern: dePattern, options: .caseInsensitive),
-                   let match = deRegex.firstMatch(in: cleaned, range: NSRange(location: 0, length: (cleaned as NSString).length)),
-                   match.numberOfRanges >= 3 {
-                    let qty = (cleaned as NSString).substring(with: match.range(at: 1))
-                    let name = (cleaned as NSString).substring(with: match.range(at: 2))
-                    ingredients.append((name: name.capitalizingFirstLetter(), detail: qty))
-                } else {
-                    ingredients.append((name: cleaned.capitalizingFirstLetter(), detail: ""))
-                }
-            }
-        }
-
-        // Parse steps section
-        var steps: [String] = []
-        if let stepsStart = content.range(of: "**Modo de Preparo**") {
-            let stepsBlock = String(content[stepsStart.upperBound...])
-            let stepLines = stepsBlock.components(separatedBy: "\n")
-                .map { $0.trimmingCharacters(in: .whitespaces) }
-                .filter { !$0.isEmpty }
-
-            let stepPattern = #"^\d+[\.\)]\s*(.+)$"#
-            let stepRegex = try? NSRegularExpression(pattern: stepPattern)
-            for line in stepLines {
-                if let stepRegex,
-                   let match = stepRegex.firstMatch(in: line, range: NSRange(location: 0, length: (line as NSString).length)),
-                   match.numberOfRanges >= 2 {
-                    steps.append((line as NSString).substring(with: match.range(at: 1)))
-                }
-            }
-        }
-
-        guard !ingredients.isEmpty, !steps.isEmpty else { return nil }
-
-        return RecipeCardData(
-            title: title,
-            subtitle: subtitle,
-            category: category,
-            heroImageURL: heroImageURL,
-            mainIngredient: mainIngredient,
-            ingredients: ingredients,
-            steps: steps,
-            totalMinutes: RecipeIdeaRequest.totalMinutes(in: content),
-            servings: RecipeIdeaRequest.servings(in: content)
-        )
+        return RecipeCardData.parse(content: message.content)
     }
 
     /// Adds a recipe from an inline card using the local recipe creation flow.
@@ -2529,7 +2417,7 @@ struct InlineChatView: View {
 
             guard !ingredientNames.isEmpty else { return nil }
             let (minutes, overflow) = recipe.prepTime.addingReportingOverflow(recipe.cookTime)
-            guard request.acceptsPantry(ingredients: ingredientNames, pantryItems: pantryNames, filterByPantry: filterByPantry),
+            guard request.acceptsPantry(ingredients: ingredientNames, steps: (recipe.steps ?? []).map(\.instruction), pantryItems: pantryNames, filterByPantry: filterByPantry),
                   request.accepts(ingredients: ingredientNames, steps: (recipe.steps ?? []).map(\.instruction),
                                   totalMinutes: !overflow && minutes > 0 ? minutes : nil, servings: recipe.servings) else { return nil }
             let score = ingredientNames.reduce(into: 0) { acc, ing in
@@ -2817,7 +2705,7 @@ struct InlineChatView: View {
                 }
 
                 guard request.accepts(draft),
-                      request.acceptsPantry(ingredients: draft.ingredients.map(\.name), pantryItems: pantryNames, filterByPantry: filterByPantry) else {
+                      request.acceptsPantry(ingredients: draft.ingredients.map(\.name), steps: draft.steps.map(\.instruction), pantryItems: pantryNames, filterByPantry: filterByPantry) else {
                     insertRecipeRestrictionError(conversationId: convId)
                     return
                 }
@@ -2851,39 +2739,9 @@ struct InlineChatView: View {
 
         let pantryItems = (try? modelContext.fetch(FetchDescriptor<UnifiedItem>())) ?? []
         let pantryNames = request.allowedPantryItems(pantryItems.filter { $0.isPantry }.map(\.name))
-        let ingredientPrompt = request.ingredientPrompt(pantryItems: pantryNames, filterByPantry: payload.filterByPantry ?? true)
 
-        let instruction = """
-        Monte a receita completa "\(idea.title)".
-        \(ingredientPrompt)
-        \(idea.ingredientNames.map { "Ingredientes planejados para esta ideia: " + $0.joined(separator: ", ") } ?? "")
-        \(idea.precookedIngredientNames.map { $0.isEmpty ? "" : "A ideia exige estes ingredientes já cozidos: " + $0.joined(separator: ", ") + ". Deixe essa condição explícita e não conte com cozimento prévio não informado." } ?? "")
-        Use medidas realistas, passos curtos e claros.
-        \(request.prompt)
-
-        Responda EXATAMENTE neste formato (sem texto antes ou depois):
-
-        **\(idea.title)**
-        _Descrição curta_
-        Categoria: Nome do caderno
-        Ingrediente principal: \(idea.mainIngredient.isEmpty ? "(ingrediente principal)" : idea.mainIngredient)
-        Tempo total: N min
-        Porções: N
-
-        **Ingredientes**
-        - 200g de Ingrediente
-        - 2 un de Outro Ingrediente
-
-        **Modo de Preparo**
-        1. Primeiro passo.
-        2. Segundo passo.
-
-        Regras:
-        - Nomes dos ingredientes SEMPRE começam com letra maiúscula.
-        - Inclua a linha "Categoria:" com um caderno apropriado.
-        - Inclua a linha "Ingrediente principal:" obrigatoriamente.
-        - Não chame nenhuma ferramenta. Apenas retorne o texto formatado.
-        """
+        let instruction = idea.expansionInstruction(request: request, pantryItems: pantryNames,
+                                                     filterByPantry: payload.filterByPantry ?? true)
 
         Task {
             await performQuickIdeaExpansion(
@@ -2924,14 +2782,11 @@ struct InlineChatView: View {
         msgs.append(["role": "user", "content": instruction])
 
         do {
-            let response = try await aiService.sendChat(
-                messages: msgs,
-                tools: nil,
-                apiKey: apiKey
-            )
+            let content = try await RecipeQuickIdeaExpander(aiService: aiService).expand(
+                messages: msgs, request: request, pantryItems: pantryNames,
+                filterByPantry: filterByPantry, apiKey: apiKey)
             await MainActor.run {
                 finishRecipeCreation(id: loadingId)
-                let content = response.content ?? ""
                 guard !content.isEmpty else {
                     let message = ChatMessage(
                         role: .assistant,
@@ -2948,7 +2803,7 @@ struct InlineChatView: View {
                     conversationId: conversationId
                 )
                 guard let card = parseRecipeDetailCard(from: message),
-                      request.acceptsPantry(ingredients: card.ingredients.map(\.name), pantryItems: pantryNames, filterByPantry: filterByPantry),
+                      request.acceptsPantry(ingredients: card.ingredients.map(\.name), steps: card.steps, pantryItems: pantryNames, filterByPantry: filterByPantry),
                       request.accepts(ingredients: card.ingredients.map(\.name),
                                       steps: card.steps,
                                       totalMinutes: card.totalMinutes, servings: card.servings) else {
@@ -2957,6 +2812,11 @@ struct InlineChatView: View {
                 }
                 pendingRecipeResultMessageID = message.id
                 insertMessage(message)
+            }
+        } catch RecipeQuickIdeaExpander.Failure.incompatibleRecipe {
+            await MainActor.run {
+                finishRecipeCreation(id: loadingId)
+                insertRecipeRestrictionError(conversationId: conversationId)
             }
         } catch {
             await replaceLoadingWithError(loadingId: loadingId, conversationId: conversationId)
@@ -3140,6 +3000,124 @@ struct RecipeCardData {
     let steps: [String]
     var totalMinutes: Int? = nil
     var servings: Int? = nil
+}
+
+extension RecipeCardData {
+    /// The same parser is used by inline cards and native provider validation.
+    static func parse(content: String) -> RecipeCardData? {
+        // Must have both ingredients and steps sections
+        guard let ingredientHeading = content.range(of: "**Ingredientes**"),
+              let methodHeading = content.range(of: "**Modo de Preparo**"),
+              ingredientHeading.upperBound <= methodHeading.lowerBound else { return nil }
+
+        // Parse title: first **bold** line
+        let titlePattern = #"^\*\*(.+?)\*\*\s*$"#
+        guard let titleRegex = try? NSRegularExpression(pattern: titlePattern, options: .anchorsMatchLines) else { return nil }
+        let nsContent = content as NSString
+        let titleMatch = titleRegex.firstMatch(in: content, range: NSRange(location: 0, length: nsContent.length))
+        guard let titleRange = titleMatch?.range(at: 1) else { return nil }
+        let title = nsContent.substring(with: titleRange).trimmingCharacters(in: .whitespaces)
+
+        // Don't match recipe option lists (multiple **Name** — Description lines)
+        let optionPattern = #"\*\*(.+?)\*\*\s*[—–\-]\s*(.+)"#
+        if let optionRegex = try? NSRegularExpression(pattern: optionPattern) {
+            let optionMatches = optionRegex.matches(in: content, range: NSRange(location: 0, length: nsContent.length))
+            if optionMatches.count >= 2 { return nil }
+        }
+
+        // Parse subtitle (italic _text_)
+        var subtitle: String?
+        let subtitlePattern = #"^_(.+?)_\s*$"#
+        if let subRegex = try? NSRegularExpression(pattern: subtitlePattern, options: .anchorsMatchLines),
+           let subMatch = subRegex.firstMatch(in: content, range: NSRange(location: 0, length: nsContent.length)) {
+            subtitle = nsContent.substring(with: subMatch.range(at: 1)).trimmingCharacters(in: .whitespaces)
+        }
+
+        var category: String?
+        let categoryPattern = #"(?m)^Categoria:\s*(.+)$"#
+        if let categoryRegex = try? NSRegularExpression(pattern: categoryPattern),
+           let categoryMatch = categoryRegex.firstMatch(in: content, range: NSRange(location: 0, length: nsContent.length)),
+           categoryMatch.numberOfRanges >= 2 {
+            category = nsContent.substring(with: categoryMatch.range(at: 1)).trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+
+        var heroImageURL: String?
+        let imagePattern = #"(?m)^(?:Imagem|Image):\s*(\S+.*)$"#
+        if let imageRegex = try? NSRegularExpression(pattern: imagePattern),
+           let imageMatch = imageRegex.firstMatch(in: content, range: NSRange(location: 0, length: nsContent.length)),
+           imageMatch.numberOfRanges >= 2 {
+            let raw = nsContent.substring(with: imageMatch.range(at: 1)).trimmingCharacters(in: .whitespacesAndNewlines)
+            if raw.hasPrefix("http") {
+                heroImageURL = raw
+            }
+        }
+
+        var mainIngredient: String?
+        let mainPattern = #"(?m)^(?:Ingrediente principal|Main ingredient):\s*(.+)$"#
+        if let mainRegex = try? NSRegularExpression(pattern: mainPattern),
+           let mainMatch = mainRegex.firstMatch(in: content, range: NSRange(location: 0, length: nsContent.length)),
+           mainMatch.numberOfRanges >= 2 {
+            mainIngredient = nsContent.substring(with: mainMatch.range(at: 1)).trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+
+        // Parse ingredients section
+        var ingredients: [(name: String, detail: String)] = []
+        if let ingredientStart = content.range(of: "**Ingredientes**"),
+           let stepsStart = content.range(of: "**Modo de Preparo**") {
+            let ingredientBlock = String(content[ingredientStart.upperBound..<stepsStart.lowerBound])
+            let ingredientLines = ingredientBlock.components(separatedBy: "\n")
+                .map { $0.trimmingCharacters(in: .whitespaces) }
+                .filter { $0.hasPrefix("-") || $0.hasPrefix("•") }
+
+            for line in ingredientLines {
+                let cleaned = String(line.dropFirst()).trimmingCharacters(in: .whitespaces)
+                // Try to split: "200g de Farinha" → detail="200g", name="Farinha"
+                let dePattern = #"^(.+?)\s+de\s+(.+)$"#
+                if let deRegex = try? NSRegularExpression(pattern: dePattern, options: .caseInsensitive),
+                   let match = deRegex.firstMatch(in: cleaned, range: NSRange(location: 0, length: (cleaned as NSString).length)),
+                   match.numberOfRanges >= 3 {
+                    let qty = (cleaned as NSString).substring(with: match.range(at: 1))
+                    let name = (cleaned as NSString).substring(with: match.range(at: 2))
+                    ingredients.append((name: name.capitalizingFirstLetter(), detail: qty))
+                } else {
+                    ingredients.append((name: cleaned.capitalizingFirstLetter(), detail: ""))
+                }
+            }
+        }
+
+        // Parse steps section
+        var steps: [String] = []
+        if let stepsStart = content.range(of: "**Modo de Preparo**") {
+            let stepsBlock = String(content[stepsStart.upperBound...])
+            let stepLines = stepsBlock.components(separatedBy: "\n")
+                .map { $0.trimmingCharacters(in: .whitespaces) }
+                .filter { !$0.isEmpty }
+
+            let stepPattern = #"^\d+[\.\)]\s*(.+)$"#
+            let stepRegex = try? NSRegularExpression(pattern: stepPattern)
+            for line in stepLines {
+                if let stepRegex,
+                   let match = stepRegex.firstMatch(in: line, range: NSRange(location: 0, length: (line as NSString).length)),
+                   match.numberOfRanges >= 2 {
+                    steps.append((line as NSString).substring(with: match.range(at: 1)))
+                }
+            }
+        }
+
+        guard !ingredients.isEmpty, !steps.isEmpty else { return nil }
+
+        return RecipeCardData(
+            title: title,
+            subtitle: subtitle,
+            category: category,
+            heroImageURL: heroImageURL,
+            mainIngredient: mainIngredient,
+            ingredients: ingredients,
+            steps: steps,
+            totalMinutes: RecipeIdeaRequest.totalMinutes(in: content),
+            servings: RecipeIdeaRequest.servings(in: content)
+        )
+    }
 }
 
 private extension String {

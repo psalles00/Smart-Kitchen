@@ -1,5 +1,77 @@
 import Foundation
 
+/// Validate complete recipes before exposing them; repair one incompatible
+/// response at most. Transport errors and cancellation never start this repair.
+@MainActor
+struct RecipeQuickIdeaExpander {
+    enum Failure: Error { case incompatibleRecipe }
+    let aiService: AIService
+
+    func expand(messages: [[String: Any]], request: RecipeIdeaRequest, pantryItems: [String],
+                filterByPantry: Bool, apiKey: String) async throws -> String {
+        var messages = messages
+        for attempt in 0..<2 {
+            try RequestCancellation.check()
+            let response = try await aiService.sendChat(messages: messages, tools: nil, apiKey: apiKey, maxTokens: 2048)
+            let content = response.content ?? ""
+            if let card = RecipeCardData.parse(content: content),
+               request.acceptsPantry(ingredients: card.ingredients.map(\.name), steps: card.steps,
+                                     pantryItems: pantryItems, filterByPantry: filterByPantry),
+               request.accepts(ingredients: card.ingredients.map(\.name), steps: card.steps,
+                               totalMinutes: card.totalMinutes, servings: card.servings) {
+                return content
+            }
+            guard attempt == 0 else { throw Failure.incompatibleRecipe }
+            messages.append(["role": "assistant", "content": content])
+            messages.append(["role": "user", "content": """
+            A receita anterior foi rejeitada: o formato, os ingredientes, os passos, o tempo ou as porções não cumpriram o pedido. Refaça a receita inteira no mesmo formato exigido, corrigindo esses pontos.
+            \(request.ingredientPrompt(pantryItems: pantryItems, filterByPantry: filterByPantry))
+            \(request.generationRules)
+            Não use sal, óleo, manteiga ou qualquer outro ingrediente adicional se ele não for permitido. Não basta omiti-lo da lista: retire o uso dele de todos os passos e escolha uma técnica viável com os ingredientes permitidos.
+            """])
+        }
+        throw Failure.incompatibleRecipe
+    }
+}
+
+extension RecipeQuickIdea {
+    /// One request format for the UI and native end-to-end provider checks.
+    func expansionInstruction(request: RecipeIdeaRequest, pantryItems: [String], filterByPantry: Bool) -> String {
+        let ingredientPrompt = request.ingredientPrompt(pantryItems: pantryItems, filterByPantry: filterByPantry)
+        return """
+        Monte a receita completa "\(title)".
+        \(ingredientPrompt)
+        \(ingredientNames.map { "Ingredientes planejados para esta ideia: " + $0.joined(separator: ", ") } ?? "")
+        \(precookedIngredientNames.map { $0.isEmpty ? "" : "A ideia exige estes ingredientes já cozidos: " + $0.joined(separator: ", ") + ". Deixe essa condição explícita e não conte com cozimento prévio não informado." } ?? "")
+        Use medidas realistas, passos curtos e claros.
+        \(request.prompt)
+
+        Responda EXATAMENTE neste formato (sem texto antes ou depois):
+
+        **\(title)**
+        _Descrição curta_
+        Categoria: Nome do caderno
+        Ingrediente principal: \(mainIngredient.isEmpty ? "(ingrediente principal)" : mainIngredient)
+        Tempo total: N min
+        Porções: N
+
+        **Ingredientes**
+        - 200g de Ingrediente
+        - 2 un de Outro Ingrediente
+
+        **Modo de Preparo**
+        1. Primeiro passo.
+        2. Segundo passo.
+
+        Regras:
+        - Nomes dos ingredientes SEMPRE começam com letra maiúscula.
+        - Inclua a linha "Categoria:" com um caderno apropriado.
+        - Inclua a linha "Ingrediente principal:" obrigatoriamente.
+        - Não chame nenhuma ferramenta. Apenas retorne o texto formatado.
+        """
+    }
+}
+
 /// Resultado curto produzido pelo modelo para a seção "Ideias Rápidas":
 /// receitas simples, com ingredientes restritos à despensa quando essa opção está ativa.
 struct RecipeQuickIdea: Identifiable, Codable, Equatable {
@@ -189,19 +261,70 @@ struct RecipeIdeaRequest {
         let names = allowedPantryItems(pantryItems)
         let list = names.isEmpty ? "(despensa vazia)" : names.joined(separator: ", ")
         if filterByPantry {
-            return "Use APENAS ingredientes desta despensa: \(list). Não inclua ingredientes fora da lista, nem nos passos. Copie os nomes exatos da lista; coloque quantidades nos campos de quantidade e cortes nos passos, sem modificar os nomes dos ingredientes."
+            return "Use APENAS ingredientes desta despensa: \(list). Não inclua ingredientes fora da lista, nem nos passos, nem como opcionais. Sal, água, óleo, azeite e temperos só são permitidos se estiverem nesta lista. Todo ingrediente usado no preparo deve aparecer também na lista de ingredientes. Copie os nomes exatos da lista; coloque quantidades nos campos de quantidade e cortes nos passos, sem modificar os nomes dos ingredientes."
         }
         return "Priorize os ingredientes disponíveis quando combinarem com o pedido: \(list). Pode incluir ingredientes de fora da despensa; não os apresente como disponíveis. Uma despensa vazia não impede sugerir receitas."
     }
 
     /// Availability requires exact names, never icon identity, substrings or fuzzy matches.
-    func acceptsPantry(ingredients: [String], pantryItems: [String], filterByPantry: Bool) -> Bool {
+    func acceptsPantry(ingredients: [String], steps: [String] = [], pantryItems: [String], filterByPantry: Bool) -> Bool {
         guard filterByPantry else { return true }
         let allowed = Set(allowedPantryItems(pantryItems).map { Self.normalized($0).trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty })
-        return !ingredients.isEmpty && ingredients.allSatisfy {
+        guard !ingredients.isEmpty && ingredients.allSatisfy({
             let name = Self.normalized($0).trimmingCharacters(in: .whitespacesAndNewlines)
             return !name.isEmpty && allowed.contains(name)
+        }) else { return false }
+        return Self.recognizedPreparationIngredientsAreDeclared(steps, ingredients: ingredients)
+    }
+
+    // Bounded, explicit vocabulary for common ingredients smuggled into steps.
+    // This is an extra rejection guard, not a proof of complete semantic parsing.
+    // Whole names and longest phrases avoid sal/salmão and oil/olive oil overlap.
+    private static let preparationFoods: [[String]] = [
+        ["sal", "salt", "sel", "salz", "sale", "塩"],
+        ["agua", "water", "eau", "wasser", "acqua", "水"],
+        ["oleo", "oleo vegetal", "oleo animal", "oil", "vegetable oil", "huile", "aceite", "ol", "pflanzenol", "olio", "油"],
+        ["azeite", "azeite de oliva", "olive oil", "huile d olive", "aceite de oliva", "olivenol", "olio d oliva", "オリーブオイル"],
+        ["acucar", "sugar", "sucre", "azucar", "zucker", "zucchero", "砂糖"],
+        ["pimenta do reino", "black pepper", "poivre noir", "pimienta negra", "schwarzer pfeffer", "pepe nero", "黒こしょう"],
+        ["pimenta", "pepper", "poivre", "pimienta", "pfeffer", "pepe", "こしょう", "胡椒"],
+        ["alho", "garlic", "ail", "ajo", "knoblauch", "aglio", "にんにく"],
+        ["cebola", "onion", "oignon", "cebolla", "zwiebel", "cipolla", "玉ねぎ"],
+        ["manteiga", "butter", "beurre", "mantequilla", "burro", "バター"],
+        ["leite", "milk", "lait", "leche", "milch", "latte", "牛乳"],
+        ["queijo", "cheese", "fromage", "queso", "kase", "formaggio", "チーズ"],
+        ["farinha", "farinha de trigo", "flour", "wheat flour", "farine", "harina", "mehl", "farina", "小麦粉"],
+        ["shoyu", "shoyo", "molho de soja", "soy sauce", "sauce soja", "salsa de soja", "sojasauce", "salsa di soia", "醤油"],
+        ["vinagre", "vinegar", "vinaigre", "essig", "aceto", "酢"],
+        ["salsa", "salsinha", "parsley", "persil", "perejil", "petersilie", "prezzemolo", "パセリ"]
+    ]
+
+    private static let preparationFoodPattern: String = {
+        let names = preparationFoods.flatMap { $0 }.sorted { $0.count > $1.count }
+        let japanese = names.filter { $0.unicodeScalars.contains { $0.value > 0x3000 } }
+        let latin = names.filter { !japanese.contains($0) }
+        return "(?<![\\p{L}\\p{N}])(?:" + latin.map(NSRegularExpression.escapedPattern).joined(separator: "|") + ")(?![\\p{L}\\p{N}])|(?:" + japanese.map(NSRegularExpression.escapedPattern).joined(separator: "|") + ")(?=を|は|で|に|も|と|、|。|適量|少々|$)"
+    }()
+
+    private static func recognizedPreparationIngredientsAreDeclared(_ steps: [String], ingredients: [String]) -> Bool {
+        let declared = Set(ingredients.map { normalized($0).trimmingCharacters(in: .whitespacesAndNewlines) })
+        guard let matcher = try? NSRegularExpression(pattern: preparationFoodPattern) else { return false }
+        for step in steps {
+            let food = preparationFoodPattern
+            let separator = #"(?:\s*,\s*|\s+(?:e|ou|nem|and|or|nor|et|y|o|ni|und|oder|o|ne)\s+)"#
+            let negation = #"\b(?:sem|without|no|sans|sin|ohne|senza|nao\s+(?:use|adicione|inclua|coloque|utilize)|do\s+not\s+(?:use|add|include))\s+"#
+            var text = normalized(step).replacingOccurrences(of: negation + "(?:" + food + ")(?:" + separator + "(?:" + food + "))*", with: "", options: .regularExpression)
+            // Japanese ingredient tokens are not separated by Latin word bounds.
+            for name in preparationFoods.flatMap({ $0 }).filter({ $0.unicodeScalars.contains { $0.value > 0x3000 } }) {
+                text = text.replacingOccurrences(of: NSRegularExpression.escapedPattern(for: name) + #"(?:なし|不使用|(?:を|は)(?:使わない|加えない))"#, with: "", options: .regularExpression)
+            }
+            for match in matcher.matches(in: text, range: NSRange(text.startIndex..., in: text)) {
+                guard let range = Range(match.range, in: text),
+                      let group = preparationFoods.first(where: { $0.contains(String(text[range])) }),
+                      group.contains(where: declared.contains) else { return false }
+            }
         }
+        return true
     }
 
     var maximumMinutes: Int? {
