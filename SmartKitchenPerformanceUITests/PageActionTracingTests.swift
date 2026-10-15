@@ -3,6 +3,40 @@ import XCTest
 /// Navigates existing food data without purchases, AI calls, seeding or deletion.
 @MainActor
 final class PageActionTracingTests: XCTestCase {
+    /// Hardware-only preview; never captures, analyzes, or registers a photo.
+    func testPhysicalCameraPreviewAndCancellationWithoutSaving() throws {
+        #if targetEnvironment(simulator)
+        throw XCTSkip("Real camera validation requires a physical iPhone.")
+        #else
+        continueAfterFailure = false
+        let app = XCUIApplication(bundleIdentifier: "com.pedrosalles.smartkitchen.sync")
+        app.launch()
+        let nutrition = app.tabBars.buttons["Nutrição"].firstMatch
+        XCTAssertTrue(nutrition.waitForExistence(timeout: 45))
+        nutrition.tap()
+        let add = app.buttons["savoria.nutrition.add"]
+        XCTAssertTrue(add.waitForExistence(timeout: 10))
+        add.tap()
+        app.buttons["Câmera"].firstMatch.tap()
+        let cancel = app.buttons["DismissButton"]
+        XCTAssertTrue(cancel.waitForExistence(timeout: 15))
+        XCTAssertFalse(app.alerts["Câmera indisponível"].exists)
+        XCTAssertTrue(app.buttons["PhotoCapture"].isHittable, "The real camera shutter must be exposed, but never pressed")
+        let screen = XCTAttachment(screenshot: app.screenshot())
+        screen.name = "Physical camera preview, no photo captured"
+        screen.lifetime = .keepAlways
+        self.add(screen)
+        let tree = XCTAttachment(string: app.debugDescription)
+        tree.name = "Physical camera controls"
+        tree.lifetime = .keepAlways
+        self.add(tree)
+        cancel.tap()
+        XCTAssertTrue(add.waitForExistence(timeout: 15))
+        XCTAssertFalse(app.buttons["savoria.nutrition.capture.analyze"].exists)
+        XCUIDevice.shared.press(.home)
+        #endif
+    }
+
     /// Uses the existing four-step validation recipe without editing it.
     func testExistingRecipeCookingStepsAndForegroundPreserveData() throws {
         continueAfterFailure = false

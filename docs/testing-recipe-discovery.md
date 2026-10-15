@@ -327,3 +327,28 @@ que não façam parte da receita.
 
 Teste manual: abra uma receita com vários passos, avance até o segundo, saia e
 volte ao app, confira o mesmo passo, volte ao anterior e finalize o percurso.
+
+## Padrão de destinos e câmera física — 15/10
+
+Por preferência explícita de Pedro, o iPhone 17 Pro no Simulator é o destino
+padrão. O físico é reservado a necessidades reais de hardware, desempenho ou
+CloudKit, sem bloquear o desenvolvimento comum por sua indisponibilidade.
+
+Com o iPhone 12 Pro conectado, foi criado backup completo antes da atualização,
+com quick_check aprovado nos dois stores. Bundle ID, Team, containers iCloud na
+ordem original, CloudDocuments/CloudKit e App Group foram conferidos. O candidato
+atual foi compilado, instalado sem desinstalação e aberto com os dados existentes.
+
+Teste físico de câmera aprovado: controles nativos e obturador acessível foram
+observados; o teste usou o botão nativo de descartar. Não houve captura de foto,
+análise, registro de alimento ou chamada paga. A prévia estava escura; o teste
+não certifica qualidade de imagem nem inferência. O caso é ignorado no Simulator.
+
+Readback após a instalação e os testes: todos os registros, IDs, metadados e
+hashes dos BLOBs permaneceram idênticos. Os 151 arquivos externos de mídia
+mantiveram tamanho e SHA-256. A primeira cópia posterior atingiu seu timeout;
+foi preservada como parcial e a comparação usa uma segunda cópia completa,
+concluída com prazo maior. Não houve recuperação, restauração ou limpeza.
+
+Teste manual físico: abra Nutrição > Câmera, confira os controles nativos e
+cancele. Confira que voltou à Nutrição sem uma nova refeição ou foto registrada.
