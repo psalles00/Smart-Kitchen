@@ -78,12 +78,26 @@ private struct SavoriaShaderBackground: View {
                                     paused: !animates || reduceMotion || scenePhase != .active)) { _ in
                 let now = ProcessInfo.processInfo.systemUptime
                 let tint = palette?.target == theme ? palette!.rgb(at: now) : theme.shaderRGB
+                // This is a soft, full-screen field, not foreground detail.
+                // Rasterize the expensive CPPN at quarter dimensions, then
+                // enlarge that texture. Keep the viewport/time proportional so
+                // tab changes never restart or reshape the animated field.
+                let renderScale: CGFloat = 4
+                let fieldSize = viewport.width > 0 ? viewport : geometry.size
                 Rectangle()
                     .fill(.white)
+                    .frame(width: geometry.size.width / renderScale,
+                           height: geometry.size.height / renderScale)
                     .modifier(SavoriaAnimatedShaderTint(
                         tint: tint,
-                        size: viewport.width > 0 ? viewport : geometry.size,
+                        size: CGSize(width: fieldSize.width / renderScale,
+                                     height: fieldSize.height / renderScale),
                         time: reduceMotion ? 0 : now - SavoriaShaderClock.epoch))
+                    .drawingGroup(opaque: true)
+                    .scaleEffect(renderScale, anchor: .topLeading)
+                    .frame(width: geometry.size.width, height: geometry.size.height,
+                           alignment: .topLeading)
+                    .clipped()
                     .overlay {
                         LinearGradient(colors: [.black.opacity(contrast == .increased ? 0.60 : 0.42), .black.opacity(contrast == .increased ? 0.85 : 0.72)],
                                        startPoint: .top, endPoint: .bottom)

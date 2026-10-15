@@ -377,3 +377,40 @@ receitas e ingredientes principais como “uma”, “pressa” e “Jantar”. 
 expansão de receitas, geração de imagens, chamada OpenAI/OpenRouter ou alteração
 de dados pessoais nessa execução. A correção e a revalidação da qualidade
 continuam necessárias.
+
+## Renderização do fundo: gargalo físico reproduzido em 15/10
+
+O teste Release `testPagesAndForeground` percorreu cinco páginas e o retorno ao
+app no iPhone 12 Pro. Após a execução, os registros de Private e Shared, seus IDs
+e BLOBs e os 151 arquivos de mídia permaneceram idênticos. A comparação ordena as
+linhas por chave primária; a ordem física de leitura não indica mudança de dados.
+
+Uma captura Animation Hitches de aproximadamente 30 segundos encontrou 180
+linhas atribuídas ao Savoria: duração somada de 11.852,39 ms, máximo de 317,46 ms.
+Muitas linhas apontam trabalho de GPU e passes de renderização fora da tela.
+Esses números não são uma razão de engasgos normalizada nem prova isolada da
+causa; XCTest e espelhamento também podem interferir. Método da Apple:
+https://developer.apple.com/documentation/xcode/improving-app-responsiveness.
+
+O fundo CPPN agora é rasterizado com um quarto das dimensões e ampliado para a
+tela. Relógio, animação, coordenadas proporcionais e fade da paleta permanecem;
+não há congelamento do fundo. A correção reduz a resolução apenas da textura do
+fundo, sem rasterizar textos ou controles. Os três builds passaram. A versão
+abriu no iPhone 17 Pro Simulator, com shader visível; navegação e retorno ao app
+passaram e todos os registros dos dois stores permaneceram idênticos.
+
+O Mac foi compilado, instalado com os entitlements existentes e aberto na tela
+de boas-vindas já existente nesta instalação. Snapshot do backend idêntico antes
+e depois. A primeira assinatura ad hoc não permitiu abrir o app; a instalação
+foi corrigida com o certificado Apple Development do Team original e verificada.
+Não se completou o onboarding nem se alterou perfil para simular paridade.
+
+A versão também foi compilada para o teste físico específico. A execução nativa
+está em andamento; a nova captura do Instruments ainda não foi obtida porque a
+anexação durante a automação não encontrou o processo. A otimização ainda não
+está certificada como suficiente, e nenhum percentual de melhora foi inferido.
+
+Teste manual: observe o fundo em movimento, troque entre as páginas, confira o
+fade de cor sem reiniciar a forma, role listas e receitas, saia e volte ao app.
+Confira que textos continuam nítidos e o shader permanece visível. Desempenho no
+Simulator não substitui a medição física que motivou esta correção.
