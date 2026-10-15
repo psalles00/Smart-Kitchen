@@ -40,6 +40,7 @@ def main():
         target["UseDestinationArtifacts"] = True
         target["TestBundleDestinationRelativePath"] = bundle
         target["UITargetAppBundleIdentifier"] = "com.pedrosalles.smartkitchen.sync"
+        target.setdefault("EnvironmentVariables", {})["SAVORIA_USE_INSTALLED_TARGET"] = "1"
         for key in ("TestBundlePath", "TestHostPath", "UITargetAppPath"):
             target.pop(key, None)
     for name in ("EnvironmentVariables", "UITargetAppEnvironmentVariables"):

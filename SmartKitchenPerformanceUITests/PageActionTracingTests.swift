@@ -17,7 +17,7 @@ final class PageActionTracingTests: XCTestCase {
         let app = XCUIApplication(bundleIdentifier: "com.pedrosalles.smartkitchen.sync")
         app.launchArguments = ["-SavoriaActionTrace", "-SavoriaKeepAwakeForValidation",
                                "-AppleLanguages", "(pt-BR)", "-AppleLocale", "pt_BR"]
-        app.launch()
+        try openMeasurementApp(app)
         let tabs = app.tabBars.firstMatch
         XCTAssertTrue(tabs.waitForExistence(timeout: 45))
         let options = XCTMeasureOptions()
@@ -72,7 +72,7 @@ final class PageActionTracingTests: XCTestCase {
         let app = XCUIApplication(bundleIdentifier: "com.pedrosalles.smartkitchen.sync")
         app.launchArguments = ["-SavoriaActionTrace", "-SavoriaKeepAwakeForValidation",
                                "-AppleLanguages", "(pt-BR)", "-AppleLocale", "pt_BR"]
-        app.launch()
+        try openMeasurementApp(app)
         let tabs = app.tabBars.firstMatch
         XCTAssertTrue(tabs.waitForExistence(timeout: 45))
         tabs.buttons["Listas"].firstMatch.tap()
@@ -92,6 +92,19 @@ final class PageActionTracingTests: XCTestCase {
         XCTAssertTrue(tabs.buttons["Listas"].firstMatch.waitForExistence(timeout: 10))
         XCTAssertTrue(tabs.buttons["Listas"].firstMatch.isSelected)
         attachDeviceConditions(thermalBefore: thermalBefore, lowPowerBefore: lowPowerBefore)
+    }
+
+    private func openMeasurementApp(_ app: XCUIApplication) throws {
+        if ProcessInfo.processInfo.environment["SAVORIA_USE_INSTALLED_TARGET"] == "1" {
+            // The CLI opens the signed, installed app before starting XCTest.
+            // launch() triggers an erroneous installation in Xcode 27 beta's
+            // UseDestinationArtifacts mode. Never silently launch without flags.
+            XCTAssertTrue(app.state == .runningForeground || app.state == .runningBackground,
+                          "Open the installed validation app before this test")
+            app.activate()
+        } else {
+            app.launch()
+        }
     }
 
     private func attachDeviceConditions(thermalBefore: Int, lowPowerBefore: Bool) {

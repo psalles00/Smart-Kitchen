@@ -876,3 +876,28 @@ Etapas para teste manual dos separadores:
 1. Na Despensa e no Mercado, conferir o pontilhado entre itens e rolar a lista.
 2. Abrir uma receita e conferir os divisores entre ingredientes nos dois temas.
 3. Alternar as cinco páginas, sair e voltar ao app, conferindo a seleção e o fundo.
+
+### Ativação do app instalado — limitação do Xcode 27 beta
+
+Após o desbloqueio, devicectl abriu a versão nova corretamente. O primeiro
+UseDestinationArtifacts iniciou o runner instalado, mas XCUIApplication.launch()
+acionou IDEInstallCoreDeviceWorker e falhou com Application Bundle Not Found,
+apesar de o app estar instalado e ter acabado de abrir. As cinco falhas ocorreram
+antes das medições; não representam cinco falhas funcionais do Savoria.
+
+O modo instalado agora usa um runner atualizado, com a variável de teste
+SAVORIA_USE_INSTALLED_TARGET=1. O helper abre o app com os argumentos de validação
+e idioma antes do XCTest. O teste exige que ele esteja em execução e usa activate()
+em vez de launch(). Cada invocação mede somente uma página, pois o XCTest pode
+encerrar o app ao terminar a sessão; a próxima invocação o abre novamente.
+Não use esse modo com um runner antigo: atualize somente o app do runner no
+aparelho, sem reinstalar o Savoria principal. O fluxo normal do Simulator mantém
+launch(). A API de ativação está documentada em:
+https://developer.apple.com/documentation/xcuiautomation/xcuiapplication/activate().
+
+A primeira rodada de Listas nesse modo passou com swipes no UICollectionView
+real e retorno do segundo plano, sem reinstalar o app. FPS de rolagem:
+45,20 / 45,33 / 42,96 (média 44,50), hitch ratio médio 251,53 ms/s.
+Temperatura serious antes e depois; Low Power Mode false. A medição anterior
+com diagnósticos reduzidos teve média 39,19 fps, mas sem temperatura registrada:
+essa comparação não isola o efeito dos separadores nem comprova fluidez plena.

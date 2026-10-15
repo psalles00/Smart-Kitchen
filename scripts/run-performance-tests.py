@@ -26,6 +26,11 @@ def main():
         runner = plistlib.load(stream).get("SavoriaPerformanceUITests", {})
     if runner.get("UITargetAppPerformanceAntipatternCheckerEnabled") is not False:
         parser.error("Prepare a measurement copy with prepare-performance-run.py first.")
+    installed = runner.get("UseDestinationArtifacts") is True
+    if installed and runner.get("EnvironmentVariables", {}).get("SAVORIA_USE_INSTALLED_TARGET") != "1":
+        parser.error("Prepare a new installed-mode copy with the current helper first.")
+    if installed and (not args.device or (not args.profile_lists and len(args.page or []) != 1)):
+        parser.error("Installed mode requires a physical device and one --page per invocation (or --profile-lists).")
     result = args.result.resolve()
     log_path = result.with_suffix(".log")
     if result.exists() or log_path.exists():
@@ -41,15 +46,16 @@ def main():
         for page in args.page or PAGES:
             method = "testHitchesSearchAndForeground" if page == "Search" else "testHitches" + page + "ScrollAndForeground"
             command.append("-only-testing:SavoriaPerformanceUITests/PageActionTracingTests/" + method)
-    flags = ["-SavoriaActionTrace", "-SavoriaKeepAwakeForValidation"]
+    flags = ["-SavoriaActionTrace", "-SavoriaKeepAwakeForValidation",
+             "-AppleLanguages", "(pt-BR)", "-AppleLocale", "pt_BR"]
     launch = (["xcrun", "simctl", "launch", "--terminate-running-process", identifier, BUNDLE] + flags
               if args.simulator else
               ["xcrun", "devicectl", "device", "process", "launch", "--device", identifier,
                "--terminate-existing", BUNDLE, "--"] + flags)
     result.parent.mkdir(parents=True, exist_ok=True)
     with log_path.open("x") as log:
-        def reopen():
-            log.write("\nReopening validation app before/after Xcode result export.\n")
+        def reopen(phase="before/after Xcode result export"):
+            log.write(f"\nOpening validation app {phase}.\n")
             log.flush()
             try:
                 status = subprocess.run(launch, stdout=log, stderr=subprocess.STDOUT, timeout=20).returncode
@@ -59,6 +65,8 @@ def main():
             log.flush()
             return status
 
+        if installed and reopen("before XCTest (installed mode)"):
+            raise SystemExit("Could not open the installed app; no test was started.")
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                    text=True, bufsize=1)
         reopened = False
@@ -71,11 +79,12 @@ def main():
                 reopen()
                 reopened = True
         status = process.wait()
-        if status == 0:
-            launch_status = reopen()
-            if launch_status:
-                print(f"Tests passed; app reopening requires attention (exit {launch_status}).")
-                raise SystemExit(launch_status)
+        # A failed test can also leave the target terminated by XCTest. Restore
+        # the foreground validation app, retaining the original test failure.
+        launch_status = reopen()
+        if status == 0 and launch_status:
+            print(f"Tests passed; app reopening requires attention (exit {launch_status}).")
+            raise SystemExit(launch_status)
     print(f"Tests exit: {status}; evidence: {result}")
     raise SystemExit(status)
 
