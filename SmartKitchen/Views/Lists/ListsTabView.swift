@@ -299,7 +299,6 @@ private struct ListsLoadedTabView: View {
     @State private var pantryFilter: PantryListFilterOption = .all
     @State private var groceryFilter: GroceryListFilterOption = .all
     @State private var targetedTab: ListSubtab?
-    @State private var currentScrollOffset: CGFloat = 0
     @State private var contentResetToken: Int = 0
     @State private var isLocalSearchVisible = false
     @State private var localSearchText = ""
@@ -463,7 +462,6 @@ private struct ListsLoadedTabView: View {
             finishItemSelection()
             localSearchText = ""
             showsInlineTitle = false
-            currentScrollOffset = 0
         }
         .onChange(of: scrollToTopTrigger) { _, _ in
             handleActiveTabRetap()
@@ -810,7 +808,8 @@ private struct ListsLoadedTabView: View {
     }
 
     private func updateInlineTitle(_ offset: CGFloat) {
-        currentScrollOffset = offset
+        // Only the threshold is consumed by the title and tab-retap behavior.
+        // Persisting every pixel in @State rebuilt the entire list per frame.
         let shouldShow = offset < -24
         if showsInlineTitle != shouldShow {
             showsInlineTitle = shouldShow
@@ -826,7 +825,7 @@ private struct ListsLoadedTabView: View {
     }
 
     private var isNearTop: Bool {
-        currentScrollOffset >= -24
+        !showsInlineTitle
     }
 
     private func advanceToNextVisibleSubtab() {

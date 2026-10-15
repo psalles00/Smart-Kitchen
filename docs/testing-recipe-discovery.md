@@ -702,3 +702,21 @@ antes da abertura, pois a instalação encerrou o processo com o argumento de te
 acesa. O Device Hub foi reaberto e o desbloqueio solicitado. Time Profiler e
 métricas físicas dessa correção seguem pendentes; não se afirma que o bloqueio
 foi eliminado no aparelho até obter essa evidência.
+
+### Listas: atualizar somente ao atravessar o limite do título
+
+A rolagem de Listas guardava cada pixel em @State, embora os consumidores só
+precisem saber se a posição atravessou -24 pontos. Agora apenas a mudança desse
+limite atualiza o estado. O comportamento de título e toque repetido na aba
+continua equivalente; dados, textos e persistência não mudam.
+
+Builds iOS físico/Simulator e macOS passaram. O teste de rolagem e retorno ao
+app em Listas passou no iPhone 17 Pro virtual. Os dois stores continuam idênticos
+em todas as linhas, IDs e hashes de BLOBs, com quick_check ok. Mac instalado e
+assinado com o certificado original; snapshot antes/depois idêntico e janela
+real de boas-vindas conferida (estado vazio pós-formatação já conhecido).
+A medição física da combinação com o worker Metal ainda está em andamento.
+
+Teste manual: rolar Listas para ocultar/exibir o título; tocar na aba perto do
+topo para alternar a categoria e longe do topo para voltar ao início; sair e
+retornar ao app.
