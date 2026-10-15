@@ -544,3 +544,31 @@ deve capturar ações reais com a métrica de hitches do XCTest.
 Teste manual: com modo restrito, peça jantar em 20 minutos e confira que não
 pressupõe arroz/feijão já cozidos. Cite explicitamente um alimento e confira sua
 prioridade. Repita em modo livre e confirme que não impõe o inventário restrito.
+
+### Repetição real e coleta de métricas
+
+A consulta explícita foi repetida com o mesmo pedido e a mesma despensa sintética,
+sem enfraquecer as restrições. Duas respostas Exa não trouxeram receitas completas
+compatíveis; o teste terminou com `empty`. US$ 0,026 foram informados pelo provedor,
+com US$ 0,038 conservadoramente retidos. O caso de qualidade web segue reprovado.
+
+Há agora cinco testes de ações com `XCTHitchMetric`, rolagem quando aplicável e
+retorno do segundo plano, três amostras por página. O teste da Home no Simulator
+passou; a coleta adicional confirmou amostras de relógio e duração de rolagem,
+mas não apresentou métricas de hitches/FPS. Duração inclui esperas da automação
+e não representa latência de resposta nem fluidez. Referência oficial:
+https://developer.apple.com/documentation/xctest/xcthitchmetric.
+
+O build físico Release passou usando os certificados e profiles locais, sem
+`-allowProvisioningUpdates`. A execução não iniciou: o iPhone exibiu a autorização
+separada “Digite o código do iPhone para XCTest / Enable UI Automation” e o runner
+expirou esperando essa autorização. Nenhuma página física foi aprovada nessa
+tentativa. A medição aguarda o código digitado pelo proprietário no aparelho.
+
+A investigação do login Apple encontrou HTTP 503 também no caminho público de
+recuperação, sem conta, cookies ou credenciais. O status público do App Store
+Connect não listava incidente, o que não exclui falha no serviço de recuperação.
+Nos logs locais e unificados, houve uma falha de leitura de metadados do Keychain
+(`missing Xcode-Username`), sem prova de envio de senha incorreta à Apple. A causa
+do bloqueio da conta permanece indeterminada. Tentativas de login foram suspensas;
+nenhuma senha, conta, certificado ou item do Keychain foi removido ou redefinido.

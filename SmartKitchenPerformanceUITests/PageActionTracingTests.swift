@@ -3,6 +3,51 @@ import XCTest
 /// Navigates existing food data without purchases, AI calls, seeding or deletion.
 @MainActor
 final class PageActionTracingTests: XCTestCase {
+    func testHitchesHomeScrollAndForeground() throws { try measurePageHitches("Savoria") }
+    func testHitchesListsScrollAndForeground() throws { try measurePageHitches("Listas") }
+    func testHitchesRecipesScrollAndForeground() throws { try measurePageHitches("Receitas") }
+    func testHitchesNutritionScrollAndForeground() throws { try measurePageHitches("Nutrição") }
+    func testHitchesSearchAndForeground() throws { try measurePageHitches("Buscar") }
+
+    /// Actual OS hitch measurements, not automation elapsed time or callback gaps.
+    /// Existing data only: no seeding, AI requests, checkbox changes or purchases.
+    private func measurePageHitches(_ name: String) throws {
+        guard #available(iOS 26.0, *) else { throw XCTSkip("OS hitch metrics require iOS 26 or later.") }
+        continueAfterFailure = false
+        let app = XCUIApplication(bundleIdentifier: "com.pedrosalles.smartkitchen.sync")
+        app.launchArguments = ["-SavoriaActionTrace", "-SavoriaKeepAwakeForValidation",
+                               "-AppleLanguages", "(pt-BR)", "-AppleLocale", "pt_BR"]
+        app.launch()
+        let tabs = app.tabBars.firstMatch
+        XCTAssertTrue(tabs.waitForExistence(timeout: 45))
+        let options = XCTMeasureOptions()
+        options.iterationCount = 3
+        // Clock samples also prove the measurement block produced a report.
+        // They include automation waits and must never be interpreted as FPS.
+        var metrics: [any XCTMetric] = [XCTClockMetric(), XCTHitchMetric(application: app)]
+        if name != "Buscar" { metrics.append(XCTOSSignpostMetric.scrollingAndDecelerationMetric) }
+        measure(metrics: metrics, options: options) {
+            tabs.buttons[name == "Savoria" ? "Listas" : "Savoria"].firstMatch.tap()
+            tabs.buttons[name].firstMatch.tap()
+            if name == "Listas", app.buttons["Despensa"].firstMatch.isHittable {
+                app.buttons["Despensa"].firstMatch.tap()
+            }
+            if name != "Buscar" {
+                let scroll = app.scrollViews.firstMatch
+                if scroll.exists { scroll.swipeUp(); scroll.swipeDown() }
+                else if app.tables.firstMatch.exists { app.tables.firstMatch.swipeUp(); app.tables.firstMatch.swipeDown() }
+                // A downward pull can deliberately open Search. Return to the
+                // target so foreground measures and checks the intended page.
+                if !tabs.buttons[name].firstMatch.isSelected { tabs.buttons[name].firstMatch.tap() }
+            }
+            XCUIDevice.shared.press(.home)
+            app.activate()
+            XCTAssertTrue(tabs.buttons[name].firstMatch.waitForExistence(timeout: 10))
+            XCTAssertTrue(tabs.buttons[name].firstMatch.isSelected)
+        }
+        XCUIDevice.shared.press(.home)
+    }
+
     /// Hardware-only preview; never captures, analyzes, or registers a photo.
     func testPhysicalCameraPreviewAndCancellationWithoutSaving() throws {
         #if targetEnvironment(simulator)
