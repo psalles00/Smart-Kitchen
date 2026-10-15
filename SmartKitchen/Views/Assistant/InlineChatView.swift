@@ -2376,7 +2376,7 @@ struct InlineChatView: View {
         )
 
         let (exaResults, quickResults) = await (exaTask, quickTask)
-        let localMatchedRecipeIDs = matchLocalRecipes(occasion: occasion, refinement: refinement, customQuery: customQuery)
+        let localMatchedRecipeIDs = matchLocalRecipes(occasion: occasion, refinement: refinement, customQuery: customQuery, filterByPantry: filterEnabled)
 
         if exaResults.isEmpty && quickResults.isEmpty && localMatchedRecipeIDs.isEmpty {
             if filterEnabled && pantryNames.count <= 2 {
@@ -2424,7 +2424,8 @@ struct InlineChatView: View {
     private func matchLocalRecipes(
         occasion: RecipeIdeaOccasion?,
         refinement: String?,
-        customQuery: String?
+        customQuery: String?,
+        filterByPantry: Bool
     ) -> [UUID] {
         let pantryItems = (try? modelContext.fetch(FetchDescriptor<UnifiedItem>())) ?? []
         let pantryNames = pantryItems.filter { $0.isPantry }.map { normalized($0.name) }
@@ -2448,7 +2449,7 @@ struct InlineChatView: View {
         }
         keywords = Array(Set(keywords.filter { $0.count >= 3 }))
 
-        let thresholdPercent = Double(settings?.recipeCompatibilityThresholdPercentValue ?? 80) / 100.0
+        let request = RecipeIdeaRequest(occasion: occasion?.label, refinement: refinement, customQuery: customQuery)
 
         let scored: [(Recipe, Double, Int)] = allRecipes.compactMap { recipe in
             let category = normalized(recipe.category)
@@ -2462,8 +2463,12 @@ struct InlineChatView: View {
 
             let ingredientNames = (recipe.ingredients ?? []).map { normalized($0.name) }
             guard !ingredientNames.isEmpty else { return nil }
+            let (minutes, overflow) = recipe.prepTime.addingReportingOverflow(recipe.cookTime)
+            guard request.acceptsPantry(ingredients: ingredientNames, pantryItems: pantryNames, filterByPantry: filterByPantry),
+                  request.accepts(ingredients: ingredientNames, steps: (recipe.steps ?? []).map(\.instruction),
+                                  totalMinutes: !overflow && minutes > 0 ? minutes : nil, servings: recipe.servings) else { return nil }
             let score = ingredientNames.reduce(into: 0) { acc, ing in
-                if pantryNames.contains(where: { $0 == ing || $0.contains(ing) || ing.contains($0) }) {
+                if pantryNames.contains(ing) {
                     acc += 1
                 }
             }
@@ -2475,9 +2480,7 @@ struct InlineChatView: View {
             return lhs.0.name.localizedCaseInsensitiveCompare(rhs.0.name) == .orderedAscending
         }
 
-        let filtered = scored.filter { $0.1 >= thresholdPercent }
-        let chosen = filtered.isEmpty ? Array(scored.prefix(4)) : Array(filtered.prefix(4))
-        return chosen.map(\.0.id)
+        return scored.prefix(4).map(\.0.id)
     }
 
     // MARK: - Recipe Ideas Wizard — Results View
@@ -2696,6 +2699,10 @@ struct InlineChatView: View {
     private func handleNewIdeaTap(_ idea: RecipeIdeaResult, payload: ResultsPayload) {
         let convId = ensureConversation()
         let request = payload.request
+        let pantryItems = (try? modelContext.fetch(FetchDescriptor<UnifiedItem>())) ?? []
+        let pantryNames = pantryItems.filter { $0.isPantry }.map(\.name)
+        let filterByPantry = payload.filterByPantry ?? true
+        let ingredientPrompt = request.ingredientPrompt(pantryItems: pantryNames, filterByPantry: filterByPantry)
         let loadingId = beginRecipeCreation(title: idea.title, sourceLabel: String(localized: "Receitas da Web"))
 
         Task {
@@ -2712,7 +2719,7 @@ struct InlineChatView: View {
                 externalURL: idea.sourceURL.flatMap(URL.init(string:)),
                 imageURL: idea.heroImageURL.flatMap(URL.init(string:)),
                 sourceLabel: idea.sourceHost ?? "EXA",
-                requestContext: request.prompt
+                requestContext: ingredientPrompt + "\n" + request.prompt
             )
 
             async let structuredTask: RecipeDraft? = {
@@ -2740,7 +2747,8 @@ struct InlineChatView: View {
                     return
                 }
 
-                guard request.accepts(draft) else {
+                guard request.accepts(draft),
+                      request.acceptsPantry(ingredients: draft.ingredients.map(\.name), pantryItems: pantryNames, filterByPantry: filterByPantry) else {
                     insertRecipeRestrictionError(conversationId: convId)
                     return
                 }
@@ -2813,7 +2821,9 @@ struct InlineChatView: View {
                 instruction: instruction,
                 loadingId: loadingId,
                 conversationId: convId,
-                request: request
+                request: request,
+                pantryNames: pantryNames,
+                filterByPantry: payload.filterByPantry ?? true
             )
         }
     }
@@ -2824,7 +2834,9 @@ struct InlineChatView: View {
         instruction: String,
         loadingId: UUID,
         conversationId: UUID,
-        request: RecipeIdeaRequest
+        request: RecipeIdeaRequest,
+        pantryNames: [String],
+        filterByPantry: Bool
     ) async {
         // Não exigir `apiKey` local: em Release a OpenAI key direta é vazia
         // por design — o backend de IA roda via Supabase Edge Function
@@ -2867,6 +2879,7 @@ struct InlineChatView: View {
                     conversationId: conversationId
                 )
                 guard let card = parseRecipeDetailCard(from: message),
+                      request.acceptsPantry(ingredients: card.ingredients.map(\.name), pantryItems: pantryNames, filterByPantry: filterByPantry),
                       request.accepts(ingredients: card.ingredients.map(\.name),
                                       steps: card.steps,
                                       totalMinutes: card.totalMinutes, servings: card.servings) else {

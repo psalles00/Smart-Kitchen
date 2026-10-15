@@ -65,9 +65,19 @@ struct RecipeIdeaRequest {
         let names = allowedPantryItems(pantryItems)
         let list = names.isEmpty ? "(despensa vazia)" : names.joined(separator: ", ")
         if filterByPantry {
-            return "Use APENAS ingredientes desta despensa: \(list). Não inclua ingredientes fora da lista."
+            return "Use APENAS ingredientes desta despensa: \(list). Não inclua ingredientes fora da lista, nem nos passos. Copie os nomes exatos da lista; coloque quantidades nos campos de quantidade e cortes nos passos, sem modificar os nomes dos ingredientes."
         }
         return "Priorize os ingredientes disponíveis quando combinarem com o pedido: \(list). Pode incluir ingredientes de fora da despensa; não os apresente como disponíveis. Uma despensa vazia não impede sugerir receitas."
+    }
+
+    /// Availability requires exact names, never icon identity, substrings or fuzzy matches.
+    func acceptsPantry(ingredients: [String], pantryItems: [String], filterByPantry: Bool) -> Bool {
+        guard filterByPantry else { return true }
+        let allowed = Set(allowedPantryItems(pantryItems).map { Self.normalized($0).trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty })
+        return !ingredients.isEmpty && ingredients.allSatisfy {
+            let name = Self.normalized($0).trimmingCharacters(in: .whitespacesAndNewlines)
+            return !name.isEmpty && allowed.contains(name)
+        }
     }
 
     var maximumMinutes: Int? {

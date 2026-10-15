@@ -5,6 +5,17 @@ import XCTest
 
 @MainActor
 final class RecipeIdeaRequestTests: XCTestCase {
+    func testFinalRecipePantryCheckRejectsExtrasAndSubstringMatches() {
+        let request = RecipeIdeaRequest(occasion: nil, refinement: nil, customQuery: "Sem leite")
+        let pantry = ["Ovos", "Tomate", "Salmão", "Leite"]
+        XCTAssertTrue(request.acceptsPantry(ingredients: [" ovos ", "TOMATE"], pantryItems: pantry, filterByPantry: true))
+        for names in [["Ovos", "Óleo"], ["Sal"], ["Leite"], [""], []] {
+            XCTAssertFalse(request.acceptsPantry(ingredients: names, pantryItems: pantry, filterByPantry: true))
+        }
+        XCTAssertFalse(request.acceptsPantry(ingredients: ["Ovos"], pantryItems: [], filterByPantry: true))
+        XCTAssertTrue(request.acceptsPantry(ingredients: ["Frango", "Limão"], pantryItems: [], filterByPantry: false))
+    }
+
     private let original = "Tenho arroz, ovos e tomate. Quero jantar em até 20 minutos para uma pessoa, sem leite. Não registre nem altere dados."
 
     func testConversationSurvivesReopeningStoreWithAutosaveDisabled() throws {

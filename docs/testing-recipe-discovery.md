@@ -73,3 +73,24 @@ Teste manual adicional: no modo livre, abra sugestões com cortes/embalagens
 específicos; no modo restrito, confirme que esses mesmos nomes não passam como
 itens disponíveis quando a despensa não os contém. Confira também a receita
 completa: a validação ponta a ponta da expansão ainda está em andamento.
+
+## Conferência da receita completa e da biblioteca
+
+A preferência capturada no resultado agora acompanha a estruturação de uma
+receita da web e a expansão de uma ideia rápida. Antes de exibir o card completo,
+o app confere os ingredientes reais contra a despensa no modo restrito. Nomes
+são comparados por inteiro, ignorando apenas caixa, acentos e espaços externos;
+ícones, correspondências parciais e similaridade não provam disponibilidade.
+
+A biblioteca aplica as restrições do pedido a ingredientes, passos, tempo e
+porções. O modo livre mantém receitas com ingredientes externos; o modo restrito
+não recorre silenciosamente a receitas abaixo da disponibilidade exigida. A
+compatibilidade geral configurável da página inicial permanece independente.
+
+Roteiro manual: abra tanto uma sugestão da web como uma ideia rápida com a
+restrição ativa. Confira a receita completa; um óleo ou tempero acrescentado que
+não esteja na despensa deve impedir o card e mostrar o erro já traduzido.
+Repita com a restrição desativada e verifique que ingredientes externos são
+permitidos. Na biblioteca, peça uma receita sem leite e confirme que receitas
+com laticínios não reaparecem como fallback. Esses roteiros ainda precisam da
+validação visual completa; testes do comparador não a substituem.
