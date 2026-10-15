@@ -668,3 +668,37 @@ https://developer.apple.com/documentation/quartzcore/cametallayer.
 
 Teste manual: conferir o painel e a borda em Home/Nutrição/Listas/Receitas, rolar,
 abrir e fechar a busca, sair e voltar ao app e confirmar o fundo em movimento.
+
+### Aquisição de drawable fora da interface
+
+O callback principal do MTKView agora só captura dimensões, cor e relógio e
+entrega o valor mais recente a uma fila serial. `CAMetalLayer.nextDrawable`,
+criação do render pass, encoding e commit ficam nessa fila. Nenhuma propriedade
+de UIView é consultada fora da thread principal. Uma trava curta protege somente
+o snapshot e a sinalização; ela nunca envolve aquisição de drawable ou trabalho
+Metal. Há no máximo um trabalho pendente, dois comandos em voo e descarte de
+snapshots antigos. Uma atualização estática final não é perdida; saída da tela,
+pausa e desmontagem cancelam valores pendentes sem esperar a fila.
+
+Cada trabalho usa autoreleasepool para liberar drawables prontamente, seguindo
+a documentação da Apple. Rede do shader, resolução de 384, relógio compartilhado,
+viewport e fade continuam iguais. Não se reduziu FPS nem se congelou o fundo.
+
+Os três builds passaram. No Simulator, as cinco páginas e o retorno ao app
+passaram; 737 de 756 pontos de uma faixa só de fundo mudaram em capturas da mesma
+Home, sem interação. Um novo arquivo GPU confirmou 180 comandos completados.
+São evidências de movimento, não desempenho físico. Os dois stores permaneceram
+idênticos e passaram quick_check. Mac atualizado, assinatura original preservada,
+snapshot idêntico e tela conhecida de boas-vindas conferida.
+
+Após a rodada física da composição, os bancos, BLOBs e os mesmos 151 arquivos
+de mídia ficaram idênticos. Uma cópia geral falhou num snapshot temporário do
+SplashBoard protegido pelo iOS; a parcial foi preservada e não usada como prova
+completa. Cópias bem-sucedidas de Application Support, RecipeThumbnails e
+tmp/RecipeMediaCache forneceram a comparação dos dados reais.
+
+A versão com o worker foi instalada no físico, mas o aparelho voltou a bloquear
+antes da abertura, pois a instalação encerrou o processo com o argumento de tela
+acesa. O Device Hub foi reaberto e o desbloqueio solicitado. Time Profiler e
+métricas físicas dessa correção seguem pendentes; não se afirma que o bloqueio
+foi eliminado no aparelho até obter essa evidência.

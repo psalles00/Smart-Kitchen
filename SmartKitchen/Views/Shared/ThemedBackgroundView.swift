@@ -195,9 +195,11 @@ private struct SavoriaMetalBackdrop: UIViewRepresentable {
         view.backgroundColor = .black
         view.clearColor = MTLClearColorMake(0, 0, 0, 1)
         view.framebufferOnly = true
+        view.presentsWithTransaction = false
         view.autoResizeDrawable = false
         view.preferredFramesPerSecond = 60
         view.delegate = context.coordinator
+        view.cancelPendingFrame = { [weak coordinator = context.coordinator] in coordinator?.worker.cancelPending() }
         view.isUserInteractionEnabled = false
         return view
     }
@@ -215,6 +217,8 @@ private struct SavoriaMetalBackdrop: UIViewRepresentable {
     static func dismantleUIView(_ view: SavoriaBackdropMetalView, coordinator: Coordinator) {
         view.isPaused = true
         view.delegate = nil
+        view.cancelPendingFrame = nil
+        coordinator.worker.stop()
     }
 
     @MainActor
@@ -223,52 +227,146 @@ private struct SavoriaMetalBackdrop: UIViewRepresentable {
         var palette: SavoriaBackdropPalette?
         var viewport: CGSize = .zero
         var reduceMotion = false
-        private let queue = SavoriaMetalBackdropResources.shared.device?.makeCommandQueue()
-        private let inFlight = DispatchSemaphore(value: 2)
-        private lazy var gpuProbe: SavoriaBackdropGPUProbe? = SavoriaBackdropDiagnostics.enabled ? SavoriaBackdropGPUProbe() : nil
+        let worker = SavoriaBackdropRenderWorker(
+            pipeline: SavoriaMetalBackdropResources.shared.pipeline,
+            commandQueue: SavoriaMetalBackdropResources.shared.device?.makeCommandQueue(),
+            gpuProbe: SavoriaBackdropDiagnostics.enabled ? SavoriaBackdropGPUProbe() : nil)
 
         func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) { }
 
         func draw(in view: MTKView) {
-            guard view.bounds.width > 0, view.bounds.height > 0,
-                  let pipeline = SavoriaMetalBackdropResources.shared.pipeline,
-                  let queue, inFlight.wait(timeout: .now()) == .success else { return }
-            guard let drawable = view.currentDrawable,
-                  let descriptor = view.currentRenderPassDescriptor,
-                  let command = queue.makeCommandBuffer(),
-                  let encoder = command.makeRenderCommandEncoder(descriptor: descriptor) else {
-                inFlight.signal()
+            guard view.bounds.width > 0, view.bounds.height > 0, view.window != nil,
+                  UIApplication.shared.applicationState == .active,
+                  let layer = view.layer as? CAMetalLayer else {
+                worker.cancelPending()
                 return
             }
             let now = ProcessInfo.processInfo.systemUptime
             let tint = !reduceMotion && palette?.target == theme ? palette!.rgb(at: now) : theme.shaderRGB
             let field = viewport.width > 0 ? viewport : view.bounds.size
-            // Three float4s keep Swift/Metal alignment explicit.
-            var uniforms = (SIMD4<Float>(Float(view.bounds.width), Float(view.bounds.height), Float(field.width), Float(field.height)),
-                            SIMD4<Float>(Float(tint.x), Float(tint.y), Float(tint.z), 1),
-                            SIMD4<Float>(reduceMotion ? 0 : Float(now - SavoriaShaderClock.epoch), 0, 0, 0))
-            encoder.setRenderPipelineState(pipeline)
-            encoder.setFragmentBytes(&uniforms, length: MemoryLayout.size(ofValue: uniforms), index: 0)
-            encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 3)
-            encoder.endEncoding()
-            let semaphore = inFlight
-            let probe = gpuProbe
-            let width = Int(view.drawableSize.width)
-            let height = Int(view.drawableSize.height)
-            let page = theme.rawValue
-            command.addCompletedHandler { buffer in
-                semaphore.signal()
-                probe?.record(start: buffer.gpuStartTime, end: buffer.gpuEndTime,
-                              width: width, height: height, page: page)
-            }
-            command.present(drawable)
-            command.commit()
+            let frame = SavoriaBackdropFrame(
+                dimensions: SIMD4(Float(view.bounds.width), Float(view.bounds.height), Float(field.width), Float(field.height)),
+                tint: SIMD4(Float(tint.x), Float(tint.y), Float(tint.z), 1),
+                clock: SIMD4(reduceMotion ? 0 : Float(now - SavoriaShaderClock.epoch), 0, 0, 0),
+                page: theme.rawValue)
+            // Never acquire a drawable or encode commands on the UI thread.
+            worker.submit(layer: layer, frame: frame)
         }
+    }
+
+}
+
+
+private struct SavoriaBackdropFrame: Sendable {
+    let dimensions: SIMD4<Float>
+    let tint: SIMD4<Float>
+    let clock: SIMD4<Float>
+    let page: String
+}
+
+/// A single serial worker owns drawable acquisition and command encoding.
+/// The lock protects only the latest value and gate; it never covers Metal work.
+/// At most one job is queued, and newer display ticks replace stale snapshots.
+private final class SavoriaBackdropRenderWorker: @unchecked Sendable {
+    private let renderQueue = DispatchQueue(label: "com.pedrosalles.savoria.backdrop", qos: .userInitiated)
+    private let lock = NSLock()
+    private var latest: (layer: CAMetalLayer, frame: SavoriaBackdropFrame, revision: UInt64)?
+    private var revision: UInt64 = 0
+    private var scheduled = false
+    private var stopped = false
+    private let inFlight = DispatchSemaphore(value: 2)
+    private let pipeline: (any MTLRenderPipelineState)?
+    private let commandQueue: (any MTLCommandQueue)?
+    private let gpuProbe: SavoriaBackdropGPUProbe?
+
+    init(pipeline: (any MTLRenderPipelineState)?, commandQueue: (any MTLCommandQueue)?, gpuProbe: SavoriaBackdropGPUProbe?) {
+        self.pipeline = pipeline
+        self.commandQueue = commandQueue
+        self.gpuProbe = gpuProbe
+    }
+
+    func submit(layer: CAMetalLayer, frame: SavoriaBackdropFrame) {
+        lock.lock()
+        guard !stopped else { lock.unlock(); return }
+        revision &+= 1
+        latest = (layer, frame, revision)
+        guard !scheduled else { lock.unlock(); return }
+        scheduled = true
+        lock.unlock()
+        scheduleJob()
+    }
+
+    private func scheduleJob() {
+        renderQueue.async { [self] in
+            let consumed = autoreleasepool { renderLatest() }
+            lock.lock()
+            let hasNewerFrame = !stopped && latest != nil && latest?.revision != consumed
+            if !hasNewerFrame { scheduled = false }
+            lock.unlock()
+            // Preserve a final static/reduced-motion update that arrived while
+            // encoding. This still queues at most one job, never a frame backlog.
+            if hasNewerFrame { scheduleJob() }
+        }
+    }
+
+    func cancelPending() {
+        lock.lock()
+        latest = nil
+        lock.unlock()
+    }
+
+    func stop() {
+        lock.lock()
+        stopped = true
+        latest = nil
+        lock.unlock()
+    }
+
+    private func snapshot() -> (layer: CAMetalLayer, frame: SavoriaBackdropFrame, revision: UInt64)? {
+        lock.lock()
+        defer { lock.unlock() }
+        return stopped ? nil : latest
+    }
+
+    private func renderLatest() -> UInt64? {
+        guard let initial = snapshot() else { return nil }
+        guard let pipeline, let commandQueue,
+              inFlight.wait(timeout: .now()) == .success else { return snapshot()?.revision }
+        var submitted = false
+        defer { if !submitted { inFlight.signal() } }
+        guard let command = commandQueue.makeCommandBuffer(),
+              let drawable = initial.layer.nextDrawable(),
+              let current = snapshot(), current.layer === initial.layer else { return snapshot()?.revision }
+        let descriptor = MTLRenderPassDescriptor()
+        descriptor.colorAttachments[0].texture = drawable.texture
+        descriptor.colorAttachments[0].loadAction = .clear
+        descriptor.colorAttachments[0].storeAction = .store
+        descriptor.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 1)
+        guard let encoder = command.makeRenderCommandEncoder(descriptor: descriptor) else { return snapshot()?.revision }
+        var uniforms = (current.frame.dimensions, current.frame.tint, current.frame.clock)
+        encoder.setRenderPipelineState(pipeline)
+        encoder.setFragmentBytes(&uniforms, length: MemoryLayout.size(ofValue: uniforms), index: 0)
+        encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 3)
+        encoder.endEncoding()
+        let semaphore = inFlight
+        let probe = gpuProbe
+        let width = drawable.texture.width
+        let height = drawable.texture.height
+        let page = current.frame.page
+        command.addCompletedHandler { buffer in
+            semaphore.signal()
+            probe?.record(start: buffer.gpuStartTime, end: buffer.gpuEndTime, width: width, height: height, page: page)
+        }
+        command.present(drawable)
+        command.commit()
+        submitted = true
+        return current.revision
     }
 }
 
 private final class SavoriaBackdropMetalView: MTKView {
     var wantsAnimation = false
+    var cancelPendingFrame: (() -> Void)?
 
     override func didMoveToWindow() {
         super.didMoveToWindow()
@@ -287,6 +385,7 @@ private final class SavoriaBackdropMetalView: MTKView {
 
     func updateRenderState() {
         isPaused = !wantsAnimation || window == nil
+        if isPaused { cancelPendingFrame?() }
     }
 }
 
