@@ -46,7 +46,24 @@ Resultados preservados fora do repositório:
 O cadastro de produção foi conferido no App Store Connect: app `6771525885`,
 Bundle ID `com.pedrosalles.smartkitchen.sync`. Não havia grupos ou produtos de
 assinatura cadastrados. O grupo `Savoria Premium` (`22478308`) foi criado;
-os preços dos produtos ainda precisam ser configurados e conferidos ali.
+os dois produtos foram criados com os mesmos identificadores usados pelo app:
+
+| Plano | ID Apple | Duração | Preço inicial no Brasil |
+| --- | --- | --- | --- |
+| `com.pedrosalles.smartkitchen.sync.premium.annual` | `6822917042` | 1 ano | R$ 99,90 |
+| `com.pedrosalles.smartkitchen.sync.premium.monthly` | `6822949625` | 1 mês | R$ 49,90 |
+
+Após salvar cada preço, a tabela de preço inicial foi reaberta e os valores
+brasileiros foram conferidos novamente. Os preços dos outros territórios foram
+calculados automaticamente pela Apple a partir do preço brasileiro.
+Ambos os produtos estão em **Preparar para envio**. Essa configuração não
+significa que foram enviados para revisão, aprovados ou publicados, nem comprova
+que `Product.products` já os retorna no ambiente Sandbox. A divergência de
+centavos no SDK de testes local continua pendente, sem alterar as expectativas.
+O grupo atribuiu inicialmente nível 1 ao anual e nível 2 ao mensal. Como ambos
+oferecem o mesmo Premium, o ajuste para um nível comum ainda precisa ser salvo
+e conferido. Disponibilidade, metadados localizados e envio para revisão também
+não foram concluídos nesta configuração dos preços.
 
 Referências oficiais: [StoreKit Testing](https://developer.apple.com/documentation/storekittest/sktestsession)
 e [Product.displayPrice](https://developer.apple.com/documentation/storekit/product/displayprice).
