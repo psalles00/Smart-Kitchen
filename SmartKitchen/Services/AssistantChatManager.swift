@@ -10,10 +10,6 @@ final class AssistantChatManager: ObservableObject {
 
     let aiService = AIService()
 
-    // Cached RAG context to avoid rebuilding on every message
-    private var cachedInventoryContext: String?
-    private var cachedInventoryDate: Date?
-    private let contextCacheTTL: TimeInterval = 10
 
     private let confirmPrompt = "__confirm_pending_ai_change__"
     private let cancelPrompt = "__cancel_pending_ai_change__"
@@ -200,8 +196,6 @@ final class AssistantChatManager: ObservableObject {
                 ])
             }
 
-            cachedInventoryContext = nil
-            cachedInventoryDate = nil
 
             try await continueConversation(with: apiMessages, context: context, allRecipes: allRecipes, apiKey: apiKey)
             return
@@ -233,8 +227,6 @@ final class AssistantChatManager: ObservableObject {
                 ])
             }
 
-            cachedInventoryContext = nil
-            cachedInventoryDate = nil
 
             let allRecipes = (try? context.fetch(FetchDescriptor<Recipe>(sortBy: [SortDescriptor(\.name)]))) ?? []
             try await continueConversation(with: apiMessages, context: context, allRecipes: allRecipes, apiKey: APIConfig.openAIAPIKey)
@@ -282,12 +274,8 @@ final class AssistantChatManager: ObservableObject {
         1. Quando o usuário perguntar sobre a despensa, lista de compras ou receitas, \
         SEMPRE use as ferramentas (get_all_pantry, get_all_grocery, search_recipes, etc.) \
         para buscar os dados atualizados ANTES de responder. NUNCA invente dados.
-        2. Ao sugerir receitas, chame get_all_pantry primeiro para saber o que o usuário tem, \
-        depois use search_recipes ou suggest_recipe.
-        3. Quando o usuário pedir sugestões como "o que posso cozinhar?", "o que posso fazer de sobremesa?" \
-        ou qualquer variação de sugestão de receitas, NÃO liste os itens da despensa na resposta. \
-        Responda com uma introdução curta dizendo que as opções abaixo foram encontradas com base na despensa \
-        e nas receitas salvas, e feche perguntando se o usuário quer outras sugestões.
+        2. Ao sugerir receitas, considere todo o snapshot atual da despensa. Consulte ferramentas quando precisar atualizar ou detalhar os dados.
+        3. Ao sugerir receitas, responda ao pedido de forma natural e contextual. Explique escolhas e adaptações úteis sem despejar o inventário inteiro nem impor uma introdução, uma pergunta final ou um número fixo de receitas.
         4. Ao criar uma receita, use create_recipe com ingredientes detalhados (quantidade + unidade) \
         e passos claros e numerados.
         5. Você pode criar, editar, excluir, buscar e detalhar receitas usando as ferramentas de receita.
@@ -302,28 +290,19 @@ final class AssistantChatManager: ObservableObject {
         11. Se não souber algo, diga que não sabe. Nunca invente informações.
         """)
 
+        parts.append(RecipePantryContext.guidance)
+        parts.append("Selected pantry-only mode: \(((try? context.fetch(FetchDescriptor<AppSettings>()))?.first?.recipeIdeasFilterByPantry ?? true)). An explicit latest user override takes priority.")
+
         guard includeInventoryContext else {
             return parts.joined(separator: "\n\n")
         }
 
-        if let cached = cachedInventoryContext,
-           let cacheDate = cachedInventoryDate,
-           Date().timeIntervalSince(cacheDate) < contextCacheTTL {
-            parts.append(cached)
-            return parts.joined(separator: "\n\n")
-        }
 
         var inventoryParts = [String]()
 
         let pantryDescriptor = FetchDescriptor<UnifiedItem>(sortBy: [SortDescriptor(\.category)])
         if let allItems = try? context.fetch(pantryDescriptor) {
-            let pantryItems = allItems.filter { $0.isPantry }
-            if pantryItems.isEmpty {
-                inventoryParts.append("## Despensa atual\nA despensa está vazia.")
-            } else {
-                let itemDescriptions = pantryItems.map { $0.aiReadableDescription }
-                inventoryParts.append("## Despensa atual (\(pantryItems.count) itens)\n\(itemDescriptions.joined(separator: "\n"))")
-            }
+            inventoryParts.append(RecipePantryContext(items: allItems).prompt)
 
             let groceryItems = allItems.filter { $0.isGrocery }
             if groceryItems.isEmpty {
@@ -356,8 +335,6 @@ final class AssistantChatManager: ObservableObject {
         inventoryParts.append(Self.nutritionPromptSection(context: context))
 
         let inventoryContext = inventoryParts.joined(separator: "\n\n")
-        cachedInventoryContext = inventoryContext
-        cachedInventoryDate = Date()
 
         parts.append(inventoryContext)
         return parts.joined(separator: "\n\n")
@@ -374,10 +351,11 @@ final class AssistantChatManager: ObservableObject {
 
     private func makeRecipeDiscoveryResponse(for text: String, context: ModelContext, allRecipes: [Recipe]) -> RecipeDiscoveryResponse? {
         let normalizedPrompt = normalized(text)
-        guard isRecipeSuggestionPrompt(normalizedPrompt) else { return nil }
+        guard RecipeIdeaRequest(occasion: nil, refinement: nil, customQuery: text).onlySavedRecipes,
+              isRecipeSuggestionPrompt(normalizedPrompt) else { return nil }
 
         let pantryItems = (try? context.fetch(FetchDescriptor<UnifiedItem>())) ?? []
-        let pantryNames = pantryItems.filter { $0.isPantry }.map { normalized($0.name) }
+        let pantryNames = RecipePantryContext(items: pantryItems).availableNames.map(normalized)
         let wantsDessert = normalizedPrompt.contains("sobremesa") || normalizedPrompt.contains("doce")
 
         let rankedRecipes = allRecipes

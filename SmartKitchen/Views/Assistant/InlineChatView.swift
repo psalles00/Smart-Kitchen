@@ -19,10 +19,6 @@ struct InlineChatView: View {
     @State private var pendingPaywallReason: PaywallSheet.Reason?
     @FocusState private var isInputFocused: Bool
 
-    // Cached RAG context
-    @State private var cachedInventoryContext: String?
-    @State private var cachedInventoryDate: Date?
-    private let contextCacheTTL: TimeInterval = 10
 
     // Recipe Ideas wizard state (apenas usado quando aiChatPreset == .recipeIdeas)
     /// Override por sessão do filtro "apenas itens da despensa". `nil` = usa AppSettings.
@@ -712,8 +708,6 @@ struct InlineChatView: View {
         pinnedUserMessageID = nil
         pendingToolExecution = nil
         errorMessage = nil
-        cachedInventoryContext = nil
-        cachedInventoryDate = nil
         activeRecipeCreation = nil
         pendingInlineDrafts = [:]
         #if DEBUG
@@ -989,7 +983,7 @@ struct InlineChatView: View {
         if aiChatPreset == .recipeIdeas {
             msgs.append([
                 "role": "system",
-                "content": "O usuário abriu o modo Ideias de receitas. Priorize sugerir receitas novas e criativas, em vez de listar apenas receitas já salvas. Não trate a despensa como restrição padrão; só use a despensa quando o usuário pedir isso explicitamente ou citar ingredientes que quer aproveitar."
+                "content": "O usuário abriu o modo Ideias de receitas. Priorize sugerir receitas novas e criativas, em vez de listar apenas receitas já salvas. Considere toda a despensa como contexto. Respeite a preferência de usar apenas a despensa, salvo mudança explícita do usuário."
             ])
         }
 
@@ -1056,8 +1050,6 @@ struct InlineChatView: View {
                 ])
             }
 
-            cachedInventoryContext = nil
-            cachedInventoryDate = nil
 
             try await continueConversation(with: apiMessages)
             return
@@ -1094,8 +1086,6 @@ struct InlineChatView: View {
                 ])
             }
 
-            cachedInventoryContext = nil
-            cachedInventoryDate = nil
 
             try await continueConversation(with: apiMessages)
         } catch {
@@ -1160,12 +1150,8 @@ struct InlineChatView: View {
         1. Quando o usuário perguntar sobre a despensa, lista de compras ou receitas, \
         SEMPRE use as ferramentas (get_all_pantry, get_all_grocery, search_recipes, etc.) \
         para buscar os dados atualizados ANTES de responder. NUNCA invente dados.
-        2. Ao sugerir receitas, chame get_all_pantry primeiro para saber o que o usuário tem, \
-        depois use search_recipes ou suggest_recipe.
-        3. Quando o usuário pedir sugestões como "o que posso cozinhar?", "o que posso fazer de sobremesa?" \
-        ou qualquer variação de sugestão de receitas, NÃO liste os itens da despensa na resposta. \
-        Responda com uma introdução curta dizendo que as opções abaixo foram encontradas com base na despensa \
-        e nas receitas salvas, e feche perguntando se o usuário quer outras sugestões.
+        2. Ao sugerir receitas, considere todo o snapshot atual da despensa. Consulte ferramentas quando precisar atualizar ou detalhar os dados.
+        3. Ao sugerir receitas, responda ao pedido de forma natural e contextual. Explique escolhas e adaptações úteis sem despejar o inventário inteiro nem impor uma introdução, uma pergunta final ou um número fixo de receitas.
         4. Quando o usuário pedir para adicionar, criar ou salvar uma receita nova, NUNCA chame create_recipe durante a conversa. \
         Primeiro apresente a receita completa no formato de card descrito abaixo.
         5. O usuário só pode decidir criar/salvar a receita através do botão do card na interface. \
@@ -1182,18 +1168,7 @@ struct InlineChatView: View {
         12. Se não souber algo, diga que não sabe. Nunca invente informações.
 
         ## Sugestão de receitas novas
-        Quando o usuário pedir para criar opções de receitas ou sugerir novas receitas que ele não tem salvas:
-        - Use seu conhecimento interno para sugerir 4-6 opções de receitas.
-        - Responda APENAS com uma frase introdutória curta (ex: "Aqui estão algumas opções:").
-        - Em seguida, liste cada opção em uma linha separada com o formato: "**Nome da Receita** — Descrição breve"
-        - A descrição de cada opção deve ter NO MÁXIMO 50 caracteres.
-        - NÃO repita as opções como texto corrido. As opções devem estar APENAS no formato acima.
-        - NÃO adicione texto depois da lista de opções.
-        - Se o usuário pedir receitas novas sem especificar "a partir da despensa" ou "do zero", e a despensa tiver 3+ itens, assuma que quer receitas com base na despensa e mencione isso na introdução.
-        - Se a despensa tiver menos de 3 itens, pergunte: "Quer receitas com base na sua despensa ou partindo do zero?"
-        - REGRA OBRIGATÓRIA: Quando for com base na despensa, TODOS os ingredientes de cada receita sugerida DEVEM estar presentes na despensa do usuário. NÃO sugira receitas que necessitem de ingredientes que o usuário NÃO possui na despensa.
-        - Se o usuário pedir receitas que incluam ingredientes que ele NÃO tem na despensa, envie uma mensagem de confirmação ANTES de listar: "Essas receitas podem incluir ingredientes que você não tem na despensa. Deseja continuar?"
-        - Apenas prossiga com receitas com ingredientes fora da despensa se o usuário confirmar explicitamente.
+        Responda ao pedido com flexibilidade, considerando a despensa completa e o contexto recente. Explique as opções, técnicas e substituições quando isso ajudar. Respeite o modo apenas despensa selecionado e as restrições explícitas. Não force uma quantidade fixa de opções nem peça confirmação apenas para discutir ingredientes que faltam quando o modo livre estiver permitido.
 
         ## Receita completa
         Sempre que for apresentar uma receita nova completa, seja após o usuário escolher uma opção ou após um pedido direto:
@@ -1221,28 +1196,19 @@ struct InlineChatView: View {
         - NÃO adicione texto antes ou depois deste formato.
         """)
 
+        parts.append(RecipePantryContext.guidance)
+        parts.append("Selected pantry-only mode: \(currentPantryFilterEnabled). An explicit latest user override takes priority.")
+
         guard includeInventoryContext else {
             return parts.joined(separator: "\n\n")
         }
 
-        if let cached = cachedInventoryContext,
-           let cacheDate = cachedInventoryDate,
-           Date().timeIntervalSince(cacheDate) < contextCacheTTL {
-            parts.append(cached)
-            return parts.joined(separator: "\n\n")
-        }
 
         var inventoryParts = [String]()
 
         let pantryDescriptor = FetchDescriptor<UnifiedItem>(sortBy: [SortDescriptor(\.category)])
         if let allItems = try? modelContext.fetch(pantryDescriptor) {
-            let pantryItems = allItems.filter { $0.isPantry }
-            if pantryItems.isEmpty {
-                inventoryParts.append("## Despensa atual\nA despensa está vazia.")
-            } else {
-                let itemDescriptions = pantryItems.map { $0.aiReadableDescription }
-                inventoryParts.append("## Despensa atual (\(pantryItems.count) itens)\n\(itemDescriptions.joined(separator: "\n"))")
-            }
+            inventoryParts.append(RecipePantryContext(items: allItems).prompt)
 
             let groceryItems = allItems.filter { $0.isGrocery }
             if groceryItems.isEmpty {
@@ -1275,8 +1241,6 @@ struct InlineChatView: View {
         inventoryParts.append(AssistantChatManager.nutritionPromptSection(context: modelContext))
 
         let inventoryContext = inventoryParts.joined(separator: "\n\n")
-        cachedInventoryContext = inventoryContext
-        cachedInventoryDate = Date()
         parts.append(inventoryContext)
         return parts.joined(separator: "\n\n")
     }
@@ -1285,10 +1249,11 @@ struct InlineChatView: View {
 
     private func makeRecipeDiscoveryResponse(for text: String) -> RecipeDiscoveryResponse? {
         let normalizedPrompt = normalized(text)
-        guard isRecipeSuggestionPrompt(normalizedPrompt) else { return nil }
+        guard RecipeIdeaRequest(occasion: nil, refinement: nil, customQuery: text).onlySavedRecipes,
+              isRecipeSuggestionPrompt(normalizedPrompt) else { return nil }
 
         let pantryItems = (try? modelContext.fetch(FetchDescriptor<UnifiedItem>())) ?? []
-        let pantryNames = pantryItems.filter { $0.isPantry }.map { normalized($0.name) }
+        let pantryNames = RecipePantryContext(items: pantryItems).availableNames.map(normalized)
         let wantsDessert = normalizedPrompt.contains("sobremesa") || normalizedPrompt.contains("doce")
 
         // Check for specific keywords beyond generic recipe request
@@ -2292,76 +2257,62 @@ struct InlineChatView: View {
         isLoadingExaIdeas = true
         defer { isLoadingExaIdeas = false }
 
-        let pantryItems = (try? modelContext.fetch(FetchDescriptor<UnifiedItem>())) ?? []
-        let pantryNames = pantryItems.filter { $0.isPantry }.map { $0.name }
+        guard let pantryItems = try? modelContext.fetch(FetchDescriptor<UnifiedItem>()) else {
+            insertMessage(ChatMessage(role: .assistant,
+                content: String(localized: "Não consegui buscar ideias agora. Tente novamente."), conversationId: conversationId))
+            return
+        }
+        let pantryContext = RecipePantryContext(items: pantryItems)
+        let pantryNames = pantryContext.availableNames
         let filterEnabled = request.pantryOverride ?? currentPantryFilterEnabled
         let targetLanguage = recipeIdeasTargetLanguage(for: customQuery)
 
-        // EXA (web) + Quick Ideas (LLM) em paralelo.
-        async let exaTask: [RecipeIdeaResult] = (try? EXARecipeIdeasService.shared.search(
-            occasion: occasion,
-            refinement: refinement,
-            customQuery: customQuery,
-            pantryItems: pantryNames,
-            filterByPantry: filterEnabled,
-            language: targetLanguage,
-            requestContext: request,
-            excludingURLs: excludingWebURLs,
-            limit: 6,
-            seed: exaSearchSeed
-        )) ?? []
-
-        async let quickTask: [RecipeQuickIdea] = RecipeQuickIdeasGenerator.shared.generate(
-            pantryItems: pantryNames,
-            occasion: occasion,
-            refinement: refinement,
-            customQuery: customQuery,
-            language: targetLanguage,
-            filterByPantry: filterEnabled,
-            requestContext: request,
-            excludingTitles: excludingQuickTitles,
-            limit: 10
-        )
-
-        let (exaResults, quickResults) = await (exaTask, quickTask)
-        let localMatchedRecipeIDs = matchLocalRecipes(occasion: occasion, refinement: refinement, customQuery: customQuery,
-                                                      filterByPantry: filterEnabled, excludingIDs: excludingLocalIDs, requestContext: request)
-
-        if exaResults.isEmpty && quickResults.isEmpty && localMatchedRecipeIDs.isEmpty {
-            if filterEnabled && pantryNames.count <= 2 {
-                insertMessage(ChatMessage(
-                    role: .assistant,
-                    content: String(localized: "Não encontrei ideias usando só itens da despensa. Quer buscar sem essa restrição?"),
-                    quickActions: [QuickAction(label: "_wizard", prompt: RecipeIdeasSentinel.pantryBannerPrefix)],
-                    conversationId: conversationId
-                ))
-            } else {
-                insertMessage(ChatMessage(
-                    role: .assistant,
-                    content: String(localized: "Não consegui buscar ideias agora. Tente novamente."),
-                    conversationId: conversationId
-                ))
-            }
-            return
+        // Interpret the actual question first. A conversational adaptation must
+        // not trigger a web search or attach unrelated recipe cards.
+        let quickResponse = await RecipeQuickIdeasGenerator.shared.generateResponse(
+            pantryItems: pantryNames, occasion: occasion, refinement: refinement,
+            customQuery: customQuery, language: targetLanguage, filterByPantry: filterEnabled,
+            requestContext: request, excludingTitles: excludingQuickTitles,
+            pantryContext: pantryContext, conversationContext: lastRecipeIdeasResultsPayload()?.encoded(), limit: 10)
+        let localIDs = quickResponse.isAnswerOnly ? [] : matchLocalRecipes(
+            occasion: occasion, refinement: refinement, customQuery: customQuery,
+            filterByPantry: filterEnabled, excludingIDs: excludingLocalIDs, requestContext: request)
+        var payload = ResultsPayload(ideas: [], quickIdeas: quickResponse.ideas, answer: quickResponse.answer,
+            localRecipeIDs: localIDs, occasionRaw: occasion?.rawValue, refinement: refinement,
+            customQuery: customQuery, filterByPantry: filterEnabled, queryHistory: queryHistory)
+        var resultMessage: ChatMessage?
+        if quickResponse.answer != nil || !quickResponse.ideas.isEmpty || !localIDs.isEmpty {
+            let message = ChatMessage(role: .assistant, content: payload.encoded(),
+                quickActions: [QuickAction(label: "_wizard", prompt: RecipeIdeasSentinel.resultsPrefix)], conversationId: conversationId)
+            insertMessage(message)
+            resultMessage = message
         }
+        guard !quickResponse.isAnswerOnly, !Task.isCancelled else { return }
 
-        let payload = ResultsPayload(
-            ideas: exaResults,
-            quickIdeas: quickResults,
-            localRecipeIDs: localMatchedRecipeIDs,
-            occasionRaw: occasion?.rawValue,
-            refinement: refinement,
-            customQuery: customQuery,
-            filterByPantry: filterEnabled,
-            queryHistory: queryHistory
-        )
-
-        insertMessage(ChatMessage(
-            role: .assistant,
-            content: payload.encoded(),
-            quickActions: [QuickAction(label: "_wizard", prompt: RecipeIdeasSentinel.resultsPrefix)],
-            conversationId: conversationId
-        ))
+        let web = (try? await EXARecipeIdeasService.shared.search(
+            occasion: occasion, refinement: refinement, customQuery: customQuery,
+            pantryItems: pantryNames, filterByPantry: filterEnabled, language: targetLanguage,
+            requestContext: request, excludingURLs: excludingWebURLs, limit: 6, seed: exaSearchSeed)) ?? []
+        guard !Task.isCancelled else { return }
+        if !web.isEmpty {
+            payload.ideas = web
+            if let message = resultMessage {
+                message.content = payload.encoded()
+                do { try ChatConversation.persist(message, in: modelContext) }
+                catch { errorMessage = String(localized: "Não foi possível salvar a conversa. Tente novamente.") }
+            } else {
+                insertMessage(ChatMessage(role: .assistant, content: payload.encoded(),
+                    quickActions: [QuickAction(label: "_wizard", prompt: RecipeIdeasSentinel.resultsPrefix)], conversationId: conversationId))
+            }
+        } else if resultMessage == nil {
+            if filterEnabled && pantryNames.count <= 2 {
+                insertMessage(ChatMessage(role: .assistant,
+                    content: String(localized: "Não encontrei ideias usando só itens da despensa. Quer buscar sem essa restrição?"),
+                    quickActions: [QuickAction(label: "_wizard", prompt: RecipeIdeasSentinel.pantryBannerPrefix)], conversationId: conversationId))
+            } else {
+                insertMessage(ChatMessage(role: .assistant, content: String(localized: "Não consegui buscar ideias agora. Tente novamente."), conversationId: conversationId))
+            }
+        }
     }
 
     /// Filtro ativo (override de sessão > AppSettings).
@@ -2381,7 +2332,7 @@ struct InlineChatView: View {
         requestContext: RecipeIdeaRequest? = nil
     ) -> [UUID] {
         let pantryItems = (try? modelContext.fetch(FetchDescriptor<UnifiedItem>())) ?? []
-        let pantryNames = pantryItems.filter { $0.isPantry }.map { normalized($0.name) }
+        let pantryNames = RecipePantryContext(items: pantryItems).availableNames.map(normalized)
         let request = requestContext ?? RecipeIdeaRequest(occasion: occasion?.label, refinement: refinement, customQuery: customQuery)
 
         var keywords: [String] = []
@@ -2442,7 +2393,10 @@ struct InlineChatView: View {
     private func recipeIdeasResultsView(for message: ChatMessage) -> some View {
         let payload = ResultsPayload.decode(message.content)
         VStack(alignment: .leading, spacing: 14) {
-            if let noLocalMatchMessage = recipeIdeasNoLocalMatchMessage(for: payload) {
+            if let answer = payload.answer, !answer.isEmpty {
+                assistantTextBubble(answer)
+            }
+            if payload.answer == nil, let noLocalMatchMessage = recipeIdeasNoLocalMatchMessage(for: payload) {
                 assistantTextBubble(noLocalMatchMessage)
             }
 
@@ -2509,7 +2463,7 @@ struct InlineChatView: View {
                 .padding(.horizontal, 16)
             }
 
-            if payload.localRecipeIDs.isEmpty && payload.quickIdeas.isEmpty && payload.ideas.isEmpty {
+            if payload.answer == nil && payload.localRecipeIDs.isEmpty && payload.quickIdeas.isEmpty && payload.ideas.isEmpty {
                 Text(payload.request.onlySavedRecipes ? String(localized: "Nenhum resultado encontrado") : String(localized: "Não encontrei nenhuma ideia agora."))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
@@ -2520,7 +2474,7 @@ struct InlineChatView: View {
 
     private func recipeIdeasNoLocalMatchMessage(for payload: ResultsPayload) -> String? {
         guard payload.localRecipeIDs.isEmpty,
-              !payload.quickIdeas.isEmpty || !payload.ideas.isEmpty,
+              !payload.ideas.isEmpty,
               let customQuery = payload.customQuery?.trimmingCharacters(in: .whitespacesAndNewlines),
               !customQuery.isEmpty else {
             return nil
@@ -2657,9 +2611,9 @@ struct InlineChatView: View {
         let convId = ensureConversation()
         let request = payload.request
         let pantryItems = (try? modelContext.fetch(FetchDescriptor<UnifiedItem>())) ?? []
-        let pantryNames = pantryItems.filter { $0.isPantry }.map(\.name)
+        let pantryNames = RecipePantryContext(items: pantryItems).availableNames
         let filterByPantry = payload.filterByPantry ?? true
-        let ingredientPrompt = request.ingredientPrompt(pantryItems: pantryNames, filterByPantry: filterByPantry)
+        let ingredientPrompt = request.ingredientPrompt(pantryItems: pantryNames, filterByPantry: filterByPantry) + "\n" + RecipePantryContext(items: pantryItems).prompt
         let loadingId = beginRecipeCreation(title: idea.title, sourceLabel: String(localized: "Receitas da Web"))
 
         Task {
@@ -2738,9 +2692,9 @@ struct InlineChatView: View {
         let loadingId = beginRecipeCreation(title: idea.title, sourceLabel: String(localized: "Ideias Rápidas"))
 
         let pantryItems = (try? modelContext.fetch(FetchDescriptor<UnifiedItem>())) ?? []
-        let pantryNames = request.allowedPantryItems(pantryItems.filter { $0.isPantry }.map(\.name))
+        let pantryNames = request.allowedPantryItems(RecipePantryContext(items: pantryItems).availableNames)
 
-        let instruction = idea.expansionInstruction(request: request, pantryItems: pantryNames,
+        let instruction = RecipePantryContext(items: pantryItems).prompt + "\n" + idea.expansionInstruction(request: request, pantryItems: pantryNames,
                                                      filterByPantry: payload.filterByPantry ?? true)
 
         Task {
@@ -2919,6 +2873,7 @@ struct InlineChatView: View {
     struct ResultsPayload: Codable {
         var ideas: [RecipeIdeaResult]
         var quickIdeas: [RecipeQuickIdea]
+        var answer: String?
         var localRecipeIDs: [UUID]
         var occasionRaw: String?
         var refinement: String?
@@ -2934,6 +2889,7 @@ struct InlineChatView: View {
         init(
             ideas: [RecipeIdeaResult],
             quickIdeas: [RecipeQuickIdea],
+            answer: String? = nil,
             localRecipeIDs: [UUID],
             occasionRaw: String?,
             refinement: String?,
@@ -2941,6 +2897,7 @@ struct InlineChatView: View {
             filterByPantry: Bool? = nil,
             queryHistory: [String]? = nil
         ) {
+            self.answer = answer
             self.filterByPantry = filterByPantry
             self.queryHistory = queryHistory
             self.ideas = ideas
@@ -2955,6 +2912,7 @@ struct InlineChatView: View {
             let c = try decoder.container(keyedBy: CodingKeys.self)
             self.ideas = (try? c.decode([RecipeIdeaResult].self, forKey: .ideas)) ?? []
             self.quickIdeas = (try? c.decode([RecipeQuickIdea].self, forKey: .quickIdeas)) ?? []
+            self.answer = try? c.decodeIfPresent(String.self, forKey: .answer)
             self.localRecipeIDs = (try? c.decode([UUID].self, forKey: .localRecipeIDs)) ?? []
             self.occasionRaw = try? c.decodeIfPresent(String.self, forKey: .occasionRaw)
             self.refinement = try? c.decodeIfPresent(String.self, forKey: .refinement)

@@ -1212,3 +1212,72 @@ e App Group corretos; a abertura retornou Locked. A medição da otimização de
 Conferência manual adicional: nas listas e ingredientes, confira ícones de
 nomes compostos (por exemplo, purê de abóbora), alterne o idioma e volte ao
 anterior; depois saia/volte ao app nas cinco páginas e confira os mesmos itens.
+
+## Contexto completo e resposta flexível — 16/10/2026
+
+O fluxo deixou de impor uma lista fixa de nomes de receitas. A geração recebe
+um snapshot de todos os registros da despensa, incluindo quantidade, unidade,
+categoria, observações e validade. Não há seleção dos primeiros itens nem um
+ranking que remova ingredientes do contexto. A leitura é refeita a cada pedido,
+sem reaproveitar o antigo cache de dez segundos. Mercado e Para depois não
+viram estoque disponível; quantidade zero permanece no snapshot, mas sai da
+lista de ingredientes utilizáveis. Nomes e observações são tratados como dados.
+
+A resposta estruturada contém uma explicação em linguagem natural e uma lista
+opcional de ideias. Perguntas sobre adaptação ou técnica podem receber somente
+uma explicação. O resultado anterior acompanha a continuação da conversa; as
+restrições compatíveis são preservadas, com prioridade para a alteração mais
+recente. Porções escritas por extenso, como “duas pessoas”, passam a ser
+reconhecidas nos sete idiomas. O campo opcional de explicação é salvo no JSON
+já existente da mensagem, mantendo a leitura das conversas anteriores. Nenhum
+schema, store, capability ou configuração de sincronização foi modificado.
+
+Uma resposta somente explicativa encerra o fluxo antes da busca web e do
+matching local. Nas sugestões, a explicação e as opções rápidas/locais são
+publicadas primeiro; a web pode complementar a mesma mensagem depois. A
+persistência da atualização foi testada em store isolado: mesmo ID, uma única
+mensagem, explicação e restrições preservadas. Não há afirmação de fontes web
+antes de existirem resultados desse serviço.
+
+Os filtros de disponibilidade, dieta, tempo, porções e pré-cozimento continuam
+ativos. Uma resposta com ideias rejeitadas pode ser revista uma única vez;
+falhas de transporte não iniciam essa revisão. Se ainda houver ideias
+incompatíveis, a explicação que poderia endossá-las não é exibida. O modo livre
+continua permitindo discutir ingredientes externos sem tratá-los como estoque.
+
+Os 73 testes locais passaram, incluindo snapshot com 138 registros de despensa,
+metadados do último item, alterações de quantidade/observações/vínculo entre
+pedidos, sete idiomas, retomada do payload, revisão limitada, atualização da
+mesma mensagem e renderização nativa com store exclusivamente em memória. A
+captura visual confirmou uma explicação sem lista forçada de cards.
+
+O teste real usou uma cópia de leitura da última despensa física conferida,
+com 49 registros; o iPhone estava desconectado para uma leitura mais recente.
+A primeira tentativa foi reprovada: uma opção dependia de feijão previamente
+cozido e sua explicação ainda a mencionava após a rejeição. Após a correção,
+os dois casos reais passaram: duas sugestões viáveis e uma adaptação contextual
+sem novos cards. O fallback respondeu via OpenRouter; isso não certifica a
+saúde do provedor primário. Não houve alteração de chaves ou Edge Functions.
+As reservas de requisições incertas foram mantidas; o teto acumulado de US$ 4
+não foi ampliado.
+
+O build macOS final passou, foi assinado com os entitlements e perfil existentes,
+instalado e aberto. O snapshot do backend permaneceu idêntico à condição já
+conhecida após a formatação. A conferência visual final aguarda desbloqueio do
+Mac; não se apresenta esse snapshot vazio conhecido como paridade CloudKit.
+A repetição isolada no Simulator passou nos dois testes nativos (cinco páginas
+e retomadas; capa e passos da receita), em 133,82 s. O app foi reaberto
+normalmente e o readback confirmou todos os registros, IDs e BLOBs idênticos,
+com quick_check ok nos dois stores. As rodadas
+interrompidas por sobreposição de execução e o erro de preflight Busy foram
+excluídos da validação. O mesmo iPhone 17 Pro foi reiniciado após uma cópia dos
+stores e readback idêntico, sem reset, desinstalação ou restauração.
+
+Conferência manual:
+
+1. Peça ideias de jantar citando um ingrediente no final da despensa; confira
+   escolhas úteis, restrições e ausência de ingredientes presumidos.
+2. Pergunte como substituir um ingrediente da primeira opção ou adaptar sua
+   técnica; confira uma explicação contextual, sem lista nova obrigatória.
+3. Altere uma quantidade ou mova um item para Para depois e repita o pedido;
+   confira o estado atualizado. Reabra a conversa após sair/voltar ao app.
