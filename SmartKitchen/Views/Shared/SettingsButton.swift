@@ -127,7 +127,7 @@ struct SavoriaSettingsMenuIcon: View {
             Capsule(style: .continuous).frame(width: 20, height: 2.2)
             Capsule(style: .continuous).frame(width: 12, height: 2.2)
         }
-        .foregroundStyle(Color(white: 174 / 255.0))
+        .foregroundStyle(PageHeaderPalette.control)
         .frame(width: 46, height: 44)
         .contentShape(Rectangle())
         .accessibilityHidden(true)

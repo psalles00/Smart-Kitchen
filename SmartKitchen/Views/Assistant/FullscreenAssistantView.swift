@@ -101,8 +101,11 @@ struct FullscreenAssistantView: View {
             GridItem(.flexible(), spacing: 6)
         ]
     }
+    private var usesHomeHeaderPalette: Bool { presentation == .tab || usesDarkThemedBackground }
+    private var headerControlColor: Color { usesHomeHeaderPalette ? PageHeaderPalette.control : .secondary }
+
     private var headerBackgroundStyle: AnyShapeStyle {
-        if usesDarkThemedBackground {
+        if usesHomeHeaderPalette {
             return AnyShapeStyle(
                 LinearGradient(
                     colors: [
@@ -244,7 +247,7 @@ struct FullscreenAssistantView: View {
                 } label: {
                     Image(systemName: "chevron.left")
                         .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(.primary)
+                        .foregroundStyle(usesHomeHeaderPalette ? PageHeaderPalette.control : .primary)
                         .frame(width: 34, height: 34)
                         .background(
                             Circle()
@@ -262,7 +265,7 @@ struct FullscreenAssistantView: View {
 
             Text(searchBarState.mode == .aiChat ? String(localized: "SavorIA") : String(localized: "Assistente"))
                 .font(assistantHeaderTitleFont)
-                .foregroundStyle(Color.primary)
+                .foregroundStyle(usesHomeHeaderPalette ? AnyShapeStyle(PageHeaderPalette.title) : AnyShapeStyle(Color.primary))
                 .lineLimit(1)
 
             Spacer(minLength: 0)
@@ -285,7 +288,7 @@ struct FullscreenAssistantView: View {
                     } label: {
                         Image(systemName: "ellipsis.circle")
                             .font(.system(size: 17, weight: .medium))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(headerControlColor)
                             .frame(width: 32, height: 32)
                     }
                     .menuOrder(.fixed)
@@ -296,7 +299,7 @@ struct FullscreenAssistantView: View {
                     } label: {
                         Image(systemName: "square.and.pencil")
                             .font(.system(size: 15, weight: .medium))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(headerControlColor)
                             .frame(width: 32, height: 32)
                     }
                     .buttonStyle(.plain)
@@ -306,7 +309,7 @@ struct FullscreenAssistantView: View {
                     } label: {
                         Image(systemName: "clock.arrow.circlepath")
                             .font(.system(size: 15, weight: .medium))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(headerControlColor)
                             .frame(width: 32, height: 32)
                     }
                     .buttonStyle(.plain)
@@ -317,7 +320,7 @@ struct FullscreenAssistantView: View {
                 } label: {
                     Image(systemName: "square.and.pencil")
                         .font(.system(size: 15, weight: .medium))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(headerControlColor)
                         .frame(width: 32, height: 32)
                 }
                 .buttonStyle(.plain)
@@ -327,7 +330,7 @@ struct FullscreenAssistantView: View {
                 } label: {
                     Image(systemName: "clock.arrow.circlepath")
                         .font(.system(size: 15, weight: .medium))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(headerControlColor)
                         .frame(width: 32, height: 32)
                 }
                 .buttonStyle(.plain)
@@ -341,7 +344,7 @@ struct FullscreenAssistantView: View {
                     Image(systemName: "xmark.circle.fill")
                         .font(.system(size: 22))
                         .symbolRenderingMode(.hierarchical)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(headerControlColor)
                 }
                 .buttonStyle(.plain)
             }

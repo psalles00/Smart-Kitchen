@@ -230,13 +230,14 @@ extension Font {
 
 /// Groups multiple header buttons into a single pill
 struct GlassButtonGroup<Content: View>: View {
+    @Environment(\.usesPageHeaderControls) private var usesPageHeaderControls
     @ViewBuilder let content: () -> Content
 
     var body: some View {
         HStack(spacing: 0) {
             content()
         }
-        .foregroundStyle(.white)
+        .foregroundStyle(usesPageHeaderControls ? PageHeaderPalette.control : .white)
     }
 }
 

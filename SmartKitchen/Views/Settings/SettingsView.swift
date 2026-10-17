@@ -162,7 +162,7 @@ struct SavoriaHomeDebugButton: View {
         Button { isPresented = true } label: {
             Image(systemName: "ladybug.fill")
                 .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(Color(white: 174 / 255.0))
+                .foregroundStyle(PageHeaderPalette.control)
                 .frame(width: 46, height: 44)
                 .contentShape(Rectangle())
         }

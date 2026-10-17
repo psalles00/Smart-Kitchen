@@ -45,7 +45,7 @@ enum ExpandedPageHeaderMetrics {
     static let iosInfoBottomGap: CGFloat = 16
     static let iosEmptyInfoHeight: CGFloat = 0
     static let iosCompactInfoHeight: CGFloat = 44
-    static let iosHomeInfoHeight: CGFloat = 64
+    static let iosHomeInfoHeight: CGFloat = 44
 
     static func iosHeaderDetailHeight(infoHeight: CGFloat) -> CGFloat {
         iosInfoTopPadding + infoHeight + iosInfoBottomGap
@@ -78,6 +78,10 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
     private var effectiveBgTheme: PageTheme { backgroundTheme ?? pageTheme }
     #endif
 
+    private var usesDescriptionHeader: Bool { pageTheme == .home || pageTheme == .nutrients }
+    private var infoTopPadding: CGFloat { usesDescriptionHeader ? 0 : ExpandedPageHeaderMetrics.iosInfoTopPadding }
+    private var infoBottomGap: CGFloat { usesDescriptionHeader ? 8 : ExpandedPageHeaderMetrics.iosInfoBottomGap }
+
     private let headerHeight: CGFloat = ExpandedPageHeaderMetrics.iosTitleHeight
     private let cornerRadius: CGFloat = 24
     private let topMargin: CGFloat = 10
@@ -109,7 +113,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
 
     #if os(macOS)
     private var macContainerTopGap: CGFloat {
-        18
+        usesDescriptionHeader ? 8 : 18
     }
     #endif
 
@@ -145,8 +149,8 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
 
                 infoContent()
                     .padding(.horizontal, 20)
-                    .padding(.top, 4)
-                    .padding(.bottom, 10)
+                    .padding(.top, usesDescriptionHeader ? 0 : 4)
+                    .padding(.bottom, usesDescriptionHeader ? 0 : 10)
 
                 ZStack {
                     RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
@@ -203,9 +207,9 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
         VStack(spacing: 0) {
             infoContent()
                 .padding(.horizontal, 20)
-                .padding(.top, ExpandedPageHeaderMetrics.iosInfoTopPadding)
+                .padding(.top, infoTopPadding)
 
-            Spacer().frame(height: ExpandedPageHeaderMetrics.iosInfoBottomGap)
+            Spacer().frame(height: infoBottomGap)
         }
         .frame(maxWidth: .infinity)
         .contentShape(Rectangle())
@@ -664,18 +668,14 @@ private struct NutritionDateStripeSkeleton: View {
 
 struct NutritionInfoSkeleton: View {
     var body: some View {
-        HStack(spacing: 12) {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(skeletonHeaderBaseColor)
-                .frame(height: 28)
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(skeletonHeaderBaseColor.opacity(0.82))
-                .frame(width: 92, height: 32)
+        VStack(alignment: .leading, spacing: 6) {
+            RoundedRectangle(cornerRadius: 6).fill(skeletonHeaderBaseColor).frame(height: 13)
+            RoundedRectangle(cornerRadius: 6).fill(skeletonHeaderBaseColor).frame(height: 13)
+                .padding(.trailing, 40)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .frame(height: ExpandedPageHeaderMetrics.iosCompactInfoHeight)
+        .frame(height: ExpandedPageHeaderMetrics.iosHomeInfoHeight, alignment: .topLeading)
         .skeletonShimmer()
-        .clipped()
         .allowsHitTesting(false)
     }
 }

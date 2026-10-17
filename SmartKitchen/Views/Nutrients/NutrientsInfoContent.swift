@@ -1,80 +1,41 @@
 import SwiftUI
 
-/// Bloco informativo exibido na faixa colorida do header da aba Nutrição.
-/// - Linha 1: data relativa + data completa do dia selecionado.
-/// - Linha 2: status do dia (mesmo texto que aparece no banner do dashboard).
-/// - Direita: ícone qualitativo (`NutritionScore`) — toque abre a página de Progresso.
+/// Same inline facts and typography as the Home description; tapping opens progress.
 struct NutrientsInfoContent: View {
     var profile: NutritionProfile? = nil
     var selectedDate: Date = Calendar.current.startOfDay(for: .now)
     var selectedDayState: NutritionDayState = .todayEmpty
     var caloriesConsumed: Int = 0
+    var entryCount: Int = 0
     var onTapScore: () -> Void = {}
 
     private var calendar: Calendar { .current }
     private var goal: Int { profile?.effectiveCalories ?? 0 }
-    private let secondaryLineOpacity: Double = 0.85
-
-    private var score: NutritionScore {
-        guard goal > 0 else { return .noData }
-        switch selectedDayState {
-        case .todayEmpty, .pastEmpty, .canceled, .future:
-            return .noData
-        case .todayInProgress, .pastInProgress, .completed:
-            return NutritionScore.forDay(consumed: caloriesConsumed, goal: goal)
+    var body: some View {
+        Button(action: onTapScore) {
+            descriptionText
+                .modifier(PageHeaderDescriptionStyle())
+                .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
+        .disabled(profile?.hasCompletedOnboarding != true)
+        .accessibilityIdentifier("savoria.nutrition.summary")
     }
 
-    var body: some View {
-        HStack(alignment: .center, spacing: 16) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(dateLine)
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.85)
-                    .padding(.top, 4)
-
-                if profile?.hasCompletedOnboarding == true {
-                    Text(statusLine)
-                        .font(.subheadline)
-                        .foregroundColor(.white.opacity(secondaryLineOpacity))
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.85)
-                } else {
-                    Text("Configure seu perfil para ver suas metas.")
-                        .font(.subheadline)
-                        .foregroundColor(.white.opacity(secondaryLineOpacity))
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.85)
-                }
-            }
-
-            Spacer()
-
-            if profile?.hasCompletedOnboarding == true {
-                Button(action: onTapScore) {
-                    VStack(alignment: .trailing, spacing: 2) {
-                        Image(systemName: score.systemImage)
-                            .font(.system(size: 24, weight: .semibold))
-                            .foregroundStyle(.white.opacity(0.95))
-                            .symbolRenderingMode(.hierarchical)
-
-                        Text(score.title)
-                            .font(.system(.caption2, design: .rounded, weight: .semibold))
-                            .foregroundStyle(.white.opacity(0.92))
-                            .multilineTextAlignment(.trailing)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.85)
-                    }
-                    .frame(width: 92, alignment: .trailing)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(String(localized: "\(score.title). Toque para ver progresso."))
-            }
+    private var descriptionText: Text {
+        let date = Text(dateLine + " · ").foregroundColor(.white.opacity(0.55))
+        guard profile?.hasCompletedOnboarding == true else {
+            return date + Text(String(localized: "Configure seu perfil para ver suas metas."))
+                .foregroundColor(.white)
         }
-        .padding(.bottom, 4)
-        .frame(height: ExpandedPageHeaderMetrics.iosCompactInfoHeight)
+        let count = entryCount == 1 ? String(localized: "1 registro") : String(localized: "\(entryCount) registros")
+        return date
+            + Text(Image(systemName: "chart.bar.doc.horizontal")).foregroundColor(.white)
+            + Text(" " + count).fontWeight(.bold).foregroundColor(.white)
+            + Text(" · " + statusLine + " · ").foregroundColor(.white.opacity(0.55))
+            + Text(Image(systemName: "flame")).foregroundColor(.white)
+            + Text(" " + String(localized: "\(caloriesConsumed) de \(goal) kcal"))
+                .fontWeight(.bold).foregroundColor(.white)
     }
 
     // MARK: - Composição de texto

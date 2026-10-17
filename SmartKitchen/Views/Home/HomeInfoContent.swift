@@ -18,17 +18,8 @@ struct HomeInfoContent: View {
 }
 
 private enum HomeInfoLayout {
-    #if os(iOS)
-    static let height = ExpandedPageHeaderMetrics.iosHomeInfoHeight
     static let topInset: CGFloat = 0
-    static let bottomInset: CGFloat = 0
     static let lineLimit = 3
-    #else
-    static let height: CGFloat = 47
-    static let topInset: CGFloat = -8
-    static let bottomInset: CGFloat = -3
-    static let lineLimit = 2
-    #endif
 }
 
 private struct HomeInfoContentLive: View {
@@ -91,19 +82,8 @@ private struct HomeInfoContentLive: View {
     }
 
     var body: some View {
-        Group {
-            #if os(iOS)
-            statusPhrase
-            #else
-            HStack(alignment: .center, spacing: 12) {
-                statusPhrase.layoutPriority(1)
-                Spacer()
-                calorieRing.padding(.top, -6).padding(.bottom, 6)
-            }
-            #endif
-        }
-        .padding(.bottom, HomeInfoLayout.bottomInset)
-        .frame(height: HomeInfoLayout.height)
+        statusPhrase
+            .modifier(PageHeaderDescriptionStyle())
         .onAppear {
             if !didRunInitialRefresh {
                 didRunInitialRefresh = true
@@ -299,13 +279,11 @@ private struct HomeInfoContentLive: View {
             )
         }
 
-        #if os(iOS)
         if calorieGoal > 0 {
             facts.append(KitchenStatusFact(
                 icon: "flame",
                 text: String(localized: "\(caloriesRemaining) kcal restantes hoje")))
         }
-        #endif
 
         return facts
     }
@@ -430,19 +408,8 @@ private struct HomeInfoContentStatic: View {
     }
 
     var body: some View {
-        Group {
-            #if os(iOS)
-            statusPhrase
-            #else
-            HStack(alignment: .center, spacing: 12) {
-                statusPhrase.layoutPriority(1)
-                Spacer()
-                calorieRing.padding(.top, -6).padding(.bottom, 6)
-            }
-            #endif
-        }
-        .padding(.bottom, HomeInfoLayout.bottomInset)
-        .frame(height: HomeInfoLayout.height)
+        statusPhrase
+            .modifier(PageHeaderDescriptionStyle())
     }
 
     private var statusPhrase: some View {
@@ -533,13 +500,11 @@ private struct HomeInfoContentStatic: View {
             )
         }
 
-        #if os(iOS)
         if calorieGoal > 0 {
             facts.append(KitchenStatusFact(
                 icon: "flame",
                 text: String(localized: "\(caloriesRemaining) kcal restantes hoje")))
         }
-        #endif
 
         return facts
     }

@@ -201,6 +201,7 @@ private struct NutrientsLoadedView: View {
                     selectedDate: selectedDate,
                     selectedDayState: selectedDayState,
                     caloriesConsumed: caloriesForSelectedDate,
+                    entryCount: allEntries.filter { calendar.isDate($0.timestamp, inSameDayAs: selectedDate) }.count,
                     onTapScore: { pushProgress = true }
                 )
             }
