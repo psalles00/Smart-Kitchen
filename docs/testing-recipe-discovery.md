@@ -1263,8 +1263,12 @@ não foi ampliado.
 
 O build macOS final passou, foi assinado com os entitlements e perfil existentes,
 instalado e aberto. O snapshot do backend permaneceu idêntico à condição já
-conhecida após a formatação. A conferência visual final aguarda desbloqueio do
-Mac; não se apresenta esse snapshot vazio conhecido como paridade CloudKit.
+conhecida após a formatação. Em 17/10, com o Mac acessível, foram conferidos a
+abertura, a tela de boas-vindas e o menu nativo Arquivo. O onboarding ainda
+incompleto dessa instalação limita a conferência visual do assistente no Mac;
+não foi concluído nem alterado durante o teste. Os snapshots antes/depois
+permaneceram idênticos. Isso não certifica o chat visual no Mac nem paridade
+CloudKit com os dados pessoais do iPhone.
 A repetição isolada no Simulator passou nos dois testes nativos (cinco páginas
 e retomadas; capa e passos da receita), em 133,82 s. O app foi reaberto
 normalmente e o readback confirmou todos os registros, IDs e BLOBs idênticos,
@@ -1272,6 +1276,27 @@ com quick_check ok nos dois stores. As rodadas
 interrompidas por sobreposição de execução e o erro de preflight Busy foram
 excluídos da validação. O mesmo iPhone 17 Pro foi reiniciado após uma cópia dos
 stores e readback idêntico, sem reset, desinstalação ou restauração.
+
+### Repetição solicitada em 17/10/2026
+
+Na mesma versão (`3e5aa6bf`), os 73 testes locais passaram novamente, sem
+falhas ou testes ignorados. Também passaram os dois testes nativos no iPhone
+17 Pro simulado: três ciclos pelas cinco páginas, rolagem e retorno ao app,
+além da receita existente com quatro passos e preservação do passo ao voltar.
+As execuções foram sequenciais, sem chamadas pagas adicionais de IA ou busca.
+
+A captura da resposta explicativa foi inspecionada novamente: texto legível,
+sem cards de receitas obrigatórios. Também foram conferidas as capturas do
+último passo da receita e da página Assistente. Após os testes, os dois stores
+do Simulator passaram no `quick_check`; todos os registros, IDs e hashes dos
+BLOBs permaneceram iguais à referência. O app foi reaberto sem flags de teste.
+
+No Mac, a assinatura passou na verificação estrita; Bundle ID, Team, ordem dos
+containers iCloud e serviços CloudKit/CloudDocuments foram reconferidos.
+Os snapshots do backend antes e depois da inspeção visual permaneceram
+idênticos. A limitação visual do onboarding descrita acima continua válida.
+Esta rodada comprova comportamento funcional; não mede FPS ou desempenho do
+iPhone físico, nem repete os dois casos reais de IA já aprovados em 16/10.
 
 Conferência manual:
 
