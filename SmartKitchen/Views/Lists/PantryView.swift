@@ -38,7 +38,7 @@ struct PantryView: View {
         let settings = settingsArray.first
         let isDetailed = settings?.pantryDetailLevel == .detailed
         let groupingMode = activeGroupingMode
-        let pantryCategories = allCategories.filter { $0.type == .pantry }
+        let pantryCategories = Category.uniqueForDisplay(allCategories).filter { $0.type == .pantry }
         let categoryOrder = pantryCategories.map(\.name)
         let categoryIconByName = Dictionary(
             pantryCategories.compactMap { category in

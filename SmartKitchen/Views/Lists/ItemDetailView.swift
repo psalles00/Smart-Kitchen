@@ -127,7 +127,7 @@ struct ItemDetailView: View {
     private var settings: AppSettings? { settingsArray.first }
     private var showUtensils: Bool { settings?.showUtensils == true }
     private var isDetailed: Bool { settings?.pantryDetailLevel == .detailed }
-    private var categories: [Category] { allCategories.filter { $0.type == .pantry } }
+    private var categories: [Category] { Category.uniqueForDisplay(allCategories).filter { $0.type == .pantry } }
 
     private var isCreateMode: Bool {
         if case .create = mode { return true }

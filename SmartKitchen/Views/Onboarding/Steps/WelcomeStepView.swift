@@ -5,6 +5,7 @@ import SwiftUI
 struct WelcomeStepView: View {
     let onContinue: () -> Void
     let onRestore: () -> Void
+    var onRecoverData: () -> Void = {}
     var isRestoring: Bool = false
 
     @State private var showHeroScene = false
@@ -54,7 +55,7 @@ struct WelcomeStepView: View {
                     revealedPlanetIDs: revealedPlanetIDs
                 )
                     .frame(maxWidth: .infinity)
-                    .frame(height: 388)
+                    .frame(height: 330)
                     .padding(.horizontal, 8)
                     .padding(.bottom, 14)
                     .scaleEffect(showHeroScene ? 1 : 0.92)
@@ -91,6 +92,17 @@ struct WelcomeStepView: View {
                         title: String(localized: "Começar"),
                         action: onContinue
                     )
+
+                    Button(action: onRecoverData) {
+                        Label("Já uso o Savoria", systemImage: "icloud.and.arrow.down")
+                            .font(.system(size: 16, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity, minHeight: 44)
+                            .background(.white.opacity(0.10), in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(isRestoring)
+                    .accessibilityIdentifier("onboarding-recover-icloud")
 
                     Button(action: onRestore) {
                         HStack(spacing: 8) {

@@ -38,7 +38,7 @@ struct RecipeImportPreviewView: View {
     }
 
     private var recipeCategoryNames: [String] {
-        allCategories.filter { $0.type == .recipe }.map(\.name)
+        Category.uniqueForDisplay(allCategories).filter { $0.type == .recipe }.map(\.name)
     }
 
     private var recipeCategorySignature: String {

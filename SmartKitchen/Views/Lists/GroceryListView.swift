@@ -63,8 +63,8 @@ struct GroceryListView: View {
 
     private func makeSnapshot() -> GroceryListSnapshot {
         let groupingMode = activeGroupingMode
-        let listCategories = allCategories.filter { $0.type == .pantry || $0.type == .grocery }
-        let categoryOrder = allCategories.filter { $0.type == .pantry }.map(\.name)
+        let listCategories = Category.uniqueForDisplay(allCategories).filter { $0.type == .pantry || $0.type == .grocery }
+        let categoryOrder = Category.uniqueForDisplay(allCategories).filter { $0.type == .pantry }.map(\.name)
         let categoryIconByName = Dictionary(
             listCategories.compactMap { category in
                 category.iconName.map { (category.name, $0) }

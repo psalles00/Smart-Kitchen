@@ -41,7 +41,7 @@ struct AddPantryItemView: View {
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var showPhotoPreview = false
 
-    private var categories: [Category] { allCategories.filter { $0.type == .pantry } }
+    private var categories: [Category] { Category.uniqueForDisplay(allCategories).filter { $0.type == .pantry } }
     private var isDetailed: Bool { settingsArray.first?.pantryDetailLevel == .detailed }
     private var isValid: Bool { !name.trimmingCharacters(in: .whitespaces).isEmpty }
 

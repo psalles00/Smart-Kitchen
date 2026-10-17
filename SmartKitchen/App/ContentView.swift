@@ -277,6 +277,15 @@ struct ContentView: View {
     /// migration that auto-completes onboarding for installs that already
     /// have user data (so the new flow only shows up for fresh installs).
     private func syncOnboardingFlag() {
+        if ICloudOnboardingRecovery.shared.isPresented {
+            showOnboarding = true
+            return
+        }
+        if ICloudOnboardingRecovery.shared.hasCompletedRecovery,
+           (try? ICloudOnboardingRecovery.Summary.read(in: modelContext).hasUserData) == true {
+            showOnboarding = false
+            return
+        }
         guard let settings = fetchSettingsModel() else {
             // No settings row yet (very fresh launch). Don't decide here —
             // wait until the seeder creates one and SwiftData re-feeds the
@@ -301,9 +310,10 @@ struct ContentView: View {
     }
 
     private func fetchSettingsModel() -> AppSettings? {
-        var descriptor = FetchDescriptor<AppSettings>()
-        descriptor.fetchLimit = 1
-        return try? modelContext.fetch(descriptor).first
+        let rows = (try? modelContext.fetch(FetchDescriptor<AppSettings>())) ?? []
+        // Cloud settings can arrive before the regular duplicate cleanup.
+        // Prefer the configured row without rewriting or deleting either row.
+        return rows.first(where: { $0.hasCompletedOnboarding }) ?? rows.first
     }
 
     private func syncSettingsSnapshot() {
@@ -699,6 +709,9 @@ struct ContentView: View {
                     consumePendingNutritionLogWidgetActionIfNeeded()
                 }
                 .onChange(of: settingsSnapshot.hasCompletedOnboarding) { _, _ in
+                    syncOnboardingFlag()
+                }
+                .onChange(of: ICloudOnboardingRecovery.shared.isPresented) { _, _ in
                     syncOnboardingFlag()
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .appearanceModeChanged)) { _ in
@@ -3064,7 +3077,7 @@ private struct HomeView: View {
     }
 
     private func updateRecipeCategories() {
-        recipeCategoriesState = liveInputs.categories.filter { $0.type == .recipe }
+        recipeCategoriesState = Category.uniqueForDisplay(liveInputs.categories).filter { $0.type == .recipe }
     }
     private func updateCompatibleMatches() {
         guard compatibleMatchesNeedRefresh else {

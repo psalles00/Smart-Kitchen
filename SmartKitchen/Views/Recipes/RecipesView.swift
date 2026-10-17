@@ -240,7 +240,7 @@ private struct RecipesLoadedView: View {
     }
 
     private var recipeCategories: [Category] {
-        allCategories.filter { $0.type == .recipe }
+        Category.uniqueForDisplay(allCategories).filter { $0.type == .recipe }
     }
 
     private var compatibilities: [UUID: RecipeCompatibility] { cachedCompatibilities }
@@ -2142,7 +2142,7 @@ private struct RecipeNotebookManagerSheet: View {
     @State private var errorMessage: String?
 
     private var recipeCategories: [Category] {
-        allCategories.filter { $0.type == .recipe }
+        Category.uniqueForDisplay(allCategories).filter { $0.type == .recipe }
     }
 
     var body: some View {

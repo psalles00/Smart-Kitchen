@@ -19,7 +19,7 @@ struct AddUtensilItemView: View {
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var showPhotoPreview = false
 
-    private var categories: [Category] { allCategories.filter { $0.type == .utensil } }
+    private var categories: [Category] { Category.uniqueForDisplay(allCategories).filter { $0.type == .utensil } }
     private var isValid: Bool { !name.trimmingCharacters(in: .whitespaces).isEmpty }
 
     var body: some View {

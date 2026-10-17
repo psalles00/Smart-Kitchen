@@ -22,7 +22,7 @@ struct UtensilsView: View {
     }
 
     private func makeSnapshot() -> UtensilsListSnapshot {
-        let utensilCategories = allCategories.filter { $0.type == .utensil }
+        let utensilCategories = Category.uniqueForDisplay(allCategories).filter { $0.type == .utensil }
         let categoryIconByName = Dictionary(
             utensilCategories.compactMap { category in
                 category.iconName.map { (category.name, $0) }

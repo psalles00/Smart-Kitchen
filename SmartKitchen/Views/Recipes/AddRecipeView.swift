@@ -54,7 +54,7 @@ struct AddRecipeView: View {
     private var settings: AppSettings? { settingsArray.first }
 
     private var recipeCategories: [Category] {
-        allCategories.filter { $0.type == .recipe }
+        Category.uniqueForDisplay(allCategories).filter { $0.type == .recipe }
     }
 
     private var recipeCategorySignature: String {

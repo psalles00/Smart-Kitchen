@@ -648,32 +648,9 @@ final class CloudSyncService: @unchecked Sendable {
         dedupByUUID(ChatMessage.self, keyPath: \.id)
         dedupByUUID(ChatConversation.self, keyPath: \.id)
 
-        // Categories: dedup by UUID, then by (type, normalized name), keeping lowest sortOrder.
-        if let categories = try? context.fetch(FetchDescriptor<Category>()) {
-            var seenIDs = Set<UUID>()
-            var surviving = [Category]()
-            for cat in categories {
-                if seenIDs.contains(cat.id) {
-                    context.delete(cat)
-                } else {
-                    seenIDs.insert(cat.id)
-                    surviving.append(cat)
-                }
-            }
-            surviving.sort { $0.sortOrder < $1.sortOrder }
-            var seenKeys = Set<String>()
-            for cat in surviving {
-                let normalized = cat.name
-                    .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
-                    .lowercased()
-                let key = "\(cat.type.rawValue)|\(normalized)"
-                if seenKeys.contains(key) {
-                    context.delete(cat)
-                } else {
-                    seenKeys.insert(key)
-                }
-            }
-        }
+        // A matching name is not proof that two CloudKit identities are
+        // interchangeable. Keep both records; UI projections collapse labels.
+        _ = deduplicateCategories(context: context)
 
         // AppSettings: keep only one — prefer the one with completed onboarding.
         if let all = try? context.fetch(FetchDescriptor<AppSettings>()), all.count > 1 {
@@ -1030,18 +1007,7 @@ final class CloudSyncService: @unchecked Sendable {
         if anyDuplicate(ChatMessage.self, idKeyPath: \.id) { return true }
         if anyDuplicate(ChatConversation.self, idKeyPath: \.id) { return true }
 
-        // Categories may collide by (type, normalized name) even if UUIDs differ
-        if let cats = try? context.fetch(FetchDescriptor<Category>()) {
-            var seenIDs = Set<UUID>()
-            var seenKeys = Set<String>()
-            for c in cats {
-                if !seenIDs.insert(c.id).inserted { return true }
-                let normalized = c.name
-                    .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
-                    .lowercased()
-                if !seenKeys.insert("\(c.type.rawValue)|\(normalized)").inserted { return true }
-            }
-        }
+        if anyDuplicate(Category.self, idKeyPath: \.id) { return true }
 
         var settingsFD = FetchDescriptor<AppSettings>()
         settingsFD.fetchLimit = 2
@@ -1068,7 +1034,7 @@ final class CloudSyncService: @unchecked Sendable {
         totalDeleted += deduplicateByID(Recipe.self, keyPath: \.id, context: context)
         totalDeleted += deduplicateByID(ChatMessage.self, keyPath: \.id, context: context)
         totalDeleted += deduplicateByID(ChatConversation.self, keyPath: \.id, context: context)
-        totalDeleted += deduplicateCategories(context: context)
+        totalDeleted += Self.deduplicateCategories(context: context)
         totalDeleted += deduplicateAppSettings(context: context)
 
         guard totalDeleted > 0 else { return }
@@ -1105,43 +1071,17 @@ final class CloudSyncService: @unchecked Sendable {
         return deleted
     }
 
-    /// Categories: dedup by UUID and then by (name, type) to catch
-    /// duplicates created by the seeder on a different device.
-    private func deduplicateCategories(context: ModelContext) -> Int {
+    /// Reconcile repeated UUIDs only; same-name categories from different
+    /// devices retain their identities and are grouped only for display.
+    static func deduplicateCategories(context: ModelContext) -> Int {
         guard let all = try? context.fetch(FetchDescriptor<Category>()) else { return 0 }
-
-        var deleted = 0
-
-        // Pass 1 — dedup by UUID
-        var seenIDs = Set<UUID>()
-        var surviving = [Category]()
-        for cat in all {
-            if seenIDs.contains(cat.id) {
-                context.delete(cat)
-                deleted += 1
-            } else {
-                seenIDs.insert(cat.id)
-                surviving.append(cat)
-            }
+        var seen = Set<UUID>()
+        var removed = 0
+        for category in all where !seen.insert(category.id).inserted {
+            context.delete(category)
+            removed += 1
         }
-
-        // Pass 2 — dedup by (name, type); keep the one with the lowest sortOrder
-        surviving.sort { $0.sortOrder < $1.sortOrder }
-        var seenKeys = Set<String>()
-        for cat in surviving {
-            let normalized = cat.name
-                .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
-                .lowercased()
-            let key = "\(cat.type.rawValue)|\(normalized)"
-            if seenKeys.contains(key) {
-                context.delete(cat)
-                deleted += 1
-            } else {
-                seenKeys.insert(key)
-            }
-        }
-
-        return deleted
+        return removed
     }
 
     /// Keep only one AppSettings instance (the one that looks most configured).

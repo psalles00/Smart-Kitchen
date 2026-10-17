@@ -1,6 +1,7 @@
 import StoreKit
 import SwiftUI
 import SwiftData
+import CoreData
 
 /// Root coordinator for the first-launch onboarding flow. Hosts every step
 /// and is the single point that flips `AppSettings.hasCompletedOnboarding` to
@@ -21,6 +22,8 @@ struct OnboardingFlowView: View {
     @State private var showRestorePrompt = false
     @State private var restoreFeedbackMessage = ""
     @State private var showRestoreFeedbackAlert = false
+    @State private var recovery = ICloudOnboardingRecovery.shared
+    @State private var showRecoveryPreview = false
 
     private var cloudSync = CloudSyncService.shared
 
@@ -42,7 +45,12 @@ struct OnboardingFlowView: View {
             backgroundLayer
                 .ignoresSafeArea()
 
-            VStack(spacing: 0) {
+            if showRecoveryPreview || (!isPreview && recovery.isPresented) {
+                ICloudRecoveryWelcomeView(recovery: recovery, isPreview: isPreview,
+                    onBack: { if isPreview { showRecoveryPreview = false } else { recovery.dismiss() } },
+                    onOpen: { if recovery.finish() { onFinish() } })
+            } else {
+              VStack(spacing: 0) {
                 if showsProgressBar {
                     OnboardingProgressBar(
                         progress: progressFraction,
@@ -55,6 +63,7 @@ struct OnboardingFlowView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .id(state.stepIndex) // forces transition between steps
                     .transition(stepTransition)
+              }
             }
         }
         .preferredColorScheme(nil) // follow system
@@ -69,6 +78,10 @@ struct OnboardingFlowView: View {
             }
         }
         .animation(.spring(response: 0.55, dampingFraction: 0.82), value: state.stepIndex)
+        .onReceive(NotificationCenter.default.publisher(for: .NSPersistentStoreRemoteChange)
+            .debounce(for: .milliseconds(300), scheduler: RunLoop.main)) { _ in
+            if !isPreview { recovery.refreshAvailableSummary() }
+        }
         .alert(restorePromptTitle, isPresented: $showRestorePrompt) {
             Button(String(localized: "Continuar"), role: .cancel) {}
             Button(restorePromptButtonTitle) {
@@ -113,6 +126,7 @@ struct OnboardingFlowView: View {
             WelcomeStepView(
                 onContinue: advance,
                 onRestore: restorePurchasesFromWelcome,
+                onRecoverData: { if isPreview { showRecoveryPreview = true } else { recovery.present() } },
                 isRestoring: subscriptionManager.isRestoring
             )
         case .overview:
@@ -446,6 +460,75 @@ struct OnboardingFlowView: View {
         let normalized = UnifiedItem.normalizedName(name)
         guard !normalized.isEmpty else { return false }
         return recipes.contains { UnifiedItem.normalizedName($0.name) == normalized }
+    }
+}
+
+/// Shared iOS/macOS recovery screen. No purchase restore or onboarding seeding.
+private struct ICloudRecoveryWelcomeView: View {
+    let recovery: ICloudOnboardingRecovery
+    let isPreview: Bool
+    let onBack: () -> Void
+    let onOpen: () -> Void
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 22) {
+                Image(systemName: "icloud.and.arrow.down")
+                    .font(.system(size: 44))
+                    .foregroundStyle(Color.accentColor)
+                Text("Recuperar do iCloud")
+                    .font(.largeTitle.bold())
+                    .accessibilityAddTraits(.isHeader)
+                Text("Use a mesma Conta Apple do outro dispositivo. Buscaremos os dados que já foram sincronizados, sem repetir a configuração inicial.")
+                    .foregroundStyle(.secondary)
+
+                if !isPreview {
+                    switch recovery.phase {
+                    case .checking, .waiting:
+                        HStack(spacing: 12) {
+                            ProgressView()
+                            Text(recovery.phase == .checking ? String(localized: "Verificando o iCloud…") : String(localized: "Aguardando seus dados…"))
+                        }
+                        .accessibilityIdentifier("icloud-recovery-progress")
+                    case .available:
+                        Label("Seus dados estão disponíveis", systemImage: "checkmark.icloud")
+                            .font(.headline)
+                        Text(String(format: String(localized: "%lld itens · %lld receitas · %lld registros de alimentação"),
+                                    recovery.summary.items, recovery.summary.recipes, recovery.summary.foodEntries))
+                        Text("A sincronização pode continuar em segundo plano. Suas configurações existentes serão mantidas.")
+                            .font(.footnote).foregroundStyle(.secondary)
+                    case .delayed:
+                        Label("Os dados ainda não apareceram. Confira a Conta Apple e se o iCloud está ativo no outro dispositivo. Você pode tentar novamente.", systemImage: "clock.icloud")
+                            .foregroundStyle(.secondary)
+                    case .failed(let message):
+                        Label(message, systemImage: "exclamationmark.icloud")
+                            .foregroundStyle(.secondary)
+                    case .idle: EmptyView()
+                    }
+                }
+
+                if !isPreview && recovery.phase == .available {
+                    Button("Abrir Savoria", action: onOpen)
+                        .buttonStyle(.borderedProminent)
+                        .accessibilityIdentifier("icloud-recovery-open")
+                } else {
+                    Button(recovery.phase == .idle || isPreview ? String(localized: "Buscar meus dados") : String(localized: "Tentar novamente")) {
+                        if !isPreview { recovery.start() }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(isPreview || recovery.isBusy)
+                    .accessibilityIdentifier("icloud-recovery-start")
+                }
+                Button("Voltar", action: onBack)
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("icloud-recovery-back")
+            }
+            .padding(28)
+            .frame(maxWidth: 520, alignment: .leading)
+            .frame(maxWidth: .infinity)
+        }
+        .scrollBounceBehavior(.basedOnSize)
+        .accessibilityIdentifier("icloud-recovery-screen")
     }
 }
 

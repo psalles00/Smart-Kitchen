@@ -39,7 +39,7 @@ struct EditRecipeView: View {
     private var settings: AppSettings? { settingsArray.first }
 
     private var recipeCategories: [Category] {
-        allCategories.filter { $0.type == .recipe }
+        Category.uniqueForDisplay(allCategories).filter { $0.type == .recipe }
     }
 
     var body: some View {

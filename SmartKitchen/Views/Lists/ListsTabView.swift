@@ -122,7 +122,7 @@ private struct ListBulkCategorySheet: View {
     var body: some View {
         NavigationStack {
             List {
-                ForEach(categories) { category in
+                ForEach(Category.uniqueForDisplay(categories)) { category in
                     Button(category.localizedDisplayName) { onChoose(category.name); dismiss() }
                 }
                 if !categories.contains(where: { $0.name == "Outros" }) {

@@ -11,6 +11,112 @@ import Metal
 #endif
 @testable import Savoria
 
+@MainActor
+final class ICloudOnboardingRecoveryTests: XCTestCase {
+    func testSameNamedCloudCategoriesKeepBothIDsAndMetadataWhileShowingOneLabel() throws {
+        let container = try ModelContainer(for: CloudSyncService.appSchema, configurations: ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none))
+        let context = container.mainContext
+        let local = Category(name: "Almoço", type: .recipe, iconName: "fork.knife", sortOrder: 0)
+        let remote = Category(name: "Almoço", type: .recipe, iconName: "star", sortOrder: 9)
+        let otherType = Category(name: "Almoço", type: .pantry)
+        context.insert(local); context.insert(remote); context.insert(otherType); try context.save()
+        let ids = Set([local.id, remote.id, otherType.id])
+        XCTAssertEqual(CloudSyncService.deduplicateCategories(context: context), 0)
+        XCTAssertEqual(Category.uniqueForDisplay([remote, local, otherType]).map(\.id), [remote.id, otherType.id])
+        let all = try context.fetch(FetchDescriptor<Savoria.Category>())
+        XCTAssertEqual(Set(all.map(\.id)), ids)
+        XCTAssertEqual(remote.iconName, "star")
+        XCTAssertEqual(remote.sortOrder, 9)
+        XCTAssertFalse(context.hasChanges)
+    }
+    private func defaults() -> UserDefaults { UserDefaults(suiteName: "RecoveryTests.\(UUID().uuidString)")! }
+    private func settle(_ recovery: ICloudOnboardingRecovery) async {
+        for _ in 0..<1000 {
+            if !recovery.isBusy { return }
+            await Task.yield()
+        }
+        XCTFail("Recovery did not leave its busy state")
+    }
+
+    func testSeededSettingsAndCategoriesDoNotProveAnExistingUser() throws {
+        let container = try ModelContainer(for: CloudSyncService.appSchema, configurations: ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none))
+        let context = container.mainContext
+        let settings = AppSettings(); context.insert(settings)
+        XCTAssertFalse(try ICloudOnboardingRecovery.Summary.read(in: context).hasUserData)
+        context.insert(UnifiedItem(name: "Item preservado", isPantry: true))
+        let before = settings.id
+        let summary = try ICloudOnboardingRecovery.Summary.read(in: context)
+        XCTAssertTrue(summary.hasUserData)
+        XCTAssertEqual(summary.items, 1)
+        XCTAssertEqual(settings.id, before)
+        XCTAssertFalse(settings.hasCompletedOnboarding)
+    }
+
+    func testRecoveryReadsTheReplacementContainerAndDoesNotSeedOrCompleteAutomatically() async throws {
+        let old = try ModelContainer(for: CloudSyncService.appSchema, configurations: ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none))
+        let restored = try ModelContainer(for: CloudSyncService.appSchema, configurations: ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none))
+        let settings = AppSettings(); restored.mainContext.insert(settings)
+        restored.mainContext.insert(UnifiedItem(name: "Último item restaurado", isPantry: true))
+        var current = old
+        var completions = 0
+        let preferences = defaults()
+        let recovery = ICloudOnboardingRecovery(defaults: preferences, actions: .init(checkAccount: {}, enable: { current = restored },
+            read: { try .read(in: ModelContext(current)) }, complete: { completions += 1 }, wait: {}))
+        try restored.mainContext.save()
+        recovery.start(); await settle(recovery)
+        XCTAssertEqual(recovery.phase, .available)
+        XCTAssertEqual(recovery.summary.items, 1)
+        restored.mainContext.insert(UnifiedItem(name: "Próximo lote", isPantry: true))
+        try restored.mainContext.save()
+        recovery.refreshAvailableSummary()
+        XCTAssertEqual(recovery.summary.items, 2)
+        XCTAssertEqual(completions, 0)
+        XCTAssertFalse(settings.hasCompletedOnboarding)
+        XCTAssertTrue(recovery.finish())
+        XCTAssertEqual(completions, 1)
+        XCTAssertTrue(recovery.hasCompletedRecovery)
+        XCTAssertFalse(settings.hasCompletedOnboarding, "Cloud settings must never be replaced by fresh onboarding choices")
+        XCTAssertEqual(try old.mainContext.fetchCount(FetchDescriptor<UnifiedItem>()), 0)
+        XCTAssertEqual(try restored.mainContext.fetchCount(FetchDescriptor<UnifiedItem>()), 2)
+    }
+
+    func testAccountFailureDoesNotEnableSyncAndRetryUsesFreshData() async {
+        var failAccount = true
+        var enabled = 0
+        var available = false
+        let recovery = ICloudOnboardingRecovery(defaults: defaults(), actions: .init(checkAccount: {
+            if failAccount { throw URLError(.notConnectedToInternet) }
+        }, enable: { enabled += 1; available = true }, read: { .init(items: available ? 1 : 0) }, complete: {}, wait: {}))
+        recovery.start(); await settle(recovery)
+        if case .failed = recovery.phase {} else { XCTFail("Expected recoverable account error") }
+        XCTAssertEqual(enabled, 0)
+        XCTAssertFalse(recovery.finish())
+        failAccount = false
+        recovery.start(); await settle(recovery)
+        XCTAssertEqual(recovery.phase, .available)
+        XCTAssertEqual(enabled, 1)
+    }
+
+    func testDelayedImportDoesNotClaimEmptyAccountOrSkipOnboardingAndSurvivesRecreation() async {
+        let preferences = defaults()
+        var waits = 0
+        var completions = 0
+        let actions = ICloudOnboardingRecovery.Actions(checkAccount: {}, enable: {}, read: { .init() }, complete: { completions += 1 }, wait: { waits += 1 })
+        let recovery = ICloudOnboardingRecovery(defaults: preferences, actions: actions)
+        recovery.start(); await settle(recovery)
+        XCTAssertEqual(recovery.phase, .delayed)
+        XCTAssertEqual(waits, 30)
+        XCTAssertFalse(recovery.finish())
+        XCTAssertEqual(completions, 0)
+        XCTAssertFalse(recovery.hasCompletedRecovery)
+        let reopened = ICloudOnboardingRecovery(defaults: preferences, actions: actions)
+        XCTAssertTrue(reopened.isPresented)
+        XCTAssertEqual(reopened.phase, .idle)
+        reopened.dismiss()
+        XCTAssertFalse(ICloudOnboardingRecovery(defaults: preferences, actions: actions).isPresented)
+    }
+}
+
 final class ItemDatabaseMatchingTests: XCTestCase {
     private func catalog() -> ItemDatabase {
         ItemDatabase(entries: [

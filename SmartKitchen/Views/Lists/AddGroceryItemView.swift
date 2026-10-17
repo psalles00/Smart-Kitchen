@@ -18,7 +18,7 @@ struct AddGroceryItemView: View {
     @State private var iconName: String?
     @State private var userChangedCategory = false
 
-    private var categories: [Category] { allCategories.filter { $0.type == .pantry } }
+    private var categories: [Category] { Category.uniqueForDisplay(allCategories).filter { $0.type == .pantry } }
     @State private var quantity: Double?
     @State private var unit = ""
     @State private var hasDefaultExpiry = false

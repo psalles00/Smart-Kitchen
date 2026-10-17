@@ -65,7 +65,7 @@ struct AddItemView: View {
         if showUtensils { destinations.append(.utensil) }
         return destinations
     }
-    private var categories: [Category] { allCategories.filter { $0.type == .pantry } }
+    private var categories: [Category] { Category.uniqueForDisplay(allCategories).filter { $0.type == .pantry } }
     private var isValid: Bool { !name.trimmingCharacters(in: .whitespaces).isEmpty }
 
     var body: some View {

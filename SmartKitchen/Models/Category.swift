@@ -74,6 +74,18 @@ final class Category {
     var localizedDisplayName: String {
         CategoryMutationService.localizedDisplayName(for: name, type: type)
     }
+
+    /// First-launch defaults and imported categories can share a name while
+    /// retaining different identities. Collapse labels in the UI only: never
+    /// delete CloudKit records or lose their icons/order to reconcile a name.
+    static func uniqueForDisplay(_ categories: [Category]) -> [Category] {
+        var seen = Set<String>()
+        return categories.filter {
+            let name = $0.name.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: Locale(identifier: "en_US_POSIX"))
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            return seen.insert("\($0.type.rawValue)|\(name)").inserted
+        }
+    }
 }
 
 @Model

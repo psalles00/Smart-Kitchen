@@ -3,6 +3,52 @@ import XCTest
 /// Navigates existing food data without purchases, AI calls, seeding or deletion.
 @MainActor
 final class PageActionTracingTests: XCTestCase {
+    func testICloudRecoveryWelcomePreviewAcrossSupportedLanguages() throws {
+        try inspectRecoveryPreview(languages: [("pt-BR", "pt_BR"), ("en", "en_US"), ("es", "es_ES"),
+                                              ("fr", "fr_FR"), ("de", "de_DE"), ("it", "it_IT"), ("ja", "ja_JP")])
+    }
+
+    func testICloudRecoveryWelcomePreviewAndForeground() throws {
+        try inspectRecoveryPreview(languages: [("pt-BR", "pt_BR")])
+    }
+
+    private func inspectRecoveryPreview(languages: [(String, String)]) throws {
+        continueAfterFailure = false
+        let app = XCUIApplication(bundleIdentifier: "com.pedrosalles.smartkitchen.sync")
+        defer {
+            app.terminate()
+            app.launchArguments = ["-AppleLanguages", "(pt-BR)", "-AppleLocale", "pt_BR"]
+            app.launch()
+        }
+        for (language, locale) in languages {
+            app.terminate()
+            app.launchArguments = ["-SavoriaKeepAwakeForValidation", "-AppleLanguages", "(\(language))", "-AppleLocale", locale]
+            app.launch()
+            let home = app.tabBars.buttons["Savoria"].firstMatch
+            XCTAssertTrue(home.waitForExistence(timeout: 45))
+            home.tap()
+            app.buttons["savoria.settings"].tap()
+            let debug = app.buttons["settings-debug-center"]
+            XCTAssertTrue(debug.waitForExistence(timeout: 10)); debug.tap()
+            let preview = app.buttons["debug-open-onboarding"]
+            XCTAssertTrue(preview.waitForExistence(timeout: 10)); preview.tap()
+            let recover = app.buttons["onboarding-recover-icloud"]
+            XCTAssertTrue(recover.waitForExistence(timeout: 15), language)
+            XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "hittable == true"), object: recover)], timeout: 10), .completed, language)
+            let welcome = XCTAttachment(screenshot: app.screenshot()); welcome.name = "Recovery welcome \(language)"; welcome.lifetime = .keepAlways; add(welcome)
+            recover.tap()
+            let start = app.buttons["icloud-recovery-start"]
+            XCTAssertTrue(start.waitForExistence(timeout: 10), language)
+            XCTAssertFalse(start.isEnabled, "Preview must never enable real CloudKit or change stores")
+            let screen = XCTAttachment(screenshot: app.screenshot()); screen.name = "Recovery panel \(language), no cloud mutation"; screen.lifetime = .keepAlways; add(screen)
+            XCUIDevice.shared.press(.home); app.activate()
+            let back = app.buttons["icloud-recovery-back"]
+            XCTAssertTrue(back.waitForExistence(timeout: 10)); back.tap()
+            XCTAssertTrue(recover.waitForExistence(timeout: 10))
+            app.buttons["debug-close-onboarding-preview"].tap()
+        }
+    }
+
     func testHitchesHomeScrollAndForeground() throws { try measurePageHitches("Savoria") }
     func testHitchesListsScrollAndForeground() throws { try measurePageHitches("Listas") }
     func testHitchesRecipesScrollAndForeground() throws { try measurePageHitches("Receitas") }
