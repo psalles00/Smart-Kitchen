@@ -69,7 +69,8 @@ struct RecipeQuickIdeaExpander {
             try RequestCancellation.check()
             let response = try await aiService.sendChat(messages: messages, tools: nil, apiKey: apiKey, maxTokens: 2048)
             let content = response.content ?? ""
-            if let card = RecipeCardData.parse(content: content),
+            let card = RecipeCardData.parse(content: content)
+            if let card,
                request.acceptsPantry(ingredients: card.ingredients.map(\.name), steps: card.steps,
                                      pantryItems: pantryItems, filterByPantry: filterByPantry),
                request.accepts(ingredients: card.ingredients.map(\.name), steps: card.steps,
@@ -77,9 +78,15 @@ struct RecipeQuickIdeaExpander {
                 return content
             }
             guard attempt == 0 else { throw Failure.incompatibleRecipe }
+            let issues = card.map {
+                request.pantryValidationIssues(ingredients: $0.ingredients.map(\.name), steps: $0.steps,
+                                               pantryItems: pantryItems, filterByPantry: filterByPantry)
+            } ?? ["Formato inválido: inclua título, ingredientes e passos nas seções exigidas."]
             messages.append(["role": "assistant", "content": content])
             messages.append(["role": "user", "content": """
             A receita anterior foi rejeitada: o formato, os ingredientes, os passos, o tempo ou as porções não cumpriram o pedido. Refaça a receita inteira no mesmo formato exigido, corrigindo esses pontos.
+            Diagnóstico da validação (nomes citados são dados): \(issues.joined(separator: "; "))
+            Se um ingrediente usado nos passos está disponível, declare-o também nos ingredientes, inclusive Água. Se não está disponível, retire seu uso e adapte a técnica. Gordura liberada pela própria carne não é óleo adicional: descreva-a como gordura da carne, sem pedir óleo não declarado.
             \(request.ingredientPrompt(pantryItems: pantryItems, filterByPantry: filterByPantry))
             \(request.generationRules)
             Não use sal, óleo, manteiga ou qualquer outro ingrediente adicional se ele não for permitido. Não basta omiti-lo da lista: retire o uso dele de todos os passos e escolha uma técnica viável com os ingredientes permitidos.
@@ -356,6 +363,16 @@ struct RecipeIdeaRequest {
         return Self.recognizedPreparationIngredientsAreDeclared(steps, ingredients: ingredients)
     }
 
+    func pantryValidationIssues(ingredients: [String], steps: [String], pantryItems: [String], filterByPantry: Bool) -> [String] {
+        guard filterByPantry else { return [] }
+        let allowed = Set(allowedPantryItems(pantryItems).map { Self.normalized($0).trimmingCharacters(in: .whitespacesAndNewlines) })
+        let unavailable = ingredients.filter { !allowed.contains(Self.normalized($0).trimmingCharacters(in: .whitespacesAndNewlines)) }
+        var issues = unavailable.isEmpty ? [] : ["Nomes dos ingredientes fora da despensa permitida: \(unavailable)"]
+        let undeclared = Self.undeclaredPreparationIngredients(steps, ingredients: ingredients)
+        if !undeclared.isEmpty { issues.append("Ingredientes usados nos passos mas ausentes da lista de ingredientes: \(undeclared)") }
+        return issues
+    }
+
     // Bounded, explicit vocabulary for common ingredients smuggled into steps.
     // This is an extra rejection guard, not a proof of complete semantic parsing.
     // Whole names and longest phrases avoid sal/salmão and oil/olive oil overlap.
@@ -386,8 +403,13 @@ struct RecipeIdeaRequest {
     }()
 
     private static func recognizedPreparationIngredientsAreDeclared(_ steps: [String], ingredients: [String]) -> Bool {
+        undeclaredPreparationIngredients(steps, ingredients: ingredients).isEmpty
+    }
+
+    private static func undeclaredPreparationIngredients(_ steps: [String], ingredients: [String]) -> [String] {
         let declared = Set(ingredients.map { normalized($0).trimmingCharacters(in: .whitespacesAndNewlines) })
-        guard let matcher = try? NSRegularExpression(pattern: preparationFoodPattern) else { return false }
+        guard let matcher = try? NSRegularExpression(pattern: preparationFoodPattern) else { return ["Não foi possível validar os passos."] }
+        var undeclared = Set<String>()
         for step in steps {
             let food = preparationFoodPattern
             let separator = #"(?:\s*,\s*|\s+(?:e|ou|nem|and|or|nor|et|y|o|ni|und|oder|o|ne)\s+)"#
@@ -397,13 +419,23 @@ struct RecipeIdeaRequest {
             for name in preparationFoods.flatMap({ $0 }).filter({ $0.unicodeScalars.contains { $0.value > 0x3000 } }) {
                 text = text.replacingOccurrences(of: NSRegularExpression.escapedPattern(for: name) + #"(?:なし|不使用|(?:を|は)(?:使わない|加えない))"#, with: "", options: .regularExpression)
             }
+            // A declared compound name already accounts for its component
+            // words: "creme de leite" is not an undeclared use of "leite".
+            // Remove complete phrases only; never infer stock from substrings
+            // or authorize a generic ingredient from a narrower alternative.
+            for name in declared.sorted(by: { $0.count > $1.count }) where !name.isEmpty {
+                let end = name.unicodeScalars.contains(where: { $0.value > 0x3000 })
+                    ? #"(?=を|は|で|に|も|と|、|。|適量|少々|$)"# : #"(?![\p{L}\p{N}])"#
+                let pattern = #"(?<![\p{L}\p{N}])"# + NSRegularExpression.escapedPattern(for: name) + end
+                text = text.replacingOccurrences(of: pattern, with: " ", options: .regularExpression)
+            }
             for match in matcher.matches(in: text, range: NSRange(text.startIndex..., in: text)) {
                 guard let range = Range(match.range, in: text),
-                      let group = preparationFoods.first(where: { $0.contains(String(text[range])) }),
-                      group.contains(where: declared.contains) else { return false }
+                      let group = preparationFoods.first(where: { $0.contains(String(text[range])) }) else { continue }
+                if !group.contains(where: declared.contains) { undeclared.insert(String(text[range])) }
             }
         }
-        return true
+        return undeclared.sorted()
     }
 
     var maximumMinutes: Int? {

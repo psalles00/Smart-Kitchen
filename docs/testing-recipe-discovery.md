@@ -1298,6 +1298,50 @@ idênticos. A limitação visual do onboarding descrita acima continua válida.
 Esta rodada comprova comportamento funcional; não mede FPS ou desempenho do
 iPhone físico, nem repete os dois casos reais de IA já aprovados em 16/10.
 
+### Correção da abertura de ideias — relato de 17/10/2026
+
+A conversa relatada no iPhone ainda usava o payload anterior: seis ideias,
+sem o campo de explicação contextual e sem resultados web. A atualização do
+assistente havia sido entregue ao Simulator, mas ainda não ao aparelho físico.
+O snapshot de leitura do aparelho confirmou os bancos íntegros e preservou
+os registros e as mídias antes da atualização.
+
+Foram corrigidos três falsos problemas de identificação de ingredientes:
+nomes compostos declarados nos passos (como creme de leite), quantidades
+qualitativas (como sal a gosto) e unidades com a palavra “de” (como duas
+colheres de sopa de azeite). A identidade do ingrediente permanece separada
+da medida; nomes sem quantidade, como “Creme de Leite”, também permanecem
+inteiros. A disponibilidade continua exigindo o nome completo da despensa.
+Ingredientes extras e restrições alimentares continuam sendo rejeitados.
+
+O teste real do pedido exato “o que posso fazer pro almoco?” passou com a
+despensa completa recém-copiada do aparelho e uma explicação contextual.
+A primeira expansão real foi reprovada: usava água nos passos sem declará-la
+e a tentativa genérica de revisão repetiu a omissão. O diagnóstico agora
+informa os nomes rejeitados e os ingredientes ausentes da lista; a revisão
+continua limitada a uma tentativa. A repetição real passou, incluindo água
+declarada e sem ingrediente adicional escondido nos passos. Todas as chamadas,
+inclusive as da tentativa reprovada, mantiveram suas reservas no teto de US$ 4.
+
+Os 77 testes locais passaram na versão final, incluindo nomes compostos,
+medidas com colher/xícara, “a gosto” nos sete idiomas, diagnóstico específico
+da água e controles negativos para ingredientes realmente indisponíveis.
+Não houve alteração de schema, stores, configuração de sincronização ou
+capabilities. Respostas históricas não são reescritas: o fluxo novo é usado
+ao fazer um novo pedido.
+
+As compilações finais iOS/macOS passaram. A atualização foi instalada e aberta
+no iPhone 12 Pro físico; Bundle ID, Team, ordem dos containers iCloud e App
+Group da extensão foram conferidos antes da instalação. O readback após a
+instalação confirmou todos os registros, IDs, BLOBs e 151 arquivos de mídia
+idênticos. A versão Mac também foi assinada com o perfil/entitlements originais,
+instalada e aberta; seu snapshot permaneceu igual. A limitação visual do
+onboarding do Mac continua válida. Os dois testes nativos de navegação e
+retomada passaram na versão final no iPhone 17 Pro simulado, que foi reaberto
+normalmente com os dados idênticos. As chamadas reais verificaram o gerador
+e o expansor nativos com a cópia atual da despensa; não se apresentam esses
+testes como interação paga pela interface do aparelho físico.
+
 Conferência manual:
 
 1. Peça ideias de jantar citando um ingrediente no final da despensa; confira

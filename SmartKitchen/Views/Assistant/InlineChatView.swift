@@ -3030,7 +3030,9 @@ extension RecipeCardData {
             for line in ingredientLines {
                 let cleaned = String(line.dropFirst()).trimmingCharacters(in: .whitespaces)
                 // Try to split: "200g de Farinha" → detail="200g", name="Farinha"
-                let dePattern = #"^(.+?)\s+de\s+(.+)$"#
+                // "de" belongs to many ingredient names. Split only a
+                // numeric measurement, never "Creme de Leite" itself.
+                let dePattern = #"^(\d[\d.,/]*\s*(?:colher(?:es)?|x[ií]cara(?:s)?|copo(?:s)?)\s+de\s+(?:sopa|ch[aá]|caf[eé]|sobremesa)|\d.+?|\d)\s+de\s+(.+)$"#
                 if let deRegex = try? NSRegularExpression(pattern: dePattern, options: .caseInsensitive),
                    let match = deRegex.firstMatch(in: cleaned, range: NSRange(location: 0, length: (cleaned as NSString).length)),
                    match.numberOfRanges >= 3 {
@@ -3038,7 +3040,15 @@ extension RecipeCardData {
                     let name = (cleaned as NSString).substring(with: match.range(at: 2))
                     ingredients.append((name: name.capitalizingFirstLetter(), detail: qty))
                 } else {
-                    ingredients.append((name: cleaned.capitalizingFirstLetter(), detail: ""))
+                    let tastePattern = #"\s*\(?\s*(?:a gosto|to taste|al gusto|au go[uû]t|nach Geschmack|quanto basta|q\.?\s*b\.?|適量|少々)\s*\)?\s*$"#
+                    if let range = cleaned.range(of: tastePattern, options: [.regularExpression, .caseInsensitive]),
+                       !cleaned[..<range.lowerBound].trimmingCharacters(in: .whitespaces).isEmpty {
+                        let name = cleaned[..<range.lowerBound].trimmingCharacters(in: .whitespaces)
+                        let detail = cleaned[range].trimmingCharacters(in: .whitespaces)
+                        ingredients.append((name: name.capitalizingFirstLetter(), detail: detail))
+                    } else {
+                        ingredients.append((name: cleaned.capitalizingFirstLetter(), detail: ""))
+                    }
                 }
             }
         }

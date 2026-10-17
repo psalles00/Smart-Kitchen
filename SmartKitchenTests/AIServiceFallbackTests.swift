@@ -650,6 +650,29 @@ final class RecipeIdeaRequestTests: XCTestCase {
         XCTAssertTrue(request.acceptsPantry(ingredients: ["Ovos"], steps: ["Add salt."], pantryItems: [], filterByPantry: false))
     }
 
+    func testDeclaredCompoundIngredientsDoNotBecomeHiddenExtrasInPreparation() {
+        let request = RecipeIdeaRequest(occasion: nil, refinement: nil, customQuery: "o que posso fazer pro almoco?")
+        let examples = [
+            ("Queijo Gorgonzola", "Misture o queijo gorgonzola até derreter."),
+            ("Creme de Leite", "Incorpore o creme de leite."),
+            ("Leite Integral", "Aqueça o leite integral."),
+            ("Açúcar Mascavo", "Acrescente açúcar mascavo."),
+            ("Coconut Milk", "Add coconut milk."),
+            ("Lait de coco", "Ajoutez du lait de coco."),
+            ("Leche de coco", "Añade leche de coco."),
+            ("Kokosmilch", "Kokosmilch hinzufügen."),
+            ("Latte di cocco", "Aggiungi latte di cocco.")
+        ]
+        for (ingredient, step) in examples {
+            XCTAssertTrue(request.acceptsPantry(ingredients: [ingredient], steps: [step], pantryItems: [ingredient], filterByPantry: true), step)
+        }
+        for step in ["Use leite.", "Misture leite de coco e leite.", "Misture leite de coco e manteiga."] {
+            XCTAssertFalse(request.acceptsPantry(ingredients: ["Leite de Coco"], steps: [step], pantryItems: ["Leite de Coco"], filterByPantry: true), step)
+        }
+        XCTAssertFalse(request.acceptsPantry(ingredients: ["Salmão"], steps: ["Tempere o salmão com sal."], pantryItems: ["Salmão"], filterByPantry: true))
+        XCTAssertFalse(request.acceptsPantry(ingredients: ["Queijo"], steps: ["Derreta o queijo."], pantryItems: ["Queijo Gorgonzola"], filterByPantry: true))
+    }
+
     private let original = "Tenho arroz, ovos e tomate. Quero jantar em até 20 minutos para uma pessoa, sem leite. Não registre nem altere dados."
 
     func testConversationSurvivesReopeningStoreWithAutosaveDisabled() throws {
@@ -1730,6 +1753,29 @@ final class BackdropMetalPipelineTests: XCTestCase {
 final class RecipeIdeaExpansionTests: XCTestCase {
     private let validRecipe = "**Omelete**\nTempo total: 10 min\nPorções: 1\n**Ingredientes**\n- 2 un de Ovos\n**Modo de Preparo**\n1. Bata os ovos e cozinhe em frigideira antiaderente."
 
+    func testLunchWithDeclaredCheeseAndCreamOpensWithoutFalseRestrictionOrRepair() async throws {
+        let recipe = """
+        **Fettuccine ao gorgonzola**
+        Tempo total: 20 min
+        Porções: 2
+        **Ingredientes**
+        - 200 g de Macarrão Fettuccine
+        - 80 g de Queijo Gorgonzola
+        - 100 g de Creme de Leite
+        - 1 l de Água
+        **Modo de Preparo**
+        1. Cozinhe o macarrão fettuccine na água.
+        2. Aqueça o creme de leite e derreta o queijo gorgonzola.
+        3. Misture o macarrão fettuccine ao molho e sirva.
+        """
+        let backend = RecipeExpansionFixtureBackend(contents: [recipe])
+        let content = try await RecipeQuickIdeaExpander(aiService: AIService(supabase: backend)).expand(
+            messages: [], request: .init(occasion: "Almoço", refinement: nil, customQuery: "o que posso fazer pro almoco?"),
+            pantryItems: ["Macarrão Fettuccine", "Queijo Gorgonzola", "Creme de Leite", "Água"], filterByPantry: true, apiKey: "")
+        XCTAssertEqual(content, recipe)
+        XCTAssertEqual(backend.bodies.count, 1, "A valid compound ingredient must not incur a repair request")
+    }
+
     func testOneRejectedPreparationIsRepairedWithOriginalRequest() async throws {
         let backend = RecipeExpansionFixtureBackend(contents: [validRecipe + "\n2. Adicione sal.", validRecipe])
         let request = RecipeIdeaRequest(occasion: nil, refinement: nil, customQuery: "Sem leite em 20 minutos para uma pessoa")
@@ -1741,6 +1787,45 @@ final class RecipeIdeaExpansionTests: XCTestCase {
         let last = try XCTUnwrap((backend.bodies.last?["messages"] as? [[String: Any]])?.last?["content"] as? String)
         XCTAssertTrue(last.contains(request.generationRules))
         XCTAssertTrue(last.contains(request.ingredientPrompt(pantryItems: ["Ovos"], filterByPantry: true)))
+    }
+
+    func testRepairIdentifiesWaterUsedInStepsInsteadOfRepeatingAGenericRestriction() async throws {
+        let invalid = "**Arroz**\n**Ingredientes**\n- 100 g de Arroz\n- Sal a gosto\n**Modo de Preparo**\n1. Cozinhe o arroz em água com sal."
+        let valid = invalid.replacingOccurrences(of: "- Sal a gosto", with: "- Sal a gosto\n- 200 ml de Água")
+        let backend = RecipeExpansionFixtureBackend(contents: [invalid, valid])
+        let content = try await RecipeQuickIdeaExpander(aiService: AIService(supabase: backend)).expand(
+            messages: [], request: .init(occasion: nil, refinement: nil, customQuery: "o que posso fazer pro almoco?"),
+            pantryItems: ["Arroz", "Sal", "Água"], filterByPantry: true, apiKey: "")
+        XCTAssertEqual(content, valid)
+        XCTAssertEqual(backend.bodies.count, 2)
+        let repair = try XCTUnwrap((backend.bodies.last?["messages"] as? [[String: Any]])?.last?["content"] as? String)
+        XCTAssertTrue(repair.contains("ausentes da lista de ingredientes: [\"agua\"]"))
+    }
+
+    func testTasteAmountsAndUnmeasuredCompoundNamesKeepTheirIngredientIdentity() throws {
+        let card = try XCTUnwrap(RecipeCardData.parse(content: """
+        **Molho**
+        **Ingredientes**
+        - Creme de Leite
+        - 2 colheres de sopa de Azeite
+        - 1 colher de chá de Sal
+        - 0,5 xícara de chá de Creme de Leite
+        - Sal a gosto
+        - Salt to taste
+        - Sel au goût
+        - Sal al gusto
+        - Salz nach Geschmack
+        - Sale quanto basta
+        - 塩 適量
+        **Modo de Preparo**
+        1. Misture.
+        """))
+        XCTAssertEqual(card.ingredients.map(\.name), ["Creme de Leite", "Azeite", "Sal", "Creme de Leite", "Sal", "Salt", "Sel", "Sal", "Salz", "Sale", "塩"])
+        XCTAssertEqual(card.ingredients[0].detail, "")
+        XCTAssertEqual(card.ingredients[1].detail, "2 colheres de sopa")
+        XCTAssertEqual(card.ingredients[3].detail, "0,5 xícara de chá")
+        XCTAssertEqual(card.ingredients[4].detail, "a gosto")
+        XCTAssertNil(AssistantRecipeIngredientAmount.decode(card.ingredients[4].detail).quantity)
     }
 
     func testSecondInvalidResponseStopsWithoutAnUnboundedRetry() async {
@@ -1821,6 +1906,49 @@ private final class RecipeExpansionFixtureBackend: SupabaseFunctionInvoking {
 /// Opt-in native provider smoke test. Normal test runs never dispatch paid calls.
 @MainActor
 final class RecipeIdeasLiveProviderTests: XCTestCase {
+    private func reservedLunchService(_ backend: ReservedRecipeValidationBackend) -> AIService {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [DirectChatURLProtocol.self]
+        DirectChatURLProtocol.requestHandler = { _ in throw URLError(.unsupportedURL) }
+        return AIService(supabase: backend, urlSession: URLSession(configuration: configuration),
+                         openRouterKey: { "" }, prefersDirectOpenRouter: { false })
+    }
+
+    func testLiveReportedLunchQuestionWithinReservedBudget() async throws {
+        guard ProcessInfo.processInfo.environment["SAVORIA_LIVE_REPORTED_LUNCH"] == "1" else { throw XCTSkip("Requires a prepared reservation") }
+        continueAfterFailure = false
+        let backend = try ReservedRecipeValidationBackend()
+        let generator = RecipeQuickIdeasGenerator(aiService: reservedLunchService(backend))
+        let directory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0].appendingPathComponent("LiveRecipeValidation")
+        let decoder = JSONDecoder(); decoder.dateDecodingStrategy = .iso8601
+        let pantry = try decoder.decode(RecipePantryContext.self, from: Data(contentsOf: directory.appendingPathComponent("pantry-context-20261016.json")))
+        let response = await generator.generateResponse(pantryItems: pantry.availableNames, occasion: .almoco, refinement: nil,
+            customQuery: "o que posso fazer pro almoco?", language: .ptBR, pantryContext: pantry, limit: 10)
+        try JSONEncoder().encode(response).write(to: directory.appendingPathComponent("reported-lunch-source-20261017.json"), options: .atomic)
+        XCTAssertFalse(response.answer?.isEmpty ?? true, "The ordinary lunch question needs a useful contextual explanation")
+        XCTAssertFalse(response.ideas.isEmpty, "The stocked pantry should yield a feasible lunch")
+    }
+
+    func testLiveReportedLunchExpansionWithinReservedBudget() async throws {
+        guard ProcessInfo.processInfo.environment["SAVORIA_LIVE_REPORTED_LUNCH"] == "1" else { throw XCTSkip("Requires a prepared reservation") }
+        continueAfterFailure = false
+        let backend = try ReservedRecipeValidationBackend()
+        let directory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0].appendingPathComponent("LiveRecipeValidation")
+        let decoder = JSONDecoder(); decoder.dateDecodingStrategy = .iso8601
+        let pantry = try decoder.decode(RecipePantryContext.self, from: Data(contentsOf: directory.appendingPathComponent("pantry-context-20261016.json")))
+        let response = try JSONDecoder().decode(RecipeQuickIdeasResponse.self, from: Data(contentsOf: directory.appendingPathComponent("reported-lunch-source-20261017.json")))
+        let idea = try XCTUnwrap(response.ideas.first)
+        let request = RecipeIdeaRequest(occasion: "Almoço", refinement: nil, customQuery: "o que posso fazer pro almoco?")
+        let instruction = pantry.prompt + "\n" + idea.expansionInstruction(request: request, pantryItems: pantry.availableNames, filterByPantry: true)
+        let content = try await RecipeQuickIdeaExpander(aiService: reservedLunchService(backend)).expand(
+            messages: [["role": "system", "content": RecipePantryContext.guidance + "\nResponda em português do Brasil."], ["role": "user", "content": instruction]],
+            request: request, pantryItems: pantry.availableNames, filterByPantry: true, apiKey: "")
+        let card = try XCTUnwrap(RecipeCardData.parse(content: content))
+        XCTAssertFalse(card.steps.isEmpty)
+        XCTAssertTrue(request.acceptsPantry(ingredients: card.ingredients.map(\.name), steps: card.steps, pantryItems: pantry.availableNames, filterByPantry: true))
+        try content.write(to: directory.appendingPathComponent("reported-lunch-expansion-20261017.txt"), atomically: true, encoding: .utf8)
+    }
+
     func testLiveContextualPantrySuggestionsWithinReservedBudget() async throws {
         guard ProcessInfo.processInfo.environment["SAVORIA_LIVE_PANTRY_CONVERSATION"] == "1" else {
             throw XCTSkip("Requires a separately prepared reservation and read-only pantry snapshot.")
