@@ -73,6 +73,9 @@ struct UnifiedSearchBar: View {
             .padding(.vertical, 4)
             .padding(.horizontal, 20)
             .animation(.snappy(duration: 0.18, extraBounce: 0), value: state.isVisible)
+            .onAppear {
+                if state.isVisible { isFocused = true }
+            }
             .onChange(of: isFocused) { _, newValue in
                 if newValue && !state.isVisible {
                     state.isVisible = true

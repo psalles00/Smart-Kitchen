@@ -12,8 +12,7 @@ import AppKit
 extension Notification.Name {
     static let openSettings = Notification.Name("com.smartkitchen.openSettings")
     /// Posted when the user taps the Assistant widget (Lock Screen / Home Screen).
-    /// The root view responds by revealing the fullscreen assistant in AI chat mode,
-    /// which in turn auto-focuses the text field (keyboard opens automatically).
+    /// The root view opens the idle assistant and focuses its input when active.
     static let openAssistantFromWidget = Notification.Name("com.smartkitchen.openAssistantFromWidget")
     /// Posted when the user taps the AI Chat widget. Reveals the fullscreen assistant
     /// in AI chat mode (conversation interface, keyboard open).
@@ -36,7 +35,28 @@ extension Notification.Name {
 
 @MainActor
 enum WidgetDeepLinkStore {
+    enum AssistantDestination: Equatable {
+        case assistant, aiChat
+    }
+
+    private static var pendingAssistantDestination: AssistantDestination?
     private static var pendingNutritionLogAction: String?
+
+    /// Keep the intent while launch content is still behind the splash, or
+    /// while unlocking. Notifications alone can arrive before ContentView exists.
+    static func postAssistant(_ destination: AssistantDestination) {
+        pendingAssistantDestination = destination
+        NotificationCenter.default.post(
+            name: destination == .assistant ? .openAssistantFromWidget : .openAIChatFromWidget,
+            object: nil
+        )
+    }
+
+    static func consumePendingAssistant() -> AssistantDestination? {
+        let destination = pendingAssistantDestination
+        pendingAssistantDestination = nil
+        return destination
+    }
 
     static func postNutritionLogAction(_ action: String) {
         pendingNutritionLogAction = action
@@ -215,7 +235,7 @@ struct SmartKitchenApp: App {
             let _ = PerformanceLogger.event(.launch, "WindowGroup content building")
             ZStack {
                 if isLaunchContentMounted {
-                    ContentView()
+                    ContentView(isLaunchReady: isAppReady)
                         .modelContainer(cloudSync.container)
                         .id(cloudSync.containerID)
                         .environment(subscriptionManager)
@@ -254,15 +274,21 @@ struct SmartKitchenApp: App {
             // bug — see `SharedImportInboxHost` for details.
             .recipeImportInboxHost()
             .sharedImportInboxHost(isPresentationEnabled: isAppReady && scenePhase == .active)
+                #if os(macOS)
+                .handlesExternalEvents(
+                    preferring: ["smartkitchen://assistant", "smartkitchen://aichat"],
+                    allowing: ["smartkitchen://assistant", "smartkitchen://aichat"]
+                )
+                #endif
                 .onOpenURL { url in
                     RecipeImportLogger.info("app onOpenURL received url=\(url.absoluteString)")
                     // Widget deep links
                     if url.scheme == "smartkitchen", url.host == "assistant" {
-                        NotificationCenter.default.post(name: .openAssistantFromWidget, object: nil)
+                        WidgetDeepLinkStore.postAssistant(.assistant)
                         return
                     }
                     if url.scheme == "smartkitchen", url.host == "aichat" {
-                        NotificationCenter.default.post(name: .openAIChatFromWidget, object: nil)
+                        WidgetDeepLinkStore.postAssistant(.aiChat)
                         return
                     }
                     if Self.isNutritionLogDeepLink(url) {

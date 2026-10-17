@@ -122,14 +122,11 @@ final class SearchBarState: ObservableObject {
         focusRequestSession += 1
         let currentFocusSession = focusRequestSession
 
-        guard !isVisible else {
-            focusTrigger += 1
-            return
-        }
-
-        HapticManager.searchReveal()
-        withAnimation(.snappy(duration: 0.22, extraBounce: 0.02)) {
-            isVisible = true
+        if !isVisible {
+            HapticManager.searchReveal()
+            withAnimation(.snappy(duration: 0.22, extraBounce: 0.02)) {
+                isVisible = true
+            }
         }
         focusTrigger += 1
 

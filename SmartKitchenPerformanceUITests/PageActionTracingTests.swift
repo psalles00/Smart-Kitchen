@@ -3,6 +3,46 @@ import XCTest
 /// Navigates existing food data without purchases, AI calls, seeding or deletion.
 @MainActor
 final class PageActionTracingTests: XCTestCase {
+    func testAssistantWidgetKeyboardOnColdLaunch() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication(bundleIdentifier: "com.pedrosalles.smartkitchen.sync")
+        app.launchArguments = ["-AppleLanguages", "(pt-BR)", "-AppleLocale", "pt_BR"]
+        app.terminate()
+        app.open(URL(string: "smartkitchen://assistant")!)
+        assertAutomaticAssistantKeyboard(app, capture: "Assistant widget, cold launch")
+        app.typeText("\n") // Empty Done dismisses; never submit a message.
+    }
+
+    func testAssistantWidgetKeyboardFromOtherPageAndBackground() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication(bundleIdentifier: "com.pedrosalles.smartkitchen.sync")
+        app.launchArguments = ["-AppleLanguages", "(pt-BR)", "-AppleLocale", "pt_BR"]
+        app.launch()
+        for background in [false, true] {
+            let recipes = app.tabBars.buttons["Receitas"]
+            XCTAssertTrue(recipes.waitForExistence(timeout: 45))
+            recipes.tap()
+            if background { XCUIDevice.shared.press(.home) }
+            app.open(URL(string: "smartkitchen://assistant")!)
+            assertAutomaticAssistantKeyboard(app, capture: background ? "Assistant widget, background" : "Assistant widget, other page")
+            app.typeText("\n")
+            let hidden = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.keyboards.firstMatch)
+            XCTAssertEqual(XCTWaiter.wait(for: [hidden], timeout: 10), .completed)
+        }
+    }
+
+    private func assertAutomaticAssistantKeyboard(_ app: XCUIApplication, capture name: String) {
+        let input = app.textFields["savoria.search.input"]
+        XCTAssertTrue(input.waitForExistence(timeout: 45))
+        // Deliberately never tap the field: the widget must focus it itself.
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 15))
+        let capture = XCTAttachment(screenshot: app.screenshot())
+        capture.name = name;capture.lifetime = .keepAlways;add(capture)
+        app.typeText("zx")
+        XCTAssertTrue((input.value as? String)?.contains("zx") == true)
+        app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 2))
+    }
+
     func testDevelopmentHomeDebugPlansAndPreviews() throws {
         continueAfterFailure = false
         let app = XCUIApplication(bundleIdentifier: "com.pedrosalles.smartkitchen.sync")

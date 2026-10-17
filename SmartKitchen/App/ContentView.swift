@@ -65,6 +65,7 @@ private enum NutritionLogWidgetAction: String {
 }
 
 struct ContentView: View {
+    var isLaunchReady: Bool = true
     @Environment(\.modelContext) private var modelContext
     @State private var selectedTab: AppTab = .assistant
     @State private var lastContentTab: AppTab = .assistant
@@ -707,12 +708,29 @@ struct ContentView: View {
                 .onAppear {
                     syncOnboardingFlag()
                     consumePendingNutritionLogWidgetActionIfNeeded()
+                    consumePendingAssistantWidgetIfReady()
+                }
+                .onChange(of: isLaunchReady) { _, _ in
+                    consumePendingAssistantWidgetIfReady()
+                }
+                #if os(iOS)
+                .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
+                    consumePendingAssistantWidgetIfReady()
+                }
+                #else
+                .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+                    consumePendingAssistantWidgetIfReady()
+                }
+                #endif
+                .onChange(of: showOnboarding) { _, _ in
+                    consumePendingAssistantWidgetIfReady()
                 }
                 .onChange(of: settingsSnapshot.hasCompletedOnboarding) { _, _ in
                     syncOnboardingFlag()
                 }
                 .onChange(of: ICloudOnboardingRecovery.shared.isPresented) { _, _ in
                     syncOnboardingFlag()
+                    consumePendingAssistantWidgetIfReady()
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .appearanceModeChanged)) { _ in
                     #if os(iOS)
@@ -723,14 +741,10 @@ struct ContentView: View {
                     showSettings = true
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .openAssistantFromWidget)) { _ in
-                    #if os(iOS)
-                    openAssistantTab()
-                    #else
-                    searchBarState.reveal(mode: .idle)
-                    #endif
+                    consumePendingAssistantWidgetIfReady()
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .openAIChatFromWidget)) { _ in
-                    openAIMode()
+                    consumePendingAssistantWidgetIfReady()
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .openNutritionLogFromWidget)) { note in
                     let action = NutritionLogWidgetAction.resolve(note.userInfo?["action"] as? String)
@@ -1184,6 +1198,25 @@ struct ContentView: View {
 
     private func openNutritionLogFromWidget(_ action: NutritionLogWidgetAction) {
         scheduleNutritionLogAction(action)
+    }
+
+    private func consumePendingAssistantWidgetIfReady() {
+        #if os(iOS)
+        guard UIApplication.shared.applicationState == .active else { return }
+        #endif
+        guard isLaunchReady, !showOnboarding, !ICloudOnboardingRecovery.shared.isPresented,
+              let destination = WidgetDeepLinkStore.consumePendingAssistant() else { return }
+        switch destination {
+        case .assistant:
+            openAssistantTab()
+            searchBarState.reveal(mode: .idle)
+        case .aiChat:
+            openAIMode()
+            searchBarState.reveal(mode: .aiChat)
+        }
+        #if os(macOS)
+        expandAssistantBar()
+        #endif
     }
 
     private func consumePendingNutritionLogWidgetActionIfNeeded() {
