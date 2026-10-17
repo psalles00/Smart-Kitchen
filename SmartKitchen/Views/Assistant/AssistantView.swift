@@ -155,25 +155,7 @@ struct AssistantView: View {
     // MARK: - Typing Indicator
 
     private var typingIndicator: some View {
-        HStack(spacing: 4) {
-            ForEach(0..<3) { i in
-                Circle()
-                    .fill(Color.secondary)
-                    .frame(width: 7, height: 7)
-                    .opacity(0.6)
-                    .animation(
-                        .easeInOut(duration: 0.5)
-                            .repeatForever()
-                            .delay(Double(i) * 0.15),
-                        value: aiService.isLoading
-                    )
-            }
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .background(Color(.secondarySystemBackground), in: .capsule)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 16)
+        AssistantActivityIndicator()
     }
 
     // MARK: - Input Bar

@@ -1,5 +1,31 @@
 import SwiftUI
 
+/// Native indeterminate progress animates independently of network state changes.
+/// It exists only while a response is pending, with no timer in the chat tree.
+struct AssistantActivityIndicator: View {
+    @Environment(\.scenePhase) private var scenePhase
+
+    var body: some View {
+        HStack(spacing: 9) {
+            if scenePhase == .active {
+                ProgressView().controlSize(.small)
+            } else {
+                Image(systemName: "ellipsis")
+            }
+            Text("Preparando resposta…")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(Color(.secondarySystemBackground), in: .capsule)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 16)
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("assistant-response-activity")
+    }
+}
+
 struct ChatBubbleView: View {
     let message: ChatMessage
     let onQuickAction: (QuickAction) -> Void

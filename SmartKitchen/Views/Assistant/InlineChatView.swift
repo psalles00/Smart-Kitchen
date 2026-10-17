@@ -611,25 +611,7 @@ struct InlineChatView: View {
     // MARK: - Typing Indicator
 
     private var typingIndicator: some View {
-        HStack(spacing: 4) {
-            ForEach(0..<3) { i in
-                Circle()
-                    .fill(Color.secondary)
-                    .frame(width: 7, height: 7)
-                    .opacity(0.6)
-                    .animation(
-                        .easeInOut(duration: 0.5)
-                            .repeatForever()
-                            .delay(Double(i) * 0.15),
-                        value: aiService.isLoading
-                    )
-            }
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .background(Color(.secondarySystemBackground), in: .capsule)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 16)
+        AssistantActivityIndicator()
     }
 
     // MARK: - Input Bar
@@ -2240,7 +2222,7 @@ struct InlineChatView: View {
         if request.onlySavedRecipes {
             let filter = request.pantryOverride ?? currentPantryFilterEnabled
             let ids = matchLocalRecipes(occasion: occasion, refinement: refinement, customQuery: customQuery,
-                                        filterByPantry: filter, libraryOnly: true, excludingIDs: excludingLocalIDs, requestContext: request)
+                                        libraryOnly: true, excludingIDs: excludingLocalIDs, requestContext: request)
             let payload = ResultsPayload(ideas: [], quickIdeas: [], localRecipeIDs: ids, occasionRaw: occasion?.rawValue,
                                          refinement: refinement, customQuery: customQuery, filterByPantry: filter, queryHistory: queryHistory)
             insertMessage(ChatMessage(role: .assistant, content: payload.encoded(),
@@ -2273,10 +2255,10 @@ struct InlineChatView: View {
             pantryItems: pantryNames, occasion: occasion, refinement: refinement,
             customQuery: customQuery, language: targetLanguage, filterByPantry: filterEnabled,
             requestContext: request, excludingTitles: excludingQuickTitles,
-            pantryContext: pantryContext, conversationContext: lastRecipeIdeasResultsPayload()?.encoded(), limit: 10)
+            pantryContext: pantryContext, conversationContext: lastRecipeIdeasResultsPayload()?.encoded(), includeVariety: true, limit: 12)
         let localIDs = quickResponse.isAnswerOnly ? [] : matchLocalRecipes(
             occasion: occasion, refinement: refinement, customQuery: customQuery,
-            filterByPantry: filterEnabled, excludingIDs: excludingLocalIDs, requestContext: request)
+            excludingIDs: excludingLocalIDs, requestContext: request)
         var payload = ResultsPayload(ideas: [], quickIdeas: quickResponse.ideas, answer: quickResponse.answer,
             localRecipeIDs: localIDs, occasionRaw: occasion?.rawValue, refinement: refinement,
             customQuery: customQuery, filterByPantry: filterEnabled, queryHistory: queryHistory)
@@ -2326,7 +2308,6 @@ struct InlineChatView: View {
         occasion: RecipeIdeaOccasion?,
         refinement: String?,
         customQuery: String?,
-        filterByPantry: Bool,
         libraryOnly: Bool = false,
         excludingIDs: Set<UUID> = [],
         requestContext: RecipeIdeaRequest? = nil
@@ -2354,37 +2335,8 @@ struct InlineChatView: View {
         }
         keywords = Array(Set(keywords.filter { $0.count >= 3 }))
 
-        let scored: [(Recipe, Double, Int)] = allRecipes.compactMap { recipe in
-            guard !excludingIDs.contains(recipe.id) else { return nil }
-            let category = normalized(recipe.category)
-            let tags = recipe.tags.map(normalized)
-            let name = normalized(recipe.name)
-            let ingredientNames = (recipe.ingredients ?? []).map { normalized($0.name) }
-            let categoryMatches = keywords.contains(where: { kw in
-                !kw.isEmpty && (category.contains(kw) || tags.contains(where: { $0.contains(kw) }) || name.contains(kw) || ingredientNames.contains(where: { $0.contains(kw) }))
-            })
-            // Sem keywords (ocasião nil/customQuery vazio), aceita qualquer categoria.
-            if !keywords.isEmpty && !categoryMatches { return nil }
-
-            guard !ingredientNames.isEmpty else { return nil }
-            let (minutes, overflow) = recipe.prepTime.addingReportingOverflow(recipe.cookTime)
-            guard request.acceptsPantry(ingredients: ingredientNames, steps: (recipe.steps ?? []).map(\.instruction), pantryItems: pantryNames, filterByPantry: filterByPantry),
-                  request.accepts(ingredients: ingredientNames, steps: (recipe.steps ?? []).map(\.instruction),
-                                  totalMinutes: !overflow && minutes > 0 ? minutes : nil, servings: recipe.servings) else { return nil }
-            let score = ingredientNames.reduce(into: 0) { acc, ing in
-                if pantryNames.contains(ing) {
-                    acc += 1
-                }
-            }
-            let ratio = Double(score) / Double(ingredientNames.count)
-            return (recipe, ratio, score)
-        }
-        .sorted { lhs, rhs in
-            if lhs.1 != rhs.1 { return lhs.1 > rhs.1 }
-            return lhs.0.name.localizedCaseInsensitiveCompare(rhs.0.name) == .orderedAscending
-        }
-
-        return scored.prefix(4).map(\.0.id)
+        return RecipeLibrarySuggestions.ranked(allRecipes, pantryNames: pantryNames, request: request,
+                                                keywords: keywords, occasion: occasion, excludingIDs: excludingIDs).map(\.id)
     }
 
     // MARK: - Recipe Ideas Wizard — Results View
@@ -2402,26 +2354,34 @@ struct InlineChatView: View {
 
             if !payload.localRecipeIDs.isEmpty {
                 recipeIdeasSection(title: String(localized: "Suas Receitas"), icon: "books.vertical.fill") {
-                    RecipeCardMessage(recipeIds: payload.localRecipeIDs)
+                    Text("Mais ingredientes disponíveis primeiro. Confira o que falta em cada receita.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 16)
+                    RecipeCardMessage(recipeIds: payload.localRecipeIDs, showMissingIngredients: true)
                 }
                 .padding(.bottom, 12)
             }
 
-            if !payload.quickIdeas.isEmpty {
-                recipeIdeasSection(title: String(localized: "Ideias Rápidas"), icon: "bolt.fill") {
-                    ExpandingFlowLayout(spacing: 8) {
-                        ForEach(payload.quickIdeas) { idea in
-                            Button {
-                                handleQuickIdeaTap(idea, payload: payload)
-                            } label: {
-                                quickIdeaChip(idea)
+            ForEach(RecipeIdeaCategory.allCases) { category in
+                let sectionIdeas = payload.quickIdeas.filter { $0.section == category }
+                if !sectionIdeas.isEmpty {
+                    recipeIdeasSection(title: category.title, icon: category.icon) {
+                        ExpandingFlowLayout(spacing: 8) {
+                            ForEach(sectionIdeas) { idea in
+                                Button {
+                                    handleQuickIdeaTap(idea, payload: payload)
+                                } label: {
+                                    quickIdeaChip(idea)
+                                }
+                                .buttonStyle(.plain)
                             }
-                            .buttonStyle(.plain)
                         }
+                        .padding(.horizontal, 16)
                     }
-                    .padding(.horizontal, 16)
+                    .accessibilityIdentifier("assistant-ideas-\(category.rawValue)")
+                    .padding(.bottom, 12)
                 }
-                .padding(.bottom, 12)
             }
 
             if !payload.ideas.isEmpty {
@@ -2689,7 +2649,7 @@ struct InlineChatView: View {
     private func handleQuickIdeaTap(_ idea: RecipeQuickIdea, payload: ResultsPayload) {
         let convId = ensureConversation()
         let request = payload.request
-        let loadingId = beginRecipeCreation(title: idea.title, sourceLabel: String(localized: "Ideias Rápidas"))
+        let loadingId = beginRecipeCreation(title: idea.title, sourceLabel: idea.section.title)
 
         let pantryItems = (try? modelContext.fetch(FetchDescriptor<UnifiedItem>())) ?? []
         let pantryNames = request.allowedPantryItems(RecipePantryContext(items: pantryItems).availableNames)

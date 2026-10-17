@@ -63,6 +63,7 @@ enum AssistantRecipeCardTextSanitizer {
 struct RecipeCardMessage: View {
     @Environment(\.openRecipeInRecipesTab) private var openRecipeInRecipesTab
     let recipeIds: [UUID]
+    var showMissingIngredients = false
     @Query(sort: \Recipe.name) private var allRecipes: [Recipe]
     @Query(filter: #Predicate<UnifiedItem> { $0.isPantry }) private var pantryItems: [UnifiedItem]
 
@@ -70,20 +71,29 @@ struct RecipeCardMessage: View {
     private let cardHeight: CGFloat = 154
 
     private var pantryNames: [String] {
-        pantryItems.map {
+        pantryItems.filter { ($0.quantity ?? 1) > 0 }.map {
             $0.name.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current).lowercased()
         }
     }
 
     private var matchedRecipes: [Recipe] {
-        let recipesById = Dictionary(uniqueKeysWithValues: allRecipes.map { ($0.id, $0) })
-        return recipeIds.compactMap { recipesById[$0] }
+        let recipesById = allRecipes.reduce(into: [UUID: Recipe]()) { if $0[$1.id] == nil { $0[$1.id] = $1 } }
+        let recipes = recipeIds.compactMap { recipesById[$0] }
+        guard showMissingIngredients else { return recipes }
+        // Reflect inventory changes when an old conversation is reopened too.
+        let scored = recipes.map { ($0, availability(for: $0)) }
+        return scored.sorted {
+            if $0.1.available.count != $1.1.available.count { return $0.1.available.count > $1.1.available.count }
+            if $0.1.ratio != $1.1.ratio { return $0.1.ratio > $1.1.ratio }
+            let order = $0.0.name.localizedCaseInsensitiveCompare($1.0.name)
+            return order == .orderedSame ? $0.0.id.uuidString < $1.0.id.uuidString : order == .orderedAscending
+        }.map(\.0)
     }
 
     var body: some View {
         if !matchedRecipes.isEmpty {
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 10) {
+                LazyHStack(spacing: 10) {
                     ForEach(matchedRecipes) { recipe in
                         Button {
                             openRecipeInRecipesTab(recipe.id)
@@ -100,6 +110,9 @@ struct RecipeCardMessage: View {
 
     private func recipeCard(_ recipe: Recipe) -> some View {
         let compat = recipe.compatibility(against: pantryNames)
+        let stock = availability(for: recipe)
+        let width: CGFloat = showMissingIngredients ? 208 : cardWidth
+        let height: CGFloat = showMissingIngredients ? 200 : cardHeight
         let hasStoredImageData = (recipe.imageData?.isEmpty == false)
 
         return ZStack(alignment: .bottomLeading) {
@@ -114,7 +127,7 @@ struct RecipeCardMessage: View {
                     )
                 }
             }
-            .frame(width: cardWidth, height: cardHeight)
+            .frame(width: width, height: height)
             .clipped()
 
             // Gradient overlay
@@ -142,7 +155,18 @@ struct RecipeCardMessage: View {
                 .font(.caption2)
                 .foregroundStyle(.white.opacity(0.85))
 
-                if let compat {
+                if showMissingIngredients {
+                    Label(String(format: String(localized: "%lld de %lld ingredientes disponíveis"), stock.available.count, stock.total),
+                          systemImage: stock.missing.isEmpty ? "checkmark.seal.fill" : "checklist")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(.white)
+                    Text(stock.missing.isEmpty
+                         ? String(localized: "Todos os ingredientes disponíveis")
+                         : String(format: String(localized: "Faltam: %@"), stock.missing.joined(separator: ", ")))
+                        .font(.caption2)
+                        .foregroundStyle(.white.opacity(0.92))
+                        .lineLimit(2)
+                } else if let compat {
                     HStack(spacing: 4) {
                         if compat.ratio >= 1.0 {
                             Image(systemName: "checkmark.seal.fill")
@@ -158,7 +182,12 @@ struct RecipeCardMessage: View {
             }
             .padding(10)
         }
-        .frame(width: cardWidth, height: cardHeight)
+        .frame(width: width, height: height)
         .clipShape(.rect(cornerRadius: 14))
+    }
+
+    private func availability(for recipe: Recipe) -> RecipeIngredientAvailability {
+        RecipeIngredientAvailability(ingredients: (recipe.ingredients ?? []).sorted { $0.sortOrder < $1.sortOrder }.map(\.name),
+                                     pantryNames: pantryNames)
     }
 }

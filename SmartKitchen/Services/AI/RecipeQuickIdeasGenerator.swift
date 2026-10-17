@@ -134,8 +134,26 @@ extension RecipeQuickIdea {
     }
 }
 
-/// Resultado curto produzido pelo modelo para a seção "Ideias Rápidas":
-/// receitas simples, com ingredientes restritos à despensa quando essa opção está ativa.
+enum RecipeIdeaCategory: String, Codable, CaseIterable, Identifiable {
+    case quick, unique, pantry
+    var id: String { rawValue }
+    var title: String {
+        switch self {
+        case .quick: String(localized: "Ideias Rápidas")
+        case .unique: String(localized: "Ideias únicas")
+        case .pantry: String(localized: "Aproveite a despensa")
+        }
+    }
+    var icon: String {
+        switch self {
+        case .quick: "bolt.fill"
+        case .unique: "sparkles"
+        case .pantry: "basket.fill"
+        }
+    }
+}
+
+/// Optional category keeps previously saved conversation cards compatible.
 struct RecipeQuickIdea: Identifiable, Codable, Equatable {
     let id: UUID
     let title: String
@@ -144,13 +162,73 @@ struct RecipeQuickIdea: Identifiable, Codable, Equatable {
     /// Optional for older conversation cards; new ideas include their planned ingredients.
     let ingredientNames: [String]?
     let precookedIngredientNames: [String]?
+    let category: RecipeIdeaCategory?
+    var section: RecipeIdeaCategory { category ?? .quick }
 
-    init(id: UUID = UUID(), title: String, mainIngredient: String, ingredientNames: [String]? = nil, precookedIngredientNames: [String]? = nil) {
+    init(id: UUID = UUID(), title: String, mainIngredient: String, ingredientNames: [String]? = nil, precookedIngredientNames: [String]? = nil, category: RecipeIdeaCategory? = nil) {
         self.id = id
         self.title = title
         self.mainIngredient = mainIngredient
         self.ingredientNames = ingredientNames
         self.precookedIngredientNames = precookedIngredientNames
+        self.category = category
+    }
+}
+
+/// Exact inventory identity: salt must never match salmon, nor milk coconut milk.
+struct RecipeIngredientAvailability: Equatable {
+    let available: [String]
+    let missing: [String]
+    var total: Int { available.count + missing.count }
+    var ratio: Double { total == 0 ? 0 : Double(available.count) / Double(total) }
+
+    init(ingredients: [String], pantryNames: [String]) {
+        let pantry = Set(pantryNames.map(Self.normalized).filter { !$0.isEmpty })
+        var seen = Set<String>()
+        let names = ingredients.filter { !Self.normalized($0).isEmpty && seen.insert(Self.normalized($0)).inserted }
+        available = names.filter { pantry.contains(Self.normalized($0)) }
+        missing = names.filter { !pantry.contains(Self.normalized($0)) }
+    }
+
+    static func normalized(_ text: String) -> String {
+        text.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: Locale(identifier: "en_US_POSIX"))
+            .lowercased()
+            .split(whereSeparator: \.isWhitespace).joined(separator: " ")
+    }
+}
+
+@MainActor
+enum RecipeLibrarySuggestions {
+    /// Missing stock is a ranking input, not a reason to hide saved recipes.
+    /// Explicit pantry-only, dietary, time and serving requests remain hard limits.
+    static func ranked(_ recipes: [Recipe], pantryNames: [String], request: RecipeIdeaRequest,
+                       keywords: [String] = [], occasion: RecipeIdeaOccasion? = nil, excludingIDs: Set<UUID> = []) -> [Recipe] {
+        let broadTerms: Set<String> = ["almoco", "almoço", "jantar", "lunch", "dinner", "posso", "fazer", "cozinhar", "comer", "hoje", "pro", "ideias", "rapido", "rapidas", "can", "make", "cook", "today", "could", "what", "puis", "faire", "puedo", "hacer", "kann", "kochen", "posso", "cucinare", "pranzo", "cena", "dejeuner", "diner", "mittagessen", "abendessen", "almuerzo"]
+        let terms = keywords.map(RecipeIngredientAvailability.normalized).filter { !broadTerms.contains($0) && !$0.isEmpty }
+        let scored = recipes.compactMap { recipe -> (Recipe, RecipeIngredientAvailability)? in
+            guard !excludingIDs.contains(recipe.id) else { return nil }
+            if occasion == .almoco || occasion == .jantar {
+                let otherMeals: Set<String> = ["sobremesa", "sobremesas", "doces", "dessert", "desserts", "postres", "nachspeisen", "dolci", "デザート", "bebidas", "drinks", "beverages", "boissons", "getranke", "bevande", "飲み物", "cafe da manha", "breakfast", "petit dejeuner", "fruhstuck", "colazione", "朝食"]
+                let labels = ([recipe.category] + recipe.tags).map(RecipeIngredientAvailability.normalized)
+                if labels.contains(where: otherMeals.contains) { return nil }
+            }
+            let ingredients = (recipe.ingredients ?? []).sorted { $0.sortOrder < $1.sortOrder }.map(\.name)
+            guard !ingredients.isEmpty else { return nil }
+            let text = ([recipe.name, recipe.category] + recipe.tags + ingredients).map(RecipeIngredientAvailability.normalized)
+            guard terms.isEmpty || terms.contains(where: { term in text.contains { $0.contains(term) } }) else { return nil }
+            let (minutes, overflow) = recipe.prepTime.addingReportingOverflow(recipe.cookTime)
+            guard request.acceptsPantry(ingredients: ingredients, steps: (recipe.steps ?? []).map(\.instruction),
+                                       pantryItems: pantryNames, filterByPantry: request.pantryOverride == true),
+                  request.accepts(ingredients: ingredients, steps: (recipe.steps ?? []).map(\.instruction),
+                                  totalMinutes: !overflow && minutes > 0 ? minutes : nil, servings: recipe.servings) else { return nil }
+            return (recipe, RecipeIngredientAvailability(ingredients: ingredients, pantryNames: pantryNames))
+        }
+        return scored.sorted { lhs, rhs in
+            if lhs.1.available.count != rhs.1.available.count { return lhs.1.available.count > rhs.1.available.count }
+            if lhs.1.ratio != rhs.1.ratio { return lhs.1.ratio > rhs.1.ratio }
+            let order = lhs.0.name.localizedCaseInsensitiveCompare(rhs.0.name)
+            return order == .orderedSame ? lhs.0.id.uuidString < rhs.0.id.uuidString : order == .orderedAscending
+        }.map(\.0)
     }
 }
 
@@ -244,7 +322,7 @@ struct RecipeIdeaRequest {
     }
 
     private static let libraryCues = ["minha biblioteca", "biblioteca", "receitas salvas", "receita salva", "my library", "library", "saved recipes", "saved recipe",
-                                      "recetas guardadas", "receta guardada", "recettes enregistrees", "bibliotheque", "gespeicherte rezepte", "bibliothek", "ricette salvate", "libreria", "保存したレシピ", "保存済みレシピ", "ライブラリ"]
+                                      "recetas guardadas", "receta guardada", "recettes enregistrees", "bibliotheque", "gespeicherte rezepte", "gespeicherten rezepte", "bibliothek", "ricette salvate", "libreria", "保存したレシピ", "保存済みレシピ", "ライブラリ"]
 
     var pantryOverride: Bool? {
         for section in prioritySections {
@@ -322,6 +400,9 @@ struct RecipeIdeaRequest {
                                                 "sin limitar a mi despensa", "sans restriction du garde manger", "ohne vorratsbeschrankung",
                                                 "senza limitarmi alla dispensa", "パントリーに限定しない"]
     private static let restrictedPantryCues = ["apenas itens da despensa", "apenas ingredientes da despensa", "somente ingredientes da despensa", "so itens da despensa",
+                                              "so com o que tenho", "somente com o que tenho", "apenas com o que tenho",
+                                              "only what i have", "only with what i have", "solo con lo que tengo", "seulement avec ce que j ai", "seulement avec ce que j’ai", "seulement avec ce que j'ai",
+                                              "nur mit dem was ich habe", "nur mit dem, was ich habe", "solo con quello che ho", "手元にあるものだけ",
                                               "only pantry ingredients", "solo ingredientes de la despensa", "uniquement les ingredients du garde manger",
                                               "nur zutaten aus dem vorrat", "solo ingredienti della dispensa", "パントリーの食材だけ"]
 
@@ -588,6 +669,7 @@ final class RecipeQuickIdeasGenerator {
         pantryContext: RecipePantryContext? = nil,
         conversationContext: String? = nil,
         repairInvalidIdeas: Bool = true,
+        includeVariety: Bool = false,
         limit: Int = 10
     ) async -> RecipeQuickIdeasResponse {
         let request = requestContext ?? RecipeIdeaRequest(occasion: occasion?.label, refinement: refinement, customQuery: customQuery)
@@ -619,7 +701,8 @@ final class RecipeQuickIdeasGenerator {
             occasion: occasion,
             refinement: refinement,
             customQuery: customQuery,
-            language: language
+            language: language,
+            includeVariety: includeVariety
         ) + "\n" + RecipePantryContext.guidance + "\n" + request.ingredientPrompt(pantryItems: pantryItems, filterByPantry: filterByPantry) + "\n" + request.prompt
             + (excludingTitles.isEmpty ? "" : "\nDo not repeat these already shown dishes: " + excludingTitles.joined(separator: ", "))
 
@@ -639,7 +722,7 @@ final class RecipeQuickIdeasGenerator {
                 try RequestCancellation.check()
                 let response = try await sendJSONChat(messages: messages, apiKey: apiKey, language: language,
                                                       responseFormat: responseFormat(pantryItems: pantryItems, filterByPantry: filterByPantry,
-                                                                                     request: request, limit: generationLimit))
+                                                                                     request: request, limit: generationLimit, includeVariety: includeVariety))
                 guard let content = response.content,
                       let data = content.data(using: .utf8),
                       let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
@@ -689,7 +772,9 @@ final class RecipeQuickIdeasGenerator {
                     }
                     guard request.acceptsIdea(title: title, mainIngredient: mainIngredient),
                           request.accepts(ingredients: names, totalMinutes: dict["totalMinutes"] as? Int, servings: dict["servings"] as? Int) else { continue }
-                    ideas.append(RecipeQuickIdea(title: title, mainIngredient: mainIngredient, ingredientNames: names, precookedIngredientNames: precooked))
+                    let category = (dict["category"] as? String).flatMap(RecipeIdeaCategory.init(rawValue:))
+                    if includeVariety && category == nil { continue }
+                    ideas.append(RecipeQuickIdea(title: title, mainIngredient: mainIngredient, ingredientNames: names, precookedIngredientNames: precooked, category: category))
                     if ideas.count >= generationLimit { break }
                 }
 
@@ -702,14 +787,30 @@ final class RecipeQuickIdeasGenerator {
                     """])
                     continue
                 }
-                let ranked = rankIdeas(
-                    ideas,
-                    pantryItems: pantryItems,
-                    occasion: occasion,
-                    refinement: refinement,
-                    customQuery: customQuery,
-                    limit: limit
-                )
+                let ranked: [RecipeQuickIdea]
+                if includeVariety {
+                    // Rank within sections so quick dishes cannot crowd out all
+                    // creative or inventory-focused ideas. This uses one response.
+                    ranked = RecipeIdeaCategory.allCases.flatMap { category in
+                        let relevant = rankIdeas(ideas.filter { $0.section == category }, pantryItems: pantryItems,
+                                                 occasion: occasion, refinement: refinement, customQuery: customQuery,
+                                                 limit: generationLimit)
+                        let ordered: [RecipeQuickIdea]
+                        if category == .pantry {
+                            ordered = relevant.enumerated().sorted { lhs, rhs in
+                                let a = RecipeIngredientAvailability(ingredients: lhs.element.ingredientNames ?? [], pantryNames: pantryItems)
+                                let b = RecipeIngredientAvailability(ingredients: rhs.element.ingredientNames ?? [], pantryNames: pantryItems)
+                                if a.available.count != b.available.count { return a.available.count > b.available.count }
+                                if a.missing.count != b.missing.count { return a.missing.count < b.missing.count }
+                                return lhs.offset < rhs.offset
+                            }.map(\.element)
+                        } else { ordered = relevant }
+                        return Array(ordered.prefix(max(1, limit / RecipeIdeaCategory.allCases.count)))
+                    }.prefix(limit).map { $0 }
+                } else {
+                    ranked = rankIdeas(ideas, pantryItems: pantryItems, occasion: occasion,
+                                       refinement: refinement, customQuery: customQuery, limit: limit)
+                }
                 // An explanation accompanying rejected ideas must not endorse them.
                 let answer = (json["answer"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
                 return RecipeQuickIdeasResponse(answer: allIdeasAccepted ? answer.flatMap { $0.isEmpty ? nil : $0 } : nil,
@@ -727,7 +828,7 @@ final class RecipeQuickIdeasGenerator {
         return ["cozid", "cooked", "cuit", "gekocht", "cocid", "cott", "pront", "ready", "pret a", "enlatado", "canned", "conserva", "em lata", "炊いた", "茹でた", "調理済", "炊飯済", "加熱済"].contains(where: text.contains)
     }
 
-    private func responseFormat(pantryItems: [String], filterByPantry: Bool, request: RecipeIdeaRequest, limit: Int) -> [String: Any] {
+    private func responseFormat(pantryItems: [String], filterByPantry: Bool, request: RecipeIdeaRequest, limit: Int, includeVariety: Bool) -> [String: Any] {
         var ingredient: [String: Any] = ["type": "string", "description": "Exact ingredient name, without quantities or instructions"]
         let uniqueNames = Array(Set(pantryItems)).sorted()
         if filterByPantry, !uniqueNames.isEmpty, uniqueNames.count <= 1000, uniqueNames.joined().utf8.count <= 12000 {
@@ -738,14 +839,19 @@ final class RecipeQuickIdeasGenerator {
         var servings: [String: Any] = ["type": "integer", "minimum": 1]
         if let count = request.requestedServings { servings["enum"] = [count] }
         let reference: [String: Any] = ["$ref": "#/$defs/ingredientName"]
-        let properties: [String: Any] = [
+        var properties: [String: Any] = [
             "title": ["type": "string"], "mainIngredient": reference,
             "ingredients": ["type": "array", "minItems": pantryItems.count == 1 ? 1 : 2, "items": reference],
             "totalMinutes": minutes, "servings": servings,
             "requiresPrecooked": ["type": "array", "items": reference]
         ]
+        var required = ["title", "mainIngredient", "ingredients", "totalMinutes", "servings", "requiresPrecooked"]
+        if includeVariety {
+            properties["category"] = ["type": "string", "enum": RecipeIdeaCategory.allCases.map(\.rawValue)]
+            required.append("category")
+        }
         let idea: [String: Any] = ["type": "object", "properties": properties,
-                                   "required": ["title", "mainIngredient", "ingredients", "totalMinutes", "servings", "requiresPrecooked"],
+                                   "required": required,
                                    "additionalProperties": false]
         let schema: [String: Any] = ["type": "object", "$defs": ["ingredientName": ingredient],
                                      "properties": ["answer": ["type": "string"], "ideas": ["type": "array", "maxItems": limit, "items": idea]],
@@ -759,7 +865,8 @@ final class RecipeQuickIdeasGenerator {
         occasion: RecipeIdeaOccasion?,
         refinement: String?,
         customQuery: String?,
-        language: AppLanguage
+        language: AppLanguage,
+        includeVariety: Bool
     ) -> String {
         var rules: [String] = [
             "You are a contextual cooking assistant. Reply ONLY with a JSON object of the form:",
@@ -782,12 +889,22 @@ final class RecipeQuickIdeasGenerator {
             "- Match the user's requested dish type and eating occasion, not just pantry popularity.",
             "- The target language for every title is \(language.aiModelLanguageName).",
             "- Keep titles short (max 4 words) and write them only in \(language.aiModelLanguageName).",
-            "- Pick simple, fast recipes.",
+            includeVariety ? "- Only quick ideas must be simple and fast. Unique and pantry ideas may take longer, within the user's explicit time limit." : "- Pick simple, fast recipes.",
             filterByPantry
                 ? "- \"mainIngredient\" must be a single pantry item name from the list."
                 : "- \"mainIngredient\" must name the actual main ingredient of the dish, even when it is not in the pantry.",
             "- No extra commentary, no markdown, no code fences."
         ]
+
+        if includeVariety {
+            rules.append("""
+            - Each idea MUST include category: quick, unique or pantry. Aim for several worthwhile options in EACH of the three sections, while staying within the overall limit. Do not force a section when no viable idea respects the request.
+            - quick: straightforward everyday dishes with few steps and short total preparation time.
+            - unique: noticeably different flavor combinations, cooking techniques or cuisines. Make recognizable, feasible dishes; do not merely rename a quick dish or swap a garnish. Keep the requested meal and dietary constraints.
+            - pantry: useful dishes that combine more of the actual edible pantry inventory and minimize extra purchases. Explore the whole snapshot, not just its first or most popular entries. Explain relevant substitutions or expiry uncertainty in answer; never claim expired food is safe.
+            - Do not repeat a dish across sections. Different titles alone do not make different ideas. When missing ingredients are allowed, identify them honestly in answer; never pretend they are stocked.
+            """)
+        }
 
         if let occasion {
             rules.append(contentsOf: occasionPromptRules(for: occasion))

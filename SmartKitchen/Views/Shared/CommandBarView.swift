@@ -1027,6 +1027,11 @@ final class AssistantSuggestionRanker {
     private static let actionIDs = ["add-pantry", "add-grocery", "create-recipe", "ask-assistant", "register-food-text"]
 
     func orderedIDs(query: String) -> [String] {
+        // A request to READ the recipe library must not become a food log or
+        // a recipe creation because of query length or learned action frequency.
+        if RecipeIdeaRequest(occasion: nil, refinement: nil, customQuery: query).onlySavedRecipes {
+            return ["ask-assistant"] + Self.actionIDs.filter { $0 != "ask-assistant" }
+        }
         let normalized = Self.normalize(query)
         let words = Self.keywords(query)
         let bucket = Self.lengthBucket(query)

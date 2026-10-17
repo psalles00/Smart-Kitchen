@@ -1410,15 +1410,21 @@ private final class RecipeIdeasFixtureBackend: SupabaseFunctionInvoking {
     var bodies: [[String: Any]] = []
     let ingredients: [String: [String]]
     let precooked: [String: [String]]
+    let categories: [String: String]
     var acceptLanguage: String?
     var messages: [[String: Any]] { bodies.last?["messages"] as? [[String: Any]] ?? [] }
-    init(ideas: [(String, String)], ingredients: [String: [String]] = [:], precooked: [String: [String]] = [:]) {
-        self.ideas = ideas; self.ingredients = ingredients; self.precooked = precooked
+    init(ideas: [(String, String)], ingredients: [String: [String]] = [:], precooked: [String: [String]] = [:], categories: [String: String] = [:]) {
+        self.ideas = ideas; self.ingredients = ingredients; self.precooked = precooked; self.categories = categories
     }
     func invokeFunctionData(name: String, body: [String: Any], acceptLanguage: String?) async throws -> Data {
         bodies.append(body)
         self.acceptLanguage = acceptLanguage
-        let content = try JSONSerialization.data(withJSONObject: ["ideas": ideas.map { ["title": $0.0, "mainIngredient": $0.1, "ingredients": ingredients[$0.0] ?? [$0.1], "totalMinutes": 15, "servings": 1, "requiresPrecooked": precooked[$0.0] ?? []] as [String: Any] }])
+        let rows: [[String: Any]] = ideas.map { idea in
+            var row: [String: Any] = ["title": idea.0, "mainIngredient": idea.1, "ingredients": ingredients[idea.0] ?? [idea.1], "totalMinutes": 15, "servings": 1, "requiresPrecooked": precooked[idea.0] ?? []]
+            if let category = categories[idea.0] { row["category"] = category }
+            return row
+        }
+        let content = try JSONSerialization.data(withJSONObject: ["ideas": rows])
         return try JSONSerialization.data(withJSONObject: ["choices": [["message": ["content": String(decoding: content, as: UTF8.self)]]]])
     }
     func invokeFunctionData(name: String, body: Data, contentType: String, acceptLanguage: String?) async throws -> Data {
@@ -2339,4 +2345,137 @@ private final class ReservedRecipeValidationBackend: SupabaseFunctionInvoking {
         try persist()
         return response
     }
+}
+
+
+@MainActor
+final class AssistantRecipeVarietyTests: XCTestCase {
+    private func recipe(_ name: String, _ names: [String], category: String = "Carnes", minutes: Int = 15) -> Recipe {
+        Recipe(name: name, ingredients: names.enumerated().map { RecipeIngredient(name: $0.element, sortOrder: $0.offset) },
+               category: category, prepTime: minutes)
+    }
+
+    func testSavedRecipesIncludePartialAndZeroMatchesInDescendingAvailableCount() {
+        let many = recipe("Frigideira completa", ["Ovos", "Tomate", "Arroz", "Feijão", "Sal", "Óleo"])
+        let complete = recipe("Omelete", ["Ovos", "Tomate"])
+        let partial = recipe("Massa", ["Tomate", "Macarrão", "Queijo"])
+        let none = recipe("Sopa", ["Batata", "Cenoura"])
+        let dessert = recipe("Bolo", ["Ovos", "Tomate", "Arroz", "Feijão", "Sal"], category: "Sobremesas")
+        let request = RecipeIdeaRequest(occasion: "Almoço", refinement: nil, customQuery: "o que posso fazer pro almoco?")
+        let ranked = RecipeLibrarySuggestions.ranked([none, dessert, partial, complete, many],
+            pantryNames: ["Ovos", "Tomate", "Arroz", "Feijão", "Sal"], request: request,
+            keywords: ["almoco", "posso", "fazer", "pro"], occasion: .almoco)
+        XCTAssertEqual(ranked.map(\.id), [many.id, complete.id, partial.id, none.id])
+        XCTAssertEqual(RecipeIngredientAvailability(ingredients: many.ingredients!.map(\.name), pantryNames: ["Ovos", "Tomate", "Arroz", "Feijão", "Sal"]).missing, ["Óleo"])
+    }
+
+    func testExplicitRestrictionsStillApplyWhileStockIsFlexible() {
+        let valid = recipe("Omelete", ["Ovos", "Tomate"])
+        let missing = recipe("Omelete com cebola", ["Ovos", "Cebola"])
+        let dairy = recipe("Omelete cremoso", ["Ovos", "Leite"])
+        let slow = recipe("Ovos assados", ["Ovos", "Tomate"], minutes: 60)
+        let pantry = ["Ovos", "Tomate"]
+        let free = RecipeIdeaRequest(occasion: nil, refinement: nil, customQuery: "Sem leite em 20 minutos")
+        XCTAssertEqual(Set(RecipeLibrarySuggestions.ranked([valid, missing, dairy, slow], pantryNames: pantry, request: free).map(\.id)), [valid.id, missing.id])
+        let strict = RecipeIdeaRequest(occasion: nil, refinement: nil, customQuery: "Use apenas ingredientes da despensa, sem leite em 20 minutos")
+        XCTAssertEqual(RecipeLibrarySuggestions.ranked([valid, missing, dairy, slow], pantryNames: pantry, request: strict).map(\.id), [valid.id])
+        XCTAssertTrue(RecipeLibrarySuggestions.ranked([valid], pantryNames: pantry, request: free, keywords: ["Peixe"]).isEmpty)
+        XCTAssertTrue(RecipeLibrarySuggestions.ranked([valid], pantryNames: pantry, request: free, excludingIDs: [valid.id]).isEmpty)
+    }
+
+    func testNaturalPantryOnlyRequestsStayStrictInEverySupportedLanguage() {
+        let saved = recipe("Omelete", ["Ovos", "Queijo"])
+        for phrase in ["Só com o que tenho", "Only with what I have", "Solo con lo que tengo", "Seulement avec ce que j’ai", "Nur mit dem was ich habe", "Solo con quello che ho", "手元にあるものだけ"] {
+            let request = RecipeIdeaRequest(occasion: nil, refinement: nil, customQuery: phrase)
+            XCTAssertEqual(request.pantryOverride, true, phrase)
+            XCTAssertTrue(RecipeLibrarySuggestions.ranked([saved], pantryNames: ["Ovos"], request: request).isEmpty, phrase)
+        }
+    }
+
+    func testLibraryReadIntentWinsOverFoodLoggingHistoryInEveryLanguage() {
+        let defaults = UserDefaults(suiteName: "Savoria.Variety.Ranking.\(UUID().uuidString)")!
+        let ranker = AssistantSuggestionRanker(defaults: defaults)
+        for _ in 0..<200 { ranker.record(actionID: "register-food-text", query: "Mostre minhas receitas salvas") }
+        for query in ["Mostre minhas receitas salvas", "Show my saved recipes", "Muestrame mis recetas guardadas", "Montre mes recettes enregistrees", "Zeige meine gespeicherten Rezepte", "Mostrami le mie ricette salvate", "保存したレシピを見せて"] {
+            XCTAssertEqual(ranker.orderedIDs(query: query).first, "ask-assistant", query)
+        }
+        XCTAssertNotEqual(ranker.orderedIDs(query: "Crie uma receita de omelete").first, "ask-assistant")
+    }
+
+    func testAvailabilityDoesNotInventStockFromSubstringsOrDuplicateRows() {
+        let stock = RecipeIngredientAvailability(ingredients: [" SAL ", "sal", "Salmão", "Leite", "Leite de coco", "Óleo"],
+                                                 pantryNames: ["Sal", "Leite de coco", "  ÓLEO  "])
+        XCTAssertEqual(stock.available.count, 3)
+        XCTAssertEqual(stock.missing, ["Salmão", "Leite"])
+        XCTAssertEqual(stock.total, 5)
+        let empty = RecipeIngredientAvailability(ingredients: ["Sal"], pantryNames: [])
+        XCTAssertEqual(empty.available.count, 0)
+        XCTAssertEqual(empty.missing, ["Sal"])
+    }
+
+    func testCategoriesRoundTripAndOldCardsRemainQuickIdeas() throws {
+        let old = Data("{\"id\":\"\(UUID().uuidString)\",\"title\":\"Omelete\",\"mainIngredient\":\"Ovos\"}".utf8)
+        XCTAssertEqual(try JSONDecoder().decode(RecipeQuickIdea.self, from: old).section, .quick)
+        let ideas = RecipeIdeaCategory.allCases.map { RecipeQuickIdea(title: $0.rawValue, mainIngredient: "Ovos", ingredientNames: ["Ovos", "Tomate"], category: $0) }
+        let payload = InlineChatView.ResultsPayload(ideas: [], quickIdeas: ideas, localRecipeIDs: [], occasionRaw: nil, refinement: nil, customQuery: nil)
+        XCTAssertEqual(InlineChatView.ResultsPayload.decode(payload.encoded()).quickIdeas, ideas)
+    }
+
+    func testOneProviderResponseSuppliesThreeDistinctSectionsAndKeepsIngredientChecks() async throws {
+        let names = ["Omelete", "Shakshuka", "Arroz de frigideira", "Ideia inválida"]
+        let backend = RecipeIdeasFixtureBackend(ideas: names.map { ($0, "Ovos") },
+            ingredients: Dictionary(uniqueKeysWithValues: names.map { ($0, $0 == "Ideia inválida" ? ["Ovos", "Queijo"] : ["Ovos", "Tomate"]) }),
+            categories: [names[0]: "quick", names[1]: "unique", names[2]: "pantry", names[3]: "unique"])
+        let result = await RecipeQuickIdeasGenerator(aiService: AIService(supabase: backend)).generateResponse(
+            pantryItems: ["Ovos", "Tomate"], occasion: nil, refinement: nil, customQuery: nil, language: .ptBR,
+            repairInvalidIdeas: false, includeVariety: true, limit: 12)
+        XCTAssertEqual(result.ideas.map(\.section), [.quick, .unique, .pantry])
+        XCTAssertFalse(result.ideas.contains { $0.title == "Ideia inválida" })
+        XCTAssertEqual(backend.bodies.count, 1)
+        let format = try XCTUnwrap(backend.bodies.first?["response_format"] as? [String: Any])
+        let jsonSchema = try XCTUnwrap(format["json_schema"] as? [String: Any])
+        let schema = try XCTUnwrap(jsonSchema["schema"] as? [String: Any])
+        let serialized = String(decoding: try JSONSerialization.data(withJSONObject: schema), as: UTF8.self)
+        XCTAssertTrue(serialized.contains("category"))
+        XCTAssertTrue(serialized.contains("unique"))
+        XCTAssertTrue(backend.messages.contains { ($0["content"] as? String ?? "").contains("Different titles alone do not make different ideas") })
+    }
+
+    func testPantrySectionPrioritizesActualCoverageBeforeItsSectionLimit() async {
+        let names = ["Omelete", "Shakshuka", "Abobrinha recheada", "Zuppa de arroz"]
+        let backend = RecipeIdeasFixtureBackend(ideas: names.map { ($0, "Ovos") },
+            ingredients: [names[0]: ["Ovos", "Tomate"], names[1]: ["Ovos", "Tomate"],
+                          names[2]: ["Ovos", "Queijo"], names[3]: ["Ovos", "Tomate", "Arroz"]],
+            categories: [names[0]: "quick", names[1]: "unique", names[2]: "pantry", names[3]: "pantry"])
+        let result = await RecipeQuickIdeasGenerator(aiService: AIService(supabase: backend)).generateResponse(
+            pantryItems: ["Ovos", "Tomate", "Arroz"], occasion: nil, refinement: nil, customQuery: nil, language: .ptBR,
+            filterByPantry: false, repairInvalidIdeas: false, includeVariety: true, limit: 3)
+        XCTAssertEqual(result.ideas.map(\.title), [names[0], names[1], names[3]])
+        XCTAssertEqual(backend.bodies.count, 1)
+    }
+
+    #if canImport(UIKit)
+    func testNativeSectionsAndPartialRecipeRenderingInIsolatedStore() async throws {
+        let container = try ModelContainer(for: CloudSyncService.appSchema,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none))
+        let context = container.mainContext
+        let saved = recipe("Omelete com queijo", ["Ovos", "Tomate", "Queijo"])
+        context.insert(saved); context.insert(UnifiedItem(name: "Ovos", isPantry: true)); context.insert(UnifiedItem(name: "Tomate", isPantry: true))
+        let conversation = ChatConversation(title: "Ideias variadas — teste isolado"); context.insert(conversation)
+        let ideas = [RecipeQuickIdea(title: "Omelete de tomate", mainIngredient: "Ovos", category: .quick),
+                     RecipeQuickIdea(title: "Shakshuka de frigideira", mainIngredient: "Tomate", category: .unique),
+                     RecipeQuickIdea(title: "Arroz com legumes", mainIngredient: "Arroz", category: .pantry)]
+        let payload = InlineChatView.ResultsPayload(ideas: [], quickIdeas: ideas, answer: "Você tem opções práticas e combinações diferentes. Na receita salva, falta queijo.", localRecipeIDs: [saved.id], occasionRaw: nil, refinement: nil, customQuery: nil)
+        context.insert(ChatMessage(role: .assistant, content: payload.encoded(), quickActions: [QuickAction(label: "_wizard", prompt: RecipeIdeasSentinel.resultsPrefix)], conversationId: conversation.id));try context.save()
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let window = UIWindow(windowScene: scene); window.frame = CGRect(x: 0, y: 0, width: 402, height: 1100)
+        window.rootViewController = UIHostingController(rootView: InlineChatView(existingConversationId: conversation.id, onDismiss: {}, onShowHistory: {}).modelContainer(container));window.makeKeyAndVisible()
+        defer { window.isHidden = true; window.rootViewController = nil }
+        try await Task.sleep(for: .seconds(1));window.layoutIfNeeded()
+        let image = UIGraphicsImageRenderer(bounds: window.bounds).image { _ in window.drawHierarchy(in: window.bounds, afterScreenUpdates: true) }
+        let attachment = XCTAttachment(image: image);attachment.name = "Three idea sections and saved recipe missing cheese — isolated store";attachment.lifetime = .keepAlways;add(attachment)
+        XCTAssertEqual(try context.fetchCount(FetchDescriptor<Recipe>()), 1)
+        XCTAssertEqual(try context.fetchCount(FetchDescriptor<ChatMessage>()), 1)
+    }
+    #endif
 }
