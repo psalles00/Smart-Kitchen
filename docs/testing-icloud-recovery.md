@@ -54,7 +54,7 @@ pelo backend continua incluindo os registros preservados.
 - Também foram conferidos os 691 ingredientes, 94 seções, 714 passos e 18
   mídias: IDs e metadados preservados; os 18 conteúdos de mídia têm os mesmos
   hashes. As 41 categorias originais mantiveram IDs, nomes, ícones e ordem.
-- A importação também trouxe 28 categorias padrão locais da instalação nova.
+- As 28 categorias padrão preexistentes na instalação nova do Mac permaneceram.
   Seus registros são preservados e seus rótulos equivalentes são agrupados na
   interface, sem eliminar as categorias originais.
 - **Abrir Savoria** entrou na interface principal do Mac sem o questionário.
@@ -77,6 +77,19 @@ pelo backend continua incluindo os registros preservados.
 - O teste adicional de interface no iPhone físico foi interrompido antes de
   executar por falta de autorização do XCTest (`Timed out while enabling
   automation mode`). Essa rodada não é contabilizada como aprovada.
+  Após a autorização, o roteiro de prévia também foi reprovado por depender
+  da Central de Debug, ausente por definição no binário Release. A prévia
+  foi validada no Simulator Debug; essa falha não é apresentada como aprovação.
+- A conferência física foi concluída manualmente pelo Device Hub na versão
+  Release: abertura com os dados existentes, iCloud conectado, mídias ativadas
+  e retorno do segundo plano sem onboarding. Não se desligou a sincronização
+  nem se apagou o app para forçar uma instalação nova.
+- A cópia física após essa conferência preservou todos os registros e campos
+  originais (ignorando somente `Z_OPT`), além dos hashes dos oito arquivos
+  externos. Os dois bancos passaram no `quick_check`. As 28 categorias locais
+  do Mac chegaram também ao iPhone, totalizando 69 registros preservados;
+  as 41 categorias originais mantiveram os mesmos campos e IDs. O snapshot
+  final do Mac continuou idêntico após essa retomada física.
 - Nenhuma chamada de IA ou alteração de chaves/backend foi necessária.
 
 ## Teste manual
