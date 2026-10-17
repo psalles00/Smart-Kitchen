@@ -2,20 +2,23 @@ import StoreKit
 import SwiftUI
 import SwiftData
 
-#if DEBUG && os(iOS)
-private struct SavoriaDebugCenter: View {
+#if DEBUG
+struct SavoriaDebugCenter: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(SubscriptionManager.self) private var manager
     @State private var gate = FeatureGate.shared
     @State private var previewStep: OnboardingStep?
+    #if os(iOS)
     @State private var openRouterDraft = ""
     @State private var hasLocalOpenRouter = APIConfig.usesLocalOpenRouter
     @State private var credentialMessage: String?
     @State private var credentialFailed = false
+    #endif
 
     var body: some View {
         NavigationStack {
             Form {
+                #if os(iOS)
                 Section {
                     LabeledContent("OpenRouter", value: hasLocalOpenRouter
                                    ? String(localized: "Chave salva neste iPhone") : String(localized: "Não configurado"))
@@ -50,6 +53,8 @@ private struct SavoriaDebugCenter: View {
                     Text("Chave local para texto e imagens. Armazenada com segurança neste iPhone, sem sincronização iCloud. Voz usa o serviço de transcrição.")
                 }
 
+                #endif
+
                 Section {
                     Picker("Plano de teste", selection: Binding(
                         get: { manager.debugMode }, set: { manager.setDebugMode($0) }
@@ -69,7 +74,7 @@ private struct SavoriaDebugCenter: View {
                 }
 
                 Section {
-                    Button("Abrir onboarding") { previewStep = .welcome }
+                    Button("Abrir onboarding + paywall") { previewStep = .welcome }
                         .accessibilityIdentifier("debug-open-onboarding")
                     Button("Abrir preparação") { previewStep = .preparing }
                         .accessibilityIdentifier("debug-open-preparing")
@@ -124,17 +129,47 @@ private struct SavoriaDebugCenter: View {
                 }
             }
             .navigationTitle("Central de Debug")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Fechar") { dismiss() }
+                        .accessibilityIdentifier("debug-close-center")
                 }
             }
         }
+        #if os(iOS)
         .fullScreenCover(item: $previewStep) { step in
             OnboardingFlowView(isPreview: true, initialStep: step) { previewStep = nil }
         }
+        #else
+        .frame(minWidth: 620, minHeight: 600)
+        .sheet(item: $previewStep) { step in
+            OnboardingFlowView(isPreview: true, initialStep: step) { previewStep = nil }
+                .frame(minWidth: 680, minHeight: 760)
+        }
+        #endif
         .accessibilityIdentifier("savoria-debug-center")
+    }
+}
+
+/// Entire entry point is absent from Release, including its layout and sheet.
+struct SavoriaHomeDebugButton: View {
+    @State private var isPresented = false
+
+    var body: some View {
+        Button { isPresented = true } label: {
+            Image(systemName: "ladybug.fill")
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(Color(white: 174 / 255.0))
+                .frame(width: 46, height: 44)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Central de Debug")
+        .accessibilityIdentifier("home-debug-button")
+        .sheet(isPresented: $isPresented) { SavoriaDebugCenter() }
     }
 }
 #endif

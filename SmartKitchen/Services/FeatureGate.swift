@@ -72,7 +72,7 @@ final class FeatureGate {
     private let defaults: UserDefaults
     init(defaults: UserDefaults = .standard) { self.defaults = defaults }
 
-    #if DEBUG && os(iOS)
+    #if DEBUG
     enum DebugUsageMode: String, CaseIterable, Identifiable {
         case actual, available, exhausted
         var id: String { rawValue }
@@ -99,7 +99,7 @@ final class FeatureGate {
 
     /// Current usage count for today.
     func usage(of feature: Feature) -> Int {
-        #if DEBUG && os(iOS)
+        #if DEBUG
         if debugUsageMode != .actual { return debugUsage[feature, default: 0] }
         #endif
         rolloverIfNeeded()
@@ -116,7 +116,7 @@ final class FeatureGate {
     /// On premium, this is a no-op (counters aren't tracked).
     func consume(_ feature: Feature) {
         guard !isPremium else { return }
-        #if DEBUG && os(iOS)
+        #if DEBUG
         if debugUsageMode != .actual {
             debugUsage[feature, default: 0] += 1
             return

@@ -3,6 +3,55 @@ import XCTest
 /// Navigates existing food data without purchases, AI calls, seeding or deletion.
 @MainActor
 final class PageActionTracingTests: XCTestCase {
+    func testDevelopmentHomeDebugPlansAndPreviews() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication(bundleIdentifier: "com.pedrosalles.smartkitchen.sync")
+        app.launchArguments = ["-SavoriaKeepAwakeForValidation", "-AppleLanguages", "(pt-BR)", "-AppleLocale", "pt_BR"]
+        app.launch()
+        let debug = app.buttons["home-debug-button"]
+        XCTAssertTrue(debug.waitForExistence(timeout: 45))
+        let settings = app.buttons["savoria.settings"]
+        XCTAssertTrue(settings.exists)
+        XCTAssertLessThanOrEqual(debug.frame.maxX, settings.frame.minX + 1)
+        debug.tap()
+        let plans = app.segmentedControls["debug-plan-mode"]
+        XCTAssertTrue(plans.waitForExistence(timeout: 10))
+        plans.buttons["Premium"].tap();XCTAssertTrue(plans.buttons["Premium"].isSelected)
+        plans.buttons["Grátis"].tap();XCTAssertTrue(plans.buttons["Grátis"].isSelected)
+        // Return to real state before any screen preview assertions.
+        plans.buttons["App Store"].tap()
+        XCTAssertTrue(plans.buttons["App Store"].isSelected)
+        for id in ["debug-open-onboarding", "debug-open-paywall"] {
+            app.buttons[id].tap()
+            let close = app.buttons["debug-close-onboarding-preview"]
+            XCTAssertTrue(close.waitForExistence(timeout: 15))
+            XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "hittable == true"), object: close)], timeout: 10), .completed)
+            if id == "debug-open-onboarding" { XCTAssertTrue(app.buttons["onboarding-recover-icloud"].exists) }
+            let capture = XCTAttachment(screenshot: app.screenshot());capture.name = id;capture.lifetime = .keepAlways;add(capture)
+            close.tap()
+            XCTAssertTrue(plans.waitForExistence(timeout: 10))
+        }
+        app.buttons["debug-close-center"].tap()
+        XCTAssertTrue(debug.waitForExistence(timeout: 10))
+    }
+
+    func testProductionHomeHasNoDebugEntryOrSettingsOption() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication(bundleIdentifier: "com.pedrosalles.smartkitchen.sync")
+        app.launchArguments = ["-AppleLanguages", "(pt-BR)", "-AppleLocale", "pt_BR"]
+        app.launch()
+        let settings = app.buttons["savoria.settings"]
+        XCTAssertTrue(settings.waitForExistence(timeout: 45))
+        XCTAssertFalse(app.buttons["home-debug-button"].exists)
+        XCTAssertEqual(settings.frame.width, 46, accuracy: 1)
+        let capture = XCTAttachment(screenshot: app.screenshot());capture.name = "Production home, debug button and slot absent";capture.lifetime = .keepAlways;add(capture)
+        settings.tap()
+        XCTAssertTrue(app.buttons["savoria.settings.icloud"].waitForExistence(timeout: 10))
+        XCTAssertFalse(app.buttons["settings-debug-center"].exists)
+        XCTAssertFalse(app.otherElements["savoria-debug-center"].exists)
+        app.buttons["savoria.settings.close"].tap()
+    }
+
     func testICloudRecoveryWelcomePreviewAcrossSupportedLanguages() throws {
         try inspectRecoveryPreview(languages: [("pt-BR", "pt_BR"), ("en", "en_US"), ("es", "es_ES"),
                                               ("fr", "fr_FR"), ("de", "de_DE"), ("it", "it_IT"), ("ja", "ja_JP")])

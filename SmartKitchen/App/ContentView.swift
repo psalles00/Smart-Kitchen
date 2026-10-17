@@ -2916,9 +2916,14 @@ private struct HomeView: View {
             pageTheme: .home,
             header: { isInverted in
                 PageHeader(title: "Savoria", isInverted: isInverted) {
-                    #if !os(macOS)
-                    SettingsButton(onTap: onSettingsTap)
-                    #endif
+                    HStack(spacing: 0) {
+                        #if DEBUG
+                        SavoriaHomeDebugButton()
+                        #endif
+                        #if !os(macOS)
+                        SettingsButton(onTap: onSettingsTap)
+                        #endif
+                    }
                 }
             },
             content: {

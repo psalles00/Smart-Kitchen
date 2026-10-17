@@ -36,19 +36,19 @@ final class SubscriptionManager {
     /// True if the user currently has a valid entitlement to either plan.
     private(set) var storeIsSubscribed: Bool = false
     var isSubscribed: Bool {
-        #if DEBUG && os(iOS)
+        #if DEBUG
         if debugMode != .appStore { return debugMode == .premium }
         #endif
         return storeIsSubscribed
     }
-    #if DEBUG && os(iOS)
+    #if DEBUG
     enum DebugMode: String, CaseIterable, Identifiable {
         case appStore, basic, premium
         var id: String { rawValue }
         var title: String {
             switch self {
             case .appStore: String(localized: "App Store")
-            case .basic: String(localized: "Básico")
+            case .basic: String(localized: "Grátis")
             case .premium: String(localized: "Premium")
             }
         }
@@ -75,7 +75,7 @@ final class SubscriptionManager {
     nonisolated(unsafe) private var updatesTask: Task<Void, Never>? = nil
 
     init(defaults: UserDefaults = .standard, observesTransactions: Bool = true) {
-        #if DEBUG && os(iOS)
+        #if DEBUG
         debugDefaults = defaults
         debugMode = DebugMode(rawValue: defaults.string(forKey: Self.debugModeKey) ?? "") ?? .appStore
         #endif
@@ -151,7 +151,7 @@ final class SubscriptionManager {
     /// Initiates a purchase. Returns `true` on a successful, verified buy.
     @discardableResult
     func purchase(_ product: Product) async -> Bool {
-        #if DEBUG && os(iOS)
+        #if DEBUG
         guard debugMode == .appStore else {
             purchaseState = .failed(String(localized: "Volte ao modo App Store para realizar uma compra real."))
             return false

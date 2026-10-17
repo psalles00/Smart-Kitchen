@@ -1,6 +1,47 @@
 {
   "sourceLanguage" : "pt-BR",
   "strings" : {
+    "Abrir onboarding + paywall": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open onboarding + paywall"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir bienvenida + suscripción"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir l’accueil + l’abonnement"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einführung + Abo-Seite öffnen"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apri introduzione + abbonamento"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "初期設定＋プラン画面を開く"
+          }
+        }
+      }
+    },
     "Preparando resposta…": {
       "extractionState": "manual",
       "localizations": {

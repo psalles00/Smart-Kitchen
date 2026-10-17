@@ -2479,3 +2479,43 @@ final class AssistantRecipeVarietyTests: XCTestCase {
     }
     #endif
 }
+
+
+@MainActor
+final class DevelopmentBuildContractTests: XCTestCase {
+    func testPlanSimulationIsDevelopmentOnlyAndPreservesRealEntitlement() throws {
+        let defaults = UserDefaults(suiteName: "Savoria.DevelopmentContract.\(UUID().uuidString)")!
+        defaults.set("premium", forKey: "Savoria.debug.subscriptionMode")
+        let manager = SubscriptionManager(defaults: defaults, observesTransactions: false)
+        let real = manager.storeIsSubscribed
+        #if DEBUG
+        XCTAssertTrue(manager.isSubscribed)
+        manager.setDebugMode(.basic)
+        XCTAssertFalse(manager.isSubscribed)
+        XCTAssertEqual(manager.storeIsSubscribed, real)
+        manager.setDebugMode(.appStore)
+        XCTAssertEqual(manager.isSubscribed, real)
+        #else
+        // Even if a development build left a Premium override on disk,
+        // production can only use the verified StoreKit entitlement.
+        XCTAssertEqual(manager.isSubscribed, real)
+        XCTAssertFalse(manager.isSubscribed)
+        #endif
+    }
+
+    func testSimulatedLimitsNeverOverwriteRealCounters() throws {
+        #if DEBUG
+        let defaults = UserDefaults(suiteName: "Savoria.DevelopmentUsage.\(UUID().uuidString)")!
+        let manager = SubscriptionManager(defaults: defaults, observesTransactions: false)
+        let gate = FeatureGate(defaults: defaults);gate.subscriptionManager = manager
+        manager.setDebugMode(.basic);gate.consume(.nutritionAI)
+        let actual = gate.usage(of: .nutritionAI)
+        gate.setDebugUsageMode(.exhausted);XCTAssertFalse(gate.canUse(.nutritionAI))
+        gate.setDebugUsageMode(.available);XCTAssertEqual(gate.usage(of: .nutritionAI), 0)
+        gate.consume(.nutritionAI);gate.setDebugUsageMode(.actual)
+        XCTAssertEqual(gate.usage(of: .nutritionAI), actual)
+        #else
+        throw XCTSkip("Simulated counters are compiled out of production")
+        #endif
+    }
+}
