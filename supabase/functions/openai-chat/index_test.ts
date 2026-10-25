@@ -1,4 +1,8 @@
-import { FALLBACK_MODELS, handleRequest } from "./index.ts";
+import {
+  FALLBACK_MODELS,
+  handleRequest,
+  RECIPE_IDEA_FALLBACK_MODELS,
+} from "./index.ts";
 const complete = { choices: [{ message: { content: '{"ok":true}' } }] };
 const request = (
   body: unknown = {
@@ -52,6 +56,159 @@ Deno.test("OpenAI success never invokes OpenRouter", async () => {
   assert(r.status === 200 && f.calls.length === 1);
   assert(r.headers.get("X-Savoria-AI-Provider") === "openai");
 });
+Deno.test("Recipe ideas explicitly try Gemini before any secondary model", async () => {
+  const format = {
+    type: "json_schema",
+    json_schema: {
+      name: "recipe_ideas",
+      strict: true,
+      schema: { type: "object" },
+    },
+  };
+  const f = fixture([
+    Response.json({ error: "balance unavailable" }, { status: 429 }),
+    Response.json(complete),
+  ]);
+  const r = await handleRequest(
+    request({
+      model: "gpt-4.1-mini",
+      messages: [{ role: "user", content: "o que fazer no cafe da manha" }],
+      response_format: format,
+      max_tokens: 4096,
+    }),
+    f.dependencies,
+  );
+  assert(r.status === 200 && f.calls.length === 2);
+  assert(
+    f.calls[1].body.model === RECIPE_IDEA_FALLBACK_MODELS[0] &&
+      f.calls[1].body.models === undefined,
+  );
+  assert(
+    JSON.stringify(f.calls[1].body.response_format) === JSON.stringify({type: "json_object"}),
+  );
+  assert(f.calls[1].body.max_tokens === 4096);
+  assert(JSON.stringify(f.calls[1].body.reasoning) ===
+    JSON.stringify({ effort: "low", exclude: true }));
+});
+Deno.test("Recipe primary success still skips every fallback", async () => {
+  const f = fixture([Response.json(complete)]);
+  const r = await handleRequest(
+    request({
+      messages: [{ role: "user", content: "cafe da manha" }],
+      response_format: {
+        type: "json_schema",
+        json_schema: { name: "recipe_ideas" },
+      },
+    }),
+    f.dependencies,
+  );
+  assert(r.status === 200 && f.calls.length === 1);
+});
+Deno.test("Secondary recipe schema keeps pantry and category constraints", async () => {
+  const ingredient = { type: "string", enum: ["Ovos", "Banana"] };
+  const reference = { $ref: "#/$defs/ingredientName" };
+  const format = {
+    type: "json_schema",
+    json_schema: {
+      name: "recipe_ideas",
+      strict: true,
+      schema: {
+        type: "object",
+        $defs: { ingredientName: ingredient },
+        properties: {
+          ideas: {
+            type: "array",
+            maxItems: 18,
+            items: {
+              type: "object",
+              required: [
+                "mainIngredient",
+                "ingredients",
+                "requiresPrecooked",
+                "category",
+              ],
+              properties: {
+                mainIngredient: reference,
+                ingredients: { type: "array", minItems: 2, items: reference },
+                requiresPrecooked: { type: "array", items: reference },
+                category: {
+                  type: "string",
+                  enum: ["quick", "unique", "pantry"],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  };
+  const original = JSON.stringify(format);
+  const f = fixture([
+    Response.json({}, { status: 429 }),
+    Response.json({error:"schema"}, {status:400}),
+    Response.json(complete),
+  ]);
+  const r = await handleRequest(
+    request({
+      messages: [{ role: "user", content: "breakfast" }],
+      response_format: format,
+    }),
+    f.dependencies,
+  );
+  assert(r.status === 200 && f.calls.length === 3);
+  assert(
+    JSON.stringify(f.calls[0].body.response_format) === original,
+    "OpenAI schema remains untouched",
+  );
+  const routed = f.calls[2].body.response_format as typeof format;
+  const fields = routed.json_schema.schema.properties.ideas.items.properties;
+  assert(JSON.stringify(fields.mainIngredient) === JSON.stringify(ingredient));
+  assert(
+    JSON.stringify(fields.ingredients.items) === JSON.stringify(ingredient),
+  );
+  assert(
+    JSON.stringify(fields.requiresPrecooked.items) ===
+      JSON.stringify(ingredient),
+  );
+  assert(
+    JSON.stringify(fields.category) ===
+      JSON.stringify(
+        format.json_schema.schema.properties.ideas.items.properties.category,
+      ),
+  );
+  assert(fields.ingredients.minItems === 2);
+  assert(!JSON.stringify(routed).includes('"$ref"'));
+  assert(!JSON.stringify(routed).includes('"$defs"'));
+  assert(
+    JSON.stringify(format) === original,
+    "Caller data must not be mutated",
+  );
+});
+for (
+  const format of [undefined, { type: "json_object" }, {
+    type: "json_schema",
+    json_schema: { name: "nutrition" },
+  }, { type: "json_schema", json_schema: "recipe_ideas" }]
+) {
+  Deno.test(`Other formats keep the default routing: ${JSON.stringify(format)}`, async () => {
+    const f = fixture([
+      Response.json({}, { status: 503 }),
+      Response.json(complete),
+    ]);
+    const r = await handleRequest(
+      request({
+        messages: [{ role: "user", content: "recipe_ideas" }],
+        response_format: format,
+      }),
+      f.dependencies,
+    );
+    assert(r.status === 200 && f.calls.length === 2);
+    assert(
+      JSON.stringify(f.calls[1].body.models) ===
+        JSON.stringify(FALLBACK_MODELS),
+    );
+  });
+}
 for (const status of [401, 403, 408, 429, 500, 503]) {
   Deno.test(`OpenAI ${status} invokes one bounded server fallback`, async () => {
     const f = fixture([
@@ -155,4 +312,25 @@ Deno.test("Reject arbitrary model, non-object, tools and oversize payload withou
     const r = await handleRequest(request(body), f.dependencies);
     assert(r.status >= 400 && f.calls.length === 0);
   }
+});
+
+Deno.test("Recipe Gemini failure tries Qwen once and exposes only fixed classification", async () => {
+  const f = fixture([
+    Response.json({error:"credits"}, {status:429}),
+    Response.json({error:{message:"Invalid response_schema: private prompt and fake-secret"}}, {status:400}),
+    Response.json(complete),
+  ]);
+  const r = await handleRequest(request({messages:[{role:"user",content:"breakfast"}],response_format:{type:"json_schema",json_schema:{name:"recipe_ideas"}}}),f.dependencies);
+  assert(r.status===200 && f.calls.length===3);
+  assert(f.calls[1].body.model===RECIPE_IDEA_FALLBACK_MODELS[0]);
+  assert(f.calls[2].body.model===RECIPE_IDEA_FALLBACK_MODELS[1]);
+  assert(JSON.stringify(f.calls[2].body.reasoning)===JSON.stringify({enabled:false}));
+  assert(r.headers.get("X-Savoria-AI-Fallback-Failure")==="400:schema");
+  assert(!(await r.text()).includes("private prompt"));
+});
+Deno.test("Both explicit recipe models fail without retry loops or upstream leakage", async () => {
+  const f = fixture([Response.json({error:"credit"},{status:429}),new Error("offline"),Response.json({error:"secret"},{status:503})]);
+  const r=await handleRequest(request({messages:[{role:"user",content:"breakfast"}],response_format:{type:"json_schema",json_schema:{name:"recipe_ideas"}}}),f.dependencies);
+  assert(r.status===502 && f.calls.length===3);
+  assert(!(await r.text()).includes("secret"));
 });

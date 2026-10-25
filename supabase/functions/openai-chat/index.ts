@@ -13,6 +13,13 @@ export const FALLBACK_MODELS = [
   "qwen/qwen3.5-flash-02-23",
   "google/gemini-3.1-flash-lite",
 ];
+// Recipe discovery needs substantive combinations, not just valid JSON.
+// Keep the cheaper default for other chat requests; reuse the same two models
+// with explicit bounded attempts for the structured recipe workflow.
+export const RECIPE_IDEA_FALLBACK_MODELS = [
+  "google/gemini-3.1-flash-lite",
+  "qwen/qwen3.5-flash-02-23",
+];
 const ALLOWED_MODELS = new Set(["gpt-4.1-mini", "gpt-4o-mini"]);
 const MAX_MESSAGES = 40;
 const MAX_TOOLS = 24;
@@ -36,6 +43,47 @@ function isPlainObject(value: unknown): value is JsonObject {
 
 function stringValue(value: unknown): string | undefined {
   return typeof value === "string" ? value.trim() || undefined : undefined;
+}
+
+// Some routed providers accept structured outputs but reject local references.
+// Inline only the three ingredient references emitted by this app. Preserve
+// the same enum and all other constraints; never rewrite arbitrary schemas.
+export function portableRecipeFormat(format: JsonObject): JsonObject {
+  const result = structuredClone(format);
+  const schema = isPlainObject(result.json_schema)
+    ? result.json_schema.schema
+    : undefined;
+  if (!isPlainObject(schema) || !isPlainObject(schema.$defs)) return format;
+  const ingredient = schema.$defs.ingredientName;
+  const properties = isPlainObject(schema.properties)
+    ? schema.properties
+    : undefined;
+  const ideas = properties && isPlainObject(properties.ideas)
+    ? properties.ideas
+    : undefined;
+  const item = ideas && isPlainObject(ideas.items) ? ideas.items : undefined;
+  const fields = item && isPlainObject(item.properties)
+    ? item.properties
+    : undefined;
+  if (!isPlainObject(ingredient) || ingredient.type !== "string" || !fields) {
+    return format;
+  }
+  const reference = (value: unknown) =>
+    isPlainObject(value) &&
+    Object.keys(value).length === 1 && value.$ref === "#/$defs/ingredientName";
+  if (
+    !reference(fields.mainIngredient) || !isPlainObject(fields.ingredients) ||
+    !reference(fields.ingredients.items) ||
+    !isPlainObject(fields.requiresPrecooked) ||
+    !reference(fields.requiresPrecooked.items)
+  ) return format;
+  fields.mainIngredient = structuredClone(ingredient);
+  fields.ingredients.items = structuredClone(ingredient);
+  fields.requiresPrecooked.items = structuredClone(ingredient);
+  // Keep definitions only if an unfamiliar reference may still use them.
+  const { $defs: _definitions, ...root } = schema;
+  if (!JSON.stringify(root).includes('"$ref"')) delete schema.$defs;
+  return result;
 }
 
 export async function handleRequest(
@@ -136,6 +184,7 @@ export async function handleRequest(
     endpoint: string,
     key: string,
     payload: JsonObject,
+    timeoutMs = 45_000,
   ) {
     const upstreamResponse = await dependencies.fetch(endpoint, {
       method: "POST",
@@ -147,7 +196,7 @@ export async function handleRequest(
           : {}),
       },
       body: JSON.stringify(payload),
-      signal: AbortSignal.timeout(45_000),
+      signal: AbortSignal.timeout(timeoutMs),
     });
 
     const responseText = await upstreamResponse.text();
@@ -186,29 +235,59 @@ export async function handleRequest(
     } catch { /* Network failure/timeout: one bounded fallback request. */ }
   }
   if (openRouterKey) {
-    const fallbackBody = {
+    const format = upstreamBody.response_format;
+    const isRecipeIdeas = isPlainObject(format) &&
+      format.type === "json_schema" &&
+      isPlainObject(format.json_schema) &&
+      format.json_schema.name === "recipe_ideas";
+    const fallbackBody: JsonObject = {
       ...upstreamBody,
-      models: FALLBACK_MODELS,
+      models: isRecipeIdeas ? RECIPE_IDEA_FALLBACK_MODELS : FALLBACK_MODELS,
       provider: { require_parameters: true },
-      reasoning: { enabled: false },
+      // Recipe selection benefits from bounded low-effort ingredient planning.
+      reasoning: isRecipeIdeas
+        ? { effort: "low", exclude: true }
+        : { enabled: false },
     };
-    delete (fallbackBody as JsonObject).model;
-    try {
-      const fallback = await callProvider(
-        OPENROUTER_ENDPOINT,
-        openRouterKey,
-        fallbackBody,
-      );
-      if (fallback.status < 400) {
-        return completion(fallback.text, fallback.status, "openrouter");
-      }
-      return jsonResponse({
-        error: "AI providers unavailable",
-        upstream_status: fallback.status,
-      }, 502);
-    } catch {
-      return jsonResponse({ error: "AI providers unavailable" }, 502);
+    if (isRecipeIdeas && isPlainObject(format)) {
+      fallbackBody.response_format = portableRecipeFormat(format);
     }
+    delete (fallbackBody as JsonObject).model;
+    // Explicit recipe attempts make model availability observable. Ordinary chat
+    // keeps its existing single router request. No model is attempted twice here.
+    const candidates = isRecipeIdeas ? RECIPE_IDEA_FALLBACK_MODELS : [undefined];
+    let failure: string | undefined;
+    let lastStatus: number | undefined;
+    // Preserve the existing 45-second total fallback time budget. Reserve up to
+    // 15 seconds for Qwen if Gemini stalls; do not extend the client wait.
+    const fallbackDeadline = Date.now() + 45_000;
+    for (const candidate of candidates) {
+      const payload = { ...fallbackBody };
+      if (candidate) {
+        delete payload.models;
+        payload.model = candidate;
+        payload.reasoning = candidate.startsWith("google/")
+          ? { effort: "low", exclude: true }
+          : { enabled: false };
+        // The app validates every ingredient/category/constraint after decoding.
+        // Gemini's JSON mode avoids provider-specific schema compiler failures.
+        if (candidate.startsWith("google/")) payload.response_format = { type: "json_object" };
+      }
+      try {
+        const remaining = fallbackDeadline - Date.now();
+        if (remaining <= 0) break;
+        const timeout = Math.min(remaining, candidate?.startsWith("google/") ? 30_000 : 45_000);
+        const fallback = await callProvider(OPENROUTER_ENDPOINT, openRouterKey, payload, timeout);
+        if (fallback.status < 400) {
+          return completion(fallback.text, fallback.status, "openrouter", failure);
+        }
+        lastStatus = fallback.status;
+        failure = `${fallback.status}:${classifyFailure(fallback.text)}`;
+      } catch {
+        failure = "network_or_timeout";
+      }
+    }
+    return jsonResponse({ error: "AI providers unavailable", upstream_status: lastStatus }, 502);
   }
   return jsonResponse({
     error: "AI providers unavailable",
@@ -216,13 +295,28 @@ export async function handleRequest(
   }, 502);
 }
 
-function completion(text: string, status: number, provider: string) {
+// Only fixed classifications leave the server, never upstream messages or data.
+function classifyFailure(text: string): string {
+  let error: unknown;
+  try { error = JSON.parse(text)?.error; } catch { return "invalid_response"; }
+  const details = JSON.stringify(error ?? {}).toLowerCase();
+  if (/credit|balance|payment/.test(details)) return "credits";
+  if (/no endpoints|no provider|model.*not found|model.*not allowed/.test(details)) return "model_unavailable";
+  if (/schema|response_format|responseformat/.test(details)) return "schema";
+  if (/thinking|reasoning/.test(details)) return "reasoning";
+  if (/rate.limit/.test(details)) return "rate_limit";
+  if (/unauthorized|authentication|api.key/.test(details)) return "authentication";
+  return "provider_error";
+}
+
+function completion(text: string, status: number, provider: string, failure?: string) {
   return new Response(text, {
     status,
     headers: {
       ...corsHeaders,
       "Content-Type": "application/json; charset=utf-8",
       "X-Savoria-AI-Provider": provider,
+      ...(failure ? { "X-Savoria-AI-Fallback-Failure": failure } : {}),
     },
   });
 }

@@ -78,14 +78,18 @@ resposta válida curta não dispara novas chamadas para preencher uma meta. Cada
 resposta mantém o máximo de 4.096 tokens. A busca web existente usa até duas
 consultas Auto de seis resultados (texto até 6.000 caracteres por página e resumo).
 Cada gateway de chat tenta OpenAI uma vez e, em falha elegível, OpenRouter com
-dois modelos permitidos. Nada disso é multiplicado pelo número de cartões.
+dois modelos permitidos. Para ideias, tenta Gemini e depois Qwen explicitamente;
+para outros pedidos, o roteamento existente permanece em uma requisição. O
+fallback compartilha 45 segundos, com até 30 para Gemini. Nada disso é
+multiplicado pelo número de cartões.
 Abrir/reler cartões já serializados e manter o app ocioso não introduz chamadas.
 
-Orçamento estimado para as duas rodadas: até oito invocações classificadas, com
-reserva durável anterior ao envio, mantendo o teto acumulado autorizado de US$ 4.
-O saldo conservador anterior era US$ 0,212441545; tentativas antigas não
-reconciliadas continuam reservadas. O operador bloqueia endpoints não previstos
-e requisições acima de 64 KiB; não é um limite financeiro do produto em produção.
+O teto acumulado de testes foi ampliado por Pedro para **US$ 5 em 25/10/2026**.
+O operador temporário reserva o custo antes de cada envio; tentativas antigas sem
+reconciliação continuam reservadas. O limite operacional de 30 invocações desta
+investigação é adicional ao teto financeiro, nunca autorização para ultrapassá-lo.
+Bloqueia endpoints não previstos e requisições acima de 64 KiB; não é um limite
+financeiro do produto em produção. Não houve plano, recarga ou assinatura nova.
 
 Referências oficiais consultadas em 25/10/2026, USD, sem câmbio/impostos:
 
@@ -99,51 +103,97 @@ Referências oficiais consultadas em 25/10/2026, USD, sem câmbio/impostos:
 | Dados locais/iCloud e recursos do Mac | Mesmos stores e sincronização; sem novo armazenamento remoto contratado, polling ou processo permanente. Compilações reutilizam caches existentes. |
 
 Como cenário proporcional (projeção, não medição), 1.000 pedidos em um ciclo usam
-1.000 chats + 1.000 buscas web no caso normal; no caso de correção e segunda
-busca em todos os pedidos, até 2.000 + 2.000 invocações. Com 6 mil tokens de
-entrada e 2,5 mil de saída, o chat primário custa cerca de US$ 0,0064 por chamada;
-somado à reserva web, cerca de US$ 25,40/1.000 pedidos normais, além do plano
-existente, egress e eventuais tentativas de fallback. Isso não é orçamento total
-da organização: consumo compartilhado, saldo, quotas efetivas, logs e histórico
-não foram auditados nesta correção. Créditos, bloqueios e excedentes dependem
-do plano; alertas não são tetos. Nenhum plano ou recarga foi ativado.
+1.000 chats + 1.000–2.000 buscas web no caso normal; com correção em todos,
+até 2.000 chats + 2.000 buscas. Com 6 mil tokens de entrada e 2,5 mil de saída,
+o chat primário custa cerca de US$ 0,0064/chamada; o Gemini cerca de US$ 0,00525.
+Somado à reserva web de US$ 0,019 por busca, isso representa aproximadamente
+US$ 25,40–44,40/1.000 pedidos com um chat primário, ou US$ 24,25–43,25 com
+um Gemini bem-sucedido, além do plano existente, egress e eventuais tentativas
+anteriores/fallback. O máximo de 4.096 tokens inclui raciocínio do Gemini; o
+perfil de ideias usa esforço baixo. Uma falha pode consumir tokens mesmo sem
+resposta aproveitável e não é tratada como custo zero.
 
-## Evidências de 25/10/2026 — validação ainda incompleta
+Não é orçamento total da organização: consumo compartilhado, saldo, quotas
+efetivas e histórico não foram auditados. O dashboard KitchenApp mostrava plano
+Free, banco 29/500 MB, egress arredondado 0/5 GB e logs 0,01/1 GB; isso não
+comprova folga em todas as quotas. Créditos, bloqueios e excedentes dependem do
+plano; alertas não são tetos. Não há novo polling, Realtime, banco, storage,
+backup contratado ou processo de monitoramento permanente por esta correção.
 
-- 73 testes fechados passaram, novamente na versão final, no iPhone 17 Pro
+## Evidências de 25/10/2026
+
+- **73 testes fechados passaram na versão final**, iPhone 17 Pro
   `EagleVault Validation`: restrições, despensa completa/atualizada, ingredientes
   indisponíveis, expansão, categorias, redistribuição e conversas antigas.
 - iOS Debug, iOS Release físico e macOS Debug compilaram. Team, stores e
   capabilities permaneceram iguais. A cópia do Mac foi assinada, instalada em
-  `/Applications/Savoria.app` e aberta.
-- Dois E2Es independentes no Mac instalado, em conversas novas, enviaram a
-  pergunta exata com a despensa real. Retornaram 11 e depois 12 cartões nas três
-  seções. **Ambos falharam na qualidade**: muitas coberturas de pão, classificação
-  artificial como “únicas” e, no segundo, café com Gatorade no conteúdo gerado.
-  O teste não aprovou variedade apenas por contar cartões.
-- A segunda rodada usou um chat (sem correção) e duas buscas web; a primeira
-  usou dois chats (uma correção) e duas buscas. Não houve chamada por cartão.
-  Os chats capturados tinham 18.187/22.606/19.141 bytes de entrada; buscas,
-  aproximadamente 1,1–1,3 KiB. Respostas capturadas usaram Qwen. A correção
-  mantém o teto de tokens e a seleção é toda local.
-- O registro conservador acumulado chegou a **US$ 3,9861621**, dentro dos US$ 4
-  autorizados. Há reservas antigas e uma primeira resposta desta rodada sem
-  reconciliação; não são declaradas custo zero. Novas inferências dependem de
-  ampliação explícita do teto. O monitor temporário foi desligado após os testes.
-- Snapshots completos antes/depois ficaram idênticos: 49 itens de despensa,
+  `/Applications/Savoria.app` e aberta. O Simulator foi atualizado e aberto;
+  o iPhone 12 Pro recebeu a instalação final, sem abertura para testes rotineiros.
+- Os E2Es iniciais com Qwen retornaram 11/12 cartões, mas falharam na variedade:
+  muitas coberturas de pão, classificação artificial e café com Gatorade. A
+  investigação posterior também detectou respostas sem categoria e um número
+  no lugar de JSON. Esses resultados não foram aprovados só pela contagem.
+- A tentativa explícita do Gemini isolou um erro HTTP 400 no formato estruturado.
+  A comparação conservando o pedido e usando JSON simples resolveu o bloqueio:
+  Gemini retornou **10 ideias**, nas três seções (4/4/2), em cerca de seis segundos,
+  usando os ingredientes reais. Revisão independente aprovou variedade e estoque,
+  registrando limitações menores (banana com açúcar e algum parentesco entre ovos).
+- No fallback Gemini, o modo JSON garante sintaxe; a mesma validação local continua
+  conferindo categorias, despensa, tempo, porções e restrições antes de exibir.
+  OpenAI conserva o schema original; Qwen conserva o schema equivalente com as
+  referências de ingredientes expandidas. O exemplo no prompt agora inclui a
+  categoria quando ela é obrigatória.
+- **22 testes do gateway** passam com fetch/segredos injetados e nenhuma chamada
+  externa. Incluem modelos explícitos limitados, formatos, ausência de vazamento
+  e erros. O limite total de 45 s do fallback foi revisado em código; não foi
+  medido com uma espera artificial de 45 s.
+- CLI oficial 2.122.0 conectado à conta proprietária e ao projeto
+  `yfcmvdijvgeaihvwyssb`. Somente os seis tokens antigos expressamente autorizados
+  foram revogados; `CLI Visual Studio Code` e os demais foram preservados. Deploy
+  e download/readback usam `--use-api`, sem Docker e com JWT ativo.
+- Snapshots completos antes/depois permaneceram idênticos: 49 itens de despensa,
   43 em Para depois, cinco no mercado, nove utensílios, 64 receitas, incluindo
   identidades, notas e hashes de mídias. Só foram criadas conversas de validação.
-- Não há nova mensagem de interface: os títulos de seção e suas traduções
-  continuam no catálogo compartilhado; as instruções de geração respeitam o
-  idioma escolhido.
+- Não há nova mensagem de interface: títulos e traduções continuam no catálogo
+  compartilhado; a geração respeita o idioma escolhido.
 
-Próxima etapa: avaliar encaminhamento do fallback de receitas para o Gemini já
-permitido, com o mesmo número de chamadas. Em 6 mil tokens de entrada e 2,5 mil
-de saída, o custo de inferência estimado é US$ 0,00525, contra US$ 0,00104 do
-Qwen, além dos demais componentes acima. A troca ainda não foi publicada nem
-validada; acesso proprietário ao projeto Supabase e orçamento são bloqueios
-reais. O aumento de quantidade está implementado, mas o pedido completo **não
-está concluído** enquanto o E2E de qualidade não passar.
+O perfil final com raciocínio baixo passou no E2E independente: **12 ideias,
+4 por seção**, incluindo panqueca de banana, crepe de queijo, mingau e ovos com
+linguiça. Ainda há algum parentesco entre opções com pão/ovos; diversidade de IA
+não é uma garantia determinística para toda consulta. A abertura de **Panqueca
+de Banana** mostrou 15 minutos, duas porções, seis ingredientes existentes e
+quatro passos coerentes. Houve uma correção automática delimitada: o primeiro
+preparo usava gordura não declarada na lista; o segundo passou a listar a
+Margarina da despensa. Nenhuma receita foi salva.
+
+Na consulta final houve **um chat e duas buscas**, sem correção de ideias;
+19.166 bytes no chat, 1.314/1.117 bytes nas buscas. O chat levou cerca de dez
+segundos incluindo gateway/fallback, com 5.059 tokens de entrada, 2.786 de saída
+(dos quais 1.527 de raciocínio), custo reportado US$ 0,00544375. Cada busca
+reportou US$ 0,013. A expansão usou dois chats (18.762/21.556 bytes), custos
+reportados US$ 0,000412555 e US$ 0,000461175. Não houve chamada por cartão.
+Depois das ações, **140 segundos observados sem nova invocação do gateway**;
+isso não é uma auditoria de toda a organização ou de todo o tráfego CloudKit.
+
+A investigação inteira usou 29 invocações classificadas, custo reportado de
+respostas US$ 0,221006015 e reserva conservadora desta tarefa US$ 0,677422415.
+O teto conservador acumulado ficou em **US$ 4,46498087 de US$ 5**. Reservas de
+tentativas anteriores/falhas não foram descartadas nem declaradas custo zero.
+O operador temporário será desanexado ao encerrar; não é componente do produto.
+
+O modo debug foi restaurado ao estado anterior: App Store, contadores reais,
+sem Premium simulado. Snapshot completo final continuou exatamente igual ao
+inicial, revisão `9260c35fe134792ba2d5176824ef515dbd5d2ffca31a1b5619120d59a48a8b88`.
+O gateway final foi publicado pelo CLI e baixado novamente para comparação exata;
+SHA-256 `5997893632858b3ddae5a3e873c3c5f5e645a7a236528c73b4cc3abb1de22c4a`, JWT ativo.
+Evidências mínimas e recuperação do fonte anterior ficam em
+`/Volumes/PS-Externo/Coding/Builds/Savoria-Variety-20261025`; caches de instalação
+CLI e downloads intermediários próprios são descartados ao concluir.
+
+Referências de compatibilidade:
+[OpenRouter reasoning](https://openrouter.ai/docs/guides/best-practices/reasoning-tokens),
+[Google structured output](https://ai.google.dev/gemini-api/docs/structured-output),
+[Google thinking](https://ai.google.dev/gemini-api/docs/generate-content/thinking).
 
 ## Resultado em 17/10/2026
 
