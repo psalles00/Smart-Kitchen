@@ -1,6 +1,8 @@
 import SwiftUI
 import SwiftData
 
+enum NutritionDashboardSection { case all, summary, meals }
+
 /// Conteúdo principal do dashboard (strip + ring + macros + refeições do dia).
 struct NutritionDashboardView: View {
     @Environment(\.modelContext) private var modelContext
@@ -15,6 +17,8 @@ struct NutritionDashboardView: View {
     var onOpenProgress: () -> Void = {}
     /// Built once by the iOS data host, reused by every day/calendar lookup.
     var historyIndex: DayHistoryIndex<FoodEntry, NutritionDayLog>? = nil
+
+    var workspaceSection: NutritionDashboardSection = .all
 
     @State private var isMonthExpanded = false
     @State private var isPrimaryActionHighlighted = false
@@ -92,6 +96,7 @@ struct NutritionDashboardView: View {
             ScrollView {
                 VStack(spacing: 18) {
                     VStack(spacing: 8) {
+                        if workspaceSection != .meals {
                         WeekEnergyStrip(
                             selectedDate: $selectedDate,
                             caloriesForDate: caloriesFor,
@@ -114,10 +119,13 @@ struct NutritionDashboardView: View {
                         .buttonStyle(.plain)
                         .padding(.horizontal, 12)
 
+                        }
+                        if workspaceSection != .summary {
                         mealSections
                             .padding(.top, 12)
                             .padding(.horizontal, 16)
                             .padding(.bottom, 24)
+                        }
                     }
                     .padding(.top, -5)
 
@@ -126,9 +134,11 @@ struct NutritionDashboardView: View {
             }
         }
         .overlay(alignment: .bottomLeading) {
-            floatingDayActionButton
-                .padding(.leading, 16)
-                .padding(.bottom, 8)
+            if workspaceSection != .meals {
+                floatingDayActionButton
+                    .padding(.leading, 16)
+                    .padding(.bottom, 8)
+            }
         }
         .preference(key: ContentPanelWavyBorderKey.self, value: wavyStateBorderColor)
     }

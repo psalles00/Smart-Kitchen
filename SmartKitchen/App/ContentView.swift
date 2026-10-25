@@ -82,7 +82,13 @@ struct ContentView: View {
     @State private var addItemCategory: String?
     @State private var scrollToTopTrigger: Int = 0
     @State private var scrollToItemRequest: ScrollToItemRequest?
-    @State private var recipeNavigationPath = NavigationPath()
+    @State private var recipeWorkspace = SavoriaRecipeWorkspaceNavigation()
+    private var recipeNavigationPath: [UUID] {
+        get { recipeWorkspace.path }
+        nonmutating set { recipeWorkspace.path = newValue }
+    }
+    @State private var workspaceExpanded = false
+    @Environment(\.dynamicTypeSize) private var workspaceTypeSize
     @State private var displayedBgTheme: PageTheme = .home
     #if os(iOS)
     @State private var backdropPalette = SavoriaBackdropPalette()
@@ -378,7 +384,7 @@ struct ContentView: View {
                     let isResettingRecipeDetail = newValue == .recipes && !recipeNavigationPath.isEmpty
 
                     if newValue == .recipes {
-                        recipeNavigationPath = NavigationPath()
+                        recipeNavigationPath = []
                     }
 
                     if !isResettingRecipeDetail {
@@ -469,6 +475,21 @@ struct ContentView: View {
                 }
                 #endif
             }
+            .onGeometryChange(for: Bool.self) { geometry in
+                SavoriaWorkspaceMetrics.supportsCompanion(geometry: geometry,
+                                                         accessibilitySize: workspaceTypeSize.isAccessibilitySize)
+            } action: { workspaceExpanded = $0 }
+            .onChange(of: workspaceExpanded) { _, expanded in
+                guard selectedTab == .recipes else { return }
+                recipeWorkspace.resize(expanded: expanded)
+                if expanded, let id = recipeWorkspace.selection {
+                    scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "recipe")
+                }
+            }
+            .onChange(of: recipeNavigationPath) { _, _ in
+                recipeWorkspace.stackChanged(expanded: workspaceExpanded)
+            }
+
         )
     }
 
@@ -485,6 +506,8 @@ struct ContentView: View {
             .environment(\.savoriaBackdropViewport, backdropViewport)
             #endif
                 .environment(\.activeAppTab, selectedTab)
+                .environment(\.savoriaWorkspaceExpanded, workspaceExpanded)
+                .environment(\.savoriaWorkspaceRecipeSelection, $recipeWorkspace.selection)
         )
     }
 
@@ -845,11 +868,13 @@ struct ContentView: View {
         }
         #if os(iOS)
         .onGeometryChange(for: CGSize.self) { proxy in
-            CGSize(width: proxy.size.width, height: proxy.size.height + proxy.safeAreaInsets.top + proxy.safeAreaInsets.bottom)
+            CGSize(width: proxy.size.width + proxy.safeAreaInsets.leading + proxy.safeAreaInsets.trailing, height: proxy.size.height + proxy.safeAreaInsets.top + proxy.safeAreaInsets.bottom)
         } action: { backdropViewport = $0 }
         #endif
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            persistentAssistantBar
+            SavoriaWorkspaceAccessory(expanded: workspaceExpanded) {
+                persistentAssistantBar
+            }
         }
         #if os(iOS)
         .onPreferenceChange(ListSelectionActiveKey.self) { isActive in
@@ -976,6 +1001,7 @@ struct ContentView: View {
                 inactiveTabPlaceholder
             }
         }
+        .environment(\.savoriaWorkspacePageActive, selectedTab == .assistant)
         .background {
             TabActivationProbe(
                 tab: .assistant,
@@ -998,6 +1024,7 @@ struct ContentView: View {
                 inactiveTabPlaceholder
             }
         }
+        .environment(\.savoriaWorkspacePageActive, selectedTab == .lists)
         .background {
             TabActivationProbe(
                 tab: .lists,
@@ -1010,7 +1037,7 @@ struct ContentView: View {
     private var recipesTabContent: some View {
         Group {
             if shouldMountTab(.recipes) {
-                NavigationStack(path: $recipeNavigationPath) {
+                NavigationStack(path: $recipeWorkspace.path) {
                     RecipesView()
                 }
                 #if os(iOS)
@@ -1020,6 +1047,7 @@ struct ContentView: View {
                 inactiveTabPlaceholder
             }
         }
+        .environment(\.savoriaWorkspacePageActive, selectedTab == .recipes)
         .background {
             TabActivationProbe(
                 tab: .recipes,
@@ -1042,6 +1070,7 @@ struct ContentView: View {
                 inactiveTabPlaceholder
             }
         }
+        .environment(\.savoriaWorkspacePageActive, selectedTab == .nutrients)
         .background {
             TabActivationProbe(
                 tab: .nutrients,
@@ -1070,6 +1099,7 @@ struct ContentView: View {
                 inactiveTabPlaceholder
             }
         }
+        .environment(\.savoriaWorkspacePageActive, selectedTab == .commandBar)
         .background {
             TabActivationProbe(
                 tab: .commandBar,
@@ -1151,7 +1181,7 @@ struct ContentView: View {
             // Compensate for the floating tab bar only while it is visible.
             // When the keyboard opens, the tab bar hides and the safe area
             // already repositions this inset above the keyboard.
-            .padding(.bottom, isKeyboardVisible ? 0 : 45)
+            .padding(.bottom, isKeyboardVisible || workspaceExpanded ? 0 : 45)
             // Selection occupies this floating slot. Keep its reserved geometry
             // so hiding the assistant does not resize the shared shader viewport.
     }
@@ -2306,9 +2336,10 @@ struct ContentView: View {
         // multiple times per frame" warning and can land the detail view in
         // the same tick as SwiftData autosave — which has been trapping.
         let navigateToRecipe = {
-            var path = NavigationPath()
-            path.append(id)
-            recipeNavigationPath = path
+            recipeWorkspace.open(id, expanded: workspaceExpanded)
+            if workspaceExpanded {
+                scrollToItemRequest = ScrollToItemRequest(itemID: id, type: "recipe")
+            }
         }
 
         if selectedTab != .recipes {
@@ -3289,7 +3320,8 @@ private struct HomeView: View {
         GeometryReader { geo in
             let spacing: CGFloat = 12
             let width = geo.size.width
-            let trailingColumnWidth = min(max(width * 0.36, 250), 330)
+            let compactDeck = width < 600
+            let trailingColumnWidth = compactDeck ? max((width - spacing) / 2, 0) : min(max(width * 0.36, 250), 330)
             let featuredHeight: CGFloat = 232
             let stackedHeight: CGFloat = (featuredHeight - spacing) / 2
             let quickTileHeight: CGFloat = 76
@@ -3301,8 +3333,8 @@ private struct HomeView: View {
                         subtitle: String(localized: "Adicione, busque ou pergunte..."),
                         imageName: "assistente",
                         style: .featured,
-                        imageSize: 600,
-                        imageOffset: CGSize(width: 110, height: 30)
+                        imageSize: compactDeck ? 180 : 600,
+                        imageOffset: CGSize(width: compactDeck ? 28 : 110, height: 30)
                     ) {
                         onOpenSearch()
                     }

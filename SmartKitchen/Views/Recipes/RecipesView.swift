@@ -166,6 +166,7 @@ private struct NotebookLoadingSkeleton: View {
 }
 
 private struct RecipesLoadedView: View {
+    @Environment(\.savoriaWorkspaceExpanded) private var workspaceExpanded
     @Environment(\.activeAppTab) private var activeAppTab
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.scrollToTopTrigger) private var scrollToTopTrigger
@@ -194,7 +195,18 @@ private struct RecipesLoadedView: View {
     @State private var contentResetToken: Int = 0
     @State private var highlightedRecipeID: UUID?
     @State private var pendingRecipeScrollID: UUID?
-    @State private var selectedRecipeID: UUID?
+    @Environment(\.savoriaWorkspaceRecipeSelection) private var workspaceSelection
+    @State private var localRecipeID: UUID?
+    private var selectedRecipeID: UUID? {
+        get {
+            if let workspaceSelection { return workspaceSelection.wrappedValue }
+            return localRecipeID
+        }
+        nonmutating set {
+            if let workspaceSelection { workspaceSelection.wrappedValue = newValue }
+            else { localRecipeID = newValue }
+        }
+    }
     @State private var categoryBarCenterToken: Int = 0
     @State private var isLocalSearchVisible = false
     @State private var localSearchText = ""
@@ -376,9 +388,18 @@ private struct RecipesLoadedView: View {
     var body: some View {
         ExpandedPageLayout(
             pageTheme: .recipes,
+            companionTitle: String(localized: "Receita"),
+            companionSubtitle: String(localized: "Ingredientes e preparo"),
+            companion: {
+                if let id = selectedRecipeID, let recipe = allRecipes.first(where: { $0.id == id }) {
+                    AnyView(RecipeDetailView(recipe: recipe).id(id))
+                } else {
+                    AnyView(ContentUnavailableView(String(localized: "Selecione uma receita"), systemImage: "book"))
+                }
+            },
             header: { isInverted in
                 #if os(macOS)
-                if !isShowingCadernos,
+                if !workspaceExpanded, !isShowingCadernos,
                    let recipeID = selectedRecipeID,
                    let recipe = allRecipes.first(where: { $0.id == recipeID }) {
                     macRecipeDetailHeader(recipe: recipe, isInverted: isInverted)
@@ -393,7 +414,7 @@ private struct RecipesLoadedView: View {
                 #if os(macOS)
                 if isShowingCadernos {
                     cadernosContent
-                } else if let recipeID = selectedRecipeID,
+                } else if !workspaceExpanded, let recipeID = selectedRecipeID,
                    let recipe = allRecipes.first(where: { $0.id == recipeID }) {
                     RecipeDetailView(recipe: recipe)
                 } else {
@@ -1287,8 +1308,12 @@ private struct RecipesLoadedView: View {
             }
             .id(recipe.id)
         #else
-        NavigationLink(value: recipe.id) {
-            card
+        Group {
+            if workspaceExpanded {
+                Button { openRecipeInRecipesTab(recipe.id) } label: { card }
+            } else {
+                NavigationLink(value: recipe.id) { card }
+            }
         }
         .accessibilityIdentifier("savoria.recipe.\(recipe.id)")
         .buttonStyle(.plain)
@@ -1330,8 +1355,12 @@ private struct RecipesLoadedView: View {
                     }
                     .id(recipe.id)
                 #else
-                NavigationLink(value: recipe.id) {
-                    row
+                Group {
+                    if workspaceExpanded {
+                        Button { openRecipeInRecipesTab(recipe.id) } label: { row }
+                    } else {
+                        NavigationLink(value: recipe.id) { row }
+                    }
                 }
                 .accessibilityIdentifier("savoria.recipe.\(recipe.id)")
                 .buttonStyle(.plain)
@@ -1656,6 +1685,7 @@ private struct RecipesLoadedView: View {
             }
         }
         #else
+        if workspaceExpanded { selectedRecipeID = request.itemID }
         pendingRecipeScrollID = request.itemID
         #endif
     }

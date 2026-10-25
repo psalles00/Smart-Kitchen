@@ -330,6 +330,11 @@ private struct ListsLoadedTabView: View {
     var body: some View {
         ExpandedPageLayout(
             pageTheme: .lists,
+            companionTitle: String(localized: "Listas"),
+            companionSubtitle: String(localized: "Compare e organize suas listas"),
+            companion: {
+                AnyView(SavoriaListCompanion(primary: selectedSubtab, showReserve: settings?.showReserve == true))
+            },
             header: { isInverted in
                 PageHeader(title: String(localized: "Listas"), isInverted: isInverted) {
                     HStack(spacing: 6) {
@@ -912,5 +917,50 @@ private struct ListsSubtabDropButton: View {
             },
             isTargeted: onTargetChange
         )
+    }
+}
+
+/// A second, independent list. Reuses existing move/edit flows and the same
+/// ModelContext; never creates another store or mirrors items into a new model.
+private struct SavoriaListCompanion: View {
+    let primary: ListSubtab
+    let showReserve: Bool
+    @State private var selected: ListSubtab
+
+    init(primary: ListSubtab, showReserve: Bool) {
+        self.primary = primary
+        self.showReserve = showReserve
+        _selected = State(initialValue: primary == .grocery ? .pantry : .grocery)
+    }
+
+    private var tabs: [ListSubtab] {
+        ([.pantry] + (showReserve ? [.reserve] : []) + [.grocery]).filter { $0 != primary }
+    }
+
+    var body: some View {
+        VStack(spacing: 8) {
+            Picker("Listas", selection: $selected) {
+                ForEach(tabs, id: \.self) { tab in Text(tab.title).tag(tab) }
+            }
+            .pickerStyle(.segmented)
+            .padding(16)
+            Group {
+                if selected == .pantry {
+                    PantryView(searchText: "", sortOption: .custom, filterOption: .all,
+                               expiringLeadDays: 30)
+                } else {
+                    GroceryListView(searchText: "", sortOption: .custom, filterOption: .all,
+                                    listType: selected == .reserve ? .reserve : .grocery)
+                }
+            }
+        }
+        // Selection/bulk actions belong to the main list, never the reference.
+        .environment(\.listItemSelection, ListItemSelection())
+        .onChange(of: primary) { _, _ in reconcileSelection() }
+        .onChange(of: showReserve) { _, _ in reconcileSelection() }
+    }
+
+    private func reconcileSelection() {
+        if !tabs.contains(selected), let first = tabs.first { selected = first }
     }
 }

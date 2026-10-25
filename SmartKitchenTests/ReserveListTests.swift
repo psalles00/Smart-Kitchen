@@ -202,3 +202,274 @@ final class RecipeCoverPaletteTests: XCTestCase {
     }
 }
 #endif
+
+final class AdaptiveWorkspaceLayoutTests: XCTestCase {
+    func testPhoneAndNarrowMultitaskingKeepOneCompletePage() {
+        for size in [CGSize(width: 402, height: 874), CGSize(width: 600, height: 1000),
+                     CGSize(width: 874, height: 360)] {
+            XCTAssertFalse(SavoriaWorkspaceMetrics.supportsCompanion(size: size), "\(size)")
+        }
+    }
+
+    func testDuoAndIPadHaveRoomForBothFunctionalPanels() {
+        for size in [CGSize(width: 840, height: 780), CGSize(width: 780, height: 840),
+                     CGSize(width: 834, height: 1194), CGSize(width: 1194, height: 834)] {
+            XCTAssertTrue(SavoriaWorkspaceMetrics.supportsCompanion(size: size), "\(size)")
+        }
+    }
+
+    func testAccessibilityTextKeepsTheFullPrimaryFlowReachable() {
+        XCTAssertFalse(SavoriaWorkspaceMetrics.supportsCompanion(
+            size: CGSize(width: 1194, height: 834), accessibilitySize: true))
+    }
+}
+
+
+final class RecipeWorkspaceNavigationTests: XCTestCase {
+    func testClosingDetailBeforeFoldingDoesNotResurrectIt() {
+        var navigation = SavoriaRecipeWorkspaceNavigation()
+        navigation.open(UUID(), expanded: true)
+        navigation.selection = nil // the library/notebook clears the shared binding
+        navigation.resize(expanded: false)
+        XCTAssertTrue(navigation.path.isEmpty)
+        XCTAssertNil(navigation.selection)
+    }
+
+    func testFoldingAndUnfoldingPreserveTheActiveRecipe() {
+        let id = UUID()
+        var navigation = SavoriaRecipeWorkspaceNavigation()
+        navigation.open(id, expanded: true)
+        XCTAssertTrue(navigation.path.isEmpty)
+        navigation.resize(expanded: false)
+        XCTAssertEqual(navigation.path, [id])
+        navigation.resize(expanded: true)
+        XCTAssertEqual(navigation.selection, id)
+        XCTAssertTrue(navigation.path.isEmpty)
+    }
+
+    func testBackFromCompactDetailClearsSelection() {
+        var navigation = SavoriaRecipeWorkspaceNavigation()
+        navigation.open(UUID(), expanded: false)
+        navigation.path = []
+        navigation.stackChanged(expanded: false)
+        navigation.resize(expanded: true)
+        XCTAssertNil(navigation.selection)
+        XCTAssertTrue(navigation.path.isEmpty)
+    }
+}
+
+#if os(iOS)
+import SwiftUI
+
+/// Native-scene rendering only. Fixtures never enter the application's stores or CloudKit.
+@MainActor
+final class AdaptiveWorkspaceRenderingTests: XCTestCase {
+    private func fixture() throws -> (ModelContainer, UUID) {
+        let container = try ModelContainer(for: CloudSyncService.appSchema, configurations:
+            ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none))
+        let context = container.mainContext
+        let settings = AppSettings()
+        settings.hasCompletedOnboarding = true
+        settings.showReserve = true
+        context.insert(settings)
+        for name in ["Arroz", "Ovos", "Tomate", "Queijo"] {
+            context.insert(UnifiedItem(name: name, quantity: 2, unit: "un", isPantry: true))
+        }
+        context.insert(UnifiedItem(name: "Leite", isGrocery: true))
+        context.insert(UnifiedItem(name: "Aveia", isReserve: true))
+        let recipe = Recipe(name: "Arroz com ovos e tomate", ingredients: [
+            RecipeIngredient(name: "Arroz", quantity: 1, unit: "xícara"),
+            RecipeIngredient(name: "Ovos", quantity: 2, unit: "un")
+        ], steps: [RecipeStep(order: 1, instruction: "Cozinhe o arroz e prepare os ovos.")], prepTime: 10)
+        context.insert(recipe)
+        let profile = NutritionProfile()
+        profile.hasCompletedOnboarding = true
+        context.insert(profile)
+        try context.save()
+        return (container, recipe.id)
+    }
+
+    private func render(_ root: AnyView, name: String) async throws -> UIWindow {
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+            .first { $0.activationState == .foregroundActive })
+        let window = UIWindow(windowScene: scene)
+        window.frame = scene.coordinateSpace.bounds
+        window.windowLevel = .normal + 1
+        let ready = expectation(description: "Native layout: " + name)
+        let controller = UIHostingController(rootView: root.environment(\.scenePhase, .active).onAppear { ready.fulfill() })
+        window.rootViewController = controller
+        window.makeKeyAndVisible()
+        await fulfillment(of: [ready], timeout: 10)
+        controller.view.setNeedsLayout()
+        controller.view.layoutIfNeeded()
+        // Wait for native display commits, including geometry/query-driven updates.
+        // No wall-clock sleep and no production bootstrap/test-mode changes.
+        let committed = expectation(description: "Display commits: " + name)
+        let frames = WorkspaceDisplayCommits { committed.fulfill() }
+        frames.start()
+        await fulfillment(of: [committed], timeout: 10)
+        frames.stop()
+        XCTAssertGreaterThan(controller.view.bounds.width, 300)
+        XCTAssertGreaterThan(controller.view.bounds.height, 300)
+        let image = UIGraphicsImageRenderer(bounds: window.bounds).image { _ in
+            window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
+        }
+        let attachment = XCTAttachment(image: image)
+        attachment.name = name
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        return window
+    }
+
+    func testNativePanelsRespectReservedRegions() async throws {
+        let (container, _) = try fixture()
+        let measurements = WorkspaceRenderMeasurements()
+        let search = SearchBarState()
+        let root = WorkspaceGeometryFixture(measurements: measurements)
+            .modelContainer(container).environmentObject(search)
+        let window = try await render(AnyView(root), name: "native-workspace-geometry")
+        defer { window.isHidden = true; window.rootViewController = nil }
+        let primary = try XCTUnwrap(measurements.primary)
+        XCTAssertGreaterThan(primary.width, 100)
+        XCTAssertGreaterThanOrEqual(primary.minX, -1)
+        XCTAssertGreaterThanOrEqual(primary.minY, -1)
+        if measurements.expanded {
+            let secondary = try XCTUnwrap(measurements.secondary)
+            XCTAssertGreaterThan(secondary.width, 100)
+            XCTAssertFalse(primary.insetBy(dx: 1, dy: 1).intersects(secondary.insetBy(dx: 1, dy: 1)))
+            if primary.maxX <= secondary.minX, let content = measurements.primaryContent {
+                XCTAssertEqual(content.minY - 10, secondary.minY, accuracy: 1, "Panel tops must align after the primary content inset")
+            }
+            for reserved in measurements.reserved where reserved.width > 0 && reserved.height > 0 {
+                XCTAssertFalse(primary.intersects(reserved), "Header overlaps reserved region: \(reserved)")
+                XCTAssertFalse(secondary.intersects(reserved), "Content overlaps reserved region: \(reserved)")
+            }
+        }
+        let data = try JSONSerialization.data(withJSONObject: [
+            "expanded": measurements.expanded,
+            "window": String(describing: window.bounds),
+            "safeArea": String(describing: window.safeAreaInsets),
+            "primaryHeader": String(describing: primary),
+            "secondaryContent": measurements.secondary.map { String(describing: $0) } ?? "hidden",
+            "reserved": measurements.reserved.map { String(describing: $0) }
+        ], options: [.sortedKeys])
+        let evidence = XCTAttachment(data: data, uniformTypeIdentifier: "public.json")
+        evidence.name = "native-workspace-frames"
+        evidence.lifetime = .keepAlways
+        add(evidence)
+    }
+
+    func testNativeFunctionalPagesWithIsolatedFixtures() async throws {
+        let (container, recipeID) = try fixture()
+        let search = SearchBarState()
+        let service = UniversalSearchService()
+        let subscription = SubscriptionManager(observesTransactions: false)
+        for (name, tab, page) in [
+            ("home", AppTab.assistant, AnyView(ContentView())),
+            ("lists", .lists, AnyView(ListsTabView())),
+            ("recipes", .recipes, AnyView(RecipesView()
+                .environment(\.savoriaWorkspaceRecipeSelection, .constant(recipeID)))),
+            ("nutrition", .nutrients, AnyView(NutrientsView())),
+            ("assistant", .commandBar, AnyView(FullscreenAssistantView(
+                searchBarState: search, searchService: service, onAction: { _ in },
+                onOpenFoodCameraDirect: {}, onOpenFoodGalleryDirect: {},
+                pendingChatQuery: .constant(nil), pendingOpenChat: .constant(false),
+                pendingNewConversation: .constant(false), pendingShowHistory: .constant(false),
+                presentation: .tab)))
+        ] {
+            let root = WorkspacePageFixture(content: page)
+                .environment(\.activeAppTab, tab)
+                .environmentObject(search).environment(subscription).modelContainer(container)
+            let window = try await render(AnyView(root), name: "native-page-" + name)
+            window.isHidden = true
+            window.rootViewController = nil
+        }
+        // Rendering must not change membership, recipes, or create chat requests.
+        XCTAssertEqual(try container.mainContext.fetchCount(FetchDescriptor<UnifiedItem>()), 6)
+        XCTAssertEqual(try container.mainContext.fetchCount(FetchDescriptor<Recipe>()), 1)
+        XCTAssertEqual(try container.mainContext.fetchCount(FetchDescriptor<ChatMessage>()), 0)
+    }
+}
+
+@MainActor
+private final class WorkspaceDisplayCommits: NSObject {
+    private var link: CADisplayLink?
+    private var frames = 0
+    private let completion: () -> Void
+    init(completion: @escaping () -> Void) { self.completion = completion }
+    func start() {
+        link = CADisplayLink(target: self, selector: #selector(tick))
+        link?.add(to: .main, forMode: .common)
+    }
+    func stop() { link?.invalidate(); link = nil }
+    @objc private func tick() {
+        frames += 1
+        if frames == 6 { stop(); completion() }
+    }
+}
+
+@MainActor
+private final class WorkspaceRenderMeasurements {
+    var expanded = false
+    var primary: CGRect?
+    var primaryContent: CGRect?
+    var secondary: CGRect?
+    var reserved: [CGRect] = []
+}
+
+private struct WorkspaceGeometryReport: Equatable {
+    let expanded: Bool
+    let reserved: [CGRect]
+}
+
+private struct WorkspaceGeometryFixture: View {
+    let measurements: WorkspaceRenderMeasurements
+    @State private var expanded = false
+    var body: some View {
+        NavigationStack {
+            ExpandedPageLayout(pageTheme: .home, companion: {
+                AnyView(SavoriaPantryReference().onGeometryChange(for: CGRect.self) { $0.frame(in: .global) }
+                    action: { measurements.secondary = $0 })
+            }, header: { inverted in
+                PageHeader(title: "Savoria", isInverted: inverted) {
+                    HStack { SettingsButton(); GlassGroupButton(systemImage: "plus") {} }
+                }
+                .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) }
+                    action: { measurements.primary = $0 }
+            }, content: {
+                SavoriaPantryReference().onGeometryChange(for: CGRect.self) { $0.frame(in: .global) }
+                    action: { measurements.primaryContent = $0 }
+            }, infoContent: {
+                Text("Ingredientes disponíveis para cozinhar")
+            })
+            .environment(\.savoriaWorkspaceExpanded, expanded)
+            .toolbar(.hidden, for: .navigationBar)
+        }
+        .onGeometryChange(for: WorkspaceGeometryReport.self) { proxy in
+            var reserved: [CGRect] = []
+            if #available(iOS 27.1, *) {
+                let origin = proxy.frame(in: .global).origin
+                reserved = (proxy.reservedRegions(kind: .division) + proxy.reservedRegions(kind: .occlusion))
+                    .map { $0.frame.offsetBy(dx: origin.x, dy: origin.y) }
+            }
+            return WorkspaceGeometryReport(expanded: SavoriaWorkspaceMetrics.supportsCompanion(geometry: proxy),
+                                           reserved: reserved)
+        } action: {
+            expanded = $0.expanded
+            measurements.expanded = $0.expanded
+            measurements.reserved = $0.reserved
+        }
+    }
+}
+
+private struct WorkspacePageFixture: View {
+    let content: AnyView
+    @State private var expanded = false
+    var body: some View {
+        NavigationStack { content.environment(\.savoriaWorkspaceExpanded, expanded) }
+            .onGeometryChange(for: Bool.self) {
+                SavoriaWorkspaceMetrics.supportsCompanion(geometry: $0)
+            } action: { expanded = $0 }
+    }
+}
+#endif

@@ -54,6 +54,7 @@ private struct NutrientsSkeletonPage: View {
 #endif
 
 private struct NutrientsLoadedView: View {
+    @Environment(\.savoriaWorkspaceExpanded) private var workspaceExpanded
     @Environment(\.calendar) private var calendar
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scrollToTopTrigger) private var scrollToTopTrigger
@@ -102,6 +103,19 @@ private struct NutrientsLoadedView: View {
     var body: some View {
         ExpandedPageLayout(
             pageTheme: .nutrients,
+            companionTitle: String(localized: "Refeições do dia"),
+            companionSubtitle: selectedDate.formatted(date: .complete, time: .omitted),
+            companion: {
+                if let profile, profile.hasCompletedOnboarding {
+                    AnyView(NutritionDashboardView(
+                        profile: profile, allEntries: allEntries, allDayLogs: allDayLogs,
+                        selectedDate: $selectedDate,
+                        onTapEntry: { editingEntry = $0 }, onDeleteEntry: delete,
+                        onPickEntry: { activeEntrySheet = $0 },
+                        onOpenProgress: { pushProgress = true },
+                        historyIndex: dashboardHistoryIndex, workspaceSection: .meals))
+                } else { AnyView(emptyState) }
+            },
             header: { isInverted in
                 PageHeader(title: String(localized: "Nutrição"), isInverted: isInverted) {
                     HStack(spacing: 6) {
@@ -189,7 +203,8 @@ private struct NutrientsLoadedView: View {
                             activeEntrySheet = sheet
                         },
                         onOpenProgress: { pushProgress = true },
-                        historyIndex: dashboardHistoryIndex
+                        historyIndex: dashboardHistoryIndex,
+                        workspaceSection: workspaceExpanded ? .summary : .all
                     )
                 } else {
                     emptyState

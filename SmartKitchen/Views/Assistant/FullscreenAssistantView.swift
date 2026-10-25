@@ -74,8 +74,9 @@ struct FullscreenAssistantView: View {
     private let embeddedPanelTopInset: CGFloat = 16
 
     private var settings: AppSettings? { settingsArray.first }
+    private var usesPageLayout: Bool { presentation == .tab && chromeStyle == .fullscreen }
     private var topPinnedInset: CGFloat {
-        chromeStyle == .fullscreen ? fullscreenTopPinnedInset : embeddedPanelTopInset
+        usesPageLayout ? 0 : (chromeStyle == .fullscreen ? fullscreenTopPinnedInset : embeddedPanelTopInset)
     }
     private var showsPinnedHeader: Bool {
         chromeStyle == .fullscreen
@@ -122,6 +123,24 @@ struct FullscreenAssistantView: View {
     }
 
     var body: some View {
+        Group {
+            if usesPageLayout {
+                ExpandedPageLayout(
+                    pageTheme: .home,
+                    backgroundOverride: AnyView(AssistantModeBackground()),
+                    companion: { AnyView(SavoriaPantryReference()) },
+                    header: { _ in header.padding(.horizontal, 16) },
+                    content: { contentArea },
+                    infoContent: { EmptyView() }
+                )
+            } else { legacyBody }
+        }
+        .onAppear {
+            withAnimation(.smooth(duration: 0.12)) { contentOpacity = 1 }
+        }
+    }
+
+    private var legacyBody: some View {
         ZStack {
             if chromeStyle == .fullscreen {
                 if presentation == .overlay {
@@ -811,6 +830,7 @@ struct MacAssistantExpandedPage: View {
         ExpandedPageLayout(
             pageTheme: .home,
             backgroundOverride: AnyView(AssistantModeBackground()),
+            companion: { AnyView(SavoriaPantryReference()) },
             header: { isInverted in
                 PageHeader(title: mode.title, isInverted: isInverted) {
                     if mode == .aiMode {
