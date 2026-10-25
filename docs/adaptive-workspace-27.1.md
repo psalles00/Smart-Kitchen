@@ -1,73 +1,67 @@
 # Adaptive workspace — SDK 27.1
 
-The app builds with Xcode 27.1 (27A9275), iOS/iPhoneSimulator SDK 27.1 and macOS SDK 27.0. Deployment remains iOS 17/macOS 26; new APIs are availability guarded. Existing device families include iPhone and iPad. SDKROOT remains automatic instead of pinning an SDK path/version.
+Validated with Xcode 27.1 (27A9275), iOS/iPhoneSimulator SDK 27.1 and macOS SDK 27.0 on 2026-10-25. Deployment remains iOS 17/macOS 26; new APIs are availability guarded. SDKROOT remains automatic; existing device families include iPhone and iPad.
 
 ## Layout contract
 
-- Home and assistant: pantry reference alongside the current activity.
-- Lists: compare the primary list with a different pantry/reserve/grocery list, reusing the existing item operations.
-- Recipes: library and selected recipe side by side. One shared selection projects into compact stack navigation when closing the device/window; clearing the selection cannot resurrect an old recipe.
-- Nutrition: summary/calendar/macros alongside meals for the same selected day. Entry callbacks and already fetched data are shared.
-- Each panel has its own rounded light/dark surface. One shared shader field extends behind both; controls remain inside asymmetric safe areas.
-- SDK 27.1 uses native `ArrangementView` with split arrangements on both axes. The active division controls displacement. No device-model, main-screen, orientation, or hinge-angle assumptions.
-- In narrow windows/accessibility text sizes, all functionality remains reachable through the primary flow. A horizontal reserved division also permits vertically stacked panels where two horizontal columns would not fit.
-- The single assistant field measures local reserved division geometry; it does not stretch through a vertical fold or duplicate focus state.
-- macOS uses equivalent two-column behavior when there is room, with a compact home shortcut deck.
+Adaptive secondary regions are exclusive to iOS. **macOS retains its original single content column and original home shortcut layout**; it never mounts the new companions. The generic parity rule does not expand this request to add Mac columns.
+
+The second region adapts the original feature instead of recreating a simplified panel:
+
+- Lists starts with Despensa on one side and Mercado on the other. Both regions instantiate the complete original `ListsTabView`, including its header, tabs, search, filters, add/edit sheets, checkboxes, selection, swipe and bulk actions. A small paired selection value swaps the two sides when needed and reconciles hidden optional tabs. It changes presentation state, not stored items.
+- Home and assistant display that same complete original Lists page alongside the current activity, initially on Despensa.
+- Recipes uses the original library and `RecipeDetailView`. One selection projects into compact stack navigation on folding; clearing it cannot resurrect a dismissed recipe.
+- Nutrition uses the existing dashboard sections, shared selected day, fetched data and entry callbacks.
+
+Each region owns its original rounded light/dark surface and header. A single shader field extends behind both. Secondary pages inherit the same ModelContext, mark themselves as already assigned to a region, and do not recursively create another workspace or consume the root search context. Inactive retained tabs do not mount companions. Bulk selection in either list hides the persistent assistant field.
+
+SDK 27.1 uses native `ArrangementView`, split arrangements on both axes and reserved division/occlusion geometry. No device-model, main-screen, orientation or hinge-angle assumptions. Foreground controls respect asymmetric safe areas; only backgrounds extend beneath them. Compact/accessibility layouts keep the primary flow. A horizontal reserved division permits stacked panels. The single assistant field measures its local division and avoids the native tab bar.
 
 ## Apple sources checked 2026-10-25
 
-- [Prepare your app for iPhone Duo](https://developer.apple.com/videos/play/tech-talks/111461/): SDK opt-in, resizing, asymmetric safe areas and native navigation.
-- [Strike a pose with adaptive layouts](https://developer.apple.com/videos/play/tech-talks/111463/): arrangements, both split axes and reserved regions.
-- [Raise the bar with iPhone Duo](https://developer.apple.com/videos/play/tech-talks/111462/): native vertical tab/navigation bars.
-- [Designing for iPhone Duo](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo).
-- Installed 27.1 SwiftUI/SwiftUICore public interfaces and Xcode App Resizability safe-area guide were checked against the actual API signatures.
+- [Prepare your app for iPhone Duo](https://developer.apple.com/videos/play/tech-talks/111461/)
+- [Strike a pose with adaptive layouts](https://developer.apple.com/videos/play/tech-talks/111463/)
+- [Raise the bar with iPhone Duo](https://developer.apple.com/videos/play/tech-talks/111462/)
+- [Designing for iPhone Duo](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo)
+- Installed public SwiftUI/SwiftUICore interfaces and Xcode App Resizability safe-area guide, checked against the actual API signatures.
 
 ## Data and resource boundaries
 
-No production schema, container layout/URL, bootstrap, sync flag, signing Team or capability changes. The ordered iCloud containers and App Group remain unchanged. Rendering fixtures exist only in the test target, with an in-memory container and CloudKit disabled; onboarding fixtures never enter user stores.
+No production schema, container layout/URL, bootstrap, sync flag, signing Team or capability changes. Team remains `44K57HQAP9`, bundle `com.pedrosalles.smartkitchen.sync`. The ordered iCloud containers, CloudKit/CloudDocuments and App Group remain unchanged. Simulator capability checks use Xcode’s linked `Savoria.app-Simulated.xcent`; the ad-hoc signature’s empty dictionary is normal.
 
-Budget before implementation: zero new remote requests/bytes per navigation action, zero idle polling, zero new services/fixed charges, and zero paid AI requests. The companions use local data: at most one visible pantry/list reference, or existing recipe/nutrition data. Retained inactive tabs do not mount companion observers. Existing explicit edits use their existing save/sync path; there is no extra background write or AI retry path. This is a UI-only change, so no provider price/plan is changed. Local GPU work reuses one field rather than rendering a second shader. Remote quota headroom and device performance are not claimed measured by layout tests.
+Before/after budget for the new UI paths: zero new remote requests/bytes per navigation action, zero idle polling, zero paid AI calls or new services. Each visible secondary list reuses existing local queries and explicit save/sync operations; it creates no additional container or background mutation. There is one shared shader, not a second GPU renderer. Existing services’ aggregate background traffic, quota headroom and real-device performance are not claimed measured by layout tests.
 
-Readback after the first macOS installation exactly matched the full pre-change backend snapshot (items, categories, recipes, counts, grouping, flags and revision).
+The full Mac backend snapshot after the corrected installation exactly matches the baseline: SHA-256 `18aceb3680763cd7f239bf4e3d89986e3e42fb281468b1612323e5bf200f431d`. All IDs, records, grouping, flags and revision are preserved.
 
-## Validation
+## Validation of the corrected implementation
 
-`AdaptiveWorkspaceLayoutTests`: compact, wide and accessibility policies.
-`RecipeWorkspaceNavigationTests`: selection clearing, folding/unfolding, back navigation.
-`AdaptiveWorkspaceRenderingTests`: actual native window-scene rendering of all five pages with isolated data, reserved-region/frame assertions and image attachments. It waits for native display commits, not wall-clock sleeps. Fixture readback checks item/recipe counts and zero chat messages.
+Evidence root: `/Volumes/PS-Externo/Coding/Builds/Savoria-Duo-20261025`.
 
-Evidence is retained outside the repository in `/Volumes/PS-Externo/Coding/Builds/Savoria-Duo-20261025`. Native rendering uses the installed app's views in the actual simulator scene, with test-only data; it is not a claim of CloudKit delivery or real foldable hardware validation.
-
-Final validation matrix (2026-10-25):
-
-| Destination | Evidence | Result |
+| Destination | Current evidence | Result |
 | --- | --- | --- |
-| Duo open, horizontal | `duo-horizontal-final` | 2 native tests passed; both panels and actual input/tab bar frames |
-| Duo partially open | `duo-partial` | 2 native tests passed; vertical division excluded |
-| Duo portrait partially open | `duo-portrait-partial` | 2 native tests passed; horizontal division excluded |
-| Duo closed | `duo-closed` | 2 native tests passed; complete compact flow |
-| Duo portrait, dark | `duo-dark-bar-final` | 2 native tests passed; input does not overlap bottom navigation |
-| iPad portrait | `ipad-portrait` | 2 native tests passed; independent panels |
-| iPad horizontal | `ipad-horizontal-verified` | 2 native tests passed; native top tabs and input |
-| iPhone 17 Pro | `iphone17-final`, `iphone17-bar-final` | 8 layout/navigation/rendering tests, then 2 native tests after final clearance correction |
-| macOS installed app | independent CUA journey + backend readback | Lists comparison, recipe/detail, clearing selection via notebooks, same-day nutrition and assistant/pantry verified |
+| iPhone 17 Pro | `correction-iphone17` | 13 tests passed: compact/accessibility policy, recipe navigation, paired-list selection, original bulk operations and native rendering |
+| Duo open | `correction-duo-open-verified` | 2 native tests passed; actual scene 951×669, secondary visible, panels 417.5 points wide, right reserved area 84 points respected |
+| Duo partially open | `correction-duo-partial` | 2 native tests passed; original pages respect the active division |
+| iPad portrait | `correction-ipad` | 2 native tests passed; actual scene 834×1210, both original list pages visible |
+| macOS | corrected build and installed app | Original single content column; complete original signed entitlements preserved |
+| iPhone 12 Pro | `correction-install-physical.log` | Release installed successfully, database sequence 16808; no routine physical app interaction |
 
-The rendering test checks the actual visible `UITextField` against every visible `UITabBar`. iPad's top tab switcher uses a different native representation, so the test does not incorrectly require a bottom/side `UITabBar` there.
+Native rendering hosts the actual production views in the simulator’s real window scene, with an isolated in-memory test-only ModelContainer and CloudKit disabled. It captures all five pages, checks panel frames against reserved regions, and verifies fixture readback. No synthetic onboarding or food records enter user stores. These tests prove native layout with fixtures; they do not prove CloudKit delivery, real foldable hardware, or every live fold/keyboard transition.
 
-Both code review and E2E validation were performed in separate delegated contexts. Final app source is commit `406669ec`; `9b7b8f63` adjusts only the iPad test expectation. No outstanding code defects were reported.
+The earlier runs named `correction-duo` and `correction-duo-open` actually rendered the Duo closed (466×678); they are compact evidence only. The final run explicitly verifies `expanded:true`. A Device Hub slider initially changed its displayed angle without applying the pose; selecting another simulator and returning exposed the working native Open/Partially Open/Closed controls.
 
-Final iOS Debug SDK 27.1, physical iOS Release SDK 27.1 and macOS builds passed. The current app was installed and launched on the iPhone 17 Pro, Duo and iPad simulators, preserving existing containers. macOS was installed/opened at `/Applications/Savoria.app`, with the complete original signed entitlement dictionary preserved. Simulator entitlement checks use Xcode's `Savoria.app-Simulated.xcent` linked into the executable; an empty ad-hoc code-signing dictionary is not evidence that Simulator capabilities were removed.
+The corrected source was independently approved against patch SHA-256 `d3a154ce841c1a71650510433764187b2901f07750f37c1e6bc5fcac2cf10b0a` after the actual open-pose evidence was available. Implementation commits are `3c0c2c0d` (Mac scope) and `fa2c7621` (complete original list pages).
 
-Physical iPhone 12 Pro installation initially reported CoreDevice 4016 (unavailable connectivity/services). After the device became available, installation succeeded for `com.pedrosalles.smartkitchen.sync`, database sequence 16776. Bundle, signing Team and ordered iCloud containers were checked before installation. The physical app was not opened or operated for routine tests; no uninstall was performed. This layout change was validated in Simulator; real foldable hardware, live fold/keyboard transitions, CloudKit delivery and migration remain unverified. No persistence migration is introduced.
+Fresh independent E2E validation of the installed Mac app navigated Home → Lists → Recipes → Nutrition, confirmed a single primary content column, and read back the identical full data snapshot. The report is `correction-e2e.md`; iOS fixture-based validation is explicitly distinguished from a persisted-live user-store journey.
 
-Final backend snapshot is byte-for-byte identical to the baseline, SHA-256 `18aceb3680763cd7f239bf4e3d89986e3e42fb281468b1612323e5bf200f431d`. New remote operations remain zero by construction of the changed paths; no paid AI query was submitted. This does not claim measured total background network consumption of existing services.
+Both iOS configurations and macOS build successfully. The updated app is installed/opened on the iPhone 17 Pro, Duo and iPad simulators, preserving their containers. macOS is installed/opened at `/Applications/Savoria.app`. The physical installation preserves the existing app data and was not opened for routine testing.
 
-Superseded raw test bundles are replaced by compact report summaries; final frame/image evidence and the latest three raw results are retained for review. Build caches were reused. Only temporary simulators booted for this task are stopped after validation; their data remains intact.
+Retain compact reports and the current final images/results until superseded by the next validated release; discard duplicate raw attempts, never user data or recovery material. Reuse build caches and stop only the additional simulators started for this task after validation.
 
 ## Manual smoke test
 
-1. Open Home/Listas/Nutrição on Duo open; check aligned rounded panels, shader on both sides and accessible controls beside the system status region.
-2. Compare Despensa/Para depois/Mercado without selecting the same list twice. Do not alter real items merely to test layout.
-3. Open a recipe, close/reopen the Duo, then return to the library; the current recipe should persist, and a dismissed recipe should remain dismissed.
-4. Check assistant input and virtual keyboard in both poses, without submitting a paid query for a layout check.
-5. Repeat with an iPad window made narrow/wide, large accessibility text, light/dark appearance, and the iPhone 17 Pro fallback.
+1. On Duo/iPad, open Listas: check Despensa and Mercado side by side, with the same original tabs, header buttons, item rows and rounded surfaces.
+2. Choose Mercado on the first side; the other should become Despensa. Choose Para depois on either side and check independent search/filter state. Open an item and cancel without changing real data.
+3. Open a recipe, fold/unfold, then return to the library; the current selection should persist and a dismissed recipe should remain dismissed.
+4. Check shader continuity, status-region clearance, assistant input and virtual keyboard in open/partial/closed poses; no paid query is needed.
+5. Open Home, Lists, Recipes and Nutrition on the installed Mac app: each should retain its original single content column. Repeat compact/accessibility layouts on the iPhone 17 Pro.
