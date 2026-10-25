@@ -1,5 +1,4 @@
 import SwiftUI
-import SwiftData
 #if os(macOS)
 import AppKit
 #endif
@@ -71,6 +70,8 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
     let companionTitle: String
     let companionSubtitle: String
     let companion: (() -> AnyView)?
+    let companionPage: (() -> AnyView)?
+    @Environment(\.savoriaWorkspacePane) private var isWorkspacePane
     @Environment(\.savoriaWorkspaceExpanded) private var workspaceExpanded
     @Environment(\.savoriaWorkspacePageActive) private var workspacePageActive
     @State private var detailZoneHeight: CGFloat = 0
@@ -82,6 +83,8 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
         false
         #endif
     }
+
+    private var isWorkspacePanel: Bool { usesWorkspace || isWorkspacePane }
 
     #if !os(iOS)
     @Environment(\.backgroundTheme) private var backgroundTheme
@@ -139,6 +142,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
         companionTitle: String = String(localized: "Despensa"),
         companionSubtitle: String = String(localized: "Seu estoque, ao lado"),
         companion: (() -> AnyView)? = nil,
+        companionPage: (() -> AnyView)? = nil,
         @ViewBuilder header: @escaping (_ isInverted: Bool) -> Header,
         @ViewBuilder content: @escaping () -> Content,
         @ViewBuilder infoContent: @escaping () -> InfoContent
@@ -149,6 +153,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
         self.companionTitle = companionTitle
         self.companionSubtitle = companionSubtitle
         self.companion = companion
+        self.companionPage = companionPage
         self.header = header
         self.content = content
         self.infoContent = infoContent
@@ -160,11 +165,14 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
         #if os(macOS)
         primaryBody
         #else
-        ZStack {
-            if usesWorkspace {
-                backgroundLayer.ignoresSafeArea().allowsHitTesting(false)
+        if isWorkspacePane {
+            // This original page already occupies a native arrangement region.
+            primaryBody
+        } else {
+            ZStack {
+                if usesWorkspace { backgroundLayer.ignoresSafeArea().allowsHitTesting(false) }
+                workspaceContent
             }
-            workspaceContent
         }
         #endif
     }
@@ -177,7 +185,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
                 primaryBody.padding(.horizontal, usesWorkspace ? 8 : 0)
                     .accessibilityIdentifier("savoria.workspace.primary")
             } secondary: {
-                companionBody.padding(.horizontal, 8)
+                secondaryPane.padding(.horizontal, 8)
                     .accessibilityIdentifier("savoria.workspace.secondary")
             }
             .arrangementViewStyle(SavoriaWorkspaceArrangement(expanded: usesWorkspace))
@@ -194,11 +202,26 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
         if usesWorkspace {
             HStack(alignment: .top, spacing: 16) {
                 primaryBody.frame(maxWidth: .infinity)
-                companionBody.frame(maxWidth: .infinity)
+                secondaryPane.frame(maxWidth: .infinity)
             }
         } else {
             primaryBody
         }
+    }
+
+    @ViewBuilder
+    private var secondaryPane: some View {
+        if usesWorkspace && workspacePageActive {
+            if let companionPage {
+                companionPage()
+                    .environment(\.savoriaWorkspaceExpanded, false)
+                    .environment(\.savoriaWorkspacePane, true)
+            } else if companion != nil {
+                companionBody
+            } else {
+                SavoriaOriginalListPane(initialSubtab: .pantry)
+            }
+        } else { Color.clear }
     }
 
     private var companionBody: some View {
@@ -221,7 +244,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
                 // Inactive, retained tabs must not mount more data observers.
                 if usesWorkspace && workspacePageActive {
                     if let companion { companion() }
-                    else { AnyView(SavoriaPantryReference()) }
+                    else { AnyView(EmptyView()) }
                 } else { Color.clear }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -248,7 +271,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
     private var primaryBody: some View {
         #if os(macOS)
         ZStack(alignment: .top) {
-            if !usesWorkspace { backgroundLayer.ignoresSafeArea().allowsHitTesting(false) }
+            if !isWorkspacePanel { backgroundLayer.ignoresSafeArea().allowsHitTesting(false) }
 
             VStack(spacing: 0) {
                 header(false)
@@ -259,7 +282,6 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
                     .padding(.horizontal, 20)
                     .padding(.top, usesDescriptionHeader ? 0 : 4)
                     .padding(.bottom, usesDescriptionHeader ? 0 : 10)
-                    .onGeometryChange(for: CGFloat.self) { ceil($0.size.height) } action: { detailZoneHeight = $0 }
 
                 ZStack {
                     RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
@@ -280,7 +302,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
         #else
             ZStack(alignment: .top) {
                 // Standalone pages keep a local backdrop. Tabs share the app field.
-                if !usesWorkspace { backgroundLayer.ignoresSafeArea().allowsHitTesting(false) }
+                if !isWorkspacePanel { backgroundLayer.ignoresSafeArea().allowsHitTesting(false) }
 
                 // LAYOUT
                 VStack(spacing: 0) {
@@ -290,7 +312,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
 
                     // Header zone: info content + search bar slot
                     headerDetailZone
-                        .frame(minHeight: usesWorkspace ? ExpandedPageHeaderMetrics.iosCompactInfoHeight : 0, alignment: .top)
+                        .frame(minHeight: isWorkspacePanel ? ExpandedPageHeaderMetrics.iosCompactInfoHeight : 0, alignment: .top)
                         .onGeometryChange(for: CGFloat.self) { ceil($0.size.height) } action: { detailZoneHeight = $0 }
 
                     // Content area
@@ -298,7 +320,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
                 }
             }
         .onAppear {
-            searchBarState.pageContext = pageTheme.searchContext
+            if !isWorkspacePane { searchBarState.pageContext = pageTheme.searchContext }
     }
         .modifier(SavoriaPageContainerBackground())
     #endif
@@ -338,7 +360,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            Color.clear.frame(height: usesWorkspace ? 12 : bottomTabBarContentInset)
+            Color.clear.frame(height: isWorkspacePanel ? 12 : bottomTabBarContentInset)
         }
         .background {
             SavoriaColumnSurface(theme: pageTheme, cornerRadius: cornerRadius)
@@ -346,8 +368,8 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
         .clipShape(
             UnevenRoundedRectangle(
                 topLeadingRadius: cornerRadius,
-                bottomLeadingRadius: usesWorkspace ? cornerRadius : 0,
-                bottomTrailingRadius: usesWorkspace ? cornerRadius : 0,
+                bottomLeadingRadius: isWorkspacePanel ? cornerRadius : 0,
+                bottomTrailingRadius: isWorkspacePanel ? cornerRadius : 0,
                 topTrailingRadius: cornerRadius
             )
         )
@@ -361,8 +383,8 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
                     .allowsHitTesting(false)
             }
         }
-        .ignoresSafeArea(edges: usesWorkspace ? [] : .bottom)
-        .padding(.bottom, usesWorkspace ? 8 : 0)
+        .ignoresSafeArea(edges: isWorkspacePanel ? [] : .bottom)
+        .padding(.bottom, isWorkspacePanel ? 8 : 0)
         .padding(.leading, leadingPanelInset)
         .padding(.trailing, trailingPanelInset)
         .animation(.spring(response: 0.38, dampingFraction: 0.78), value: searchBarState.isVisible)
@@ -998,66 +1020,18 @@ private struct SavoriaWorkspaceArrangement: ArrangementViewStyle {
 }
 #endif
 
-/// Reference only: no API, timer, model writes, guessed quantities or AI work.
-/// Mounted only while its page's companion is visible.
-struct SavoriaPantryReference: View {
-    @Query(filter: #Predicate<UnifiedItem> { $0.isPantry }, sort: \UnifiedItem.name)
-    private var items: [UnifiedItem]
-
-    var body: some View {
-        List {
-            ForEach(items) { item in
-                HStack(alignment: .top, spacing: 12) {
-                    Image(systemName: "shippingbox")
-                        .foregroundStyle(PageTheme.lists.accentColor)
-                        .accessibilityHidden(true)
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(item.name).font(.body.weight(.semibold))
-                        if !item.formattedQuantity.isEmpty {
-                            Text(item.formattedQuantity).font(.subheadline).foregroundStyle(.secondary)
-                        }
-                        if let expiry = item.formattedExpirationDate {
-                            Text(expiry).font(.caption).foregroundStyle(.secondary)
-                        }
-                    }
-                    Spacer(minLength: 0)
-                }
-                .padding(.vertical, 4)
-                .listRowBackground(Color.clear)
-            }
-        }
-        .listStyle(.plain)
-        .scrollContentBackground(.hidden)
-        .overlay {
-            if items.isEmpty {
-                ContentUnavailableView(String(localized: "Despensa"), systemImage: "shippingbox")
-            }
-        }
-    }
-}
-
-
-/// One selection drives both the companion and the collapsed navigation stack.
-/// Closing a notebook/detail clears this same selection, so folding cannot
-/// resurrect an older recipe from a separate parent cache.
+/// One recipe selection projected into compact navigation when required.
 struct SavoriaRecipeWorkspaceNavigation {
     var selection: UUID?
     var path: [UUID] = []
-
     mutating func open(_ id: UUID, expanded: Bool) {
         selection = id
         path = expanded ? [] : [id]
     }
-
     mutating func resize(expanded: Bool) {
-        if expanded {
-            selection = path.last ?? selection
-            path = []
-        } else {
-            path = selection.map { [$0] } ?? []
-        }
+        if expanded { selection = path.last ?? selection; path = [] }
+        else { path = selection.map { [$0] } ?? [] }
     }
-
     mutating func stackChanged(expanded: Bool) {
         if let id = path.last { selection = id }
         else if !expanded { selection = nil }
@@ -1065,13 +1039,39 @@ struct SavoriaRecipeWorkspaceNavigation {
 }
 
 private struct SavoriaWorkspaceRecipeSelectionKey: EnvironmentKey {
-    static let defaultValue: Binding<UUID?>? = nil
+    nonisolated(unsafe) static let defaultValue: Binding<UUID?>? = nil
 }
 
 extension EnvironmentValues {
     var savoriaWorkspaceRecipeSelection: Binding<UUID?>? {
         get { self[SavoriaWorkspaceRecipeSelectionKey.self] }
         set { self[SavoriaWorkspaceRecipeSelectionKey.self] = newValue }
+    }
+}
+
+/// Reuse the original feature page, including its header, tabs, search, filters,
+/// selection, sheets, rows and actions. Only its placement/chrome is adapted.
+struct SavoriaOriginalListPane: View {
+    let initialSubtab: ListSubtab
+    var selection: Binding<ListSubtab>? = nil
+    var body: some View {
+        ListsTabView(initialSubtab: initialSubtab, selection: selection)
+            .environment(\.activeAppTab, .lists)
+            .environment(\.savoriaWorkspaceExpanded, false)
+            .environment(\.savoriaWorkspacePane, true)
+            .environment(\.searchOverlay, nil)
+            .environment(\.scrollToItem, nil)
+    }
+}
+
+private struct SavoriaWorkspacePaneKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
+extension EnvironmentValues {
+    var savoriaWorkspacePane: Bool {
+        get { self[SavoriaWorkspacePaneKey.self] }
+        set { self[SavoriaWorkspacePaneKey.self] = newValue }
     }
 }
 

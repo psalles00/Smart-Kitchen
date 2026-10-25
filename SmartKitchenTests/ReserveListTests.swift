@@ -448,7 +448,7 @@ private struct WorkspaceGeometryFixture: View {
     var body: some View {
         NavigationStack {
             ExpandedPageLayout(pageTheme: .home, companion: {
-                AnyView(SavoriaPantryReference().onGeometryChange(for: CGRect.self) { $0.frame(in: .global) }
+                AnyView(PantryView(searchText: "", sortOption: .custom, filterOption: .all, expiringLeadDays: 30).onGeometryChange(for: CGRect.self) { $0.frame(in: .global) }
                     action: { measurements.secondary = $0 })
             }, header: { inverted in
                 PageHeader(title: "Savoria", isInverted: inverted) {
@@ -457,7 +457,7 @@ private struct WorkspaceGeometryFixture: View {
                 .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) }
                     action: { measurements.primary = $0 }
             }, content: {
-                SavoriaPantryReference().onGeometryChange(for: CGRect.self) { $0.frame(in: .global) }
+                PantryView(searchText: "", sortOption: .custom, filterOption: .all, expiringLeadDays: 30).onGeometryChange(for: CGRect.self) { $0.frame(in: .global) }
                     action: { measurements.primaryContent = $0 }
             }, infoContent: {
                 Text("Ingredientes disponíveis para cozinhar")
@@ -493,3 +493,31 @@ private struct WorkspacePageFixture: View {
     }
 }
 #endif
+
+
+final class OriginalListWorkspaceSelectionTests: XCTestCase {
+    func testPantryAndMarketStartOnOppositeSides() {
+        XCTAssertEqual(ListWorkspaceSelection().primary, .pantry)
+        XCTAssertEqual(ListWorkspaceSelection().secondary, .grocery)
+        XCTAssertEqual(ListWorkspaceSelection(primary: .grocery).secondary, .pantry)
+    }
+    func testSelectingTheOtherVisibleListSwapsWithoutDuplication() {
+        var state = ListWorkspaceSelection()
+        state.selectPrimary(.grocery)
+        XCTAssertEqual(state.primary, .grocery)
+        XCTAssertEqual(state.secondary, .pantry)
+        state.selectSecondary(.grocery)
+        XCTAssertEqual(state.primary, .pantry)
+        XCTAssertEqual(state.secondary, .grocery)
+        state.selectSecondary(.reserve)
+        XCTAssertEqual(state.primary, .pantry)
+        XCTAssertEqual(state.secondary, .reserve)
+    }
+    func testDisablingAnOptionalListKeepsBothSelectionsValid() {
+        var state = ListWorkspaceSelection(primary: .reserve)
+        state.selectSecondary(.utensils)
+        state.reconcile(available: [.pantry, .grocery])
+        XCTAssertEqual(state.primary, .pantry)
+        XCTAssertEqual(state.secondary, .grocery)
+    }
+}

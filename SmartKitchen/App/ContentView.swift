@@ -1163,7 +1163,7 @@ struct ContentView: View {
 
     @ViewBuilder
     private var persistentAssistantBar: some View {
-        if selectedTab == .lists && isListSelectionActive {
+        if isListSelectionActive {
             assistantBarWithReservedSpace
                 .opacity(0)
                 .allowsHitTesting(false)

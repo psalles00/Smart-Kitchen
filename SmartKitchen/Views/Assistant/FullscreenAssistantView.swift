@@ -128,7 +128,6 @@ struct FullscreenAssistantView: View {
                 ExpandedPageLayout(
                     pageTheme: .home,
                     backgroundOverride: AnyView(AssistantModeBackground()),
-                    companion: { AnyView(SavoriaPantryReference()) },
                     header: { _ in header.padding(.horizontal, 16) },
                     content: { contentArea },
                     infoContent: { EmptyView() }

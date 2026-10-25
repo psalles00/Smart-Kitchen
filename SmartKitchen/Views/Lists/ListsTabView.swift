@@ -226,22 +226,48 @@ struct ListsDragPayload: Codable, Transferable, Hashable {
     }
 }
 
+/// Only presentation selection is shared; the original feature owns its actions.
+struct ListWorkspaceSelection {
+    var primary: ListSubtab
+    var secondary: ListSubtab
+    init(primary: ListSubtab = .pantry) {
+        self.primary = primary
+        secondary = primary == .grocery ? .pantry : .grocery
+    }
+    mutating func selectPrimary(_ value: ListSubtab) {
+        if value == secondary { secondary = primary }
+        primary = value
+    }
+    mutating func selectSecondary(_ value: ListSubtab) {
+        if value == primary { primary = secondary }
+        secondary = value
+    }
+    mutating func reconcile(available: [ListSubtab]) {
+        if !available.contains(primary) { primary = available.first ?? .pantry }
+        if !available.contains(secondary) || secondary == primary {
+            secondary = available.first { $0 != primary } ?? primary
+        }
+    }
+}
+
 struct ListsTabView: View {
     let initialSubtab: ListSubtab
+    let selection: Binding<ListSubtab>?
 
-    init(initialSubtab: ListSubtab = .pantry) {
+    init(initialSubtab: ListSubtab = .pantry, selection: Binding<ListSubtab>? = nil) {
         self.initialSubtab = initialSubtab
+        self.selection = selection
     }
 
     var body: some View {
         #if os(iOS)
         DeferredTabPage(tab: .lists) {
-            ListsLoadedTabView(initialSubtab: initialSubtab)
+            ListsLoadedTabView(initialSubtab: initialSubtab, selection: selection)
         } placeholder: {
             ListsSkeletonPage(initialSubtab: initialSubtab)
         }
         #else
-        ListsLoadedTabView(initialSubtab: initialSubtab)
+        ListsLoadedTabView(initialSubtab: initialSubtab, selection: selection)
         #endif
     }
 }
@@ -288,7 +314,15 @@ private struct ListsLoadedTabView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var settingsArray: [AppSettings]
 
-    @State private var selectedSubtab: ListSubtab
+    private let externalSelection: Binding<ListSubtab>?
+    @State private var workspaceSelection: ListWorkspaceSelection
+    private var selectedSubtab: ListSubtab {
+        get { externalSelection?.wrappedValue ?? workspaceSelection.primary }
+        nonmutating set {
+            if let externalSelection { externalSelection.wrappedValue = newValue }
+            else { workspaceSelection.selectPrimary(newValue) }
+        }
+    }
     @State private var showAddPantry = false
     @State private var showAddGrocery = false
     @State private var showAddReserve = false
@@ -323,17 +357,19 @@ private struct ListsLoadedTabView: View {
         return tabs
     }
 
-    init(initialSubtab: ListSubtab = .pantry) {
-        _selectedSubtab = State(initialValue: initialSubtab)
+    init(initialSubtab: ListSubtab = .pantry, selection: Binding<ListSubtab>? = nil) {
+        externalSelection = selection
+        _workspaceSelection = State(initialValue: ListWorkspaceSelection(primary: initialSubtab))
     }
 
     var body: some View {
         ExpandedPageLayout(
             pageTheme: .lists,
-            companionTitle: String(localized: "Listas"),
-            companionSubtitle: String(localized: "Compare e organize suas listas"),
-            companion: {
-                AnyView(SavoriaListCompanion(primary: selectedSubtab, showReserve: settings?.showReserve == true))
+            companionPage: {
+                AnyView(SavoriaOriginalListPane(initialSubtab: workspaceSelection.secondary, selection: Binding(
+                    get: { workspaceSelection.secondary },
+                    set: { workspaceSelection.selectSecondary($0) }
+                )))
             },
             header: { isInverted in
                 PageHeader(title: String(localized: "Listas"), isInverted: isInverted) {
@@ -460,8 +496,8 @@ private struct ListsLoadedTabView: View {
             Button("OK", role: .cancel) {}
         }
         .tint(PageTheme.lists.accentColor)
-        .onChange(of: settings?.showReserve) { _, enabled in
-            if enabled != true && selectedSubtab == .reserve { selectedSubtab = .pantry }
+        .onChange(of: visibleTabs) { _, tabs in
+            if externalSelection == nil { workspaceSelection.reconcile(available: tabs) }
         }
         .onChange(of: selectedSubtab) {
             finishItemSelection()
@@ -920,47 +956,3 @@ private struct ListsSubtabDropButton: View {
     }
 }
 
-/// A second, independent list. Reuses existing move/edit flows and the same
-/// ModelContext; never creates another store or mirrors items into a new model.
-private struct SavoriaListCompanion: View {
-    let primary: ListSubtab
-    let showReserve: Bool
-    @State private var selected: ListSubtab
-
-    init(primary: ListSubtab, showReserve: Bool) {
-        self.primary = primary
-        self.showReserve = showReserve
-        _selected = State(initialValue: primary == .grocery ? .pantry : .grocery)
-    }
-
-    private var tabs: [ListSubtab] {
-        ([.pantry] + (showReserve ? [.reserve] : []) + [.grocery]).filter { $0 != primary }
-    }
-
-    var body: some View {
-        VStack(spacing: 8) {
-            Picker("Listas", selection: $selected) {
-                ForEach(tabs, id: \.self) { tab in Text(tab.title).tag(tab) }
-            }
-            .pickerStyle(.segmented)
-            .padding(16)
-            Group {
-                if selected == .pantry {
-                    PantryView(searchText: "", sortOption: .custom, filterOption: .all,
-                               expiringLeadDays: 30)
-                } else {
-                    GroceryListView(searchText: "", sortOption: .custom, filterOption: .all,
-                                    listType: selected == .reserve ? .reserve : .grocery)
-                }
-            }
-        }
-        // Selection/bulk actions belong to the main list, never the reference.
-        .environment(\.listItemSelection, ListItemSelection())
-        .onChange(of: primary) { _, _ in reconcileSelection() }
-        .onChange(of: showReserve) { _, _ in reconcileSelection() }
-    }
-
-    private func reconcileSelection() {
-        if !tabs.contains(selected), let first = tabs.first { selected = first }
-    }
-}
