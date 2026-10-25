@@ -3,6 +3,35 @@ import XCTest
 /// Navigates existing food data without purchases, AI calls, seeding or deletion.
 @MainActor
 final class PageActionTracingTests: XCTestCase {
+    /// Native foreground journey only; never completes onboarding or changes records.
+    func testVerticalStatusRegionRemainsHiddenAfterForeground() throws {
+        guard ProcessInfo.processInfo.environment["SAVORIA_VALIDATE_VERTICAL_CHROME"] == "1" else {
+            throw XCTSkip("Requires an explicitly selected native vertical-bar simulator context.")
+        }
+        continueAfterFailure = false
+        let app = XCUIApplication(bundleIdentifier: "com.pedrosalles.smartkitchen.sync")
+        app.launchArguments = ["-AppleLanguages", "(pt-BR)", "-AppleLocale", "pt_BR"]
+        app.launch()
+        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 30))
+        let status = app.statusBars.firstMatch
+        let hidden = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: status)
+        XCTAssertEqual(XCTWaiter.wait(for: [hidden], timeout: 10), .completed)
+        for iteration in 1...2 {
+            XCUIDevice.shared.press(.home)
+            let background = XCTNSPredicateExpectation(
+                predicate: NSPredicate { _, _ in app.state != .runningForeground }, object: nil)
+            XCTAssertEqual(XCTWaiter.wait(for: [background], timeout: 15), .completed)
+            app.activate()
+            XCTAssertTrue(app.wait(for: .runningForeground, timeout: 15))
+            let hiddenAgain = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: status)
+            XCTAssertEqual(XCTWaiter.wait(for: [hiddenAgain], timeout: 10), .completed)
+            let capture = XCTAttachment(screenshot: app.screenshot())
+            capture.name = "Native status region after foreground \(iteration)"
+            capture.lifetime = .keepAlways
+            add(capture)
+        }
+    }
+
     func testAssistantWidgetKeyboardOnColdLaunch() throws {
         continueAfterFailure = false
         let app = XCUIApplication(bundleIdentifier: "com.pedrosalles.smartkitchen.sync")

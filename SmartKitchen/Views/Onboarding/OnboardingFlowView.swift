@@ -67,6 +67,7 @@ struct OnboardingFlowView: View {
             }
         }
         .preferredColorScheme(nil) // follow system
+        .savoriaSystemChrome()
         .overlay(alignment: .topTrailing) {
             if isPreview {
                 Button("Fechar prévia", action: onFinish)

@@ -1,6 +1,88 @@
 import SwiftUI
 #if os(macOS)
 import AppKit
+#elseif os(iOS)
+import UIKit
+#endif
+
+extension View {
+    /// Ask the system to release the vertical status region, without ignoring
+    /// camera, keyboard or navigation safe areas. Other platforms keep their chrome.
+    @ViewBuilder
+    func savoriaSystemChrome() -> some View {
+        #if os(iOS)
+        if #available(iOS 27.1, *) {
+            modifier(SavoriaVerticalSystemChrome())
+        } else {
+            self
+        }
+        #else
+        self
+        #endif
+    }
+}
+
+#if os(iOS)
+@available(iOS 27.1, *)
+private struct SavoriaVerticalSystemChrome: ViewModifier {
+    @State private var prefersVerticalBar = false
+
+    func body(content: Content) -> some View {
+        content
+            .statusBarHidden(prefersVerticalBar)
+            // The app's paired pages and assistant field use a horizontal flow.
+            // Keep the native tabs horizontal instead of reserving a side rail.
+            .toolbarVerticalBehavior(.disabled)
+            .background {
+                SavoriaPreferredBarEdgeReader { prefersVerticalBar = $0 }
+                    .frame(width: 0, height: 0)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+            }
+    }
+}
+
+/// Read the system's preferred edge, which remains available when the app opts
+/// out of vertical toolbars. Reading the current SwiftUI bar edge after opting
+/// out would report nil and make the status preference alternate on rotation.
+@available(iOS 27.1, *)
+private struct SavoriaPreferredBarEdgeReader: UIViewRepresentable {
+    let onChange: (Bool) -> Void
+
+    func makeUIView(context: Context) -> EdgeView { EdgeView() }
+    func updateUIView(_ view: EdgeView, context: Context) {
+        view.onChange = onChange
+        view.reportPreferredEdge()
+    }
+
+    final class EdgeView: UIView {
+        var onChange: ((Bool) -> Void)?
+        private var lastValue: Bool?
+
+        override init(frame: CGRect) {
+            super.init(frame: frame)
+            isUserInteractionEnabled = false
+            registerForTraitChanges(UITraitCollection.systemTraitsAffectingVerticalBarEdge) {
+                (view: EdgeView, _: UITraitCollection) in view.reportPreferredEdge()
+            }
+        }
+        required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            reportPreferredEdge()
+        }
+        func reportPreferredEdge() {
+            guard let window else { return }
+            // The hosting view can override its traits when opting out. The
+            // containing window retains the system's preferred placement.
+            let value = window.traitCollection.verticalBarEdge != .unspecified
+            guard value != lastValue else { return }
+            lastValue = value
+            Task { @MainActor [weak self] in self?.onChange?(value) }
+        }
+    }
+}
 #endif
 
 // MARK: - Search Overlay Environment Key

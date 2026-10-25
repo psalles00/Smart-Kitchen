@@ -289,7 +289,8 @@ final class AdaptiveWorkspaceRenderingTests: XCTestCase {
         return (container, recipe.id)
     }
 
-    private func render(_ root: AnyView, name: String) async throws -> UIWindow {
+    private func render(_ root: AnyView, name: String,
+                        layoutReady: @escaping () -> Bool = { true }) async throws -> UIWindow {
         let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
             .first { $0.activationState == .foregroundActive })
         let window = UIWindow(windowScene: scene)
@@ -305,7 +306,14 @@ final class AdaptiveWorkspaceRenderingTests: XCTestCase {
         // Wait for native display commits, including geometry/query-driven updates.
         // No wall-clock sleep and no production bootstrap/test-mode changes.
         let committed = expectation(description: "Display commits: " + name)
-        let frames = WorkspaceDisplayCommits { committed.fulfill() }
+        let frames = WorkspaceDisplayCommits(isReady: {
+            guard layoutReady() else { return false }
+            if #available(iOS 27.1, *) {
+                return window.windowScene?.statusBarManager?.isStatusBarHidden ==
+                    (window.traitCollection.verticalBarEdge != .unspecified)
+            }
+            return true
+        }) { committed.fulfill() }
         frames.start()
         await fulfillment(of: [committed], timeout: 10)
         frames.stop()
@@ -347,7 +355,17 @@ final class AdaptiveWorkspaceRenderingTests: XCTestCase {
         let search = SearchBarState()
         let root = WorkspaceGeometryFixture(measurements: measurements)
             .modelContainer(container).environmentObject(search)
-        let window = try await render(AnyView(root), name: "native-workspace-geometry")
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+            .first { $0.activationState == .foregroundActive })
+        let expectsExpanded = SavoriaWorkspaceMetrics.supportsCompanion(size: scene.coordinateSpace.bounds.size)
+        let window = try await render(AnyView(root), name: "native-workspace-geometry", layoutReady: {
+            if expectsExpanded && !measurements.expanded { return false }
+            if measurements.expanded {
+                guard let primary = measurements.primary, let secondary = measurements.secondary else { return false }
+                if secondary.minX > primary.minX + 1 { return primary.maxX <= secondary.minX + 1 }
+            }
+            return true
+        })
         defer { window.isHidden = true; window.rootViewController = nil }
         let primary = try XCTUnwrap(measurements.primary)
         XCTAssertGreaterThan(primary.width, 100)
@@ -357,6 +375,10 @@ final class AdaptiveWorkspaceRenderingTests: XCTestCase {
             let secondary = try XCTUnwrap(measurements.secondary)
             XCTAssertGreaterThan(secondary.width, 100)
             XCTAssertFalse(primary.insetBy(dx: 1, dy: 1).intersects(secondary.insetBy(dx: 1, dy: 1)))
+            if measurements.reserved.isEmpty {
+                XCTAssertEqual((primary.midX + secondary.midX) / 2, window.bounds.midX, accuracy: 1,
+                               "A released status region must not leave both panels shifted to one side")
+            }
             if primary.maxX <= secondary.minX, let content = measurements.primaryContent {
                 XCTAssertEqual(content.minY - 10, secondary.minY, accuracy: 1, "Panel tops must align after the primary content inset")
             }
@@ -370,6 +392,7 @@ final class AdaptiveWorkspaceRenderingTests: XCTestCase {
             "window": String(describing: window.bounds),
             "safeArea": String(describing: window.safeAreaInsets),
             "primaryHeader": String(describing: primary),
+            "primaryContent": String(describing: measurements.primaryContent),
             "secondaryContent": measurements.secondary.map { String(describing: $0) } ?? "hidden",
             "reserved": measurements.reserved.map { String(describing: $0) }
         ], options: [.sortedKeys])
@@ -409,6 +432,29 @@ final class AdaptiveWorkspaceRenderingTests: XCTestCase {
         XCTAssertEqual(try container.mainContext.fetchCount(FetchDescriptor<Recipe>()), 1)
         XCTAssertEqual(try container.mainContext.fetchCount(FetchDescriptor<ChatMessage>()), 0)
     }
+
+    func testNativeOnboardingSystemChrome() async throws {
+        let (container, _) = try fixture()
+        let root = OnboardingFlowView(isPreview: true, initialStep: .overview, onFinish: {})
+            .modelContainer(container)
+        let window = try await render(AnyView(root), name: "native-onboarding-system-chrome")
+        defer { window.isHidden = true; window.rootViewController = nil }
+        let hidden = try XCTUnwrap(window.windowScene?.statusBarManager?.isStatusBarHidden)
+        if #available(iOS 27.1, *) {
+            XCTAssertEqual(hidden, window.traitCollection.verticalBarEdge != .unspecified,
+                           "Status visibility must follow the system preference, including after disabling the vertical rail")
+        }
+        let evidence = try JSONSerialization.data(withJSONObject: [
+            "statusBarHidden": hidden,
+            "safeArea": String(describing: window.safeAreaInsets),
+            "window": String(describing: window.bounds)
+        ], options: [.sortedKeys])
+        let attachment = XCTAttachment(data: evidence, uniformTypeIdentifier: "public.json")
+        attachment.name = "native-system-chrome-frames"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        XCTAssertEqual(try container.mainContext.fetchCount(FetchDescriptor<UnifiedItem>()), 6)
+    }
 }
 
 @MainActor
@@ -416,14 +462,18 @@ private final class WorkspaceDisplayCommits: NSObject {
     private var link: CADisplayLink?
     private var frames = 0
     private let completion: () -> Void
-    init(completion: @escaping () -> Void) { self.completion = completion }
+    private let isReady: () -> Bool
+    init(isReady: @escaping () -> Bool = { true }, completion: @escaping () -> Void) {
+        self.isReady = isReady
+        self.completion = completion
+    }
     func start() {
         link = CADisplayLink(target: self, selector: #selector(tick))
         link?.add(to: .main, forMode: .common)
     }
     func stop() { link?.invalidate(); link = nil }
     @objc private func tick() {
-        frames += 1
+        frames = isReady() ? frames + 1 : 0
         if frames == 6 { stop(); completion() }
     }
 }
@@ -442,23 +492,35 @@ private struct WorkspaceGeometryReport: Equatable {
     let reserved: [CGRect]
 }
 
+private struct WorkspacePanelBoundsKey: PreferenceKey {
+    static let defaultValue: [String: Anchor<CGRect>] = [:]
+    static func reduce(value: inout [String: Anchor<CGRect>], nextValue: () -> [String: Anchor<CGRect>]) {
+        value.merge(nextValue(), uniquingKeysWith: { _, new in new })
+    }
+}
+
+private struct WorkspacePanelFrames: Equatable {
+    var primary: CGRect?
+    var content: CGRect?
+    var secondary: CGRect?
+}
+
 private struct WorkspaceGeometryFixture: View {
     let measurements: WorkspaceRenderMeasurements
     @State private var expanded = false
     var body: some View {
         NavigationStack {
             ExpandedPageLayout(pageTheme: .home, companion: {
-                AnyView(PantryView(searchText: "", sortOption: .custom, filterOption: .all, expiringLeadDays: 30).onGeometryChange(for: CGRect.self) { $0.frame(in: .global) }
-                    action: { measurements.secondary = $0 })
+                AnyView(PantryView(searchText: "", sortOption: .custom, filterOption: .all, expiringLeadDays: 30)
+                    .anchorPreference(key: WorkspacePanelBoundsKey.self, value: .bounds) { ["secondary": $0] })
             }, header: { inverted in
                 PageHeader(title: "Savoria", isInverted: inverted) {
                     HStack { SettingsButton(); GlassGroupButton(systemImage: "plus") {} }
                 }
-                .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) }
-                    action: { measurements.primary = $0 }
+                .anchorPreference(key: WorkspacePanelBoundsKey.self, value: .bounds) { ["header": $0] }
             }, content: {
-                PantryView(searchText: "", sortOption: .custom, filterOption: .all, expiringLeadDays: 30).onGeometryChange(for: CGRect.self) { $0.frame(in: .global) }
-                    action: { measurements.primaryContent = $0 }
+                PantryView(searchText: "", sortOption: .custom, filterOption: .all, expiringLeadDays: 30)
+                    .anchorPreference(key: WorkspacePanelBoundsKey.self, value: .bounds) { ["content": $0] }
             }, infoContent: {
                 Text("Ingredientes disponíveis para cozinhar")
             })
@@ -479,6 +541,21 @@ private struct WorkspaceGeometryFixture: View {
             measurements.expanded = $0.expanded
             measurements.reserved = $0.reserved
         }
+        .overlayPreferenceValue(WorkspacePanelBoundsKey.self) { bounds in
+            GeometryReader { proxy in
+                let origin = proxy.frame(in: .global).origin
+                let frames = WorkspacePanelFrames(
+                    primary: bounds["header"].map { proxy[$0].offsetBy(dx: origin.x, dy: origin.y) },
+                    content: bounds["content"].map { proxy[$0].offsetBy(dx: origin.x, dy: origin.y) },
+                    secondary: bounds["secondary"].map { proxy[$0].offsetBy(dx: origin.x, dy: origin.y) })
+                Color.clear.onChange(of: frames, initial: true) { _, value in
+                    measurements.primary = value.primary
+                    measurements.primaryContent = value.content
+                    measurements.secondary = value.secondary
+                }
+            }.allowsHitTesting(false)
+        }
+        .savoriaSystemChrome()
     }
 }
 
@@ -490,6 +567,7 @@ private struct WorkspacePageFixture: View {
             .onGeometryChange(for: Bool.self) {
                 SavoriaWorkspaceMetrics.supportsCompanion(geometry: $0)
             } action: { expanded = $0 }
+            .savoriaSystemChrome()
     }
 }
 #endif

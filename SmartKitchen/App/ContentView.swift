@@ -457,6 +457,7 @@ struct ContentView: View {
         let staged2 = applyPlatformNutritionPresentation(to: staged1)
         let staged3 = applyEditorAndImportSheets(to: staged2)
         return applyLifecycleAndGlobalPresentation(to: staged3)
+            .savoriaSystemChrome()
     }
 
     private var baseBodyView: AnyView {
