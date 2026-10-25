@@ -6,7 +6,6 @@ import SwiftUI
 /// núcleo central, comunicando "tudo em um só lugar e sincronizado".
 struct OverviewStepView: View {
     let onContinue: () -> Void
-    @State private var availableHeight: CGFloat = 640
 
     @State private var showHero = false
     @State private var showCore = false
@@ -30,54 +29,39 @@ struct OverviewStepView: View {
     private var revealOrder: [String] { planets.map(\.id) }
 
     var body: some View {
-        VStack(spacing: 0) {
-            Spacer(minLength: 8)
-
-            heroStage
+        GeometryReader { geometry in
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 16) {
+                    heroStage
+                        .frame(maxWidth: .infinity)
+                        .frame(height: min(360, max(180, geometry.size.height * 0.55)))
+                        .opacity(showHero ? 1 : 0)
+                        .scaleEffect(showHero ? 1 : 0.92)
+                        .animation(.spring(response: 0.85, dampingFraction: 0.84), value: showHero)
+                    VStack(spacing: 12) {
+                        OnboardingFeatureChip(icon: "square.grid.2x2.fill", title: String(localized: "Visão geral"))
+                        OnboardingHeader(title: String(localized: "Toda a sua cozinha em um só lugar"),
+                            subtitle: String(localized: "Receitas, despensa, mercado e nutrição que conversam entre si."))
+                    }
+                    .opacity(showHeader ? 1 : 0)
+                    .offset(y: showHeader ? 0 : 14)
+                    .animation(.spring(response: 0.7, dampingFraction: 0.86), value: showHeader)
+                }
                 .frame(maxWidth: .infinity)
-                .frame(height: min(360, max(200, availableHeight * 0.55)))
-                .opacity(showHero ? 1 : 0)
-                .scaleEffect(showHero ? 1 : 0.92)
-                .animation(.spring(response: 0.85, dampingFraction: 0.82), value: showHero)
-
-            VStack(spacing: 0) {
-            VStack(spacing: 12) {
-                OnboardingFeatureChip(
-                    icon: "square.grid.2x2.fill",
-                    title: String(localized: "Visão geral"),
-                    tint: .accentColor
-                )
-                .opacity(showHeader ? 1 : 0)
-                .animation(.spring(response: 0.7, dampingFraction: 0.86), value: showHeader)
-
-                OnboardingHeader(
-                    title: String(localized: "Toda a sua cozinha em um só lugar"),
-                    subtitle: String(localized: "Receitas, despensa, mercado e nutrição que conversam entre si.")
-                )
-                .opacity(showHeader ? 1 : 0)
-                .offset(y: showHeader ? 0 : 14)
-                .animation(.spring(response: 0.7, dampingFraction: 0.86), value: showHeader)
+                .padding(.vertical, 8)
             }
-
-                Spacer(minLength: 16)
-
-                OnboardingPrimaryButton(
-                    title: String(localized: "Continuar"),
-                    action: onContinue
-                )
-                .padding(.horizontal, 24)
-                .padding(.bottom, 12)
-                .opacity(showButton ? 1 : 0)
-                .offset(y: showButton ? 0 : 18)
-                .animation(.spring(response: 0.74, dampingFraction: 0.86), value: showButton)
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                OnboardingPrimaryButton(title: String(localized: "Continuar"), action: onContinue)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 8)
+                    .padding(.bottom, 12)
+                    .opacity(showButton ? 1 : 0)
+                    .offset(y: showButton ? 0 : 18)
+                    .animation(.spring(response: 0.74, dampingFraction: 0.86), value: showButton)
             }
         }
-        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { availableHeight = $0 }
         .onAppear { beginEntranceSequence() }
-        .onDisappear {
-            entranceTask?.cancel()
-            entranceTask = nil
-        }
+        .onDisappear { entranceTask?.cancel(); entranceTask = nil }
     }
 
     // MARK: - Hero stage

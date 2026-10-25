@@ -5,7 +5,6 @@ import SwiftUI
 /// exemplo se alternam para mostrar a variedade de uso.
 struct NutritionCoachStepView: View {
     let onContinue: () -> Void
-    @State private var availableHeight: CGFloat = 640
 
     @State private var messages: [ChatMessageMock] = []
     @State private var typingFromUser: Bool = false
@@ -28,54 +27,41 @@ struct NutritionCoachStepView: View {
     ]
 
     var body: some View {
-        VStack(spacing: 16) {
-            Spacer(minLength: 8)
-
-            stage
-                .padding(.horizontal, 18)
-                .frame(height: min(360, max(200, availableHeight * 0.55)))
-                .opacity(showHero ? 1 : 0)
-                .scaleEffect(showHero ? 1 : 0.94)
-                .animation(.spring(response: 0.85, dampingFraction: 0.84), value: showHero)
-
-            VStack(spacing: 0) {
-            VStack(spacing: 12) {
-                OnboardingFeatureChip(
-                    icon: "sparkles",
-                    title: String(localized: "Coach de IA"),
-                    tint: Color(red: 0.55, green: 0.50, blue: 0.96)
-                )
-                .opacity(showHeader ? 1 : 0)
-                .animation(.spring(response: 0.7, dampingFraction: 0.86), value: showHeader)
-
-                OnboardingHeader(
-                    title: String(localized: "Tenha sempre um Nutrition Coach com você"),
-                    subtitle: String(localized: "IA que entende sua rotina e sugere ajustes inteligentes.")
-                )
-                .opacity(showHeader ? 1 : 0)
-                .offset(y: showHeader ? 0 : 14)
-                .animation(.spring(response: 0.7, dampingFraction: 0.86), value: showHeader)
+        GeometryReader { geometry in
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 16) {
+                    stage
+                        .padding(.horizontal, 18)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: min(360, max(180, geometry.size.height * 0.55)))
+                        .opacity(showHero ? 1 : 0)
+                        .scaleEffect(showHero ? 1 : 0.94)
+                        .animation(.spring(response: 0.85, dampingFraction: 0.84), value: showHero)
+                    VStack(spacing: 12) {
+                        OnboardingFeatureChip(icon: "sparkles", title: String(localized: "Coach de IA"),
+                            tint: Color(red: 0.55, green: 0.50, blue: 0.96))
+                        OnboardingHeader(title: String(localized: "Tenha sempre um Nutrition Coach com você"),
+                            subtitle: String(localized: "IA que entende sua rotina e sugere ajustes inteligentes."))
+                    }
+                    .opacity(showHeader ? 1 : 0)
+                    .offset(y: showHeader ? 0 : 14)
+                    .animation(.spring(response: 0.7, dampingFraction: 0.86), value: showHeader)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
             }
-
-                Spacer(minLength: 14)
-
-                OnboardingPrimaryButton(
-                    title: String(localized: "Continuar"),
-                    action: onContinue
-                )
-                .padding(.horizontal, 24)
-                .padding(.bottom, 12)
-                .opacity(showButton ? 1 : 0)
-                .offset(y: showButton ? 0 : 18)
-                .animation(.spring(response: 0.74, dampingFraction: 0.86), value: showButton)
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                OnboardingPrimaryButton(title: String(localized: "Continuar"), action: onContinue)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 8)
+                    .padding(.bottom, 12)
+                    .opacity(showButton ? 1 : 0)
+                    .offset(y: showButton ? 0 : 18)
+                    .animation(.spring(response: 0.74, dampingFraction: 0.86), value: showButton)
             }
         }
-        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { availableHeight = $0 }
         .onAppear { beginEntrance() }
-        .onDisappear {
-            entranceTask?.cancel(); entranceTask = nil
-            loopTask?.cancel(); loopTask = nil
-        }
+        .onDisappear { entranceTask?.cancel(); entranceTask = nil; loopTask?.cancel(); loopTask = nil }
     }
 
     // MARK: - Stage
