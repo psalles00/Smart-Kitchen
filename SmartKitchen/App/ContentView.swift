@@ -1181,7 +1181,7 @@ struct ContentView: View {
             // Compensate for the floating tab bar only while it is visible.
             // When the keyboard opens, the tab bar hides and the safe area
             // already repositions this inset above the keyboard.
-            .padding(.bottom, isKeyboardVisible || workspaceExpanded ? 0 : 45)
+            .padding(.bottom, isKeyboardVisible ? 0 : 45)
             // Selection occupies this floating slot. Keep its reserved geometry
             // so hiding the assistant does not resize the shared shader viewport.
     }

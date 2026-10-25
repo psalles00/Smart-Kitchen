@@ -311,6 +311,25 @@ final class AdaptiveWorkspaceRenderingTests: XCTestCase {
         frames.stop()
         XCTAssertGreaterThan(controller.view.bounds.width, 300)
         XCTAssertGreaterThan(controller.view.bounds.height, 300)
+        if name == "native-page-home" {
+            func descendants(_ view: UIView) -> [UIView] {
+                view.subviews.flatMap { [$0] + descendants($0) }
+            }
+            let visible = descendants(window).filter { !$0.isHidden && $0.alpha > 0 &&
+                !$0.bounds.isEmpty && $0.convert($0.bounds, to: window).intersects(window.bounds) }
+            let bars = visible.compactMap { $0 as? UITabBar }
+            let inputs = visible.compactMap { $0 as? UITextField }
+            XCTAssertFalse(bars.isEmpty, "Real native tab navigation must be present")
+            XCTAssertFalse(inputs.isEmpty, "The single assistant field must be present")
+            for bar in bars {
+                let barFrame = bar.convert(bar.bounds, to: window).insetBy(dx: 1, dy: 1)
+                for input in inputs {
+                    let inputFrame = input.convert(input.bounds, to: window).insetBy(dx: 1, dy: 1)
+                    XCTAssertFalse(inputFrame.intersects(barFrame),
+                                   "Assistant field overlaps native tab navigation: \(inputFrame) / \(barFrame)")
+                }
+            }
+        }
         let image = UIGraphicsImageRenderer(bounds: window.bounds).image { _ in
             window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
         }
