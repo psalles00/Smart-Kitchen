@@ -31,6 +31,7 @@ struct FullscreenAssistantView: View {
     @ObservedObject var searchService: UniversalSearchService
     @Environment(\.openRecipeInRecipesTab) private var openRecipeInRecipesTab
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.savoriaWorkspaceExpanded) private var workspaceExpanded
     @Query private var settingsArray: [AppSettings]
     @Query private var nutritionProfiles: [NutritionProfile]
 
@@ -57,6 +58,7 @@ struct FullscreenAssistantView: View {
     /// NavigationStack retains its root while the AI page is pushed. Only the
     /// current page may mount a chat consumer for the shared search-bar events.
     var isCurrentPage: Bool = true
+    var optionsOnly = false
 
     @Environment(\.dismiss) private var environmentDismiss
 
@@ -128,8 +130,9 @@ struct FullscreenAssistantView: View {
                 ExpandedPageLayout(
                     pageTheme: .home,
                     backgroundOverride: AnyView(AssistantModeBackground()),
+                    arrangesCompanion: false,
                     header: { _ in header.padding(.horizontal, 16) },
-                    content: { contentArea },
+                    content: { adaptiveAssistantContent },
                     infoContent: { EmptyView() }
                 )
             } else { legacyBody }
@@ -376,7 +379,8 @@ struct FullscreenAssistantView: View {
         let hasText = !searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         let showResults = hasText || searchBarState.mode == .aiChat || pendingOpenChat || pendingChatQuery != nil
 
-        if isCurrentPage && showResults {
+        if optionsOnly { idleActionButtons }
+        else if isCurrentPage && showResults {
             InlineSearchResultsView(
                 searchBarState: searchBarState,
                 searchService: searchService,
@@ -392,6 +396,54 @@ struct FullscreenAssistantView: View {
         } else {
             idleActionButtons
         }
+    }
+
+    /// AnyLayout keeps the original options and the one conversation subtree
+    /// alive when folding. Moving two conditional copies between columns would
+    /// discard chat state and an in-flight reply.
+    private var adaptiveAssistantContent: some View {
+        GeometryReader { geometry in
+            let hasText = !searchBarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            let showResults = hasText || searchBarState.mode == .aiChat || pendingOpenChat || pendingChatQuery != nil
+            let stacked = hasHorizontalDivision(geometry)
+            let layout = workspaceExpanded
+                ? (stacked ? AnyLayout(VStackLayout(spacing: 16)) : AnyLayout(HStackLayout(spacing: 16)))
+                : AnyLayout(ZStackLayout())
+            layout {
+                idleActionButtons
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .opacity(workspaceExpanded || !showResults ? 1 : 0)
+                    .allowsHitTesting(workspaceExpanded || !showResults)
+                    .accessibilityHidden(!workspaceExpanded && showResults)
+                Group {
+                    if isCurrentPage && showResults {
+                        InlineSearchResultsView(searchBarState: searchBarState, searchService: searchService,
+                            onAction: onAction, topPinnedInset: 0, isScrollAtTop: $isScrollableContentAtTop,
+                            pendingChatQuery: $pendingChatQuery, pendingOpenChat: $pendingOpenChat,
+                            pendingNewConversation: $pendingNewConversation, pendingShowHistory: $pendingShowHistory,
+                            disableEmptyTapDismiss: true)
+                    } else { ContentUnavailableView("SavorIA", systemImage: "sparkles") }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .opacity(workspaceExpanded || showResults ? 1 : 0)
+                .allowsHitTesting(workspaceExpanded || showResults)
+                .accessibilityHidden(!workspaceExpanded && !showResults)
+            }
+            .overlay {
+                if workspaceExpanded {
+                    if stacked { Color.primary.opacity(0.08).frame(height: 1).allowsHitTesting(false) }
+                    else { Color.primary.opacity(0.08).frame(width: 1).allowsHitTesting(false) }
+                }
+            }
+        }
+    }
+    private func hasHorizontalDivision(_ geometry: GeometryProxy) -> Bool {
+        #if os(iOS)
+        if #available(iOS 27.1, *) {
+            return geometry.reservedRegions(kind: .division).contains { $0.frame.width > $0.frame.height }
+        }
+        #endif
+        return false
     }
 
     // MARK: - Idle Action Buttons (nothing typed)
@@ -418,7 +470,7 @@ struct FullscreenAssistantView: View {
                             imageOffset: CGSize(width: 8, height: 12)
                         ) {
                             searchBarState.resignFocus()
-                            if let onRequestAIMode {
+                            if let onRequestAIMode, !workspaceExpanded {
                                 onRequestAIMode(.nutritionCoach, nil)
                             } else {
                                 searchBarState.aiChatPreset = .nutritionCoach
@@ -437,7 +489,7 @@ struct FullscreenAssistantView: View {
                             imageOffset: CGSize(width: 6, height: 12)
                         ) {
                             searchBarState.resignFocus()
-                            if let onRequestAIMode {
+                            if let onRequestAIMode, !workspaceExpanded {
                                 onRequestAIMode(.recipeIdeas, nil)
                             } else {
                                 searchBarState.aiChatPreset = .recipeIdeas
@@ -675,7 +727,7 @@ struct FullscreenAssistantView: View {
     /// suggestion prompt so it is auto-sent.
     private func openAIChat(with prompt: String) {
         searchBarState.resignFocus()
-        if let onRequestAIMode {
+        if let onRequestAIMode, !workspaceExpanded {
             // Tab presentation: push the AI page with prefill so it auto-sends.
             onRequestAIMode(.nutritionCoach, prompt)
         } else {

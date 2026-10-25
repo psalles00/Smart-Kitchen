@@ -6,6 +6,7 @@ import SwiftUI
 /// núcleo central, comunicando "tudo em um só lugar e sincronizado".
 struct OverviewStepView: View {
     let onContinue: () -> Void
+    @State private var availableHeight: CGFloat = 640
 
     @State private var showHero = false
     @State private var showCore = false
@@ -34,7 +35,7 @@ struct OverviewStepView: View {
 
             heroStage
                 .frame(maxWidth: .infinity)
-                .frame(height: 360)
+                .frame(height: min(360, max(200, availableHeight * 0.55)))
                 .opacity(showHero ? 1 : 0)
                 .scaleEffect(showHero ? 1 : 0.92)
                 .animation(.spring(response: 0.85, dampingFraction: 0.82), value: showHero)
@@ -65,12 +66,13 @@ struct OverviewStepView: View {
                     action: onContinue
                 )
                 .padding(.horizontal, 24)
-                .padding(.bottom, 28)
+                .padding(.bottom, 12)
                 .opacity(showButton ? 1 : 0)
                 .offset(y: showButton ? 0 : 18)
                 .animation(.spring(response: 0.74, dampingFraction: 0.86), value: showButton)
             }
         }
+        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { availableHeight = $0 }
         .onAppear { beginEntranceSequence() }
         .onDisappear {
             entranceTask?.cancel()

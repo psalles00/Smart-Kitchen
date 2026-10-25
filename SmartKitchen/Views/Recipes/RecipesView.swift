@@ -385,18 +385,27 @@ private struct RecipesLoadedView: View {
         [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
     }
 
-    var body: some View {
+    private var pageLayout: some View {
         ExpandedPageLayout(
             pageTheme: .recipes,
             companionTitle: String(localized: "Receita"),
             companionSubtitle: String(localized: "Ingredientes e preparo"),
             companion: {
                 if let id = selectedRecipeID, let recipe = allRecipes.first(where: { $0.id == id }) {
-                    AnyView(RecipeDetailView(recipe: recipe).id(id))
-                } else {
-                    AnyView(ContentUnavailableView(String(localized: "Selecione uma receita"), systemImage: "book"))
-                }
+                    AnyView(VStack(spacing: 0) {
+                        HStack {
+                            Spacer()
+                            Button("Fechar", systemImage: "xmark") {
+                                withAnimation(.smooth(duration: 0.32)) { selectedRecipeID = nil }
+                            }
+                            .labelStyle(.iconOnly)
+                            .padding(12)
+                        }
+                        RecipeDetailView(recipe: recipe).id(id)
+                    }.transition(.move(edge: .trailing).combined(with: .opacity)))
+                } else { AnyView(cadernosContent) }
             },
+            primaryFraction: selectedRecipeID == nil ? 0.60 : 0.46,
             header: { isInverted in
                 #if os(macOS)
                 if !workspaceExpanded, !isShowingCadernos,
@@ -428,11 +437,18 @@ private struct RecipesLoadedView: View {
                 localSearchHeader
             }
         )
+    }
+
+    private var presentedPage: some View {
+        AnyView(pageLayout)
         #if os(iOS)
         .toolbar(.hidden, for: .navigationBar)
         .navigationDestination(for: UUID.self) { id in
             RecipeDetailContainer(recipeID: id)
         }
+        #endif
+        #if os(iOS)
+        .animation(.smooth(duration: 0.32), value: workspaceExpanded ? selectedRecipeID : nil)
         #endif
         .tint(PageTheme.recipes.accentColor)
         .sheet(isPresented: $showAddRecipe) {
@@ -470,6 +486,10 @@ private struct RecipesLoadedView: View {
         )
         .background(Color(.windowBackgroundColor).ignoresSafeArea())
         #endif
+    }
+
+    var body: some View {
+        AnyView(presentedPage)
         .onAppear {
             recipeList.loadIfNeeded(in: modelContext)
             #if os(iOS)
@@ -485,7 +505,7 @@ private struct RecipesLoadedView: View {
             didRunInitialAppearWork = true
             recomputeCompatibilities()
             refreshRecipeProjectionsIfNeeded(force: isInitialAppear)
-            if isShowingCadernos {
+            if isShowingCadernos || workspaceExpanded {
                 scheduleNotebookRefresh(showSkeleton: cachedNotebookSummaries.isEmpty, force: isInitialAppear)
             } else if isInitialAppear {
                 notebookSummariesNeedRefresh = true
@@ -528,7 +548,7 @@ private struct RecipesLoadedView: View {
             normalizeSelectedCategoryIfNeeded()
             recomputeCompatibilities()
             refreshRecipeProjectionsIfNeeded()
-            if isShowingCadernos {
+            if isShowingCadernos || workspaceExpanded {
                 scheduleNotebookRefresh(showSkeleton: cachedNotebookSummaries.isEmpty, force: false)
             }
             scheduleGalleryPrefetchIfNeeded()
@@ -543,6 +563,9 @@ private struct RecipesLoadedView: View {
         // (item identities + names) so we only recompute when the inputs
         // that actually matter for compatibility have changed, and debounce
         // bursts that would otherwise trigger many recomputes back-to-back.
+        .onChange(of: workspaceExpanded) { _, expanded in
+            if expanded { scheduleNotebookRefresh(showSkeleton: cachedNotebookSummaries.isEmpty, force: false) }
+        }
         .onChange(of: pantryCompatibilitySignature) { _, _ in
             scheduleCompatibilityRecompute()
         }
@@ -598,7 +621,7 @@ private struct RecipesLoadedView: View {
 
     @ViewBuilder
     private func recipesListHeader(isInverted: Bool) -> some View {
-        PageHeader(title: isShowingCadernos ? String(localized: "Cadernos") : String(localized: "Receitas"), isInverted: isInverted) {
+        PageHeader(title: isShowingCadernos && !workspaceExpanded ? String(localized: "Cadernos") : String(localized: "Receitas"), isInverted: isInverted) {
             HStack(spacing: 6) {
                 GlassButtonGroup {
                     GlassGroupMenu(systemImage: "plus") {
@@ -762,7 +785,7 @@ private struct RecipesLoadedView: View {
         // duration of the animation, which makes the toggle feel like it
         // is running at a very low frame rate.
         Group {
-            if isShowingCadernos {
+            if isShowingCadernos && !workspaceExpanded {
                 cadernosModeContent
             } else {
                 recipesModeContent
@@ -970,7 +993,7 @@ private struct RecipesLoadedView: View {
 
     private func invalidateNotebookSummaries(showSkeleton: Bool = false, force: Bool = false) {
         notebookSummariesNeedRefresh = true
-        guard isShowingCadernos else { return }
+        guard isShowingCadernos || workspaceExpanded else { return }
         scheduleNotebookRefresh(showSkeleton: showSkeleton, force: force)
     }
 
@@ -1310,7 +1333,7 @@ private struct RecipesLoadedView: View {
         #else
         Group {
             if workspaceExpanded {
-                Button { openRecipeInRecipesTab(recipe.id) } label: { card }
+                Button { withAnimation(.smooth(duration: 0.32)) { openRecipeInRecipesTab(recipe.id) } } label: { card }
             } else {
                 NavigationLink(value: recipe.id) { card }
             }
@@ -1712,6 +1735,11 @@ private struct RecipesLoadedView: View {
     }
 
     private func handleActiveTabRetap() {
+        if workspaceExpanded {
+            withAnimation(.smooth(duration: 0.32)) { selectedRecipeID = nil }
+            contentResetToken += 1
+            return
+        }
         if isShowingCadernos {
             isShowingCadernos = false
         } else if isNearTop {
@@ -1733,6 +1761,11 @@ private struct RecipesLoadedView: View {
     }
 
     private func toggleNotebookPage() {
+        if workspaceExpanded {
+            withAnimation(.smooth(duration: 0.32)) { selectedRecipeID = nil }
+            scheduleNotebookRefresh(showSkeleton: cachedNotebookSummaries.isEmpty, force: notebookSummariesNeedRefresh)
+            return
+        }
         if !isShowingCadernos {
             isShowingCadernos = true
             selectedRecipeID = nil

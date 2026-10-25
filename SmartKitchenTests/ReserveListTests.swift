@@ -300,9 +300,10 @@ final class AdaptiveWorkspaceRenderingTests: XCTestCase {
         let controller = UIHostingController(rootView: root.environment(\.scenePhase, .active).onAppear { ready.fulfill() })
         window.rootViewController = controller
         window.makeKeyAndVisible()
-        await fulfillment(of: [ready], timeout: 10)
+        controller.loadViewIfNeeded()
         controller.view.setNeedsLayout()
         controller.view.layoutIfNeeded()
+        await fulfillment(of: [ready], timeout: 10)
         // Wait for native display commits, including geometry/query-driven updates.
         // No wall-clock sleep and no production bootstrap/test-mode changes.
         let committed = expectation(description: "Display commits: " + name)
@@ -361,7 +362,7 @@ final class AdaptiveWorkspaceRenderingTests: XCTestCase {
         let window = try await render(AnyView(root), name: "native-workspace-geometry", layoutReady: {
             if expectsExpanded && !measurements.expanded { return false }
             if measurements.expanded {
-                guard let primary = measurements.primary, let secondary = measurements.secondary else { return false }
+                guard let primary = measurements.primaryContent, let secondary = measurements.secondary else { return false }
                 if secondary.minX > primary.minX + 1 { return primary.maxX <= secondary.minX + 1 }
             }
             return true
@@ -374,16 +375,16 @@ final class AdaptiveWorkspaceRenderingTests: XCTestCase {
         if measurements.expanded {
             let secondary = try XCTUnwrap(measurements.secondary)
             XCTAssertGreaterThan(secondary.width, 100)
-            XCTAssertFalse(primary.insetBy(dx: 1, dy: 1).intersects(secondary.insetBy(dx: 1, dy: 1)))
+            let content = try XCTUnwrap(measurements.primaryContent)
+            XCTAssertFalse(content.insetBy(dx: 1, dy: 1).intersects(secondary.insetBy(dx: 1, dy: 1)))
+            XCTAssertGreaterThan(primary.width, content.width + 100, "The one page header must span both content regions")
             if measurements.reserved.isEmpty {
-                XCTAssertEqual((primary.midX + secondary.midX) / 2, window.bounds.midX, accuracy: 1,
+                XCTAssertEqual((content.midX + secondary.midX) / 2, window.bounds.midX, accuracy: 1,
                                "A released status region must not leave both panels shifted to one side")
             }
-            if primary.maxX <= secondary.minX, let content = measurements.primaryContent {
-                XCTAssertEqual(content.minY - 10, secondary.minY, accuracy: 1, "Panel tops must align after the primary content inset")
-            }
+            XCTAssertEqual(content.minY, secondary.minY, accuracy: 1, "Both halves start in the same shared surface")
             for reserved in measurements.reserved where reserved.width > 0 && reserved.height > 0 {
-                XCTAssertFalse(primary.intersects(reserved), "Header overlaps reserved region: \(reserved)")
+                XCTAssertFalse(content.intersects(reserved), "Content overlaps reserved region: \(reserved)")
                 XCTAssertFalse(secondary.intersects(reserved), "Content overlaps reserved region: \(reserved)")
             }
         }
@@ -428,6 +429,20 @@ final class AdaptiveWorkspaceRenderingTests: XCTestCase {
             window.rootViewController = nil
         }
         // Rendering must not change membership, recipes, or create chat requests.
+        XCTAssertEqual(try container.mainContext.fetchCount(FetchDescriptor<UnifiedItem>()), 6)
+        XCTAssertEqual(try container.mainContext.fetchCount(FetchDescriptor<Recipe>()), 1)
+        XCTAssertEqual(try container.mainContext.fetchCount(FetchDescriptor<ChatMessage>()), 0)
+    }
+
+    func testNativeOnboardingRecipeGridAndProjection() async throws {
+        let (container, _) = try fixture()
+        for (name, step) in [("recipe-selection", OnboardingStep.selectRecipes),
+                             ("goal-projection", .goalProjection), ("nutrition-coach", .nutritionCoach)] {
+            let root = OnboardingFlowView(isPreview: true, initialStep: step, onFinish: {})
+                .modelContainer(container)
+            let window = try await render(AnyView(root), name: "native-onboarding-" + name)
+            window.isHidden = true; window.rootViewController = nil
+        }
         XCTAssertEqual(try container.mainContext.fetchCount(FetchDescriptor<UnifiedItem>()), 6)
         XCTAssertEqual(try container.mainContext.fetchCount(FetchDescriptor<Recipe>()), 1)
         XCTAssertEqual(try container.mainContext.fetchCount(FetchDescriptor<ChatMessage>()), 0)

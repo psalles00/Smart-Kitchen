@@ -7,10 +7,15 @@ struct SelectRecipesStepView: View {
     @Bindable var state: OnboardingState
     let onContinue: () -> Void
 
-    private let columns = [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)]
+    @Environment(\.dynamicTypeSize) private var typeSize
+    @State private var availableWidth: CGFloat = 0
+    private var columns: [GridItem] {
+        let count = typeSize.isAccessibilitySize ? 2 : (availableWidth >= 740 ? 5 : (availableWidth >= 440 ? 3 : 2))
+        return Array(repeating: GridItem(.flexible(), spacing: 12), count: count)
+    }
 
     var body: some View {
-        VStack(spacing: 18) {
+        VStack(spacing: 12) {
             OnboardingHeader(
                 title: String(localized: "O que você gosta de cozinhar?"),
                 subtitle: String(localized: "Escolha pelo menos 2 receitas para começar sua coleção.")
@@ -46,6 +51,7 @@ struct SelectRecipesStepView: View {
             }
             .padding(.bottom, 24)
         }
+        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { availableWidth = $0 }
     }
 
     private func toggle(_ id: String) {
@@ -79,37 +85,27 @@ private struct RecipeTemplateCard: View {
     let isSelected: Bool
     let action: () -> Void
 
-    private let cardAspectRatio: CGFloat = 0.76
-    private let coverHeightRatio: CGFloat = 0.62
 
     var body: some View {
         Button(action: action) {
-            GeometryReader { proxy in
-                let coverHeight = proxy.size.height * coverHeightRatio
-
-                VStack(alignment: .leading, spacing: 0) {
-                    gradientCover
-                        .frame(maxWidth: .infinity)
-                        .frame(height: coverHeight)
-                        .clipped()
-
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(template.name)
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(.primary)
-                            .lineLimit(2)
-                            .multilineTextAlignment(.leading)
-                            .frame(maxWidth: .infinity, minHeight: 36, maxHeight: 36, alignment: .topLeading)
-
-                        Text("\(template.prepMinutes + template.cookMinutes) min · \(template.calories) kcal")
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(.secondary)
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                    .padding(12)
+            VStack(alignment: .leading, spacing: 0) {
+                gradientCover
+                    .frame(height: 104)
+                    .frame(maxWidth: .infinity)
+                    .clipped()
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(template.name)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.primary)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text("\(template.prepMinutes + template.cookMinutes) min · \(template.calories) kcal")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(.secondary)
                 }
+                .frame(maxWidth: .infinity, minHeight: 76, alignment: .topLeading)
+                .padding(10)
             }
-            .aspectRatio(cardAspectRatio, contentMode: .fit)
             .background(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
                     .fill(neutralSurfaceColor)

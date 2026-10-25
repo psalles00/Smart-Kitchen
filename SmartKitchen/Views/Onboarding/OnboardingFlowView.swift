@@ -52,11 +52,15 @@ struct OnboardingFlowView: View {
             } else {
               VStack(spacing: 0) {
                 if showsProgressBar {
-                    OnboardingProgressBar(
+                    SavoriaCameraHeader(height: 52) {
+                      OnboardingProgressBar(
                         progress: progressFraction,
                         canGoBack: state.stepIndex > 0,
                         onBack: goBack
-                    )
+                      )
+                      .frame(maxWidth: 680)
+                      .frame(maxWidth: .infinity)
+                    }
                 }
 
                 stepContent
@@ -64,6 +68,7 @@ struct OnboardingFlowView: View {
                     .id(state.stepIndex) // forces transition between steps
                     .transition(stepTransition)
               }
+              .modifier(SavoriaCameraBandContent(enabled: showsProgressBar))
             }
         }
         .preferredColorScheme(nil) // follow system

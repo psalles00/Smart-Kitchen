@@ -5,6 +5,7 @@ import SwiftUI
 /// exemplo se alternam para mostrar a variedade de uso.
 struct NutritionCoachStepView: View {
     let onContinue: () -> Void
+    @State private var availableHeight: CGFloat = 640
 
     @State private var messages: [ChatMessageMock] = []
     @State private var typingFromUser: Bool = false
@@ -32,7 +33,7 @@ struct NutritionCoachStepView: View {
 
             stage
                 .padding(.horizontal, 18)
-                .frame(height: 360)
+                .frame(height: min(360, max(200, availableHeight * 0.55)))
                 .opacity(showHero ? 1 : 0)
                 .scaleEffect(showHero ? 1 : 0.94)
                 .animation(.spring(response: 0.85, dampingFraction: 0.84), value: showHero)
@@ -63,12 +64,13 @@ struct NutritionCoachStepView: View {
                     action: onContinue
                 )
                 .padding(.horizontal, 24)
-                .padding(.bottom, 28)
+                .padding(.bottom, 12)
                 .opacity(showButton ? 1 : 0)
                 .offset(y: showButton ? 0 : 18)
                 .animation(.spring(response: 0.74, dampingFraction: 0.86), value: showButton)
             }
         }
+        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { availableHeight = $0 }
         .onAppear { beginEntrance() }
         .onDisappear {
             entranceTask?.cancel(); entranceTask = nil

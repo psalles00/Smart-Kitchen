@@ -19,10 +19,11 @@ extension EnvironmentValues {
 }
 
 struct PageHeaderDescriptionStyle: ViewModifier {
+    @Environment(\.savoriaWorkspaceExpanded) private var expanded
     func body(content: Content) -> some View {
         content
             .font(.system(size: 14.5, weight: .semibold, design: .rounded))
-            .lineLimit(3)
+            .lineLimit(expanded ? 1 : 3)
             .minimumScaleFactor(0.82)
             .allowsTightening(true)
             .fixedSize(horizontal: false, vertical: true)

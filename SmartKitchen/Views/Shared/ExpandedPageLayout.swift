@@ -29,6 +29,7 @@ private struct SavoriaVerticalSystemChrome: ViewModifier {
 
     func body(content: Content) -> some View {
         content
+            .environment(\.savoriaVerticalChrome, prefersVerticalBar)
             .statusBarHidden(prefersVerticalBar)
             // The app's paired pages and assistant field use a horizontal flow.
             // Keep the native tabs horizontal instead of reserving a side rail.
@@ -84,6 +85,74 @@ private struct SavoriaPreferredBarEdgeReader: UIViewRepresentable {
     }
 }
 #endif
+
+/// Only the chrome row enters the camera band. Its controls avoid the actual
+/// native occlusion; the remainder of the page keeps the full available width.
+private struct SavoriaVerticalChromeKey: EnvironmentKey { static let defaultValue = false }
+private struct SavoriaTopOcclusionExtentKey: EnvironmentKey { static let defaultValue: CGFloat = 0 }
+extension EnvironmentValues {
+    var savoriaTopOcclusionExtent: CGFloat {
+        get { self[SavoriaTopOcclusionExtentKey.self] }
+        set { self[SavoriaTopOcclusionExtentKey.self] = newValue }
+    }
+    var savoriaVerticalChrome: Bool {
+        get { self[SavoriaVerticalChromeKey.self] }
+        set { self[SavoriaVerticalChromeKey.self] = newValue }
+    }
+}
+struct SavoriaCameraBandContent: ViewModifier {
+    var enabled = true
+    @Environment(\.savoriaVerticalChrome) private var verticalChrome
+    func body(content: Content) -> some View {
+        GeometryReader { geometry in
+            content
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .environment(\.savoriaTopOcclusionExtent, topOcclusion(geometry))
+        }
+        .ignoresSafeArea(.container, edges: enabled && verticalChrome ? .top : [])
+    }
+    private func topOcclusion(_ geometry: GeometryProxy) -> CGFloat {
+        #if os(iOS)
+        if #available(iOS 27.1, *), enabled && verticalChrome {
+            let bounds = CGRect(origin: .zero, size: geometry.size)
+            return geometry.reservedRegions(kind: .occlusion)
+                .filter { $0.frame.intersects(bounds) && $0.frame.maxY <= bounds.midY }
+                .map { $0.frame.maxY }.max() ?? 0
+        }
+        #endif
+        return 0
+    }
+}
+struct SavoriaCameraHeader<Content: View>: View {
+    let height: CGFloat
+    @ViewBuilder var content: () -> Content
+    @Environment(\.savoriaTopOcclusionExtent) private var cameraBottom
+    var body: some View {
+        GeometryReader { geometry in
+            let clearance = cameraClearance(geometry)
+            content()
+                .padding(.leading, clearance.leading)
+                .padding(.trailing, clearance.trailing)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .frame(height: max(height, cameraBottom > 0 ? cameraBottom + 8 : height))
+    }
+    private func cameraClearance(_ geometry: GeometryProxy) -> EdgeInsets {
+        var insets = EdgeInsets()
+        #if os(iOS)
+        if #available(iOS 27.1, *) {
+            for region in geometry.reservedRegions(kind: .occlusion) {
+                let rect = region.frame
+                guard rect.intersects(CGRect(origin: .zero, size: geometry.size)) else { continue }
+                if rect.midX > geometry.size.width / 2 {
+                    insets.trailing = max(insets.trailing, geometry.size.width - rect.minX + 8)
+                } else { insets.leading = max(insets.leading, rect.maxX + 8) }
+            }
+        }
+        #endif
+        return insets
+    }
+}
 
 // MARK: - Search Overlay Environment Key
 
@@ -153,6 +222,8 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
     let companionSubtitle: String
     let companion: (() -> AnyView)?
     let companionPage: (() -> AnyView)?
+    let primaryFraction: CGFloat
+    let arrangesCompanion: Bool
     @Environment(\.savoriaWorkspacePane) private var isWorkspacePane
     @Environment(\.savoriaWorkspaceExpanded) private var workspaceExpanded
     @Environment(\.savoriaWorkspacePageActive) private var workspacePageActive
@@ -160,13 +231,13 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
 
     private var usesWorkspace: Bool {
         #if os(iOS)
-        workspaceExpanded && pageTheme != .settings
+        workspaceExpanded && pageTheme != .settings && arrangesCompanion
         #else
         false
         #endif
     }
 
-    private var isWorkspacePanel: Bool { usesWorkspace || isWorkspacePane }
+    private var isWorkspacePanel: Bool { workspaceExpanded || isWorkspacePane }
 
     #if !os(iOS)
     @Environment(\.backgroundTheme) private var backgroundTheme
@@ -225,6 +296,8 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
         companionSubtitle: String = String(localized: "Seu estoque, ao lado"),
         companion: (() -> AnyView)? = nil,
         companionPage: (() -> AnyView)? = nil,
+        primaryFraction: CGFloat = 0.5,
+        arrangesCompanion: Bool = true,
         @ViewBuilder header: @escaping (_ isInverted: Bool) -> Header,
         @ViewBuilder content: @escaping () -> Content,
         @ViewBuilder infoContent: @escaping () -> InfoContent
@@ -236,6 +309,8 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
         self.companionSubtitle = companionSubtitle
         self.companion = companion
         self.companionPage = companionPage
+        self.primaryFraction = primaryFraction
+        self.arrangesCompanion = arrangesCompanion
         self.header = header
         self.content = content
         self.infoContent = infoContent
@@ -248,13 +323,15 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
         primaryBody
         #else
         if isWorkspacePane {
-            // This original page already occupies a native arrangement region.
-            primaryBody
-        } else {
-            ZStack {
-                if usesWorkspace { backgroundLayer.ignoresSafeArea().allowsHitTesting(false) }
-                workspaceContent
+            // Reuse the feature's original controls/content in the shared page.
+            // It owns no second page title, description or rounded outer surface.
+            VStack(spacing: 0) {
+                infoContent()
+                content()
             }
+        } else {
+            primaryBody
+                .modifier(SavoriaCameraBandContent())
         }
         #endif
     }
@@ -262,98 +339,49 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
     @ViewBuilder
     private var workspaceContent: some View {
         #if os(iOS)
-        if #available(iOS 27.1, *) {
-            ArrangementView {
-                primaryBody.padding(.horizontal, usesWorkspace ? 8 : 0)
-                    .accessibilityIdentifier("savoria.workspace.primary")
-            } secondary: {
-                secondaryPane.padding(.horizontal, 8)
-                    .accessibilityIdentifier("savoria.workspace.secondary")
-            }
-            .arrangementViewStyle(SavoriaWorkspaceArrangement(expanded: usesWorkspace))
-        } else {
-            legacyWorkspace
-        }
-        #else
-        legacyWorkspace
-        #endif
-    }
-
-    @ViewBuilder
-    private var legacyWorkspace: some View {
         if usesWorkspace {
-            HStack(alignment: .top, spacing: 16) {
-                primaryBody.frame(maxWidth: .infinity)
-                secondaryPane.frame(maxWidth: .infinity)
+            if #available(iOS 27.1, *) {
+                ArrangementView {
+                    content()
+                        .splitArrangementLayoutRatio(primaryFraction)
+                        .overlay(alignment: .trailing) { Color.primary.opacity(0.08).frame(width: 1).allowsHitTesting(false) }
+                        .accessibilityIdentifier("savoria.workspace.primary")
+                } secondary: {
+                    secondaryPane.splitArrangementLayoutRatio(1 - primaryFraction)
+                        .accessibilityIdentifier("savoria.workspace.secondary")
+                }
+                .arrangementViewStyle(SavoriaWorkspaceArrangement(expanded: true))
+            } else {
+                HStack(spacing: 0) {
+                    content().frame(maxWidth: .infinity)
+                    Divider()
+                    secondaryPane.frame(maxWidth: .infinity)
+                }
             }
-        } else {
-            primaryBody
-        }
+        } else { content() }
+        #else
+        content()
+        #endif
     }
 
     @ViewBuilder
     private var secondaryPane: some View {
         if usesWorkspace && workspacePageActive {
-            if let companionPage {
-                companionPage()
-                    .environment(\.savoriaWorkspaceExpanded, false)
-                    .environment(\.savoriaWorkspacePane, true)
-            } else if companion != nil {
-                companionBody
-            } else {
-                SavoriaOriginalListPane(initialSubtab: .pantry)
-            }
-        } else { Color.clear }
-    }
-
-    private var companionBody: some View {
-        VStack(spacing: 0) {
-            PageHeader(title: companionTitle, isInverted: false)
-                #if os(macOS)
-                .frame(height: macHeaderHeight).padding(.top, macHeaderTopInset)
-                #else
-                .frame(height: headerHeight)
-                #endif
-            Text(companionSubtitle)
-                .modifier(PageHeaderDescriptionStyle())
-                .foregroundStyle(PageHeaderPalette.control)
-                .padding(.horizontal, 20)
-                .opacity(detailZoneHeight >= 20 ? 1 : 0)
-                .accessibilityHidden(detailZoneHeight < 20)
-                .frame(height: detailZoneHeight, alignment: .topLeading)
-                .clipped()
             Group {
-                // Inactive, retained tabs must not mount more data observers.
-                if usesWorkspace && workspacePageActive {
-                    if let companion { companion() }
-                    else { AnyView(EmptyView()) }
-                } else { Color.clear }
+                if let companionPage { companionPage() }
+                else if let companion { companion() }
+                else { AnyView(EmptyView()) }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(appPrimaryBackground)
-            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-            .overlay {
-                #if os(iOS)
-                SavoriaColumnBorder(theme: pageTheme, cornerRadius: cornerRadius)
-                #else
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .stroke(LinearGradient(colors: [pageTheme.accentColor.opacity(0.55), .clear],
-                                           startPoint: .top, endPoint: .bottom), lineWidth: 0.7)
-                    .allowsHitTesting(false)
-                #endif
-            }
-            #if os(macOS)
-            .padding(.top, macContainerTopGap).padding(.horizontal, 16).padding(.bottom, macBottomInset)
-            #else
-            .padding(.bottom, 8)
-            #endif
-        }
+            .environment(\.savoriaWorkspaceExpanded, false)
+            .environment(\.savoriaWorkspacePane, true)
+            .environment(\.searchOverlay, nil)
+        } else { Color.clear }
     }
 
     private var primaryBody: some View {
         #if os(macOS)
         ZStack(alignment: .top) {
-            if !isWorkspacePanel { backgroundLayer.ignoresSafeArea().allowsHitTesting(false) }
+            if !isWorkspacePane { backgroundLayer.ignoresSafeArea().allowsHitTesting(false) }
 
             VStack(spacing: 0) {
                 header(false)
@@ -384,17 +412,18 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
         #else
             ZStack(alignment: .top) {
                 // Standalone pages keep a local backdrop. Tabs share the app field.
-                if !isWorkspacePanel { backgroundLayer.ignoresSafeArea().allowsHitTesting(false) }
+                if !isWorkspacePane { backgroundLayer.ignoresSafeArea().allowsHitTesting(false) }
 
                 // LAYOUT
                 VStack(spacing: 0) {
                     // Fixed header (transparent, over background)
-                    header(false)
-                        .frame(height: headerHeight)
+                    SavoriaCameraHeader(height: headerHeight) { header(false) }
+                        .accessibilityElement(children: .contain)
+                        .accessibilityIdentifier("savoria.page.header")
 
                     // Header zone: info content + search bar slot
                     headerDetailZone
-                        .frame(minHeight: isWorkspacePanel ? ExpandedPageHeaderMetrics.iosCompactInfoHeight : 0, alignment: .top)
+                        .frame(minHeight: 0, alignment: .top)
                         .onGeometryChange(for: CGFloat.self) { ceil($0.size.height) } action: { detailZoneHeight = $0 }
 
                     // Content area
@@ -430,7 +459,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
     #if !os(macOS)
     private var contentArea: some View {
         ZStack(alignment: .top) {
-            content()
+            workspaceContent
                 .padding(.top, topMargin)
 
             // Search results rendered inside the content panel
@@ -441,8 +470,9 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .clipped()
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            Color.clear.frame(height: isWorkspacePanel ? 12 : bottomTabBarContentInset)
+            Color.clear.frame(height: isWorkspacePanel ? 16 : bottomTabBarContentInset)
         }
         .background {
             SavoriaColumnSurface(theme: pageTheme, cornerRadius: cornerRadius)
@@ -465,7 +495,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
                     .allowsHitTesting(false)
             }
         }
-        .ignoresSafeArea(edges: isWorkspacePanel ? [] : .bottom)
+
         .padding(.bottom, isWorkspacePanel ? 8 : 0)
         .padding(.leading, leadingPanelInset)
         .padding(.trailing, trailingPanelInset)

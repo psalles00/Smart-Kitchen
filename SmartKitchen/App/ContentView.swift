@@ -863,7 +863,7 @@ struct ContentView: View {
                 #if os(iOS)
                 // Hide the tab bar only while the keyboard is up; otherwise the
                 // assistant bar always shows alongside the tab bar.
-                .toolbar(isKeyboardVisible ? .hidden : .visible, for: .tabBar)
+                .toolbar(isKeyboardVisible || workspaceExpanded ? .hidden : .visible, for: .tabBar)
                 #endif
                 .onChange(of: searchBarState.debouncedSearchText) { _, newValue in
                     guard searchBarState.mode != .aiChat else { return }
@@ -877,7 +877,14 @@ struct ContentView: View {
         } action: { backdropViewport = $0 }
         #endif
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            SavoriaWorkspaceAccessory(expanded: workspaceExpanded) {
+            if workspaceExpanded {
+                HStack(spacing: 8) {
+                    persistentAssistantBar.frame(maxWidth: .infinity)
+                    if !isKeyboardVisible { workspaceTabBar }
+                }
+                .padding(.horizontal, 12)
+                .padding(.bottom, 6)
+            } else {
                 persistentAssistantBar
             }
         }
@@ -921,30 +928,45 @@ struct ContentView: View {
             TabView(selection: tabSelectionBinding) {
                 Tab(value: AppTab.assistant) {
                     assistantTabContent
+                        #if os(iOS)
+                        .toolbar(workspaceExpanded || isKeyboardVisible ? .hidden : .visible, for: .tabBar)
+                        #endif
                 } label: {
                     Label("Savoria", systemImage: AppTab.assistant.icon)
                 }
 
                 Tab(value: AppTab.lists) {
                     listsTabContent
+                        #if os(iOS)
+                        .toolbar(workspaceExpanded || isKeyboardVisible ? .hidden : .visible, for: .tabBar)
+                        #endif
                 } label: {
                     Label("Listas", systemImage: AppTab.lists.icon)
                 }
 
                 Tab(value: AppTab.recipes) {
                     recipesTabContent
+                        #if os(iOS)
+                        .toolbar(workspaceExpanded || isKeyboardVisible ? .hidden : .visible, for: .tabBar)
+                        #endif
                 } label: {
                     Label("Receitas", systemImage: AppTab.recipes.icon)
                 }
 
                 Tab(value: AppTab.nutrients) {
                     nutrientsTabContent
+                        #if os(iOS)
+                        .toolbar(workspaceExpanded || isKeyboardVisible ? .hidden : .visible, for: .tabBar)
+                        #endif
                 } label: {
                     Label("Nutrição", systemImage: AppTab.nutrients.icon)
                 }
 
                 Tab(value: AppTab.commandBar, role: .search) {
                     commandBarTabContent
+                        #if os(iOS)
+                        .toolbar(workspaceExpanded || isKeyboardVisible ? .hidden : .visible, for: .tabBar)
+                        #endif
                 } label: {
                     Label("Buscar", systemImage: AppTab.commandBar.icon)
                 }
@@ -993,7 +1015,18 @@ struct ContentView: View {
                             },
                             onOpenRecipeImport: openQuickRecipeImport,
                             onOpenFoodCameraDirect: openDirectFoodCamera,
-                            onOpenFoodGalleryDirect: openDirectFoodGallery
+                            onOpenFoodGalleryDirect: openDirectFoodGallery,
+                            assistantOptions: { AnyView(
+                                FullscreenAssistantView(searchBarState: searchBarState, searchService: searchService,
+                                    onAction: handleCommandBarAction,
+                                    onOpenFoodCameraDirect: openDirectFoodCamera,
+                                    onOpenFoodGalleryDirect: openDirectFoodGallery,
+                                    pendingChatQuery: $pendingChatQuery, pendingOpenChat: $pendingOpenChat,
+                                    pendingNewConversation: $pendingNewConversation, pendingShowHistory: $pendingShowHistory,
+                                    presentation: .tab, chromeStyle: .embeddedPanel,
+                                    onRequestAIMode: { preset, prefill in openAIMode(preset: preset, prefill: prefill) },
+                                    optionsOnly: true)
+                            ) }
                         )
                     } placeholder: {
                         HomeSkeletonPage()
@@ -1186,9 +1219,45 @@ struct ContentView: View {
             // Compensate for the floating tab bar only while it is visible.
             // When the keyboard opens, the tab bar hides and the safe area
             // already repositions this inset above the keyboard.
-            .padding(.bottom, isKeyboardVisible ? 0 : 45)
+            .padding(.bottom, isKeyboardVisible || workspaceExpanded ? 0 : 45)
             // Selection occupies this floating slot. Keep its reserved geometry
             // so hiding the assistant does not resize the shared shader viewport.
+    }
+
+    /// The wide page keeps assistant input and navigation on one baseline.
+    /// Buttons use the existing tab state/routes; compact keeps the native tabs.
+    private var workspaceTabBar: some View {
+        HStack(spacing: 2) {
+            ForEach([AppTab.assistant, .lists, .recipes, .nutrients, .commandBar], id: \.self) { tab in
+                Button { selectTab(tab) } label: {
+                    VStack(spacing: 3) {
+                        Image(systemName: tab.icon).font(.system(size: 21, weight: .medium))
+                        Text(workspaceTabTitle(tab)).font(.system(size: 10, weight: .semibold))
+                    }
+                    .foregroundStyle(selectedTab == tab ? PageTheme.home.accentColor : .primary)
+                    .frame(width: 62, height: 52)
+                    .background(selectedTab == tab ? Color.primary.opacity(0.09) : .clear, in: Capsule())
+                    .contentShape(Capsule())
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(selectedTab == tab ? .isSelected : [])
+                .accessibilityIdentifier("savoria.workspace.tab." + tab.rawValue)
+            }
+        }
+        .padding(5)
+        .background(.regularMaterial, in: Capsule())
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("savoria.workspace.navigation")
+    }
+
+    private func workspaceTabTitle(_ tab: AppTab) -> String {
+        switch tab {
+        case .assistant: String(localized: "Savoria")
+        case .lists: String(localized: "Listas")
+        case .recipes: String(localized: "Receitas")
+        case .nutrients: String(localized: "Nutrição")
+        case .commandBar: String(localized: "Buscar")
+        }
     }
 
     private func openQuickRecipeImport(_ launchMode: RecipeImportLaunchMode) {
@@ -2939,6 +3008,21 @@ private struct HomeSkeletonPage: View {
     }
 }
 
+/// Exact deck height at the width of the current layout proposal. No asynchronous
+/// geometry preference can leave the next section inside the shortcut labels.
+private struct SavoriaHomeDeckLayout: Layout {
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let width = proposal.width ?? 320
+        let side = max((width - 24) / 4, 0)
+        return CGSize(width: width, height: side * 3 + 16 + 34)
+    }
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        for subview in subviews {
+            subview.place(at: bounds.origin, anchor: .topLeading, proposal: ProposedViewSize(bounds.size))
+        }
+    }
+}
+
 private struct HomeView: View {
     @Environment(\.scrollToTopTrigger) private var scrollToTopTrigger
     @Environment(\.modelContext) private var modelContext
@@ -2965,7 +3049,6 @@ private struct HomeView: View {
     @State private var homeInfoSnapshot = HomeInfoSnapshot()
     @State private var hasPendingNutritionDays = false
     @State private var contentResetToken: Int = 0
-    @State private var shortcutDeckWidth: CGFloat = 0
     @State private var settingsSnapshot = HomeSettingsSnapshot()
     @StateObject private var liveInputs = HomeLiveInputsStore()
     @State private var hasLoadedInitialInputs = false
@@ -2979,10 +3062,12 @@ private struct HomeView: View {
     let onOpenRecipeImport: (RecipeImportLaunchMode) -> Void
     let onOpenFoodCameraDirect: () -> Void
     let onOpenFoodGalleryDirect: () -> Void
+    var assistantOptions: (() -> AnyView)? = nil
 
     var body: some View {
         ExpandedPageLayout(
             pageTheme: .home,
+            companion: assistantOptions,
             header: { isInverted in
                 PageHeader(title: "Savoria", isInverted: isInverted) {
                     HStack(spacing: 0) {
@@ -3445,7 +3530,8 @@ private struct HomeView: View {
     private var iosActionDeck: some View {
         VStack(alignment: .leading, spacing: 14) {
 
-        GeometryReader { geo in
+        SavoriaHomeDeckLayout {
+          GeometryReader { geo in
             let spacing = homeShortcutSpacing
             let smallSide = homeShortcutSmallSide(for: geo.size.width)
             let topSide = smallSide * 2 + spacing
@@ -3538,18 +3624,9 @@ private struct HomeView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
+        }
         .frame(maxWidth: .infinity)
-        .frame(height: homeShortcutDeckHeight(for: shortcutDeckWidth))
-        .background {
-            GeometryReader { proxy in
-                Color.clear
-                    .preference(key: HomeShortcutDeckWidthKey.self, value: proxy.size.width)
-            }
-        }
-        .onPreferenceChange(HomeShortcutDeckWidthKey.self) { newWidth in
-            shortcutDeckWidth = newWidth
-        }
-        .padding(.bottom, 40)
+        .padding(.bottom, 12)
         } // end outer VStack
     }
     #endif
@@ -3835,11 +3912,6 @@ private struct HomeView: View {
     private func homeShortcutSmallSide(for width: CGFloat) -> CGFloat {
         guard width > 0 else { return 72 }
         return max((width - homeShortcutSpacing * 3) / 4, 0)
-    }
-
-    private func homeShortcutDeckHeight(for width: CGFloat) -> CGFloat {
-        let smallSide = homeShortcutSmallSide(for: width)
-        return smallSide * 3 + homeShortcutSpacing * 2 + 22
     }
 
     private func homeShortcutButton(

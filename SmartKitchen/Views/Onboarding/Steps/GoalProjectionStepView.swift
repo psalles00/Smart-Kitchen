@@ -41,8 +41,9 @@ struct GoalProjectionStepView: View {
         ZStack {
             backgroundLayer
 
-            VStack(spacing: 0) {
-                Spacer(minLength: 12)
+            ScrollView(showsIndicators: false) {
+              VStack(spacing: 0) {
+                Spacer(minLength: 20)
 
                 heroBadge
                     .opacity(showHero ? 1 : 0)
@@ -68,18 +69,14 @@ struct GoalProjectionStepView: View {
                     .padding(.horizontal, 22)
                     .padding(.top, 4)
 
-                Spacer(minLength: 16)
-
-                OnboardingPrimaryButton(
-                    title: String(localized: "Continuar"),
-                    isEnabled: true,
-                    action: onContinue
-                )
-                .padding(.horizontal, 24)
-                .padding(.bottom, 24)
-                .opacity(showButton ? 1 : 0)
-                .offset(y: showButton ? 0 : 18)
-                .animation(.spring(response: 0.7, dampingFraction: 0.86), value: showButton)
+              }
+              .padding(.bottom, 16)
+            }
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                OnboardingPrimaryButton(title: String(localized: "Continuar"), action: onContinue)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 12)
+                    .background(.regularMaterial)
             }
         }
         .onAppear { startEntrance() }
@@ -242,7 +239,7 @@ struct GoalProjectionStepView: View {
                         )
                         .foregroundStyle(primaryGradient)
                         .symbolSize(pinPulse ? 260 : 180)
-                        .annotation(position: .top, alignment: .center, spacing: 4) {
+                        .annotation(position: .top, alignment: .trailing, spacing: 4) {
                             Text(String(format: "%.0f kg", animatedWeight))
                                 .font(.system(size: 13, weight: .bold, design: .rounded))
                                 .foregroundStyle(.white)
