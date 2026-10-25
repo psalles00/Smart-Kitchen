@@ -474,9 +474,6 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
         .safeAreaInset(edge: .bottom, spacing: 0) {
             Color.clear.frame(height: isWorkspacePanel ? 16 : bottomTabBarContentInset)
         }
-        .background {
-            SavoriaColumnSurface(theme: pageTheme, cornerRadius: cornerRadius)
-        }
         .clipShape(
             UnevenRoundedRectangle(
                 topLeadingRadius: cornerRadius,
@@ -485,8 +482,15 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
                 topTrailingRadius: cornerRadius
             )
         )
+        // Extend only the surface under system/navigation bars. The clipped
+        // foreground and its scroll inset stay above the interactive controls.
+        .background {
+            SavoriaColumnSurface(theme: pageTheme, cornerRadius: cornerRadius)
+                .ignoresSafeArea(.container, edges: .bottom)
+        }
         .overlay {
             SavoriaColumnBorder(theme: pageTheme, cornerRadius: cornerRadius)
+                .ignoresSafeArea(.container, edges: .bottom)
         }
         .overlayPreferenceValue(ContentPanelWavyBorderKey.self) { borderColor in
             if let borderColor {
@@ -496,7 +500,6 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
             }
         }
 
-        .padding(.bottom, isWorkspacePanel ? 8 : 0)
         .padding(.leading, leadingPanelInset)
         .padding(.trailing, trailingPanelInset)
         .animation(.spring(response: 0.38, dampingFraction: 0.78), value: searchBarState.isVisible)

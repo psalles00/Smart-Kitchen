@@ -295,6 +295,7 @@ final class AdaptiveWorkspaceRenderingTests: XCTestCase {
             .first { $0.activationState == .foregroundActive })
         let window = UIWindow(windowScene: scene)
         window.frame = scene.coordinateSpace.bounds
+        window.overrideUserInterfaceStyle = .light
         window.windowLevel = .normal + 1
         let ready = expectation(description: "Native layout: " + name)
         let controller = UIHostingController(rootView: root.environment(\.scenePhase, .active).onAppear { ready.fulfill() })
@@ -342,6 +343,19 @@ final class AdaptiveWorkspaceRenderingTests: XCTestCase {
         }
         let image = UIGraphicsImageRenderer(bounds: window.bounds).image { _ in
             window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
+        }
+        if name == "native-page-home", let pixels = image.cgImage {
+            for fraction in [0.25, 0.75] {
+                let rect = CGRect(x: Double(pixels.width) * fraction, y: Double(pixels.height - 4), width: 1, height: 1)
+                let sample = try XCTUnwrap(pixels.cropping(to: rect))
+                var rgba = [UInt8](repeating: 0, count: 4)
+                let context = try XCTUnwrap(CGContext(data: &rgba, width: 1, height: 1,
+                    bitsPerComponent: 8, bytesPerRow: 4, space: CGColorSpaceCreateDeviceRGB(),
+                    bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
+                context.draw(sample, in: CGRect(x: 0, y: 0, width: 1, height: 1))
+                XCTAssertTrue(rgba.prefix(3).allSatisfy { $0 > 224 },
+                              "The light main surface must reach the bottom edge behind navigation: \(rgba)")
+            }
         }
         let attachment = XCTAttachment(image: image)
         attachment.name = name
@@ -438,9 +452,12 @@ final class AdaptiveWorkspaceRenderingTests: XCTestCase {
         let (container, _) = try fixture()
         for (name, step) in [("recipe-selection", OnboardingStep.selectRecipes),
                              ("goal-projection", .goalProjection), ("nutrition-coach", .nutritionCoach)] {
+            let readiness = WorkspaceRenderMeasurements()
             let root = OnboardingFlowView(isPreview: true, initialStep: step, onFinish: {})
                 .modelContainer(container)
-            let window = try await render(AnyView(root), name: "native-onboarding-" + name)
+                .onPreferenceChange(OnboardingProjectionReadyKey.self) { readiness.presentationReady = $0 }
+            let window = try await render(AnyView(root), name: "native-onboarding-" + name,
+                layoutReady: { step != .goalProjection || readiness.presentationReady })
             window.isHidden = true; window.rootViewController = nil
         }
         XCTAssertEqual(try container.mainContext.fetchCount(FetchDescriptor<UnifiedItem>()), 6)
@@ -495,6 +512,7 @@ private final class WorkspaceDisplayCommits: NSObject {
 
 @MainActor
 private final class WorkspaceRenderMeasurements {
+    var presentationReady = false
     var expanded = false
     var primary: CGRect?
     var primaryContent: CGRect?

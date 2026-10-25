@@ -6,6 +6,13 @@ import Charts
 /// Renders an animated chart with two trajectories (Without Savoria vs With
 /// Savoria) and uses the same haptic + entrance pattern of the rest of the
 /// onboarding flow.
+/// Signals that the projection's existing entrance sequence has completed.
+/// Snapshot hosts can wait for the rendered content instead of a fixed delay.
+struct OnboardingProjectionReadyKey: PreferenceKey {
+    static let defaultValue = false
+    static func reduce(value: inout Bool, nextValue: () -> Bool) { value = value || nextValue() }
+}
+
 struct GoalProjectionStepView: View {
     @Environment(\.colorScheme) private var colorScheme
 
@@ -79,6 +86,7 @@ struct GoalProjectionStepView: View {
                     .background(.regularMaterial)
             }
         }
+        .preference(key: OnboardingProjectionReadyKey.self, value: showButton)
         .onAppear { startEntrance() }
         .onDisappear {
             entranceTask?.cancel()
