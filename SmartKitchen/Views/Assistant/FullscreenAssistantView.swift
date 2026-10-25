@@ -830,7 +830,6 @@ struct MacAssistantExpandedPage: View {
         ExpandedPageLayout(
             pageTheme: .home,
             backgroundOverride: AnyView(AssistantModeBackground()),
-            companion: { AnyView(SavoriaPantryReference()) },
             header: { isInverted in
                 PageHeader(title: mode.title, isInverted: isInverted) {
                     if mode == .aiMode {

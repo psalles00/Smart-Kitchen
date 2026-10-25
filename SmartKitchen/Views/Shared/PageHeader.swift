@@ -50,7 +50,6 @@ struct PageHeader: View {
             }
             #else
             Text(title).font(.pageTitle).foregroundStyle(PageHeaderPalette.title)
-                .lineLimit(1).minimumScaleFactor(0.7)
             #endif
 
             Spacer()

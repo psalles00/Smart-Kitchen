@@ -475,6 +475,7 @@ struct ContentView: View {
                 }
                 #endif
             }
+            #if os(iOS)
             .onGeometryChange(for: Bool.self) { geometry in
                 SavoriaWorkspaceMetrics.supportsCompanion(geometry: geometry,
                                                          accessibilitySize: workspaceTypeSize.isAccessibilitySize)
@@ -489,6 +490,7 @@ struct ContentView: View {
             .onChange(of: recipeNavigationPath) { _, _ in
                 recipeWorkspace.stackChanged(expanded: workspaceExpanded)
             }
+            #endif
 
         )
     }
@@ -506,8 +508,10 @@ struct ContentView: View {
             .environment(\.savoriaBackdropViewport, backdropViewport)
             #endif
                 .environment(\.activeAppTab, selectedTab)
+                #if os(iOS)
                 .environment(\.savoriaWorkspaceExpanded, workspaceExpanded)
                 .environment(\.savoriaWorkspaceRecipeSelection, $recipeWorkspace.selection)
+                #endif
         )
     }
 
@@ -3320,8 +3324,7 @@ private struct HomeView: View {
         GeometryReader { geo in
             let spacing: CGFloat = 12
             let width = geo.size.width
-            let compactDeck = width < 600
-            let trailingColumnWidth = compactDeck ? max((width - spacing) / 2, 0) : min(max(width * 0.36, 250), 330)
+            let trailingColumnWidth = min(max(width * 0.36, 250), 330)
             let featuredHeight: CGFloat = 232
             let stackedHeight: CGFloat = (featuredHeight - spacing) / 2
             let quickTileHeight: CGFloat = 76
@@ -3333,8 +3336,8 @@ private struct HomeView: View {
                         subtitle: String(localized: "Adicione, busque ou pergunte..."),
                         imageName: "assistente",
                         style: .featured,
-                        imageSize: compactDeck ? 180 : 600,
-                        imageOffset: CGSize(width: compactDeck ? 28 : 110, height: 30)
+                        imageSize: 600,
+                        imageOffset: CGSize(width: 110, height: 30)
                     ) {
                         onOpenSearch()
                     }

@@ -75,7 +75,13 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
     @Environment(\.savoriaWorkspacePageActive) private var workspacePageActive
     @State private var detailZoneHeight: CGFloat = 0
 
-    private var usesWorkspace: Bool { workspaceExpanded && pageTheme != .settings }
+    private var usesWorkspace: Bool {
+        #if os(iOS)
+        workspaceExpanded && pageTheme != .settings
+        #else
+        false
+        #endif
+    }
 
     #if !os(iOS)
     @Environment(\.backgroundTheme) private var backgroundTheme
@@ -151,12 +157,16 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
 
 
     var body: some View {
+        #if os(macOS)
+        primaryBody
+        #else
         ZStack {
             if usesWorkspace {
                 backgroundLayer.ignoresSafeArea().allowsHitTesting(false)
             }
             workspaceContent
         }
+        #endif
     }
 
     @ViewBuilder
