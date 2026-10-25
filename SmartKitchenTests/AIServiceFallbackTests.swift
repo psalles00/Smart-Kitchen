@@ -2486,6 +2486,8 @@ final class AssistantRecipeVarietyTests: XCTestCase {
         XCTAssertTrue(serialized.contains("category"))
         XCTAssertTrue(serialized.contains("unique"))
         XCTAssertTrue(backend.messages.contains { ($0["content"] as? String ?? "").contains("Different titles alone do not make different ideas") })
+        XCTAssertTrue(backend.messages.contains { ($0["content"] as? String ?? "").contains("\"category\": \"quick\"") },
+                      "The example must agree with the required schema even for a provider with weaker enforcement")
     }
 
     func testPantrySectionPrioritizesActualCoverageBeforeItsSectionLimit() async {

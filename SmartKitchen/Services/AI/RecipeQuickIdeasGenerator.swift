@@ -888,9 +888,10 @@ final class RecipeQuickIdeasGenerator {
         includeVariety: Bool,
         displayLimit: Int
     ) -> String {
+        let categoryExample = includeVariety ? ", \"category\": \"quick\"" : ""
         var rules: [String] = [
             "You are a contextual cooking assistant. Reply ONLY with a JSON object of the form:",
-            "{\"answer\": \"A helpful natural response in the conversation language\", \"ideas\": [{\"title\": \"...\", \"mainIngredient\": \"...\", \"ingredients\": [\"...\"], \"totalMinutes\": 15, \"servings\": 1, \"requiresPrecooked\": []}]}",
+            "{\"answer\": \"A helpful natural response in the conversation language\", \"ideas\": [{\"title\": \"...\", \"mainIngredient\": \"...\", \"ingredients\": [\"...\"], \"totalMinutes\": 15, \"servings\": 1, \"requiresPrecooked\": []\(categoryExample)}]}",
             "Rules:",
             "- Do not refer to option numbers or ordering in answer; refer to dish names so explanation remains correct when cards are ranked. Never describe unverified food as fresh.",
             "- answer addresses the user's actual question in 1–3 concise sentences; let the cards carry the list of dishes rather than describing every option in a long paragraph. A technique or substitution question may need a fuller explanation. Refer only to the validated ingredients of ideas you provide. Do not claim quantities, freshness, prior cooking or missing staples you cannot establish.",
