@@ -38,7 +38,31 @@ Readback after the first macOS installation exactly matched the full pre-change 
 
 Evidence is retained outside the repository in `/Volumes/PS-Externo/Coding/Builds/Savoria-Duo-20261025`. Native rendering uses the installed app's views in the actual simulator scene, with test-only data; it is not a claim of CloudKit delivery or real foldable hardware validation.
 
-Verified during implementation: Duo open, partially open and portrait partially open; iOS/macOS builds; independent code review. Final destination matrix is recorded below after completion.
+Final validation matrix (2026-10-25):
+
+| Destination | Evidence | Result |
+| --- | --- | --- |
+| Duo open, horizontal | `duo-horizontal-final` | 2 native tests passed; both panels and actual input/tab bar frames |
+| Duo partially open | `duo-partial` | 2 native tests passed; vertical division excluded |
+| Duo portrait partially open | `duo-portrait-partial` | 2 native tests passed; horizontal division excluded |
+| Duo closed | `duo-closed` | 2 native tests passed; complete compact flow |
+| Duo portrait, dark | `duo-dark-bar-final` | 2 native tests passed; input does not overlap bottom navigation |
+| iPad portrait | `ipad-portrait` | 2 native tests passed; independent panels |
+| iPad horizontal | `ipad-horizontal-verified` | 2 native tests passed; native top tabs and input |
+| iPhone 17 Pro | `iphone17-final`, `iphone17-bar-final` | 8 layout/navigation/rendering tests, then 2 native tests after final clearance correction |
+| macOS installed app | independent CUA journey + backend readback | Lists comparison, recipe/detail, clearing selection via notebooks, same-day nutrition and assistant/pantry verified |
+
+The rendering test checks the actual visible `UITextField` against every visible `UITabBar`. iPad's top tab switcher uses a different native representation, so the test does not incorrectly require a bottom/side `UITabBar` there.
+
+Both code review and E2E validation were performed in separate delegated contexts. Final app source is commit `406669ec`; `9b7b8f63` adjusts only the iPad test expectation. No outstanding code defects were reported.
+
+Final iOS Debug SDK 27.1, physical iOS Release SDK 27.1 and macOS builds passed. The current app was installed and launched on the iPhone 17 Pro, Duo and iPad simulators, preserving existing containers. macOS was installed/opened at `/Applications/Savoria.app`, with the complete original signed entitlement dictionary preserved. Simulator entitlement checks use Xcode's `Savoria.app-Simulated.xcent` linked into the executable; an empty ad-hoc code-signing dictionary is not evidence that Simulator capabilities were removed.
+
+Physical iPhone 12 Pro installation could not complete: CoreDevice 4016 reported unavailable trusted connectivity/device services. No physical interaction or uninstall was performed. This layout change was validated in Simulator; real foldable hardware, live fold/keyboard transitions, CloudKit delivery and migration remain unverified. No persistence migration is introduced.
+
+Final backend snapshot is byte-for-byte identical to the baseline, SHA-256 `18aceb3680763cd7f239bf4e3d89986e3e42fb281468b1612323e5bf200f431d`. New remote operations remain zero by construction of the changed paths; no paid AI query was submitted. This does not claim measured total background network consumption of existing services.
+
+Superseded raw test bundles are replaced by compact report summaries; final frame/image evidence and the latest three raw results are retained for review. Build caches were reused. Only temporary simulators booted for this task are stopped after validation; their data remains intact.
 
 ## Manual smoke test
 
