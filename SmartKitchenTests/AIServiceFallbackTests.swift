@@ -2350,6 +2350,53 @@ private final class ReservedRecipeValidationBackend: SupabaseFunctionInvoking {
 
 @MainActor
 final class AssistantRecipeVarietyTests: XCTestCase {
+    func testBreakfastKeepsValidIdeasWhenSectionsAreUneven() async {
+        // Before the fix, the per-section cap silently kept only 6 of these 12.
+        let titles = ["Café com leite", "Ovos mexidos", "Pão com banana", "Torrada cremosa",
+                      "Omelete de queijo", "Vitamina de banana", "Sanduíche quente", "Panqueca de banana",
+                      "Pão na chapa", "Ovos com bacon", "Rabanada de frigideira", "Pudim de pão"]
+        let stock = ["Ovos", "Queijo Minas Padrão", "Leite Integral", "Banana", "Pão de Forma", "Bacon", "Margarina", "Café em Pó"]
+        let combinations = [[stock[7], stock[2]], [stock[0], stock[6]], [stock[4], stock[3]], [stock[4], stock[1]],
+                            [stock[0], stock[1]], [stock[3], stock[2]], [stock[4], stock[5], stock[1]], [stock[3], stock[0]],
+                            [stock[4], stock[6]], [stock[0], stock[5]], [stock[4], stock[0], stock[2]], [stock[4], stock[2], stock[3]]]
+        let backend = RecipeIdeasFixtureBackend(ideas: zip(titles, combinations).map { pair in (pair.0, pair.1[0]) },
+            ingredients: Dictionary(uniqueKeysWithValues: zip(titles, combinations)),
+            categories: Dictionary(uniqueKeysWithValues: titles.enumerated().map { ($0.element, $0.offset < 10 ? "quick" : $0.offset == 10 ? "unique" : "pantry") }))
+        let response = await RecipeQuickIdeasGenerator(aiService: AIService(supabase: backend)).generateResponse(
+            pantryItems: stock, occasion: .cafeDaManha, refinement: nil, customQuery: "o que fazer no cafe da manha",
+            language: .ptBR, includeVariety: true, limit: 12)
+        XCTAssertEqual(response.ideas.count, 12)
+        XCTAssertEqual(Set(response.ideas.map(\.title)), Set(titles))
+        XCTAssertEqual(Set(response.ideas.map(\.section)), Set(RecipeIdeaCategory.allCases))
+        XCTAssertTrue(response.ideas.allSatisfy { Set($0.ingredientNames ?? []).isSubset(of: Set(stock)) })
+        XCTAssertEqual(backend.bodies.count, 1, "More cards must not cause a request per section or per card")
+    }
+
+    func testVarietyUsesRemainderWithoutCrowdingOutSections() async {
+        let titles = (0..<15).map { "Omelete \($0)" }
+        let backend = RecipeIdeasFixtureBackend(ideas: titles.map { ($0, "Ovos") },
+            ingredients: Dictionary(uniqueKeysWithValues: titles.map { ($0, ["Ovos", "Tomate"]) }),
+            categories: Dictionary(uniqueKeysWithValues: titles.enumerated().map { ($0.element, RecipeIdeaCategory.allCases[$0.offset % 3].rawValue) }))
+        let response = await RecipeQuickIdeasGenerator(aiService: AIService(supabase: backend)).generateResponse(
+            pantryItems: ["Ovos", "Tomate"], occasion: nil, refinement: nil, customQuery: nil,
+            language: .ptBR, includeVariety: true, limit: 11)
+        XCTAssertEqual(response.ideas.count, 11)
+        for category in RecipeIdeaCategory.allCases { XCTAssertGreaterThanOrEqual(response.ideas.filter { $0.section == category }.count, 3) }
+        XCTAssertEqual(backend.bodies.count, 1)
+    }
+
+    func testBroadBreakfastTargetDoesNotPadSparseResultsOrRetryValidShortResponses() async {
+        let backend = RecipeIdeasFixtureBackend(ideas: [("Banana grelhada", "Banana")],
+            ingredients: ["Banana grelhada": ["Banana"]], categories: ["Banana grelhada": "quick"])
+        let response = await RecipeQuickIdeasGenerator(aiService: AIService(supabase: backend)).generateResponse(
+            pantryItems: ["Banana"], occasion: .cafeDaManha, refinement: nil, customQuery: "Quero apenas uma ideia",
+            language: .ptBR, includeVariety: true, limit: 12)
+        XCTAssertEqual(response.ideas.count, 1)
+        XCTAssertEqual(backend.bodies.count, 1)
+        XCTAssertTrue(backend.messages.contains { ($0["content"] as? String ?? "").contains("aim for 9–12 DISTINCT") })
+        XCTAssertTrue(backend.messages.contains { ($0["content"] as? String ?? "").contains("Honor an explicitly smaller requested count") })
+    }
+
     private func recipe(_ name: String, _ names: [String], category: String = "Carnes", minutes: Int = 15) -> Recipe {
         Recipe(name: name, ingredients: names.enumerated().map { RecipeIngredient(name: $0.element, sortOrder: $0.offset) },
                category: category, prepTime: minutes)
