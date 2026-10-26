@@ -226,6 +226,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
     let companionPage: (() -> AnyView)?
     let primaryFraction: CGFloat
     let arrangesCompanion: Bool
+    let companionExtendsToTop: Bool
     @Environment(\.savoriaWorkspacePane) private var isWorkspacePane
     @Environment(\.savoriaWorkspaceExpanded) private var workspaceExpanded
     @Environment(\.savoriaWorkspacePageActive) private var workspacePageActive
@@ -300,6 +301,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
         companionPage: (() -> AnyView)? = nil,
         primaryFraction: CGFloat = 0.5,
         arrangesCompanion: Bool = true,
+        companionExtendsToTop: Bool = false,
         @ViewBuilder header: @escaping (_ isInverted: Bool) -> Header,
         @ViewBuilder content: @escaping () -> Content,
         @ViewBuilder infoContent: @escaping () -> InfoContent
@@ -313,6 +315,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
         self.companionPage = companionPage
         self.primaryFraction = primaryFraction
         self.arrangesCompanion = arrangesCompanion
+        self.companionExtendsToTop = companionExtendsToTop
         self.header = header
         self.content = content
         self.infoContent = infoContent
@@ -345,6 +348,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
             if #available(iOS 27.1, *) {
                 ArrangementView {
                     content()
+                        .padding(.top, companionExtendsToTop ? topMargin : 0)
                         .splitArrangementLayoutRatio(primaryFraction)
                         .overlay(alignment: .trailing) { Color.primary.opacity(0.08).frame(width: 1).allowsHitTesting(false) }
                         .accessibilityIdentifier("savoria.workspace.primary")
@@ -355,7 +359,9 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
                 .arrangementViewStyle(SavoriaWorkspaceArrangement(expanded: true))
             } else {
                 HStack(spacing: 0) {
-                    content().frame(maxWidth: .infinity)
+                    content()
+                        .padding(.top, companionExtendsToTop ? topMargin : 0)
+                        .frame(maxWidth: .infinity)
                     Divider()
                     secondaryPane.frame(maxWidth: .infinity)
                 }
@@ -462,7 +468,9 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
     private var contentArea: some View {
         ZStack(alignment: .top) {
             workspaceContent
-                .padding(.top, topMargin)
+                // A cover reaches the shared rounded edge. Keep the normal
+                // inset on the gallery alone, rather than above both regions.
+                .padding(.top, usesWorkspace && companionExtendsToTop ? 0 : topMargin)
 
             // Search results rendered inside the content panel
             if searchBarState.isVisible, let searchOverlay {

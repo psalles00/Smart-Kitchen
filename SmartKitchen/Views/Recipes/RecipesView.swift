@@ -416,6 +416,7 @@ private struct RecipesLoadedView: View {
                 } else { AnyView(cadernosContent) }
             },
             primaryFraction: selectedRecipeID == nil ? 0.60 : 0.46,
+            companionExtendsToTop: selectedRecipeID != nil,
             header: { isInverted in
                 #if os(macOS)
                 if !workspaceExpanded, !isShowingCadernos,
