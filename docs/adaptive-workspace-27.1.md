@@ -1,6 +1,6 @@
 # Adaptive workspace — SDK 27.1
 
-Updated 2026-10-25. Xcode 27.1 (27A9275), iOS/Simulator SDK 27.1, macOS SDK 27.0; deployment remains iOS 17/macOS 26. SDKROOT is automatic. This document supersedes the earlier two-page/two-header design.
+Updated 2026-10-26. Xcode 27.1 (27A9275), iOS/Simulator SDK 27.1, macOS SDK 27.0; deployment remains iOS 17/macOS 26. SDKROOT is automatic. This document supersedes the earlier two-page/two-header design.
 
 ## Presentation contract
 
@@ -18,7 +18,7 @@ A single shader field remains behind the complete page. Region content reuses th
 
 On iOS 27.1, documented `toolbarVerticalBehavior(.disabled)` keeps horizontal navigation. `statusBarHidden` follows the containing window's public `verticalBarEdge` preference, observed through `systemTraitsAffectingVerticalBarEdge`. The narrow UIKit reader deduplicates events; it does not poll or manipulate global application/window settings. Older iOS and macOS do not adopt this policy.
 
-The closed-Duo header enters the top camera band, with controls avoiding actual native occlusion geometry. The root supplies occlusion extent directly; the header never measures its own height back into state. Only this chrome treatment enters the top unsafe region; foreground content still respects camera/division geometry. The wider page uses native ArrangementView/SplitArrangementViewStyle; the assistant's stable AnyLayout reads native division orientation. Backgrounds extend behind both regions. The main light/dark surface extends to the app’s bottom edge behind navigation; only its background/border ignore the bottom safe area. Foreground clipping and scroll clearance remain intact. No wide-panel bottom padding may detach that surface from the safe-area boundary.
+The closed-Duo header enters the top camera band, with controls avoiding actual native occlusion geometry. The root supplies occlusion extent directly; the header never measures its own height back into state. Only this chrome treatment enters the top unsafe region; foreground content still respects camera/division geometry. The wider page uses native ArrangementView/SplitArrangementViewStyle; the assistant's stable AnyLayout reads native division orientation. Backgrounds extend behind both regions. The main light/dark surface extends to the app’s bottom edge behind navigation; the wide foreground viewport also extends behind the floating controls. The floating footer is an overlay, not a safe-area inset: reserving its height used to clip scroll content above the controls even after the background reached the bottom. Wide pages and their camera-band container now enter the bottom container safe area; keyboard avoidance remains native. Scroll-content margins provide end-of-list clearance without shortening the viewport. No wide-panel bottom padding may detach that surface from the safe-area boundary.
 
 Wide assistant input and navigation share one bottom row. The native tab bar is hidden at each tab root to prevent a duplicate bar; the custom SwiftUI buttons use the existing selection/routes. Compact layouts retain native tabs. The keyboard uses normal safe-area handling; physical Mac keyboard capture is never enabled.
 
@@ -77,3 +77,17 @@ Retain the current reports, final results and images until superseded. Compact s
 3. In Recipes, open an existing recipe, close it to return to notebooks, then fold/unfold and verify selection/navigation.
 4. In Assistant, open an empty chat without sending, fold/unfold, background/resume and verify options/chat placement.
 5. In onboarding preview, check progress, 3/5 recipe columns, full projection hero and reachable Continue; close the preview. Confirm the installed Mac retains its original single-column interface.
+
+## Bottom viewport correction — 2026-10-26
+
+Evidence: `/Volumes/PS-Externo/Coding/Builds/Savoria-Duo-20261026-footer`.
+
+The previous color-only bottom-edge check missed the actual defect: the root footer inset still reserved a blank strip, and the camera-band container retained the bottom safe area. The footer now overlays the page, with an 8-point bottom margin in wide layouts. Scroll margins replace the transparent inset. Compact retains native navigation and its system gesture clearance. No macOS layout, data schema, capabilities or translations changed.
+
+Validation: four native tests passed on the open Duo; the five-page isolated rendering test passed on closed Duo, iPhone 17 Pro and iPad. New assertions inspect the actual assistant field position (center within 52 points of the bottom) and a full-height scroll viewport behind the footer in wide layouts. Surface pixels are now checked on the sparse geometry fixture: Home can legitimately draw a card at the bottom and must not be required to render white there. The initial old pixel assertion failed for precisely that reason; the geometry assertions passed.
+
+Live verification showed content continuing behind the footer on open and closed Duo, plus the input staying above the virtual keyboard. Screenshots: `open-live.png` and `keyboard.png`; a default-display closed screenshot was black because simctl selected the inactive internal display, so closed live validation used Device Hub. Capture Keyboard remained off. macOS Debug/Release compiled; Debug was signed, installed and opened at `/Applications/Savoria.app`, preserving complete entitlements. Backend snapshots before/after were byte-identical. No paid AI calls or additional remote work were introduced; existing service background traffic was not remeasured.
+
+Manual regression: (1) Open/fold Duo and scroll Home or Recipes; content should continue behind the floating controls without a solid reserved strip. (2) Scroll to the last item and verify it can move above the controls. (3) Focus and dismiss the assistant keyboard; input must remain visible and navigation must return to its bottom position.
+
+Retain this small report and current final results until superseded; reuse the existing build caches. Additional owned test simulators are shut down after validation, preserving their data.

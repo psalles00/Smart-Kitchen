@@ -332,6 +332,17 @@ final class AdaptiveWorkspaceRenderingTests: XCTestCase {
             // iPad's native top tab switcher is not a UITabBar. When a
             // bottom/side UITabBar exists, assert its actual frame directly.
             XCTAssertFalse(inputs.isEmpty, "The single assistant field must be present")
+            if SavoriaWorkspaceMetrics.supportsCompanion(size: window.bounds.size) {
+                let input = try XCTUnwrap(inputs.first)
+                let inputFrame = input.convert(input.bounds, to: window)
+                XCTAssertLessThan(window.bounds.maxY - inputFrame.midY, 52,
+                    "The floating footer must use the bottom edge, not sit above a reserved strip")
+                let scrollFrames = visible.compactMap { $0 as? UIScrollView }
+                    .filter { $0.bounds.height > 150 }
+                    .map { $0.convert($0.bounds, to: window) }
+                XCTAssertTrue(scrollFrames.contains { $0.maxY >= window.bounds.maxY - 1 },
+                    "The scroll viewport must continue behind the floating footer: \(scrollFrames)")
+            }
             for bar in bars {
                 let barFrame = bar.convert(bar.bounds, to: window).insetBy(dx: 1, dy: 1)
                 for input in inputs {
@@ -344,7 +355,9 @@ final class AdaptiveWorkspaceRenderingTests: XCTestCase {
         let image = UIGraphicsImageRenderer(bounds: window.bounds).image { _ in
             window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
         }
-        if name == "native-page-home", let pixels = image.cgImage {
+        // Home can now draw cards/text at the physical bottom. Sample the
+        // sparse geometry fixture for the surface, not arbitrary Home content.
+        if name == "native-workspace-geometry", let pixels = image.cgImage {
             for fraction in [0.25, 0.75] {
                 let rect = CGRect(x: Double(pixels.width) * fraction, y: Double(pixels.height - 4), width: 1, height: 1)
                 let sample = try XCTUnwrap(pixels.cropping(to: rect))

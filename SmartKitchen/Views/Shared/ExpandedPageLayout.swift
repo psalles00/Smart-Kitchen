@@ -103,13 +103,15 @@ extension EnvironmentValues {
 struct SavoriaCameraBandContent: ViewModifier {
     var enabled = true
     @Environment(\.savoriaVerticalChrome) private var verticalChrome
+    @Environment(\.savoriaWorkspaceExpanded) private var workspaceExpanded
     func body(content: Content) -> some View {
         GeometryReader { geometry in
             content
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .environment(\.savoriaTopOcclusionExtent, topOcclusion(geometry))
         }
-        .ignoresSafeArea(.container, edges: enabled && verticalChrome ? .top : [])
+        .ignoresSafeArea(.container, edges: (enabled && verticalChrome ? Edge.Set.top : [])
+            .union(workspaceExpanded ? .bottom : []))
     }
     private func topOcclusion(_ geometry: GeometryProxy) -> CGFloat {
         #if os(iOS)
@@ -471,9 +473,10 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .clipped()
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            Color.clear.frame(height: isWorkspacePanel ? 16 : bottomTabBarContentInset)
-        }
+        // Keep the viewport full-height behind the floating controls. Insets
+        // reserve blank layout space; scroll-content margins only provide the
+        // clearance needed to bring the last item above those controls.
+        .contentMargins(.bottom, isWorkspacePanel ? 88 : bottomTabBarContentInset, for: .scrollContent)
         .clipShape(
             UnevenRoundedRectangle(
                 topLeadingRadius: cornerRadius,

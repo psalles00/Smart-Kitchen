@@ -876,18 +876,23 @@ struct ContentView: View {
             CGSize(width: proxy.size.width + proxy.safeAreaInsets.leading + proxy.safeAreaInsets.trailing, height: proxy.size.height + proxy.safeAreaInsets.top + proxy.safeAreaInsets.bottom)
         } action: { backdropViewport = $0 }
         #endif
-        .safeAreaInset(edge: .bottom, spacing: 0) {
+        // Floating controls must not shrink the page's viewport. Reserving an
+        // inset here clipped every scroll view at the top of the controls and
+        // left a solid, unusable strip below them. Scroll clearance belongs to
+        // the page's scroll content instead.
+        .overlay(alignment: .bottom) {
             if workspaceExpanded {
                 HStack(spacing: 8) {
                     persistentAssistantBar.frame(maxWidth: .infinity)
                     if !isKeyboardVisible { workspaceTabBar }
                 }
                 .padding(.horizontal, 12)
-                .padding(.bottom, 6)
+                .padding(.bottom, 8)
             } else {
                 persistentAssistantBar
             }
         }
+        .ignoresSafeArea(.container, edges: workspaceExpanded ? .bottom : [])
         #if os(iOS)
         .onPreferenceChange(ListSelectionActiveKey.self) { isActive in
             if isListSelectionActive != isActive { isListSelectionActive = isActive }
