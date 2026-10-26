@@ -392,17 +392,27 @@ private struct RecipesLoadedView: View {
             companionSubtitle: String(localized: "Ingredientes e preparo"),
             companion: {
                 if let id = selectedRecipeID, let recipe = allRecipes.first(where: { $0.id == id }) {
-                    AnyView(VStack(spacing: 0) {
-                        HStack {
-                            Spacer()
+                    AnyView(RecipeDetailView(recipe: recipe).id(id)
+                        .overlay(alignment: .topTrailing) {
+                            // The hero enters the top safe area. Keep dismissal
+                            // above that content rather than in a preceding row
+                            // that the hero can paint over.
                             Button("Fechar", systemImage: "xmark") {
                                 withAnimation(.smooth(duration: 0.32)) { selectedRecipeID = nil }
                             }
                             .labelStyle(.iconOnly)
+                            .font(.body.weight(.semibold))
+                            .foregroundStyle(.primary)
+                            .frame(width: 44, height: 44)
+                            .background(.regularMaterial, in: Circle())
+                            .contentShape(Circle())
+                            .buttonStyle(.plain)
+                            .accessibilityIdentifier("savoria.recipe.close")
                             .padding(12)
                         }
-                        RecipeDetailView(recipe: recipe).id(id)
-                    }.transition(.move(edge: .trailing).combined(with: .opacity)))
+                        .accessibilityElement(children: .contain)
+                        .clipped()
+                        .transition(.move(edge: .trailing).combined(with: .opacity)))
                 } else { AnyView(cadernosContent) }
             },
             primaryFraction: selectedRecipeID == nil ? 0.60 : 0.46,
@@ -684,9 +694,11 @@ private struct RecipesLoadedView: View {
                     .accessibilityLabel(Text(isLocalSearchVisible ? "Fechar" : "Buscar"))
                 }
 
-                GlassButtonGroup {
-                    GlassGroupButton(systemImage: isShowingCadernos ? "book.closed" : "books.vertical") {
-                        toggleNotebookPage()
+                if !workspaceExpanded {
+                    GlassButtonGroup {
+                        GlassGroupButton(systemImage: isShowingCadernos ? "book.closed" : "books.vertical") {
+                            toggleNotebookPage()
+                        }
                     }
                 }
 
@@ -1149,6 +1161,10 @@ private struct RecipesLoadedView: View {
                 .padding(4)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
+            // The page's bottom scroll clearance is for vertical content under
+            // the floating footer, not this horizontal notebook selector.
+            .contentMargins(.vertical, 0, for: .scrollContent)
+            .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(neutralSurfaceColor, in: .rect(cornerRadius: 12))
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
@@ -1167,6 +1183,11 @@ private struct RecipesLoadedView: View {
             .onChange(of: recipeCategoryNamesSignature) { _, _ in
                 centerSelectedCategoryIfNeeded(using: proxy, animated: false)
             }
+            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { _ in
+                centerSelectedCategoryIfNeeded(using: proxy, animated: false)
+            }
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("savoria.recipe.notebook-filter")
         }
     }
 
@@ -1206,19 +1227,20 @@ private struct RecipesLoadedView: View {
     }
 
     private func centerSelectedCategoryIfNeeded(using proxy: ScrollViewProxy, animated: Bool = true) {
-        guard let selectedCategory,
-              recipeCategories.contains(where: { CategoryMutationService.matchesName($0.name, selectedCategory) }) else {
+        if let selectedCategory,
+           !recipeCategories.contains(where: { CategoryMutationService.matchesName($0.name, selectedCategory) }) {
             return
         }
 
         let targetID = categoryFilterChipID(for: selectedCategory)
+        let anchor: UnitPoint = selectedCategory == nil ? .leading : .center
         DispatchQueue.main.async {
             if animated {
                 withAnimation(.spring(response: 0.32, dampingFraction: 0.9)) {
-                    proxy.scrollTo(targetID, anchor: .center)
+                    proxy.scrollTo(targetID, anchor: anchor)
                 }
             } else {
-                proxy.scrollTo(targetID, anchor: .center)
+                proxy.scrollTo(targetID, anchor: anchor)
             }
         }
     }
@@ -1585,15 +1607,21 @@ private struct RecipesLoadedView: View {
         .buttonStyle(.plain)
     }
 
+    @ViewBuilder
     private var recipesModeSwitchButton: some View {
-        modeSwitchButton(title: "Ir para os cadernos", systemImage: "books.vertical") {
-            toggleNotebookPage()
+        if !workspaceExpanded {
+            modeSwitchButton(title: "Ir para os cadernos", systemImage: "books.vertical") {
+                toggleNotebookPage()
+            }
         }
     }
 
+    @ViewBuilder
     private var notebookModeSwitchButton: some View {
-        modeSwitchButton(title: "Ir para as receitas", systemImage: "book.closed") {
-            toggleNotebookPage()
+        if !workspaceExpanded {
+            modeSwitchButton(title: "Ir para as receitas", systemImage: "book.closed") {
+                toggleNotebookPage()
+            }
         }
     }
 
