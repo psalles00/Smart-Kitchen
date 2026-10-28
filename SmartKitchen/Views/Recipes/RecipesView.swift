@@ -634,50 +634,44 @@ private struct RecipesLoadedView: View {
     private func recipesListHeader(isInverted: Bool) -> some View {
         PageHeader(title: isShowingCadernos && !workspaceExpanded ? String(localized: "Cadernos") : String(localized: "Receitas"), isInverted: isInverted) {
             HStack(spacing: 6) {
-                GlassButtonGroup {
-                    GlassGroupMenu(systemImage: "plus") {
-                        Section("Importar receita") {
-                            Button {
-                                openImport(.link)
-                            } label: {
-                                Label("Colar link", systemImage: "link")
-                            }
-                            Button {
-                                openImport(.gallery)
-                            } label: {
-                                Label("Importar da galeria", systemImage: "photo.on.rectangle.angled")
-                            }
-                            Button {
-                                openImport(.camera)
-                            } label: {
-                                Label("Ler com câmera", systemImage: "camera.viewfinder")
-                            }
-                            Button {
-                                openImport(.text)
-                            } label: {
-                                Label("Colar texto", systemImage: "text.alignleft")
-                            }
-                            #if os(macOS)
-                            Button {
-                                openImport(.files)
-                            } label: {
-                                Label("Importar dos arquivos", systemImage: "folder.fill")
-                            }
-                            #endif
-                        }
-                        Divider()
-                        Button {
-                            showAddRecipe = true
-                        } label: {
-                            Label("Criar do zero", systemImage: "square.and.pencil")
-                        }
-                    }
-                }
-
-                if isShowingCadernos {
+                if !isShowingCadernos {
                     GlassButtonGroup {
-                        GlassGroupButton(systemImage: "slider.horizontal.3") {
-                            showNotebookManager = true
+                        GlassGroupMenu(systemImage: "plus") {
+                            Section("Importar receita") {
+                                Button {
+                                    openImport(.link)
+                                } label: {
+                                    Label("Colar link", systemImage: "link")
+                                }
+                                Button {
+                                    openImport(.gallery)
+                                } label: {
+                                    Label("Importar da galeria", systemImage: "photo.on.rectangle.angled")
+                                }
+                                Button {
+                                    openImport(.camera)
+                                } label: {
+                                    Label("Ler com câmera", systemImage: "camera.viewfinder")
+                                }
+                                Button {
+                                    openImport(.text)
+                                } label: {
+                                    Label("Colar texto", systemImage: "text.alignleft")
+                                }
+                                #if os(macOS)
+                                Button {
+                                    openImport(.files)
+                                } label: {
+                                    Label("Importar dos arquivos", systemImage: "folder.fill")
+                                }
+                                #endif
+                            }
+                            Divider()
+                            Button {
+                                showAddRecipe = true
+                            } label: {
+                                Label("Criar do zero", systemImage: "square.and.pencil")
+                            }
                         }
                     }
                 }

@@ -33,9 +33,6 @@ private struct NutrientsSkeletonPage: View {
                         GlassButtonGroup {
                             GlassGroupButton(systemImage: "chart.line.uptrend.xyaxis") {}
                         }
-                        GlassButtonGroup {
-                            GlassGroupButton(systemImage: "scalemass") {}
-                        }
                         SettingsButton()
                     }
                     .disabled(true)
@@ -173,14 +170,20 @@ private struct NutrientsLoadedView: View {
                             .accessibilityIdentifier("savoria.nutrition.add")
                         }
                         GlassButtonGroup {
-                            GlassGroupButton(systemImage: "chart.line.uptrend.xyaxis") {
-                                pushProgress = true
+                            GlassGroupMenu(systemImage: "chart.line.uptrend.xyaxis") {
+                                Button {
+                                    pushProgress = true
+                                } label: {
+                                    Label("Progresso", systemImage: "chart.line.uptrend.xyaxis")
+                                }
+                                Button {
+                                    pushWeightTracker = true
+                                } label: {
+                                    Label("Rastreio de Peso", systemImage: "scalemass")
+                                }
                             }
-                        }
-                        GlassButtonGroup {
-                            GlassGroupButton(systemImage: "scalemass") {
-                                pushWeightTracker = true
-                            }
+                            .accessibilityLabel("Progresso")
+                            .accessibilityIdentifier("savoria.nutrition.progress-menu")
                         }
                         #if !os(macOS)
                         SettingsButton()

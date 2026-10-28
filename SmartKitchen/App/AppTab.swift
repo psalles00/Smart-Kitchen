@@ -29,7 +29,7 @@ enum AppTab: String, Hashable {
         case .nutrients:
             .nutrients
         case .commandBar:
-            nil
+            .assistant
         }
     }
 }

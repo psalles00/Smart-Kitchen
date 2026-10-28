@@ -391,6 +391,8 @@ private final class SavoriaBackdropMetalView: MTKView {
 
 private extension PageTheme {
     var shaderRGB: SIMD3<Double> {
+        // Preserve the animated field and color fades with an achromatic tint.
+        if self == .assistant { return SIMD3(repeating: 0.62) }
         let hue: Double = switch self {
         case .home: 0.9841
         case .lists: 0.5982
@@ -528,7 +530,7 @@ struct StaticPageBackground: View {
                     .fill(
                         RadialGradient(
                             colors: [
-                                Color(red: 0.88, green: 0.94, blue: 1.00).opacity(0.92),
+                                (theme == .assistant ? Color(white: 0.94) : Color(red: 0.88, green: 0.94, blue: 1.00)).opacity(0.92),
                                 orbAccentTint.opacity(0.58),
                                 orbDarkTint.opacity(0.86),
                                 Color.black.opacity(0.0)
@@ -581,7 +583,7 @@ struct StaticPageBackground: View {
     private var orbAccentTint: Color {
         Color(
             hue: themeOrbHue,
-            saturation: 0.98,
+            saturation: theme == .assistant ? 0 : 0.98,
             brightness: 0.43
         )
     }
@@ -589,7 +591,7 @@ struct StaticPageBackground: View {
     private var orbDarkTint: Color {
         Color(
             hue: themeOrbHue,
-            saturation: 0.96,
+            saturation: theme == .assistant ? 0 : 0.96,
             brightness: 0.30
         )
     }

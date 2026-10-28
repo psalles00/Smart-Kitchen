@@ -230,6 +230,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
     @Environment(\.savoriaWorkspacePane) private var isWorkspacePane
     @Environment(\.savoriaWorkspaceExpanded) private var workspaceExpanded
     @Environment(\.savoriaWorkspacePageActive) private var workspacePageActive
+    @Environment(\.savoriaVerticalChrome) private var verticalChrome
     @State private var detailZoneHeight: CGFloat = 0
 
     private var usesWorkspace: Bool {
@@ -254,7 +255,12 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
 
     private var usesDescriptionHeader: Bool { pageTheme == .home || pageTheme == .nutrients }
     private var infoTopPadding: CGFloat { usesDescriptionHeader ? 0 : ExpandedPageHeaderMetrics.iosInfoTopPadding }
-    private var infoBottomGap: CGFloat { usesDescriptionHeader ? 8 : ExpandedPageHeaderMetrics.iosInfoBottomGap }
+    private var infoBottomGap: CGFloat {
+        #if os(iOS)
+        if usesDescriptionHeader && !workspaceExpanded && !verticalChrome { return 20 }
+        #endif
+        return usesDescriptionHeader ? 8 : ExpandedPageHeaderMetrics.iosInfoBottomGap
+    }
 
     private let headerHeight: CGFloat = ExpandedPageHeaderMetrics.iosTitleHeight
     private let cornerRadius: CGFloat = 24
