@@ -102,6 +102,7 @@ extension EnvironmentValues {
 }
 struct SavoriaCameraBandContent: ViewModifier {
     var enabled = true
+    var extendsPanelToBottom = false
     @Environment(\.savoriaVerticalChrome) private var verticalChrome
     @Environment(\.savoriaWorkspaceExpanded) private var workspaceExpanded
     func body(content: Content) -> some View {
@@ -111,7 +112,7 @@ struct SavoriaCameraBandContent: ViewModifier {
                 .environment(\.savoriaTopOcclusionExtent, topOcclusion(geometry))
         }
         .ignoresSafeArea(.container, edges: (enabled && verticalChrome ? Edge.Set.top : [])
-            .union(workspaceExpanded ? .bottom : []))
+            .union(workspaceExpanded || extendsPanelToBottom ? .bottom : []))
     }
     private func topOcclusion(_ geometry: GeometryProxy) -> CGFloat {
         #if os(iOS)
@@ -280,8 +281,6 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
     @State private var backgroundTransitionProgress: Double = 1.0
 
     // Drag-to-reveal state
-    @State private var dragOffset: CGFloat = 0
-    private let revealThreshold: CGFloat = 40
 
     private var trailingPanelInset: CGFloat {
         #if os(macOS)
@@ -342,7 +341,7 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
             }
         } else {
             primaryBody
-                .modifier(SavoriaCameraBandContent())
+                .modifier(SavoriaCameraBandContent(extendsPanelToBottom: true))
         }
         #endif
     }
@@ -503,11 +502,11 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
         // foreground and its scroll inset stay above the interactive controls.
         .background {
             SavoriaColumnSurface(theme: pageTheme, cornerRadius: cornerRadius)
-                .ignoresSafeArea(.container, edges: .bottom)
+                .ignoresSafeArea(.all, edges: .bottom)
         }
         .overlay {
             SavoriaColumnBorder(theme: pageTheme, cornerRadius: cornerRadius)
-                .ignoresSafeArea(.container, edges: .bottom)
+                .ignoresSafeArea(.all, edges: .bottom)
         }
         .overlayPreferenceValue(ContentPanelWavyBorderKey.self) { borderColor in
             if let borderColor {
@@ -523,42 +522,6 @@ struct ExpandedPageLayout<Header: View, Content: View, InfoContent: View>: View 
     }
 
     #endif
-
-    // MARK: - Drag to Reveal Gesture
-
-    private var dragToRevealGesture: some Gesture {
-        DragGesture(minimumDistance: 30)
-            .onChanged { value in
-                let dy = value.translation.height
-                if searchBarState.isVisible {
-                    if dy < 0 {
-                        withAnimation(.interactiveSpring) {
-                            dragOffset = dy
-                        }
-                    }
-                } else {
-                    if dy > 0 {
-                        withAnimation(.interactiveSpring) {
-                            dragOffset = dy
-                        }
-                    }
-                }
-            }
-            .onEnded { _ in
-                if searchBarState.isVisible {
-                    if dragOffset <= -revealThreshold {
-                        searchBarState.dismiss()
-                    }
-                } else {
-                    if dragOffset >= revealThreshold {
-                        searchBarState.reveal(mode: .idle)
-                    }
-                }
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                    dragOffset = 0
-                }
-            }
-    }
 
     // MARK: - Background
 
@@ -1229,5 +1192,131 @@ struct SavoriaWorkspaceAccessory<Content: View>: View {
                 #endif
                 return max((proxy.size.width - 16) / 2, 0)
             } action: { primaryWidth = $0 }
+    }
+}
+
+/// One pull belongs to one drag. Starting away from the top, cancelling, or
+/// retreating below the hysteresis threshold must never open the assistant.
+struct AssistantPullState {
+    private(set) var isDragging = false
+    private(set) var isEligible = false
+    private(set) var distance: CGFloat = 0
+    private(set) var isArmed = false
+    static let revealDistance: CGFloat = 8
+    static let armDistance: CGFloat = 62
+    static let disarmDistance: CGFloat = 48
+
+    var progress: CGFloat {
+        min(1, max(0, (distance - Self.revealDistance) / (Self.armDistance - Self.revealDistance)))
+    }
+    mutating func begin(atTop: Bool) {
+        self = Self()
+        isDragging = true
+        isEligible = atTop
+    }
+    mutating func update(distance: CGFloat) {
+        guard isDragging, isEligible else { return }
+        self.distance = max(0, distance)
+        isArmed = self.distance >= (isArmed ? Self.disarmDistance : Self.armDistance)
+    }
+    mutating func finish(cancelled: Bool = false) -> Bool {
+        let shouldOpen = isDragging && isEligible && isArmed && !cancelled
+        self = Self()
+        return shouldOpen
+    }
+}
+
+extension View {
+    /// Apply directly to a vertical ScrollView/List, never to a parent containing
+    /// horizontal category strips. Observe native scrolling without taking over it.
+    @ViewBuilder
+    func savoriaAssistantPull() -> some View {
+        if #available(iOS 18, macOS 15, *) {
+            modifier(SavoriaAssistantPullModifier())
+        } else {
+            self // The persistent assistant button remains available on older OSes.
+        }
+    }
+}
+
+@available(iOS 18, macOS 15, *)
+private struct SavoriaAssistantPullModifier: ViewModifier {
+    @EnvironmentObject private var searchBarState: SearchBarState
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.savoriaWorkspacePageActive) private var pageActive
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var pull = AssistantPullState()
+    @State private var topOffset: CGFloat = 0
+
+    private var enabled: Bool { pageActive && !searchBarState.isVisible }
+
+    func body(content: Content) -> some View {
+        content
+            .onScrollGeometryChange(for: CGFloat.self) { geometry in
+                (geometry.contentOffset.y + geometry.contentInsets.top).rounded()
+            } action: { _, offset in
+                topOffset = offset
+                guard enabled else { return }
+                let wasArmed = pull.isArmed
+                let wasRevealed = pull.distance >= AssistantPullState.revealDistance
+                pull.update(distance: -offset)
+                if !wasRevealed && pull.distance >= AssistantPullState.revealDistance { feedback(armed: false) }
+                if !wasArmed && pull.isArmed { feedback(armed: true) }
+            }
+            .onScrollPhaseChange { old, phase in
+                guard enabled else { _ = pull.finish(cancelled: true); return }
+                if phase == .tracking {
+                    pull.begin(atTop: topOffset <= 1)
+                } else if phase == .interacting && !pull.isDragging {
+                    pull.begin(atTop: topOffset <= 1)
+                } else if (old == .interacting || old == .tracking) && (phase == .idle || phase == .decelerating) {
+                    if pull.finish() { WidgetDeepLinkStore.postAssistant(.assistant) }
+                } else if phase == .animating {
+                    _ = pull.finish(cancelled: true)
+                }
+            }
+            .overlay(alignment: .top) {
+                if pull.distance > 3 {
+                    HStack(spacing: 8) {
+                        Image(systemName: "sparkle.magnifyingglass")
+                            .font(.system(size: 19, weight: .semibold))
+                            .rotationEffect(.radians(reduceMotion ? 0 : -0.5 + Double(pull.progress) * 0.5))
+                            .frame(width: 38, height: 38)
+                            .overlay {
+                                Circle().trim(from: 0, to: pull.progress)
+                                    .stroke(.primary.opacity(0.7), style: StrokeStyle(lineWidth: 2, lineCap: .round))
+                                    .rotationEffect(.degrees(-90))
+                            }
+                        if pull.isArmed {
+                            Text("Solte para abrir o Assistente")
+                                .font(.subheadline.weight(.semibold))
+                                .padding(.trailing, 12)
+                                .transition(.opacity)
+                        }
+                    }
+                    .padding(5)
+                    .background(.regularMaterial, in: Capsule())
+                    .shadow(color: .black.opacity(0.08), radius: 8, y: 3)
+                    .scaleEffect(reduceMotion ? 1 : 0.82 + pull.progress * 0.18)
+                    .opacity(min(1, pull.distance / 20))
+                    .padding(.top, 6)
+                    .animation(reduceMotion ? nil : .spring(response: 0.24, dampingFraction: 0.82), value: pull.isArmed)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+                    .accessibilityIdentifier("savoria.assistant.pull-indicator")
+                }
+            }
+            .accessibilityAction(named: Text("Abrir Assistente")) { WidgetDeepLinkStore.postAssistant(.assistant) }
+            .onChange(of: pageActive) { _, active in if !active { _ = pull.finish(cancelled: true) } }
+            .onChange(of: scenePhase) { _, phase in if phase != .active { _ = pull.finish(cancelled: true) } }
+            .onDisappear { _ = pull.finish(cancelled: true) }
+    }
+
+    private func feedback(armed: Bool) {
+        #if os(iOS)
+        UIImpactFeedbackGenerator(style: armed ? .medium : .soft).impactOccurred(intensity: armed ? 0.8 : 0.5)
+        #elseif os(macOS)
+        if armed { NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .now) }
+        #endif
     }
 }

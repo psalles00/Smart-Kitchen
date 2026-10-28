@@ -682,17 +682,18 @@ private struct RecipesLoadedView: View {
                     }
                 }
 
-                GlassButtonGroup {
-                    GlassGroupButton(systemImage: "magnifyingglass") {
-                        toggleLocalSearch()
-                    }
-                    .accessibilityLabel(Text(isLocalSearchVisible ? "Fechar" : "Buscar"))
-                }
-
-                if !workspaceExpanded {
+                if isShowingCadernos {
                     GlassButtonGroup {
-                        GlassGroupButton(systemImage: isShowingCadernos ? "book.closed" : "books.vertical") {
-                            toggleNotebookPage()
+                        GlassGroupButton(systemImage: "magnifyingglass") {
+                            toggleLocalSearch()
+                        }
+                        .accessibilityLabel(Text(isLocalSearchVisible ? "Fechar" : "Buscar"))
+                    }
+                    if !workspaceExpanded {
+                        GlassButtonGroup {
+                            GlassGroupButton(systemImage: "book.closed") {
+                                toggleNotebookPage()
+                            }
                         }
                     }
                 }
@@ -1091,6 +1092,7 @@ private struct RecipesLoadedView: View {
                                 .frame(width: geometry.size.width, alignment: .leading)
                         }
                     }
+                    .savoriaAssistantPull()
                     .onAppear {
                         updateMacGalleryAvailableWidth(geometry.size.width)
                     }
@@ -1112,6 +1114,7 @@ private struct RecipesLoadedView: View {
                         listView
                     }
                 }
+                .savoriaAssistantPull()
                 .onAppear {
                     scrollToPendingRecipeIfNeeded(with: proxy)
                 }
@@ -1448,7 +1451,17 @@ private struct RecipesLoadedView: View {
     // MARK: - Options Menu
 
     private var optionsMenu: some View {
-        GlassGroupMenu(systemImage: "line.3.horizontal.decrease.circle") {
+        GlassGroupMenu(systemImage: "ellipsis") {
+            Section {
+                Button { toggleLocalSearch() } label: {
+                    Label("Buscar", systemImage: "magnifyingglass")
+                }
+                if !workspaceExpanded {
+                    Button { toggleNotebookPage() } label: {
+                        Label("Cadernos", systemImage: "books.vertical")
+                    }
+                }
+            }
             Section("Visualização") {
                 ForEach(RecipeViewMode.allCases) { mode in
                     Button {
@@ -1575,6 +1588,7 @@ private struct RecipesLoadedView: View {
                 .padding(.bottom, 28)
             }
         }
+        .savoriaAssistantPull()
         .onScrollOffsetChange(perform: updateInlineTitle)
     }
 

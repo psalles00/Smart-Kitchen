@@ -132,6 +132,7 @@ struct NutritionDashboardView: View {
                     Color.clear.frame(height: 88)
                 }
             }
+            .savoriaAssistantPull()
         }
         .overlay(alignment: .bottomLeading) {
             if workspaceSection != .meals {

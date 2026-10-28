@@ -140,6 +140,7 @@ struct GroceryListView: View {
             .contentMargins(.top, 0, for: .scrollContent)
             .contentMargins(.top, 8, for: .scrollIndicators)
             #endif
+            .savoriaAssistantPull()
             .scrollContentBackground(.hidden)
             .listSectionSeparator(.hidden)
             .coordinateSpace(name: "lists_scroll")

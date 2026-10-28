@@ -644,6 +644,7 @@ struct FullscreenAssistantView: View {
                 .padding(.top, topPinnedInset)
                 .padding(.bottom, 112)
             }
+            .savoriaAssistantPull()
             .coordinateSpace(name: "AssistantIdleScroll")
             .onScrollOffsetChange { offset in
                 isScrollableContentAtTop = offset >= idleScrollTopThreshold

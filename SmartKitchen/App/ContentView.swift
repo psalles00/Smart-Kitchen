@@ -3105,6 +3105,7 @@ private struct HomeView: View {
                     .padding(.top, 12)
                     .padding(.bottom, 28)
                 }
+                .savoriaAssistantPull()
                 .id(contentResetToken)
             },
             infoContent: {

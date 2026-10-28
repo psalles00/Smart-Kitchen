@@ -461,6 +461,49 @@ final class AdaptiveWorkspaceRenderingTests: XCTestCase {
         XCTAssertEqual(try container.mainContext.fetchCount(FetchDescriptor<ChatMessage>()), 0)
     }
 
+    /// Opt-in interactive E2E: the normal production views and routing run over
+    /// the existing memory-only fixture; no onboarding or customer store changes.
+    func testPullOpensAssistantWithKeyboardInIsolatedFixture() async throws {
+        guard ProcessInfo.processInfo.environment["SAVORIA_VALIDATE_PULL_INTERACTION"] == "1" else {
+            throw XCTSkip("Requires a native drag in the selected Simulator")
+        }
+        let (container, _) = try fixture()
+        let search = SearchBarState()
+        let keyboardShown = expectation(description: "Virtual keyboard shown")
+        let keyboardToken = NotificationCenter.default.addObserver(forName: UIResponder.keyboardDidShowNotification,
+            object: nil, queue: .main) { _ in keyboardShown.fulfill() }
+        defer { NotificationCenter.default.removeObserver(keyboardToken) }
+        let released = expectation(description: "Native pull released")
+        released.assertForOverFulfill = true
+        let token = NotificationCenter.default.addObserver(forName: .openAssistantFromWidget,
+            object: nil, queue: .main) { _ in released.fulfill() }
+        defer { NotificationCenter.default.removeObserver(token) }
+        let root = ContentView().environmentObject(search)
+            .environment(SubscriptionManager(observesTransactions: false)).modelContainer(container)
+        let window = try await render(AnyView(root), name: "native-pull-ready")
+        defer { window.endEditing(true); window.isHidden = true; window.rootViewController = nil }
+        print("SAVORIA_PULL_E2E_READY")
+        await fulfillment(of: [released], timeout: 90)
+        func fields(_ view: UIView) -> [UITextField] {
+            view.subviews.flatMap { child -> [UITextField] in
+                (child as? UITextField).map { [$0] } ?? fields(child)
+            }
+        }
+        let focused = expectation(description: "Assistant field focused without a tap")
+        let commits = WorkspaceDisplayCommits(isReady: {
+            fields(window).contains { $0.isFirstResponder }
+        }) { focused.fulfill() }
+        commits.start()
+        await fulfillment(of: [focused, keyboardShown], timeout: 10)
+        commits.stop()
+        let image = UIGraphicsImageRenderer(bounds: window.bounds).image { _ in
+            window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
+        }
+        let capture = XCTAttachment(image: image)
+        capture.name = "native-pull-assistant-keyboard"; capture.lifetime = .keepAlways; add(capture)
+        XCTAssertEqual(try container.mainContext.fetchCount(FetchDescriptor<ChatMessage>()), 0)
+    }
+
     func testNativeOnboardingRecipeGridAndProjection() async throws {
         let (container, _) = try fixture()
         for (name, step) in [("recipe-selection", OnboardingStep.selectRecipes),
@@ -643,5 +686,31 @@ final class OriginalListWorkspaceSelectionTests: XCTestCase {
         state.reconcile(available: [.pantry, .grocery])
         XCTAssertEqual(state.primary, .pantry)
         XCTAssertEqual(state.secondary, .grocery)
+    }
+}
+
+final class AssistantPullStateTests: XCTestCase {
+    func testOnlyAPullThatStartedAtTheTopCanOpen() {
+        var pull = AssistantPullState()
+        pull.begin(atTop: false)
+        pull.update(distance: 120)
+        XCTAssertFalse(pull.finish())
+        pull.begin(atTop: true)
+        pull.update(distance: 70)
+        XCTAssertTrue(pull.finish())
+        XCTAssertFalse(pull.finish(), "Release must be consumed once")
+    }
+    func testRetreatAndCancellationDoNotOpen() {
+        var pull = AssistantPullState()
+        pull.begin(atTop: true)
+        pull.update(distance: 70)
+        pull.update(distance: 50)
+        XCTAssertTrue(pull.isArmed, "Small finger movements retain the armed state")
+        pull.update(distance: 40)
+        XCTAssertFalse(pull.finish())
+        pull.begin(atTop: true)
+        pull.update(distance: 90)
+        XCTAssertFalse(pull.finish(cancelled: true))
+        XCTAssertEqual(pull.distance, 0)
     }
 }
