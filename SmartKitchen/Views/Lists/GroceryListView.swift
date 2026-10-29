@@ -114,7 +114,7 @@ struct GroceryListView: View {
             }
         }
         .onChange(of: snapshot.groups.flatMap { $0.1.map(\.id) }, initial: true) { _, ids in
-            selection.updateVisibleIDs(Set(ids))
+            selection.updateVisibleIDs(ids)
         }
         .sheet(item: $editingItem, onDismiss: { editingItem = nil }) { selection in
             ItemDetailContainerView(itemID: selection.id, removalContext: listType)

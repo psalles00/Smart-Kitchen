@@ -21,6 +21,7 @@ struct RecipeDetailView: View {
     @Bindable var recipe: Recipe
     @State private var showCookingMode = false
     @State private var showEditRecipe = false
+    @State private var textExport: PlainTextSharePayload?
     @State private var previewSelection: PreparationMediaSelection?
     @State private var editingItem: UnifiedItemSelection?
     @State private var ingredientEditorSheet: IngredientEditorSheet?
@@ -101,7 +102,7 @@ struct RecipeDetailView: View {
     }
 
     private var heroActionCount: Int {
-        var count = 1
+        var count = 2
         if externalURL != nil { count += 1 }
         if hasPreparationMedia { count += 1 }
         return count
@@ -389,6 +390,7 @@ struct RecipeDetailView: View {
                 }
         }
         #endif
+        .sheet(item: $textExport) { PlainTextShareSheet(payload: $0) }
         .sheet(isPresented: $showEditRecipe) {
             NavigationStack {
                 EditRecipeContainerView(recipeID: recipe.id)
@@ -691,6 +693,19 @@ struct RecipeDetailView: View {
         #endif
         .overlay(alignment: .topTrailing) {
             HStack(spacing: 10) {
+                Button {
+                    textExport = PlainTextSharePayload(title: recipe.name,
+                        text: SavoriaPlainTextExport.recipe(recipe, servings: displayServings))
+                } label: {
+                    Image(systemName: "square.and.arrow.up")
+                        .font(.system(size: 24, weight: .semibold))
+                        .foregroundStyle(.primary)
+                        .frame(width: floatingHeroActionSize, height: floatingHeroActionSize)
+                }
+                .buttonStyle(.plain)
+                .background(.ultraThinMaterial, in: Circle())
+                .accessibilityLabel("Compartilhar receita")
+                .accessibilityIdentifier("savoria.recipe.share-text")
                 if hasPreparationMedia, let previewMedia = preferredPreviewMedia {
                     Button {
                         openPreparationMedia(previewMedia)

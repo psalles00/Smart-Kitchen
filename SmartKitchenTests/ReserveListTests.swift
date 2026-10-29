@@ -258,6 +258,52 @@ final class RecipeWorkspaceNavigationTests: XCTestCase {
     }
 }
 
+@MainActor
+final class PlainTextExportTests: XCTestCase {
+    func testListKeepsRequestedOrderQuantitiesNotesAndAttributionWithoutMutation() {
+        let milk = UnifiedItem(name: "Leite", descriptionText: "Sem lactose", quantity: 2, unit: "L", isGrocery: true)
+        let rice = UnifiedItem(name: "Arroz", isPantry: true)
+        let text = SavoriaPlainTextExport.list(title: "Mercado", items: [milk, rice])
+        XCTAssertLessThan(text.range(of: "Leite")!.lowerBound, text.range(of: "Arroz")!.lowerBound)
+        XCTAssertTrue(text.contains("2 L"))
+        XCTAssertTrue(text.contains("Sem lactose"))
+        XCTAssertTrue(text.hasSuffix(SavoriaPlainTextExport.attribution))
+        XCTAssertEqual(milk.quantity, 2)
+        XCTAssertTrue(milk.isGrocery)
+        XCTAssertFalse(milk.isPantry)
+        XCTAssertTrue(rice.isPantry)
+    }
+
+    func testRecipeScalesOnlyExportAndKeepsSectionsStepsAndSource() {
+        let section = RecipeIngredientSection(title: "Molho", subtitle: "Misture à parte")
+        let rice = RecipeIngredient(name: "Arroz", quantity: 1, unit: "g", sortOrder: 1)
+        let sauce = RecipeIngredient(name: "Tomate", quantity: 2, unit: "g", sortOrder: 0, sectionID: section.id)
+        let recipe = Recipe(name: "Arroz com molho", ingredients: [sauce, rice], steps: [
+            RecipeStep(order: 2, instruction: "Sirva."), RecipeStep(order: 1, instruction: "Cozinhe.")
+        ], externalURLString: "https://example.com/recipe", prepTime: 10, servings: 2)
+        recipe.ingredientSections = [section]
+        let text = SavoriaPlainTextExport.recipe(recipe, servings: 4)
+        XCTAssertTrue(text.contains("Arroz — 2 g"))
+        XCTAssertTrue(text.contains("Tomate — 4 g"))
+        XCTAssertTrue(text.contains("Molho\nMisture à parte"))
+        XCTAssertTrue(text.contains("1. Cozinhe.\n2. Sirva."))
+        XCTAssertTrue(text.contains("https://example.com/recipe"))
+        XCTAssertTrue(text.hasSuffix(SavoriaPlainTextExport.attribution))
+        XCTAssertEqual(recipe.servings, 2)
+        XCTAssertEqual(rice.quantity, 1)
+        XCTAssertEqual(sauce.quantity, 2)
+    }
+
+    func testOrphanIngredientsRemainAndLocalSourceIsNotShared() {
+        let ingredient = RecipeIngredient(name: "Sal", sectionID: UUID())
+        let recipe = Recipe(name: "Teste", ingredients: [ingredient], externalURLString: "file:///private/photo.jpg")
+        let text = SavoriaPlainTextExport.recipe(recipe)
+        XCTAssertTrue(text.contains("Sal"))
+        XCTAssertFalse(text.contains("file:///"))
+        XCTAssertTrue(SavoriaPlainTextExport.list(title: "Mercado", items: []).hasSuffix(SavoriaPlainTextExport.attribution))
+    }
+}
+
 #if os(iOS)
 import SwiftUI
 import StoreKitTest
@@ -591,6 +637,29 @@ final class AdaptiveWorkspaceRenderingTests: XCTestCase {
                 layoutReady: { step != .goalProjection || readiness.presentationReady })
             window.isHidden = true; window.rootViewController = nil
         }
+        XCTAssertEqual(try container.mainContext.fetchCount(FetchDescriptor<UnifiedItem>()), 6)
+        XCTAssertEqual(try container.mainContext.fetchCount(FetchDescriptor<Recipe>()), 1)
+        XCTAssertEqual(try container.mainContext.fetchCount(FetchDescriptor<ChatMessage>()), 0)
+    }
+
+    func testNativePlainTextSharePreviewDoesNotWriteUserData() async throws {
+        let activated = expectation(description: "Share preview scene active")
+        let observer = NotificationCenter.default.addObserver(forName: UIScene.didActivateNotification,
+            object: nil, queue: .main) { _ in activated.fulfill() }
+        defer { NotificationCenter.default.removeObserver(observer) }
+        if UIApplication.shared.connectedScenes.contains(where: { $0.activationState == .foregroundActive }) {
+            activated.fulfill()
+        }
+        await fulfillment(of: [activated], timeout: 10)
+        let (container, recipeID) = try fixture()
+        let recipe = try XCTUnwrap(container.mainContext.fetch(FetchDescriptor<Recipe>()).first { $0.id == recipeID })
+        let payload = PlainTextSharePayload(title: recipe.name, text: SavoriaPlainTextExport.recipe(recipe))
+        let window = try await render(AnyView(PlainTextShareSheet(payload: payload)), name: "native-plain-text-share-preview")
+        defer { window.isHidden = true; window.rootViewController = nil }
+        let detail = try await render(AnyView(NavigationStack {
+            RecipeDetailView(recipe: recipe)
+        }.modelContainer(container)), name: "native-recipe-share-entry")
+        defer { detail.isHidden = true; detail.rootViewController = nil }
         XCTAssertEqual(try container.mainContext.fetchCount(FetchDescriptor<UnifiedItem>()), 6)
         XCTAssertEqual(try container.mainContext.fetchCount(FetchDescriptor<Recipe>()), 1)
         XCTAssertEqual(try container.mainContext.fetchCount(FetchDescriptor<ChatMessage>()), 0)

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		6524FB22241841959DB1ADD5 /* PlainTextShareSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 304329B0108F37C44660B5E7 /* PlainTextShareSheet.swift */; };
 		00E90C6FAE36A7099AEE3648 /* meta-fr.json in Resources */ = {isa = PBXBuildFile; fileRef = 678AFBB472665B3EF5D72032 /* meta-fr.json */; };
 		01D2DDC6C13E33CA9B920D76 /* NutrientsInfoContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75728DA118DDAF7AFE520AFD /* NutrientsInfoContent.swift */; };
 		01FE95C9B0E04FDF24B923BF /* NutritionProfileStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F57F27B8FA704D0DDEFDE46 /* NutritionProfileStore.swift */; };
@@ -333,6 +334,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		304329B0108F37C44660B5E7 /* PlainTextShareSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlainTextShareSheet.swift; sourceTree = "<group>"; };
 		019A8D5CCB169B9909C7F98A /* NutritionAITestDoubles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionAITestDoubles.swift; sourceTree = "<group>"; };
 		01D405419BB692070742AF7D /* BackupSnapshotV2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupSnapshotV2.swift; sourceTree = "<group>"; };
 		01EAEAF1627F23BD48B3E688 /* RecipeImportMediaFetcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeImportMediaFetcher.swift; sourceTree = "<group>"; };
@@ -1064,6 +1066,7 @@
 				DB768039F88F9878E87FABA4 /* ItemSearchField.swift */,
 				ACC973991CFB3A5474C04D92 /* LocalPageSearchBar.swift */,
 				CE3D1EB5B18D19836B0A5C38 /* MacCameraMediaPicker.swift */,
+				304329B0108F37C44660B5E7 /* PlainTextShareSheet.swift */,
 				B970691AA2D626F97231E533 /* PageHeader.swift */,
 				03D3A921192A6B45D0277413 /* PaywallSheet.swift */,
 				10B7620BD02EA643ABD8F85C /* RecipeImagePlaceholder.swift */,
@@ -1584,6 +1587,7 @@
 				627C9CE44B19CF25CF626497 /* OnboardingStep.swift in Sources */,
 				8305BB522CA2385D04C3DF2B /* OpenRouterClient.swift in Sources */,
 				D629316ED8E854CB86D0BC1A /* OverviewStepView.swift in Sources */,
+				6524FB22241841959DB1ADD5 /* PlainTextShareSheet.swift in Sources */,
 				D850A73CA9865828707DCD51 /* PageHeader.swift in Sources */,
 				092FE0F7C3BCE16A6FCCE012 /* PageTheme.swift in Sources */,
 				7CB00A81C97BAD20F92F84D9 /* PantryGrocerySyncStepView.swift in Sources */,

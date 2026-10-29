@@ -8,7 +8,7 @@ struct ListItemSelection {
     var isActive = false
     var selectedIDs: Set<UUID> = []
     var toggle: (UUID) -> Void = { _ in }
-    var updateVisibleIDs: (Set<UUID>) -> Void = { _ in }
+    var updateVisibleIDs: ([UUID]) -> Void = { _ in }
 }
 
 private struct ListItemSelectionKey: EnvironmentKey {
@@ -339,8 +339,11 @@ private struct ListsLoadedTabView: View {
     @State private var isSelectingItems = false
     @State private var selectedItemIDs: Set<UUID> = []
     @State private var visibleItemIDs: Set<UUID> = []
+    @State private var visibleItemOrder: [UUID] = []
     @State private var showsBulkCategories = false
     @State private var showsBulkSaveError = false
+    @State private var textExport: PlainTextSharePayload?
+    @State private var showsTextExportError = false
 
     @State private var pantryBadge: Int = 0
     @State private var groceryBadge: Int = 0
@@ -495,6 +498,10 @@ private struct ListsLoadedTabView: View {
         .alert("Não foi possível salvar a ação. Tente novamente.", isPresented: $showsBulkSaveError) {
             Button("OK", role: .cancel) {}
         }
+        .sheet(item: $textExport) { PlainTextShareSheet(payload: $0) }
+        .alert("Não foi possível preparar o texto. Tente novamente.", isPresented: $showsTextExportError) {
+            Button("OK", role: .cancel) {}
+        }
         .tint(PageTheme.lists.accentColor)
         .onChange(of: visibleTabs) { _, tabs in
             if externalSelection == nil { workspaceSelection.reconcile(available: tabs) }
@@ -585,6 +592,9 @@ private struct ListsLoadedTabView: View {
 
     private var optionsMenu: some View {
         GlassGroupMenu(systemImage: "line.3.horizontal.decrease.circle") {
+            Button("Compartilhar lista atual", systemImage: "square.and.arrow.up") { prepareListTextExport() }
+                .accessibilityIdentifier("savoria.lists.share-text")
+            Divider()
             Button(isSelectingItems ? String(localized: "Cancelar") : String(localized: "Selecionar itens"), systemImage: "checkmark.circle") {
                 if isSelectingItems { finishItemSelection() }
                 else { isSelectingItems = true }
@@ -720,9 +730,36 @@ private struct ListsLoadedTabView: View {
         else { selectedItemIDs.insert(id) }
     }
 
-    private func updateVisibleItemIDs(_ ids: Set<UUID>) {
+    private func updateVisibleItemIDs(_ orderedIDs: [UUID]) {
+        let ids = Set(orderedIDs)
         if visibleItemIDs != ids { visibleItemIDs = ids }
+        if visibleItemOrder != orderedIDs { visibleItemOrder = orderedIDs }
         selectedItemIDs.formIntersection(ids)
+    }
+
+    private func prepareListTextExport() {
+        // IDs and order already come from the displayed search/filter snapshot.
+        // Fetch once on tap to read current values, without new observers or writes.
+        let ids = visibleItemOrder
+        do {
+            let items = try modelContext.fetch(FetchDescriptor<UnifiedItem>(predicate: #Predicate { ids.contains($0.id) }))
+                .filter { $0.activeFlags.contains(selectedSubtab.removalContext) }
+            var byID: [UUID: UnifiedItem] = [:]
+            for item in items { byID[item.id] = item }
+            var emitted = Set<UUID>()
+            let sorted = ids.compactMap { id -> UnifiedItem? in
+                guard emitted.insert(id).inserted else { return nil }
+                return byID[id]
+            }
+            let title: String
+            switch selectedSubtab {
+            case .pantry: title = String(localized: "Despensa")
+            case .reserve: title = String(localized: "Para depois")
+            case .grocery: title = String(localized: "Mercado")
+            case .utensils: title = String(localized: "Utensílios")
+            }
+            textExport = PlainTextSharePayload(title: title, text: SavoriaPlainTextExport.list(title: title, items: sorted))
+        } catch { showsTextExportError = true }
     }
 
     private func finishItemSelection() {
