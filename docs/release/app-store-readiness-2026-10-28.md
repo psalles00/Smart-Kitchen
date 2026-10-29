@@ -1,10 +1,11 @@
 # Preparação para a App Store — fechamento em 29/10/2026
 
-**Preparação técnica concluída dentro do escopo autorizado.** Permanecem as
-imagens e a descrição da loja, upload/seleção do build e envio à Apple, que
-Pedro pediu para não executar. O pacote foi exportado localmente; não foi
-processado, aprovado ou publicado pela Apple. A falha conhecida do catálogo
-StoreKit local permanece documentada abaixo, sem disfarçar a suíte como verde.
+**Preparação técnica ainda pendente da investigação do valor decimal StoreKit.**
+A conclusão anterior foi prematura: compra anual e restauração Sandbox não
+explicam nem resolvem a falha numérica do teste local. Imagens, descrição,
+upload/seleção e envio continuam fora do escopo autorizado. O pacote existe,
+mas não deve ser apresentado como liberado tecnicamente sem resolver essa
+falha ou comprovar e delimitar sua causa externa. Não houve upload ou revisão Apple.
 
 ## Pacote final
 
@@ -146,3 +147,24 @@ para revisão nem lançado.
 - [OpenAI: controles de dados](https://developers.openai.com/api/docs/guides/your-data).
 - [OpenRouter: privacidade](https://openrouter.ai/privacy) e [retenção](https://openrouter.ai/docs/guides/privacy/provider-logging).
 - [Exa: política](https://exa.ai/privacy-policy).
+
+## Reabertura da ressalva — 29/10/2026
+
+Após o questionamento de Pedro, o teste original foi repetido sem alterar
+as expectativas. `decimal-current-runtime.xcresult`: reprovação confirmada
+no iPhone 17 Pro / iOS 27.0, valores 99 e 49 em vez de 99,90 e 49,90.
+O app exibe `Product.displayPrice`; não foi localizada conversão própria de
+preços que explique a perda dos centavos. Isso delimita o sintoma, mas não
+comprova sozinho defeito exclusivo da Apple.
+
+A comparação no runtime 27.1 existente (Duo) não executou o teste: o simulador
+ficou aguardando BackBoard; Xcode registrou `invalidDigitCount` para o build
+do runtime. A tentativa foi interrompida e somente esse simulador, iniciado
+para a comparação, foi desligado. Não houve reset, exclusão de dados, compra,
+nova compilação ou alteração do código de produção. Resultado **inconclusivo**,
+não contado como aprovação. Evidências `decimal-runtime-27-1.log` e resultado
+correspondente na pasta de testes acima.
+
+Não foi usado `XCTSkip`/`XCTExpectFailure`, preço inteiro como expectativa,
+correção artificial do valor recebido, nem comparação somente da string para
+transformar essa falha em sucesso. A discrepância permanece aberta.
