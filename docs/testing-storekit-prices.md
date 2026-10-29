@@ -89,3 +89,22 @@ Logs/resultados: pasta `Builds/Savoria-Nutrition-Final-20261028`, arquivos
 `appstore-local-suite.xcresult`, `storefront-build.log` e
 `storefront-explicit.xcresult`. SDK 27.1, iPhone 17 Pro virtual iOS 27.0.
 [Documentação oficial de storefront](https://developer.apple.com/documentation/storekittest/sktestsession/storefront).
+
+## Compra Apple Sandbox e restauração — fechamento de 29/10
+
+No Mac, a folha de pagamento Apple apresentou o plano anual a **R$ 99,90/ano**
+e informou que era uma operação apenas para teste, sem cobrança. Pedro clicou
+em Assinar e forneceu a confirmação **Processo completo / compra realizada
+com sucesso / [Environment: Sandbox]**. O Savoria instalado mostrou Premium
+Anual e renovação em 30/10 (calendário acelerado do Sandbox).
+
+Restaurar compras retornou **Sua assinatura já estava ativa**. Captura:
+`Builds/Savoria-Nutrition-Final-20261028/sandbox-restore-active.png`.
+Não houve segunda compra, limpeza de transações ou cobrança real. O login Apple
+existente funcionou; não foi necessário exigir nova autenticação de tester.
+
+Essas provas fecham compra anual e restore ativo no ambiente Apple, sem
+converter o teste decimal local reprovado em aprovado. Renovação futura,
+cancelamento observado e compra mensal separada não foram executados.
+ASC: ambos os planos, nível 1, sete idiomas, 175 países, sem trial, com capturas
+de revisão aceitas. Nenhum produto/build foi enviado para revisão.

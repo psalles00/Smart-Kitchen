@@ -1,256 +1,148 @@
-# Preparação para a App Store — 28/10/2026
+# Preparação para a App Store — fechamento em 29/10/2026
 
-**Estado: não comprovado como pronto para envio.** O objetivo permanece deixar
-somente imagens, descrição e envio pendentes. Ainda existem pendências técnicas,
-de privacidade e de validação externa. Este arquivo não substitui a aprovação da Apple.
+**Preparação técnica concluída dentro do escopo autorizado.** Permanecem as
+imagens e a descrição da loja, upload/seleção do build e envio à Apple, que
+Pedro pediu para não executar. O pacote foi exportado localmente; não foi
+processado, aprovado ou publicado pela Apple. A falha conhecida do catálogo
+StoreKit local permanece documentada abaixo, sem disfarçar a suíte como verde.
 
-## Candidato e proteção dos dados
+## Pacote final
 
-- Candidato de produção atual: `ac6c5da3` (inclui relatos de IA `978057a2`); candidato anterior `b3e9eeeb`; projeção: `201a538b`; consentimento de IA: `6dee809b`.
-- Bundle principal: `com.pedrosalles.smartkitchen.sync`; Team `44K57HQAP9`.
-- Containers, nesta ordem: `iCloud.com.pedrosalles.smartkitchen.syn`,
-  `iCloud.com.pedrosalles.smartkitchen.sync`.
-- Não houve mudança de schema, store, URLs dos bancos, Team, capabilities ou migração.
-- Os stores existentes continuam sendo `Application Support/SmartKitchen/Private.store`
-  e `Shared.store`, segundo `CloudSyncService`.
-- A versão atualizada foi instalada e aberta em `/Applications/Savoria.app` e no
-  iPhone 17 Pro virtual. A tela inicial do Mac exibiu os dados existentes.
-- O iPhone virtual abriu no onboarding. Os dois arquivos de store existem;
-  existência/tamanho não provam conteúdo. Não foram restaurados nem alterados
-  para contornar essa situação. Pedro confirmou que usa normalmente apenas o iPhone físico; o onboarding do simulador não comprova perda dos dados do aparelho.
+- Fonte de produção: `38d6034d8c407b50e716053ff02df1a60a715903`, incluindo
+  compartilhamento `e658b95b`, relatos de IA `978057a2` e remoção da alegação
+  de velocidade sem comprovação `ac6c5da3`.
+- IPA: `/Volumes/PS-Externo/Coding/Builds/Savoria-AppStore-20261029/ManifestFinal/Export/Savoria.ipa`.
+- Versão **3.6.2 (3)** nos três bundles; 64.155.941 bytes; SHA-256
+  `64322f284bac26c04213fe3ebfecec68a13dbfabe60f408ea6a1c9fb0c079f42`.
+- Archive e exportação App Store Connect passaram pelo Xcode 27.1, sem upload.
+  Assinatura Cloud Managed Apple Distribution; Team `44K57HQAP9`;
+  `get-task-allow=false` nos executáveis principal e das duas extensões.
+- Bundle principal `com.pedrosalles.smartkitchen.sync`; containers assinados,
+  nesta ordem: `iCloud.com.pedrosalles.smartkitchen.syn`,
+  `iCloud.com.pedrosalles.smartkitchen.sync`; CloudKit **Production**.
+- ShareExtension preserva `group.com.pedrosalles.smartkitchen.sync`.
+  Widgets preserva seu conjunto original de permissões. Nenhuma mudança de
+  schema, store, URLs, Team, capability ou migração foi necessária.
+- Chaves privadas OpenAI, OpenRouter e Exa vazias no Info.plist final; nenhuma
+  `.debug.dylib`; integridade ZIP conferida. Manifesto principal presente,
+  sete categorias de dados, sem tracking. Extensão agora empacota seu próprio
+  manifesto para UserDefaults do App Group, motivo Apple `1C8F.1`.
+- Verificação extraída do IPA, incluindo entitlements reais dos Mach-O:
+  `Builds/Savoria-AppStore-20261029/ManifestFinal/package-verification.json`.
+  Os perfis podem autorizar mais containers do que o app efetivamente usa;
+  não foram confundidos com os entitlements assinados do app.
 
-## Matriz de requisitos e evidências
+## App Store Connect conferido e salvo
 
-| Área | Evidência atual | Estado / próxima prova necessária |
-| --- | --- | --- |
-| 2.1 — app completo e estável | Builds Debug iOS/macOS passaram; evidências de funcionalidades em `docs/testing-*.md` | Suíte atual: 194 aprovados, 11 ignorados, 1 reprovado no catálogo StoreKit. Provas de hardware, permissões e provedores reais não decorrem dos mocks |
-| SDK, assinatura, Release e extensões | `project.yml` preserva identidade e zera chaves privadas dos provedores em Release | Archive final de 29/10 e IPA 3.6.2 (3) exportado com Cloud Managed Apple Distribution; sem upload e sem envio à revisão |
-| Depuração ausente em produção | Simulação Premium e credencial OpenRouter protegidas por `#if DEBUG` no código | Binários e interface Release conferidos; marcadores examinados de debug ausentes |
-| 5.1.2(i) — consentimento para IA externa | Gate local explícito em Supabase, OpenAI, OpenRouter e Exa; revogação nas Configurações; seis textos nos sete idiomas | Implementado; nove testes locais passaram. Aviso/recusa conferidos no Mac Release e teste nativo atual de recusa passou no iPhone virtual, sem envio de conteúdo |
-| 5.1.1 — política acessível e fiel | Links usados pelo app responderam HTTP 200 em 28/10 | Texto corrigido e publicado em 28/10; conteúdo atual e acesso sem login conferidos no endereço usado pelo app |
-| Declaração de dados | Manifesto presente, sem tracking, com quatro categorias de Required Reason APIs | Manifesto com sete categorias, sem tracking; formulário ASC alinhado e publicado com autorização explícita em 29/10 |
-| Retenção dos provedores | Políticas oficiais OpenAI, OpenRouter e Exa localizadas | Não presumir zero retenção nem ausência de treinamento em todas as rotas; verificar configuração/contratos aplicáveis antes de prometer isso |
-| Compras e restauração | StoreKit 2 observa transações, finaliza verificadas e oferece restore; catálogo local com dois IDs | Sandbox/TestFlight real, elegibilidade do trial, restauração, cancelamento e renovação ainda sem prova atual suficiente |
-| Preços e grupo Premium | Relato anterior em `docs/testing-storekit-prices.md`: anual R$ 99,90, mensal R$ 49,90, ambos nível 1 | ASC reconferido em 29/10: R$ 99,90/ano e R$ 49,90/mês, nível 1, sete idiomas, 175 países; catálogo local não comprova compra Sandbox |
-| Saúde e precisão | App estima nutrientes e projeções; resultados de nutrição existentes | Promessa e comparação inventada corrigidas em `201a538b`; layout renderizado conferido. Demais alegações/fluxos ainda não recebem aprovação global por esse teste |
-| Dados e iCloud | Stores/configuração preservados; evidências anteriores em `docs/testing-icloud-recovery.md` | Reutilizar provas compatíveis, separar do estado do simulador; nenhum teste destrutivo com dados de Pedro |
-| Permissões e recursos do dispositivo | Descrições de câmera, fotos, microfone e fala presentes | Conferir strings localizadas e recusa; hardware real somente onde necessário |
-| UGC/IA, conteúdo e direitos | Receitas locais, importação, IA e pesquisa externa são funções do app | Confirmar escopo público/privado, salvaguardas e direitos/atribuição do conteúdo usado |
-| Metadados, faixa etária e privacidade ASC | Documentos locais históricos existem | Respostas atuais do ASC não comprovadas; classificação deve vir do questionário atual, não de recomendação antiga de 4+ |
-| Contratos, impostos, banco, DSA e região | Nenhuma sessão ASC disponível nesta rodada | Verificação externa pendente; não aceitar contratos nem declarar dados comerciais por inferência |
-| Imagens, descrição e envio | Exclusões expressas do objetivo | Permanecem fora da entrega técnica; não houve envio, compra ou publicação de build |
+| Área | Resultado |
+| --- | --- |
+| Registro | App `6771525885`, versão 3.6.2 em Preparar para envio; lançamento manual; nenhum build enviado/selecionado |
+| Identificação | Categorias Food & Drink / Health & Fitness, copyright 2026 Pedro Salles, suporte público e contato de revisão autorizado salvos; app não exige login |
+| Classificação e direitos | Questionário atual: 13+ global, com exceções regionais; direitos comerciais confirmados por Pedro; declaração de não ser dispositivo médico |
+| Contratos | Apple Developer LYL260 aceito com autorização; Paid Apps e banco ativos; informações fiscais Brasil e W-8BEN ativas; situação DSA existente conferida |
+| Disponibilidade | App gratuito e dois planos em todos os 175 países/regiões permitidos pela Apple |
+| Assinaturas | Grupo `22478308`, ambos nível 1; anual `6822917042` R$ 99,90/ano e mensal `6822949625` R$ 49,90/mês; sete idiomas; sem oferta introdutória cadastrada |
+| Material IAP | Captura nativa 1206×2622 aceita e persistida para ambos os planos; mensal terminou o processamento. Fixture local sem trial, identificada como referência visual, não como prova de compra |
+| Privacidade | Sete categorias publicadas com autorização específica; todas declaradas vinculadas, sem tracking; URL pública e finalidades conferidas |
+| Comprovação | PDF adaptado do Rotina anexado uma vez ao contato de revisão; notas de revisão salvas |
 
-## Consentimento: validação concluída nesta rodada
+As categorias publicadas são Health, Fitness, Other User Content, Photos or
+Videos, Audio, Device ID e Purchase History. Saúde, atividade e conteúdo têm
+App Functionality + Product Personalization; demais têm App Functionality.
+A prévia resumida da Apple ainda mostrou Health também na coluna não vinculada,
+embora os sete formulários detalhados salvos indiquem vinculados. Não foi
+apresentada essa prévia contraditória como confirmação integral dos formulários.
 
-`consent-final-tests.xcresult`, em
-`/Volumes/PS-Externo/Coding/Builds/Savoria-Nutrition-Final-20261028/`:
+O comprovante Thiings cobre ícones, não fotos, receitas, áudio ou fontes. Mantém
+os limites do fornecedor (incluindo receita anual até US$ 200 mil e proibição
+de revenda avulsa); não houve nova auditoria financeira da conta. Pedro confirmou
+separadamente os demais direitos comerciais. O PDF contém dados privados de
+faturamento e não integra o repositório público.
 
-- iPhone 17 Pro Simulator, iOS 27.0, build com SDK 27.1.
-- **9 aprovados, 0 falhas, 0 ignorados**: cinco testes de consentimento e quatro
-  testes existentes de fallback.
-- Cobertura: sem janela não registra uma escolha; recusa não repete prompt;
-  nova autorização explícita; revogação; decisão pendente não vence revogação;
-  cancelamento não libera envio; conteúdo recusado não alcança provedor.
-- Respostas de rede substituídas por fixtures locais. Nenhuma inferência paga,
-  nenhum envio de foto/refeição real e nenhuma chamada nova de backend por este ajuste.
-- Revisão independente encontrou duas traduções de botões ausentes; corrigidas.
-  O revisor não identificou bypass nos gates examinados. Não executou a UI.
-- Mac instalado: Configurações → Autorizar serviços de IA abriu NSAlert com
-  destinatários/dados/recusa. Após “Agora não”, receitas locais continuaram visíveis.
-  A recusa permanece no Mac; o usuário pode autorizar pelas Configurações.
-- Atualização: aviso e recusa nativos iOS conferidos na terceira rodada abaixo;
-  reautorização e revogação permanecem cobertas pelos testes locais do broker.
-  Isso não substitui compras reais nem todas as verificações funcionais do app.
+## Compra e restauração reais no Sandbox
 
-## Ordem das próximas ações independentes do ASC
+- Apple mostrou o plano anual **R$ 99,90/ano** e informou que a operação era
+  apenas para teste, sem cobrança. Pedro acionou Assinar.
+- Confirmação fornecida pelo usuário: **Processo completo / Sua compra foi
+  realizada com sucesso / [Environment: Sandbox]**. Isso foi uma compra no
+  ambiente Apple; não foi o teste local SKTestSession nem uma simulação Premium.
+- Mac instalado mostrou **Premium Anual** e renovação em 30/10/2026, compatível
+  com calendário acelerado do Sandbox.
+- Restaurar compras retornou **Sua assinatura já estava ativa**; captura
+  `sandbox-restore-active.png`. Não houve segunda compra nem limpeza de histórico.
+- O login Apple existente bastou nesse fluxo. Não foi exigido novo login de
+  tester depois da confirmação, nem iniciada recuperação de senha.
+- Esta prova cobre compra anual e restore da assinatura ativa. Não comprova
+  uma renovação/cancelamento futuro observado nem uma compra mensal separada.
+  Observação e finalização de transações verificadas usam StoreKit 2 existente.
 
-1. Estado esclarecido por Pedro: uso normal no iPhone físico. Consentimento iOS
-   conferido em fixture isolada, sem restauração ou alterações nos seus dados.
-2. Política e manifesto corrigidos/publicados. Ainda separar transparência da
-   verificação das condições/configurações efetivas dos provedores; não prometer ZDR.
-3. Revisar as demais alegações e fluxos de nutrição; a promessa do gráfico já foi corrigida e validada.
-4. Archive atual gerado e inspecionado em 29/10. Exportação de distribuição
-   permanece pendente; não gerar outra candidata para repetir esta prova.
-5. Retomar somente as verificações do ASC quando houver sessão disponível. Pedro
-   pediu expressamente continuar primeiro tudo que independe desse acesso.
+## Validação funcional e limites
 
-## Fontes oficiais consultadas
-
-- [App Review Guidelines](https://developer.apple.com/app-store/review/guidelines/):
-  1 (segurança), 2 (desempenho/completude), 3 (negócios/IAP), 4 (design),
-  5 (privacidade e direitos); atenção a 1.4.1, 2.1, 3.1.2, 5.1.1 e 5.1.2(i).
-- [Preparação para envio](https://developer.apple.com/app-store/submitting/).
-- [Definição de coleta e Privacy Nutrition Labels](https://developer.apple.com/videos/play/wwdc2022/10167/).
-- [Categorias do manifesto](https://developer.apple.com/documentation/bundleresources/app-privacy-configuration/nsprivacycollecteddatatypes/nsprivacycollecteddatatype).
-- [OpenAI: controles de dados](https://developers.openai.com/api/docs/guides/your-data).
-- [OpenRouter: política](https://openrouter.ai/privacy) e
-  [retenção dos provedores](https://openrouter.ai/docs/guides/privacy/provider-logging).
-- [Exa: política](https://exa.ai/privacy-policy): diferencia site e processamento
-  por conta de clientes empresariais; a página geral não comprova o contrato da API.
-
-
-## Projeção e builds Release — segunda rodada de 28/10
-
-- `GoalProjectionStepView` deixa de prometer a conquista da meta e de comparar
-  curvas inventadas “com” e “sem” Savoria. A linha de referência permanece no
-  peso atual informado; a outra é identificada como trajetória ilustrativa.
-- Cabeçalho apresenta meta/prazo, com explicação de que o gráfico não é previsão
-  nem garantia e orientação para consultar médico/nutricionista. Novos textos
-  cobrem os sete idiomas. Nenhum dado nutricional é alterado por essa tela.
-- O teste existente `testNativeOnboardingRecipeGridAndProjection` passou em
-  fixture em memória no iPhone 17 Pro. A imagem `native-onboarding-goal-projection`
-  foi conferida: explicação completa e botão Continuar acessível.
-- Builds **Release iOS e macOS passaram**, logs `appstore-ios-release.log` e
-  `appstore-mac-release.log` na mesma pasta de evidências. Chaves OpenAI,
-  OpenRouter e Exa vazias nos dois Info.plist; marcadores verificados de debug
-  ausentes dos executáveis. Identidade/Team/ordem de containers e App Group da
-  ShareExtension iOS conferidos. Isso não substitui exportação/distribuição Apple.
-- A cópia Release foi instalada em `/Applications/Savoria.app` com assinatura de
-  desenvolvimento para validação local; verificação `codesign --deep --strict`
-  passou. A interface abriu com os dados existentes e sem o botão de debug.
-- A primeira cópia por mesclagem deixou duas bibliotecas de Debug no pacote.
-  A comparação encontrou apenas essas sobras; foram movidas, sem exclusão, para
-  `Builds/Savoria-Agent-Mac/InstallRecovery-20261028`. A assinatura instalada foi
-  conferida após essa correção. São artefatos de build, sem bancos do usuário;
-  retenção somente durante esta auditoria de lançamento.
-- O consentimento no Mac permanece recusado após o teste anterior. A autorização
-  pode ser concedida nas Configurações; não foi concedida em nome de Pedro.
-
-
-## Privacidade publicada — terceira rodada de 28/10
-
-- Commit `b3e9eeeb`: manifesto e política refletem conteúdo/saúde/atividade,
-  fotos, áudio e identificador das avaliações, além de compras. Categorias
-  empacotadas: `PurchaseHistory`, `Health`, `Fitness`, `PhotosorVideos`,
-  `AudioData`, `OtherUserContent`, `DeviceID`; finalidade AppFunctionality,
-  sem tracking. Não se presume anonimização de texto ou mídia pessoal.
-- O UUID de `FoodCache.vote` é pseudônimo e persistido com alimento/voto para
-  deduplicação, conforme o código e o SQL existentes. Foi incluído também
-  no aviso e nas sete traduções. Não houve nova coleta nem mudança do payload.
-- Revisão independente identificou essa omissão na primeira candidata; após
-  correção, aprovou o delta. Plist/JSON e diff foram conferidos.
-- `privacy-native-ios.xcresult`: teste nativo de recusa **aprovado** no iPhone
-  17 Pro, fixture em memória. O aviso foi observado pelo Device Hub e o botão
-  “Agora não” acionado por automação. Permaneceram seis itens sintéticos e zero
-  mensagens; nenhum conteúdo foi enviado a provedor. Capture Keyboard desligado.
-- macOS Release instalado: aviso novo conferido, incluindo a frase do identificador;
-  recusa mantida. A assinatura da cópia em `/Applications/Savoria.app` foi validada.
-- Builds atualizadas `privacy-build.log`, `privacy-mac-release.log` e
-  `privacy-ios-release.log` passaram. O manifesto empacotado no Release iOS
-  foi lido e confrontado com as sete categorias esperadas.
-- Política publicada: https://psalles00.github.io/Smart-Kitchen/privacy/
-  respondeu HTTP 200, sem login; data 28/10, Supabase, OpenRouter, identificador,
-  revogação e texto de retenção foram conferidos no conteúdo entregue e no Chrome.
-  O endpoint legado de histórico de builds do Pages retornou um registro antigo;
-  prevaleceu a prova do conteúdo público atual. Não foi disparado build extra.
-- A política diferencia dados locais/iCloud de envios opcionais, esclarece que
-  desinstalar não exclui iCloud, e fornece o caminho existente de exclusão e
-  contato para pedidos sem exigir Premium. Nenhuma exclusão foi executada.
-- O formulário App Privacy no ASC continua **pendente**. Esta publicação e o
-  manifesto não preenchem o formulário nem comprovam condições contratuais ou
-  configurações de retenção de todas as rotas. Não houve inferência paga nesta rodada.
-
-## Archive e suíte final local — 29/10
-
-- `appstore-local-suite.xcresult`: **206 testes: 194 aprovados, 11 ignorados,
-  1 reprovado**. Falha única: `testBrazilSubscriptionCatalogueMatchesAnnualAndMonthlyPlans`.
-  Não classificamos a suíte como aprovada. Testes optativos de inferência real,
-  migração física e interação manual não foram habilitados. Nenhuma chamada
-  paga foi feita nesta rodada; os testes de rede usam respostas locais.
-- O reteste `storefront-explicit.xcresult` fixou Brasil explicitamente: moeda e
-  períodos passaram, mas a API retornou 99 / 49. A diferença de centavos já
-  documentada em 14/10 permanece. Expectativas 99,90 / 49,90 preservadas.
-  Ver `docs/testing-storekit-prices.md`; Sandbox real continua pendente.
-- `Builds/Savoria-AppStore-20261028/Savoria.xcarchive`: **ARCHIVE SUCCEEDED**,
-  versão 3.6.2 (1), arm64, SDK iphoneos27.1, mínimo iOS 17.0.
-  Fonte de produção `b3e9eeeb` (commits seguintes até `d86b64e1` só documentação).
-- Principal, ShareExtension e Widgets passaram `codesign --verify --deep --strict`.
-  Bundle/Team corretos; containers iCloud na ordem existente, App Groups do
-  principal e ShareExtension preservados. Chaves OpenAI/OpenRouter/Exa vazias
-  no Info.plist do archive; sete categorias de privacidade empacotadas.
-- Assinado com **Apple Development**, sem certificado Apple Distribution local.
-  Archive local válido não equivale a exportação App Store nem aceitação do
-  servidor Apple. Não houve upload ou nova tentativa de login. Retenção: este
-  único candidato até finalizar a auditoria/envio; reutilizar em vez de recriar.
-
-## Limites da conclusão local
-
-- A suíte atual aprovou renderização nativa das cinco páginas em fixture em
-  memória, superfícies inferiores, onboarding/projeção e seções de receitas.
-  Não houve alteração de listas, refeições ou mídia de Pedro nesses testes.
-- Dos 11 ignorados: sete são consultas reais protegidas por reserva financeira,
-  um exige snapshot físico de migração, um é diagnóstico decimal optativo e
-  dois exigem interação manual. Consentimento e gesto têm provas separadas
-  registradas acima; os skips não são contados como aprovação.
-- Evidências anteriores compatíveis foram reaproveitadas em
+- Suíte ampla: `appstore-local-suite.xcresult`, **206 testes: 194 aprovados,
+  11 ignorados, 1 reprovado**. O reteste Brasil explícito aprovou moeda e
+  períodos, mas `Product.price` local retornou 99/49 em vez de 99,90/49,90.
+  Não foram reduzidas as expectativas. A discrepância de serialização do
+  ambiente local já foi investigada em 14/10; ver `docs/testing-storekit-prices.md`.
+  Cadastro ASC e compra anual Apple a R$ 99,90 são provas separadas dos preços
+  reais; não transformam esse teste local reprovado em aprovado.
+- Skips: sete consultas reais protegidas por reserva financeira, um snapshot
+  físico de migração, um diagnóstico decimal optativo e dois testes manuais.
+  Não contam como sucesso. Nenhuma inferência paga nova nesta rodada.
+- Consentimento IA: nove testes locais aprovados; gate explícito para serviços
+  externos, recusa e revogação. Aviso e recusa renderizados/acionados no iOS e
+  macOS; recusa não enviou conteúdo. Fixture em memória no simulador.
+- Relatos voluntários de IA: quatro testes aprovados; UI nativa nas duas
+  plataformas e revisão independente aprovadas. A prévia começa sem anexar
+  resposta; usuário decide enviar pelo app de e-mail.
+- Projeção nutricional deixou de prometer conquista da meta ou comparar curvas
+  inventadas; interface nativa conferida. Regras médicas de prompt não garantem
+  que qualquer modelo sempre as cumpra. Não promete diagnóstico ou prescrição.
+- Compartilhamento: quatro testes aprovados; lista filtrada e ordem atual,
+  receita com porções/ingredientes/preparo/fonte e referência ao Savoria.
+  Copiar e menu nativo conferidos no Mac com dados reais do proprietário;
+  receita e prévia renderizadas no iPhone 17 Pro com dados em memória.
+  Nenhuma mensagem enviada nem dado do usuário alterado. Sete idiomas.
+- Snapshot Mac antes/depois da instalação: **111 itens, 64 receitas,
+  69 categorias**, hash de conteúdo idêntico. App Release instalado e aberto
+  em `/Applications/Savoria.app`. iOS atualizado, instalado e aberto no
+  iPhone 17 Pro virtual, preservando stores. O simulador está no onboarding;
+  Pedro confirmou uso normal no aparelho físico, não foi inferida perda de dados.
+- Provas compatíveis de IA/receitas/iCloud reaproveitadas em
   `docs/testing-assistant-variety.md`, `docs/testing-recipe-discovery.md` e
-  `docs/testing-icloud-recovery.md`. Não repetimos inferências ou migrações
-  somente para aumentar a contagem. Nenhuma prova como administrador de
-  Supabase foi usada para afirmar que o caminho do cliente funciona.
-- O assistente contém regras médicas explícitas em `AssistantChatManager` e
-  `InlineChatView`: não diagnosticar/prescrever; não prometer resultado e
-  encaminhar situações clínicas a profissional. Regras de prompt são defesa
-  implementada, não prova de que o modelo sempre as cumpre.
-- **Relatos de IA implementados e validados:** `978057a2` adiciona relato no
-  nível da resposta, incluindo cartões e opções. A prévia começa sem anexar a
-  resposta; envio depende do usuário no app de e-mail. Quatro testes locais
-  passaram; interface nativa iOS/macOS e revisão independente aprovadas.
-  Ver `docs/testing-ai-content-reporting.md`. Regras de segurança de prompt não
-  são prova de que qualquer modelo sempre as cumprirá.
-- Pedro confirmou em 29/10 os direitos comerciais das imagens/receitas e do
-  conteúdo de terceiros. O comprovante Thiings adaptado foi anexado ao ASC;
-  cobre somente ícones e conserva as limitações do fornecedor (incluindo
-  receita anual de até US$ 200 mil e proibição de revenda avulsa). Não houve
-  nova auditoria de elegibilidade financeira ou da conta Thiings. Retenção
-  dos provedores não é demonstrada por build ou HTTP 200 da política.
+  `docs/testing-icloud-recovery.md`, sem repetir inferências/migrações por rotina.
+  Não foi usado acesso administrador Supabase como prova do caminho do cliente.
+- Não houve mudança de persistência que exigisse nova migração física. O
+  hardware não foi usado para testes rotineiros desta entrega.
+- Câmera, fotos, microfone e fala mantêm descrições de uso no IPA e sete
+  localizações. Produção não inclui funções de debug. Builds iOS/macOS passaram.
 
-## Fechamento atualizado — 29/10/2026
+## Privacidade, custos e entrega
 
-- Contrato Apple Developer LYL260 aceito com autorização expressa; acesso a
-  certificados liberado. Xcode autenticado na equipe `44K57HQAP9`.
-- IPA exportado **sem upload**, via Custom > App Store Connect > Export:
-  `/Volumes/PS-Externo/Coding/Builds/Savoria-AppStore-20261029/Savoria-AppStore-3.6.2-3/Savoria.ipa`.
-  64.091.821 bytes; SHA-256
-  `530e3371c2c7ad3f7e68d28d5193f245df539d4f83112c582523a9ef7a0e37c6`.
-  O Xcode incrementou o build de 1 para 3 porque informou que 1 não atendia ao
-  registro existente. Archive fonte `ac6c5da3`; alterações posteriores de testes
-  e documentação não mudam esse binário.
-- Assinatura: Cloud Managed Apple Distribution, validade 20/05/2027. IPA e ZIP
-  conferidos; principal e duas extensões são 3.6.2 (3), Team correto,
-  `get-task-allow=false`. Entitlements reais extraídos do Mach-O principal
-  mantêm os dois containers na ordem original e CloudKit Production.
-  ShareExtension mantém App Group; Widgets preserva seu conjunto original.
-  Perfis podem autorizar um conjunto maior de containers; a conferência do app
-  usou os entitlements efetivamente assinados, não só a lista do perfil.
-- Metadados ASC: versão 3.6.2 em preparação, lançamento manual, sem login de app
-  exigido; contato autorizado, suporte público, copyright e comprovante de
-  ícones anexados. Categorias, classificação 13+ global (exceções regionais),
-  declaração de direitos e de não ser dispositivo médico salvas.
-- App e planos disponíveis em todos os 175 países/regiões permitidos. Download
-  gratuito; Premium anual/mensal mantém os preços brasileiros acima. Não foi
-  habilitado o novo modelo de mensalidade com compromisso de 12 meses.
-  Grupo e planos localizados nos sete idiomas. Nenhuma oferta introdutória
-  está cadastrada; paywall de produção depende da oferta e elegibilidade
-  retornadas pelo StoreKit, sem promessa fixa de trial.
-- Privacidade: sete categorias publicadas após confirmação específica do
-  proprietário. Política de 29/10 publicada e conferida na URL pública, com
-  personalização e tratamento dos relatos voluntários; não promete retenção zero.
-- Paywall: removida a alegação sem comprovação “4.3x mais rápido” em `ac6c5da3`,
-  nos sete idiomas. Builds iOS e macOS passaram. Mac instalado e aberto em
-  `/Applications/Savoria.app`; dados existentes visíveis, preços corretos e
-  título novo conferidos. Simulador iPhone 17 Pro atualizado e aberto; não
-  foi preenchida uma despensa fictícia nos stores reais do simulador.
-- Material de revisão IAP: captura nativa 1206×2622 gerada em cena isolada,
-  fixture em memória e catálogo local sem trial (igual ao cadastro ASC atual).
-  Teste `testNativePaywallReviewLayoutWithoutWritingUserData` passou; nenhum
-  toque em comprar/restaurar, nenhuma inferência de IA ou alteração nos dados
-  reais. A captura é prova visual, **não comprova compra Sandbox**. A tentativa
-  de anexar a captura macOS foi recusada por dimensões e não foi reaproveitada.
-- Evidências atuais em `Builds/Savoria-Nutrition-Final-20261028/`; verificações
-  do IPA em `Builds/Savoria-AppStore-20261029/package-verification.json`.
+Política pública de 29/10 e termos acessíveis pelo app foram conferidos sem
+login; informações de consentimento, personalização, relatos e exclusão foram
+alinhadas. Não se promete retenção zero/tratamento sem treinamento em todas as
+rotas dos provedores sem confirmação contratual/configuração correspondente.
 
-**Ainda pendente:** compra/restauração/renovação Sandbox real e reconciliação
-com a falha decimal do catálogo local. A autenticação Sandbox depende do
-proprietário. Imagens e descrição de marketing permanecem fora deste recorte.
-Não houve upload de build nem envio para revisão; não declarar que o app está
-100% pronto enquanto a prova de compras e as pendências acima não forem fechadas.
+Compartilhar/copiar adiciona **zero chamadas remotas** para gerar a prévia:
+listas fazem uma leitura local sob demanda; nenhuma escrita, polling, nova
+inferência ou serviço foi ativado. Escolher um destino externo é ação posterior
+do usuário. Orçamento de IA não foi ampliado ou consumido por esta entrega.
+
+Evidências e screenshots: `Builds/Savoria-Nutrition-Final-20261028/`.
+Teste manual de compartilhamento: `docs/testing-plain-text-sharing.md`.
+
+**Fora deste fechamento:** imagens e texto comercial da loja (incluir links de
+privacidade e Terms/EULA na descrição), upload/seleção do IPA e envio para
+revisão. A Apple ainda realizará validação e revisão próprias. Nada foi enviado
+para revisão nem lançado.
+
+## Fontes oficiais
+
+- [App Review Guidelines](https://developer.apple.com/app-store/review/guidelines/).
+- [Preparação para envio](https://developer.apple.com/app-store/submitting/).
+- [Required Reason APIs e motivo UserDefaults App Group](https://developer.apple.com/documentation/bundleresources/app-privacy-configuration/nsprivacyaccessedapitypes/nsprivacyaccessedapitype).
+- [StoreKit Testing](https://developer.apple.com/documentation/storekittest/sktestsession).
+- [Product.displayPrice](https://developer.apple.com/documentation/storekit/product/displayprice).
+- [OpenAI: controles de dados](https://developers.openai.com/api/docs/guides/your-data).
+- [OpenRouter: privacidade](https://openrouter.ai/privacy) e [retenção](https://openrouter.ai/docs/guides/privacy/provider-logging).
+- [Exa: política](https://exa.ai/privacy-policy).
