@@ -6,7 +6,7 @@ de privacidade e de validação externa. Este arquivo não substitui a aprovaç�
 
 ## Candidato e proteção dos dados
 
-- Base anterior: `f65cc35f`; consentimento de IA: `6dee809b`.
+- Candidato de código: `201a538b`; consentimento de IA: `6dee809b`; base anterior: `f65cc35f`.
 - Bundle principal: `com.pedrosalles.smartkitchen.sync`; Team `44K57HQAP9`.
 - Containers, nesta ordem: `iCloud.com.pedrosalles.smartkitchen.syn`,
   `iCloud.com.pedrosalles.smartkitchen.sync`.
@@ -32,7 +32,7 @@ de privacidade e de validação externa. Este arquivo não substitui a aprovaç�
 | Retenção dos provedores | Políticas oficiais OpenAI, OpenRouter e Exa localizadas | Não presumir zero retenção nem ausência de treinamento em todas as rotas; verificar configuração/contratos aplicáveis antes de prometer isso |
 | Compras e restauração | StoreKit 2 observa transações, finaliza verificadas e oferece restore; catálogo local com dois IDs | Sandbox/TestFlight real, elegibilidade do trial, restauração, cancelamento e renovação ainda sem prova atual suficiente |
 | Preços e grupo Premium | Relato anterior em `docs/testing-storekit-prices.md`: anual R$ 99,90, mensal R$ 49,90, ambos nível 1 | Cadastro atual não reconferido; não recriar produtos. Catálogo local não comprova produção |
-| Saúde e precisão | App estima nutrientes e projeções; resultados de nutrição existentes | Revisar alegações do onboarding: `GoalProjectionStepView` ainda contém promessa de conquista de meta; apresentar estimativa, sem garantia médica/de resultado |
+| Saúde e precisão | App estima nutrientes e projeções; resultados de nutrição existentes | Promessa e comparação inventada corrigidas em `201a538b`; layout renderizado conferido. Demais alegações/fluxos ainda não recebem aprovação global por esse teste |
 | Dados e iCloud | Stores/configuração preservados; evidências anteriores em `docs/testing-icloud-recovery.md` | Reutilizar provas compatíveis, separar do estado do simulador; nenhum teste destrutivo com dados de Pedro |
 | Permissões e recursos do dispositivo | Descrições de câmera, fotos, microfone e fala presentes | Conferir strings localizadas e recusa; hardware real somente onde necessário |
 | UGC/IA, conteúdo e direitos | Receitas locais, importação, IA e pesquisa externa são funções do app | Confirmar escopo público/privado, salvaguardas e direitos/atribuição do conteúdo usado |
@@ -66,8 +66,8 @@ de privacidade e de validação externa. Este arquivo não substitui a aprovaç�
 1. Esclarecer o estado do iPhone virtual sem reset/restauração; usar fixture isolada
    se necessário para concluir UI iOS sem tocar nos dados existentes.
 2. Corrigir política/declarações a partir do fluxo real e das condições dos provedores.
-3. Substituir promessas de resultado por linguagem de projeção/estimativa nos idiomas do app.
-4. Conferir candidato Release, segredos ausentes, capabilities e extensões; finalizar
+3. Revisar as demais alegações e fluxos de nutrição; a promessa do gráfico já foi corrigida e validada.
+4. Finalizar archive/exportação de distribuição após as correções restantes. Builds Release, segredos e capabilities já foram conferidos; finalizar
    matriz funcional proporcional reaproveitando evidências válidas.
 5. Retomar somente as verificações do ASC quando houver sessão disponível. Pedro
    pediu expressamente continuar primeiro tudo que independe desse acesso.
