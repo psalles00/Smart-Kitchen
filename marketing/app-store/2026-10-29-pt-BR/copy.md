@@ -12,6 +12,24 @@ juntas, sem complicação.
 
 ## 02
 
+Suas calorias.
+Sem registrar
+todos os dias.
+
+Uma média inteligente dos dias registrados.
+Dias em branco não entram como zero.
+
+## 03
+
+O que falta
+vira lista
+de mercado.
+
+Veja o que tem e o que precisa comprar.
+Do mercado, os itens voltam à despensa.
+
+## 04
+
 Abra a despensa.
 Descubra
 o almoço.
@@ -19,7 +37,7 @@ o almoço.
 Peça ideias à IA com os ingredientes
 que você já tem em casa.
 
-## 03
+## 05
 
 Sua receita.
 Um passo
@@ -28,7 +46,7 @@ de cada vez.
 Ingredientes, porções e modo de preparo.
 Tudo à mão enquanto você cozinha.
 
-## 04
+## 06
 
 Foto, texto
 ou voz.
@@ -36,24 +54,6 @@ Você escolhe.
 
 Registre suas refeições do seu jeito.
 Revise as estimativas antes de salvar.
-
-## 05
-
-Receitas, listas
-e nutrição.
-Tudo conversa.
-
-Aproveite os ingredientes da despensa,
-organize as compras e cuide da alimentação.
-
-## 06
-
-O que falta
-vira lista
-de mercado.
-
-Veja o que você tem e o que precisa comprar.
-Da lista de compras de volta à despensa.
 
 ## 07
 
@@ -72,3 +72,12 @@ come.
 
 Acompanhe calorias e nutrientes
 ao longo do seu dia.
+
+## 09
+
+Receitas, listas
+e nutrição.
+Tudo conversa.
+
+Aproveite os ingredientes da despensa,
+organize as compras e cuide da alimentação.

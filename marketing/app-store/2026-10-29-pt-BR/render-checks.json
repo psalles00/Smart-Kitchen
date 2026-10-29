@@ -1,6 +1,6 @@
 [
   {
-    "page": 3,
+    "page": 1,
     "errors": [],
     "fonts": [
       {
@@ -14,65 +14,24 @@
     ],
     "copy": [
       {
-        "title": "Sua receita.\nUm passo\nde cada vez.",
-        "bottom": 829.65625,
-        "right": 1220,
-        "left": 200,
-        "height": 639.65625,
-        "overflow": false
-      }
-    ],
-    "images": [
-      {
-        "src": "assets/screenshots/recipe.png",
-        "naturalRatio": 0.459954233409611,
-        "ratio": 0.4599560417849999
-      },
-      {
-        "src": "assets/screenshots/recipe-ingredients.png",
-        "naturalRatio": 1.2877030162412992,
-        "ratio": 1.2877075147976615
-      }
-    ]
-  },
-  {
-    "page": 4,
-    "errors": [],
-    "fonts": [
-      {
-        "family": "Bricolage",
-        "status": "loaded"
-      },
-      {
-        "family": "Inter",
-        "status": "loaded"
-      }
-    ],
-    "copy": [
-      {
-        "title": "Foto, texto\nou voz.\nVocê escolhe.",
-        "bottom": 2757.109375,
+        "title": "Sua cozinha\norganizada.\nMais sabor\nno seu dia.",
+        "bottom": 1021.59375,
         "right": 1220,
         "left": 100,
-        "height": 642.109375,
+        "height": 831.59375,
         "overflow": false
       }
     ],
     "images": [
       {
-        "src": "assets/screenshots/food.png",
+        "src": "assets/screenshots/home.png",
         "naturalRatio": 0.459954233409611,
         "ratio": 0.4599560417849999
-      },
-      {
-        "src": "assets/screenshots/food-focus.png",
-        "naturalRatio": 1.5416666666666667,
-        "ratio": 1.5416880420827674
       }
     ]
   },
   {
-    "page": 5,
+    "page": 2,
     "errors": [],
     "fonts": [
       {
@@ -86,24 +45,18 @@
     ],
     "copy": [
       {
-        "title": "Receitas, listas\ne nutrição.\nTudo conversa.",
-        "bottom": 858.078125,
+        "title": "Suas calorias.\nSem registrar\ntodos os dias.",
+        "bottom": 833.53125,
         "right": 1220,
-        "left": 190,
-        "height": 598.078125,
+        "left": 100,
+        "height": 603.53125,
         "overflow": false
       }
     ],
-    "images": [
-      {
-        "src": "assets/screenshots/food.png",
-        "naturalRatio": 0.459954233409611,
-        "ratio": 0.4599560417849999
-      }
-    ]
+    "images": []
   },
   {
-    "page": 6,
+    "page": 3,
     "errors": [],
     "fonts": [
       {
@@ -134,8 +87,192 @@
       {
         "src": "assets/screenshots/pantry-focus.png",
         "naturalRatio": 1.6055555555555556,
-        "ratio": 1.6055718880971759
+        "ratio": 1.60557550962156
       }
     ]
+  },
+  {
+    "page": 4,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "copy": [
+      {
+        "title": "Abra a despensa.\nDescubra\no almoço.",
+        "bottom": 912.59375,
+        "right": 1220,
+        "left": 100,
+        "height": 612.59375,
+        "overflow": false
+      }
+    ],
+    "images": [
+      {
+        "src": "assets/screenshots/assistant-focus.png",
+        "naturalRatio": 0.818374558303887,
+        "ratio": 0.8183816183816184
+      }
+    ]
+  },
+  {
+    "page": 5,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "copy": [
+      {
+        "title": "Sua receita.\nUm passo\nde cada vez.",
+        "bottom": 829.65625,
+        "right": 1220,
+        "left": 200,
+        "height": 639.65625,
+        "overflow": false
+      }
+    ],
+    "images": [
+      {
+        "src": "assets/screenshots/recipe.png",
+        "naturalRatio": 0.459954233409611,
+        "ratio": 0.4599560417849999
+      },
+      {
+        "src": "assets/screenshots/recipe-ingredients.png",
+        "naturalRatio": 1.2877030162412992,
+        "ratio": 1.2877263581488934
+      }
+    ]
+  },
+  {
+    "page": 6,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "copy": [
+      {
+        "title": "Foto, texto\nou voz.\nVocê escolhe.",
+        "bottom": 2620.015625,
+        "right": 1220,
+        "left": 100,
+        "height": 630.015625,
+        "overflow": false
+      }
+    ],
+    "images": []
+  },
+  {
+    "page": 7,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "copy": [
+      {
+        "title": "Viu uma receita?\nGuarde\nno Savoria.",
+        "bottom": 869.234375,
+        "right": 1220,
+        "left": 100,
+        "height": 599.234375,
+        "overflow": false
+      }
+    ],
+    "images": [
+      {
+        "src": "assets/screenshots/recipes-focus.png",
+        "naturalRatio": 1.2333333333333334,
+        "ratio": 1.2333341914406137
+      }
+    ]
+  },
+  {
+    "page": 8,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "copy": [
+      {
+        "title": "Entenda melhor\no que você\ncome.",
+        "bottom": 779.078125,
+        "right": 1220,
+        "left": 100,
+        "height": 599.078125,
+        "overflow": false
+      }
+    ],
+    "images": [
+      {
+        "src": "assets/screenshots/nutrition.png",
+        "naturalRatio": 0.459954233409611,
+        "ratio": 0.4599560417849999
+      },
+      {
+        "src": "assets/screenshots/nutrition-focus.png",
+        "naturalRatio": 1.0418181818181818,
+        "ratio": 1.0418397551933911
+      }
+    ]
+  },
+  {
+    "page": 9,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "copy": [
+      {
+        "title": "Receitas, listas\ne nutrição.\nTudo conversa.",
+        "bottom": 858.078125,
+        "right": 1220,
+        "left": 190,
+        "height": 598.078125,
+        "overflow": false
+      }
+    ],
+    "images": []
   }
 ]

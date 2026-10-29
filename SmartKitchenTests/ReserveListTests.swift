@@ -519,7 +519,7 @@ final class AdaptiveWorkspaceRenderingTests: XCTestCase {
         let context = container.mainContext
         let settings = AppSettings()
         settings.hasCompletedOnboarding = true
-        settings.showReserve = true
+        settings.showReserve = false
         settings.recipeGalleryColumns = 2
         settings.pantryDetailLevel = .detailed
         context.insert(settings)
