@@ -1,0 +1,78 @@
+{
+  "worldWidth": 11880,
+  "order": "1–9, contiguous absolute coordinates",
+  "seams": [
+    {
+      "between": [
+        1,
+        2
+      ],
+      "meanChannelDifference": 0.4757089725708973,
+      "p99": 2,
+      "maximum": 3
+    },
+    {
+      "between": [
+        2,
+        3
+      ],
+      "meanChannelDifference": 0.49279404927940496,
+      "p99": 2,
+      "maximum": 3
+    },
+    {
+      "between": [
+        3,
+        4
+      ],
+      "meanChannelDifference": 0.4393305439330544,
+      "p99": 2,
+      "maximum": 2
+    },
+    {
+      "between": [
+        4,
+        5
+      ],
+      "meanChannelDifference": 0.24837284983728497,
+      "p99": 1,
+      "maximum": 240
+    },
+    {
+      "between": [
+        5,
+        6
+      ],
+      "meanChannelDifference": 0,
+      "p99": 0,
+      "maximum": 0
+    },
+    {
+      "between": [
+        6,
+        7
+      ],
+      "meanChannelDifference": 0.4702463970246397,
+      "p99": 1,
+      "maximum": 238
+    },
+    {
+      "between": [
+        7,
+        8
+      ],
+      "meanChannelDifference": 0.43677359367735935,
+      "p99": 2,
+      "maximum": 2
+    },
+    {
+      "between": [
+        8,
+        9
+      ],
+      "meanChannelDifference": 0.3609948860994886,
+      "p99": 2,
+      "maximum": 114
+    }
+  ]
+}

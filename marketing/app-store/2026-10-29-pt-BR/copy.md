@@ -21,12 +21,13 @@ Dias em branco não entram como zero.
 
 ## 03
 
-O que falta
-vira lista
-de mercado.
+Da despensa
+ao mercado.
+E de volta.
 
-Veja o que tem e o que precisa comprar.
-Do mercado, os itens voltam à despensa.
+Marcou que acabou? Vai para o mercado.
+Marcou que comprou? Volta à despensa.
+As listas movem os itens automaticamente.
 
 ## 04
 
@@ -57,12 +58,12 @@ Revise as estimativas antes de salvar.
 
 ## 07
 
-Viu uma receita?
-Guarde
-no Savoria.
+Da rede social
+para o seu
+caderno.
 
-Importe receitas de links, fotos e arquivos.
-Organize tudo nos seus cadernos.
+Viu no Instagram, TikTok ou YouTube?
+Toque em compartilhar e envie ao Savoria.
 
 ## 08
 
@@ -81,3 +82,10 @@ Tudo conversa.
 
 Aproveite os ingredientes da despensa,
 organize as compras e cuide da alimentação.
+
+## Textos complementares
+
+- 02: Contagem inteligente. Exemplo ilustrativo: cinco dias registrados, média de 1.880 kcal.
+- 04: Ideias com a sua despensa. Ideias rápidas, diferentes e com o que você tem. Demonstração simplificada do assistente.
+- 06: Fotografe seu prato. Digite o que comeu. Ou envie um áudio. Áudio enviado · 0:08. Demonstração simplificada · estimativas revisáveis.
+- 07: Instagram / TikTok / YouTube → Compartilhar → Savoria. Também importe receitas de fotos e arquivos.

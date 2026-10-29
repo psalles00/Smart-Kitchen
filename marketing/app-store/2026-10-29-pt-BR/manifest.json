@@ -1,7 +1,7 @@
 {
   "locale": "pt-BR",
   "nativeDevice": "iPhone 17 Pro (Simulator)",
-  "screenshots": "production views with isolated demonstration data; page 02 illustrative chart; page 06 authorized minimal input simulation",
+  "screenshots": "production views with isolated demonstration data; page 02 illustrative chart; pages 04 and 06 authorized simplified interface demonstrations",
   "pages": [
     {
       "page": 1,
@@ -10,8 +10,8 @@
       "height": 2868,
       "colorSpace": "srgb",
       "alpha": false,
-      "bytes": 1787597,
-      "sha256": "9c44c017d5975cfb8b36f808f3cf86d07637f5232b29f7c9a8ba2baa2868b5ab"
+      "bytes": 1773324,
+      "sha256": "a72850feae55c6e64ef410f20c4429deb4ec30c863433eaa82e688bf65fd1c52"
     },
     {
       "page": 2,
@@ -20,8 +20,8 @@
       "height": 2868,
       "colorSpace": "srgb",
       "alpha": false,
-      "bytes": 672760,
-      "sha256": "3e6a3570614ceeed8b1532e492a60dc4b0b1cfa6b3e3b5f31061e33940b532e7"
+      "bytes": 901095,
+      "sha256": "75f61ef970770dd89e77b0f4fa782dbba4d8d8c10f76545a7086297f72162b57"
     },
     {
       "page": 3,
@@ -30,8 +30,8 @@
       "height": 2868,
       "colorSpace": "srgb",
       "alpha": false,
-      "bytes": 1226000,
-      "sha256": "978aa4bba2668fa22e66a354365d5f60cc9a8aedf6285e810b24516fb7e7bbe9"
+      "bytes": 1147522,
+      "sha256": "5a0441194f8b080cd185decb6803e2ca43b17a4c16c32900a5bad25c0462dd98"
     },
     {
       "page": 4,
@@ -40,8 +40,8 @@
       "height": 2868,
       "colorSpace": "srgb",
       "alpha": false,
-      "bytes": 832233,
-      "sha256": "47d79bec87d53f790026db5f9b49d4c95922242d70538dc04758e77705c1ce85"
+      "bytes": 476793,
+      "sha256": "5db795d7342c0469efe50d9c25374deda1219c3e24646ea5b9cea7dd144d47dd"
     },
     {
       "page": 5,
@@ -50,8 +50,8 @@
       "height": 2868,
       "colorSpace": "srgb",
       "alpha": false,
-      "bytes": 2138341,
-      "sha256": "02e2695ad4e0b055731b32bd643318efbe7a5b2231cda7d63b7ce7a99967c205"
+      "bytes": 2108929,
+      "sha256": "02904e866fb1241c4c22c4638c28b9e5c20c5fee6bb5aee461be4784e50cb2c0"
     },
     {
       "page": 6,
@@ -60,8 +60,8 @@
       "height": 2868,
       "colorSpace": "srgb",
       "alpha": false,
-      "bytes": 1748612,
-      "sha256": "a34f983079cec0f85b7a994f006f9269cb4556fe58bf820b2043a73af4593aa1"
+      "bytes": 1116230,
+      "sha256": "1a84a37b800445d85148f8a6e0e1d7c25af12076d12e32968994098852286e37"
     },
     {
       "page": 7,
@@ -70,8 +70,8 @@
       "height": 2868,
       "colorSpace": "srgb",
       "alpha": false,
-      "bytes": 2111331,
-      "sha256": "3a24c8b4c75d88cb0bc9bea423c91cd9a49e68eae8c9443b6179c12a75e58ea7"
+      "bytes": 1937993,
+      "sha256": "128bf498952000eb06dfc2e83ea6afc7df97f24e69a3e618822e28881c37d478"
     },
     {
       "page": 8,
@@ -80,8 +80,8 @@
       "height": 2868,
       "colorSpace": "srgb",
       "alpha": false,
-      "bytes": 1396633,
-      "sha256": "9aae9e0c8128bc4f06a63c6370a57061ba77932a364c9dcaa066ade970a3317f"
+      "bytes": 1467263,
+      "sha256": "79488c88521c60e276d1a59a9ad9505c9b295d6c97da70b57d1e3c99e6ff0a10"
     },
     {
       "page": 9,
@@ -90,8 +90,8 @@
       "height": 2868,
       "colorSpace": "srgb",
       "alpha": false,
-      "bytes": 816653,
-      "sha256": "55e20f7e317236fcf5f5be47738a7153a8d897e11b5813b8477ab97a1dcf60c7"
+      "bytes": 830654,
+      "sha256": "dee1348d4e1ea56cb08ebd33ffac9aa006535d5c4f64453afbc992c2192e159b"
     }
   ]
 }

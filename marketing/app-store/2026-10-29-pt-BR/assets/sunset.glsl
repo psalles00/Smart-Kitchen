@@ -329,6 +329,6 @@ return vec4(vec3(finalColor), 1.0);
 }
 void main() {
  vec2 pos=vec2(gl_FragCoord.x+uOffset,uResolution.y-gl_FragCoord.y);
- vec4 c=nebula(pos,vec2(uResolution.x*8.0,uResolution.y),uTime,vec4(220.0/255.0,66.0/255.0,28.0/255.0,1.0),1.0);
+ vec4 c=nebula(pos,vec2(uResolution.x*9.0,uResolution.y),uTime,vec4(220.0/255.0,66.0/255.0,28.0/255.0,1.0),1.0);
  gl_FragColor=vec4(c.rgb,1.0);
 }
