@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		52507D3B4C62A2DAC8CF4B16 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A7CE7739DFA447E281C7CC26 /* PrivacyInfo.xcprivacy */; };
 		6524FB22241841959DB1ADD5 /* PlainTextShareSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 304329B0108F37C44660B5E7 /* PlainTextShareSheet.swift */; };
 		00E90C6FAE36A7099AEE3648 /* meta-fr.json in Resources */ = {isa = PBXBuildFile; fileRef = 678AFBB472665B3EF5D72032 /* meta-fr.json */; };
 		01D2DDC6C13E33CA9B920D76 /* NutrientsInfoContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75728DA118DDAF7AFE520AFD /* NutrientsInfoContent.swift */; };
@@ -334,6 +335,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		A7CE7739DFA447E281C7CC26 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		304329B0108F37C44660B5E7 /* PlainTextShareSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlainTextShareSheet.swift; sourceTree = "<group>"; };
 		019A8D5CCB169B9909C7F98A /* NutritionAITestDoubles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionAITestDoubles.swift; sourceTree = "<group>"; };
 		01D405419BB692070742AF7D /* BackupSnapshotV2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupSnapshotV2.swift; sourceTree = "<group>"; };
@@ -788,6 +790,7 @@
 		4FEC836DAA0C9EEAC2A6704A /* SmartKitchenShareExtension */ = {
 			isa = PBXGroup;
 			children = (
+				A7CE7739DFA447E281C7CC26 /* PrivacyInfo.xcprivacy */,
 				C14196B0A27385B271EBBA87 /* Info.plist */,
 				3886CC6A6FBE18AFA70F4105 /* ShareViewController.swift */,
 				FF771623AD1F947418F58497 /* SmartKitchenShareExtension.entitlements */,
@@ -1379,6 +1382,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				52507D3B4C62A2DAC8CF4B16 /* PrivacyInfo.xcprivacy in Resources */,
 				1AFA59FDAEBF270CD0894A36 /* InfoPlist.xcstrings in Resources */,
 				E26FED3783EE89329A414F84 /* Localizable.xcstrings in Resources */,
 			);
