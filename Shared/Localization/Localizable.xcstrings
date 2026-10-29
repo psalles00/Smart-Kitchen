@@ -1,6 +1,236 @@
 {
   "sourceLanguage" : "pt-BR",
   "strings" : {
+    "Prazo escolhido: %lld mês" : {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chosen time frame: %lld month"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plazo elegido: %lld mes"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Durée choisie : %lld mois"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gewählter Zeitraum: %lld Monat"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Periodo scelto: %lld mese"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選択した期間：%lldか月"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prazo escolhido: %lld mês"
+          }
+        }
+      }
+    },
+    "Prazo escolhido: %lld meses" : {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chosen time frame: %lld months"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plazo elegido: %lld meses"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Durée choisie : %lld mois"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gewählter Zeitraum: %lld Monate"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Periodo scelto: %lld mesi"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選択した期間：%lldか月"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prazo escolhido: %lld meses"
+          }
+        }
+      }
+    },
+    "Sua meta: " : {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your target: "
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu meta: "
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre objectif : "
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ihr Ziel: "
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il tuo obiettivo: "
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "あなたの目標："
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sua meta: "
+          }
+        }
+      }
+    },
+    "Trajetória ilustrativa" : {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Illustrative path"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trayectoria ilustrativa"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trajectoire illustrative"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Veranschaulichender Verlauf"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Percorso illustrativo"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "目標へのイメージ"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trajetória ilustrativa"
+          }
+        }
+      }
+    },
+    "Ilustração baseada no peso, na meta e no prazo que você informou. Não é uma previsão nem garantia de resultado. Para mudar sua alimentação ou peso, procure orientação de um médico ou nutricionista." : {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Illustration based on the weight, target and time frame you entered. This is not a prediction or a guarantee of results. Consult a doctor or dietitian before changing your diet or weight."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ilustración basada en el peso, la meta y el plazo que indicaste. No es una predicción ni una garantía de resultados. Consulta a un médico o nutricionista antes de cambiar tu alimentación o peso."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Illustration fondée sur le poids, l’objectif et la durée que vous avez indiqués. Ce n’est ni une prévision ni une garantie de résultat. Consultez un médecin ou un diététicien avant de modifier votre alimentation ou votre poids."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Illustration anhand des eingegebenen Gewichts, Ziels und Zeitraums. Sie ist weder eine Vorhersage noch eine Ergebnisgarantie. Lassen Sie sich ärztlich oder ernährungsfachlich beraten, bevor Sie Ihre Ernährung oder Ihr Gewicht verändern."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Illustrazione basata sul peso, sull’obiettivo e sul periodo indicati. Non è una previsione né una garanzia di risultati. Consulta un medico o un dietista prima di modificare la tua alimentazione o il tuo peso."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "入力した体重、目標、期間に基づくイメージです。予測や結果を保証するものではありません。食事や体重を変える際は、医師または管理栄養士に相談してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ilustração baseada no peso, na meta e no prazo que você informou. Não é uma previsão nem garantia de resultado. Para mudar sua alimentação ou peso, procure orientação de um médico ou nutricionista."
+          }
+        }
+      }
+    },
     "Permitir" : {
       "localizations": {
         "en": {

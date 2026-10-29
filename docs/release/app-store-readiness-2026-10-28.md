@@ -17,7 +17,7 @@ de privacidade e de validação externa. Este arquivo não substitui a aprovaç�
   iPhone 17 Pro virtual. A tela inicial do Mac exibiu os dados existentes.
 - O iPhone virtual abriu no onboarding. Os dois arquivos de store existem;
   existência/tamanho não provam conteúdo. Não foram restaurados nem alterados
-  para contornar essa situação. A confirmação sobre seu estado anterior está pendente.
+  para contornar essa situação. Pedro confirmou que usa normalmente apenas o iPhone físico; o onboarding do simulador não comprova perda dos dados do aparelho.
 
 ## Matriz de requisitos e evidências
 
@@ -85,3 +85,31 @@ de privacidade e de validação externa. Este arquivo não substitui a aprovaç�
   [retenção dos provedores](https://openrouter.ai/docs/guides/privacy/provider-logging).
 - [Exa: política](https://exa.ai/privacy-policy): diferencia site e processamento
   por conta de clientes empresariais; a página geral não comprova o contrato da API.
+
+
+## Projeção e builds Release — segunda rodada de 28/10
+
+- `GoalProjectionStepView` deixa de prometer a conquista da meta e de comparar
+  curvas inventadas “com” e “sem” Savoria. A linha de referência permanece no
+  peso atual informado; a outra é identificada como trajetória ilustrativa.
+- Cabeçalho apresenta meta/prazo, com explicação de que o gráfico não é previsão
+  nem garantia e orientação para consultar médico/nutricionista. Novos textos
+  cobrem os sete idiomas. Nenhum dado nutricional é alterado por essa tela.
+- O teste existente `testNativeOnboardingRecipeGridAndProjection` passou em
+  fixture em memória no iPhone 17 Pro. A imagem `native-onboarding-goal-projection`
+  foi conferida: explicação completa e botão Continuar acessível.
+- Builds **Release iOS e macOS passaram**, logs `appstore-ios-release.log` e
+  `appstore-mac-release.log` na mesma pasta de evidências. Chaves OpenAI,
+  OpenRouter e Exa vazias nos dois Info.plist; marcadores verificados de debug
+  ausentes dos executáveis. Identidade/Team/ordem de containers e App Group da
+  ShareExtension iOS conferidos. Isso não substitui exportação/distribuição Apple.
+- A cópia Release foi instalada em `/Applications/Savoria.app` com assinatura de
+  desenvolvimento para validação local; verificação `codesign --deep --strict`
+  passou. A interface abriu com os dados existentes e sem o botão de debug.
+- A primeira cópia por mesclagem deixou duas bibliotecas de Debug no pacote.
+  A comparação encontrou apenas essas sobras; foram movidas, sem exclusão, para
+  `Builds/Savoria-Agent-Mac/InstallRecovery-20261028`. A assinatura instalada foi
+  conferida após essa correção. São artefatos de build, sem bancos do usuário;
+  retenção somente durante esta auditoria de lançamento.
+- O consentimento no Mac permanece recusado após o teste anterior. A autorização
+  pode ser concedida nas Configurações; não foi concedida em nome de Pedro.

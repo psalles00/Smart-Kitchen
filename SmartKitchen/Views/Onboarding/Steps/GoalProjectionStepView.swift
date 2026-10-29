@@ -2,10 +2,9 @@ import SwiftUI
 import Charts
 
 /// Phase 4 — Goal projection screen. Shown right before the paywall to
-/// motivate the user with a visual story: "In N months you can reach Y kg".
-/// Renders an animated chart with two trajectories (Without Savoria vs With
-/// Savoria) and uses the same haptic + entrance pattern of the rest of the
-/// onboarding flow.
+/// illustrate the weight, target and time frame chosen by the user.
+/// The reference line is the entered current weight; the animated curve is
+/// a visual interpolation to the chosen target, not a predicted outcome.
 /// Signals that the projection's existing entrance sequence has completed.
 /// Snapshot hosts can wait for the rendered content instead of a fixed delay.
 struct OnboardingProjectionReadyKey: PreferenceKey {
@@ -70,6 +69,14 @@ struct GoalProjectionStepView: View {
                     .offset(y: showChart ? 0 : 18)
                     .animation(.spring(response: 0.85, dampingFraction: 0.84), value: showChart)
                     .padding(.horizontal, 22)
+                    .padding(.bottom, 14)
+
+                Text("Ilustração baseada no peso, na meta e no prazo que você informou. Não é uma previsão nem garantia de resultado. Para mudar sua alimentação ou peso, procure orientação de um médico ou nutricionista.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, 24)
                     .padding(.bottom, 14)
 
                 summaryRow
@@ -143,15 +150,10 @@ struct GoalProjectionStepView: View {
     }
 
     private var headlineTopText: String {
-        switch goal {
-        case .lose, .gain:
-            let format = state.nutritionTargetMonths == 1
-                ? String(localized: "Com o Savoria, em %lld mês")
-                : String(localized: "Com o Savoria, em %lld meses")
-            return String(format: format, state.nutritionTargetMonths)
-        case .maintain:
-            return String(localized: "Com o Savoria, daqui a alguns meses")
-        }
+        let format = state.nutritionTargetMonths == 1
+            ? String(localized: "Prazo escolhido: %lld mês")
+            : String(localized: "Prazo escolhido: %lld meses")
+        return String(format: format, state.nutritionTargetMonths)
     }
 
     private var monthsWord: String {
@@ -160,23 +162,12 @@ struct GoalProjectionStepView: View {
             : String(localized: "meses")
     }
 
-    /// Hero headline. The numeric target weight (or pillar word for maintain)
-    /// is rendered with the Savoria gradient.
+    /// Show the user's chosen target, without promising a future result.
     private var headlineHero: Text {
-        switch goal {
-        case .lose, .gain:
-            let prefix = String(localized: "você terá conquistado seu objetivo de ")
-            let target = String(format: "%.0f kg", animatedWeight)
-            return Text(prefix).foregroundStyle(.primary)
-                + Text(target).foregroundStyle(primaryGradient)
-        case .maintain:
-            let prefix = String(localized: "você estará ")
-            let highlight = String(localized: "no controle")
-            let suffix = String(localized: ", com hábitos consistentes.")
-            return Text(prefix).foregroundStyle(.primary)
-                + Text(highlight).foregroundStyle(primaryGradient)
-                + Text(suffix).foregroundStyle(.primary)
-        }
+        let prefix = String(localized: "Sua meta: ")
+        let target = String(format: "%.0f kg", animatedWeight)
+        return Text(prefix).foregroundStyle(.primary)
+            + Text(target).foregroundStyle(primaryGradient)
     }
 
     // MARK: - Chart card
@@ -184,20 +175,18 @@ struct GoalProjectionStepView: View {
     private var chartCard: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 14) {
-                legendDot(color: .secondary.opacity(0.7), label: String(localized: "Sem o Savoria"))
-                legendDot(gradient: primaryGradient, label: String(localized: "Com o Savoria"))
+                legendDot(color: .secondary.opacity(0.7), label: String(localized: "Peso atual"))
+                legendDot(gradient: primaryGradient, label: String(localized: "Trajetória ilustrativa"))
             }
 
             ZStack {
                 Chart {
-                    // Slow / partial trajectory — only shows the early
-                    // portion to reinforce that without help the path is
-                    // longer.
-                    ForEach(slowSeries, id: \.x) { point in
+                    // A factual reference, not an invented control group.
+                    ForEach(referenceSeries, id: \.x) { point in
                         LineMark(
                             x: .value("month", point.x),
                             y: .value("kg", point.y),
-                            series: .value("series", "without")
+                            series: .value("series", "reference")
                         )
                         .foregroundStyle(Color.secondary.opacity(0.55))
                         .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, dash: [4, 4]))
@@ -205,12 +194,12 @@ struct GoalProjectionStepView: View {
                     }
 
                     // Soft gradient glow under the fast curve.
-                    ForEach(fastSeriesAnimated, id: \.x) { point in
+                    ForEach(illustrativeSeriesAnimated, id: \.x) { point in
                         AreaMark(
                             x: .value("month", point.x),
                             yStart: .value("kgStart", yDomain.lowerBound),
                             yEnd: .value("kg", point.y),
-                            series: .value("series", "with-glow")
+                            series: .value("series", "illustration-glow")
                         )
                         .foregroundStyle(
                             LinearGradient(
@@ -225,20 +214,20 @@ struct GoalProjectionStepView: View {
                         .interpolationMethod(.catmullRom)
                     }
 
-                    // Fast / completed trajectory — animated by trimming
+                    // Illustrative target curve — animated by trimming
                     // through `chartProgress`.
-                    ForEach(fastSeriesAnimated, id: \.x) { point in
+                    ForEach(illustrativeSeriesAnimated, id: \.x) { point in
                         LineMark(
                             x: .value("month", point.x),
                             y: .value("kg", point.y),
-                            series: .value("series", "with")
+                            series: .value("series", "illustration")
                         )
                         .foregroundStyle(primaryGradient)
                         .lineStyle(StrokeStyle(lineWidth: 4, lineCap: .round))
                         .interpolationMethod(.catmullRom)
                     }
 
-                    if let last = fastSeriesAnimated.last,
+                    if let last = illustrativeSeriesAnimated.last,
                        chartProgress >= 0.98,
                        goal != .maintain {
                         PointMark(
@@ -412,7 +401,7 @@ struct GoalProjectionStepView: View {
 
     /// Full target trajectory from current weight to target weight
     /// across N months. Slightly eased (cubic) for a satisfying curve.
-    private var fastSeries: [Point] {
+    private var illustrativeSeries: [Point] {
         let months = max(1, state.nutritionTargetMonths)
         let start = state.nutritionWeightKg
         let end: Double
@@ -434,41 +423,18 @@ struct GoalProjectionStepView: View {
         }
     }
 
-    /// Slow trajectory: only progresses ~30% of the way over the same time
-    /// window. For maintain, oscillates around the current weight.
-    private var slowSeries: [Point] {
-        let months = max(1, state.nutritionTargetMonths)
-        let start = state.nutritionWeightKg
-        let end: Double
-        switch goal {
-        case .lose, .gain:
-            let delta = (state.nutritionTargetWeightKg - start) * 0.30
-            end = start + delta
-        case .maintain:
-            // Oscillating — show 4 small bumps around the current weight.
-            let amp: Double = 1.6
-            let steps = 24
-            return (0...steps).map { i in
-                let t = Double(i) / Double(steps)
-                let x = Double(months) * t
-                let y = start + sin(t * .pi * 4) * amp
-                return Point(x: x, y: y)
-            }
-        }
-        let steps = 24
-        return (0...steps).map { i in
-            let t = Double(i) / Double(steps)
-            let x = Double(months) * t
-            let y = start + (end - start) * t
-            return Point(x: x, y: y)
-        }
+    /// Keep the entered current weight constant as a visual reference.
+    private var referenceSeries: [Point] {
+        let months = Double(max(1, state.nutritionTargetMonths))
+        let weight = state.nutritionWeightKg
+        return [Point(x: 0, y: weight), Point(x: months, y: weight)]
     }
 
-    /// Trims `fastSeries` according to `chartProgress`, plus interpolates
+    /// Trims `illustrativeSeries` according to `chartProgress`, plus interpolates
     /// the trailing point so the line draws smoothly during the entrance.
-    private var fastSeriesAnimated: [Point] {
+    private var illustrativeSeriesAnimated: [Point] {
         guard chartProgress > 0 else { return [] }
-        let pts = fastSeries
+        let pts = illustrativeSeries
         let cutoff = chartProgress * Double(pts.count - 1)
         let lastIdx = Int(cutoff.rounded(.down))
         var trimmed = Array(pts.prefix(lastIdx + 1))
