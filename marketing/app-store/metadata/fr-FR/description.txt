@@ -1,0 +1,31 @@
+Savoria est votre gestionnaire de cuisine intelligent : organisez vos provisions, reliez votre liste de courses, découvrez des recettes avec l’IA et rassemblez vos favorites des réseaux sociaux. Notez vos repas par photo, texte ou voix et suivez vos calories grâce à des moyennes intelligentes qui tolèrent les oublis occasionnels.
+
+UN JOUR OUBLIÉ ? VOTRE HISTORIQUE RESTE UTILE
+Notez vos repas au quotidien pour construire votre historique. Si vous oubliez un jour de temps en temps, vos données restent utiles : Savoria calcule des moyennes intelligentes à partir des jours renseignés pour vous aider à comprendre votre alimentation. Les jours vides ne comptent pas comme zéro et n’effacent pas votre historique. Suivez calories, protéines, glucides et lipides, consultez vos anciens repas et notez l’évolution de votre poids.
+
+PHOTO, TEXTE OU VOIX : À VOUS DE CHOISIR
+Photographiez votre assiette, décrivez votre repas ou envoyez un message vocal. L’IA aide à interpréter les aliments et les quantités et estime calories et macronutriments. Vérifiez les résultats, ajustez les portions et enregistrez votre repas.
+
+DES PROVISIONS AUX COURSES. ET INVERSEMENT.
+Indiquez qu’un produit est terminé pour le déplacer vers votre liste de courses. Marquez-le comme acheté pour le remettre dans vos provisions, sans le saisir à nouveau.
+Activez la liste facultative « Pour plus tard » pour conserver les produits épuisés et décider ensuite de les racheter. Gérez quantités, catégories et dates de péremption, recevez des rappels et sélectionnez plusieurs produits pour agir en une fois. Une catégorie d’ustensiles est aussi disponible en option.
+
+DES RECETTES AVEC CE QUE VOUS AVEZ
+Demandez à l’IA quoi préparer au petit-déjeuner, au déjeuner ou au dîner avec vos provisions. Découvrez des idées rapides, originales et adaptées à vos ingrédients. Savoria propose aussi des recettes même s’il vous manque certains ingrédients, en privilégiant celles dont vous avez le plus d’ingrédients et en indiquant ce qui manque.
+
+DES RÉSEAUX SOCIAUX À VOTRE CARNET
+Une recette repérée sur Instagram, TikTok ou YouTube ? Utilisez le partage pour l’envoyer à Savoria. Importez aussi des recettes depuis des liens, photos et fichiers, puis rassemblez-les dans des carnets.
+Classez vos recettes par catégorie, gardez vos favorites et consultez ingrédients, portions et préparation. Suivez les étapes en mode cuisine et adaptez les quantités au nombre de portions.
+
+UNE IA QUI RELIE VOTRE CUISINE
+Échangez avec l’assistant pour trouver des idées, poser des questions sur vos repas et explorer des alternatives au quotidien. Provisions, recettes et nutrition se réunissent dans une même expérience.
+
+SUR IPHONE, IPAD ET MAC
+Synchronisez listes et recettes avec iCloud et continuez sur l’appareil à portée de main. Accédez à l’assistant depuis les widgets, partagez ou copiez listes et recettes en texte pour organiser les courses ou transmettre un plat.
+
+Téléchargez Savoria pour transformer vos ingrédients en idées de repas, mieux organiser vos courses et suivre votre alimentation avec souplesse.
+
+Certaines fonctions nécessitent un abonnement Premium. Les estimations nutritionnelles, notamment par image, varient selon la préparation et les portions. Vérifiez-les avant d’enregistrer. L’importation dépend de la disponibilité du contenu original et de son accessibilité.
+
+Conditions d’utilisation : https://psalles00.github.io/Smart-Kitchen/terms/
+Confidentialité : https://psalles00.github.io/Smart-Kitchen/privacy/

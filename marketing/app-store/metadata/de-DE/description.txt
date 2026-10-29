@@ -1,0 +1,31 @@
+Savoria ist dein intelligenter Küchenmanager: Organisiere Vorräte, verbinde deine Einkaufsliste, entdecke Rezepte mit KI und sammle Favoriten aus sozialen Medien. Erfasse Mahlzeiten per Foto, Text oder Sprache und behalte Kalorien mit intelligenten Durchschnittswerten im Blick – auch wenn du gelegentlich einen Eintrag vergisst.
+
+EINEN TAG VERGESSEN? DEIN VERLAUF BLEIBT ERHALTEN
+Erfasse deine Mahlzeiten im Alltag und baue deinen Verlauf auf. Wenn du einmal einen Tag vergisst, bleiben deine Einträge wertvoll: Savoria berechnet intelligente Durchschnittswerte aus erfassten Tagen, damit du deine Ernährung besser verstehst. Leere Tage zählen nicht als null und löschen deinen Verlauf nicht. Verfolge Kalorien, Eiweiß, Kohlenhydrate und Fett, sieh frühere Mahlzeiten an und dokumentiere dein Gewicht.
+
+FOTO, TEXT ODER SPRACHE: DEINE WAHL
+Fotografiere deinen Teller, beschreibe dein Essen oder sende eine Sprachnachricht. Die KI hilft, Lebensmittel und Mengen zu verstehen, und schätzt Kalorien und Makronährstoffe. Prüfe die Ergebnisse, passe Portionen an und speichere die Mahlzeit.
+
+VOM VORRAT ZUR EINKAUFSLISTE. UND ZURÜCK.
+Markiere einen Artikel als aufgebraucht, um ihn auf die Einkaufsliste zu verschieben. Markiere ihn als gekauft, damit er zurück in den Vorrat wandert. Ohne erneutes Abtippen.
+Aktiviere die optionale Liste „Für später“, um erst später über Nachkäufe zu entscheiden. Organisiere Mengen, Kategorien und Haltbarkeitsdaten, erhalte Erinnerungen und wähle mehrere Artikel für gemeinsame Aktionen. Optional kannst du auch Küchenutensilien verwalten.
+
+REZEPTE MIT DEM, WAS DU SCHON HAST
+Frage die KI nach Frühstück, Mittag- oder Abendessen mit deinen Vorräten. Erhalte schnelle Ideen, ungewöhnliche Vorschläge und Anregungen, um Zutaten zu nutzen. Savoria zeigt auch Rezepte, wenn etwas fehlt: Rezepte mit mehr vorhandenen Zutaten stehen zuerst, fehlende Zutaten werden angezeigt.
+
+AUS SOZIALEN MEDIEN IN DEIN REZEPTBUCH
+Ein Rezept auf Instagram, TikTok oder YouTube entdeckt? Sende es über die Teilen-Funktion an Savoria. Importiere auch Rezepte aus Links, Fotos und Dateien und sammle sie in Rezeptbüchern.
+Ordne Rezepte nach Kategorien, speichere Favoriten und behalte Zutaten, Portionen und Zubereitung zusammen. Folge den Schritten im Kochmodus und passe Mengen an die Portionszahl an.
+
+EINE KI, DIE DEINE KÜCHE VERBINDET
+Sprich mit dem Assistenten über Ideen, Fragen zu deinen Mahlzeiten und Alternativen für den Alltag. Vorräte, Rezepte und Ernährung kommen in einer Anwendung zusammen.
+
+AUF IPHONE, IPAD UND MAC
+Synchronisiere Listen und Rezepte über iCloud und mache auf dem gerade verfügbaren Gerät weiter. Öffne den Assistenten über Widgets und teile oder kopiere Listen und Rezepte als Text, um Einkäufe abzustimmen oder ein Gericht weiterzugeben.
+
+Lade Savoria herunter: Entdecke neue Ideen aus deinen Vorräten, organisiere Einkäufe und begleite deine Ernährung flexibel.
+
+Einige Funktionen erfordern ein Premium-Abonnement. Nährwertschätzungen, besonders anhand von Bildern, hängen von Zubereitung und Portionen ab. Prüfe die Werte vor dem Speichern. Importe hängen von Verfügbarkeit und Zugänglichkeit der ursprünglichen Inhalte ab.
+
+Nutzungsbedingungen: https://psalles00.github.io/Smart-Kitchen/terms/
+Datenschutz: https://psalles00.github.io/Smart-Kitchen/privacy/

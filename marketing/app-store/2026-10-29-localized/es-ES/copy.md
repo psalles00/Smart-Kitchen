@@ -14,9 +14,9 @@ juntas, sin complicaciones.
 
 ## 02
 
-Tus calorías.
-Sin registrar
-todos los días.
+¿Olvidaste un día?
+Tu progreso
+sigue contando.
 
 Un promedio inteligente de los días registrados.
 Los días en blanco no cuentan como cero.

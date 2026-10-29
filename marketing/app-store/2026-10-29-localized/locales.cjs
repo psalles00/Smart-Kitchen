@@ -2,7 +2,7 @@
 const locales={
 'en-US':{name:'English',ui:'en',pages:[
 ['Your kitchen.<br>Organized.<br>More flavor.<br>Every day.','Recipes, pantry and nutrition<br>together, without the hassle.'],
-['Your calories.<br>No need to log<br>every day.','A smart average of the days you log.<br>Blank days never count as zero.'],
+['Missed a day?<br>Your progress<br>still counts.','A smart average of the days you log.<br>Blank days never count as zero.'],
 ['Pantry to<br>shopping list.<br>And back.','Mark it as used up? It moves to your shopping list.<br>Mark it as bought? Back to your pantry.<br>Your lists move items automatically.'],
 ['Open your pantry.<br>Find your<br>next meal.','Ask AI for ideas using the ingredients<br>you already have at home.'],
 ['Recipes, lists<br>and nutrition.<br>All connected.','Make the most of your pantry,<br>plan your shopping and track your nutrition.'],
@@ -12,7 +12,7 @@ const locales={
 ['Understand<br>what you<br>eat.','Track calories and nutrients<br>throughout your day.']]},
 'es-ES':{name:'Español',ui:'es',pages:[
 ['Tu cocina.<br>Organizada.<br>Más sabor<br>cada día.','Recetas, despensa y nutrición<br>juntas, sin complicaciones.'],
-['Tus calorías.<br>Sin registrar<br>todos los días.','Un promedio inteligente de los días registrados.<br>Los días en blanco no cuentan como cero.'],
+['¿Olvidaste un día?<br>Tu progreso<br>sigue contando.','Un promedio inteligente de los días registrados.<br>Los días en blanco no cuentan como cero.'],
 ['De la despensa<br>a la compra.<br>Y de vuelta.','¿Se acabó? Márcalo y pasa a la lista de la compra.<br>¿Ya lo compraste? Vuelve a la despensa.<br>Las listas mueven los productos automáticamente.'],
 ['Abre tu despensa.<br>Descubre<br>qué cocinar.','Pide ideas a la IA con los ingredientes<br>que ya tienes en casa.'],
 ['Recetas, listas<br>y nutrición.<br>Todo conectado.','Aprovecha tu despensa, organiza la compra<br>y lleva un seguimiento de tu alimentación.'],
@@ -22,7 +22,7 @@ const locales={
 ['Entiende mejor<br>lo que<br>comes.','Sigue las calorías y los nutrientes<br>a lo largo del día.']]},
 'fr-FR':{name:'Français',ui:'fr',pages:[
 ['Votre cuisine.<br>Bien organisée.<br>Plus de saveur.<br>Chaque jour.','Recettes, placard et nutrition<br>réunis, sans complication.'],
-['Vos calories.<br>Sans tout noter<br>chaque jour.','Une moyenne intelligente des jours renseignés.<br>Les jours vides ne comptent pas comme zéro.'],
+['Un jour oublié ?<br>Vos progrès<br>restent acquis.','Une moyenne intelligente des jours renseignés.<br>Les jours vides ne comptent pas comme zéro.'],
 ['Du placard<br>aux courses.<br>Et inversement.','Un produit terminé ? Il passe dans les courses.<br>Un achat coché ? Il revient dans le placard.<br>Les listes déplacent les produits automatiquement.'],
 ['Ouvrez le placard.<br>Trouvez<br>votre repas.','Demandez des idées à l’IA avec les ingrédients<br>que vous avez déjà chez vous.'],
 ['Recettes, listes<br>et nutrition.<br>Tout est lié.','Utilisez vos ingrédients, organisez les courses<br>et suivez votre alimentation.'],
@@ -32,7 +32,7 @@ const locales={
 ['Comprenez mieux<br>ce que vous<br>mangez.','Suivez les calories et les nutriments<br>tout au long de la journée.']]},
 'de-DE':{name:'Deutsch',ui:'de',pages:[
 ['Deine Küche.<br>Gut organisiert.<br>Mehr Genuss.<br>Jeden Tag.','Rezepte, Vorräte und Ernährung<br>zusammen, ganz unkompliziert.'],
-['Deine Kalorien.<br>Ohne tägliches<br>Protokollieren.','Ein smarter Durchschnitt der erfassten Tage.<br>Tage ohne Eintrag zählen nicht als null.'],
+['Einen Tag vergessen?<br>Dein Fortschritt<br>bleibt erhalten.','Ein smarter Durchschnitt der erfassten Tage.<br>Tage ohne Eintrag zählen nicht als null.'],
 ['Vom Vorrat<br>zum Einkauf.<br>Und zurück.','Aufgebraucht? Abhaken – ab auf die Einkaufsliste.<br>Gekauft? Abhaken – zurück in den Vorrat.<br>Die Listen verschieben deine Artikel automatisch.'],
 ['Vorräte öffnen.<br>Dein nächstes<br>Essen finden.','Frag die KI nach Ideen mit den Zutaten,<br>die du schon zu Hause hast.'],
 ['Rezepte, Listen<br>und Ernährung.<br>Alles verbunden.','Nutze deine Vorräte, plane deinen Einkauf<br>und behalte deine Ernährung im Blick.'],
@@ -42,7 +42,7 @@ const locales={
 ['Verstehe besser,<br>was du<br>isst.','Behalte Kalorien und Nährstoffe<br>den ganzen Tag im Blick.']]},
 'it':{name:'Italiano',ui:'it',pages:[
 ['La tua cucina.<br>Organizzata.<br>Più gusto.<br>Ogni giorno.','Ricette, dispensa e nutrizione<br>insieme, senza complicazioni.'],
-['Le tue calorie.<br>Senza registrare<br>ogni giorno.','Una media intelligente dei giorni registrati.<br>I giorni vuoti non contano come zero.'],
+['Hai saltato un giorno?<br>I tuoi progressi<br>restano validi.','Una media intelligente dei giorni registrati.<br>I giorni vuoti non contano come zero.'],
 ['Dalla dispensa<br>alla spesa.<br>E ritorno.','È finito? Spuntalo: passa alla lista della spesa.<br>Comprato? Spuntalo: torna in dispensa.<br>Le liste spostano i prodotti automaticamente.'],
 ['Apri la dispensa.<br>Scopri cosa<br>cucinare.','Chiedi idee all’IA con gli ingredienti<br>che hai già in casa.'],
 ['Ricette, liste<br>e nutrizione.<br>Tutto collegato.','Sfrutta gli ingredienti in dispensa,<br>organizza la spesa e segui la tua alimentazione.'],
@@ -52,7 +52,7 @@ const locales={
 ['Capisci meglio<br>quello che<br>mangi.','Segui calorie e nutrienti<br>durante la giornata.']]},
 'ja':{name:'日本語',ui:'ja',pages:[
 ['キッチンを<br>すっきり整理。<br>毎日をもっと<br>おいしく。','レシピも食材も栄養も。<br>ひとつにまとめて、手軽に管理。'],
-['毎日つけなくても<br>カロリー管理は<br>続けられる。','記録した日の平均をかしこく計算。<br>未記録の日はゼロとして数えません。'],
+['記録を忘れても、<br>これまでの記録は<br>そのまま。','記録した日の平均をかしこく計算。<br>未記録の日はゼロとして数えません。'],
 ['食材リストから<br>買い物リストへ。<br>そして、元どおり。','使い切ったらチェックして買い物リストへ。<br>買ったらチェックして食材リストに戻せます。<br>チェックするだけで、食材が自動で移動。'],
 ['今ある食材で、<br>次の一皿を<br>見つけよう。','家にある食材をもとに、<br>AIに料理のアイデアを相談。'],
 ['レシピ、リスト、<br>栄養管理。<br>すべてつながる。','食材を活かして買い物を整理。<br>毎日の食生活もひとつのアプリで。'],
@@ -62,7 +62,7 @@ const locales={
 ['毎日の食事を<br>もっとよく<br>知ろう。','カロリーや栄養素を、<br>一日の食事とともにチェック。']]},
 'ko':{name:'한국어',ui:'en',pages:[
 ['주방은 깔끔하게.<br>매일의 식사는<br>더 맛있게.','레시피, 식재료, 영양 관리를<br>한곳에서 간편하게.'],
-['매일 기록하지<br>않아도 되는<br>칼로리 관리.','기록한 날만으로 똑똑하게 평균을 계산해요.<br>기록하지 않은 날은 0으로 계산하지 않아요.'],
+['하루를 잊어도<br>쌓아 온 기록은<br>그대로.','기록한 날만으로 똑똑하게 평균을 계산해요.<br>기록하지 않은 날은 0으로 계산하지 않아요.'],
 ['식재료에서<br>장보기 목록으로.<br>그리고 다시.','다 썼다면 체크해서 장보기 목록으로.<br>샀다면 체크해서 식재료 목록으로.<br>체크하면 항목이 자동으로 이동해요.'],
 ['지금 있는 재료로<br>다음 메뉴를<br>찾아보세요.','집에 있는 식재료를 바탕으로<br>AI에게 요리 아이디어를 물어보세요.'],
 ['레시피, 목록,<br>영양 관리.<br>모두 연결돼요.','있는 재료를 활용하고 장보기를 정리하며<br>매일의 식생활을 관리하세요.'],
@@ -72,7 +72,7 @@ const locales={
 ['내가 먹는 것을<br>더 잘<br>이해하세요.','하루 동안 섭취한 칼로리와<br>영양소를 확인하세요.']]},
 'zh-Hans':{name:'简体中文',ui:'en',pages:[
 ['厨房井井有条。<br>每天，<br>多一点美味。','食谱、食材和营养管理，<br>轻松汇集在一起。'],
-['管理热量，<br>不必每天<br>都记录。','根据已记录的日期，智能计算平均值。<br>没有记录的日子不会按零计算。'],
+['偶尔漏记一天，<br>已有的记录<br>依然有效。','根据已记录的日期，智能计算平均值。<br>没有记录的日子不会按零计算。'],
 ['从食材清单<br>到购物清单，<br>再回来。','用完了？勾选后移至购物清单。<br>买好了？勾选后回到食材清单。<br>清单会自动移动对应食材。'],
 ['看看现有食材，<br>发现下一餐<br>吃什么。','让AI根据家里已有的食材，<br>为你推荐料理灵感。'],
 ['食谱、清单、<br>营养管理，<br>一切相连。','用好现有食材，安排采购，<br>关照每天的饮食。'],
@@ -82,7 +82,7 @@ const locales={
 ['更了解<br>自己每天<br>吃了什么。','随时查看一天摄入的<br>热量和营养素。']]},
 'ar-SA':{name:'العربية',ui:'en',rtl:true,pages:[
 ['مطبخك<br>أكثر تنظيمًا.<br>مذاق أجمل<br>كل يوم.','الوصفات والمخزون والتغذية<br>معًا، دون تعقيد.'],
-['تابع سعراتك.<br>دون تسجيل<br>كل يوم.','متوسط ذكي للأيام التي تسجلها.<br>الأيام بلا تسجيل لا تُحسب بصفر.'],
+['نسيت يومًا؟<br>سجلك يبقى<br>محفوظًا.','متوسط ذكي للأيام التي تسجلها.<br>الأيام بلا تسجيل لا تُحسب بصفر.'],
 ['من المخزون<br>إلى قائمة التسوق.<br>وبالعكس.','نفد المنتج؟ حدده لينتقل إلى قائمة التسوق.<br>اشتريته؟ حدده ليعود إلى المخزون.<br>القوائم تنقل المنتجات تلقائيًا.'],
 ['افتح مخزونك.<br>واكتشف<br>وجبتك القادمة.','اطلب من الذكاء الاصطناعي أفكارًا<br>بالمكونات المتوفرة لديك في المنزل.'],
 ['وصفات وقوائم<br>وتغذية.<br>كلها مترابطة.','استفد من المكونات المتوفرة، ونظّم التسوق،<br>وتابع نظامك الغذائي.'],

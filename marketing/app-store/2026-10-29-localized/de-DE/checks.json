@@ -47,15 +47,15 @@
       }
     ],
     "fit": {
-      "headingSize": 137,
+      "headingSize": 117,
       "subtitleSize": 44
     },
-    "heading": "Deine Kalorien.\nOhne tägliches\nProtokollieren.",
+    "heading": "Einen Tag vergessen?\nDein Fortschritt\nbleibt erhalten.",
     "subtitle": "Ein smarter Durchschnitt der erfassten Tage.\nTage ohne Eintrag zählen nicht als null.",
     "copy": {
       "left": 100,
       "right": 1220,
-      "bottom": 833.53125,
+      "bottom": 770.53125,
       "overflow": false
     },
     "panels": [

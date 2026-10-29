@@ -47,15 +47,15 @@
       }
     ],
     "fit": {
-      "headingSize": 137,
+      "headingSize": 117,
       "subtitleSize": 44
     },
-    "heading": "Le tue calorie.\nSenza registrare\nogni giorno.",
+    "heading": "Hai saltato un giorno?\nI tuoi progressi\nrestano validi.",
     "subtitle": "Una media intelligente dei giorni registrati.\nI giorni vuoti non contano come zero.",
     "copy": {
       "left": 100,
       "right": 1220,
-      "bottom": 833.53125,
+      "bottom": 770.53125,
       "overflow": false
     },
     "panels": [

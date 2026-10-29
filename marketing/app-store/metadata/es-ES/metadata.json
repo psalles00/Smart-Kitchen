@@ -1,0 +1,9 @@
+{
+  "locale": "es-ES",
+  "name": "Savoria: Recetas y Calorías",
+  "subtitle": "Despensa, compra y nutrición",
+  "promotionalText": "Tu cocina conectada: despensa, compras, recetas con IA y comidas por foto, texto o voz. Si olvidas un día, tu historial sigue contando.",
+  "keywords": "contador,alimentación,macros,proteína,cocinar,ingredientes,comidas,peso",
+  "descriptionFile": "description.txt",
+  "status": "saved_in_app_store_connect"
+}

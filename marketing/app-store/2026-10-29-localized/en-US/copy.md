@@ -14,9 +14,9 @@ together, without the hassle.
 
 ## 02
 
-Your calories.
-No need to log
-every day.
+Missed a day?
+Your progress
+still counts.
 
 A smart average of the days you log.
 Blank days never count as zero.

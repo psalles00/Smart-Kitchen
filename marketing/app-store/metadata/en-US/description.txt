@@ -1,0 +1,31 @@
+Savoria is your smart kitchen manager: organize your pantry, connect your shopping list, discover recipes with AI, and collect favorites from social media. Log meals with a photo, text, or voice and track calories with intelligent averages that leave room for the occasional missed day.
+
+MISSED A DAY? YOUR HISTORY STILL COUNTS
+Log your meals daily and build your history. If you forget a day here and there, your entries still count: Savoria uses intelligent averages from recorded days to help you understand your eating habits. Blank days are not treated as zero and do not erase your history. Track calories, protein, carbohydrates, and fat, review past meals, and record your weight over time.
+
+PHOTO, TEXT, OR VOICE: LOG YOUR WAY
+Photograph your plate, describe what you ate, or send a voice recording. AI helps interpret foods and quantities and estimates calories and macronutrients. Review the results, adjust portions as needed, and save your meal.
+
+FROM PANTRY TO SHOPPING LIST. AND BACK.
+Mark an item as used up to move it from the pantry to your shopping list. Mark it as purchased to bring it back. No need to type the same items again.
+Enable the optional “For later” list to keep items you have finished until you decide whether to buy them again. Organize quantities, categories, and expiration dates, receive expiration reminders, and select multiple items for bulk actions. You can also enable a category for kitchen utensils.
+
+DISCOVER RECIPES WITH WHAT YOU HAVE
+Ask AI what to make for breakfast, lunch, or dinner using your pantry. Get quick ideas, unusual options, and suggestions for using your ingredients. Savoria also shows recipes when you are missing ingredients, prioritizing those with more ingredients available and showing what is missing.
+
+FROM SOCIAL MEDIA TO YOUR RECIPE COLLECTION
+Found a recipe on Instagram, TikTok, or YouTube? Use the share option to send it to Savoria. You can also import recipes from links, photos, and files and organize your discoveries in recipe notebooks.
+Sort recipes by category, save favorites, and keep ingredients, servings, and instructions together. Follow the steps in cooking mode and scale quantities to the number of servings.
+
+AI THAT CONNECTS YOUR KITCHEN
+Chat with the assistant for ideas, questions about your meals, and alternatives for your routine. Pantry, recipes, and nutrition come together in one experience.
+
+ON IPHONE, IPAD, AND MAC
+Sync lists and recipes through iCloud and continue on the device at hand. Open the assistant from widgets, and share or copy lists and recipes as text to coordinate shopping or pass along a dish.
+
+Download Savoria to turn what you have at home into meal ideas, better organized shopping, and flexible food tracking.
+
+Some features require a Premium subscription. Nutrition estimates, especially from images, vary with preparation and portions. Review values before saving. Importing depends on the availability of and access to the original content.
+
+Terms of Use: https://psalles00.github.io/Smart-Kitchen/terms/
+Privacy: https://psalles00.github.io/Smart-Kitchen/privacy/

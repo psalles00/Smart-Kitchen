@@ -14,9 +14,9 @@ zusammen, ganz unkompliziert.
 
 ## 02
 
-Deine Kalorien.
-Ohne tägliches
-Protokollieren.
+Einen Tag vergessen?
+Dein Fortschritt
+bleibt erhalten.
 
 Ein smarter Durchschnitt der erfassten Tage.
 Tage ohne Eintrag zählen nicht als null.

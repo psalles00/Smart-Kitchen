@@ -1,0 +1,82 @@
+[
+  {
+    "locale": "ar-SA",
+    "descriptionCharacters": 2632,
+    "promotionCharacters": 144,
+    "keywordBytes": 46,
+    "descriptionSHA256": "31a4e2a36354ce49631839af35a698cfcf2b12f1598a91b049f19276dc67aec4",
+    "storeTextReadbackVerified": true
+  },
+  {
+    "locale": "de-DE",
+    "descriptionCharacters": 3303,
+    "promotionCharacters": 145,
+    "keywordBytes": 56,
+    "descriptionSHA256": "16d2ced857378ec8b0402ba8130a7a373da62c97ec7dbfbd7f45a12d4a52a836",
+    "storeTextReadbackVerified": true
+  },
+  {
+    "locale": "en-US",
+    "descriptionCharacters": 3094,
+    "promotionCharacters": 156,
+    "keywordBytes": 60,
+    "descriptionSHA256": "dc79a63501ed8e72b366249599c70fa6ddfe353f90944b8f8e7c2c0c98be88a2",
+    "storeTextReadbackVerified": true
+  },
+  {
+    "locale": "es-ES",
+    "descriptionCharacters": 3230,
+    "promotionCharacters": 135,
+    "keywordBytes": 73,
+    "descriptionSHA256": "ef727ef3c7edb336c01b14237afeb530d15b952efdf9d415da357f1fb8b9f515",
+    "storeTextReadbackVerified": true
+  },
+  {
+    "locale": "fr-FR",
+    "descriptionCharacters": 3497,
+    "promotionCharacters": 145,
+    "keywordBytes": 60,
+    "descriptionSHA256": "60144d608de880e0ba3d80f09bcaf0ad75ca637da103c1d004992a0472b3da8d",
+    "storeTextReadbackVerified": true
+  },
+  {
+    "locale": "it",
+    "descriptionCharacters": 3177,
+    "promotionCharacters": 143,
+    "keywordBytes": 70,
+    "descriptionSHA256": "ca92db448f0ef7005e700c9726137ed27ed00a3952424b3eaf21768447676a71",
+    "storeTextReadbackVerified": true
+  },
+  {
+    "locale": "ja",
+    "descriptionCharacters": 1465,
+    "promotionCharacters": 70,
+    "keywordBytes": 67,
+    "descriptionSHA256": "429d38fc3f7646c06d61a18b2ee85a23bf9e867d41dc4cf16f4ceff7a2c9f7bf",
+    "storeTextReadbackVerified": true
+  },
+  {
+    "locale": "ko",
+    "descriptionCharacters": 1667,
+    "promotionCharacters": 82,
+    "keywordBytes": 55,
+    "descriptionSHA256": "7221b30ac583120d5b7da993b5cc2e878065c2c1aa29a9461710b320b5aaed8c",
+    "storeTextReadbackVerified": true
+  },
+  {
+    "locale": "pt-BR",
+    "descriptionCharacters": 3621,
+    "promotionCharacters": 155,
+    "keywordBytes": 88,
+    "descriptionSHA256": "f94699fd96436d08a75d7a1771ae7255f240544e51e4ce7eb61d10ef94b86e12",
+    "storeTextReadbackVerified": true
+  },
+  {
+    "locale": "zh-Hans",
+    "descriptionCharacters": 1107,
+    "promotionCharacters": 66,
+    "keywordBytes": 55,
+    "descriptionSHA256": "c5dff022e566619b285a41fcd7a09305506e22b0711025f47a8b8f6e42347064",
+    "storeTextReadbackVerified": true
+  }
+]

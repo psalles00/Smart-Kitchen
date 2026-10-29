@@ -1,0 +1,31 @@
+Savoria es tu gestor inteligente de cocina: organiza la despensa, conecta la lista de la compra, sugiere recetas con IA y reúne tus favoritas de las redes sociales. Registra comidas con foto, texto o voz y sigue tus calorías con medias inteligentes que admiten algún olvido puntual.
+
+¿OLVIDASTE UN DÍA? TU HISTORIAL SIGUE CONTANDO
+Registra tus comidas a diario y construye tu historial. Si olvidas algún día, tus registros siguen siendo útiles: Savoria calcula medias inteligentes de los días registrados para ayudarte a entender tu alimentación. Los días en blanco no cuentan como cero ni borran tu historial. Consulta calorías, proteínas, hidratos de carbono y grasas, revisa comidas anteriores y registra la evolución de tu peso.
+
+FOTO, TEXTO O VOZ: TÚ ELIGES
+Fotografía el plato, describe lo que comiste o envía un audio. La IA ayuda a interpretar alimentos y cantidades y estima calorías y macronutrientes. Revisa los resultados, ajusta las raciones y guarda la comida.
+
+DE LA DESPENSA A LA COMPRA. Y DE VUELTA.
+Marca que un producto se ha acabado para moverlo a la lista de la compra; marca que lo has comprado para devolverlo a la despensa. Sin volver a escribir los mismos productos.
+Activa la lista opcional «Para después» para guardar lo que se acaba y decidir más tarde si quieres reponerlo. Organiza cantidades, categorías y caducidades, recibe avisos de vencimiento y selecciona varios productos para actuar en conjunto. También puedes habilitar una categoría para utensilios.
+
+RECETAS CON LO QUE YA TIENES
+Pregunta a la IA qué preparar para desayunar, comer o cenar con tu despensa. Recibe ideas rápidas, opciones diferentes y propuestas para aprovechar ingredientes. Savoria también muestra recetas aunque falte algo: prioriza las que tienen más ingredientes disponibles e indica lo que falta.
+
+DE LAS REDES SOCIALES A TU RECETARIO
+¿Viste una receta en Instagram, TikTok o YouTube? Usa la opción de compartir para enviarla a Savoria. También puedes importar recetas desde enlaces, fotos y archivos y reunirlas en cuadernos.
+Organiza por categorías, guarda favoritas y consulta ingredientes, raciones y preparación. Sigue el paso a paso en el modo de cocina y ajusta las cantidades al número de raciones.
+
+UNA IA QUE CONECTA TU COCINA
+Habla con el asistente para descubrir ideas, plantear dudas sobre tus comidas y explorar alternativas para tu rutina. Despensa, recetas y nutrición forman parte de la misma experiencia.
+
+EN IPHONE, IPAD Y MAC
+Sincroniza listas y recetas con iCloud y continúa en el dispositivo que tengas a mano. Abre el asistente desde los widgets y comparte o copia listas y recetas como texto para organizar compras o compartir un plato.
+
+Descarga Savoria y transforma lo que tienes en casa en ideas para cocinar, compras más organizadas y un seguimiento flexible de tu alimentación.
+
+Algunas funciones requieren una suscripción Premium. Las estimaciones nutricionales, especialmente por imagen, pueden variar según la preparación y las raciones. Revisa los valores antes de guardar. La importación depende de la disponibilidad y el acceso al contenido original.
+
+Condiciones de uso: https://psalles00.github.io/Smart-Kitchen/terms/
+Privacidad: https://psalles00.github.io/Smart-Kitchen/privacy/

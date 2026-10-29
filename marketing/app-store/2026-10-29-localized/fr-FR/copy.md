@@ -14,9 +14,9 @@ réunis, sans complication.
 
 ## 02
 
-Vos calories.
-Sans tout noter
-chaque jour.
+Un jour oublié ?
+Vos progrès
+restent acquis.
 
 Une moyenne intelligente des jours renseignés.
 Les jours vides ne comptent pas comme zéro.

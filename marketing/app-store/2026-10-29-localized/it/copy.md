@@ -14,9 +14,9 @@ insieme, senza complicazioni.
 
 ## 02
 
-Le tue calorie.
-Senza registrare
-ogni giorno.
+Hai saltato un giorno?
+I tuoi progressi
+restano validi.
 
 Una media intelligente dei giorni registrati.
 I giorni vuoti non contano come zero.

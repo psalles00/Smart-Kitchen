@@ -12,9 +12,9 @@ juntas, sem complicação.
 
 ## 02
 
-Suas calorias.
-Sem registrar
-todos os dias.
+Esqueceu um dia?
+Seu progresso
+continua.
 
 Uma média inteligente dos dias registrados.
 Dias em branco não entram como zero.

@@ -1,0 +1,9 @@
+{
+  "locale": "ko",
+  "name": "Savoria: 레시피와 칼로리",
+  "subtitle": "식재료, 장보기, 식사 관리",
+  "promotionalText": "재고와 장보기 연결, AI 레시피, 사진·글·음성 식사 기록. 매일 기록하고 가끔 잊어도 기존 기록은 그대로 활용하세요. 앱 화면은 한국어 미지원.",
+  "keywords": "요리기록,영양관리,단백질,체중기록,식단",
+  "descriptionFile": "description.txt",
+  "status": "saved_in_app_store_connect"
+}

@@ -1,0 +1,31 @@
+Savoria è il tuo gestore intelligente della cucina: organizza la dispensa, collega la lista della spesa, suggerisce ricette con l’IA e raccoglie le tue preferite dai social. Registra i pasti con foto, testo o voce e segui le calorie con medie intelligenti che lasciano spazio a qualche dimenticanza.
+
+HAI DIMENTICATO UN GIORNO? IL TUO STORICO RESTA VALIDO
+Registra i pasti ogni giorno per costruire il tuo storico. Se ogni tanto dimentichi un giorno, i dati già inseriti restano utili: Savoria calcola medie intelligenti dai giorni registrati per aiutarti a capire la tua alimentazione. I giorni vuoti non valgono zero e non cancellano lo storico. Segui calorie, proteine, carboidrati e grassi, consulta i pasti precedenti e registra l’evoluzione del peso.
+
+FOTO, TESTO O VOCE: SCEGLI TU
+Fotografa il piatto, descrivi ciò che hai mangiato o invia un audio. L’IA aiuta a interpretare alimenti e quantità e stima calorie e macronutrienti. Controlla i risultati, modifica le porzioni e salva il pasto.
+
+DALLA DISPENSA ALLA SPESA. E VICEVERSA.
+Segna un prodotto come finito per spostarlo nella lista della spesa. Segnalo come acquistato per riportarlo in dispensa. Senza riscrivere gli stessi articoli.
+Attiva la lista facoltativa «Per dopo» per conservare i prodotti finiti e decidere più avanti se ricomprarli. Organizza quantità, categorie e scadenze, ricevi promemoria e seleziona più articoli per azioni di gruppo. Puoi anche abilitare una categoria per gli utensili.
+
+RICETTE CON QUELLO CHE HAI GIÀ
+Chiedi all’IA cosa preparare per colazione, pranzo o cena con gli ingredienti della dispensa. Scopri idee veloci, proposte originali e modi per utilizzare ciò che hai. Savoria mostra ricette anche quando manca qualcosa, dando priorità a quelle con più ingredienti disponibili e indicando cosa manca.
+
+DAI SOCIAL AL TUO RICETTARIO
+Hai visto una ricetta su Instagram, TikTok o YouTube? Usa la condivisione per inviarla a Savoria. Importa anche ricette da link, foto e file e riuniscile in quaderni.
+Organizza per categorie, salva le preferite e consulta ingredienti, porzioni e preparazione. Segui i passaggi nella modalità cucina e adatta le quantità al numero di porzioni.
+
+UN’IA CHE COLLEGA LA TUA CUCINA
+Parla con l’assistente per trovare idee, fare domande sui pasti ed esplorare alternative per la tua routine. Dispensa, ricette e nutrizione diventano parte della stessa esperienza.
+
+SU IPHONE, IPAD E MAC
+Sincronizza liste e ricette con iCloud e continua sul dispositivo che hai a portata di mano. Apri l’assistente dai widget e condividi o copia liste e ricette come testo per organizzare la spesa o far conoscere un piatto.
+
+Scarica Savoria per trasformare ciò che hai in casa in idee da cucinare, una spesa più organizzata e un monitoraggio flessibile dell’alimentazione.
+
+Alcune funzioni richiedono un abbonamento Premium. Le stime nutrizionali, soprattutto da immagini, variano in base a preparazione e porzioni. Controlla i valori prima di salvare. L’importazione dipende dalla disponibilità e dall’accessibilità dei contenuti originali.
+
+Condizioni d’uso: https://psalles00.github.io/Smart-Kitchen/terms/
+Privacy: https://psalles00.github.io/Smart-Kitchen/privacy/
