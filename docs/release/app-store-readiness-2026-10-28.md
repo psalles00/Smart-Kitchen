@@ -69,8 +69,8 @@ de privacidade e de validação externa. Este arquivo não substitui a aprovaç�
 2. Política e manifesto corrigidos/publicados. Ainda separar transparência da
    verificação das condições/configurações efetivas dos provedores; não prometer ZDR.
 3. Revisar as demais alegações e fluxos de nutrição; a promessa do gráfico já foi corrigida e validada.
-4. Finalizar archive/exportação de distribuição após as correções restantes. Builds Release, segredos e capabilities já foram conferidos; finalizar
-   matriz funcional proporcional reaproveitando evidências válidas.
+4. Archive atual gerado e inspecionado em 29/10. Exportação de distribuição
+   permanece pendente; não gerar outra candidata para repetir esta prova.
 5. Retomar somente as verificações do ASC quando houver sessão disponível. Pedro
    pediu expressamente continuar primeiro tudo que independe desse acesso.
 
@@ -172,3 +172,37 @@ de privacidade e de validação externa. Este arquivo não substitui a aprovaç�
   Archive local válido não equivale a exportação App Store nem aceitação do
   servidor Apple. Não houve upload ou nova tentativa de login. Retenção: este
   único candidato até finalizar a auditoria/envio; reutilizar em vez de recriar.
+
+## Limites da conclusão local
+
+- A suíte atual aprovou renderização nativa das cinco páginas em fixture em
+  memória, superfícies inferiores, onboarding/projeção e seções de receitas.
+  Não houve alteração de listas, refeições ou mídia de Pedro nesses testes.
+- Dos 11 ignorados: sete são consultas reais protegidas por reserva financeira,
+  um exige snapshot físico de migração, um é diagnóstico decimal optativo e
+  dois exigem interação manual. Consentimento e gesto têm provas separadas
+  registradas acima; os skips não são contados como aprovação.
+- Evidências anteriores compatíveis foram reaproveitadas em
+  `docs/testing-assistant-variety.md`, `docs/testing-recipe-discovery.md` e
+  `docs/testing-icloud-recovery.md`. Não repetimos inferências ou migrações
+  somente para aumentar a contagem. Nenhuma prova como administrador de
+  Supabase foi usada para afirmar que o caminho do cliente funciona.
+- O assistente contém regras médicas explícitas em `AssistantChatManager` e
+  `InlineChatView`: não diagnosticar/prescrever; não prometer resultado e
+  encaminhar situações clínicas a profissional. Regras de prompt são defesa
+  implementada, não prova de que o modelo sempre as cumpre.
+- **Conteúdo de IA ainda exige fechamento:** existe contato de suporte nas
+  Configurações e envio de erro na análise nutricional, mas não foi encontrado
+  mecanismo específico de denúncia nas respostas de `ChatBubbleView` e
+  `InlineChatView`. As diretrizes 1.2 incluem criação de conteúdo por IA. Não
+  presumir que o chat privado dispensa salvaguardas, nem inventar bloqueio de
+  outros usuários num app sem interação pública. Revisar filtragem/denúncia
+  e a aplicabilidade ao fluxo concreto antes de declarar pronto.
+- Direitos das imagens/receitas incluídas e condições efetivas de retenção
+  dos fornecedores não são demonstrados por build ou HTTP 200 da política.
+  Não declaramos licenças, contratos ou configurações de conta por inferência.
+
+**Conclusão em 29/10:** archive e verificações locais acima estão disponíveis;
+ainda não há evidência para afirmar que só faltam imagens, descrição e envio.
+Além do acesso ao ASC, permanecem a divergência StoreKit e o fechamento das
+salvaguardas/condições descritas. Não houve envio para revisão.
