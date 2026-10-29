@@ -1,7 +1,7 @@
-O Savoria é seu gerenciador inteligente de cozinha: organiza a despensa, conecta a lista de compras, sugere receitas com IA e reúne suas favoritas das redes sociais. Registre refeições por foto, texto ou voz e acompanhe calorias com médias inteligentes, sem precisar anotar todos os dias.
+O Savoria é seu gerenciador inteligente de cozinha: organiza a despensa, conecta a lista de compras, sugere receitas com IA e reúne suas favoritas das redes sociais. Registre refeições por foto, texto ou voz e acompanhe calorias com médias inteligentes, com flexibilidade para os dias em que você esquecer de registrar.
 
-ACOMPANHE SUAS CALORIAS SEM REGISTRAR TODOS OS DIAS
-Um contador de calorias que se adapta à sua rotina. O Savoria calcula uma média inteligente dos dias registrados para ajudar você a entender sua alimentação. Dias em branco não entram como zero. Acompanhe calorias, proteínas, carboidratos e gorduras, consulte seu histórico e registre a evolução do peso.
+ESQUECEU UM DIA? SEU ACOMPANHAMENTO CONTINUA
+Registre suas refeições no dia a dia e construa seu histórico. Se esquecer um dia ou outro, seus registros continuam valendo: o Savoria usa médias inteligentes dos dias registrados para manter uma visão útil da sua alimentação. Dias em branco não entram como zero nem apagam o que você já acompanhou. Acompanhe calorias, proteínas, carboidratos e gorduras, consulte seu histórico e registre a evolução do peso.
 
 FOTO, TEXTO OU VOZ: REGISTRE DO SEU JEITO
 Fotografe o prato, descreva o que comeu ou envie um áudio. A inteligência artificial ajuda a interpretar os alimentos e as quantidades e estima calorias e macronutrientes. Confira os resultados, ajuste as porções quando necessário e salve sua refeição.
