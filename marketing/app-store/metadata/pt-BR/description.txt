@@ -1,0 +1,33 @@
+Receitas com o que você tem. Compras conectadas à despensa. Calorias sem registrar todos os dias. Organize sua alimentação com o Savoria.
+
+ACOMPANHE SUAS CALORIAS SEM REGISTRAR TODOS OS DIAS
+Um contador de calorias que se adapta à sua rotina. O Savoria calcula uma média inteligente dos dias registrados para ajudar você a entender sua alimentação. Dias em branco não entram como zero. Acompanhe calorias, proteínas, carboidratos e gorduras, consulte seu histórico e registre a evolução do peso.
+
+FOTO, TEXTO OU VOZ: REGISTRE DO SEU JEITO
+Fotografe o prato, descreva o que comeu ou envie um áudio. A inteligência artificial ajuda a interpretar os alimentos e as quantidades e estima calorias e macronutrientes. Confira os resultados, ajuste as porções quando necessário e salve sua refeição.
+
+DA DESPENSA AO MERCADO. E DE VOLTA.
+Suas listas acompanham o que acontece na cozinha: marque que um item acabou para movê-lo da despensa ao mercado; marque que comprou para trazê-lo de volta. Tudo no mesmo fluxo, sem redigitar a lista de compras.
+
+Ative a lista opcional “Para depois” para guardar os itens que acabaram e decidir mais tarde o que vai para o mercado. Organize quantidades, categorias e validades, receba lembretes de vencimento e selecione vários itens para agir de uma vez. Você também pode habilitar uma categoria para seus utensílios.
+
+DESCUBRA RECEITAS COM O QUE VOCÊ JÁ TEM
+Abra a despensa e pergunte à IA o que fazer no café da manhã, almoço ou jantar. Receba ideias rápidas, opções diferentes e sugestões para aproveitar seus ingredientes. O Savoria também mostra receitas mesmo quando falta algo, priorizando as que têm mais ingredientes disponíveis e indicando o que falta. Menos tempo decidindo, mais possibilidades para cozinhar.
+
+DA REDE SOCIAL PARA O SEU CADERNO DE RECEITAS
+Viu uma receita no Instagram, TikTok ou YouTube? Use a opção de compartilhar para enviá-la ao Savoria. Você também pode importar receitas de links, fotos e arquivos e reunir suas descobertas em cadernos, em vez de deixá-las espalhadas.
+
+Organize suas receitas por categorias, guarde favoritas e consulte ingredientes, porções e modo de preparo. Na hora de cozinhar, acompanhe o passo a passo no modo de preparo e ajuste as quantidades ao número de porções.
+
+UMA IA QUE CONVERSA COM A SUA COZINHA
+Converse com o assistente para encontrar ideias, tirar dúvidas sobre suas refeições e explorar alternativas para sua rotina. Despensa, receitas e nutrição deixam de ser tarefas separadas e passam a fazer parte da mesma experiência.
+
+NO IPHONE, IPAD E MAC
+Sincronize suas listas e receitas pelo iCloud e continue a organização no dispositivo que estiver à mão. Acesse o assistente por widgets e compartilhe ou copie listas e receitas como texto para combinar as compras ou dividir aquele prato com alguém.
+
+Baixe o Savoria e transforme o que você tem em casa em ideias para comer melhor, comprar com mais organização e acompanhar sua alimentação com flexibilidade.
+
+Alguns recursos exigem assinatura Premium. As estimativas nutricionais, especialmente por imagem, podem variar conforme o preparo e as porções. Revise os valores antes de salvar. A importação depende da disponibilidade e do acesso ao conteúdo de origem.
+
+Termos de uso: https://psalles00.github.io/Smart-Kitchen/terms/
+Privacidade: https://psalles00.github.io/Smart-Kitchen/privacy/
