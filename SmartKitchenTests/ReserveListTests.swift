@@ -337,12 +337,13 @@ final class AdaptiveWorkspaceRenderingTests: XCTestCase {
     }
 
     private func render(_ root: AnyView, name: String,
+                        style: UIUserInterfaceStyle = .light,
                         layoutReady: @escaping () -> Bool = { true }) async throws -> UIWindow {
         let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
             .first { $0.activationState == .foregroundActive })
         let window = UIWindow(windowScene: scene)
         window.frame = scene.coordinateSpace.bounds
-        window.overrideUserInterfaceStyle = .light
+        window.overrideUserInterfaceStyle = style
         window.windowLevel = .normal + 1
         let ready = expectation(description: "Native layout: " + name)
         let localeIdentifier = ProcessInfo.processInfo.environment["SAVORIA_TEST_LOCALE"]
@@ -508,6 +509,132 @@ final class AdaptiveWorkspaceRenderingTests: XCTestCase {
         XCTAssertEqual(try container.mainContext.fetchCount(FetchDescriptor<UnifiedItem>()), 6)
         XCTAssertEqual(try container.mainContext.fetchCount(FetchDescriptor<Recipe>()), 1)
         XCTAssertEqual(try container.mainContext.fetchCount(FetchDescriptor<ChatMessage>()), 0)
+    }
+
+    /// App Store assets use production views over memory-only demonstration data.
+    /// No model bootstrap, personal stores, purchases or inference requests.
+    func testAppStoreDemonstrationCaptures() async throws {
+        let container = try ModelContainer(for: CloudSyncService.appSchema, configurations:
+            ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none))
+        let context = container.mainContext
+        let settings = AppSettings()
+        settings.hasCompletedOnboarding = true
+        settings.showReserve = true
+        settings.recipeGalleryColumns = 2
+        settings.pantryDetailLevel = .detailed
+        context.insert(settings)
+        for (index, value) in [("Tomate", "Frutas", "tomato.png"), ("Alface", "Verduras e Legumes", "lettuce.png"),
+                               ("Peito de Frango", "Carnes e Aves", "chicken-raw.png"), ("Ovos", "Laticínios e Ovos", "egg.png"),
+                               ("Arroz", "Grãos, Massas e Cereais", "rice.png"), ("Azeite", "Temperos e Condimentos", "olive-oil.png"),
+                               ("Banana", "Frutas", "banana.png"), ("Aveia", "Grãos, Massas e Cereais", "oatmeal.png")].enumerated() {
+            context.insert(UnifiedItem(name: value.0, category: value.1, quantity: [4.0, 1, 600, 6, 1, 500, 6, 300][index],
+                unit: ["un", "un", "g", "un", "kg", "ml", "un", "g"][index], iconName: value.2,
+                isPantry: true, pantrySortOrder: index,
+                expirationDate: index < 2 ? Calendar.current.date(byAdding: .day, value: index + 2, to: .now) : nil))
+        }
+        for name in ["Iogurte Natural", "Leite", "Queijo Minas", "Morango"] {
+            context.insert(UnifiedItem(name: name, quantity: 1, unit: "un", isGrocery: true))
+        }
+        context.insert(UnifiedItem(name: "Café em Pó", isReserve: true))
+        func cover(_ name: String) throws -> Data {
+            let url = try XCTUnwrap(Bundle.main.url(forResource: name, withExtension: "jpg", subdirectory: "images-128"))
+            return try Data(contentsOf: url)
+        }
+        let photo = try cover("onboarding-grilled-chicken-veggies")
+        let recipe = Recipe(name: "Frango grelhado com legumes", descriptionText: "Um almoço prático, colorido e cheio de sabor.",
+            ingredients: [RecipeIngredient(name: "Peito de Frango", quantity: 300, unit: "g", sortOrder: 0),
+                          RecipeIngredient(name: "Tomate", quantity: 2, unit: "un", sortOrder: 1),
+                          RecipeIngredient(name: "Azeite", quantity: 1, unit: "Colher de Sopa", sortOrder: 2),
+                          RecipeIngredient(name: "Abobrinha", quantity: 1, unit: "un", sortOrder: 3)],
+            steps: [RecipeStep(order: 1, instruction: "Corte os legumes. Tempere o frango com sal e azeite.", durationMinutes: 5),
+                    RecipeStep(order: 2, instruction: "Grelhe o frango e os legumes até dourarem.", durationMinutes: 15),
+                    RecipeStep(order: 3, instruction: "Sirva ainda quente e aproveite.")],
+            imageData: photo, category: "Almoço", prepTime: 5, cookTime: 15, servings: 2, calories: 420, isFavorite: true)
+        context.insert(recipe)
+        for definition in DataSeeder.defaultDefinitions(for: .recipe) {
+            context.insert(Category(name: definition.name, type: .recipe, iconName: definition.iconName))
+        }
+        for template in OnboardingCatalog.recipeTemplates.filter({ ["caesar-salad", "strawberry-oat-smoothie", "chicken-wrap-hummus", "pancake"].contains($0.id) }) {
+            let ingredients = template.ingredients.enumerated().map { index, value in
+                RecipeIngredient(name: value.0, quantity: value.1, unit: value.2, iconName: value.3, sortOrder: index)
+            }
+            let steps = template.steps.enumerated().map { RecipeStep(order: $0.offset + 1, instruction: $0.element) }
+            context.insert(Recipe(name: template.name, descriptionText: template.summary, ingredients: ingredients,
+                steps: steps, imageData: template.photoFileName.flatMap(IconResolver.imageData(forFilename:)),
+                category: template.category, prepTime: template.prepMinutes, cookTime: template.cookMinutes,
+                servings: template.servings, calories: template.calories))
+        }
+        let profile = NutritionProfile()
+        profile.hasCompletedOnboarding = true
+        profile.overrideCalories = 2200
+        profile.overrideProteinG = 120
+        profile.overrideCarbsG = 280
+        profile.overrideFatG = 65
+        context.insert(profile)
+        let today = Calendar.current.startOfDay(for: .now)
+        context.insert(FoodEntry(name: "Pão com ovos e café com leite", calories: 385, proteinG: 22, carbsG: 38, fatG: 16,
+            mealType: .breakfast, timestamp: today.addingTimeInterval(8 * 3600), emoji: "🍳"))
+        context.insert(FoodEntry(name: "Frango grelhado com legumes", calories: 420, proteinG: 38, carbsG: 29, fatG: 17,
+            mealType: .lunch, timestamp: today.addingTimeInterval(12 * 3600), emoji: "🍗"))
+        context.insert(FoodEntry(name: "Iogurte com banana e aveia", calories: 215, proteinG: 12, carbsG: 31, fatG: 5,
+            mealType: .snack, timestamp: today.addingTimeInterval(15 * 3600), emoji: "🍌"))
+        context.insert(NutritionDayLog(dayStart: today))
+        let conversation = ChatConversation(title: "Ideias com a despensa")
+        context.insert(conversation)
+        let user = ChatMessage(role: .user, content: "O que posso fazer com o que tenho?", conversationId: conversation.id)
+        user.timestamp = .now.addingTimeInterval(-60); context.insert(user)
+        let ideas: [RecipeQuickIdea] = [
+            .init(title: "Omelete de tomate", mainIngredient: "Ovos", category: .quick),
+            .init(title: "Frango com arroz", mainIngredient: "Frango", category: .quick),
+            .init(title: "Salada com frango", mainIngredient: "Alface", category: .quick),
+            .init(title: "Tomate recheado", mainIngredient: "Tomate", category: .unique),
+            .init(title: "Panqueca de aveia", mainIngredient: "Aveia", category: .unique),
+            .init(title: "Arroz de frigideira", mainIngredient: "Arroz", category: .pantry)]
+        let payload = InlineChatView.ResultsPayload(ideas: [], quickIdeas: ideas,
+            answer: "Com ovos, frango, arroz e legumes da sua despensa, dá para variar o almoço. Separei algumas ideias para você.",
+            localRecipeIDs: [], occasionRaw: nil, refinement: nil, customQuery: user.content, filterByPantry: true)
+        context.insert(ChatMessage(role: .assistant, content: payload.encoded(),
+            quickActions: [QuickAction(label: "_wizard", prompt: RecipeIdeasSentinel.resultsPrefix)], conversationId: conversation.id))
+        try context.save()
+        let search = SearchBarState()
+        search.aiChatPreset = .recipeIdeas
+        let subscription = SubscriptionManager(observesTransactions: false)
+        let result = FoodAnalysis(name: "Frango grelhado com legumes", calories: 420, protein: 38, carbs: 29, fat: 17,
+            servingSizeGrams: 350, emoji: "🍗", reviewNotes: ["Estimativa para a porção da foto. Revise antes de registrar."])
+        let pages: [(String, AnyView, UIUserInterfaceStyle)] = [
+            ("home", AnyView(ContentView()), .light),
+            ("pantry", AnyView(WorkspacePageFixture(content: AnyView(ListsTabView())).environment(\.activeAppTab, .lists)), .light),
+            ("market", AnyView(WorkspacePageFixture(content: AnyView(ListsTabView(initialSubtab: .grocery))).environment(\.activeAppTab, .lists)), .dark),
+            ("recipes", AnyView(WorkspacePageFixture(content: AnyView(RecipesView())).environment(\.activeAppTab, .recipes)), .light),
+            ("recipe", AnyView(NavigationStack { RecipeDetailView(recipe: recipe) }), .light),
+            ("cooking", AnyView(CookingModeView(recipe: recipe)), .light),
+            ("assistant", AnyView(InlineChatView(existingConversationId: conversation.id, onDismiss: {}, onShowHistory: {}, searchBarState: search)), .light),
+            ("food", AnyView(NavigationStack { FoodResultView(analysis: result, image: UIImage(data: photo), logDate: .now) }), .light),
+            ("nutrition", AnyView(WorkspacePageFixture(content: AnyView(NutrientsView())).environment(\.activeAppTab, .nutrients)), .dark)]
+        for (name, page, style) in pages {
+            let root = page.modelContainer(container).environmentObject(search).environment(subscription)
+            let window = try await render(AnyView(root), name: "store-" + name, style: style)
+            if name == "food" {
+                func scrollViews(_ view: UIView) -> [UIScrollView] {
+                    view.subviews.flatMap { child in (child as? UIScrollView).map { [$0] } ?? scrollViews(child) }
+                }
+                if let scroll = scrollViews(window).max(by: { $0.contentSize.height < $1.contentSize.height }) {
+                    scroll.setContentOffset(CGPoint(x: 0, y: 460), animated: false)
+                    let settled = expectation(description: "Food detail scroll committed")
+                    let commits = WorkspaceDisplayCommits(isReady: { true }) { settled.fulfill() }
+                    commits.start(); await fulfillment(of: [settled], timeout: 10); commits.stop()
+                    let image = UIGraphicsImageRenderer(bounds: window.bounds).image { _ in
+                        window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
+                    }
+                    let attachment = XCTAttachment(image: image)
+                    attachment.name = "store-food-details"; attachment.lifetime = .keepAlways; add(attachment)
+                }
+            }
+            window.isHidden = true; window.rootViewController = nil
+        }
+        XCTAssertEqual(try context.fetchCount(FetchDescriptor<UnifiedItem>()), 13)
+        XCTAssertEqual(try context.fetchCount(FetchDescriptor<Recipe>()), 5)
+        XCTAssertEqual(try context.fetchCount(FetchDescriptor<ChatMessage>()), 2)
     }
 
     func testNativeReportPreviewDoesNotSendOrAttachUserData() async throws {

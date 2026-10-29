@@ -1,0 +1,141 @@
+[
+  {
+    "page": 3,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "copy": [
+      {
+        "title": "Sua receita.\nUm passo\nde cada vez.",
+        "bottom": 829.65625,
+        "right": 1220,
+        "left": 200,
+        "height": 639.65625,
+        "overflow": false
+      }
+    ],
+    "images": [
+      {
+        "src": "assets/screenshots/recipe.png",
+        "naturalRatio": 0.459954233409611,
+        "ratio": 0.4599560417849999
+      },
+      {
+        "src": "assets/screenshots/recipe-ingredients.png",
+        "naturalRatio": 1.2877030162412992,
+        "ratio": 1.2877075147976615
+      }
+    ]
+  },
+  {
+    "page": 4,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "copy": [
+      {
+        "title": "Foto, texto\nou voz.\nVocê escolhe.",
+        "bottom": 2757.109375,
+        "right": 1220,
+        "left": 100,
+        "height": 642.109375,
+        "overflow": false
+      }
+    ],
+    "images": [
+      {
+        "src": "assets/screenshots/food.png",
+        "naturalRatio": 0.459954233409611,
+        "ratio": 0.4599560417849999
+      },
+      {
+        "src": "assets/screenshots/food-focus.png",
+        "naturalRatio": 1.5416666666666667,
+        "ratio": 1.5416880420827674
+      }
+    ]
+  },
+  {
+    "page": 5,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "copy": [
+      {
+        "title": "Receitas, listas\ne nutrição.\nTudo conversa.",
+        "bottom": 858.078125,
+        "right": 1220,
+        "left": 190,
+        "height": 598.078125,
+        "overflow": false
+      }
+    ],
+    "images": [
+      {
+        "src": "assets/screenshots/food.png",
+        "naturalRatio": 0.459954233409611,
+        "ratio": 0.4599560417849999
+      }
+    ]
+  },
+  {
+    "page": 6,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "copy": [
+      {
+        "title": "O que falta\nvira lista\nde mercado.",
+        "bottom": 730.671875,
+        "right": 1220,
+        "left": 205,
+        "height": 580.671875,
+        "overflow": false
+      }
+    ],
+    "images": [
+      {
+        "src": "assets/screenshots/pantry.png",
+        "naturalRatio": 0.459954233409611,
+        "ratio": 0.4599560417849999
+      },
+      {
+        "src": "assets/screenshots/pantry-focus.png",
+        "naturalRatio": 1.6055555555555556,
+        "ratio": 1.6055718880971759
+      }
+    ]
+  }
+]

@@ -1,0 +1,87 @@
+{
+  "locale": "pt-BR",
+  "nativeDevice": "iPhone 17 Pro (Simulator)",
+  "screenshots": "production views, isolated demonstration data",
+  "pages": [
+    {
+      "page": 1,
+      "path": "png/01.png",
+      "width": 1320,
+      "height": 2868,
+      "colorSpace": "srgb",
+      "alpha": false,
+      "bytes": 1811020,
+      "sha256": "79158b02735ba95716fd82b047f912c9467d4cd327f97e4c825fe460c5e6ac63"
+    },
+    {
+      "page": 2,
+      "path": "png/02.png",
+      "width": 1320,
+      "height": 2868,
+      "colorSpace": "srgb",
+      "alpha": false,
+      "bytes": 954646,
+      "sha256": "b391d024ab928340ba7233b54a414bbea5594825f4f9f1aa71e26bda71222e30"
+    },
+    {
+      "page": 3,
+      "path": "png/03.png",
+      "width": 1320,
+      "height": 2868,
+      "colorSpace": "srgb",
+      "alpha": false,
+      "bytes": 2152238,
+      "sha256": "f821de4a21756a9ea96c67fdcbeccc47ffeef4b6ee95012ea93830b6cbe20826"
+    },
+    {
+      "page": 4,
+      "path": "png/04.png",
+      "width": 1320,
+      "height": 2868,
+      "colorSpace": "srgb",
+      "alpha": false,
+      "bytes": 1664556,
+      "sha256": "ed46329a915e90518e4975e6ade038f4a29c7c099ecf3a9067a49a0a22988b26"
+    },
+    {
+      "page": 5,
+      "path": "png/05.png",
+      "width": 1320,
+      "height": 2868,
+      "colorSpace": "srgb",
+      "alpha": false,
+      "bytes": 1036829,
+      "sha256": "4614df004a758f299982bf8d119727f813584180fbc48c7a78a0d1bfcbc99bec"
+    },
+    {
+      "page": 6,
+      "path": "png/06.png",
+      "width": 1320,
+      "height": 2868,
+      "colorSpace": "srgb",
+      "alpha": false,
+      "bytes": 1252800,
+      "sha256": "9d1de39db64573cb0626da5e824e1c9b9738313d3fa4c4ae6c78c5c65a1314d0"
+    },
+    {
+      "page": 7,
+      "path": "png/07.png",
+      "width": 1320,
+      "height": 2868,
+      "colorSpace": "srgb",
+      "alpha": false,
+      "bytes": 2523303,
+      "sha256": "9038fa1aea839f47539cfbb91a4e606dccced8a083e71d9494fa012a8b91b2b0"
+    },
+    {
+      "page": 8,
+      "path": "png/08.png",
+      "width": 1320,
+      "height": 2868,
+      "colorSpace": "srgb",
+      "alpha": false,
+      "bytes": 1410357,
+      "sha256": "e6d3b24f7e1b8fd823e9396d7d9c98447c8fe1a3fbf1fa4201a08c972e53c086"
+    }
+  ]
+}
