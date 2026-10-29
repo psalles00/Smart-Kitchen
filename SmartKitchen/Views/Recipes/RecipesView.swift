@@ -1422,7 +1422,7 @@ private struct RecipesLoadedView: View {
 
     private func recipeSectionHeader(_ title: String) -> some View {
         HStack(spacing: 6) {
-            Text(title)
+            Text(CategoryMutationService.localizedDisplayName(for: title, type: .recipe))
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.secondary.opacity(0.6))
             Spacer()

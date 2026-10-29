@@ -553,7 +553,7 @@ final class AdaptiveWorkspaceRenderingTests: XCTestCase {
                                ("Peito de Frango", "Carnes e Aves", "chicken-raw.png"), ("Ovos", "Laticínios e Ovos", "egg.png"),
                                ("Arroz", "Grãos, Massas e Cereais", "rice.png"), ("Azeite", "Temperos e Condimentos", "olive-oil.png"),
                                ("Banana", "Frutas", "banana.png"), ("Aveia", "Grãos, Massas e Cereais", "oatmeal.png")].enumerated() {
-            context.insert(UnifiedItem(name: fixtureText(value.0), category: fixtureText(value.1), quantity: [4.0, 1, 600, 6, 1, 500, 6, 300][index],
+            context.insert(UnifiedItem(name: fixtureText(value.0), category: value.1, quantity: [4.0, 1, 600, 6, 1, 500, 6, 300][index],
                 unit: fixtureText(["un", "un", "g", "un", "kg", "ml", "un", "g"][index]), iconName: value.2,
                 isPantry: true, pantrySortOrder: index,
                 expirationDate: index < 2 ? Calendar.current.date(byAdding: .day, value: index + 2, to: .now) : nil))
@@ -577,8 +577,8 @@ final class AdaptiveWorkspaceRenderingTests: XCTestCase {
                     RecipeStep(order: 3, instruction: fixtureText("Sirva ainda quente e aproveite."))],
             imageData: photo, category: fixtureText("Almoço"), prepTime: 5, cookTime: 15, servings: 2, calories: 420, isFavorite: true)
         context.insert(recipe)
-        for definition in DataSeeder.defaultDefinitions(for: .recipe) {
-            context.insert(Category(name: fixtureText(definition.name), type: .recipe, iconName: definition.iconName))
+        for (index, definition) in DataSeeder.defaultDefinitions(for: .recipe).enumerated() {
+            context.insert(Category(name: definition.name, type: .recipe, iconName: definition.iconName, sortOrder: index))
         }
         for template in OnboardingCatalog.recipeTemplates.filter({ ["caesar-salad", "strawberry-oat-smoothie", "chicken-wrap-hummus", "pancake"].contains($0.id) }) {
             let ingredients = template.ingredients.enumerated().map { index, value in
@@ -587,7 +587,7 @@ final class AdaptiveWorkspaceRenderingTests: XCTestCase {
             let steps = template.steps.enumerated().map { RecipeStep(order: $0.offset + 1, instruction: $0.element) }
             context.insert(Recipe(name: template.name, descriptionText: template.summary, ingredients: ingredients,
                 steps: steps, imageData: template.photoFileName.flatMap(IconResolver.imageData(forFilename:)),
-                category: fixtureText(template.category), prepTime: template.prepMinutes, cookTime: template.cookMinutes,
+                category: template.category, prepTime: template.prepMinutes, cookTime: template.cookMinutes,
                 servings: template.servings, calories: template.calories))
         }
         let profile = NutritionProfile()
@@ -638,7 +638,8 @@ final class AdaptiveWorkspaceRenderingTests: XCTestCase {
             ("food", AnyView(NavigationStack { FoodResultView(analysis: result, image: UIImage(data: photo), logDate: .now) }), .light),
             ("nutrition", AnyView(WorkspacePageFixture(content: AnyView(NutrientsView())).environment(\.activeAppTab, .nutrients)), .dark)]
         let marketingOnly = ProcessInfo.processInfo.environment["SAVORIA_MARKETING_CAPTURE"] == "1"
-        let marketingPages: Set<String> = ["home", "pantry", "market", "recipes", "recipe", "nutrition"]
+        let marketingPages = Set((ProcessInfo.processInfo.environment["SAVORIA_MARKETING_PAGES"] ??
+            "home,pantry,market,recipes,recipe,nutrition").split(separator: ",").map(String.init))
         for (name, page, style) in pages where !marketingOnly || marketingPages.contains(name) {
             let root = page.modelContainer(container).environmentObject(search).environment(subscription)
             let window = try await render(AnyView(root), name: fixtureText("store-") + name, style: style)
