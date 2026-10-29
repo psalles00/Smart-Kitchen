@@ -99,6 +99,19 @@ acesso, correção ou exclusão de dados sob nosso controle, contate
 conforme os direitos aplicáveis, suas condições e eventuais obrigações de retenção.
 Não é necessário adquirir Premium para fazer uma solicitação de privacidade.
 
+### Personalização e relatos de conteúdo
+
+O perfil nutricional, a atividade e o conteúdo que você autoriza enviar podem
+ser usados para personalizar as recomendações solicitadas. Não são usados
+para publicidade ou rastreamento entre apps.
+
+Você pode reportar uma resposta da IA pelo próprio app. O relato começa sem
+anexar a resposta; você escolhe se deseja incluí-la e confere uma prévia.
+O app abre um e-mail para o suporte, sem enviá-lo automaticamente. Histórico,
+fotos e dados da despensa não são anexados. Se enviar o relato, os textos
+escolhidos serão recebidos pelo suporte e pelo serviço de e-mail utilizado,
+para tratar o problema. Você pode solicitar sua exclusão pelo contato abaixo.
+
 ## 5. Compras dentro do aplicativo (IAP)
 
 O Savoria oferece duas assinaturas auto-renováveis:

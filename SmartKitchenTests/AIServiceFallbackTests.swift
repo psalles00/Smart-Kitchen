@@ -11,6 +11,29 @@ import Metal
 #endif
 @testable import Savoria
 
+final class AssistantResponseReportTests: XCTestCase {
+    func testReportOmitsResponseUnlessUserSelectsIt() {
+        let report = AssistantResponseReport.body(note: "Incorrect portion", response: "PRIVATE RESPONSE", includeResponse: false)
+        XCTAssertTrue(report.contains("Incorrect portion"))
+        XCTAssertFalse(report.contains("PRIVATE RESPONSE"))
+        let included = AssistantResponseReport.body(note: "", response: "Selected response", includeResponse: true)
+        XCTAssertTrue(included.contains("Selected response"))
+    }
+
+    func testReportBoundsContentAndEncodesItOnlyInMailBody() throws {
+        let report = AssistantResponseReport.body(note: String(repeating: "n", count: 1_100), response: String(repeating: "r", count: 2_100), includeResponse: true)
+        XCTAssertFalse(report.contains(String(repeating: "n", count: 1_001)))
+        XCTAssertFalse(report.contains(String(repeating: "r", count: 2_001)))
+        let payload = "&bcc=other@example.com\r\nSubject: injected + % # café"
+        let url = try XCTUnwrap(AssistantResponseReport.emailURL(body: payload))
+        let components = try XCTUnwrap(URLComponents(url: url, resolvingAgainstBaseURL: false))
+        XCTAssertEqual(components.scheme, "mailto")
+        XCTAssertEqual(components.path, "pedrosalles00@gmail.com")
+        XCTAssertEqual(components.queryItems?.map(\.name), ["subject", "body"])
+        XCTAssertEqual(components.queryItems?.first(where: { $0.name == "body" })?.value, payload)
+    }
+}
+
 @MainActor
 final class ICloudOnboardingRecoveryTests: XCTestCase {
     func testSameNamedCloudCategoriesKeepBothIDsAndMetadataWhileShowingOneLabel() throws {

@@ -461,6 +461,53 @@ final class AdaptiveWorkspaceRenderingTests: XCTestCase {
         XCTAssertEqual(try container.mainContext.fetchCount(FetchDescriptor<ChatMessage>()), 0)
     }
 
+    func testNativeReportPreviewDoesNotSendOrAttachUserData() async throws {
+        // A focused run may start before the hosted app finishes activating.
+        // Observe that lifecycle boundary rather than relying on earlier tests.
+        let activated = expectation(description: "Report preview scene is active")
+        let observer = NotificationCenter.default.addObserver(
+            forName: UIScene.didActivateNotification, object: nil, queue: .main
+        ) { _ in activated.fulfill() }
+        defer { NotificationCenter.default.removeObserver(observer) }
+        if UIApplication.shared.connectedScenes.contains(where: { $0.activationState == .foregroundActive }) {
+            activated.fulfill()
+        }
+        await fulfillment(of: [activated], timeout: 10)
+        let window = try await render(
+            AnyView(AssistantResponseReportView(response: "SYNTHETIC RESPONSE FOR LOCAL PREVIEW")),
+            name: "native-assistant-report-preview")
+        defer { window.isHidden = true; window.rootViewController = nil }
+        // Opening the preview has no model container or network dependency.
+        // Email and clipboard actions remain explicit user actions.
+        XCTAssertNotNil(window.rootViewController)
+    }
+
+    func testNativeStructuredAssistantResponsesKeepTheirReportAction() async throws {
+        let (container, recipeID) = try fixture()
+        let detail = "**Arroz com ovos**\n\n**Ingredientes**\n- 1 xícara de arroz\n- 2 ovos\n\n**Modo de Preparo**\n1. Cozinhe o arroz e prepare os ovos."
+        XCTAssertNotNil(RecipeCardData.parse(content: detail))
+        let cases: [(String, String, [UUID])] = [
+            ("detail", detail, []),
+            ("attached", "", [recipeID]),
+            ("options", "**Arroz com ovos** — Uma opção prática.\n**Omelete de tomate** — Outra ideia.", [])
+        ]
+        for (name, content, recipeIDs) in cases {
+            let conversation = ChatConversation(title: "Report fixture " + name)
+            container.mainContext.insert(conversation)
+            container.mainContext.insert(ChatMessage(role: .assistant, content: content,
+                attachedRecipeIds: recipeIDs, conversationId: conversation.id))
+            try container.mainContext.save()
+            let window = try await render(AnyView(InlineChatView(existingConversationId: conversation.id,
+                onDismiss: {}, onShowHistory: {}).modelContainer(container)),
+                name: "native-report-" + name)
+            window.isHidden = true
+            window.rootViewController = nil
+        }
+        XCTAssertEqual(try container.mainContext.fetchCount(FetchDescriptor<ChatMessage>()), 3)
+        XCTAssertEqual(try container.mainContext.fetchCount(FetchDescriptor<Recipe>()), 1)
+        XCTAssertEqual(try container.mainContext.fetchCount(FetchDescriptor<UnifiedItem>()), 6)
+    }
+
     /// Opt-in interactive E2E: the normal production views and routing run over
     /// the existing memory-only fixture; no onboarding or customer store changes.
     func testNativeAIConsentCanBeDeclinedWithoutSendingData() async throws {

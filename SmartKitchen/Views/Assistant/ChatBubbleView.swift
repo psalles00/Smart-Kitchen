@@ -1,4 +1,9 @@
 import SwiftUI
+#if os(macOS)
+import AppKit
+#else
+import UIKit
+#endif
 
 /// Native indeterminate progress animates independently of network state changes.
 /// It exists only while a response is pending, with no timer in the chat tree.
@@ -31,6 +36,7 @@ struct ChatBubbleView: View {
     let onQuickAction: (QuickAction) -> Void
     var hideQuickActions: Bool = false
     var contentFont: Font = .body
+    var showsReportingAction: Bool = true
 
     private var isUser: Bool { message.role == .user }
 
@@ -97,6 +103,9 @@ struct ChatBubbleView: View {
                         }
                     }
                 }
+                if showsReportingAction, message.role == .assistant, !message.content.isEmpty {
+                    AssistantResponseReportButton(response: message.content)
+                }
             }
 
             if !isUser { Spacer(minLength: 48) }
@@ -136,6 +145,123 @@ struct ChatBubbleView: View {
                 bottomTrailingRadius: 18, topTrailingRadius: 18
             )
         }
+    }
+}
+
+struct AssistantResponseReportButton: View {
+    let response: String
+    @State private var showsReport = false
+
+    var body: some View {
+        Button {
+            showsReport = true
+        } label: {
+            Label("Reportar resposta", systemImage: "flag")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .frame(minHeight: 44, alignment: .leading)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("assistant-report-response")
+        .sheet(isPresented: $showsReport) {
+            AssistantResponseReportView(response: response)
+        }
+    }
+}
+
+/// User-initiated report: no network request, transcript export, or automatic send.
+enum AssistantResponseReport {
+    static let email = "pedrosalles00@gmail.com"
+
+    static func body(note: String, response: String, includeResponse: Bool) -> String {
+        var parts = [String(localized: "Relato sobre uma resposta da IA do Savoria.")]
+        let reason = String(note.prefix(1_000)).trimmingCharacters(in: .whitespacesAndNewlines)
+        if !reason.isEmpty { parts.append(reason) }
+        if includeResponse {
+            parts.append(String(localized: "Resposta selecionada:") + "\n" + String(response.prefix(2_000)))
+        }
+        return parts.joined(separator: "\n\n")
+    }
+
+    static func emailURL(body: String) -> URL? {
+        var components = URLComponents()
+        components.scheme = "mailto"
+        components.path = email
+        components.queryItems = [
+            URLQueryItem(name: "subject", value: String(localized: "Reportar resposta — Savoria")),
+            URLQueryItem(name: "body", value: body)
+        ]
+        return components.url
+    }
+}
+
+struct AssistantResponseReportView: View {
+    let response: String
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
+    @State private var note = ""
+    @State private var includeResponse = false
+    @State private var showsEmailFallback = false
+
+    private var report: String {
+        AssistantResponseReport.body(note: note, response: response, includeResponse: includeResponse)
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Text("Descreva um erro ou conteúdo inadequado. O relato será revisado pelo suporte. Nada é enviado até você confirmar o envio no seu app de e-mail.")
+                        .font(.callout)
+                    TextField("O que aconteceu?", text: $note, axis: .vertical)
+                        .lineLimit(3...6)
+                        .onChange(of: note) { _, value in
+                            if value.count > 1_000 { note = String(value.prefix(1_000)) }
+                        }
+                    Toggle("Incluir esta resposta no relato", isOn: $includeResponse)
+                    Text("Confira se o texto contém informações pessoais antes de compartilhar. O histórico, fotos e dados da despensa não são anexados.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+                Section("Prévia do relato") {
+                    Text(report).textSelection(.enabled)
+                    Text(AssistantResponseReport.email).foregroundStyle(.secondary)
+                }
+                Section {
+                    Button("Abrir e-mail para o suporte") {
+                        guard let url = AssistantResponseReport.emailURL(body: report) else {
+                            showsEmailFallback = true
+                            return
+                        }
+                        openURL(url) { accepted in showsEmailFallback = !accepted }
+                    }
+                    Button("Copiar relato") {
+                        #if os(macOS)
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(report, forType: .string)
+                        #else
+                        UIPasteboard.general.string = report
+                        #endif
+                    }
+                }
+            }
+            .formStyle(.grouped)
+            .navigationTitle("Reportar resposta")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Fechar") { dismiss() }
+                }
+            }
+            .alert("Não foi possível abrir o e-mail", isPresented: $showsEmailFallback) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text("Copie o relato e envie para pedrosalles00@gmail.com pelo serviço de e-mail de sua preferência.")
+            }
+        }
+        #if os(macOS)
+        .frame(minWidth: 480, minHeight: 520)
+        #endif
     }
 }
 
