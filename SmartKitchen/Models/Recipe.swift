@@ -655,7 +655,9 @@ struct RecipeCompatibility: Equatable {
 
     var ratio: Double { Double(matchedIngredients) / Double(totalIngredients) }
     var compactText: String { "\(matchedIngredients)/\(totalIngredients)" }
-    var longText: String { "\(matchedIngredients) de \(totalIngredients) ingredientes" }
+    var longText: String {
+        String(format: String(localized: "%lld de %lld ingredientes"), Int64(matchedIngredients), Int64(totalIngredients))
+    }
 }
 
 // MARK: - Difficulty

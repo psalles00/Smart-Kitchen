@@ -1133,7 +1133,7 @@ private struct RecipesLoadedView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 0) {
                     filterChip(
-                        label: "Todos",
+                        label: String(localized: "Todos"),
                         iconFileName: "recipe.png",
                         fallbackSymbol: "square.grid.2x2",
                         isSelected: selectedCategory == nil

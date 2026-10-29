@@ -514,6 +514,32 @@ final class AdaptiveWorkspaceRenderingTests: XCTestCase {
     /// App Store assets use production views over memory-only demonstration data.
     /// No model bootstrap, personal stores, purchases or inference requests.
     func testAppStoreDemonstrationCaptures() async throws {
+        let captureLanguage = AppLanguage.resolve(identifier:
+            ProcessInfo.processInfo.environment["SAVORIA_TEST_LOCALE"] ?? "pt-BR") ?? .ptBR
+        let captureLocalization = AppLocalization(language: captureLanguage)
+        let fixtureTranslations: [AppLanguage: [String]] = [
+            .en: ["Zucchini", "pcs", "Bread with eggs and coffee with milk", "Yogurt with banana and oats"],
+            .es: ["Calabacín", "ud", "Pan con huevos y café con leche", "Yogur con plátano y avena"],
+            .fr: ["Courgette", "pcs", "Pain aux œufs et café au lait", "Yaourt à la banane et aux flocons d’avoine"],
+            .de: ["Zucchini", "Stk.", "Brot mit Eiern und Milchkaffee", "Joghurt mit Banane und Haferflocken"],
+            .it: ["Zucchina", "pz", "Pane con uova e caffellatte", "Yogurt con banana e avena"],
+            .ja: ["ズッキーニ", "個", "卵とパン、カフェオレ", "バナナとオートミールのヨーグルト"]
+        ]
+        func fixtureText(_ key: String) -> String {
+            guard captureLanguage != .ptBR else { return key }
+            let customKeys = ["Abobrinha", "un", "Pão com ovos e café com leite", "Iogurte com banana e aveia"]
+            if let index = customKeys.firstIndex(of: key), let values = fixtureTranslations[captureLanguage] {
+                return values[index]
+            }
+            let aliases = ["Peito de Frango": "Peito de frango", "Iogurte Natural": "Iogurte natural",
+                "Queijo Minas": "Queijo", "Café em Pó": "Café", "Colher de Sopa": "colher de sopa",
+                "Frango grelhado com legumes": "Frango Grelhado com Legumes",
+                "Um almoço prático, colorido e cheio de sabor.": "Proteína magra e legumes na chapa.",
+                "Corte os legumes. Tempere o frango com sal e azeite.": "Tempere o frango com sal, pimenta e alho.",
+                "Grelhe o frango e os legumes até dourarem.": "Salteie os legumes no azeite.",
+                "Sirva ainda quente e aproveite.": "Sirva o frango ao lado dos legumes."]
+            return captureLocalization.builtInLabel(aliases[key] ?? key)
+        }
         let container = try ModelContainer(for: CloudSyncService.appSchema, configurations:
             ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none))
         let context = container.mainContext
@@ -527,32 +553,32 @@ final class AdaptiveWorkspaceRenderingTests: XCTestCase {
                                ("Peito de Frango", "Carnes e Aves", "chicken-raw.png"), ("Ovos", "Laticínios e Ovos", "egg.png"),
                                ("Arroz", "Grãos, Massas e Cereais", "rice.png"), ("Azeite", "Temperos e Condimentos", "olive-oil.png"),
                                ("Banana", "Frutas", "banana.png"), ("Aveia", "Grãos, Massas e Cereais", "oatmeal.png")].enumerated() {
-            context.insert(UnifiedItem(name: value.0, category: value.1, quantity: [4.0, 1, 600, 6, 1, 500, 6, 300][index],
-                unit: ["un", "un", "g", "un", "kg", "ml", "un", "g"][index], iconName: value.2,
+            context.insert(UnifiedItem(name: fixtureText(value.0), category: fixtureText(value.1), quantity: [4.0, 1, 600, 6, 1, 500, 6, 300][index],
+                unit: fixtureText(["un", "un", "g", "un", "kg", "ml", "un", "g"][index]), iconName: value.2,
                 isPantry: true, pantrySortOrder: index,
                 expirationDate: index < 2 ? Calendar.current.date(byAdding: .day, value: index + 2, to: .now) : nil))
         }
         for name in ["Iogurte Natural", "Leite", "Queijo Minas", "Morango"] {
-            context.insert(UnifiedItem(name: name, quantity: 1, unit: "un", isGrocery: true))
+            context.insert(UnifiedItem(name: fixtureText(name), quantity: 1, unit: fixtureText("un"), isGrocery: true))
         }
-        context.insert(UnifiedItem(name: "Café em Pó", isReserve: true))
+        context.insert(UnifiedItem(name: fixtureText("Café em Pó"), isReserve: true))
         func cover(_ name: String) throws -> Data {
             let url = try XCTUnwrap(Bundle.main.url(forResource: name, withExtension: "jpg", subdirectory: "images-128"))
             return try Data(contentsOf: url)
         }
         let photo = try cover("onboarding-grilled-chicken-veggies")
-        let recipe = Recipe(name: "Frango grelhado com legumes", descriptionText: "Um almoço prático, colorido e cheio de sabor.",
-            ingredients: [RecipeIngredient(name: "Peito de Frango", quantity: 300, unit: "g", sortOrder: 0),
-                          RecipeIngredient(name: "Tomate", quantity: 2, unit: "un", sortOrder: 1),
-                          RecipeIngredient(name: "Azeite", quantity: 1, unit: "Colher de Sopa", sortOrder: 2),
-                          RecipeIngredient(name: "Abobrinha", quantity: 1, unit: "un", sortOrder: 3)],
-            steps: [RecipeStep(order: 1, instruction: "Corte os legumes. Tempere o frango com sal e azeite.", durationMinutes: 5),
-                    RecipeStep(order: 2, instruction: "Grelhe o frango e os legumes até dourarem.", durationMinutes: 15),
-                    RecipeStep(order: 3, instruction: "Sirva ainda quente e aproveite.")],
-            imageData: photo, category: "Almoço", prepTime: 5, cookTime: 15, servings: 2, calories: 420, isFavorite: true)
+        let recipe = Recipe(name: fixtureText("Frango grelhado com legumes"), descriptionText: fixtureText("Um almoço prático, colorido e cheio de sabor."),
+            ingredients: [RecipeIngredient(name: fixtureText("Peito de Frango"), quantity: 300, unit: "g", iconName: "chicken-raw.png", sortOrder: 0),
+                          RecipeIngredient(name: fixtureText("Tomate"), quantity: 2, unit: fixtureText("un"), sortOrder: 1),
+                          RecipeIngredient(name: fixtureText("Azeite"), quantity: 1, unit: fixtureText("Colher de Sopa"), sortOrder: 2),
+                          RecipeIngredient(name: fixtureText("Abobrinha"), quantity: 1, unit: fixtureText("un"), sortOrder: 3)],
+            steps: [RecipeStep(order: 1, instruction: fixtureText("Corte os legumes. Tempere o frango com sal e azeite."), durationMinutes: 5),
+                    RecipeStep(order: 2, instruction: fixtureText("Grelhe o frango e os legumes até dourarem."), durationMinutes: 15),
+                    RecipeStep(order: 3, instruction: fixtureText("Sirva ainda quente e aproveite."))],
+            imageData: photo, category: fixtureText("Almoço"), prepTime: 5, cookTime: 15, servings: 2, calories: 420, isFavorite: true)
         context.insert(recipe)
         for definition in DataSeeder.defaultDefinitions(for: .recipe) {
-            context.insert(Category(name: definition.name, type: .recipe, iconName: definition.iconName))
+            context.insert(Category(name: fixtureText(definition.name), type: .recipe, iconName: definition.iconName))
         }
         for template in OnboardingCatalog.recipeTemplates.filter({ ["caesar-salad", "strawberry-oat-smoothie", "chicken-wrap-hummus", "pancake"].contains($0.id) }) {
             let ingredients = template.ingredients.enumerated().map { index, value in
@@ -561,7 +587,7 @@ final class AdaptiveWorkspaceRenderingTests: XCTestCase {
             let steps = template.steps.enumerated().map { RecipeStep(order: $0.offset + 1, instruction: $0.element) }
             context.insert(Recipe(name: template.name, descriptionText: template.summary, ingredients: ingredients,
                 steps: steps, imageData: template.photoFileName.flatMap(IconResolver.imageData(forFilename:)),
-                category: template.category, prepTime: template.prepMinutes, cookTime: template.cookMinutes,
+                category: fixtureText(template.category), prepTime: template.prepMinutes, cookTime: template.cookMinutes,
                 servings: template.servings, calories: template.calories))
         }
         let profile = NutritionProfile()
@@ -572,11 +598,11 @@ final class AdaptiveWorkspaceRenderingTests: XCTestCase {
         profile.overrideFatG = 65
         context.insert(profile)
         let today = Calendar.current.startOfDay(for: .now)
-        context.insert(FoodEntry(name: "Pão com ovos e café com leite", calories: 385, proteinG: 22, carbsG: 38, fatG: 16,
+        context.insert(FoodEntry(name: fixtureText("Pão com ovos e café com leite"), calories: 385, proteinG: 22, carbsG: 38, fatG: 16,
             mealType: .breakfast, timestamp: today.addingTimeInterval(8 * 3600), emoji: "🍳"))
-        context.insert(FoodEntry(name: "Frango grelhado com legumes", calories: 420, proteinG: 38, carbsG: 29, fatG: 17,
+        context.insert(FoodEntry(name: fixtureText("Frango grelhado com legumes"), calories: 420, proteinG: 38, carbsG: 29, fatG: 17,
             mealType: .lunch, timestamp: today.addingTimeInterval(12 * 3600), emoji: "🍗"))
-        context.insert(FoodEntry(name: "Iogurte com banana e aveia", calories: 215, proteinG: 12, carbsG: 31, fatG: 5,
+        context.insert(FoodEntry(name: fixtureText("Iogurte com banana e aveia"), calories: 215, proteinG: 12, carbsG: 31, fatG: 5,
             mealType: .snack, timestamp: today.addingTimeInterval(15 * 3600), emoji: "🍌"))
         context.insert(NutritionDayLog(dayStart: today))
         let conversation = ChatConversation(title: "Ideias com a despensa")
@@ -599,7 +625,7 @@ final class AdaptiveWorkspaceRenderingTests: XCTestCase {
         let search = SearchBarState()
         search.aiChatPreset = .recipeIdeas
         let subscription = SubscriptionManager(observesTransactions: false)
-        let result = FoodAnalysis(name: "Frango grelhado com legumes", calories: 420, protein: 38, carbs: 29, fat: 17,
+        let result = FoodAnalysis(name: fixtureText("Frango grelhado com legumes"), calories: 420, protein: 38, carbs: 29, fat: 17,
             servingSizeGrams: 350, emoji: "🍗", reviewNotes: ["Estimativa para a porção da foto. Revise antes de registrar."])
         let pages: [(String, AnyView, UIUserInterfaceStyle)] = [
             ("home", AnyView(ContentView()), .light),
@@ -611,9 +637,26 @@ final class AdaptiveWorkspaceRenderingTests: XCTestCase {
             ("assistant", AnyView(InlineChatView(existingConversationId: conversation.id, onDismiss: {}, onShowHistory: {}, searchBarState: search)), .light),
             ("food", AnyView(NavigationStack { FoodResultView(analysis: result, image: UIImage(data: photo), logDate: .now) }), .light),
             ("nutrition", AnyView(WorkspacePageFixture(content: AnyView(NutrientsView())).environment(\.activeAppTab, .nutrients)), .dark)]
-        for (name, page, style) in pages {
+        let marketingOnly = ProcessInfo.processInfo.environment["SAVORIA_MARKETING_CAPTURE"] == "1"
+        let marketingPages: Set<String> = ["home", "pantry", "market", "recipes", "recipe", "nutrition"]
+        for (name, page, style) in pages where !marketingOnly || marketingPages.contains(name) {
             let root = page.modelContainer(container).environmentObject(search).environment(subscription)
-            let window = try await render(AnyView(root), name: "store-" + name, style: style)
+            let window = try await render(AnyView(root), name: fixtureText("store-") + name, style: style)
+            if marketingOnly && name == "recipe" {
+                func recipeScrollViews(_ view: UIView) -> [UIScrollView] {
+                    view.subviews.flatMap { child in (child as? UIScrollView).map { [$0] } ?? recipeScrollViews(child) }
+                }
+                let scroll = try XCTUnwrap(recipeScrollViews(window).max(by: { $0.contentSize.height < $1.contentSize.height }))
+                scroll.setContentOffset(CGPoint(x: 0, y: 300), animated: false)
+                let settled = expectation(description: "Localized ingredients scroll committed")
+                let commits = WorkspaceDisplayCommits(isReady: { true }) { settled.fulfill() }
+                commits.start(); await fulfillment(of: [settled], timeout: 10); commits.stop()
+                let image = UIGraphicsImageRenderer(bounds: window.bounds).image { _ in
+                    window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
+                }
+                let attachment = XCTAttachment(image: image)
+                attachment.name = "store-recipe-scrolled"; attachment.lifetime = .keepAlways; add(attachment)
+            }
             if name == "food" {
                 func scrollViews(_ view: UIView) -> [UIScrollView] {
                     view.subviews.flatMap { child in (child as? UIScrollView).map { [$0] } ?? scrollViews(child) }

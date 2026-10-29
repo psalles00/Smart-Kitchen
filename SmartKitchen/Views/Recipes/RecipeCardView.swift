@@ -154,6 +154,6 @@ struct RecipeCardView: View, Equatable {
     }
 
     private func availableIngredientsText(for compatibility: RecipeCompatibility) -> String {
-        "\(compatibility.matchedIngredients) de \(compatibility.totalIngredients)"
+        String(format: String(localized: "%lld de %lld"), Int64(compatibility.matchedIngredients), Int64(compatibility.totalIngredients))
     }
 }
