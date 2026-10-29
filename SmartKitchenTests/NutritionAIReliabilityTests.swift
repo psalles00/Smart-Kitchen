@@ -150,6 +150,25 @@ final class SavoriaDebugTests: XCTestCase {
         XCTAssertEqual(reopened.isSubscribed, reopened.storeIsSubscribed)
     }
 
+    func testBuiltInCategoriesAndMarketSectionsAreLocalizedInEveryLanguage() throws {
+        let categoryNames = Set(CategoryType.allCases.flatMap { DataSeeder.defaultDefinitions(for: $0).map(\.name) })
+        let sectionNames = Set(CategoryDatabase.shared.allCategories.map(\.marketSection))
+        for language in AppLanguage.allCases {
+            let path = try XCTUnwrap(Bundle.main.path(forResource: language.bundleLocalizationIdentifier, ofType: "lproj"))
+            let bundle = try XCTUnwrap(Bundle(path: path))
+            for name in categoryNames.union(sectionNames) {
+                let translated = bundle.localizedString(forKey: name, value: "__MISSING__", table: nil)
+                XCTAssertNotEqual(translated, "__MISSING__", "Missing \(language.rawValue) translation for \(name)")
+            }
+            let other = try XCTUnwrap(DataSeeder.pantryCategoryDefinitions.first { $0.name == "Outros" })
+            let expected: [AppLanguage: String] = [.ptBR: "Outros", .en: "Other", .es: "Otros", .fr: "Autres", .de: "Sonstige", .it: "Altri", .ja: "その他"]
+            XCTAssertEqual(other.displayName(localization: AppLocalization(language: language)), expected[language])
+            XCTAssertEqual(other.name, "Outros", "The stored category name must not change")
+        }
+        XCTAssertEqual(CategoryMutationService.localizedDisplayName(for: "Categoria personalizada 983", type: .utensil), "Categoria personalizada 983")
+        XCTAssertEqual(CategoryDatabase.shared.marketSection(for: "Categoria personalizada 983"), AppLocalization.current().builtInLabel("Outros"))
+    }
+
     func testSimulatedCountersPreserveActualUsageAndDoNotCallAI() {
         let defaults = UserDefaults(suiteName: "SavoriaDebugTests.\(UUID().uuidString)")!
         let manager = SubscriptionManager(defaults: defaults, observesTransactions: false)

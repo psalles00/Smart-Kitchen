@@ -6,9 +6,10 @@ Cadastro Apple, catálogo, prévias e testes estão alinhados. A suíte atual te
 fracionário da Apple permanece documentado em um reproduzidor separado,
 sem alteração artificial da resposta nem relato enviado à Apple.
 
-O IPA atualizado está exportado, sem upload. Imagens/descrição da loja e envio
-continuam fora do escopo. A captura anual atualizada ainda estava em
-processamento na última leitura; não declarar essa etapa concluída sem retorno.
+O IPA descrito abaixo foi exportado sem upload antes da revisão posterior de
+traduções; ele não inclui as correções dessa revisão. Imagens/descrição da loja
+e envio continuam fora do escopo. A captura anual atualizada concluiu o
+processamento na conferência posterior.
 
 ## Pacote final
 
@@ -46,16 +47,38 @@ processamento na última leitura; não declarar essa etapa concluída sem retorn
 | Contratos | Apple Developer LYL260 aceito com autorização; Paid Apps e banco ativos; informações fiscais Brasil e W-8BEN ativas; situação DSA existente conferida |
 | Disponibilidade | App gratuito e dois planos em todos os 175 países/regiões permitidos pela Apple |
 | Assinaturas | Grupo `22478308`, ambos nível 1; anual `6822917042` R$ 99,00/ano e mensal `6822949625` R$ 49,00/mês; sete idiomas; sem oferta introdutória cadastrada |
-| Material IAP | Nova captura 1206×2622 e notas com 99/49 atualizadas; processamento anual pendente na última leitura. Fixture local sem trial, não é prova de compra |
+| Material IAP | Nova captura 1206×2622 e notas com 99/49 atualizadas; processamento concluído. Fixture local sem trial, não é prova de compra |
 | Privacidade | Sete categorias publicadas com autorização específica; todas declaradas vinculadas, sem tracking; URL pública e finalidades conferidas |
 | Comprovação | PDF adaptado do Rotina anexado uma vez ao contato de revisão; notas de revisão salvas |
 
 As categorias publicadas são Health, Fitness, Other User Content, Photos or
 Videos, Audio, Device ID e Purchase History. Saúde, atividade e conteúdo têm
 App Functionality + Product Personalization; demais têm App Functionality.
-A prévia resumida da Apple ainda mostrou Health também na coluna não vinculada,
-embora os sete formulários detalhados salvos indiquem vinculados. Não foi
-apresentada essa prévia contraditória como confirmação integral dos formulários.
+Na revisão posterior, a prévia mostrou Health também na coluna não vinculada.
+O formulário específico de Health estava de fato marcado como não vinculado.
+Foi corrigido para vinculado sob a autorização existente de Pedro para publicar
+os rótulos; a prévia salva passou a mostrar somente dados vinculados. Foram
+preservadas as finalidades e a declaração de ausência de tracking.
+
+## Revisão posterior de idiomas — 29/10/2026
+
+As chaves extraídas dos targets principal, widgets e compartilhamento foram
+comparadas ao catálogo; os textos encontrados faltantes foram traduzidos para
+português brasileiro, inglês, espanhol, francês, alemão, italiano e japonês.
+Marcas, identificadores e texto fornecido pelo usuário não são traduzidos.
+Categorias e seções internas agora resolvem o catálogo para o idioma ativo,
+sem mudar identificadores ou dados persistidos; categorias personalizadas
+desconhecidas mantêm seu nome. Títulos de utensílios e porções no cabeçalho de
+receita também foram corrigidos.
+
+As cinco páginas principais, a prévia de compartilhamento e o paywall foram
+renderizados com fixtures isoladas nos sete idiomas no iPhone 17 Pro virtual.
+Um reteste visual japonês confirmou categorias e porções. A suíte atual passou
+205 testes, com zero falhas e 11 ignorados; os ignorados não são prova de
+execução. O Mac instalado carregou os sete catálogos e reabriu com snapshot de
+111 itens, 64 receitas e 69 categorias, hash de conteúdo inalterado. Essas
+provas não equivalem à inspeção manual de todas as telas e combinações possíveis.
+Nenhuma chamada de IA foi necessária para essa revisão.
 
 O comprovante Thiings cobre ícones, não fotos, receitas, áudio ou fontes. Mantém
 os limites do fornecedor (incluindo receita anual até US$ 200 mil e proibição

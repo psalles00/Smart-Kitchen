@@ -165,7 +165,8 @@ struct RecipeDetailView: View {
         items.append(HeroMetadataItem(systemImage: recipe.difficulty.icon, text: recipe.difficulty.displayName))
 
         if recipe.servings > 0 {
-            items.append(HeroMetadataItem(systemImage: "person.2", text: "\(recipe.servings) porções"))
+            let label = recipe.servings == 1 ? String(localized: "porção") : String(localized: "porções")
+            items.append(HeroMetadataItem(systemImage: "person.2", text: String(format: String(localized: "%lld %@"), recipe.servings, label)))
         }
 
         if let calories = recipe.calories {

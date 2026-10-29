@@ -345,7 +345,9 @@ final class AdaptiveWorkspaceRenderingTests: XCTestCase {
         window.overrideUserInterfaceStyle = .light
         window.windowLevel = .normal + 1
         let ready = expectation(description: "Native layout: " + name)
-        let controller = UIHostingController(rootView: root.environment(\.scenePhase, .active).onAppear { ready.fulfill() })
+        let localeIdentifier = ProcessInfo.processInfo.environment["SAVORIA_TEST_LOCALE"]
+        let localizedRoot = root.environment(\.locale, localeIdentifier.map(Locale.init(identifier:)) ?? .current)
+        let controller = UIHostingController(rootView: localizedRoot.environment(\.scenePhase, .active).onAppear { ready.fulfill() })
         window.rootViewController = controller
         window.makeKeyAndVisible()
         controller.loadViewIfNeeded()

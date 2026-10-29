@@ -17,7 +17,7 @@ struct CategorySeedDefinition: Hashable {
     func displayName(localization: AppLocalization = .current()) -> String {
         localizedNames[localization.language.bundleLocalizationIdentifier]
             ?? localizedNames[localization.language.baseLanguageCode]
-            ?? name
+            ?? localization.builtInLabel(name)
     }
 }
 

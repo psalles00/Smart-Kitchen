@@ -43,14 +43,14 @@ struct CategoryDatabaseEntry: Codable, Identifiable, Sendable {
         let localization = AppLocalization.current()
         return localizedNames[localization.language.bundleLocalizationIdentifier]
             ?? localizedNames[localization.language.baseLanguageCode]
-            ?? name
+            ?? localization.builtInLabel(name)
     }
 
     var displayMarketSection: String {
         let localization = AppLocalization.current()
         return localizedMarketSections[localization.language.bundleLocalizationIdentifier]
             ?? localizedMarketSections[localization.language.baseLanguageCode]
-            ?? marketSection
+            ?? localization.builtInLabel(marketSection)
     }
 
     var searchableTokens: [String] {
@@ -115,7 +115,9 @@ final class CategoryDatabase: Sendable {
     }
 
     func marketSection(for category: String) -> String {
-        entry(for: category)?.displayMarketSection ?? Self.fallbackEntries.last?.marketSection ?? "Outros"
+        entry(for: category)?.displayMarketSection
+            ?? Self.fallbackEntries.last?.displayMarketSection
+            ?? AppLocalization.current().builtInLabel("Outros")
     }
 
     var marketSectionsInDisplayOrder: [String] {

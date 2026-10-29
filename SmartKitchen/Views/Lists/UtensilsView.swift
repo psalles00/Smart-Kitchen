@@ -187,7 +187,7 @@ struct UtensilsView: View {
         } header: {
             if showsHeader {
                 HStack {
-                    Text(categoryName)
+                    Text(CategoryMutationService.localizedDisplayName(for: categoryName, type: .utensil))
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.secondary)
                     Spacer()

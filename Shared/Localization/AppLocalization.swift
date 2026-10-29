@@ -219,8 +219,20 @@ enum AppLanguage: String, CaseIterable, Sendable {
 
 struct AppLocalization: Sendable {
     static let supportedLanguages = AppLanguage.allCases
+    private static let languageBundles: [AppLanguage: Bundle] = Dictionary(uniqueKeysWithValues:
+        AppLanguage.allCases.compactMap { language in
+            guard let path = Bundle.main.path(forResource: language.bundleLocalizationIdentifier, ofType: "lproj"),
+                  let bundle = Bundle(path: path) else { return nil }
+            return (language, bundle)
+        })
 
     let language: AppLanguage
+
+    /// Resolves built-in labels for the selected language without changing
+    /// persisted category identifiers or translating user-defined names.
+    func builtInLabel(_ key: String) -> String {
+        Self.languageBundles[language]?.localizedString(forKey: key, value: key, table: nil) ?? key
+    }
 
     var locale: Locale {
         language.locale
