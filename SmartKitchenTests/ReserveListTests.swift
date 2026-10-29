@@ -463,6 +463,33 @@ final class AdaptiveWorkspaceRenderingTests: XCTestCase {
 
     /// Opt-in interactive E2E: the normal production views and routing run over
     /// the existing memory-only fixture; no onboarding or customer store changes.
+    func testNativeAIConsentCanBeDeclinedWithoutSendingData() async throws {
+        guard ProcessInfo.processInfo.environment["SAVORIA_VALIDATE_AI_CONSENT_UI"] == "1" else {
+            throw XCTSkip("Requires a native refusal in the selected Simulator")
+        }
+        let (container, _) = try fixture()
+        let root = ContentView().environmentObject(SearchBarState())
+            .environment(SubscriptionManager(observesTransactions: false)).modelContainer(container)
+        let window = try await render(AnyView(root), name: "native-consent-local-content")
+        defer { window.isHidden = true; window.rootViewController = nil }
+        let suite = "Savoria.NativeConsentTest.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let consent = AIDataConsent(defaults: defaults)
+        let refused = expectation(description: "Native permission refused")
+        let request = Task {
+            do { try await consent.request(); XCTFail("This test requires choosing Not now") }
+            catch { XCTAssertTrue(error is CancellationError) }
+            refused.fulfill()
+        }
+        defer { request.cancel() }
+        print("SAVORIA_CONSENT_UI_READY_CHOOSE_NOT_NOW")
+        await fulfillment(of: [refused], timeout: 90)
+        XCTAssertFalse(consent.isGranted)
+        XCTAssertEqual(try container.mainContext.fetchCount(FetchDescriptor<UnifiedItem>()), 6)
+        XCTAssertEqual(try container.mainContext.fetchCount(FetchDescriptor<ChatMessage>()), 0)
+    }
+
     func testPullOpensAssistantWithKeyboardInIsolatedFixture() async throws {
         guard ProcessInfo.processInfo.environment["SAVORIA_VALIDATE_PULL_INTERACTION"] == "1" else {
             throw XCTSkip("Requires a native drag in the selected Simulator")

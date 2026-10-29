@@ -101,8 +101,9 @@ final class FoodCache {
 
     // MARK: - Device ID
 
-    /// Stable anonymous UUID identifying this install for vote dedup. Generated
-    /// once and persisted in `UserDefaults`. Contains no PII.
+    /// Pseudonymous UUID stored in local preferences for vote deduplication.
+    /// It is not a hardware/ad identifier, but is still disclosed as Device ID
+    /// because the server retains it with the food/vote association.
     var deviceID: UUID {
         if let raw = UserDefaults.standard.string(forKey: deviceIDKey),
            let uuid = UUID(uuidString: raw) {

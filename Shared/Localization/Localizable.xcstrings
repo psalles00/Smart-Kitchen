@@ -461,48 +461,48 @@
         }
       }
     },
-    "Para atender seus pedidos, o Savoria envia mensagens, ingredientes, dados nutricionais e as fotos ou áudios escolhidos aos serviços externos necessários: Supabase, OpenAI, OpenRouter e seus provedores de modelos, e Exa para buscas. O contexto pode incluir itens da despensa e informações do seu perfil nutricional. Autorize somente se concordar com esse envio. Você pode revogar a autorização em Configurações e continuar usando os recursos locais. Consulte a Política de privacidade em Configurações." : {
+    "Para atender seus pedidos, o Savoria envia mensagens, ingredientes, dados nutricionais e as fotos ou áudios escolhidos aos serviços externos necessários: Supabase, OpenAI, OpenRouter e seus provedores de modelos, e Exa para buscas. Avaliações de alimentos também enviam ao Supabase um identificador guardado nesta instalação, para evitar votos duplicados. O contexto pode incluir itens da despensa e informações do seu perfil nutricional. Autorize somente se concordar com esse envio. Você pode revogar a autorização em Configurações e continuar usando os recursos locais. Consulte a Política de privacidade em Configurações." : {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "To fulfill your requests, Savoria sends messages, ingredients, nutrition data and selected photos or audio to the necessary external services: Supabase, OpenAI, OpenRouter and its model providers, and Exa for searches. Context may include pantry items and information from your nutrition profile. Allow only if you agree to this sharing. You can revoke permission in Settings and keep using local features. See the Privacy Policy in Settings."
+            "value": "To fulfill your requests, Savoria sends messages, ingredients, nutrition data and selected photos or audio to the necessary external services: Supabase, OpenAI, OpenRouter and its model providers, and Exa for searches. Food ratings also send an identifier stored on this installation to Supabase to prevent duplicate votes. Context may include pantry items and information from your nutrition profile. Allow only if you agree to this sharing. You can revoke permission in Settings and keep using local features. See the Privacy Policy in Settings."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Para responder a tus solicitudes, Savoria envía mensajes, ingredientes, datos nutricionales y las fotos o audios elegidos a los servicios externos necesarios: Supabase, OpenAI, OpenRouter y sus proveedores de modelos, y Exa para búsquedas. El contexto puede incluir artículos de la despensa e información de tu perfil nutricional. Autoriza solo si aceptas este envío. Puedes revocar el permiso en Ajustes y seguir usando las funciones locales. Consulta la Política de privacidad en Ajustes."
+            "value": "Para responder a tus solicitudes, Savoria envía mensajes, ingredientes, datos nutricionales y las fotos o audios elegidos a los servicios externos necesarios: Supabase, OpenAI, OpenRouter y sus proveedores de modelos, y Exa para búsquedas. Las valoraciones de alimentos también envían a Supabase un identificador guardado en esta instalación para evitar votos duplicados. El contexto puede incluir artículos de la despensa e información de tu perfil nutricional. Autoriza solo si aceptas este envío. Puedes revocar el permiso en Ajustes y seguir usando las funciones locales. Consulta la Política de privacidad en Ajustes."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pour répondre à vos demandes, Savoria envoie les messages, ingrédients, données nutritionnelles et photos ou fichiers audio choisis aux services externes nécessaires : Supabase, OpenAI, OpenRouter et ses fournisseurs de modèles, et Exa pour les recherches. Le contexte peut inclure le garde-manger et votre profil nutritionnel. Autorisez uniquement si vous acceptez ce partage. Vous pouvez révoquer l’autorisation dans Réglages et continuer à utiliser les fonctions locales. Consultez la Politique de confidentialité dans Réglages."
+            "value": "Pour répondre à vos demandes, Savoria envoie les messages, ingrédients, données nutritionnelles et photos ou fichiers audio choisis aux services externes nécessaires : Supabase, OpenAI, OpenRouter et ses fournisseurs de modèles, et Exa pour les recherches. Les évaluations d’aliments envoient aussi à Supabase un identifiant conservé sur cette installation pour éviter les votes multiples. Le contexte peut inclure le garde-manger et votre profil nutritionnel. Autorisez uniquement si vous acceptez ce partage. Vous pouvez révoquer l’autorisation dans Réglages et continuer à utiliser les fonctions locales. Consultez la Politique de confidentialité dans Réglages."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Für Ihre Anfragen sendet Savoria Nachrichten, Zutaten, Nährwertdaten und ausgewählte Fotos oder Audiodateien an die erforderlichen externen Dienste: Supabase, OpenAI, OpenRouter und dessen Modellanbieter sowie Exa für Suchen. Der Kontext kann Vorräte und Angaben aus Ihrem Ernährungsprofil enthalten. Erlauben Sie dies nur, wenn Sie der Weitergabe zustimmen. Sie können die Erlaubnis in den Einstellungen widerrufen und lokale Funktionen weiter nutzen. Lesen Sie dort die Datenschutzerklärung."
+            "value": "Für Ihre Anfragen sendet Savoria Nachrichten, Zutaten, Nährwertdaten und ausgewählte Fotos oder Audiodateien an die erforderlichen externen Dienste: Supabase, OpenAI, OpenRouter und dessen Modellanbieter sowie Exa für Suchen. Lebensmittelbewertungen senden außerdem eine lokal gespeicherte Installationskennung an Supabase, um doppelte Stimmen zu verhindern. Der Kontext kann Vorräte und Angaben aus Ihrem Ernährungsprofil enthalten. Erlauben Sie dies nur, wenn Sie der Weitergabe zustimmen. Sie können die Erlaubnis in den Einstellungen widerrufen und lokale Funktionen weiter nutzen. Lesen Sie dort die Datenschutzerklärung."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Per rispondere alle richieste, Savoria invia messaggi, ingredienti, dati nutrizionali e foto o audio selezionati ai servizi esterni necessari: Supabase, OpenAI, OpenRouter e i suoi fornitori di modelli, ed Exa per le ricerche. Il contesto può includere la dispensa e il profilo nutrizionale. Autorizza solo se acconsenti a questo invio. Puoi revocare il consenso nelle Impostazioni e continuare a usare le funzioni locali. Consulta lì l’Informativa sulla privacy."
+            "value": "Per rispondere alle richieste, Savoria invia messaggi, ingredienti, dati nutrizionali e foto o audio selezionati ai servizi esterni necessari: Supabase, OpenAI, OpenRouter e i suoi fornitori di modelli, ed Exa per le ricerche. Le valutazioni degli alimenti inviano a Supabase anche un identificativo conservato in questa installazione per evitare voti duplicati. Il contesto può includere la dispensa e il profilo nutrizionale. Autorizza solo se acconsenti a questo invio. Puoi revocare il consenso nelle Impostazioni e continuare a usare le funzioni locali. Consulta lì l’Informativa sulla privacy."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "リクエストに対応するため、Savoriaはメッセージ、食材、栄養データ、選択した写真や音声を、必要な外部サービス（Supabase、OpenAI、OpenRouterとそのモデル提供者、検索用のExa）に送信します。食品庫の食材や栄養プロフィールの情報が含まれる場合があります。この送信に同意する場合のみ許可してください。設定で許可を取り消しても、ローカル機能は引き続き利用できます。設定のプライバシーポリシーをご確認ください。"
+            "value": "リクエストに対応するため、Savoriaはメッセージ、食材、栄養データ、選択した写真や音声を、必要な外部サービス（Supabase、OpenAI、OpenRouterとそのモデル提供者、検索用のExa）に送信します。食品の評価では、重複投票を防ぐため、このインストールに保存された識別子もSupabaseに送信します。食品庫の食材や栄養プロフィールの情報が含まれる場合があります。この送信に同意する場合のみ許可してください。設定で許可を取り消しても、ローカル機能は引き続き利用できます。設定のプライバシーポリシーをご確認ください。"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Para atender seus pedidos, o Savoria envia mensagens, ingredientes, dados nutricionais e as fotos ou áudios escolhidos aos serviços externos necessários: Supabase, OpenAI, OpenRouter e seus provedores de modelos, e Exa para buscas. O contexto pode incluir itens da despensa e informações do seu perfil nutricional. Autorize somente se concordar com esse envio. Você pode revogar a autorização em Configurações e continuar usando os recursos locais. Consulte a Política de privacidade em Configurações."
+            "value": "Para atender seus pedidos, o Savoria envia mensagens, ingredientes, dados nutricionais e as fotos ou áudios escolhidos aos serviços externos necessários: Supabase, OpenAI, OpenRouter e seus provedores de modelos, e Exa para buscas. Avaliações de alimentos também enviam ao Supabase um identificador guardado nesta instalação, para evitar votos duplicados. O contexto pode incluir itens da despensa e informações do seu perfil nutricional. Autorize somente se concordar com esse envio. Você pode revogar a autorização em Configurações e continuar usando os recursos locais. Consulte a Política de privacidade em Configurações."
           }
         }
       }

@@ -193,7 +193,7 @@ final class AIDataConsent {
 
     private static func presentPermission() async -> Bool? {
         let title = String(localized: "Permitir serviços de IA?")
-        let message = String(localized: "Para atender seus pedidos, o Savoria envia mensagens, ingredientes, dados nutricionais e as fotos ou áudios escolhidos aos serviços externos necessários: Supabase, OpenAI, OpenRouter e seus provedores de modelos, e Exa para buscas. O contexto pode incluir itens da despensa e informações do seu perfil nutricional. Autorize somente se concordar com esse envio. Você pode revogar a autorização em Configurações e continuar usando os recursos locais. Consulte a Política de privacidade em Configurações.")
+        let message = String(localized: "Para atender seus pedidos, o Savoria envia mensagens, ingredientes, dados nutricionais e as fotos ou áudios escolhidos aos serviços externos necessários: Supabase, OpenAI, OpenRouter e seus provedores de modelos, e Exa para buscas. Avaliações de alimentos também enviam ao Supabase um identificador guardado nesta instalação, para evitar votos duplicados. O contexto pode incluir itens da despensa e informações do seu perfil nutricional. Autorize somente se concordar com esse envio. Você pode revogar a autorização em Configurações e continuar usando os recursos locais. Consulte a Política de privacidade em Configurações.")
         let allow = String(localized: "Permitir")
         let deny = String(localized: "Agora não")
         #if os(iOS)
