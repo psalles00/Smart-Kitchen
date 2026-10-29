@@ -153,7 +153,6 @@ struct PaywallStepView: View {
             }
             .tracking(0.6)
 
-            // "Achieve your goals 4.3x faster" — 4.3x with gradient.
             achieveHeadline
                 .font(.custom("Bricolage Grotesque", size: 40, relativeTo: .largeTitle).weight(.heavy))
                 .tracking(-0.5)
@@ -166,12 +165,8 @@ struct PaywallStepView: View {
     }
 
     private var achieveHeadline: Text {
-        let prefix = String(localized: "Alcance seus objetivos ")
-        let highlight = String(localized: "4.3x")
-        let suffix = String(localized: " mais rápido")
-        return Text(prefix).foregroundStyle(.white)
-            + Text(highlight).foregroundStyle(primaryGradient)
-            + Text(suffix).foregroundStyle(.white)
+        Text("Mais possibilidades para sua cozinha")
+            .foregroundStyle(primaryGradient)
     }
 
     // MARK: - Plans

@@ -1,6 +1,53 @@
 {
   "sourceLanguage" : "pt-BR",
   "strings" : {
+    "Mais possibilidades para sua cozinha": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mais possibilidades para sua cozinha"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More possibilities for your kitchen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Más posibilidades para tu cocina"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plus de possibilités pour votre cuisine"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mehr Möglichkeiten für deine Küche"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Più possibilità per la tua cucina"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "キッチンにもっと多くの可能性を"
+          }
+        }
+      }
+    },
     "Reportar resposta": {
       "extractionState": "manual",
       "localizations": {

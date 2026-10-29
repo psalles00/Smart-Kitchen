@@ -1,6 +1,6 @@
 # Política de Privacidade — Savoria
 
-_Última atualização: 28 de outubro de 2026._
+_Última atualização: 29 de outubro de 2026._
 
 A Savoria ("nós", "nosso") respeita a sua privacidade. Esta política descreve
 quais dados o aplicativo Savoria (o "App") utiliza, quando são compartilhados
