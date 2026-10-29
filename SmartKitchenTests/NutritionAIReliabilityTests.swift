@@ -87,8 +87,10 @@ final class SavoriaDebugTests: XCTestCase {
             add(attachment)
             print("STOREKIT_PRICE_BOUNDARY id=\(product.id) sk2=\(product.price) sk1=\(String(describing: legacy[product.id])) display=\(product.displayPrice) json=\(raw)")
         }
-        XCTAssertEqual(annual.price, Decimal(string: "99.90"))
-        XCTAssertEqual(monthly.price, Decimal(string: "49.90"))
+        XCTAssertEqual(annual.price, Decimal(string: "99.00"))
+        XCTAssertEqual(monthly.price, Decimal(string: "49.00"))
+        XCTAssertEqual(annual.displayPrice.filter { !$0.isWhitespace }, "R$99,00")
+        XCTAssertEqual(monthly.displayPrice.filter { !$0.isWhitespace }, "R$49,00")
         XCTAssertEqual(annual.priceFormatStyle.currencyCode, "BRL")
         XCTAssertEqual(monthly.priceFormatStyle.currencyCode, "BRL")
         XCTAssertEqual(annual.subscription?.subscriptionPeriod.unit, .year)
