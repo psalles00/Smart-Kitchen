@@ -1,0 +1,56 @@
+[
+  {
+    "language": "en",
+    "nativeUI": true,
+    "recipeHeading": "Ingredients",
+    "lastIngredient": "Zucchini",
+    "galleryHeading": "Breakfast",
+    "portugueseLeakCheck": "passed",
+    "screenshotCount": 7
+  },
+  {
+    "language": "es",
+    "nativeUI": true,
+    "recipeHeading": "Ingredientes",
+    "lastIngredient": "Calabacín",
+    "galleryHeading": "Desayuno",
+    "portugueseLeakCheck": "passed",
+    "screenshotCount": 7
+  },
+  {
+    "language": "fr",
+    "nativeUI": true,
+    "recipeHeading": "Ingrédients",
+    "lastIngredient": "Courgette",
+    "galleryHeading": "Petit-déjeuner",
+    "portugueseLeakCheck": "passed",
+    "screenshotCount": 7
+  },
+  {
+    "language": "de",
+    "nativeUI": true,
+    "recipeHeading": "zutaten",
+    "lastIngredient": "Zucchini",
+    "galleryHeading": "Frühstück",
+    "portugueseLeakCheck": "passed",
+    "screenshotCount": 7
+  },
+  {
+    "language": "it",
+    "nativeUI": true,
+    "recipeHeading": "Ingredienti",
+    "lastIngredient": "Zucchina",
+    "galleryHeading": "Colazione",
+    "portugueseLeakCheck": "passed",
+    "screenshotCount": 7
+  },
+  {
+    "language": "ja",
+    "nativeUI": true,
+    "recipeHeading": "材料",
+    "lastIngredient": "ズッキーニ",
+    "galleryHeading": "朝食",
+    "portugueseLeakCheck": "passed",
+    "screenshotCount": 7
+  }
+]

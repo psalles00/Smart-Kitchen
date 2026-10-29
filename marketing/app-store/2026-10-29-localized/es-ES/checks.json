@@ -1,0 +1,346 @@
+[
+  {
+    "page": 1,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 163,
+      "subtitleSize": 47
+    },
+    "heading": "Tu cocina.\nOrganizada.\nMás sabor\ncada día.",
+    "subtitle": "Recetas, despensa y nutrición\njuntas, sin complicaciones.",
+    "copy": {
+      "left": 100,
+      "right": 1220,
+      "bottom": 1021.59375,
+      "overflow": false
+    },
+    "panels": [],
+    "screenshots": [
+      {
+        "src": "/2026-10-29-localized/captures/es/home.png",
+        "naturalRatio": 0.459954233409611,
+        "ratio": 0.4599560417849999
+      }
+    ]
+  },
+  {
+    "page": 2,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 137,
+      "subtitleSize": 44
+    },
+    "heading": "Tus calorías.\nSin registrar\ntodos los días.",
+    "subtitle": "Un promedio inteligente de los días registrados.\nLos días en blanco no cuentan como cero.",
+    "copy": {
+      "left": 100,
+      "right": 1220,
+      "bottom": 833.53125,
+      "overflow": false
+    },
+    "panels": [
+      {
+        "type": "average-card",
+        "left": 100,
+        "right": 1220,
+        "bottom": 2316
+      }
+    ],
+    "screenshots": []
+  },
+  {
+    "page": 3,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 136,
+      "subtitleSize": 38
+    },
+    "heading": "De la despensa\na la compra.\nY de vuelta.",
+    "subtitle": "¿Se acabó? Márcalo y pasa a la lista de la compra.\n¿Ya lo compraste? Vuelve a la despensa.\nLas listas mueven los productos automáticamente.",
+    "copy": {
+      "left": 260,
+      "right": 1220,
+      "bottom": 762.15625,
+      "overflow": false
+    },
+    "panels": [],
+    "screenshots": [
+      {
+        "src": "/2026-10-29-localized/captures/es/pantry.png",
+        "naturalRatio": 0.459954233409611,
+        "ratio": 0.4599560417849999
+      },
+      {
+        "src": "/2026-10-29-localized/captures/es/pantry-focus.png",
+        "naturalRatio": 1.6055555555555556,
+        "ratio": 1.60557550962156
+      }
+    ]
+  },
+  {
+    "page": 4,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 136,
+      "subtitleSize": 47
+    },
+    "heading": "Abre tu despensa.\nDescubre\nqué cocinar.",
+    "subtitle": "Pide ideas a la IA con los ingredientes\nque ya tienes en casa.",
+    "copy": {
+      "left": 100,
+      "right": 1220,
+      "bottom": 899.984375,
+      "overflow": false
+    },
+    "panels": [
+      {
+        "type": "ideas-demo",
+        "left": 100,
+        "right": 1220,
+        "bottom": 2551.171875
+      }
+    ],
+    "screenshots": []
+  },
+  {
+    "page": 5,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 138,
+      "subtitleSize": 43
+    },
+    "heading": "Recetas, listas\ny nutrición.\nTodo conectado.",
+    "subtitle": "Aprovecha tu despensa, organiza la compra\ny lleva un seguimiento de tu alimentación.",
+    "copy": {
+      "left": 190,
+      "right": 1220,
+      "bottom": 851.9375,
+      "overflow": false
+    },
+    "panels": [],
+    "screenshots": []
+  },
+  {
+    "page": 6,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 155,
+      "subtitleSize": 43
+    },
+    "heading": "Tu receta.\nUn paso\na la vez.",
+    "subtitle": "Ingredientes, raciones y preparación.\nTodo a mano mientras cocinas.",
+    "copy": {
+      "left": 200,
+      "right": 1220,
+      "bottom": 829.65625,
+      "overflow": false
+    },
+    "panels": [
+      {
+        "type": "native-panel ingredient-panel",
+        "left": 100,
+        "right": 1220,
+        "bottom": 2770
+      }
+    ],
+    "screenshots": [
+      {
+        "src": "/2026-10-29-localized/captures/es/recipe.png",
+        "naturalRatio": 0.459954233409611,
+        "ratio": 0.4599560417849999
+      },
+      {
+        "src": "/2026-10-29-localized/captures/es/recipe-ingredients.png",
+        "naturalRatio": 1.10337972166998,
+        "ratio": 1.1033932525380696
+      }
+    ]
+  },
+  {
+    "page": 7,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 155,
+      "subtitleSize": 43
+    },
+    "heading": "Foto, texto\no voz.\nTú eliges.",
+    "subtitle": "Registra tus comidas a tu manera.\nRevisa las estimaciones antes de guardar.",
+    "copy": {
+      "left": 100,
+      "right": 1220,
+      "bottom": 2620.015625,
+      "overflow": false
+    },
+    "panels": [
+      {
+        "type": "capture-photo",
+        "left": 120,
+        "right": 1140,
+        "bottom": 939
+      },
+      {
+        "type": "capture-text",
+        "left": 180,
+        "right": 1200,
+        "bottom": 1337
+      },
+      {
+        "type": "capture-voice",
+        "left": 120,
+        "right": 1200,
+        "bottom": 1754
+      }
+    ],
+    "screenshots": []
+  },
+  {
+    "page": 8,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 140,
+      "subtitleSize": 43
+    },
+    "heading": "De las redes\na tu\nrecetario.",
+    "subtitle": "¿La viste en Instagram, TikTok o YouTube?\nToca Compartir y envíala a Savoria.",
+    "copy": {
+      "left": 100,
+      "right": 1220,
+      "bottom": 883.9375,
+      "overflow": false
+    },
+    "panels": [
+      {
+        "type": "social-flow",
+        "left": 100,
+        "right": 1220,
+        "bottom": 1295
+      }
+    ],
+    "screenshots": [
+      {
+        "src": "/2026-10-29-localized/captures/es/recipes-focus.png",
+        "naturalRatio": 1.2333333333333334,
+        "ratio": 1.2333341914406137
+      }
+    ]
+  },
+  {
+    "page": 9,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 139,
+      "subtitleSize": 46
+    },
+    "heading": "Entiende mejor\nlo que\ncomes.",
+    "subtitle": "Sigue las calorías y los nutrientes\na lo largo del día.",
+    "copy": {
+      "left": 100,
+      "right": 1220,
+      "bottom": 779.078125,
+      "overflow": false
+    },
+    "panels": [],
+    "screenshots": [
+      {
+        "src": "/2026-10-29-localized/captures/es/nutrition.png",
+        "naturalRatio": 0.459954233409611,
+        "ratio": 0.4599560417849999
+      },
+      {
+        "src": "/2026-10-29-localized/captures/es/nutrition-focus.png",
+        "naturalRatio": 1.0418181818181818,
+        "ratio": 1.0418397551933911
+      }
+    ]
+  }
+]

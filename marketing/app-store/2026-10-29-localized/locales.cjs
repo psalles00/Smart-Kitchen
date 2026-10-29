@@ -1,0 +1,105 @@
+// Promotional copy is localized separately from the interface language.
+const locales={
+'en-US':{name:'English',ui:'en',pages:[
+['Your kitchen.<br>Organized.<br>More flavor.<br>Every day.','Recipes, pantry and nutrition<br>together, without the hassle.'],
+['Your calories.<br>No need to log<br>every day.','A smart average of the days you log.<br>Blank days never count as zero.'],
+['Pantry to<br>shopping list.<br>And back.','Mark it as used up? It moves to your shopping list.<br>Mark it as bought? Back to your pantry.<br>Your lists move items automatically.'],
+['Open your pantry.<br>Find your<br>next meal.','Ask AI for ideas using the ingredients<br>you already have at home.'],
+['Recipes, lists<br>and nutrition.<br>All connected.','Make the most of your pantry,<br>plan your shopping and track your nutrition.'],
+['Your recipe.<br>One step<br>at a time.','Ingredients, servings and directions.<br>Everything at hand while you cook.'],
+['Photo, text<br>or voice.<br>Your choice.','Log meals your way.<br>Review the estimates before saving.'],
+['From your feed<br>to your<br>recipe book.','Found it on Instagram, TikTok or YouTube?<br>Tap Share and send it to Savoria.'],
+['Understand<br>what you<br>eat.','Track calories and nutrients<br>throughout your day.']]},
+'es-ES':{name:'Español',ui:'es',pages:[
+['Tu cocina.<br>Organizada.<br>Más sabor<br>cada día.','Recetas, despensa y nutrición<br>juntas, sin complicaciones.'],
+['Tus calorías.<br>Sin registrar<br>todos los días.','Un promedio inteligente de los días registrados.<br>Los días en blanco no cuentan como cero.'],
+['De la despensa<br>a la compra.<br>Y de vuelta.','¿Se acabó? Márcalo y pasa a la lista de la compra.<br>¿Ya lo compraste? Vuelve a la despensa.<br>Las listas mueven los productos automáticamente.'],
+['Abre tu despensa.<br>Descubre<br>qué cocinar.','Pide ideas a la IA con los ingredientes<br>que ya tienes en casa.'],
+['Recetas, listas<br>y nutrición.<br>Todo conectado.','Aprovecha tu despensa, organiza la compra<br>y lleva un seguimiento de tu alimentación.'],
+['Tu receta.<br>Un paso<br>a la vez.','Ingredientes, raciones y preparación.<br>Todo a mano mientras cocinas.'],
+['Foto, texto<br>o voz.<br>Tú eliges.','Registra tus comidas a tu manera.<br>Revisa las estimaciones antes de guardar.'],
+['De las redes<br>a tu<br>recetario.','¿La viste en Instagram, TikTok o YouTube?<br>Toca Compartir y envíala a Savoria.'],
+['Entiende mejor<br>lo que<br>comes.','Sigue las calorías y los nutrientes<br>a lo largo del día.']]},
+'fr-FR':{name:'Français',ui:'fr',pages:[
+['Votre cuisine.<br>Bien organisée.<br>Plus de saveur.<br>Chaque jour.','Recettes, placard et nutrition<br>réunis, sans complication.'],
+['Vos calories.<br>Sans tout noter<br>chaque jour.','Une moyenne intelligente des jours renseignés.<br>Les jours vides ne comptent pas comme zéro.'],
+['Du placard<br>aux courses.<br>Et inversement.','Un produit terminé ? Il passe dans les courses.<br>Un achat coché ? Il revient dans le placard.<br>Les listes déplacent les produits automatiquement.'],
+['Ouvrez le placard.<br>Trouvez<br>votre repas.','Demandez des idées à l’IA avec les ingrédients<br>que vous avez déjà chez vous.'],
+['Recettes, listes<br>et nutrition.<br>Tout est lié.','Utilisez vos ingrédients, organisez les courses<br>et suivez votre alimentation.'],
+['Votre recette.<br>Une étape<br>à la fois.','Ingrédients, portions et préparation.<br>Tout à portée de main en cuisinant.'],
+['Photo, texte<br>ou voix.<br>À vous de choisir.','Notez vos repas à votre façon.<br>Vérifiez les estimations avant de les enregistrer.'],
+['De vos réseaux<br>à votre carnet<br>de recettes.','Une recette sur Instagram, TikTok ou YouTube ?<br>Touchez Partager et envoyez-la à Savoria.'],
+['Comprenez mieux<br>ce que vous<br>mangez.','Suivez les calories et les nutriments<br>tout au long de la journée.']]},
+'de-DE':{name:'Deutsch',ui:'de',pages:[
+['Deine Küche.<br>Gut organisiert.<br>Mehr Genuss.<br>Jeden Tag.','Rezepte, Vorräte und Ernährung<br>zusammen, ganz unkompliziert.'],
+['Deine Kalorien.<br>Ohne tägliches<br>Protokollieren.','Ein smarter Durchschnitt der erfassten Tage.<br>Tage ohne Eintrag zählen nicht als null.'],
+['Vom Vorrat<br>zum Einkauf.<br>Und zurück.','Aufgebraucht? Abhaken – ab auf die Einkaufsliste.<br>Gekauft? Abhaken – zurück in den Vorrat.<br>Die Listen verschieben deine Artikel automatisch.'],
+['Vorräte öffnen.<br>Dein nächstes<br>Essen finden.','Frag die KI nach Ideen mit den Zutaten,<br>die du schon zu Hause hast.'],
+['Rezepte, Listen<br>und Ernährung.<br>Alles verbunden.','Nutze deine Vorräte, plane deinen Einkauf<br>und behalte deine Ernährung im Blick.'],
+['Dein Rezept.<br>Ein Schritt<br>nach dem anderen.','Zutaten, Portionen und Zubereitung.<br>Beim Kochen alles griffbereit.'],
+['Foto, Text<br>oder Sprache.<br>Deine Wahl.','Erfasse Mahlzeiten auf deine Art.<br>Prüfe die Schätzwerte vor dem Speichern.'],
+['Aus deinem Feed<br>in dein<br>Rezeptbuch.','Auf Instagram, TikTok oder YouTube entdeckt?<br>Tippe auf Teilen und sende es an Savoria.'],
+['Verstehe besser,<br>was du<br>isst.','Behalte Kalorien und Nährstoffe<br>den ganzen Tag im Blick.']]},
+'it':{name:'Italiano',ui:'it',pages:[
+['La tua cucina.<br>Organizzata.<br>Più gusto.<br>Ogni giorno.','Ricette, dispensa e nutrizione<br>insieme, senza complicazioni.'],
+['Le tue calorie.<br>Senza registrare<br>ogni giorno.','Una media intelligente dei giorni registrati.<br>I giorni vuoti non contano come zero.'],
+['Dalla dispensa<br>alla spesa.<br>E ritorno.','È finito? Spuntalo: passa alla lista della spesa.<br>Comprato? Spuntalo: torna in dispensa.<br>Le liste spostano i prodotti automaticamente.'],
+['Apri la dispensa.<br>Scopri cosa<br>cucinare.','Chiedi idee all’IA con gli ingredienti<br>che hai già in casa.'],
+['Ricette, liste<br>e nutrizione.<br>Tutto collegato.','Sfrutta gli ingredienti in dispensa,<br>organizza la spesa e segui la tua alimentazione.'],
+['La tua ricetta.<br>Un passo<br>alla volta.','Ingredienti, porzioni e preparazione.<br>Tutto a portata di mano mentre cucini.'],
+['Foto, testo<br>o voce.<br>Scegli tu.','Registra i pasti come preferisci.<br>Controlla le stime prima di salvare.'],
+['Dai social<br>al tuo<br>ricettario.','Vista su Instagram, TikTok o YouTube?<br>Tocca Condividi e inviala a Savoria.'],
+['Capisci meglio<br>quello che<br>mangi.','Segui calorie e nutrienti<br>durante la giornata.']]},
+'ja':{name:'日本語',ui:'ja',pages:[
+['キッチンを<br>すっきり整理。<br>毎日をもっと<br>おいしく。','レシピも食材も栄養も。<br>ひとつにまとめて、手軽に管理。'],
+['毎日つけなくても<br>カロリー管理は<br>続けられる。','記録した日の平均をかしこく計算。<br>未記録の日はゼロとして数えません。'],
+['食材リストから<br>買い物リストへ。<br>そして、元どおり。','使い切ったらチェックして買い物リストへ。<br>買ったらチェックして食材リストに戻せます。<br>チェックするだけで、食材が自動で移動。'],
+['今ある食材で、<br>次の一皿を<br>見つけよう。','家にある食材をもとに、<br>AIに料理のアイデアを相談。'],
+['レシピ、リスト、<br>栄養管理。<br>すべてつながる。','食材を活かして買い物を整理。<br>毎日の食生活もひとつのアプリで。'],
+['お気に入りの<br>レシピを、<br>一歩ずつ。','材料、分量、作り方をまとめて確認。<br>料理中も、必要な情報がすぐ手元に。'],
+['写真・文字・音声。<br>好きな方法で<br>食事を記録。','自分に合う方法で食事を記録。<br>推定値を確認してから保存できます。'],
+['SNSのレシピを<br>自分だけの<br>レシピ帳へ。','Instagram、TikTok、YouTubeで見つけたら、<br>共有ボタンからSavoriaへ。'],
+['毎日の食事を<br>もっとよく<br>知ろう。','カロリーや栄養素を、<br>一日の食事とともにチェック。']]},
+'ko':{name:'한국어',ui:'en',pages:[
+['주방은 깔끔하게.<br>매일의 식사는<br>더 맛있게.','레시피, 식재료, 영양 관리를<br>한곳에서 간편하게.'],
+['매일 기록하지<br>않아도 되는<br>칼로리 관리.','기록한 날만으로 똑똑하게 평균을 계산해요.<br>기록하지 않은 날은 0으로 계산하지 않아요.'],
+['식재료에서<br>장보기 목록으로.<br>그리고 다시.','다 썼다면 체크해서 장보기 목록으로.<br>샀다면 체크해서 식재료 목록으로.<br>체크하면 항목이 자동으로 이동해요.'],
+['지금 있는 재료로<br>다음 메뉴를<br>찾아보세요.','집에 있는 식재료를 바탕으로<br>AI에게 요리 아이디어를 물어보세요.'],
+['레시피, 목록,<br>영양 관리.<br>모두 연결돼요.','있는 재료를 활용하고 장보기를 정리하며<br>매일의 식생활을 관리하세요.'],
+['나의 레시피.<br>한 번에<br>한 단계씩.','재료, 분량, 조리법을 한눈에.<br>요리할 때 필요한 정보를 바로 확인하세요.'],
+['사진, 글,<br>또는 음성.<br>편한 방법으로.','나에게 맞는 방법으로 식사를 기록하세요.<br>추정값을 확인한 뒤 저장하세요.'],
+['SNS에서 찾은<br>레시피를<br>내 레시피북에.','Instagram, TikTok, YouTube에서 봤다면<br>공유 버튼으로 Savoria에 보내세요.'],
+['내가 먹는 것을<br>더 잘<br>이해하세요.','하루 동안 섭취한 칼로리와<br>영양소를 확인하세요.']]},
+'zh-Hans':{name:'简体中文',ui:'en',pages:[
+['厨房井井有条。<br>每天，<br>多一点美味。','食谱、食材和营养管理，<br>轻松汇集在一起。'],
+['管理热量，<br>不必每天<br>都记录。','根据已记录的日期，智能计算平均值。<br>没有记录的日子不会按零计算。'],
+['从食材清单<br>到购物清单，<br>再回来。','用完了？勾选后移至购物清单。<br>买好了？勾选后回到食材清单。<br>清单会自动移动对应食材。'],
+['看看现有食材，<br>发现下一餐<br>吃什么。','让AI根据家里已有的食材，<br>为你推荐料理灵感。'],
+['食谱、清单、<br>营养管理，<br>一切相连。','用好现有食材，安排采购，<br>关照每天的饮食。'],
+['跟着食谱，<br>一步一步，<br>轻松烹饪。','食材、份量和做法，<br>烹饪时随手可查。'],
+['照片、文字，<br>或者语音。<br>由你选择。','用适合你的方式记录饮食。<br>保存前，先确认估算结果。'],
+['社交平台上的<br>好食谱，<br>收进食谱本。','在Instagram、TikTok或YouTube上看到？<br>点击分享，发送至Savoria。'],
+['更了解<br>自己每天<br>吃了什么。','随时查看一天摄入的<br>热量和营养素。']]},
+'ar-SA':{name:'العربية',ui:'en',rtl:true,pages:[
+['مطبخك<br>أكثر تنظيمًا.<br>مذاق أجمل<br>كل يوم.','الوصفات والمخزون والتغذية<br>معًا، دون تعقيد.'],
+['تابع سعراتك.<br>دون تسجيل<br>كل يوم.','متوسط ذكي للأيام التي تسجلها.<br>الأيام بلا تسجيل لا تُحسب بصفر.'],
+['من المخزون<br>إلى قائمة التسوق.<br>وبالعكس.','نفد المنتج؟ حدده لينتقل إلى قائمة التسوق.<br>اشتريته؟ حدده ليعود إلى المخزون.<br>القوائم تنقل المنتجات تلقائيًا.'],
+['افتح مخزونك.<br>واكتشف<br>وجبتك القادمة.','اطلب من الذكاء الاصطناعي أفكارًا<br>بالمكونات المتوفرة لديك في المنزل.'],
+['وصفات وقوائم<br>وتغذية.<br>كلها مترابطة.','استفد من المكونات المتوفرة، ونظّم التسوق،<br>وتابع نظامك الغذائي.'],
+['وصفتك.<br>خطوة واحدة<br>في كل مرة.','المكونات والحصص وطريقة التحضير.<br>كل ما تحتاجه في متناولك أثناء الطهي.'],
+['صورة أو نص<br>أو صوت.<br>الخيار لك.','سجّل وجباتك بالطريقة التي تناسبك.<br>راجع التقديرات قبل الحفظ.'],
+['من منصات التواصل<br>إلى دفتر<br>وصفاتك.','وجدتها على Instagram أو TikTok أو YouTube؟<br>اضغط على المشاركة وأرسلها إلى Savoria.'],
+['افهم أكثر<br>ما الذي<br>تأكله.','تابع السعرات والعناصر الغذائية<br>على مدار يومك.']]}
+};
+const keys=['CONTAGEM INTELIGENTE','Média dos 5 dias registrados','kcal / dia','Pulou um dia? Sua média continua<br>considerando só os dias com registro.','Exemplo ilustrativo · valores em kcal','Seg','Ter','Qua','Qui','Sex','Sáb','Dom','Fotografe seu prato','CÂMERA','FOTO','Toque para fotografar','Frango com legumes','Digite o que comeu','1 banana e 1 iogurte natural','Ou envie um áudio','Áudio enviado','“Comi arroz, feijão e frango.”','Demonstração simplificada · estimativas revisáveis.','Ideias com a sua despensa','O que posso fazer para o almoço?','Na sua despensa','Você já tem ingredientes para variar.<br>Que tal uma destas ideias?','Omelete de tomate','10 min · rápida','Frango com arroz','25 min · prática','Salada com frango','15 min · leve','Tomate recheado','25 min · diferente','Ideias rápidas, diferentes e com o que você tem.','Demonstração simplificada do assistente.','Compartilhar','Também importe receitas de fotos e arquivos.'];
+const ui={
+en:['SMART CALORIE TRACKING','Average of the 5 logged days','kcal / day','Skipped a day? Your average still uses<br>only the days you logged.','Illustrative example · values in kcal','Mon','Tue','Wed','Thu','Fri','Sat','Sun','Photograph your meal','CAMERA','PHOTO','Tap to take a photo','Chicken with veggies','Type what you ate','1 banana and 1 plain yogurt','Or send a voice message','Voice message sent','“I had rice, beans and chicken.”','Simplified demo · estimates can be reviewed.','Ideas from your pantry','What can I make for lunch?','In your pantry','You already have ingredients for variety.<br>How about one of these ideas?','Tomato omelet','10 min · quick','Chicken with rice','25 min · practical','Chicken salad','15 min · light','Stuffed tomato','25 min · different','Quick ideas, fresh twists and ingredients you have.','Simplified assistant demonstration.','Share','You can also import recipes from photos and files.'],
+es:['CONTEO INTELIGENTE','Promedio de los 5 días registrados','kcal / día','¿Te saltaste un día? El promedio sigue usando<br>solo los días que registraste.','Ejemplo ilustrativo · valores en kcal','Lun','Mar','Mié','Jue','Vie','Sáb','Dom','Fotografía tu plato','CÁMARA','FOTO','Toca para hacer la foto','Pollo con verduras','Escribe lo que comiste','1 plátano y 1 yogur natural','O envía un audio','Audio enviado','“Comí arroz, alubias y pollo.”','Demostración simplificada · estimaciones revisables.','Ideas con tu despensa','¿Qué puedo preparar para comer?','En tu despensa','Ya tienes ingredientes para variar.<br>¿Qué te parece una de estas ideas?','Tortilla de tomate','10 min · rápida','Pollo con arroz','25 min · práctica','Ensalada con pollo','15 min · ligera','Tomate relleno','25 min · diferente','Ideas rápidas, diferentes y con lo que tienes.','Demostración simplificada del asistente.','Compartir','También puedes importar recetas de fotos y archivos.'],
+fr:['SUIVI INTELLIGENT','Moyenne des 5 jours renseignés','kcal / jour','Un jour oublié ? Votre moyenne utilise toujours<br>uniquement les jours renseignés.','Exemple illustratif · valeurs en kcal','Lun','Mar','Mer','Jeu','Ven','Sam','Dim','Photographiez votre plat','APPAREIL PHOTO','PHOTO','Touchez pour photographier','Poulet aux légumes','Écrivez votre repas','1 banane et 1 yaourt nature','Ou envoyez un message vocal','Message vocal envoyé','« J’ai mangé du riz, des haricots et du poulet. »','Démonstration simplifiée · estimations modifiables.','Des idées avec votre placard','Que préparer pour le déjeuner ?','Dans votre placard','Vous avez déjà de quoi varier.<br>Une de ces idées vous tente ?','Omelette à la tomate','10 min · rapide','Poulet au riz','25 min · pratique','Salade au poulet','15 min · légère','Tomate farcie','25 min · originale','Des idées rapides, originales, avec vos ingrédients.','Démonstration simplifiée de l’assistant.','Partager','Importez aussi des recettes depuis des photos ou fichiers.'],
+de:['SMARTER DURCHSCHNITT','Durchschnitt der 5 erfassten Tage','kcal / Tag','Einen Tag ausgelassen? Dein Durchschnitt nutzt<br>weiterhin nur die erfassten Tage.','Beispiel zur Veranschaulichung · Werte in kcal','Mo','Di','Mi','Do','Fr','Sa','So','Fotografiere dein Essen','KAMERA','FOTO','Tippen zum Fotografieren','Hähnchen mit Gemüse','Tippe ein, was du gegessen hast','1 Banane und 1 Naturjoghurt','Oder sende eine Sprachnachricht','Sprachnachricht gesendet','„Ich hatte Reis, Bohnen und Hähnchen.“','Vereinfachte Darstellung · Schätzwerte anpassbar.','Ideen aus deinen Vorräten','Was kann ich zu Mittag kochen?','In deinem Vorrat','Du hast schon Zutaten für Abwechslung.<br>Wie wäre es mit einer dieser Ideen?','Tomatenomelett','10 Min. · schnell','Hähnchen mit Reis','25 Min. · praktisch','Hähnchensalat','15 Min. · leicht','Gefüllte Tomate','25 Min. · mal anders','Schnelle und neue Ideen mit deinen Zutaten.','Vereinfachte Darstellung des Assistenten.','Teilen','Importiere Rezepte auch aus Fotos und Dateien.'],
+it:['CONTEGGIO INTELLIGENTE','Media dei 5 giorni registrati','kcal / giorno','Hai saltato un giorno? La media considera<br>solo i giorni che hai registrato.','Esempio illustrativo · valori in kcal','Lun','Mar','Mer','Gio','Ven','Sab','Dom','Fotografa il tuo piatto','FOTOCAMERA','FOTO','Tocca per fotografare','Pollo con verdure','Scrivi cosa hai mangiato','1 banana e 1 yogurt naturale','Oppure invia un audio','Audio inviato','«Ho mangiato riso, fagioli e pollo.»','Dimostrazione semplificata · stime verificabili.','Idee dalla tua dispensa','Cosa posso preparare per pranzo?','Nella tua dispensa','Hai già gli ingredienti per variare.<br>Che ne dici di una di queste idee?','Omelette al pomodoro','10 min · veloce','Pollo con riso','25 min · pratica','Insalata di pollo','15 min · leggera','Pomodoro ripieno','25 min · originale','Idee veloci e diverse con quello che hai.','Dimostrazione semplificata dell’assistente.','Condividi','Importa ricette anche da foto e file.'],
+ja:['かしこいカロリー管理','記録した5日間の平均','kcal / 日','記録を忘れても大丈夫。平均は<br>記録した日だけを使って計算します。','イメージ例 · 単位：kcal','月','火','水','木','金','土','日','料理を撮影','カメラ','写真','タップして撮影','鶏肉と野菜','食べたものを入力','バナナ1本とプレーンヨーグルト1個','音声メッセージでも記録','音声を送信しました','「ご飯と豆と鶏肉を食べました。」','簡略化したイメージ · 推定値は確認できます。','今ある食材からアイデア','お昼ごはんは何を作れる？','今ある食材','今ある食材でも、いろいろ作れます。<br>こんな料理はいかがですか？','トマトオムレツ','10分 · 手軽','鶏肉ご飯','25分 · 定番','チキンサラダ','15分 · 軽め','トマトの詰め物','25分 · ひと工夫','手軽な料理もひと工夫も、今ある食材で。','アシスタントの簡略化したイメージ。','共有','写真やファイルからもレシピを取り込めます。']
+};
+for(const [language,values] of Object.entries(ui)){if(values.length!==keys.length)throw Error(language+': '+values.length+' != '+keys.length);ui[language]=Object.fromEntries(keys.map((k,i)=>[k,values[i]]));}
+for(const [language,config] of Object.entries(locales))if(config.pages.length!==9)throw Error(language);
+module.exports={locales,ui};

@@ -1,0 +1,346 @@
+[
+  {
+    "page": 1,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 160,
+      "subtitleSize": 47
+    },
+    "heading": "厨房井井有条。\n每天，\n多一点美味。",
+    "subtitle": "食谱、食材和营养管理，\n轻松汇集在一起。",
+    "copy": {
+      "left": 100,
+      "right": 1220,
+      "bottom": 908.59375,
+      "overflow": false
+    },
+    "panels": [],
+    "screenshots": [
+      {
+        "src": "/2026-10-29-localized/captures/en/home.png",
+        "naturalRatio": 0.459954233409611,
+        "ratio": 0.4599560417849999
+      }
+    ]
+  },
+  {
+    "page": 2,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 137,
+      "subtitleSize": 44
+    },
+    "heading": "管理热量，\n不必每天\n都记录。",
+    "subtitle": "根据已记录的日期，智能计算平均值。\n没有记录的日子不会按零计算。",
+    "copy": {
+      "left": 100,
+      "right": 1220,
+      "bottom": 874.640625,
+      "overflow": false
+    },
+    "panels": [
+      {
+        "type": "average-card",
+        "left": 100,
+        "right": 1220,
+        "bottom": 2316
+      }
+    ],
+    "screenshots": []
+  },
+  {
+    "page": 3,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 136,
+      "subtitleSize": 38
+    },
+    "heading": "从食材清单\n到购物清单，\n再回来。",
+    "subtitle": "用完了？勾选后移至购物清单。\n买好了？勾选后回到食材清单。\n清单会自动移动对应食材。",
+    "copy": {
+      "left": 260,
+      "right": 1220,
+      "bottom": 815.171875,
+      "overflow": false
+    },
+    "panels": [],
+    "screenshots": [
+      {
+        "src": "/2026-10-29-localized/captures/en/pantry.png",
+        "naturalRatio": 0.459954233409611,
+        "ratio": 0.4599560417849999
+      },
+      {
+        "src": "/2026-10-29-localized/captures/en/pantry-focus.png",
+        "naturalRatio": 1.6055555555555556,
+        "ratio": 1.60557550962156
+      }
+    ]
+  },
+  {
+    "page": 4,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 140,
+      "subtitleSize": 47
+    },
+    "heading": "看看现有食材，\n发现下一餐\n吃什么。",
+    "subtitle": "让AI根据家里已有的食材，\n为你推荐料理灵感。",
+    "copy": {
+      "left": 100,
+      "right": 1220,
+      "bottom": 954.59375,
+      "overflow": false
+    },
+    "panels": [
+      {
+        "type": "ideas-demo",
+        "left": 100,
+        "right": 1220,
+        "bottom": 2551.171875
+      }
+    ],
+    "screenshots": []
+  },
+  {
+    "page": 5,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 140,
+      "subtitleSize": 43
+    },
+    "heading": "食谱、清单、\n营养管理，\n一切相连。",
+    "subtitle": "用好现有食材，安排采购，\n关照每天的饮食。",
+    "copy": {
+      "left": 190,
+      "right": 1220,
+      "bottom": 912.6875,
+      "overflow": false
+    },
+    "panels": [],
+    "screenshots": []
+  },
+  {
+    "page": 6,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 155,
+      "subtitleSize": 43
+    },
+    "heading": "跟着食谱，\n一步一步，\n轻松烹饪。",
+    "subtitle": "食材、份量和做法，\n烹饪时随手可查。",
+    "copy": {
+      "left": 200,
+      "right": 1220,
+      "bottom": 890.125,
+      "overflow": false
+    },
+    "panels": [
+      {
+        "type": "native-panel ingredient-panel",
+        "left": 100,
+        "right": 1220,
+        "bottom": 2734.1875
+      }
+    ],
+    "screenshots": [
+      {
+        "src": "/2026-10-29-localized/captures/en/recipe.png",
+        "naturalRatio": 0.459954233409611,
+        "ratio": 0.4599560417849999
+      },
+      {
+        "src": "/2026-10-29-localized/captures/en/recipe-ingredients.png",
+        "naturalRatio": 1.2773302646720368,
+        "ratio": 1.2773462640078213
+      }
+    ]
+  },
+  {
+    "page": 7,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 155,
+      "subtitleSize": 43
+    },
+    "heading": "照片、文字，\n或者语音。\n由你选择。",
+    "subtitle": "用适合你的方式记录饮食。\n保存前，先确认估算结果。",
+    "copy": {
+      "left": 100,
+      "right": 1220,
+      "bottom": 2685.125,
+      "overflow": false
+    },
+    "panels": [
+      {
+        "type": "capture-photo",
+        "left": 120,
+        "right": 1140,
+        "bottom": 939
+      },
+      {
+        "type": "capture-text",
+        "left": 180,
+        "right": 1200,
+        "bottom": 1337
+      },
+      {
+        "type": "capture-voice",
+        "left": 120,
+        "right": 1200,
+        "bottom": 1754
+      }
+    ],
+    "screenshots": []
+  },
+  {
+    "page": 8,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 140,
+      "subtitleSize": 43
+    },
+    "heading": "社交平台上的\n好食谱，\n收进食谱本。",
+    "subtitle": "在Instagram、TikTok或YouTube上看到？\n点击分享，发送至Savoria。",
+    "copy": {
+      "left": 100,
+      "right": 1220,
+      "bottom": 913.375,
+      "overflow": false
+    },
+    "panels": [
+      {
+        "type": "social-flow",
+        "left": 100,
+        "right": 1220,
+        "bottom": 1295
+      }
+    ],
+    "screenshots": [
+      {
+        "src": "/2026-10-29-localized/captures/en/recipes-focus.png",
+        "naturalRatio": 1.2333333333333334,
+        "ratio": 1.2333341914406137
+      }
+    ]
+  },
+  {
+    "page": 9,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 139,
+      "subtitleSize": 46
+    },
+    "heading": "更了解\n自己每天\n吃了什么。",
+    "subtitle": "随时查看一天摄入的\n热量和营养素。",
+    "copy": {
+      "left": 100,
+      "right": 1220,
+      "bottom": 833.3125,
+      "overflow": false
+    },
+    "panels": [],
+    "screenshots": [
+      {
+        "src": "/2026-10-29-localized/captures/en/nutrition.png",
+        "naturalRatio": 0.459954233409611,
+        "ratio": 0.4599560417849999
+      },
+      {
+        "src": "/2026-10-29-localized/captures/en/nutrition-focus.png",
+        "naturalRatio": 1.0418181818181818,
+        "ratio": 1.0418397551933911
+      }
+    ]
+  }
+]

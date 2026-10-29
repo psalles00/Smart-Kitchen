@@ -1,0 +1,346 @@
+[
+  {
+    "page": 1,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 163,
+      "subtitleSize": 47
+    },
+    "heading": "주방은 깔끔하게.\n매일의 식사는\n더 맛있게.",
+    "subtitle": "레시피, 식재료, 영양 관리를\n한곳에서 간편하게.",
+    "copy": {
+      "left": 100,
+      "right": 1220,
+      "bottom": 918.90625,
+      "overflow": false
+    },
+    "panels": [],
+    "screenshots": [
+      {
+        "src": "/2026-10-29-localized/captures/en/home.png",
+        "naturalRatio": 0.459954233409611,
+        "ratio": 0.4599560417849999
+      }
+    ]
+  },
+  {
+    "page": 2,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 137,
+      "subtitleSize": 44
+    },
+    "heading": "매일 기록하지\n않아도 되는\n칼로리 관리.",
+    "subtitle": "기록한 날만으로 똑똑하게 평균을 계산해요.\n기록하지 않은 날은 0으로 계산하지 않아요.",
+    "copy": {
+      "left": 100,
+      "right": 1220,
+      "bottom": 874.640625,
+      "overflow": false
+    },
+    "panels": [
+      {
+        "type": "average-card",
+        "left": 100,
+        "right": 1220,
+        "bottom": 2316
+      }
+    ],
+    "screenshots": []
+  },
+  {
+    "page": 3,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 136,
+      "subtitleSize": 38
+    },
+    "heading": "식재료에서\n장보기 목록으로.\n그리고 다시.",
+    "subtitle": "다 썼다면 체크해서 장보기 목록으로.\n샀다면 체크해서 식재료 목록으로.\n체크하면 항목이 자동으로 이동해요.",
+    "copy": {
+      "left": 260,
+      "right": 1220,
+      "bottom": 815.171875,
+      "overflow": false
+    },
+    "panels": [],
+    "screenshots": [
+      {
+        "src": "/2026-10-29-localized/captures/en/pantry.png",
+        "naturalRatio": 0.459954233409611,
+        "ratio": 0.4599560417849999
+      },
+      {
+        "src": "/2026-10-29-localized/captures/en/pantry-focus.png",
+        "naturalRatio": 1.6055555555555556,
+        "ratio": 1.60557550962156
+      }
+    ]
+  },
+  {
+    "page": 4,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 140,
+      "subtitleSize": 47
+    },
+    "heading": "지금 있는 재료로\n다음 메뉴를\n찾아보세요.",
+    "subtitle": "집에 있는 식재료를 바탕으로\nAI에게 요리 아이디어를 물어보세요.",
+    "copy": {
+      "left": 100,
+      "right": 1220,
+      "bottom": 954.59375,
+      "overflow": false
+    },
+    "panels": [
+      {
+        "type": "ideas-demo",
+        "left": 100,
+        "right": 1220,
+        "bottom": 2551.171875
+      }
+    ],
+    "screenshots": []
+  },
+  {
+    "page": 5,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 140,
+      "subtitleSize": 43
+    },
+    "heading": "레시피, 목록,\n영양 관리.\n모두 연결돼요.",
+    "subtitle": "있는 재료를 활용하고 장보기를 정리하며\n매일의 식생활을 관리하세요.",
+    "copy": {
+      "left": 190,
+      "right": 1220,
+      "bottom": 912.6875,
+      "overflow": false
+    },
+    "panels": [],
+    "screenshots": []
+  },
+  {
+    "page": 6,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 155,
+      "subtitleSize": 43
+    },
+    "heading": "나의 레시피.\n한 번에\n한 단계씩.",
+    "subtitle": "재료, 분량, 조리법을 한눈에.\n요리할 때 필요한 정보를 바로 확인하세요.",
+    "copy": {
+      "left": 200,
+      "right": 1220,
+      "bottom": 890.125,
+      "overflow": false
+    },
+    "panels": [
+      {
+        "type": "native-panel ingredient-panel",
+        "left": 100,
+        "right": 1220,
+        "bottom": 2734.1875
+      }
+    ],
+    "screenshots": [
+      {
+        "src": "/2026-10-29-localized/captures/en/recipe.png",
+        "naturalRatio": 0.459954233409611,
+        "ratio": 0.4599560417849999
+      },
+      {
+        "src": "/2026-10-29-localized/captures/en/recipe-ingredients.png",
+        "naturalRatio": 1.2773302646720368,
+        "ratio": 1.2773462640078213
+      }
+    ]
+  },
+  {
+    "page": 7,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 155,
+      "subtitleSize": 43
+    },
+    "heading": "사진, 글,\n또는 음성.\n편한 방법으로.",
+    "subtitle": "나에게 맞는 방법으로 식사를 기록하세요.\n추정값을 확인한 뒤 저장하세요.",
+    "copy": {
+      "left": 100,
+      "right": 1220,
+      "bottom": 2685.125,
+      "overflow": false
+    },
+    "panels": [
+      {
+        "type": "capture-photo",
+        "left": 120,
+        "right": 1140,
+        "bottom": 939
+      },
+      {
+        "type": "capture-text",
+        "left": 180,
+        "right": 1200,
+        "bottom": 1337
+      },
+      {
+        "type": "capture-voice",
+        "left": 120,
+        "right": 1200,
+        "bottom": 1754
+      }
+    ],
+    "screenshots": []
+  },
+  {
+    "page": 8,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 140,
+      "subtitleSize": 43
+    },
+    "heading": "SNS에서 찾은\n레시피를\n내 레시피북에.",
+    "subtitle": "Instagram, TikTok, YouTube에서 봤다면\n공유 버튼으로 Savoria에 보내세요.",
+    "copy": {
+      "left": 100,
+      "right": 1220,
+      "bottom": 913.375,
+      "overflow": false
+    },
+    "panels": [
+      {
+        "type": "social-flow",
+        "left": 100,
+        "right": 1220,
+        "bottom": 1295
+      }
+    ],
+    "screenshots": [
+      {
+        "src": "/2026-10-29-localized/captures/en/recipes-focus.png",
+        "naturalRatio": 1.2333333333333334,
+        "ratio": 1.2333341914406137
+      }
+    ]
+  },
+  {
+    "page": 9,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 139,
+      "subtitleSize": 46
+    },
+    "heading": "내가 먹는 것을\n더 잘\n이해하세요.",
+    "subtitle": "하루 동안 섭취한 칼로리와\n영양소를 확인하세요.",
+    "copy": {
+      "left": 100,
+      "right": 1220,
+      "bottom": 833.3125,
+      "overflow": false
+    },
+    "panels": [],
+    "screenshots": [
+      {
+        "src": "/2026-10-29-localized/captures/en/nutrition.png",
+        "naturalRatio": 0.459954233409611,
+        "ratio": 0.4599560417849999
+      },
+      {
+        "src": "/2026-10-29-localized/captures/en/nutrition-focus.png",
+        "naturalRatio": 1.0418181818181818,
+        "ratio": 1.0418397551933911
+      }
+    ]
+  }
+]

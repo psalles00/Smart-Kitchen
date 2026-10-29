@@ -1,0 +1,346 @@
+[
+  {
+    "page": 1,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 161,
+      "subtitleSize": 47
+    },
+    "heading": "キッチンを\nすっきり整理。\n毎日をもっと\nおいしく。",
+    "subtitle": "レシピも食材も栄養も。\nひとつにまとめて、手軽に管理。",
+    "copy": {
+      "left": 100,
+      "right": 1220,
+      "bottom": 1097.15625,
+      "overflow": false
+    },
+    "panels": [],
+    "screenshots": [
+      {
+        "src": "/2026-10-29-localized/captures/ja/home.png",
+        "naturalRatio": 0.459954233409611,
+        "ratio": 0.4599560417849999
+      }
+    ]
+  },
+  {
+    "page": 2,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 137,
+      "subtitleSize": 44
+    },
+    "heading": "毎日つけなくても\nカロリー管理は\n続けられる。",
+    "subtitle": "記録した日の平均をかしこく計算。\n未記録の日はゼロとして数えません。",
+    "copy": {
+      "left": 100,
+      "right": 1220,
+      "bottom": 874.640625,
+      "overflow": false
+    },
+    "panels": [
+      {
+        "type": "average-card",
+        "left": 100,
+        "right": 1220,
+        "bottom": 2385
+      }
+    ],
+    "screenshots": []
+  },
+  {
+    "page": 3,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 108,
+      "subtitleSize": 38
+    },
+    "heading": "食材リストから\n買い物リストへ。\nそして、元どおり。",
+    "subtitle": "使い切ったらチェックして買い物リストへ。\n買ったらチェックして食材リストに戻せます。\nチェックするだけで、食材が自動で移動。",
+    "copy": {
+      "left": 260,
+      "right": 1220,
+      "bottom": 718.5625,
+      "overflow": false
+    },
+    "panels": [],
+    "screenshots": [
+      {
+        "src": "/2026-10-29-localized/captures/ja/pantry.png",
+        "naturalRatio": 0.459954233409611,
+        "ratio": 0.4599560417849999
+      },
+      {
+        "src": "/2026-10-29-localized/captures/ja/pantry-focus.png",
+        "naturalRatio": 1.6055555555555556,
+        "ratio": 1.60557550962156
+      }
+    ]
+  },
+  {
+    "page": 4,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 140,
+      "subtitleSize": 47
+    },
+    "heading": "今ある食材で、\n次の一皿を\n見つけよう。",
+    "subtitle": "家にある食材をもとに、\nAIに料理のアイデアを相談。",
+    "copy": {
+      "left": 100,
+      "right": 1220,
+      "bottom": 954.59375,
+      "overflow": false
+    },
+    "panels": [
+      {
+        "type": "ideas-demo",
+        "left": 100,
+        "right": 1220,
+        "bottom": 2623.171875
+      }
+    ],
+    "screenshots": []
+  },
+  {
+    "page": 5,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 130,
+      "subtitleSize": 43
+    },
+    "heading": "レシピ、リスト、\n栄養管理。\nすべてつながる。",
+    "subtitle": "食材を活かして買い物を整理。\n毎日の食生活もひとつのアプリで。",
+    "copy": {
+      "left": 190,
+      "right": 1220,
+      "bottom": 878.1875,
+      "overflow": false
+    },
+    "panels": [],
+    "screenshots": []
+  },
+  {
+    "page": 6,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 155,
+      "subtitleSize": 43
+    },
+    "heading": "お気に入りの\nレシピを、\n一歩ずつ。",
+    "subtitle": "材料、分量、作り方をまとめて確認。\n料理中も、必要な情報がすぐ手元に。",
+    "copy": {
+      "left": 200,
+      "right": 1220,
+      "bottom": 890.125,
+      "overflow": false
+    },
+    "panels": [
+      {
+        "type": "native-panel ingredient-panel",
+        "left": 100,
+        "right": 1220,
+        "bottom": 2752.921875
+      }
+    ],
+    "screenshots": [
+      {
+        "src": "/2026-10-29-localized/captures/ja/recipe.png",
+        "naturalRatio": 0.459954233409611,
+        "ratio": 0.4599560417849999
+      },
+      {
+        "src": "/2026-10-29-localized/captures/ja/recipe-ingredients.png",
+        "naturalRatio": 1.2485939257592802,
+        "ratio": 1.248616317014078
+      }
+    ]
+  },
+  {
+    "page": 7,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 125,
+      "subtitleSize": 43
+    },
+    "heading": "写真・文字・音声。\n好きな方法で\n食事を記録。",
+    "subtitle": "自分に合う方法で食事を記録。\n推定値を確認してから保存できます。",
+    "copy": {
+      "left": 100,
+      "right": 1220,
+      "bottom": 2581.625,
+      "overflow": false
+    },
+    "panels": [
+      {
+        "type": "capture-photo",
+        "left": 120,
+        "right": 1140,
+        "bottom": 961
+      },
+      {
+        "type": "capture-text",
+        "left": 180,
+        "right": 1200,
+        "bottom": 1347
+      },
+      {
+        "type": "capture-voice",
+        "left": 120,
+        "right": 1200,
+        "bottom": 1774
+      }
+    ],
+    "screenshots": []
+  },
+  {
+    "page": 8,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 140,
+      "subtitleSize": 43
+    },
+    "heading": "SNSのレシピを\n自分だけの\nレシピ帳へ。",
+    "subtitle": "Instagram、TikTok、YouTubeで見つけたら、\n共有ボタンからSavoriaへ。",
+    "copy": {
+      "left": 100,
+      "right": 1220,
+      "bottom": 913.375,
+      "overflow": false
+    },
+    "panels": [
+      {
+        "type": "social-flow",
+        "left": 100,
+        "right": 1220,
+        "bottom": 1303
+      }
+    ],
+    "screenshots": [
+      {
+        "src": "/2026-10-29-localized/captures/ja/recipes-focus.png",
+        "naturalRatio": 1.2333333333333334,
+        "ratio": 1.2333341914406137
+      }
+    ]
+  },
+  {
+    "page": 9,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 139,
+      "subtitleSize": 46
+    },
+    "heading": "毎日の食事を\nもっとよく\n知ろう。",
+    "subtitle": "カロリーや栄養素を、\n一日の食事とともにチェック。",
+    "copy": {
+      "left": 100,
+      "right": 1220,
+      "bottom": 833.3125,
+      "overflow": false
+    },
+    "panels": [],
+    "screenshots": [
+      {
+        "src": "/2026-10-29-localized/captures/ja/nutrition.png",
+        "naturalRatio": 0.459954233409611,
+        "ratio": 0.4599560417849999
+      },
+      {
+        "src": "/2026-10-29-localized/captures/ja/nutrition-focus.png",
+        "naturalRatio": 1.0418181818181818,
+        "ratio": 1.0418397551933911
+      }
+    ]
+  }
+]

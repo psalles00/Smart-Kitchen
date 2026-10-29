@@ -1,0 +1,290 @@
+[
+  {
+    "language": "en",
+    "source": "recipe-scrolled.png",
+    "crop": "recipe-ingredients.png",
+    "rect": {
+      "left": 48,
+      "top": 863,
+      "width": 1110,
+      "height": 869
+    },
+    "sourceSHA256": "c9cac64293cc03cc1a9a75e0d687143d289521490a93c318e5e0453964a24004"
+  },
+  {
+    "language": "en",
+    "source": "market.png",
+    "crop": "pantry-focus.png",
+    "rect": {
+      "left": 25,
+      "top": 455,
+      "width": 1156,
+      "height": 720
+    },
+    "sourceSHA256": "c7f97bbb57b42aaba048265eb3903c9c9ce358918dc78e77efe4cd12e089ddfc"
+  },
+  {
+    "language": "en",
+    "source": "recipes.png",
+    "crop": "recipes-focus.png",
+    "rect": {
+      "left": 48,
+      "top": 455,
+      "width": 1110,
+      "height": 900
+    },
+    "sourceSHA256": "b05d2ebe0f511ca04f6022f75b3653068b4d918bf24bab3f1e0d469503d550ef"
+  },
+  {
+    "language": "en",
+    "source": "nutrition.png",
+    "crop": "nutrition-focus.png",
+    "rect": {
+      "left": 30,
+      "top": 780,
+      "width": 1146,
+      "height": 1100
+    },
+    "sourceSHA256": "d526328df721e1eef69662e5938d4cfb69461c197c26de865a563068f9ecdc3e"
+  },
+  {
+    "language": "es",
+    "source": "recipe-scrolled.png",
+    "crop": "recipe-ingredients.png",
+    "rect": {
+      "left": 48,
+      "top": 859,
+      "width": 1110,
+      "height": 1006
+    },
+    "sourceSHA256": "24a4b2ecc1a27295a8ed062014bd763e0c3dbdb7ee03ec3486d95b255e629039"
+  },
+  {
+    "language": "es",
+    "source": "market.png",
+    "crop": "pantry-focus.png",
+    "rect": {
+      "left": 25,
+      "top": 455,
+      "width": 1156,
+      "height": 720
+    },
+    "sourceSHA256": "faab20de241f9f6a2cf85fdbd536869d976cdd2f2881929e04c73fb562effe48"
+  },
+  {
+    "language": "es",
+    "source": "recipes.png",
+    "crop": "recipes-focus.png",
+    "rect": {
+      "left": 48,
+      "top": 455,
+      "width": 1110,
+      "height": 900
+    },
+    "sourceSHA256": "fca6460eb074be3c8ac486395fe945e267fbae0fe5f8d0bf2fa2fd8417942cda"
+  },
+  {
+    "language": "es",
+    "source": "nutrition.png",
+    "crop": "nutrition-focus.png",
+    "rect": {
+      "left": 30,
+      "top": 780,
+      "width": 1146,
+      "height": 1100
+    },
+    "sourceSHA256": "99f4a272434be601f02d639c9610bddcc0933c2ee8b4c8983f470150926153e6"
+  },
+  {
+    "language": "fr",
+    "source": "recipe-scrolled.png",
+    "crop": "recipe-ingredients.png",
+    "rect": {
+      "left": 48,
+      "top": 858,
+      "width": 1110,
+      "height": 1012
+    },
+    "sourceSHA256": "7f1d021945a032fab635b3047d872384b586313ddf8accfc5e00c24a317b69d3"
+  },
+  {
+    "language": "fr",
+    "source": "market.png",
+    "crop": "pantry-focus.png",
+    "rect": {
+      "left": 25,
+      "top": 455,
+      "width": 1156,
+      "height": 720
+    },
+    "sourceSHA256": "cdf8e4c219150b50cf43a5516c5af21055b7b6d1f0fbacd005500739d5fdacb1"
+  },
+  {
+    "language": "fr",
+    "source": "recipes.png",
+    "crop": "recipes-focus.png",
+    "rect": {
+      "left": 48,
+      "top": 455,
+      "width": 1110,
+      "height": 900
+    },
+    "sourceSHA256": "6c2483444fd394097182aadee50dd51384005cb5c231003d91698ec3765f12c4"
+  },
+  {
+    "language": "fr",
+    "source": "nutrition.png",
+    "crop": "nutrition-focus.png",
+    "rect": {
+      "left": 30,
+      "top": 780,
+      "width": 1146,
+      "height": 1100
+    },
+    "sourceSHA256": "05c788645ff1c81d5df5e6736776287376688319f48b237a8c0ee9d8ee39d7f6"
+  },
+  {
+    "language": "de",
+    "source": "recipe-scrolled.png",
+    "crop": "recipe-ingredients.png",
+    "rect": {
+      "left": 48,
+      "top": 868,
+      "width": 1110,
+      "height": 997
+    },
+    "sourceSHA256": "09f5f7890d077de6bdb080c9a3d873009d398527655e8ccad700e2f928925e2a"
+  },
+  {
+    "language": "de",
+    "source": "market.png",
+    "crop": "pantry-focus.png",
+    "rect": {
+      "left": 25,
+      "top": 455,
+      "width": 1156,
+      "height": 720
+    },
+    "sourceSHA256": "cb99dfde03b25ab4749fa723f4355dd6b8309cdf55fa5b23645973e870ab7875"
+  },
+  {
+    "language": "de",
+    "source": "recipes.png",
+    "crop": "recipes-focus.png",
+    "rect": {
+      "left": 48,
+      "top": 455,
+      "width": 1110,
+      "height": 900
+    },
+    "sourceSHA256": "73b025baca2b24a33dd84aa68a836f9c014af304dd68d8dfea90e34a80daa6ca"
+  },
+  {
+    "language": "de",
+    "source": "nutrition.png",
+    "crop": "nutrition-focus.png",
+    "rect": {
+      "left": 30,
+      "top": 780,
+      "width": 1146,
+      "height": 1100
+    },
+    "sourceSHA256": "3b6275d4c1a082cf0fdfce4956ddf895f530ff94845bfd337752fa5e38d04dae"
+  },
+  {
+    "language": "it",
+    "source": "recipe-scrolled.png",
+    "crop": "recipe-ingredients.png",
+    "rect": {
+      "left": 48,
+      "top": 863,
+      "width": 1110,
+      "height": 872
+    },
+    "sourceSHA256": "e94c7172eb156389db195d3150fafefc4e54cb478b96bec3716ceeea773bab9a"
+  },
+  {
+    "language": "it",
+    "source": "market.png",
+    "crop": "pantry-focus.png",
+    "rect": {
+      "left": 25,
+      "top": 455,
+      "width": 1156,
+      "height": 720
+    },
+    "sourceSHA256": "61ba5ae74f2dbfb67a9562f4817036298baa91ed74a8bb769977d56abe437259"
+  },
+  {
+    "language": "it",
+    "source": "recipes.png",
+    "crop": "recipes-focus.png",
+    "rect": {
+      "left": 48,
+      "top": 455,
+      "width": 1110,
+      "height": 900
+    },
+    "sourceSHA256": "6ea9185650c5242d8f263a3f11f820372b6f57e78b80b7998cbe43100332f089"
+  },
+  {
+    "language": "it",
+    "source": "nutrition.png",
+    "crop": "nutrition-focus.png",
+    "rect": {
+      "left": 30,
+      "top": 780,
+      "width": 1146,
+      "height": 1100
+    },
+    "sourceSHA256": "37d52d8193d3efc59a3c25aa4914f9a3d6e4e2098c6c63a53ea8122d6684b02d"
+  },
+  {
+    "language": "ja",
+    "source": "recipe-scrolled.png",
+    "crop": "recipe-ingredients.png",
+    "rect": {
+      "left": 48,
+      "top": 850,
+      "width": 1110,
+      "height": 889
+    },
+    "sourceSHA256": "0394f451d0b36932712e41189ae8ec0eabd60ffd122eb4c5ce4b11e901b4d132"
+  },
+  {
+    "language": "ja",
+    "source": "market.png",
+    "crop": "pantry-focus.png",
+    "rect": {
+      "left": 25,
+      "top": 455,
+      "width": 1156,
+      "height": 720
+    },
+    "sourceSHA256": "67c20cba0024298c24d5be3de2f227533c5e1bcfb7bea3fcadaa788f0cc1f004"
+  },
+  {
+    "language": "ja",
+    "source": "recipes.png",
+    "crop": "recipes-focus.png",
+    "rect": {
+      "left": 48,
+      "top": 455,
+      "width": 1110,
+      "height": 900
+    },
+    "sourceSHA256": "ec1e11c092c0adb1c7923efc2633773659fe0cafc5e8719fb4e36b0fbb16fcfc"
+  },
+  {
+    "language": "ja",
+    "source": "nutrition.png",
+    "crop": "nutrition-focus.png",
+    "rect": {
+      "left": 30,
+      "top": 780,
+      "width": 1146,
+      "height": 1100
+    },
+    "sourceSHA256": "8ce6c9cd29770c86c9a0c858d5f4f6d19b33d3eabe9b23d835ae2186cb93fe38"
+  }
+]

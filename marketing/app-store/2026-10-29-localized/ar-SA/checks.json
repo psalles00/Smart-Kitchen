@@ -1,0 +1,346 @@
+[
+  {
+    "page": 1,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 163,
+      "subtitleSize": 47
+    },
+    "heading": "مطبخك\nأكثر تنظيمًا.\nمذاق أجمل\nكل يوم.",
+    "subtitle": "الوصفات والمخزون والتغذية\nمعًا، دون تعقيد.",
+    "copy": {
+      "left": 100,
+      "right": 1220,
+      "bottom": 1106.34375,
+      "overflow": false
+    },
+    "panels": [],
+    "screenshots": [
+      {
+        "src": "/2026-10-29-localized/captures/en/home.png",
+        "naturalRatio": 0.459954233409611,
+        "ratio": 0.4599560417849999
+      }
+    ]
+  },
+  {
+    "page": 2,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 137,
+      "subtitleSize": 44
+    },
+    "heading": "تابع سعراتك.\nدون تسجيل\nكل يوم.",
+    "subtitle": "متوسط ذكي للأيام التي تسجلها.\nالأيام بلا تسجيل لا تُحسب بصفر.",
+    "copy": {
+      "left": 100,
+      "right": 1050,
+      "bottom": 874.640625,
+      "overflow": false
+    },
+    "panels": [
+      {
+        "type": "average-card",
+        "left": 100,
+        "right": 1220,
+        "bottom": 2316
+      }
+    ],
+    "screenshots": []
+  },
+  {
+    "page": 3,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 128,
+      "subtitleSize": 38
+    },
+    "heading": "من المخزون\nإلى قائمة التسوق.\nوبالعكس.",
+    "subtitle": "نفد المنتج؟ حدده لينتقل إلى قائمة التسوق.\nاشتريته؟ حدده ليعود إلى المخزون.\nالقوائم تنقل المنتجات تلقائيًا.",
+    "copy": {
+      "left": 260,
+      "right": 1220,
+      "bottom": 787.5625,
+      "overflow": false
+    },
+    "panels": [],
+    "screenshots": [
+      {
+        "src": "/2026-10-29-localized/captures/en/pantry.png",
+        "naturalRatio": 0.459954233409611,
+        "ratio": 0.4599560417849999
+      },
+      {
+        "src": "/2026-10-29-localized/captures/en/pantry-focus.png",
+        "naturalRatio": 1.6055555555555556,
+        "ratio": 1.60557550962156
+      }
+    ]
+  },
+  {
+    "page": 4,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 140,
+      "subtitleSize": 47
+    },
+    "heading": "افتح مخزونك.\nواكتشف\nوجبتك القادمة.",
+    "subtitle": "اطلب من الذكاء الاصطناعي أفكارًا\nبالمكونات المتوفرة لديك في المنزل.",
+    "copy": {
+      "left": 100,
+      "right": 1220,
+      "bottom": 954.59375,
+      "overflow": false
+    },
+    "panels": [
+      {
+        "type": "ideas-demo",
+        "left": 100,
+        "right": 1220,
+        "bottom": 2551.171875
+      }
+    ],
+    "screenshots": []
+  },
+  {
+    "page": 5,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 140,
+      "subtitleSize": 43
+    },
+    "heading": "وصفات وقوائم\nوتغذية.\nكلها مترابطة.",
+    "subtitle": "استفد من المكونات المتوفرة، ونظّم التسوق،\nوتابع نظامك الغذائي.",
+    "copy": {
+      "left": 190,
+      "right": 1220,
+      "bottom": 912.6875,
+      "overflow": false
+    },
+    "panels": [],
+    "screenshots": []
+  },
+  {
+    "page": 6,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 155,
+      "subtitleSize": 43
+    },
+    "heading": "وصفتك.\nخطوة واحدة\nفي كل مرة.",
+    "subtitle": "المكونات والحصص وطريقة التحضير.\nكل ما تحتاجه في متناولك أثناء الطهي.",
+    "copy": {
+      "left": 200,
+      "right": 1220,
+      "bottom": 890.125,
+      "overflow": false
+    },
+    "panels": [
+      {
+        "type": "native-panel ingredient-panel",
+        "left": 100,
+        "right": 1220,
+        "bottom": 2734.1875
+      }
+    ],
+    "screenshots": [
+      {
+        "src": "/2026-10-29-localized/captures/en/recipe.png",
+        "naturalRatio": 0.459954233409611,
+        "ratio": 0.4599560417849999
+      },
+      {
+        "src": "/2026-10-29-localized/captures/en/recipe-ingredients.png",
+        "naturalRatio": 1.2773302646720368,
+        "ratio": 1.2773462640078213
+      }
+    ]
+  },
+  {
+    "page": 7,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 155,
+      "subtitleSize": 43
+    },
+    "heading": "صورة أو نص\nأو صوت.\nالخيار لك.",
+    "subtitle": "سجّل وجباتك بالطريقة التي تناسبك.\nراجع التقديرات قبل الحفظ.",
+    "copy": {
+      "left": 100,
+      "right": 1220,
+      "bottom": 2685.125,
+      "overflow": false
+    },
+    "panels": [
+      {
+        "type": "capture-photo",
+        "left": 120,
+        "right": 1140,
+        "bottom": 939
+      },
+      {
+        "type": "capture-text",
+        "left": 180,
+        "right": 1200,
+        "bottom": 1337
+      },
+      {
+        "type": "capture-voice",
+        "left": 120,
+        "right": 1200,
+        "bottom": 1754
+      }
+    ],
+    "screenshots": []
+  },
+  {
+    "page": 8,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 137,
+      "subtitleSize": 43
+    },
+    "heading": "من منصات التواصل\nإلى دفتر\nوصفاتك.",
+    "subtitle": "وجدتها على Instagram أو TikTok أو YouTube؟\nاضغط على المشاركة وأرسلها إلى Savoria.",
+    "copy": {
+      "left": 100,
+      "right": 1220,
+      "bottom": 903.015625,
+      "overflow": false
+    },
+    "panels": [
+      {
+        "type": "social-flow",
+        "left": 100,
+        "right": 1220,
+        "bottom": 1295
+      }
+    ],
+    "screenshots": [
+      {
+        "src": "/2026-10-29-localized/captures/en/recipes-focus.png",
+        "naturalRatio": 1.2333333333333334,
+        "ratio": 1.2333341914406137
+      }
+    ]
+  },
+  {
+    "page": 9,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 139,
+      "subtitleSize": 46
+    },
+    "heading": "افهم أكثر\nما الذي\nتأكله.",
+    "subtitle": "تابع السعرات والعناصر الغذائية\nعلى مدار يومك.",
+    "copy": {
+      "left": 100,
+      "right": 1220,
+      "bottom": 833.3125,
+      "overflow": false
+    },
+    "panels": [],
+    "screenshots": [
+      {
+        "src": "/2026-10-29-localized/captures/en/nutrition.png",
+        "naturalRatio": 0.459954233409611,
+        "ratio": 0.4599560417849999
+      },
+      {
+        "src": "/2026-10-29-localized/captures/en/nutrition-focus.png",
+        "naturalRatio": 1.0418181818181818,
+        "ratio": 1.0418397551933911
+      }
+    ]
+  }
+]

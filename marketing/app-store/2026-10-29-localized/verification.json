@@ -1,0 +1,91 @@
+{
+  "date": "2026-10-29",
+  "locales": [
+    {
+      "locale": "pt-BR",
+      "interfaceLanguage": "pt-BR",
+      "images": 9,
+      "englishFallback": false,
+      "verified": true
+    },
+    {
+      "locale": "en-US",
+      "interfaceLanguage": "en",
+      "images": 9,
+      "englishFallback": false,
+      "verified": true
+    },
+    {
+      "locale": "es-ES",
+      "interfaceLanguage": "es",
+      "images": 9,
+      "englishFallback": false,
+      "verified": true
+    },
+    {
+      "locale": "fr-FR",
+      "interfaceLanguage": "fr",
+      "images": 9,
+      "englishFallback": false,
+      "verified": true
+    },
+    {
+      "locale": "de-DE",
+      "interfaceLanguage": "de",
+      "images": 9,
+      "englishFallback": false,
+      "verified": true
+    },
+    {
+      "locale": "it",
+      "interfaceLanguage": "it",
+      "images": 9,
+      "englishFallback": false,
+      "verified": true
+    },
+    {
+      "locale": "ja",
+      "interfaceLanguage": "ja",
+      "images": 9,
+      "englishFallback": false,
+      "verified": true
+    },
+    {
+      "locale": "ko",
+      "interfaceLanguage": "en",
+      "images": 9,
+      "englishFallback": true,
+      "verified": true
+    },
+    {
+      "locale": "zh-Hans",
+      "interfaceLanguage": "en",
+      "images": 9,
+      "englishFallback": true,
+      "verified": true
+    },
+    {
+      "locale": "ar-SA",
+      "interfaceLanguage": "en",
+      "images": 9,
+      "englishFallback": true,
+      "verified": true
+    }
+  ],
+  "images": 90,
+  "pngBytes": 118944345,
+  "nativeCaptureLanguages": [
+    "en",
+    "es",
+    "fr",
+    "de",
+    "it",
+    "ja"
+  ],
+  "nativeCaptureFiles": 42,
+  "nativeCrops": 24,
+  "sharedPanoramaVerified": true,
+  "backgroundJoins": 8,
+  "paidInferenceRequests": 0,
+  "appStoreUpload": false
+}

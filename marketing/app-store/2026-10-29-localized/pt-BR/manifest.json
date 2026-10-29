@@ -1,0 +1,97 @@
+{
+  "locale": "pt-BR",
+  "nativeDevice": "iPhone 17 Pro (Simulator)",
+  "screenshots": "production views with isolated demonstration data; page 02 illustrative chart; pages 04 and 07 authorized simplified interface demonstrations",
+  "pages": [
+    {
+      "page": 1,
+      "path": "png/01.png",
+      "width": 1320,
+      "height": 2868,
+      "colorSpace": "srgb",
+      "alpha": false,
+      "bytes": 1773333,
+      "sha256": "a17d41327de2d0b7db4a5d9cc417f663bf21e5725a16bdef974b144bfea82362"
+    },
+    {
+      "page": 2,
+      "path": "png/02.png",
+      "width": 1320,
+      "height": 2868,
+      "colorSpace": "srgb",
+      "alpha": false,
+      "bytes": 766972,
+      "sha256": "7ef4366697362442b7b3dfe7f89e4fbdd160218d86f1ba2079259d6f1ee1fe7f"
+    },
+    {
+      "page": 3,
+      "path": "png/03.png",
+      "width": 1320,
+      "height": 2868,
+      "colorSpace": "srgb",
+      "alpha": false,
+      "bytes": 873365,
+      "sha256": "6914d4ffe3af695612c5c9f5dc6e66f7827ac0c465f7db8ea132f2f43e2556f6"
+    },
+    {
+      "page": 4,
+      "path": "png/04.png",
+      "width": 1320,
+      "height": 2868,
+      "colorSpace": "srgb",
+      "alpha": false,
+      "bytes": 531643,
+      "sha256": "35fcee97d693a24fc7fe075ac1302c196c43abfc4a57e9447582f37259bf3747"
+    },
+    {
+      "page": 5,
+      "path": "png/05.png",
+      "width": 1320,
+      "height": 2868,
+      "colorSpace": "srgb",
+      "alpha": false,
+      "bytes": 816653,
+      "sha256": "55e20f7e317236fcf5f5be47738a7153a8d897e11b5813b8477ab97a1dcf60c7"
+    },
+    {
+      "page": 6,
+      "path": "png/06.png",
+      "width": 1320,
+      "height": 2868,
+      "colorSpace": "srgb",
+      "alpha": false,
+      "bytes": 2417575,
+      "sha256": "e7799e5834fe251a49770be51981a045db0cdde4be128883c04f50c98d23fb6e"
+    },
+    {
+      "page": 7,
+      "path": "png/07.png",
+      "width": 1320,
+      "height": 2868,
+      "colorSpace": "srgb",
+      "alpha": false,
+      "bytes": 1495875,
+      "sha256": "c7ff9fd9bd6c9cc1ab8541a5e5f5f156565457ebcfe1bb0820befcb6d9fc625a"
+    },
+    {
+      "page": 8,
+      "path": "png/08.png",
+      "width": 1320,
+      "height": 2868,
+      "colorSpace": "srgb",
+      "alpha": false,
+      "bytes": 1990473,
+      "sha256": "e5ab167446e6cb4d1f8093daccfedd9670091fdaff92bde1d479b8d966fc16a4"
+    },
+    {
+      "page": 9,
+      "path": "png/09.png",
+      "width": 1320,
+      "height": 2868,
+      "colorSpace": "srgb",
+      "alpha": false,
+      "bytes": 1389387,
+      "sha256": "6a8cfc929cee906b7a302e8a744521bd0ab2442e66fa82321f7543abff150492"
+    }
+  ]
+}

@@ -1,0 +1,100 @@
+{
+  "locale": "ar-SA",
+  "interfaceLanguage": "en",
+  "usesEnglishFallback": true,
+  "nativeScreenshots": true,
+  "rtlPromotionalCopy": true,
+  "backgroundSourceSHA256": "3f61b9e0e3622cc8f2beb49d9c50a7dbf5b19148228f09d256ca3396d5d4792f",
+  "pages": [
+    {
+      "page": 1,
+      "file": "png/01.png",
+      "width": 1320,
+      "height": 2868,
+      "colorSpace": "srgb",
+      "alpha": false,
+      "bytes": 1730282,
+      "sha256": "9c9d81fb338e12bb218b48c86986ab2e3669fe47f8f5c172861f0cc36592e6c4"
+    },
+    {
+      "page": 2,
+      "file": "png/02.png",
+      "width": 1320,
+      "height": 2868,
+      "colorSpace": "srgb",
+      "alpha": false,
+      "bytes": 746088,
+      "sha256": "eb85aa3c2cdfe7f7ca701404256062d04175f5c489f6a0c0975b1fe051466aef"
+    },
+    {
+      "page": 3,
+      "file": "png/03.png",
+      "width": 1320,
+      "height": 2868,
+      "colorSpace": "srgb",
+      "alpha": false,
+      "bytes": 842895,
+      "sha256": "7d1b03128eb22f737b446f6ad3f221a5282c3e5c6655ea3db2120444a85336d6"
+    },
+    {
+      "page": 4,
+      "file": "png/04.png",
+      "width": 1320,
+      "height": 2868,
+      "colorSpace": "srgb",
+      "alpha": false,
+      "bytes": 521918,
+      "sha256": "b1ded4229616d27a833dee26e74fdea49d1b4883bfe2d8a3d3159c4b33f6e190"
+    },
+    {
+      "page": 5,
+      "file": "png/05.png",
+      "width": 1320,
+      "height": 2868,
+      "colorSpace": "srgb",
+      "alpha": false,
+      "bytes": 804172,
+      "sha256": "74f092c0e84bf6ac18d19b44c30536d5b5940b3ac484f2ff620a21f715e94bc6"
+    },
+    {
+      "page": 6,
+      "file": "png/06.png",
+      "width": 1320,
+      "height": 2868,
+      "colorSpace": "srgb",
+      "alpha": false,
+      "bytes": 2394316,
+      "sha256": "ea5b0d99088e6a0485e1fccdddb7b5edf18d0e8a129affa3b5087781bebe943c"
+    },
+    {
+      "page": 7,
+      "file": "png/07.png",
+      "width": 1320,
+      "height": 2868,
+      "colorSpace": "srgb",
+      "alpha": false,
+      "bytes": 1487440,
+      "sha256": "78c84817ee0f454a8eadf17df56510360e128899b5077c4835b842d4d15dd2aa"
+    },
+    {
+      "page": 8,
+      "file": "png/08.png",
+      "width": 1320,
+      "height": 2868,
+      "colorSpace": "srgb",
+      "alpha": false,
+      "bytes": 1976919,
+      "sha256": "c670b5c7f867dc387c4da63f4c9b51e3c89f93c2c3becceee29beb1cb4506e85"
+    },
+    {
+      "page": 9,
+      "file": "png/09.png",
+      "width": 1320,
+      "height": 2868,
+      "colorSpace": "srgb",
+      "alpha": false,
+      "bytes": 1366160,
+      "sha256": "b9fc75807c89546f9af655b74f4cebe5e07e41ab8b59ba8748146b8108d15969"
+    }
+  ]
+}

@@ -1,0 +1,272 @@
+{
+  "en": {
+    "locale": "en-US",
+    "device": "iPhone 17 Pro Simulator",
+    "result": "/Volumes/PS-Externo/Coding/Builds/Savoria-Nutrition-Final-20261028/marketing-locale-en-v3.xcresult",
+    "galleryResult": "/Volumes/PS-Externo/Coding/Builds/Savoria-Nutrition-Final-20261028/marketing-locale-en-v5-gallery.xcresult",
+    "fixture": "memory-only, no CloudKit",
+    "files": [
+      {
+        "name": "nutrition",
+        "path": "captures/en/nutrition.png",
+        "sha256": "d526328df721e1eef69662e5938d4cfb69461c197c26de865a563068f9ecdc3e"
+      },
+      {
+        "name": "recipe-scrolled",
+        "path": "captures/en/recipe-scrolled.png",
+        "sha256": "c9cac64293cc03cc1a9a75e0d687143d289521490a93c318e5e0453964a24004"
+      },
+      {
+        "name": "recipe",
+        "path": "captures/en/recipe.png",
+        "sha256": "cd342fab66bc411b591bf47022d5c146266c45131b5fa21be6e74059b2e62914"
+      },
+      {
+        "name": "recipes",
+        "path": "captures/en/recipes.png",
+        "sha256": "b05d2ebe0f511ca04f6022f75b3653068b4d918bf24bab3f1e0d469503d550ef",
+        "captureResult": "/Volumes/PS-Externo/Coding/Builds/Savoria-Nutrition-Final-20261028/marketing-locale-en-v5-gallery.xcresult"
+      },
+      {
+        "name": "market",
+        "path": "captures/en/market.png",
+        "sha256": "c7f97bbb57b42aaba048265eb3903c9c9ce358918dc78e77efe4cd12e089ddfc"
+      },
+      {
+        "name": "pantry",
+        "path": "captures/en/pantry.png",
+        "sha256": "3f0a2a4edfc747429d9180386958085b264eaf9e41ca0eeb3ed84c397bcac4e6"
+      },
+      {
+        "name": "home",
+        "path": "captures/en/home.png",
+        "sha256": "163a8ccde57c24e1d8c45ad683b64f35a373c0c9fde273ddea61eb6411ae823e"
+      }
+    ]
+  },
+  "es": {
+    "locale": "es-ES",
+    "device": "iPhone 17 Pro Simulator",
+    "result": "/Volumes/PS-Externo/Coding/Builds/Savoria-Nutrition-Final-20261028/marketing-locale-es-v3.xcresult",
+    "galleryResult": "/Volumes/PS-Externo/Coding/Builds/Savoria-Nutrition-Final-20261028/marketing-locale-es-v5-gallery.xcresult",
+    "fixture": "memory-only, no CloudKit",
+    "files": [
+      {
+        "name": "nutrition",
+        "path": "captures/es/nutrition.png",
+        "sha256": "99f4a272434be601f02d639c9610bddcc0933c2ee8b4c8983f470150926153e6"
+      },
+      {
+        "name": "recipe-scrolled",
+        "path": "captures/es/recipe-scrolled.png",
+        "sha256": "24a4b2ecc1a27295a8ed062014bd763e0c3dbdb7ee03ec3486d95b255e629039"
+      },
+      {
+        "name": "recipe",
+        "path": "captures/es/recipe.png",
+        "sha256": "d5acb94b713cd7fe4a477b0e067147d61ef0dda8a4823aa9c4b7185a1249aaa7"
+      },
+      {
+        "name": "recipes",
+        "path": "captures/es/recipes.png",
+        "sha256": "fca6460eb074be3c8ac486395fe945e267fbae0fe5f8d0bf2fa2fd8417942cda",
+        "captureResult": "/Volumes/PS-Externo/Coding/Builds/Savoria-Nutrition-Final-20261028/marketing-locale-es-v5-gallery.xcresult"
+      },
+      {
+        "name": "market",
+        "path": "captures/es/market.png",
+        "sha256": "faab20de241f9f6a2cf85fdbd536869d976cdd2f2881929e04c73fb562effe48"
+      },
+      {
+        "name": "pantry",
+        "path": "captures/es/pantry.png",
+        "sha256": "a4aebe8b800ddac02b647677f30d7f639a58708f6c362d82684821e34d5a5e04"
+      },
+      {
+        "name": "home",
+        "path": "captures/es/home.png",
+        "sha256": "9a0d384d4ccbee9d32f4dd3ac9c9a1c7943ea95c5bd7d39e5162985cff31e86f"
+      }
+    ]
+  },
+  "fr": {
+    "locale": "fr-FR",
+    "device": "iPhone 17 Pro Simulator",
+    "result": "/Volumes/PS-Externo/Coding/Builds/Savoria-Nutrition-Final-20261028/marketing-locale-fr-v3.xcresult",
+    "galleryResult": "/Volumes/PS-Externo/Coding/Builds/Savoria-Nutrition-Final-20261028/marketing-locale-fr-v5-gallery.xcresult",
+    "fixture": "memory-only, no CloudKit",
+    "files": [
+      {
+        "name": "nutrition",
+        "path": "captures/fr/nutrition.png",
+        "sha256": "05c788645ff1c81d5df5e6736776287376688319f48b237a8c0ee9d8ee39d7f6"
+      },
+      {
+        "name": "recipe-scrolled",
+        "path": "captures/fr/recipe-scrolled.png",
+        "sha256": "7f1d021945a032fab635b3047d872384b586313ddf8accfc5e00c24a317b69d3"
+      },
+      {
+        "name": "recipe",
+        "path": "captures/fr/recipe.png",
+        "sha256": "28069165ae9394014d184d48e6caab1e827c5806b077d17d0ae2777b9cbc6742"
+      },
+      {
+        "name": "recipes",
+        "path": "captures/fr/recipes.png",
+        "sha256": "6c2483444fd394097182aadee50dd51384005cb5c231003d91698ec3765f12c4",
+        "captureResult": "/Volumes/PS-Externo/Coding/Builds/Savoria-Nutrition-Final-20261028/marketing-locale-fr-v5-gallery.xcresult"
+      },
+      {
+        "name": "market",
+        "path": "captures/fr/market.png",
+        "sha256": "cdf8e4c219150b50cf43a5516c5af21055b7b6d1f0fbacd005500739d5fdacb1"
+      },
+      {
+        "name": "pantry",
+        "path": "captures/fr/pantry.png",
+        "sha256": "f07a8765162e5c89c8279260ad6a9669ce26d6f22ef665ae362f5b30057bc030"
+      },
+      {
+        "name": "home",
+        "path": "captures/fr/home.png",
+        "sha256": "9b25e2e876d8f62144ea10a24a6e1af0936f154d9ad1e603b618d93b078e4870"
+      }
+    ]
+  },
+  "de": {
+    "locale": "de-DE",
+    "device": "iPhone 17 Pro Simulator",
+    "result": "/Volumes/PS-Externo/Coding/Builds/Savoria-Nutrition-Final-20261028/marketing-locale-de-v3.xcresult",
+    "galleryResult": "/Volumes/PS-Externo/Coding/Builds/Savoria-Nutrition-Final-20261028/marketing-locale-de-v5-gallery.xcresult",
+    "fixture": "memory-only, no CloudKit",
+    "files": [
+      {
+        "name": "nutrition",
+        "path": "captures/de/nutrition.png",
+        "sha256": "3b6275d4c1a082cf0fdfce4956ddf895f530ff94845bfd337752fa5e38d04dae"
+      },
+      {
+        "name": "recipe-scrolled",
+        "path": "captures/de/recipe-scrolled.png",
+        "sha256": "09f5f7890d077de6bdb080c9a3d873009d398527655e8ccad700e2f928925e2a"
+      },
+      {
+        "name": "recipe",
+        "path": "captures/de/recipe.png",
+        "sha256": "5563c54e74fdfe8258ed5d3cdcc9b1fc9ab44c7cbdd1901dd0dad74df0b8fb42"
+      },
+      {
+        "name": "recipes",
+        "path": "captures/de/recipes.png",
+        "sha256": "73b025baca2b24a33dd84aa68a836f9c014af304dd68d8dfea90e34a80daa6ca",
+        "captureResult": "/Volumes/PS-Externo/Coding/Builds/Savoria-Nutrition-Final-20261028/marketing-locale-de-v5-gallery.xcresult"
+      },
+      {
+        "name": "market",
+        "path": "captures/de/market.png",
+        "sha256": "cb99dfde03b25ab4749fa723f4355dd6b8309cdf55fa5b23645973e870ab7875"
+      },
+      {
+        "name": "pantry",
+        "path": "captures/de/pantry.png",
+        "sha256": "07aa460ec38bdd971d20cb81e1e4f4245ebac99e8d15821ea5ee4256e8bf5efb"
+      },
+      {
+        "name": "home",
+        "path": "captures/de/home.png",
+        "sha256": "3ecab5877fd54ab08f7c730299b07248233fcefbdf4db8f67b30232519bbccba"
+      }
+    ]
+  },
+  "it": {
+    "locale": "it-IT",
+    "device": "iPhone 17 Pro Simulator",
+    "result": "/Volumes/PS-Externo/Coding/Builds/Savoria-Nutrition-Final-20261028/marketing-locale-it-v3.xcresult",
+    "galleryResult": "/Volumes/PS-Externo/Coding/Builds/Savoria-Nutrition-Final-20261028/marketing-locale-it-v5-gallery.xcresult",
+    "fixture": "memory-only, no CloudKit",
+    "files": [
+      {
+        "name": "nutrition",
+        "path": "captures/it/nutrition.png",
+        "sha256": "37d52d8193d3efc59a3c25aa4914f9a3d6e4e2098c6c63a53ea8122d6684b02d"
+      },
+      {
+        "name": "recipe-scrolled",
+        "path": "captures/it/recipe-scrolled.png",
+        "sha256": "e94c7172eb156389db195d3150fafefc4e54cb478b96bec3716ceeea773bab9a"
+      },
+      {
+        "name": "recipe",
+        "path": "captures/it/recipe.png",
+        "sha256": "6bf93da6530a45e66c7e51efa473964bc6b59d601ffd5602b2df7e77aa840004"
+      },
+      {
+        "name": "recipes",
+        "path": "captures/it/recipes.png",
+        "sha256": "6ea9185650c5242d8f263a3f11f820372b6f57e78b80b7998cbe43100332f089",
+        "captureResult": "/Volumes/PS-Externo/Coding/Builds/Savoria-Nutrition-Final-20261028/marketing-locale-it-v5-gallery.xcresult"
+      },
+      {
+        "name": "market",
+        "path": "captures/it/market.png",
+        "sha256": "61ba5ae74f2dbfb67a9562f4817036298baa91ed74a8bb769977d56abe437259"
+      },
+      {
+        "name": "pantry",
+        "path": "captures/it/pantry.png",
+        "sha256": "ff050a6894127d8f160f4a8b561996a5e3ab55307569866c6ce3b6f1d9af9adc"
+      },
+      {
+        "name": "home",
+        "path": "captures/it/home.png",
+        "sha256": "ce0fa949daa09126e803c0f8eecfcdd840cf2449c6b6f5ed229028028bfb4fdd"
+      }
+    ]
+  },
+  "ja": {
+    "locale": "ja-JP",
+    "device": "iPhone 17 Pro Simulator",
+    "result": "/Volumes/PS-Externo/Coding/Builds/Savoria-Nutrition-Final-20261028/marketing-locale-ja-v3.xcresult",
+    "galleryResult": "/Volumes/PS-Externo/Coding/Builds/Savoria-Nutrition-Final-20261028/marketing-locale-ja-v5-gallery.xcresult",
+    "fixture": "memory-only, no CloudKit",
+    "files": [
+      {
+        "name": "nutrition",
+        "path": "captures/ja/nutrition.png",
+        "sha256": "8ce6c9cd29770c86c9a0c858d5f4f6d19b33d3eabe9b23d835ae2186cb93fe38"
+      },
+      {
+        "name": "recipe-scrolled",
+        "path": "captures/ja/recipe-scrolled.png",
+        "sha256": "0394f451d0b36932712e41189ae8ec0eabd60ffd122eb4c5ce4b11e901b4d132"
+      },
+      {
+        "name": "recipe",
+        "path": "captures/ja/recipe.png",
+        "sha256": "5f78a4196a727c16cfb430d59afb691dbbad4e14ba62829342cda3215d9fa3b3"
+      },
+      {
+        "name": "recipes",
+        "path": "captures/ja/recipes.png",
+        "sha256": "ec1e11c092c0adb1c7923efc2633773659fe0cafc5e8719fb4e36b0fbb16fcfc",
+        "captureResult": "/Volumes/PS-Externo/Coding/Builds/Savoria-Nutrition-Final-20261028/marketing-locale-ja-v5-gallery.xcresult"
+      },
+      {
+        "name": "market",
+        "path": "captures/ja/market.png",
+        "sha256": "67c20cba0024298c24d5be3de2f227533c5e1bcfb7bea3fcadaa788f0cc1f004"
+      },
+      {
+        "name": "pantry",
+        "path": "captures/ja/pantry.png",
+        "sha256": "48f0f7bd40802f43a51bcce1c216acdda79a82885fa0607ddc359ec3dda4b810"
+      },
+      {
+        "name": "home",
+        "path": "captures/ja/home.png",
+        "sha256": "0f7298d2c84dcc3b9ce799d4ff805cd76fa46029d08f6583b6691fb48edab872"
+      }
+    ]
+  }
+}

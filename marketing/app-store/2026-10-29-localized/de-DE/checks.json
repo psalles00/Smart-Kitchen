@@ -1,0 +1,346 @@
+[
+  {
+    "page": 1,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 157,
+      "subtitleSize": 47
+    },
+    "heading": "Deine Küche.\nGut organisiert.\nMehr Genuss.\nJeden Tag.",
+    "subtitle": "Rezepte, Vorräte und Ernährung\nzusammen, ganz unkompliziert.",
+    "copy": {
+      "left": 100,
+      "right": 1220,
+      "bottom": 997.09375,
+      "overflow": false
+    },
+    "panels": [],
+    "screenshots": [
+      {
+        "src": "/2026-10-29-localized/captures/de/home.png",
+        "naturalRatio": 0.459954233409611,
+        "ratio": 0.4599560417849999
+      }
+    ]
+  },
+  {
+    "page": 2,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 137,
+      "subtitleSize": 44
+    },
+    "heading": "Deine Kalorien.\nOhne tägliches\nProtokollieren.",
+    "subtitle": "Ein smarter Durchschnitt der erfassten Tage.\nTage ohne Eintrag zählen nicht als null.",
+    "copy": {
+      "left": 100,
+      "right": 1220,
+      "bottom": 833.53125,
+      "overflow": false
+    },
+    "panels": [
+      {
+        "type": "average-card",
+        "left": 100,
+        "right": 1220,
+        "bottom": 2316
+      }
+    ],
+    "screenshots": []
+  },
+  {
+    "page": 3,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 136,
+      "subtitleSize": 38
+    },
+    "heading": "Vom Vorrat\nzum Einkauf.\nUnd zurück.",
+    "subtitle": "Aufgebraucht? Abhaken – ab auf die Einkaufsliste.\nGekauft? Abhaken – zurück in den Vorrat.\nDie Listen verschieben deine Artikel automatisch.",
+    "copy": {
+      "left": 260,
+      "right": 1220,
+      "bottom": 762.15625,
+      "overflow": false
+    },
+    "panels": [],
+    "screenshots": [
+      {
+        "src": "/2026-10-29-localized/captures/de/pantry.png",
+        "naturalRatio": 0.459954233409611,
+        "ratio": 0.4599560417849999
+      },
+      {
+        "src": "/2026-10-29-localized/captures/de/pantry-focus.png",
+        "naturalRatio": 1.6055555555555556,
+        "ratio": 1.60557550962156
+      }
+    ]
+  },
+  {
+    "page": 4,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 140,
+      "subtitleSize": 47
+    },
+    "heading": "Vorräte öffnen.\nDein nächstes\nEssen finden.",
+    "subtitle": "Frag die KI nach Ideen mit den Zutaten,\ndie du schon zu Hause hast.",
+    "copy": {
+      "left": 100,
+      "right": 1220,
+      "bottom": 912.59375,
+      "overflow": false
+    },
+    "panels": [
+      {
+        "type": "ideas-demo",
+        "left": 100,
+        "right": 1220,
+        "bottom": 2551.171875
+      }
+    ],
+    "screenshots": []
+  },
+  {
+    "page": 5,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 136,
+      "subtitleSize": 43
+    },
+    "heading": "Rezepte, Listen\nund Ernährung.\nAlles verbunden.",
+    "subtitle": "Nutze deine Vorräte, plane deinen Einkauf\nund behalte deine Ernährung im Blick.",
+    "copy": {
+      "left": 190,
+      "right": 1220,
+      "bottom": 845.84375,
+      "overflow": false
+    },
+    "panels": [],
+    "screenshots": []
+  },
+  {
+    "page": 6,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 118,
+      "subtitleSize": 43
+    },
+    "heading": "Dein Rezept.\nEin Schritt\nnach dem anderen.",
+    "subtitle": "Zutaten, Portionen und Zubereitung.\nBeim Kochen alles griffbereit.",
+    "copy": {
+      "left": 200,
+      "right": 1220,
+      "bottom": 716.453125,
+      "overflow": false
+    },
+    "panels": [
+      {
+        "type": "native-panel ingredient-panel",
+        "left": 100,
+        "right": 1220,
+        "bottom": 2770
+      }
+    ],
+    "screenshots": [
+      {
+        "src": "/2026-10-29-localized/captures/de/recipe.png",
+        "naturalRatio": 0.459954233409611,
+        "ratio": 0.4599560417849999
+      },
+      {
+        "src": "/2026-10-29-localized/captures/de/recipe-ingredients.png",
+        "naturalRatio": 1.1133400200601806,
+        "ratio": 1.113341362237388
+      }
+    ]
+  },
+  {
+    "page": 7,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 155,
+      "subtitleSize": 43
+    },
+    "heading": "Foto, Text\noder Sprache.\nDeine Wahl.",
+    "subtitle": "Erfasse Mahlzeiten auf deine Art.\nPrüfe die Schätzwerte vor dem Speichern.",
+    "copy": {
+      "left": 100,
+      "right": 1220,
+      "bottom": 2620.015625,
+      "overflow": false
+    },
+    "panels": [
+      {
+        "type": "capture-photo",
+        "left": 120,
+        "right": 1140,
+        "bottom": 939
+      },
+      {
+        "type": "capture-text",
+        "left": 180,
+        "right": 1200,
+        "bottom": 1337
+      },
+      {
+        "type": "capture-voice",
+        "left": 120,
+        "right": 1200,
+        "bottom": 1754
+      }
+    ],
+    "screenshots": []
+  },
+  {
+    "page": 8,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 140,
+      "subtitleSize": 43
+    },
+    "heading": "Aus deinem Feed\nin dein\nRezeptbuch.",
+    "subtitle": "Auf Instagram, TikTok oder YouTube entdeckt?\nTippe auf Teilen und sende es an Savoria.",
+    "copy": {
+      "left": 100,
+      "right": 1220,
+      "bottom": 883.9375,
+      "overflow": false
+    },
+    "panels": [
+      {
+        "type": "social-flow",
+        "left": 100,
+        "right": 1220,
+        "bottom": 1295
+      }
+    ],
+    "screenshots": [
+      {
+        "src": "/2026-10-29-localized/captures/de/recipes-focus.png",
+        "naturalRatio": 1.2333333333333334,
+        "ratio": 1.2333341914406137
+      }
+    ]
+  },
+  {
+    "page": 9,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "fit": {
+      "headingSize": 139,
+      "subtitleSize": 46
+    },
+    "heading": "Verstehe besser,\nwas du\nisst.",
+    "subtitle": "Behalte Kalorien und Nährstoffe\nden ganzen Tag im Blick.",
+    "copy": {
+      "left": 100,
+      "right": 1220,
+      "bottom": 779.078125,
+      "overflow": false
+    },
+    "panels": [],
+    "screenshots": [
+      {
+        "src": "/2026-10-29-localized/captures/de/nutrition.png",
+        "naturalRatio": 0.459954233409611,
+        "ratio": 0.4599560417849999
+      },
+      {
+        "src": "/2026-10-29-localized/captures/de/nutrition-focus.png",
+        "naturalRatio": 1.0418181818181818,
+        "ratio": 1.0418397551933911
+      }
+    ]
+  }
+]
