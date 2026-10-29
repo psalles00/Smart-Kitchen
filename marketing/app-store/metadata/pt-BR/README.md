@@ -1,6 +1,6 @@
 # Metadados da App Store — Savoria / pt-BR
 
-Preparados em 29/10/2026. Proposta editorial; não enviada ao App Store Connect.
+Preparados em 29/10/2026, salvos e conferidos no App Store Connect. A submissão completa à revisão ainda depende das capturas de iPad; acompanhar `docs/release/app-store-submission-2026-10-29.md`.
 
 - `description.txt`: texto simples para o campo Descrição.
 - `metadata.json`: proposta de nome, subtítulo, texto promocional e palavras-chave.

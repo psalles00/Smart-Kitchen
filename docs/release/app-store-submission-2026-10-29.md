@@ -21,7 +21,7 @@ Pedro autorizou traduzir a descrição para os demais idiomas, conferir a pronti
 ## Pendências reais
 
 - [ ] Gerar/revisar/enviar capturas de iPad 13 polegadas | Executor comigo; CoreSimulator compartilhado precisa de recuperação autorizada.
-- [ ] Confirmar o fim do processamento das imagens | Apple; verificar a validação atual antes de enviar.
+- [x] Processamento de iPhone concluído: na validação posterior, a Apple deixou de apontar imagens em processamento e indicou somente a falta da captura de iPad de 13 polegadas.
 - [ ] Incluir o app com os dois planos e enviar o rascunho à revisão | Execução comigo após resolver as capturas e os requisitos acima.
 
 ## Captura de iPad: diagnóstico e recuperação preservada
@@ -33,3 +33,13 @@ A execução seguinte não conseguiu instalar/abrir o runner: `Mach error -308 /
 Resultados reprovados/inconclusivos são preservados em `SubmissionFinal/iPad-en.xcresult`, `iPad-en-current.xcresult` e `iPad-en-stable.xcresult`, com logs correspondentes; não contam como capturas aprovadas. Plano de retomada: recuperar o serviço com autorização, rodar o caso `AdaptiveWorkspaceRenderingTests/testAppStoreDemonstrationCaptures` em dados somente em memória nos sete idiomas, exportar os anexos, verificar dimensões/layout e enviar. Nenhuma nova chamada de IA é necessária.
 
 Pedro foi consultado para reiniciar o CoreSimulator porque o serviço é compartilhado com outros trabalhos. A coordenação de Device Hub anteriormente autorizada foi usada para avisar “Rotina App”, preservando seus uploads e sem solicitar encerramento dos processos alheios. O servidor HTTP local temporário de metadados foi encerrado após a transferência dos textos; abas auxiliares concluídas também foram fechadas.
+
+## Recuperação e capturas finais
+
+Pedro autorizou reiniciar o CoreSimulator compartilhado. As outras tarefas foram avisadas; os simuladores foram encerrados e o serviço reiniciado sem apagar dados. O iPad concluiu seu boot em quatro segundos.
+
+A incompatibilidade de símbolos reapareceu e foi localizada na configuração desta execução: ela ainda referenciava a pasta antiga `Savoria-2-Simulator/Products`, enquanto a recompilação atual gerou `Savoria-2-Simulator/Build/Products`. O arquivo novo `Savoria_iphonesimulator27.1-arm64.xctestrun` e seus caminhos passaram a ser usados. Todas as 697 referências Savoria do bundle de testes foram encontradas no dylib atual. Os erros anteriores não demonstram defeito exclusivo do fornecedor.
+
+A primeira rodada renderizada exibiu textos misturados e o botão Debug na página inicial. Essas capturas não foram enviadas. Os argumentos do processo foram alinhados ao idioma da janela e foram escolhidas as views originais de listas, receitas e nutrição, que não exibem controles de desenvolvimento. A rodada `iPad-localized-*` passou nos sete idiomas, gerando 21 capturas em 2064×2752 sem alpha. Revisão visual e títulos localizados aprovados por OCR local; corrigida a chave do idioma usada pelo reconhecedor japonês, sem mudar as expectativas.
+
+As capturas finais estão em `marketing/app-store/2026-10-29-ipad-localized`. Três arquivos próprios foram enviados por idioma suportado; coreano, chinês e árabe herdam inglês, confirmado no Gerenciador de mídia. A exigência de captura de iPad desapareceu da validação. Aguarda-se somente o processamento pela Apple para poder incluir o app e submeter o rascunho. O iPad foi encerrado ao terminar, liberando recursos; coordenação com Rotina concluída.

@@ -1,0 +1,149 @@
+[
+  {
+    "language": "en",
+    "file": "01-pantry.png",
+    "expectedHeading": "Lists",
+    "headingVerified": true,
+    "sha256": "a13c14d9cf64793eb06f56b1455582af49db319060a533d7a0695fe7d1e4df4d"
+  },
+  {
+    "language": "en",
+    "file": "02-recipes.png",
+    "expectedHeading": "Recipes",
+    "headingVerified": true,
+    "sha256": "6c3c7f33e2535d1787dadef84598ac34ff3acdbf82314f8a2accfae2cf8566bc"
+  },
+  {
+    "language": "en",
+    "file": "03-nutrition.png",
+    "expectedHeading": "Nutrition",
+    "headingVerified": true,
+    "sha256": "c242e0a9e5cf6a8513768e5b2d81aac5a55bb6b584275e6254a4ed75bb06b649"
+  },
+  {
+    "language": "pt-BR",
+    "file": "01-pantry.png",
+    "expectedHeading": "Listas",
+    "headingVerified": true,
+    "sha256": "b4dbba58bae9a48a0a045a97affa212d89c4d62a253547ffa0e141ab72cdc9e8"
+  },
+  {
+    "language": "pt-BR",
+    "file": "02-recipes.png",
+    "expectedHeading": "Receitas",
+    "headingVerified": true,
+    "sha256": "f323f5ea542d815120f174b77f09ef4e5a2d7397ae5eacc0d301ffc52dfbf6bb"
+  },
+  {
+    "language": "pt-BR",
+    "file": "03-nutrition.png",
+    "expectedHeading": "Nutrição",
+    "headingVerified": true,
+    "sha256": "1103d4f95246186e69c1b1db976faf33a0cefd0d91f670b1bb3bb24cc53d879c"
+  },
+  {
+    "language": "es",
+    "file": "01-pantry.png",
+    "expectedHeading": "Listas",
+    "headingVerified": true,
+    "sha256": "feef219ae5fad1e0c364800f8035924712a60cf41585a1119297f5ce275732c2"
+  },
+  {
+    "language": "es",
+    "file": "02-recipes.png",
+    "expectedHeading": "Recetas",
+    "headingVerified": true,
+    "sha256": "5f1fb79bd77168b390be5ca51282520a7236cb57d5e3855be66e372ff7c21161"
+  },
+  {
+    "language": "es",
+    "file": "03-nutrition.png",
+    "expectedHeading": "Nutrición",
+    "headingVerified": true,
+    "sha256": "364005717c8d4c1c47d5d8dcf5824c12a78313e3f6604de08fadf762b19fb335"
+  },
+  {
+    "language": "fr",
+    "file": "01-pantry.png",
+    "expectedHeading": "Listes",
+    "headingVerified": true,
+    "sha256": "2074213a22f12e3a2a3e97e2c86ab63b44095e285213c930797915f8a615da7e"
+  },
+  {
+    "language": "fr",
+    "file": "02-recipes.png",
+    "expectedHeading": "Recettes",
+    "headingVerified": true,
+    "sha256": "e46288dc7e5cb101cb146614a1d39b2324051f40dd219869bcff6ee488399f3a"
+  },
+  {
+    "language": "fr",
+    "file": "03-nutrition.png",
+    "expectedHeading": "Nutrition",
+    "headingVerified": true,
+    "sha256": "f36fe4ed9f3a14d384c17e27e5dc3656b4e660360316a4626f1f363cc16c9384"
+  },
+  {
+    "language": "de",
+    "file": "01-pantry.png",
+    "expectedHeading": "Listen",
+    "headingVerified": true,
+    "sha256": "03b69bd17d312e631acabc3c357da7a859764950b5d7b1e377d48677b8d49ff0"
+  },
+  {
+    "language": "de",
+    "file": "02-recipes.png",
+    "expectedHeading": "Rezepte",
+    "headingVerified": true,
+    "sha256": "08d8abb71da9ea298adbd8a98e1eec1727e692222beca412f9c2e72c64016063"
+  },
+  {
+    "language": "de",
+    "file": "03-nutrition.png",
+    "expectedHeading": "Ernährung",
+    "headingVerified": true,
+    "sha256": "8a470797c8f5523c3ee992d081f408e2931260f020fa73e5fee97edba121aa63"
+  },
+  {
+    "language": "it",
+    "file": "01-pantry.png",
+    "expectedHeading": "Liste",
+    "headingVerified": true,
+    "sha256": "3567926edab4c32f60fec6187a0656b27195a089ca3dd20ade63b5a27ea3c518"
+  },
+  {
+    "language": "it",
+    "file": "02-recipes.png",
+    "expectedHeading": "Ricette",
+    "headingVerified": true,
+    "sha256": "0f640c1c8c030bedb0963fc9abe48f8b8599afdb096a9b803f5808f6afa71549"
+  },
+  {
+    "language": "it",
+    "file": "03-nutrition.png",
+    "expectedHeading": "Nutrizione",
+    "headingVerified": true,
+    "sha256": "625aeff5e151c99d1265c465bc0f6977d330942fcaffc87d406b1f4210d769f9"
+  },
+  {
+    "language": "ja",
+    "file": "01-pantry.png",
+    "expectedHeading": "リスト",
+    "headingVerified": true,
+    "sha256": "65f5003ef3230aa673e8090a69c5f6b4c77379c55e951ebb2346b053b80b56ce"
+  },
+  {
+    "language": "ja",
+    "file": "02-recipes.png",
+    "expectedHeading": "レシピ",
+    "headingVerified": true,
+    "sha256": "863c1db15687ad359190760c0fc5ad5bfdb2107daec282ff84be2b9874e7d8cc"
+  },
+  {
+    "language": "ja",
+    "file": "03-nutrition.png",
+    "expectedHeading": "栄養",
+    "headingVerified": true,
+    "sha256": "e19d098e051b80d75525e71b4431528ae01aa89683445dca90700ca4096da7eb"
+  }
+]

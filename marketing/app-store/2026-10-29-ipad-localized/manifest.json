@@ -1,0 +1,180 @@
+{
+  "device": "iPad Pro 13-inch (M5)",
+  "data": "isolated in-memory demonstration data",
+  "viewRendering": "production ListsTabView, RecipesView and NutrientsView; no debug home button",
+  "languages": [
+    {
+      "language": "en",
+      "images": [
+        {
+          "file": "01-pantry.png",
+          "width": 2064,
+          "height": 2752,
+          "alpha": false
+        },
+        {
+          "file": "02-recipes.png",
+          "width": 2064,
+          "height": 2752,
+          "alpha": false
+        },
+        {
+          "file": "03-nutrition.png",
+          "width": 2064,
+          "height": 2752,
+          "alpha": false
+        }
+      ]
+    },
+    {
+      "language": "pt-BR",
+      "images": [
+        {
+          "file": "01-pantry.png",
+          "width": 2064,
+          "height": 2752,
+          "alpha": false
+        },
+        {
+          "file": "02-recipes.png",
+          "width": 2064,
+          "height": 2752,
+          "alpha": false
+        },
+        {
+          "file": "03-nutrition.png",
+          "width": 2064,
+          "height": 2752,
+          "alpha": false
+        }
+      ]
+    },
+    {
+      "language": "es",
+      "images": [
+        {
+          "file": "01-pantry.png",
+          "width": 2064,
+          "height": 2752,
+          "alpha": false
+        },
+        {
+          "file": "02-recipes.png",
+          "width": 2064,
+          "height": 2752,
+          "alpha": false
+        },
+        {
+          "file": "03-nutrition.png",
+          "width": 2064,
+          "height": 2752,
+          "alpha": false
+        }
+      ]
+    },
+    {
+      "language": "fr",
+      "images": [
+        {
+          "file": "01-pantry.png",
+          "width": 2064,
+          "height": 2752,
+          "alpha": false
+        },
+        {
+          "file": "02-recipes.png",
+          "width": 2064,
+          "height": 2752,
+          "alpha": false
+        },
+        {
+          "file": "03-nutrition.png",
+          "width": 2064,
+          "height": 2752,
+          "alpha": false
+        }
+      ]
+    },
+    {
+      "language": "de",
+      "images": [
+        {
+          "file": "01-pantry.png",
+          "width": 2064,
+          "height": 2752,
+          "alpha": false
+        },
+        {
+          "file": "02-recipes.png",
+          "width": 2064,
+          "height": 2752,
+          "alpha": false
+        },
+        {
+          "file": "03-nutrition.png",
+          "width": 2064,
+          "height": 2752,
+          "alpha": false
+        }
+      ]
+    },
+    {
+      "language": "it",
+      "images": [
+        {
+          "file": "01-pantry.png",
+          "width": 2064,
+          "height": 2752,
+          "alpha": false
+        },
+        {
+          "file": "02-recipes.png",
+          "width": 2064,
+          "height": 2752,
+          "alpha": false
+        },
+        {
+          "file": "03-nutrition.png",
+          "width": 2064,
+          "height": 2752,
+          "alpha": false
+        }
+      ]
+    },
+    {
+      "language": "ja",
+      "images": [
+        {
+          "file": "01-pantry.png",
+          "width": 2064,
+          "height": 2752,
+          "alpha": false
+        },
+        {
+          "file": "02-recipes.png",
+          "width": 2064,
+          "height": 2752,
+          "alpha": false
+        },
+        {
+          "file": "03-nutrition.png",
+          "width": 2064,
+          "height": 2752,
+          "alpha": false
+        }
+      ]
+    }
+  ],
+  "storefronts": {
+    "en-US": "en",
+    "pt-BR": "pt-BR",
+    "es-ES": "es",
+    "fr-FR": "fr",
+    "de-DE": "de",
+    "it": "it",
+    "ja": "ja",
+    "ko": "en",
+    "zh-Hans": "en",
+    "ar-SA": "en"
+  }
+}
