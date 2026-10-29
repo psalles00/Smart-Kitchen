@@ -67,3 +67,25 @@ nesta configuração dos preços.
 
 Referências oficiais: [StoreKit Testing](https://developer.apple.com/documentation/storekittest/sktestsession)
 e [Product.displayPrice](https://developer.apple.com/documentation/storekit/product/displayprice).
+
+## Reteste de 29/10/2026 — storefront explícito
+
+A suíte local completa terminou com 194 aprovados, 11 ignorados e um teste
+reprovado: o catálogo brasileiro retornou USD 14,99 / 7,99. O arquivo fonte e
+o catálogo empacotado continham os valores corretos e `_storefront: BRA`.
+
+O teste agora fixa `SKTestSession.storefront = "BRA"` e `locale = pt_BR`,
+restaurando os overrides anteriores ao terminar. A Apple documenta ambiente
+compartilhado entre sessões e storefront padrão USA. Nenhuma transação é
+comprada, excluída ou limpa. Os preços do app não foram alterados.
+
+Em `storefront-explicit.xcresult`, moeda BRL e períodos passaram; os preços
+numéricos retornaram **99 / 49**, mantendo a reprovação por centavos observada
+em 14/10. Reutilizamos aquela investigação de serialização; não repetimos
+consultas pagas ou diagnósticos equivalentes. Este reteste separa a região
+incorreta do problema decimal, mas não comprova preços nem compras Sandbox.
+
+Logs/resultados: pasta `Builds/Savoria-Nutrition-Final-20261028`, arquivos
+`appstore-local-suite.xcresult`, `storefront-build.log` e
+`storefront-explicit.xcresult`. SDK 27.1, iPhone 17 Pro virtual iOS 27.0.
+[Documentação oficial de storefront](https://developer.apple.com/documentation/storekittest/sktestsession/storefront).

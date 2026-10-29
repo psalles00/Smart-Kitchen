@@ -59,6 +59,17 @@ final class SavoriaDebugTests: XCTestCase {
         let url = try XCTUnwrap(Bundle.main.url(forResource: "Configuration", withExtension: "storekit"))
         let session = try SKTestSession(contentsOf: url)
         session.disableDialogs = true
+        let previousStorefront = session.storefront
+        let previousLocale = session.locale
+        defer {
+            session.storefront = previousStorefront
+            session.locale = previousLocale
+        }
+        // SKTestSession shares its environment across sessions. This test's
+        // Brazilian prices must not depend on another session's region.
+        session.storefront = "BRA"
+        session.locale = Locale(identifier: "pt_BR")
+        XCTAssertEqual(session.storefront, "BRA")
         let products = try await Product.products(for: [SubscriptionManager.annualProductID, SubscriptionManager.monthlyProductID])
         XCTAssertEqual(products.count, 2)
         let annual = try XCTUnwrap(products.first { $0.id == SubscriptionManager.annualProductID })

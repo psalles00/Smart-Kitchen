@@ -23,9 +23,9 @@ de privacidade e de validação externa. Este arquivo não substitui a aprovaç�
 
 | Área | Evidência atual | Estado / próxima prova necessária |
 | --- | --- | --- |
-| 2.1 — app completo e estável | Builds Debug iOS/macOS passaram; evidências de funcionalidades em `docs/testing-*.md` | Confrontar cobertura com o candidato final, incluindo falhas de rede e permissões; não generalizar nove testes para o app inteiro |
-| SDK, assinatura, Release e extensões | `project.yml` preserva identidade e zera chaves privadas dos provedores em Release | Gerar e inspecionar candidato Release atual; archive antigo de maio não serve como candidato |
-| Depuração ausente em produção | Simulação Premium e credencial OpenRouter protegidas por `#if DEBUG` no código | Conferir o binário/interface Release, não apenas Debug |
+| 2.1 — app completo e estável | Builds Debug iOS/macOS passaram; evidências de funcionalidades em `docs/testing-*.md` | Suíte atual: 194 aprovados, 11 ignorados, 1 reprovado no catálogo StoreKit. Provas de hardware, permissões e provedores reais não decorrem dos mocks |
+| SDK, assinatura, Release e extensões | `project.yml` preserva identidade e zera chaves privadas dos provedores em Release | Archive atual gerado e inspecionado em 29/10; assinatura local Apple Development. Exportação/distribuição e certificado Apple Distribution continuam pendentes |
+| Depuração ausente em produção | Simulação Premium e credencial OpenRouter protegidas por `#if DEBUG` no código | Binários e interface Release conferidos; marcadores examinados de debug ausentes |
 | 5.1.2(i) — consentimento para IA externa | Gate local explícito em Supabase, OpenAI, OpenRouter e Exa; revogação nas Configurações; seis textos nos sete idiomas | Implementado; nove testes locais passaram. Aviso/recusa conferidos no Mac Release e teste nativo atual de recusa passou no iPhone virtual, sem envio de conteúdo |
 | 5.1.1 — política acessível e fiel | Links usados pelo app responderam HTTP 200 em 28/10 | Texto corrigido e publicado em 28/10; conteúdo atual e acesso sem login conferidos no endereço usado pelo app |
 | Declaração de dados | Manifesto presente, sem tracking, com quatro categorias de Required Reason APIs | Manifesto atualizado e empacotado com sete categorias; sem tracking. Formulário do ASC ainda não conferido nem atualizado |
@@ -149,3 +149,26 @@ de privacidade e de validação externa. Este arquivo não substitui a aprovaç�
 - O formulário App Privacy no ASC continua **pendente**. Esta publicação e o
   manifesto não preenchem o formulário nem comprovam condições contratuais ou
   configurações de retenção de todas as rotas. Não houve inferência paga nesta rodada.
+
+## Archive e suíte final local — 29/10
+
+- `appstore-local-suite.xcresult`: **206 testes: 194 aprovados, 11 ignorados,
+  1 reprovado**. Falha única: `testBrazilSubscriptionCatalogueMatchesAnnualAndMonthlyPlans`.
+  Não classificamos a suíte como aprovada. Testes optativos de inferência real,
+  migração física e interação manual não foram habilitados. Nenhuma chamada
+  paga foi feita nesta rodada; os testes de rede usam respostas locais.
+- O reteste `storefront-explicit.xcresult` fixou Brasil explicitamente: moeda e
+  períodos passaram, mas a API retornou 99 / 49. A diferença de centavos já
+  documentada em 14/10 permanece. Expectativas 99,90 / 49,90 preservadas.
+  Ver `docs/testing-storekit-prices.md`; Sandbox real continua pendente.
+- `Builds/Savoria-AppStore-20261028/Savoria.xcarchive`: **ARCHIVE SUCCEEDED**,
+  versão 3.6.2 (1), arm64, SDK iphoneos27.1, mínimo iOS 17.0.
+  Fonte de produção `b3e9eeeb` (commits seguintes até `d86b64e1` só documentação).
+- Principal, ShareExtension e Widgets passaram `codesign --verify --deep --strict`.
+  Bundle/Team corretos; containers iCloud na ordem existente, App Groups do
+  principal e ShareExtension preservados. Chaves OpenAI/OpenRouter/Exa vazias
+  no Info.plist do archive; sete categorias de privacidade empacotadas.
+- Assinado com **Apple Development**, sem certificado Apple Distribution local.
+  Archive local válido não equivale a exportação App Store nem aceitação do
+  servidor Apple. Não houve upload ou nova tentativa de login. Retenção: este
+  único candidato até finalizar a auditoria/envio; reutilizar em vez de recriar.
