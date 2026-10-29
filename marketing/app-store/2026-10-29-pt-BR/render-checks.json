@@ -71,10 +71,10 @@
     "copy": [
       {
         "title": "Da despensa\nao mercado.\nE de volta.",
-        "bottom": 789.671875,
+        "bottom": 762.15625,
         "right": 1220,
-        "left": 205,
-        "height": 639.671875,
+        "left": 260,
+        "height": 612.15625,
         "overflow": false
       }
     ],
@@ -131,6 +131,31 @@
     ],
     "copy": [
       {
+        "title": "Receitas, listas\ne nutrição.\nTudo conversa.",
+        "bottom": 858.078125,
+        "right": 1220,
+        "left": 190,
+        "height": 598.078125,
+        "overflow": false
+      }
+    ],
+    "images": []
+  },
+  {
+    "page": 6,
+    "errors": [],
+    "fonts": [
+      {
+        "family": "Bricolage",
+        "status": "loaded"
+      },
+      {
+        "family": "Inter",
+        "status": "loaded"
+      }
+    ],
+    "copy": [
+      {
         "title": "Sua receita.\nUm passo\nde cada vez.",
         "bottom": 829.65625,
         "right": 1220,
@@ -153,7 +178,7 @@
     ]
   },
   {
-    "page": 6,
+    "page": 7,
     "errors": [],
     "fonts": [
       {
@@ -178,7 +203,7 @@
     "images": []
   },
   {
-    "page": 7,
+    "page": 8,
     "errors": [],
     "fonts": [
       {
@@ -209,7 +234,7 @@
     ]
   },
   {
-    "page": 8,
+    "page": 9,
     "errors": [],
     "fonts": [
       {
@@ -243,30 +268,5 @@
         "ratio": 1.0418397551933911
       }
     ]
-  },
-  {
-    "page": 9,
-    "errors": [],
-    "fonts": [
-      {
-        "family": "Bricolage",
-        "status": "loaded"
-      },
-      {
-        "family": "Inter",
-        "status": "loaded"
-      }
-    ],
-    "copy": [
-      {
-        "title": "Receitas, listas\ne nutrição.\nTudo conversa.",
-        "bottom": 858.078125,
-        "right": 1220,
-        "left": 190,
-        "height": 598.078125,
-        "overflow": false
-      }
-    ],
-    "images": []
   }
 ]

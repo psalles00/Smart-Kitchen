@@ -40,6 +40,15 @@ que você já tem em casa.
 
 ## 05
 
+Receitas, listas
+e nutrição.
+Tudo conversa.
+
+Aproveite os ingredientes da despensa,
+organize as compras e cuide da alimentação.
+
+## 06
+
 Sua receita.
 Um passo
 de cada vez.
@@ -47,7 +56,7 @@ de cada vez.
 Ingredientes, porções e modo de preparo.
 Tudo à mão enquanto você cozinha.
 
-## 06
+## 07
 
 Foto, texto
 ou voz.
@@ -56,7 +65,7 @@ Você escolhe.
 Registre suas refeições do seu jeito.
 Revise as estimativas antes de salvar.
 
-## 07
+## 08
 
 Da rede social
 para o seu
@@ -65,7 +74,7 @@ caderno.
 Viu no Instagram, TikTok ou YouTube?
 Toque em compartilhar e envie ao Savoria.
 
-## 08
+## 09
 
 Entenda melhor
 o que você
@@ -74,18 +83,9 @@ come.
 Acompanhe calorias e nutrientes
 ao longo do seu dia.
 
-## 09
-
-Receitas, listas
-e nutrição.
-Tudo conversa.
-
-Aproveite os ingredientes da despensa,
-organize as compras e cuide da alimentação.
-
 ## Textos complementares
 
 - 02: Contagem inteligente. Exemplo ilustrativo: cinco dias registrados, média de 1.880 kcal.
 - 04: Ideias com a sua despensa. Ideias rápidas, diferentes e com o que você tem. Demonstração simplificada do assistente.
-- 06: Fotografe seu prato. Digite o que comeu. Ou envie um áudio. Áudio enviado · 0:08. Demonstração simplificada · estimativas revisáveis.
-- 07: Instagram / TikTok / YouTube → Compartilhar → Savoria. Também importe receitas de fotos e arquivos.
+- 07: Fotografe seu prato. Digite o que comeu. Ou envie um áudio. Áudio enviado · 0:08. Demonstração simplificada · estimativas revisáveis.
+- 08: Instagram / TikTok / YouTube → Compartilhar → Savoria. Também importe receitas de fotos e arquivos.

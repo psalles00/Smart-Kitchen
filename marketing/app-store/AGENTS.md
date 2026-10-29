@@ -11,3 +11,8 @@
   sólidas indesejadas em superfícies claras. Não deixar ícones cobrirem textos.
 - Diferenciar prints reais de demonstrações simplificadas. Preservar informações
   relevantes ao reorganizar a narrativa e não inventar funcionalidades do app.
+
+- Neste conjunto inspirado no Rotina, manter a entrada/divisão do fundo claro
+  já na segunda imagem e a grade de ícones em degradê no meio da sequência.
+  A grade deve compartilhar cena, ponto de fuga e máscara entre as páginas
+  vizinhas; não transferi-la ao final nem atrasar a divisão ao reorganizar peças.

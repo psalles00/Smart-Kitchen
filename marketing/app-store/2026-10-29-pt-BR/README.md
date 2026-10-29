@@ -14,8 +14,9 @@ a moldura e o destaque de elementos. Paleta quente de pôr do sol.
 inteiro é um panorama de 11.880 × 2.868, recortado em nove partes consecutivas.
 Curvas, iluminação e shader compartilham coordenadas absolutas. Ao reorganizar,
 recompor o panorama e conferir todas as junções, tanto isoladas como na sequência.
-A grade da peça 09 usa o mesmo contorno da curva clara, sem uma segunda superfície
-branca atravessando o fundo. Regras aplicáveis também em `../AGENTS.md`.
+A divisão começa na peça 02, a área clara ocupa o centro e retorna ao fundo
+quente na peça 06. A grade de ícones em degradê atravessa as peças 04–06,
+com destaque na peça 05; usa uma só cena com coordenadas compartilhadas. Regras aplicáveis também em `../AGENTS.md`.
 
 ## Ordem e comunicação
 
@@ -26,13 +27,13 @@ branca atravessando o fundo. Regras aplicáveis também em `../AGENTS.md`.
    automaticamente, nos dois sentidos. Prints sem a opção “Para depois”.
 4. Ideias com a despensa: composição simplificada com contexto de ingredientes e
    quatro cartões, mantendo margens internas e sem a borda preta inferior.
-5. Receita e ingredientes disponíveis.
-6. Foto, texto e voz: câmera com visor e obturador, entrada digitada e áudio enviado
+5. Integração de receitas, listas e alimentação, com a grade de ícones em degradê.
+6. Receita e ingredientes disponíveis; transição de volta ao fundo quente.
+7. Foto, texto e voz: câmera com visor e obturador, entrada digitada e áudio enviado
    com onda, duração e transcrição ilustrativa. Estimativas revisáveis.
-7. Instagram, TikTok e YouTube → botão Compartilhar → Savoria. Preservada a
+8. Instagram, TikTok e YouTube → botão Compartilhar → Savoria. Preservada a
    informação sobre importação de receitas por fotos e arquivos.
-8. Calorias e nutrientes.
-9. Integração de receitas, listas e alimentação.
+9. Calorias e nutrientes.
 
 ## Origem dos recursos
 
@@ -46,7 +47,7 @@ nesta revisão gráfica; não houve alteração de funcionalidade do app.
 
 Peça 02: infográfico ilustrativo, cinco dias somando 9.400 kcal, média 1.880 kcal.
 A explicação foi confrontada com `NutritionAveragesService` e `SmartCountStepView`.
-Peças 04 e 06: demonstrações simplificadas autorizadas, indicadas nas próprias artes;
+Peças 04 e 07: demonstrações simplificadas autorizadas, indicadas nas próprias artes;
 não são prints literais nem evidência de inferência real. Fotos e ícones de comida
 vêm dos recursos existentes do app. `crop-sources.json` registra origem dos recortes.
 Moldura e fontes vêm do material de referência do Rotina.
@@ -83,3 +84,14 @@ O renderer usa Playwright, Sharp e Chrome headless locais, encerrando o navegado
 e o servidor ao terminar. O render completo valida as oito junções e atualiza os
 manifestos. Para revisar manualmente, abrir a sequência e as nove imagens em alta.
 Nenhuma chamada paga, inferência de IA ou publicação no App Store Connect.
+
+## Ajuste de fidelidade ao original — 29/10
+
+A ordem editorial foi ajustada para trazer a integração à quinta peça. Assim,
+a primeira entrada da curva clara acontece já na segunda imagem, o centro
+recebe a grade de alimentos em perspectiva e degradê, e a sexta peça devolve
+a composição ao pôr do sol. A cena da grade ocupa 3.960 px contínuos, recortados
+nas peças 04, 05 e 06, com o mesmo ponto de fuga e máscara global.
+
+Nenhum texto de funcionalidade foi removido; foram atualizados somente sua ordem,
+os contrastes e os fundos. As oito junções são revalidadas no render completo.
