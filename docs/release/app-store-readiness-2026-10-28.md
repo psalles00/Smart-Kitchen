@@ -1,11 +1,14 @@
 # Preparação para a App Store — fechamento em 29/10/2026
 
-**Preparação técnica ainda pendente da investigação do valor decimal StoreKit.**
-A conclusão anterior foi prematura: compra anual e restauração Sandbox não
-explicam nem resolvem a falha numérica do teste local. Imagens, descrição,
-upload/seleção e envio continuam fora do escopo autorizado. O pacote existe,
-mas não deve ser apresentado como liberado tecnicamente sem resolver essa
-falha ou comprovar e delimitar sua causa externa. Não houve upload ou revisão Apple.
+**Falha decimal isolada fora do Savoria; correção do ambiente Apple pendente.**
+O mesmo truncamento foi reproduzido em um aplicativo UIKit/XCTest independente,
+sem código, inicialização ou dados do Savoria. Não é uma conversão do app.
+A suíte local continua reprovando o contrato numérico; não foi declarada verde.
+O Savoria usa o preço formatado da Apple, e compra anual/restore Sandbox foram
+confirmados separadamente. Não existe correção de produção justificada por esta
+falha local. O reproduzidor permanece local; Pedro pediu expressamente não enviar relato
+à Apple e autorizou avaliar preços inteiros como alternativa. Imagens, descrição, upload/seleção e envio do app
+continuam fora desta entrega. O pacote não foi enviado nem aprovado pela Apple.
 
 ## Pacote final
 
@@ -168,3 +171,36 @@ correspondente na pasta de testes acima.
 Não foi usado `XCTSkip`/`XCTExpectFailure`, preço inteiro como expectativa,
 correção artificial do valor recebido, nem comparação somente da string para
 transformar essa falha em sucesso. A discrepância permanece aberta.
+
+## Isolamento concluído — resposta ao questionamento de Pedro
+
+`decimal-api-boundary-fixed.xcresult`: StoreKit 1 e 2 retornam 99/49 e a
+resposta Apple contém `priceString` com vírgula. Alterar apenas idioma/região
+do processo não corrigiu (`decimal-process-enUS.xcresult`).
+
+O aplicativo mínimo UIKit e XCTest em `docs/reproductions/storekit-decimal/`
+não importa Savoria, SwiftData ou seus serviços; usa IDs de produto próprios,
+catálogo sintético com os mesmos preços e nenhuma compra. O teste independente
+reproduziu a falha em duas execuções, incluindo o script portátil (1 teste,
+2 comparações numéricas reprovadas). Isso comprova o defeito fora do app nesta
+combinação de toolchain/runtime, sem presumir qual componente privado da Apple
+é responsável ou que todos os ambientes de produção estão afetados.
+
+Não há uso de `Product.price` em cálculos no código de produção examinado; o
+paywall usa `Product.displayPrice`. Não foi aplicado arredondamento artificial,
+parsing de string localizada ou valor fixo para modificar respostas da Apple.
+O teste numérico permanece estrito. Xcode ativo 27.1; alternativa instalada
+27.0, mais antiga. O runtime 27.1 não executou a comparação e não foi contado
+como prova. O próximo fechamento do defeito numérico depende de correção ou
+ambiente Apple compatível validado pelo reproduzidor.
+
+Instruções globais reforçadas em `/Users/pedrosalles/.codex/AGENTS.md`, seção
+Não encerrar prematuramente, 29/10/2026. Não houve nova inferência, compra,
+cobrança, mudança de produção, persistência, Team ou capabilities.
+
+### Alternativa autorizada em andamento
+
+Pedro autorizou resolver sem enviar relato à Apple, exemplificando a alteração
+real para R$ 99/ano e R$ 49/mês. A Apple oferece ambos nos pontos adicionais.
+Mensal R$ 49,00 já salvo e relido no ASC; anual, catálogo/app e testes ainda
+em atualização. Não interpretar somente a troca de expectativas como solução.

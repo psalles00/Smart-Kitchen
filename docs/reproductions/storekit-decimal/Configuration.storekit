@@ -1,0 +1,56 @@
+{
+  "identifier": "ED98D3B0-050A-4E15-B315-86279AF177DB",
+  "nonRenewingSubscriptions": [],
+  "products": [],
+  "settings": {
+    "_compatibilityTimeRate": 1,
+    "_failTransactionsEnabled": false,
+    "_locale": "pt_BR",
+    "_storefront": "BRA",
+    "_storeKitErrors": [],
+    "_disableDialogs": false
+  },
+  "subscriptionGroups": [
+    {
+      "id": "21484567",
+      "localizations": [],
+      "name": "Decimal Reproduction",
+      "subscriptions": [
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "99.90",
+          "familyShareable": true,
+          "groupNumber": 1,
+          "internalID": "21484568",
+          "introductoryOffer": null,
+          "localizations": [],
+          "productID": "com.example.storekitdecimal.annual",
+          "recurringSubscriptionPeriod": "P1Y",
+          "referenceName": "Annual",
+          "subscriptionGroupID": "21484567",
+          "type": "RecurringSubscription"
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "49.90",
+          "familyShareable": true,
+          "groupNumber": 2,
+          "internalID": "21484570",
+          "introductoryOffer": null,
+          "localizations": [],
+          "productID": "com.example.storekitdecimal.monthly",
+          "recurringSubscriptionPeriod": "P1M",
+          "referenceName": "Monthly",
+          "subscriptionGroupID": "21484567",
+          "type": "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version": {
+    "major": 4,
+    "minor": 0
+  }
+}

@@ -58,6 +58,8 @@ final class SavoriaDebugTests: XCTestCase {
     func testBrazilSubscriptionCatalogueMatchesAnnualAndMonthlyPlans() async throws {
         let url = try XCTUnwrap(Bundle.main.url(forResource: "Configuration", withExtension: "storekit"))
         let session = try SKTestSession(contentsOf: url)
+        // Keep the local StoreKit session alive across the asynchronous product lookup.
+        defer { withExtendedLifetime(session) {} }
         session.disableDialogs = true
         let previousStorefront = session.storefront
         let previousLocale = session.locale
@@ -74,6 +76,17 @@ final class SavoriaDebugTests: XCTestCase {
         XCTAssertEqual(products.count, 2)
         let annual = try XCTUnwrap(products.first { $0.id == SubscriptionManager.annualProductID })
         let monthly = try XCTUnwrap(products.first { $0.id == SubscriptionManager.monthlyProductID })
+        // Compare both Apple APIs against the same local server response. This
+        // keeps a decimal failure actionable without changing the expected price.
+        let legacy = try await LegacyPriceProbe().load([SubscriptionManager.annualProductID, SubscriptionManager.monthlyProductID])
+        for product in [annual, monthly] {
+            let raw = String(decoding: product.jsonRepresentation, as: UTF8.self)
+            let attachment = XCTAttachment(string: "id=\(product.id)\nStoreKit2=\(product.price)\nStoreKit1=\(String(describing: legacy[product.id]))\ndisplay=\(product.displayPrice)\njson=\(raw)")
+            attachment.name = "StoreKit price boundary - \(product.id)"
+            attachment.lifetime = .keepAlways
+            add(attachment)
+            print("STOREKIT_PRICE_BOUNDARY id=\(product.id) sk2=\(product.price) sk1=\(String(describing: legacy[product.id])) display=\(product.displayPrice) json=\(raw)")
+        }
         XCTAssertEqual(annual.price, Decimal(string: "99.90"))
         XCTAssertEqual(monthly.price, Decimal(string: "49.90"))
         XCTAssertEqual(annual.priceFormatStyle.currencyCode, "BRL")
@@ -82,6 +95,40 @@ final class SavoriaDebugTests: XCTestCase {
         XCTAssertEqual(annual.subscription?.subscriptionPeriod.value, 1)
         XCTAssertEqual(monthly.subscription?.subscriptionPeriod.unit, .month)
         XCTAssertEqual(monthly.subscription?.subscriptionPeriod.value, 1)
+    }
+
+    @MainActor
+    private final class LegacyPriceProbe: NSObject, SKProductsRequestDelegate {
+        private var continuation: CheckedContinuation<[String: Decimal], Error>?
+        private var request: SKProductsRequest?
+
+        func load(_ identifiers: Set<String>) async throws -> [String: Decimal] {
+            defer { request?.cancel(); request = nil }
+            return try await withCheckedThrowingContinuation { continuation in
+                self.continuation = continuation
+                let request = SKProductsRequest(productIdentifiers: identifiers)
+                self.request = request
+                request.delegate = self
+                request.start()
+            }
+        }
+
+        nonisolated func productsRequest(_ request: SKProductsRequest, didReceive response: SKProductsResponse) {
+            let prices = Dictionary(uniqueKeysWithValues: response.products.map {
+                ($0.productIdentifier, $0.price.decimalValue)
+            })
+            Task { @MainActor in
+                continuation?.resume(returning: prices)
+                continuation = nil
+            }
+        }
+
+        nonisolated func request(_ request: SKRequest, didFailWithError error: Error) {
+            Task { @MainActor in
+                continuation?.resume(throwing: error)
+                continuation = nil
+            }
+        }
     }
 
     func testSimulatedPlansPersistLocallyWithoutChangingEntitlement() {

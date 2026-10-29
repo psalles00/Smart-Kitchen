@@ -108,3 +108,19 @@ converter o teste decimal local reprovado em aprovado. Renovação futura,
 cancelamento observado e compra mensal separada não foram executados.
 ASC: ambos os planos, nível 1, sete idiomas, 175 países, sem trial, com capturas
 de revisão aceitas. Nenhum produto/build foi enviado para revisão.
+
+## Causa delimitada por reprodução independente — 29/10
+
+A comparação das duas APIs Apple no mesmo teste retornou 99/49 em ambas.
+A resposta JSON continha `priceString: "99,9"` / `"49,9"`, com `displayPrice`
+correto. Override de idioma/região do processo não resolveu.
+
+Foi criado e executado um host UIKit/XCTest independente, sem importar Savoria
+ou acessar seus stores/serviços. O mesmo teste falhou em 99 vs 99,90 e
+49 vs 49,90, inclusive no script portátil, com produtos sintéticos próprios.
+Reprodução e relato: `docs/reproductions/storekit-decimal/README.md`. Isso
+isola o defeito na implementação Apple do caminho local para o ambiente
+examinado; não identifica o componente privado exato nem generaliza para todas
+as respostas Sandbox/produção. Não houve correção de valor no app, skip ou
+expectativa enfraquecida. O contrato numérico continua reprovando até correção
+externa ou validação de um ambiente Apple que preserve os centavos.
