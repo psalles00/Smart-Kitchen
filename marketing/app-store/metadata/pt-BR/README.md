@@ -1,6 +1,6 @@
 # Metadados da App Store — Savoria / pt-BR
 
-Preparados em 29/10/2026, salvos e conferidos no App Store Connect. A submissão completa à revisão ainda depende das capturas de iPad; acompanhar `docs/release/app-store-submission-2026-10-29.md`.
+Preparados em 29/10/2026, traduzidos nos dez idiomas da entrega, salvos e conferidos no App Store Connect. **Submetidos à revisão da Apple em 29/10/2026 às 19:23 BRT**, com Savoria 3.6.2 (3), os dois planos e o grupo Premium. Status “Aguardando revisão”; lançamento manual após aprovação. Evidência em `docs/release/app-store-submission-2026-10-29.md`.
 
 - `description.txt`: texto simples para o campo Descrição.
 - `metadata.json`: proposta de nome, subtítulo, texto promocional e palavras-chave.
@@ -31,4 +31,4 @@ O texto diferencia média de dias registrados de registro real de dias em branco
 - [Skill App Store Optimization](https://github.com/dpearson2699/swift-ios-skills/blob/main/skills/app-store-optimization/SKILL.md): estrutura de conversão e distribuição dos termos entre os campos.
 - Skill local: `/Users/pedrosalles/.agents/skills/axiom-shipping/SKILL.md`.
 
-Próxima avaliação de desempenho, após publicação autorizada: comparar impressões, visitas e downloads no App Analytics. Este pedido não inclui publicação, experimento ou alteração da categoria.
+Próxima avaliação de desempenho, após publicação autorizada: comparar impressões, visitas e downloads no App Analytics. A submissão à revisão foi autorizada e concluída; lançamento manual após aprovação permanece a cargo de Pedro. Não foi iniciado experimento nem alterada a categoria.

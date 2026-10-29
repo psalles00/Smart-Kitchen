@@ -2,7 +2,9 @@
 
 ## Autorização e estado atual
 
-Pedro autorizou traduzir a descrição para os demais idiomas, conferir a prontidão e enviar à App Store se tudo estiver correto. O envio completo à revisão ainda NÃO foi concluído. Não confundir upload do IPA ou inclusão de assinaturas no rascunho com submissão final.
+Pedro autorizou traduzir a descrição para os demais idiomas, conferir a prontidão e enviar à App Store se tudo estiver correto. **Submissão concluída em 29/10/2026 às 19:23 BRT.** A Apple confirmou “4 itens enviados” e o status **“Aguardando revisão”**: Savoria iOS 3.6.2 (3), assinatura anual, assinatura mensal e grupo Savoria Premium. O app ainda não foi aprovado nem publicado; o lançamento manual após aprovação foi preservado.
+
+[Conferir envio no App Store Connect](https://appstoreconnect.apple.com/apps/6771525885/distribution/reviewsubmissions/details/3752e448-29f8-463b-bf5c-488d0bc4f46b). Identificador: `3752e448-29f8-463b-bf5c-488d0bc4f46b`.
 
 ## Verificado
 
@@ -14,15 +16,16 @@ Pedro autorizou traduzir a descrição para os demais idiomas, conferir a pronti
 - Versão 3.6.2 (3), SDK iphoneos27.1, bundle `com.pedrosalles.smartkitchen.sync`, Team `44K57HQAP9`; assinatura estrita e ZIP verificados. CloudKit Production, ordem dos dois containers iCloud e App Group preservados; `get-task-allow=false`, sem `.debug.dylib` e sem configuração privada de provedores preenchida no Info.plist. Resumo SHA-256 em `SubmissionFinal/package-summary.json`.
 - Upload confirmado pelo Xcode: “Upload succeeded / Uploaded Savoria”. Build 3 apareceu processado no cadastro e foi associado à versão 3.6.2. Lançamento manual existente preservado.
 - Privacidade atual conferida: sete tipos de dados publicados, vinculados ao usuário, com finalidades coerentes com a revisão anterior; URL pública preservada. Classificação etária, direitos de terceiros, declaração de não ser dispositivo médico, categorias Gastronomia e bebidas / Saúde e fitness e dados de revisão presentes.
-- Anual 6822917042 e mensal 6822949625 incluídos no MESMO rascunho. Cada produto mostrou “Pronto para revisão”; lista de envios confirmou dois itens no rascunho criado às 18:30. Ainda falta incluir o app nesse rascunho e realizar a submissão conjunta.
+- Anual 6822917042 e mensal 6822949625 enviados com o app e o grupo 22478308, Savoria Premium, no mesmo envio. Ambos no nível 1, preços brasileiros anuais R$ 99/ano e mensais R$ 49/mês, conforme configuração autorizada. O grupo foi incluído como quarto item exigido pela validação da Apple; a confirmação final registrou os quatro itens enviados.
 - Metadados/imagens registrados em `a39b6198`, push confirmado para `origin/main` (https://github.com/psalles00/Smart-Kitchen.git). Alterações preexistentes fora do pedido foram preservadas.
 - Provas funcionais compatíveis e Sandbox anteriores reutilizadas conforme `app-store-readiness-2026-10-28.md`. Nenhuma inferência paga, compra adicional, restauração, migração ou alteração de dados pessoais foi feita nesta preparação.
 
-## Pendências reais
+## Pendências externas
 
-- [ ] Gerar/revisar/enviar capturas de iPad 13 polegadas | Executor comigo; CoreSimulator compartilhado precisa de recuperação autorizada.
-- [x] Processamento de iPhone concluído: na validação posterior, a Apple deixou de apontar imagens em processamento e indicou somente a falta da captura de iPad de 13 polegadas.
-- [ ] Incluir o app com os dois planos e enviar o rascunho à revisão | Execução comigo após resolver as capturas e os requisitos acima.
+- [ ] Analisar os quatro itens enviados | Apple; status atual “Aguardando revisão”.
+- [ ] Liberar o lançamento após aprovação | Pedro; configuração de lançamento manual mantida.
+
+Nenhuma pendência local de tradução, imagens, pacote ou submissão permanece neste pedido. O diagnóstico abaixo registra impedimentos anteriores, resolvidos antes do envio.
 
 ## Captura de iPad: diagnóstico e recuperação preservada
 
@@ -42,4 +45,4 @@ A incompatibilidade de símbolos reapareceu e foi localizada na configuração d
 
 A primeira rodada renderizada exibiu textos misturados e o botão Debug na página inicial. Essas capturas não foram enviadas. Os argumentos do processo foram alinhados ao idioma da janela e foram escolhidas as views originais de listas, receitas e nutrição, que não exibem controles de desenvolvimento. A rodada `iPad-localized-*` passou nos sete idiomas, gerando 21 capturas em 2064×2752 sem alpha. Revisão visual e títulos localizados aprovados por OCR local; corrigida a chave do idioma usada pelo reconhecedor japonês, sem mudar as expectativas.
 
-As capturas finais estão em `marketing/app-store/2026-10-29-ipad-localized`. Três arquivos próprios foram enviados por idioma suportado; coreano, chinês e árabe herdam inglês, confirmado no Gerenciador de mídia. A exigência de captura de iPad desapareceu da validação. Aguarda-se somente o processamento pela Apple para poder incluir o app e submeter o rascunho. O iPad foi encerrado ao terminar, liberando recursos; coordenação com Rotina concluída.
+As capturas finais estão em `marketing/app-store/2026-10-29-ipad-localized`. Três arquivos próprios foram enviados por idioma suportado; coreano, chinês e árabe herdam inglês, confirmado no Gerenciador de mídia. A exigência de captura de iPad desapareceu da validação. O processamento foi concluído, o app e o grupo Premium foram incluídos junto aos dois planos, e a submissão dos quatro itens foi confirmada pela Apple às 19:23 BRT. O iPad foi encerrado ao terminar, liberando recursos; coordenação com Rotina concluída.
