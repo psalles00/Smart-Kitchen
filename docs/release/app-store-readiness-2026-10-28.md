@@ -6,7 +6,7 @@ de privacidade e de validação externa. Este arquivo não substitui a aprovaç�
 
 ## Candidato e proteção dos dados
 
-- Candidato de código: `b3e9eeeb`; projeção: `201a538b`; consentimento de IA: `6dee809b`.
+- Candidato de produção atual: `ac6c5da3` (inclui relatos de IA `978057a2`); candidato anterior `b3e9eeeb`; projeção: `201a538b`; consentimento de IA: `6dee809b`.
 - Bundle principal: `com.pedrosalles.smartkitchen.sync`; Team `44K57HQAP9`.
 - Containers, nesta ordem: `iCloud.com.pedrosalles.smartkitchen.syn`,
   `iCloud.com.pedrosalles.smartkitchen.sync`.
@@ -24,14 +24,14 @@ de privacidade e de validação externa. Este arquivo não substitui a aprovaç�
 | Área | Evidência atual | Estado / próxima prova necessária |
 | --- | --- | --- |
 | 2.1 — app completo e estável | Builds Debug iOS/macOS passaram; evidências de funcionalidades em `docs/testing-*.md` | Suíte atual: 194 aprovados, 11 ignorados, 1 reprovado no catálogo StoreKit. Provas de hardware, permissões e provedores reais não decorrem dos mocks |
-| SDK, assinatura, Release e extensões | `project.yml` preserva identidade e zera chaves privadas dos provedores em Release | Archive atual gerado e inspecionado em 29/10; assinatura local Apple Development. Exportação/distribuição e certificado Apple Distribution continuam pendentes |
+| SDK, assinatura, Release e extensões | `project.yml` preserva identidade e zera chaves privadas dos provedores em Release | Archive final de 29/10 e IPA 3.6.2 (3) exportado com Cloud Managed Apple Distribution; sem upload e sem envio à revisão |
 | Depuração ausente em produção | Simulação Premium e credencial OpenRouter protegidas por `#if DEBUG` no código | Binários e interface Release conferidos; marcadores examinados de debug ausentes |
 | 5.1.2(i) — consentimento para IA externa | Gate local explícito em Supabase, OpenAI, OpenRouter e Exa; revogação nas Configurações; seis textos nos sete idiomas | Implementado; nove testes locais passaram. Aviso/recusa conferidos no Mac Release e teste nativo atual de recusa passou no iPhone virtual, sem envio de conteúdo |
 | 5.1.1 — política acessível e fiel | Links usados pelo app responderam HTTP 200 em 28/10 | Texto corrigido e publicado em 28/10; conteúdo atual e acesso sem login conferidos no endereço usado pelo app |
-| Declaração de dados | Manifesto presente, sem tracking, com quatro categorias de Required Reason APIs | Manifesto atualizado e empacotado com sete categorias; sem tracking. Formulário do ASC ainda não conferido nem atualizado |
+| Declaração de dados | Manifesto presente, sem tracking, com quatro categorias de Required Reason APIs | Manifesto com sete categorias, sem tracking; formulário ASC alinhado e publicado com autorização explícita em 29/10 |
 | Retenção dos provedores | Políticas oficiais OpenAI, OpenRouter e Exa localizadas | Não presumir zero retenção nem ausência de treinamento em todas as rotas; verificar configuração/contratos aplicáveis antes de prometer isso |
 | Compras e restauração | StoreKit 2 observa transações, finaliza verificadas e oferece restore; catálogo local com dois IDs | Sandbox/TestFlight real, elegibilidade do trial, restauração, cancelamento e renovação ainda sem prova atual suficiente |
-| Preços e grupo Premium | Relato anterior em `docs/testing-storekit-prices.md`: anual R$ 99,90, mensal R$ 49,90, ambos nível 1 | Cadastro atual não reconferido; não recriar produtos. Catálogo local não comprova produção |
+| Preços e grupo Premium | Relato anterior em `docs/testing-storekit-prices.md`: anual R$ 99,90, mensal R$ 49,90, ambos nível 1 | ASC reconferido em 29/10: R$ 99,90/ano e R$ 49,90/mês, nível 1, sete idiomas, 175 países; catálogo local não comprova compra Sandbox |
 | Saúde e precisão | App estima nutrientes e projeções; resultados de nutrição existentes | Promessa e comparação inventada corrigidas em `201a538b`; layout renderizado conferido. Demais alegações/fluxos ainda não recebem aprovação global por esse teste |
 | Dados e iCloud | Stores/configuração preservados; evidências anteriores em `docs/testing-icloud-recovery.md` | Reutilizar provas compatíveis, separar do estado do simulador; nenhum teste destrutivo com dados de Pedro |
 | Permissões e recursos do dispositivo | Descrições de câmera, fotos, microfone e fala presentes | Conferir strings localizadas e recusa; hardware real somente onde necessário |
@@ -191,18 +191,66 @@ de privacidade e de validação externa. Este arquivo não substitui a aprovaç�
   `InlineChatView`: não diagnosticar/prescrever; não prometer resultado e
   encaminhar situações clínicas a profissional. Regras de prompt são defesa
   implementada, não prova de que o modelo sempre as cumpre.
-- **Conteúdo de IA ainda exige fechamento:** existe contato de suporte nas
-  Configurações e envio de erro na análise nutricional, mas não foi encontrado
-  mecanismo específico de denúncia nas respostas de `ChatBubbleView` e
-  `InlineChatView`. As diretrizes 1.2 incluem criação de conteúdo por IA. Não
-  presumir que o chat privado dispensa salvaguardas, nem inventar bloqueio de
-  outros usuários num app sem interação pública. Revisar filtragem/denúncia
-  e a aplicabilidade ao fluxo concreto antes de declarar pronto.
-- Direitos das imagens/receitas incluídas e condições efetivas de retenção
-  dos fornecedores não são demonstrados por build ou HTTP 200 da política.
-  Não declaramos licenças, contratos ou configurações de conta por inferência.
+- **Relatos de IA implementados e validados:** `978057a2` adiciona relato no
+  nível da resposta, incluindo cartões e opções. A prévia começa sem anexar a
+  resposta; envio depende do usuário no app de e-mail. Quatro testes locais
+  passaram; interface nativa iOS/macOS e revisão independente aprovadas.
+  Ver `docs/testing-ai-content-reporting.md`. Regras de segurança de prompt não
+  são prova de que qualquer modelo sempre as cumprirá.
+- Pedro confirmou em 29/10 os direitos comerciais das imagens/receitas e do
+  conteúdo de terceiros. O comprovante Thiings adaptado foi anexado ao ASC;
+  cobre somente ícones e conserva as limitações do fornecedor (incluindo
+  receita anual de até US$ 200 mil e proibição de revenda avulsa). Não houve
+  nova auditoria de elegibilidade financeira ou da conta Thiings. Retenção
+  dos provedores não é demonstrada por build ou HTTP 200 da política.
 
-**Conclusão em 29/10:** archive e verificações locais acima estão disponíveis;
-ainda não há evidência para afirmar que só faltam imagens, descrição e envio.
-Além do acesso ao ASC, permanecem a divergência StoreKit e o fechamento das
-salvaguardas/condições descritas. Não houve envio para revisão.
+## Fechamento atualizado — 29/10/2026
+
+- Contrato Apple Developer LYL260 aceito com autorização expressa; acesso a
+  certificados liberado. Xcode autenticado na equipe `44K57HQAP9`.
+- IPA exportado **sem upload**, via Custom > App Store Connect > Export:
+  `/Volumes/PS-Externo/Coding/Builds/Savoria-AppStore-20261029/Savoria-AppStore-3.6.2-3/Savoria.ipa`.
+  64.091.821 bytes; SHA-256
+  `530e3371c2c7ad3f7e68d28d5193f245df539d4f83112c582523a9ef7a0e37c6`.
+  O Xcode incrementou o build de 1 para 3 porque informou que 1 não atendia ao
+  registro existente. Archive fonte `ac6c5da3`; alterações posteriores de testes
+  e documentação não mudam esse binário.
+- Assinatura: Cloud Managed Apple Distribution, validade 20/05/2027. IPA e ZIP
+  conferidos; principal e duas extensões são 3.6.2 (3), Team correto,
+  `get-task-allow=false`. Entitlements reais extraídos do Mach-O principal
+  mantêm os dois containers na ordem original e CloudKit Production.
+  ShareExtension mantém App Group; Widgets preserva seu conjunto original.
+  Perfis podem autorizar um conjunto maior de containers; a conferência do app
+  usou os entitlements efetivamente assinados, não só a lista do perfil.
+- Metadados ASC: versão 3.6.2 em preparação, lançamento manual, sem login de app
+  exigido; contato autorizado, suporte público, copyright e comprovante de
+  ícones anexados. Categorias, classificação 13+ global (exceções regionais),
+  declaração de direitos e de não ser dispositivo médico salvas.
+- App e planos disponíveis em todos os 175 países/regiões permitidos. Download
+  gratuito; Premium anual/mensal mantém os preços brasileiros acima. Não foi
+  habilitado o novo modelo de mensalidade com compromisso de 12 meses.
+  Grupo e planos localizados nos sete idiomas. Nenhuma oferta introdutória
+  está cadastrada; paywall de produção depende da oferta e elegibilidade
+  retornadas pelo StoreKit, sem promessa fixa de trial.
+- Privacidade: sete categorias publicadas após confirmação específica do
+  proprietário. Política de 29/10 publicada e conferida na URL pública, com
+  personalização e tratamento dos relatos voluntários; não promete retenção zero.
+- Paywall: removida a alegação sem comprovação “4.3x mais rápido” em `ac6c5da3`,
+  nos sete idiomas. Builds iOS e macOS passaram. Mac instalado e aberto em
+  `/Applications/Savoria.app`; dados existentes visíveis, preços corretos e
+  título novo conferidos. Simulador iPhone 17 Pro atualizado e aberto; não
+  foi preenchida uma despensa fictícia nos stores reais do simulador.
+- Material de revisão IAP: captura nativa 1206×2622 gerada em cena isolada,
+  fixture em memória e catálogo local sem trial (igual ao cadastro ASC atual).
+  Teste `testNativePaywallReviewLayoutWithoutWritingUserData` passou; nenhum
+  toque em comprar/restaurar, nenhuma inferência de IA ou alteração nos dados
+  reais. A captura é prova visual, **não comprova compra Sandbox**. A tentativa
+  de anexar a captura macOS foi recusada por dimensões e não foi reaproveitada.
+- Evidências atuais em `Builds/Savoria-Nutrition-Final-20261028/`; verificações
+  do IPA em `Builds/Savoria-AppStore-20261029/package-verification.json`.
+
+**Ainda pendente:** compra/restauração/renovação Sandbox real e reconciliação
+com a falha decimal do catálogo local. A autenticação Sandbox depende do
+proprietário. Imagens e descrição de marketing permanecem fora deste recorte.
+Não houve upload de build nem envio para revisão; não declarar que o app está
+100% pronto enquanto a prova de compras e as pendências acima não forem fechadas.

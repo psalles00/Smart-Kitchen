@@ -260,6 +260,7 @@ final class RecipeWorkspaceNavigationTests: XCTestCase {
 
 #if os(iOS)
 import SwiftUI
+import StoreKitTest
 
 /// Native-scene rendering only. Fixtures never enter the application's stores or CloudKit.
 @MainActor
@@ -592,6 +593,40 @@ final class AdaptiveWorkspaceRenderingTests: XCTestCase {
         }
         XCTAssertEqual(try container.mainContext.fetchCount(FetchDescriptor<UnifiedItem>()), 6)
         XCTAssertEqual(try container.mainContext.fetchCount(FetchDescriptor<Recipe>()), 1)
+        XCTAssertEqual(try container.mainContext.fetchCount(FetchDescriptor<ChatMessage>()), 0)
+    }
+
+    func testNativePaywallReviewLayoutWithoutWritingUserData() async throws {
+        let activated = expectation(description: "Paywall scene active")
+        let observer = NotificationCenter.default.addObserver(forName: UIScene.didActivateNotification,
+            object: nil, queue: .main) { _ in activated.fulfill() }
+        defer { NotificationCenter.default.removeObserver(observer) }
+        if UIApplication.shared.connectedScenes.contains(where: { $0.activationState == .foregroundActive }) {
+            activated.fulfill()
+        }
+        await fulfillment(of: [activated], timeout: 10)
+        // A local layout fixture, not proof of a Sandbox purchase. Match the
+        // currently verified ASC catalogue: neither subscription has a trial.
+        let catalogueURL = try XCTUnwrap(Bundle.main.url(forResource: "Configuration", withExtension: "storekit"))
+        var catalogue = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: catalogueURL)) as? [String: Any])
+        var groups = try XCTUnwrap(catalogue["subscriptionGroups"] as? [[String: Any]])
+        var plans = try XCTUnwrap(groups[0]["subscriptions"] as? [[String: Any]])
+        for index in plans.indices { plans[index]["introductoryOffer"] = NSNull() }
+        groups[0]["subscriptions"] = plans
+        catalogue["subscriptionGroups"] = groups
+        let localURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".storekit")
+        try JSONSerialization.data(withJSONObject: catalogue).write(to: localURL)
+        defer { try? FileManager.default.removeItem(at: localURL) }
+        let session = try SKTestSession(contentsOf: localURL)
+        session.disableDialogs = true
+        defer { withExtendedLifetime(session) {} }
+        let (container, _) = try fixture()
+        let root = PaywallStepView(state: OnboardingState(), onFinish: { _ in
+            XCTFail("Review capture must never purchase or complete onboarding")
+        }).modelContainer(container)
+        let window = try await render(AnyView(root), name: "native-paywall-review-layout-local-catalogue")
+        defer { window.isHidden = true; window.rootViewController = nil }
+        XCTAssertEqual(try container.mainContext.fetchCount(FetchDescriptor<UnifiedItem>()), 6)
         XCTAssertEqual(try container.mainContext.fetchCount(FetchDescriptor<ChatMessage>()), 0)
     }
 
