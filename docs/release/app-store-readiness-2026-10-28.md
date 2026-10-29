@@ -26,7 +26,7 @@ de privacidade e de validação externa. Este arquivo não substitui a aprovaç�
 | 2.1 — app completo e estável | Builds Debug iOS/macOS passaram; evidências de funcionalidades em `docs/testing-*.md` | Confrontar cobertura com o candidato final, incluindo falhas de rede e permissões; não generalizar nove testes para o app inteiro |
 | SDK, assinatura, Release e extensões | `project.yml` preserva identidade e zera chaves privadas dos provedores em Release | Gerar e inspecionar candidato Release atual; archive antigo de maio não serve como candidato |
 | Depuração ausente em produção | Simulação Premium e credencial OpenRouter protegidas por `#if DEBUG` no código | Conferir o binário/interface Release, não apenas Debug |
-| 5.1.2(i) — consentimento para IA externa | Gate local explícito em Supabase, OpenAI, OpenRouter e Exa; revogação nas Configurações; seis textos nos sete idiomas | Implementado; nove testes locais passaram e aviso nativo/recusa/receitas locais conferidos no Mac; interface iOS ainda precisa da conferência pertinente |
+| 5.1.2(i) — consentimento para IA externa | Gate local explícito em Supabase, OpenAI, OpenRouter e Exa; revogação nas Configurações; seis textos nos sete idiomas | Implementado; nove testes locais passaram. Aviso/recusa conferidos no Mac Release e teste nativo atual de recusa passou no iPhone virtual, sem envio de conteúdo |
 | 5.1.1 — política acessível e fiel | Links usados pelo app responderam HTTP 200 em 28/10 | Texto corrigido e publicado em 28/10; conteúdo atual e acesso sem login conferidos no endereço usado pelo app |
 | Declaração de dados | Manifesto presente, sem tracking, com quatro categorias de Required Reason APIs | Manifesto atualizado e empacotado com sete categorias; sem tracking. Formulário do ASC ainda não conferido nem atualizado |
 | Retenção dos provedores | Políticas oficiais OpenAI, OpenRouter e Exa localizadas | Não presumir zero retenção nem ausência de treinamento em todas as rotas; verificar configuração/contratos aplicáveis antes de prometer isso |
@@ -58,8 +58,9 @@ de privacidade e de validação externa. Este arquivo não substitui a aprovaç�
 - Mac instalado: Configurações → Autorizar serviços de IA abriu NSAlert com
   destinatários/dados/recusa. Após “Agora não”, receitas locais continuaram visíveis.
   A recusa permanece no Mac; o usuário pode autorizar pelas Configurações.
-- Manual restante: no iOS, conferir aviso, recusa e reautorização em instalação
-  de validação com estado conhecido; conferir modo local sem enviar conteúdo real.
+- Atualização: aviso e recusa nativos iOS conferidos na terceira rodada abaixo;
+  reautorização e revogação permanecem cobertas pelos testes locais do broker.
+  Isso não substitui compras reais nem todas as verificações funcionais do app.
 
 ## Ordem das próximas ações independentes do ASC
 
