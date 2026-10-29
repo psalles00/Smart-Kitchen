@@ -1,5 +1,11 @@
 # Checklist Manual Obrigatório — TestFlight e Publicação do Savoria
 
+> Privacidade atualizada em 28/10/2026: não declare apenas histórico de compras.
+> O manifesto atual inclui conteúdo, saúde/atividade, mídia e identificador das
+> avaliações. Consulte [a auditoria atual](app-store-readiness-2026-10-28.md).
+> O formulário App Privacy na Apple ainda exige conferência e preenchimento.
+
+
 Atualização verificada em 15/10/2026: as duas assinaturas já existem como
 rascunhos no App Store Connect, no grupo Savoria Premium (`22478308`), ambas no
 nível 1. Anual: `6822917042`, 1 ano, R$ 99,90 no Brasil. Mensal: `6822949625`,

@@ -6,7 +6,7 @@ de privacidade e de validação externa. Este arquivo não substitui a aprovaç�
 
 ## Candidato e proteção dos dados
 
-- Candidato de código: `201a538b`; consentimento de IA: `6dee809b`; base anterior: `f65cc35f`.
+- Candidato de código: `b3e9eeeb`; projeção: `201a538b`; consentimento de IA: `6dee809b`.
 - Bundle principal: `com.pedrosalles.smartkitchen.sync`; Team `44K57HQAP9`.
 - Containers, nesta ordem: `iCloud.com.pedrosalles.smartkitchen.syn`,
   `iCloud.com.pedrosalles.smartkitchen.sync`.
@@ -27,8 +27,8 @@ de privacidade e de validação externa. Este arquivo não substitui a aprovaç�
 | SDK, assinatura, Release e extensões | `project.yml` preserva identidade e zera chaves privadas dos provedores em Release | Gerar e inspecionar candidato Release atual; archive antigo de maio não serve como candidato |
 | Depuração ausente em produção | Simulação Premium e credencial OpenRouter protegidas por `#if DEBUG` no código | Conferir o binário/interface Release, não apenas Debug |
 | 5.1.2(i) — consentimento para IA externa | Gate local explícito em Supabase, OpenAI, OpenRouter e Exa; revogação nas Configurações; seis textos nos sete idiomas | Implementado; nove testes locais passaram e aviso nativo/recusa/receitas locais conferidos no Mac; interface iOS ainda precisa da conferência pertinente |
-| 5.1.1 — política acessível e fiel | Links usados pelo app responderam HTTP 200 em 28/10 | Texto público ainda omite Supabase/OpenRouter e não explica suficientemente retenção/compartilhamento atual; atualizar com fatos verificados |
-| Declaração de dados | Manifesto presente, sem tracking, com quatro categorias de Required Reason APIs | Manifesto lista somente Purchase History; confrontar conteúdo/fotos/áudio/dados nutricionais enviados à IA com retenção efetiva e corrigir declarações necessárias |
+| 5.1.1 — política acessível e fiel | Links usados pelo app responderam HTTP 200 em 28/10 | Texto corrigido e publicado em 28/10; conteúdo atual e acesso sem login conferidos no endereço usado pelo app |
+| Declaração de dados | Manifesto presente, sem tracking, com quatro categorias de Required Reason APIs | Manifesto atualizado e empacotado com sete categorias; sem tracking. Formulário do ASC ainda não conferido nem atualizado |
 | Retenção dos provedores | Políticas oficiais OpenAI, OpenRouter e Exa localizadas | Não presumir zero retenção nem ausência de treinamento em todas as rotas; verificar configuração/contratos aplicáveis antes de prometer isso |
 | Compras e restauração | StoreKit 2 observa transações, finaliza verificadas e oferece restore; catálogo local com dois IDs | Sandbox/TestFlight real, elegibilidade do trial, restauração, cancelamento e renovação ainda sem prova atual suficiente |
 | Preços e grupo Premium | Relato anterior em `docs/testing-storekit-prices.md`: anual R$ 99,90, mensal R$ 49,90, ambos nível 1 | Cadastro atual não reconferido; não recriar produtos. Catálogo local não comprova produção |
@@ -63,9 +63,10 @@ de privacidade e de validação externa. Este arquivo não substitui a aprovaç�
 
 ## Ordem das próximas ações independentes do ASC
 
-1. Esclarecer o estado do iPhone virtual sem reset/restauração; usar fixture isolada
-   se necessário para concluir UI iOS sem tocar nos dados existentes.
-2. Corrigir política/declarações a partir do fluxo real e das condições dos provedores.
+1. Estado esclarecido por Pedro: uso normal no iPhone físico. Consentimento iOS
+   conferido em fixture isolada, sem restauração ou alterações nos seus dados.
+2. Política e manifesto corrigidos/publicados. Ainda separar transparência da
+   verificação das condições/configurações efetivas dos provedores; não prometer ZDR.
 3. Revisar as demais alegações e fluxos de nutrição; a promessa do gráfico já foi corrigida e validada.
 4. Finalizar archive/exportação de distribuição após as correções restantes. Builds Release, segredos e capabilities já foram conferidos; finalizar
    matriz funcional proporcional reaproveitando evidências válidas.
@@ -113,3 +114,37 @@ de privacidade e de validação externa. Este arquivo não substitui a aprovaç�
   retenção somente durante esta auditoria de lançamento.
 - O consentimento no Mac permanece recusado após o teste anterior. A autorização
   pode ser concedida nas Configurações; não foi concedida em nome de Pedro.
+
+
+## Privacidade publicada — terceira rodada de 28/10
+
+- Commit `b3e9eeeb`: manifesto e política refletem conteúdo/saúde/atividade,
+  fotos, áudio e identificador das avaliações, além de compras. Categorias
+  empacotadas: `PurchaseHistory`, `Health`, `Fitness`, `PhotosorVideos`,
+  `AudioData`, `OtherUserContent`, `DeviceID`; finalidade AppFunctionality,
+  sem tracking. Não se presume anonimização de texto ou mídia pessoal.
+- O UUID de `FoodCache.vote` é pseudônimo e persistido com alimento/voto para
+  deduplicação, conforme o código e o SQL existentes. Foi incluído também
+  no aviso e nas sete traduções. Não houve nova coleta nem mudança do payload.
+- Revisão independente identificou essa omissão na primeira candidata; após
+  correção, aprovou o delta. Plist/JSON e diff foram conferidos.
+- `privacy-native-ios.xcresult`: teste nativo de recusa **aprovado** no iPhone
+  17 Pro, fixture em memória. O aviso foi observado pelo Device Hub e o botão
+  “Agora não” acionado por automação. Permaneceram seis itens sintéticos e zero
+  mensagens; nenhum conteúdo foi enviado a provedor. Capture Keyboard desligado.
+- macOS Release instalado: aviso novo conferido, incluindo a frase do identificador;
+  recusa mantida. A assinatura da cópia em `/Applications/Savoria.app` foi validada.
+- Builds atualizadas `privacy-build.log`, `privacy-mac-release.log` e
+  `privacy-ios-release.log` passaram. O manifesto empacotado no Release iOS
+  foi lido e confrontado com as sete categorias esperadas.
+- Política publicada: https://psalles00.github.io/Smart-Kitchen/privacy/
+  respondeu HTTP 200, sem login; data 28/10, Supabase, OpenRouter, identificador,
+  revogação e texto de retenção foram conferidos no conteúdo entregue e no Chrome.
+  O endpoint legado de histórico de builds do Pages retornou um registro antigo;
+  prevaleceu a prova do conteúdo público atual. Não foi disparado build extra.
+- A política diferencia dados locais/iCloud de envios opcionais, esclarece que
+  desinstalar não exclui iCloud, e fornece o caminho existente de exclusão e
+  contato para pedidos sem exigir Premium. Nenhuma exclusão foi executada.
+- O formulário App Privacy no ASC continua **pendente**. Esta publicação e o
+  manifesto não preenchem o formulário nem comprovam condições contratuais ou
+  configurações de retenção de todas as rotas. Não houve inferência paga nesta rodada.
