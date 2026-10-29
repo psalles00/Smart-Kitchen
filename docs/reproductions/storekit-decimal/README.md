@@ -72,3 +72,12 @@ routine. Pedro explicitly declined submission to Apple. This is retained local
 diagnostic evidence, **not submitted**, with no Apple case ID. Original draft title: “StoreKit Testing emits locale-comma
 priceString and truncates fractional Product.price in both StoreKit APIs”.
 Attach this directory and the independent xcresult. No user data is needed.
+
+## Resolution chosen by the owner
+
+Pedro declined submission to Apple and authorized changing the actual commercial
+prices to BRL 99.00/year and 49.00/month. Both were saved and read back in ASC;
+the app and catalogue were updated. The regular 215-test suite passed:
+204 passed, 0 failed, 11 skipped. This independent reproduction intentionally
+retains fractional values to preserve the evidence. The commercial change
+avoids this trigger; it does not repair Apple's fractional-price implementation.

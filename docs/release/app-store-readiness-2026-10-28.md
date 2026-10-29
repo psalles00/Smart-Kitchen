@@ -1,23 +1,23 @@
 # Preparação para a App Store — fechamento em 29/10/2026
 
-**Falha decimal isolada fora do Savoria; correção do ambiente Apple pendente.**
-O mesmo truncamento foi reproduzido em um aplicativo UIKit/XCTest independente,
-sem código, inicialização ou dados do Savoria. Não é uma conversão do app.
-A suíte local continua reprovando o contrato numérico; não foi declarada verde.
-O Savoria usa o preço formatado da Apple, e compra anual/restore Sandbox foram
-confirmados separadamente. Não existe correção de produção justificada por esta
-falha local. O reproduzidor permanece local; Pedro pediu expressamente não enviar relato
-à Apple e autorizou avaliar preços inteiros como alternativa. Imagens, descrição, upload/seleção e envio do app
-continuam fora desta entrega. O pacote não foi enviado nem aprovado pela Apple.
+**Preços ativos corrigidos por autorização de Pedro: R$ 99,00/ano e R$ 49,00/mês.**
+Cadastro Apple, catálogo, prévias e testes estão alinhados. A suíte atual tem
+204 aprovados, zero falhas e 11 ignorados, sem falhas esperadas. O defeito
+fracionário da Apple permanece documentado em um reproduzidor separado,
+sem alteração artificial da resposta nem relato enviado à Apple.
+
+O IPA atualizado está exportado, sem upload. Imagens/descrição da loja e envio
+continuam fora do escopo. A captura anual atualizada ainda estava em
+processamento na última leitura; não declarar essa etapa concluída sem retorno.
 
 ## Pacote final
 
-- Fonte de produção: `38d6034d8c407b50e716053ff02df1a60a715903`, incluindo
+- Fonte de produção: `a971bbcd5256e9876441a3c3fd8648392e9a94f6`, incluindo
   compartilhamento `e658b95b`, relatos de IA `978057a2` e remoção da alegação
   de velocidade sem comprovação `ac6c5da3`.
-- IPA: `/Volumes/PS-Externo/Coding/Builds/Savoria-AppStore-20261029/ManifestFinal/Export/Savoria.ipa`.
-- Versão **3.6.2 (3)** nos três bundles; 64.155.941 bytes; SHA-256
-  `64322f284bac26c04213fe3ebfecec68a13dbfabe60f408ea6a1c9fb0c079f42`.
+- IPA: `/Volumes/PS-Externo/Coding/Builds/Savoria-AppStore-20261029/IntegerPrices/Export/Savoria.ipa`.
+- Versão **3.6.2 (3)** nos três bundles; 64.155.931 bytes; SHA-256
+  `3dc93c0f28d4e0c415cfdb1588b8d14dbc26e3432f1caae92ea17d7677d3bf9e`.
 - Archive e exportação App Store Connect passaram pelo Xcode 27.1, sem upload.
   Assinatura Cloud Managed Apple Distribution; Team `44K57HQAP9`;
   `get-task-allow=false` nos executáveis principal e das duas extensões.
@@ -32,7 +32,7 @@ continuam fora desta entrega. O pacote não foi enviado nem aprovado pela Apple.
   sete categorias de dados, sem tracking. Extensão agora empacota seu próprio
   manifesto para UserDefaults do App Group, motivo Apple `1C8F.1`.
 - Verificação extraída do IPA, incluindo entitlements reais dos Mach-O:
-  `Builds/Savoria-AppStore-20261029/ManifestFinal/package-verification.json`.
+  `Builds/Savoria-AppStore-20261029/IntegerPrices/package-verification.json`.
   Os perfis podem autorizar mais containers do que o app efetivamente usa;
   não foram confundidos com os entitlements assinados do app.
 
@@ -45,8 +45,8 @@ continuam fora desta entrega. O pacote não foi enviado nem aprovado pela Apple.
 | Classificação e direitos | Questionário atual: 13+ global, com exceções regionais; direitos comerciais confirmados por Pedro; declaração de não ser dispositivo médico |
 | Contratos | Apple Developer LYL260 aceito com autorização; Paid Apps e banco ativos; informações fiscais Brasil e W-8BEN ativas; situação DSA existente conferida |
 | Disponibilidade | App gratuito e dois planos em todos os 175 países/regiões permitidos pela Apple |
-| Assinaturas | Grupo `22478308`, ambos nível 1; anual `6822917042` R$ 99,90/ano e mensal `6822949625` R$ 49,90/mês; sete idiomas; sem oferta introdutória cadastrada |
-| Material IAP | Captura nativa 1206×2622 aceita e persistida para ambos os planos; mensal terminou o processamento. Fixture local sem trial, identificada como referência visual, não como prova de compra |
+| Assinaturas | Grupo `22478308`, ambos nível 1; anual `6822917042` R$ 99,00/ano e mensal `6822949625` R$ 49,00/mês; sete idiomas; sem oferta introdutória cadastrada |
+| Material IAP | Nova captura 1206×2622 e notas com 99/49 atualizadas; processamento anual pendente na última leitura. Fixture local sem trial, não é prova de compra |
 | Privacidade | Sete categorias publicadas com autorização específica; todas declaradas vinculadas, sem tracking; URL pública e finalidades conferidas |
 | Comprovação | PDF adaptado do Rotina anexado uma vez ao contato de revisão; notas de revisão salvas |
 
@@ -82,6 +82,12 @@ faturamento e não integra o repositório público.
 
 ## Validação funcional e limites
 
+- **Suíte vigente:** `integer-prices-suite.xcresult`, 215 testes: 204 aprovados,
+  0 falhas, 11 ignorados e 0 falhas esperadas. O teste exige os preços reais
+  novos 99.00/49.00, texto R$ 99,00/R$ 49,00, BRL e períodos. As duas APIs
+  retornaram os valores corretos. Paywall nativo renderizado com esses preços,
+  sem compra. Resultados antigos abaixo preservam a investigação anterior
+  à mudança comercial autorizada e não representam a suíte vigente.
 - Suíte ampla: `appstore-local-suite.xcresult`, **206 testes: 194 aprovados,
   11 ignorados, 1 reprovado**. O reteste Brasil explícito aprovou moeda e
   períodos, mas `Product.price` local retornou 99/49 em vez de 99,90/49,90.
@@ -198,9 +204,27 @@ Instruções globais reforçadas em `/Users/pedrosalles/.codex/AGENTS.md`, seç�
 Não encerrar prematuramente, 29/10/2026. Não houve nova inferência, compra,
 cobrança, mudança de produção, persistência, Team ou capabilities.
 
-### Alternativa autorizada em andamento
+### Alternativa autorizada e validada
 
 Pedro autorizou resolver sem enviar relato à Apple, exemplificando a alteração
 real para R$ 99/ano e R$ 49/mês. A Apple oferece ambos nos pontos adicionais.
-Mensal R$ 49,00 já salvo e relido no ASC; anual, catálogo/app e testes ainda
-em atualização. Não interpretar somente a troca de expectativas como solução.
+Anual R$ 99,00 e mensal R$ 49,00 salvos e relidos no ASC, demais territórios
+recalculados pela Apple; mesmos IDs, durações e serviço Premium. Catálogo,
+fallbacks e teste regular alinhados em `a971bbcd`. A expectativa mudou porque
+os preços comerciais mudaram de fato, e não para aceitar o truncamento antigo.
+
+`integer-prices-suite.xcresult`: 215 testes, 204 aprovados, 0 falhas, 11
+ignorados e 0 falhas esperadas. As duas APIs retornam 99/49 e a UI nativa
+mostra R$ 99,00/R$ 49,00, coerentes com cadastro e catálogo. O reproduzidor
+separado mantém valores fracionários para preservar a evidência histórica.
+
+Release macOS instalado e aberto em `/Applications/Savoria.app`; iOS
+atualizado e aberto no iPhone 17 Pro. Snapshot Mac antes/depois: 111 itens,
+64 receitas, 69 categorias, hash idêntico. O Premium Sandbox existente segue
+ativo. Nenhum novo I/O de produção, inferência paga ou compra nesta alteração.
+
+O pacote vigente é o IPA IntegerPrices acima; ManifestFinal e Sharing são
+candidatos anteriores. A compra Sandbox anterior usou R$ 99,90 e permanece
+prova daquele fluxo, não de uma nova compra com os preços atuais. Cadastro,
+APIs locais e nova UI comprovam a configuração nova. Os textos localizados
+continuam vindo do StoreKit; nenhuma nova string de interface foi introduzida.

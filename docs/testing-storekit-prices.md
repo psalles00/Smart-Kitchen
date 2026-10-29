@@ -1,5 +1,10 @@
 # Catálogo de assinaturas no teste local
 
+**Configuração vigente em 29/10/2026: R$ 99,00/ano e R$ 49,00/mês.**
+Pedro autorizou preços inteiros como solução prática. Cadastro Apple, catálogo
+e prévias foram de fato alterados; o teste numérico e a apresentação passaram.
+As seções antigas abaixo registram a investigação, não os preços vigentes.
+
 O catálogo `SmartKitchen/Resources/Configuration.storekit` usa valores numéricos
 com ponto decimal: `99.90` no anual e `49.90` no mensal. A configuração brasileira
 permanece `pt_BR` / `BRA`. A apresentação localizada deve vir de
@@ -123,4 +128,40 @@ isola o defeito na implementação Apple do caminho local para o ambiente
 examinado; não identifica o componente privado exato nem generaliza para todas
 as respostas Sandbox/produção. Não houve correção de valor no app, skip ou
 expectativa enfraquecida. O contrato numérico continua reprovando até correção
-externa ou validação de um ambiente Apple que preserve os centavos.
+externa ou validação de um ambiente Apple que preserve os centavos, quando
+usado com os preços fracionários antigos. A solução comercial abaixo evita
+esse gatilho sem alterar a resposta da Apple.
+
+## Solução autorizada: preços inteiros — 29/10/2026
+
+Pedro pediu não enviar relato à Apple e autorizou mudar os preços reais para
+R$ 99/ano e R$ 49/mês. Ambos existem nos pontos adicionais da Apple. As
+alterações foram salvas e as tabelas reabertas: Brasil R$ 99,00/ano e
+R$ 49,00/mês; demais territórios recalculados, mantendo os 175 países, mesmos
+IDs, durações e grupo Premium. Provas `asc-annual-99.png` e `asc-monthly-49.png`.
+
+`a971bbcd` atualiza catálogo 99.00/49.00 e fallbacks compartilhados. O teste
+regular exige os novos valores, BRL, períodos e texto completo com centavos
+00 (normaliza somente espaços). Não foi simplesmente aceito o truncamento.
+
+`integer-prices-suite.xcresult`: **215 testes, 204 aprovados, 0 falhas,
+11 ignorados, 0 falhas esperadas**, iPhone 17 Pro / iOS 27.0 / SDK 27.1.
+As duas APIs retornaram os valores corretos. Paywall nativo em memória passou
+e mostrou os preços novos, sem compra ou escrita em dados reais. Captura
+1206×2622: `integer-paywall-preview/2F77F8C9-97A5-419D-A853-2AE8DD454C0D.png`.
+
+Notas e capturas de revisão dos planos atualizadas; a anual ainda estava
+Processando na última leitura. Não houve envio do app à revisão, relato à
+Apple ou nova compra Sandbox. O reproduzidor independente conserva 99,90/49,90
+para registrar o problema original, sem alterar artificialmente seus valores.
+
+Release macOS aprovado, instalado e aberto em `/Applications/Savoria.app`;
+iOS instalado e aberto no iPhone 17 Pro. Snapshot Mac: 111 itens, 64 receitas,
+69 categorias e hash idêntico antes/depois. Stores, Team, iCloud e App Groups
+preservados. Nenhum novo I/O remoto de produção ou cobrança por este ajuste;
+as consultas locais de metadados do diagnóstico não compram assinaturas.
+
+Teste manual: em uma conta sem assinatura, abra Descobrir Premium no iOS ou
+macOS e confira anual R$ 99,00/ano e mensal R$ 49,00/mês; alterne os planos e
+confira os períodos sem tocar em Assinar. Em conta já assinante, mantenha o
+plano ativo; não cancele nem recompre para testar somente a apresentação.
