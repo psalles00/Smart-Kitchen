@@ -784,6 +784,7 @@ struct AboutSettingsRows: View {
     @Environment(\.openURL) private var openURL
     @Environment(\.requestReview) private var requestReview
 
+    @AppStorage(AIDataConsent.preferenceKey) private var aiConsent = 0
     @State private var isRestoring: Bool = false
     @State private var restoreMessage: String? = nil
     @State private var showRestoreAlert: Bool = false
@@ -814,6 +815,14 @@ struct AboutSettingsRows: View {
                 openSupportEmail()
             } label: {
                 SettingsRowLabel("Contatar suporte", systemImage: "envelope")
+            }
+            .buttonStyle(.plain)
+
+            Button {
+                if aiConsent == 1 { AIDataConsent.shared.revoke() }
+                else { Task { try? await AIDataConsent.shared.requestAgain() } }
+            } label: {
+                SettingsRowLabel(aiConsent == 1 ? "Revogar autorização de IA" : "Autorizar serviços de IA", systemImage: "hand.raised")
             }
             .buttonStyle(.plain)
 

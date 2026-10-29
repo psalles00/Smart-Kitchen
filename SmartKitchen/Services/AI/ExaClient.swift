@@ -71,6 +71,7 @@ final class ExaClient {
             request.timeoutInterval = 30
             request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
+            try await AIDataConsent.shared.request()
             let result = try await URLSession.shared.data(for: request)
             data = result.0
             resp = result.1

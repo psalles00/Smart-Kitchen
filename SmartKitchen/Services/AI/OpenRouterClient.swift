@@ -51,6 +51,7 @@ final class OpenRouterClient {
         request.timeoutInterval = 60
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
+        try await AIDataConsent.shared.request()
         let (data, resp) = try await URLSession.shared.data(for: request)
 
         guard let http = resp as? HTTPURLResponse else { throw AIError.invalidResponse }
@@ -115,6 +116,7 @@ final class OpenRouterClient {
         request.timeoutInterval = 60
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
+        try await AIDataConsent.shared.request()
         let (data, resp) = try await URLSession.shared.data(for: request)
         guard let http = resp as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
             let msg = String(data: data, encoding: .utf8) ?? ""

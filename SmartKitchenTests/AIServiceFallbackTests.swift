@@ -708,7 +708,7 @@ final class RecipeIdeaRequestTests: XCTestCase {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [DirectChatURLProtocol.self]
         DirectChatURLProtocol.requestHandler = { _ in throw URLError(.unsupportedURL) }
-        let service = AIService(supabase: backend, urlSession: URLSession(configuration: configuration),
+        let service = AIService(supabase: backend, urlSession: URLSession(configuration: configuration), permission: {},
                                 openRouterKey: { "" }, prefersDirectOpenRouter: { false })
         let generated = await RecipeQuickIdeasGenerator(aiService: service).generate(pantryItems: ["Ovos", "Tomate"],
                             occasion: nil, refinement: nil, customQuery: prompt, language: .ptBR)
@@ -1060,7 +1060,7 @@ final class AIServiceFallbackTests: XCTestCase {
             throw URLError(.badURL)
         }
         let service = AIService(supabase: backend,
-                                urlSession: URLSession(configuration: configuration),
+                                urlSession: URLSession(configuration: configuration), permission: {},
                                 openRouterKey: { "unused-local-router-key" })
         let response = try await service.sendNutritionChat(
             messages: [["role": "user", "content": "arroz"]],
@@ -1105,7 +1105,7 @@ final class AIServiceFallbackTests: XCTestCase {
         }
         let backend = CountingUnavailableBackend()
         let service = AIService(supabase: backend,
-                                urlSession: URLSession(configuration: configuration),
+                                urlSession: URLSession(configuration: configuration), permission: {},
                                 openRouterKey: { "test-router-key" },
                                 prefersDirectOpenRouter: { preferred })
         let response = try await service.sendNutritionChat(messages: [["role": "user", "content": "refeição de teste"]],
@@ -1144,7 +1144,7 @@ final class AIServiceFallbackTests: XCTestCase {
 
         let service = AIService(
             supabase: CannotFindHostSupabaseFunctionInvoker(),
-            urlSession: session
+            urlSession: session, permission: {}
         )
 
         let response = try await service.sendNutritionChat(
@@ -1459,7 +1459,7 @@ final class AnalysisCancellationTests: XCTestCase {
             hosts.append(request.url?.host ?? "")
             throw URLError(.cancelled)
         }
-        let service = AIService(supabase: CountingUnavailableBackend(), urlSession: URLSession(configuration: configuration),
+        let service = AIService(supabase: CountingUnavailableBackend(), urlSession: URLSession(configuration: configuration), permission: {},
                                 openRouterKey: { "test-router-key" }, prefersDirectOpenRouter: { false })
         do { _ = try await service.sendChat(messages: [], apiKey: "test-openai-key"); XCTFail("Cancellation must propagate") }
         catch { XCTAssertTrue(error is CancellationError) }
@@ -1488,7 +1488,7 @@ final class AnalysisCancellationTests: XCTestCase {
                 throw URLError(.unsupportedURL)
             }
             let backend = CancelledChatBackend(error: error)
-            let service = AIService(supabase: backend, urlSession: URLSession(configuration: configuration),
+            let service = AIService(supabase: backend, urlSession: URLSession(configuration: configuration), permission: {},
                                     openRouterKey: { "test-router-key" }, prefersDirectOpenRouter: { false })
             do {
                 _ = try await service.sendChat(messages: [], apiKey: "test-openai-key")
@@ -2022,7 +2022,7 @@ final class RecipeIdeasLiveProviderTests: XCTestCase {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [DirectChatURLProtocol.self]
         DirectChatURLProtocol.requestHandler = { _ in throw URLError(.unsupportedURL) }
-        return AIService(supabase: backend, urlSession: URLSession(configuration: configuration),
+        return AIService(supabase: backend, urlSession: URLSession(configuration: configuration), permission: {},
                          openRouterKey: { "" }, prefersDirectOpenRouter: { false })
     }
 
@@ -2070,7 +2070,7 @@ final class RecipeIdeasLiveProviderTests: XCTestCase {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [DirectChatURLProtocol.self]
         DirectChatURLProtocol.requestHandler = { _ in throw URLError(.unsupportedURL) }
-        let service = AIService(supabase: backend, urlSession: URLSession(configuration: configuration),
+        let service = AIService(supabase: backend, urlSession: URLSession(configuration: configuration), permission: {},
                                 openRouterKey: { "" }, prefersDirectOpenRouter: { false })
         let directory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0].appendingPathComponent("LiveRecipeValidation")
         let decoder = JSONDecoder(); decoder.dateDecodingStrategy = .iso8601
@@ -2095,7 +2095,7 @@ final class RecipeIdeasLiveProviderTests: XCTestCase {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [DirectChatURLProtocol.self]
         DirectChatURLProtocol.requestHandler = { _ in throw URLError(.unsupportedURL) }
-        let generator = RecipeQuickIdeasGenerator(aiService: AIService(supabase: backend, urlSession: URLSession(configuration: configuration),
+        let generator = RecipeQuickIdeasGenerator(aiService: AIService(supabase: backend, urlSession: URLSession(configuration: configuration), permission: {},
             openRouterKey: { "" }, prefersDirectOpenRouter: { false }))
         let directory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0].appendingPathComponent("LiveRecipeValidation")
         let decoder = JSONDecoder(); decoder.dateDecodingStrategy = .iso8601
@@ -2123,7 +2123,7 @@ final class RecipeIdeasLiveProviderTests: XCTestCase {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [DirectChatURLProtocol.self]
         DirectChatURLProtocol.requestHandler = { _ in throw URLError(.unsupportedURL) }
-        let service = AIService(supabase: backend, urlSession: URLSession(configuration: configuration),
+        let service = AIService(supabase: backend, urlSession: URLSession(configuration: configuration), permission: {},
                                 openRouterKey: { "" }, prefersDirectOpenRouter: { false })
         let pantry = ["Ovos", "Arroz", "Tomate", "Cenoura", "Feijão"]
         let query = "Jantar sem leite em 20 minutos para uma pessoa"
@@ -2155,7 +2155,7 @@ final class RecipeIdeasLiveProviderTests: XCTestCase {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [DirectChatURLProtocol.self]
         DirectChatURLProtocol.requestHandler = { _ in throw URLError(.unsupportedURL) }
-        let service = AIService(supabase: backend, urlSession: URLSession(configuration: configuration),
+        let service = AIService(supabase: backend, urlSession: URLSession(configuration: configuration), permission: {},
                                 openRouterKey: { "" }, prefersDirectOpenRouter: { false })
         let generator = RecipeQuickIdeasGenerator(aiService: service)
         let pantry = ["Ovos", "Arroz", "Tomate", "Cenoura", "Feijão"]
@@ -2566,5 +2566,92 @@ final class DevelopmentBuildContractTests: XCTestCase {
         #else
         throw XCTSkip("Simulated counters are compiled out of production")
         #endif
+    }
+}
+
+@MainActor
+final class AIDataConsentTests: XCTestCase {
+    private func isolatedDefaults() -> UserDefaults {
+        UserDefaults(suiteName: "Savoria.ConsentTests.\(UUID().uuidString)")!
+    }
+
+    func testMissingPresenterNeverRecordsAChoice() async {
+        let defaults = isolatedDefaults()
+        let consent = AIDataConsent(defaults: defaults, prompt: { nil })
+        do { try await consent.request(); XCTFail("Must fail closed") }
+        catch { XCTAssertTrue(error is CancellationError) }
+        XCTAssertNil(defaults.object(forKey: AIDataConsent.preferenceKey))
+    }
+
+    func testDenialIsRememberedAndOnlyExplicitRetryPromptsAgain() async throws {
+        let defaults = isolatedDefaults()
+        var prompts = 0
+        let consent = AIDataConsent(defaults: defaults, prompt: { prompts += 1; return prompts > 1 })
+        for _ in 0..<2 {
+            do { try await consent.request(); XCTFail("No permission") }
+            catch { XCTAssertTrue(error is CancellationError) }
+        }
+        XCTAssertEqual(prompts, 1)
+        XCTAssertFalse(consent.isGranted)
+        try await consent.requestAgain()
+        try consent.requireGranted()
+        consent.revoke()
+        XCTAssertThrowsError(try consent.requireGranted())
+        XCTAssertEqual(prompts, 2)
+    }
+
+    func testConcurrentRequestsShareOnePromptAndRevocationWins() async {
+        let defaults = isolatedDefaults()
+        var prompts = 0
+        var finish: CheckedContinuation<Bool?, Never>?
+        let consent = AIDataConsent(defaults: defaults, prompt: {
+            prompts += 1
+            return await withCheckedContinuation { finish = $0 }
+        })
+        let first = Task { try await consent.request() }
+        let second = Task { try await consent.request() }
+        while finish == nil { await Task.yield() }
+        consent.revoke()
+        finish?.resume(returning: true)
+        for request in [first, second] {
+            do { try await request.value; XCTFail("Revoked permission must stay revoked") }
+            catch { XCTAssertTrue(error is CancellationError) }
+        }
+        XCTAssertEqual(prompts, 1)
+        XCTAssertFalse(consent.isGranted)
+    }
+
+    func testCancelledRequestCannotProceedAfterTheUserAllows() async {
+        let defaults = isolatedDefaults()
+        var finish: CheckedContinuation<Bool?, Never>?
+        let consent = AIDataConsent(defaults: defaults, prompt: {
+            await withCheckedContinuation { finish = $0 }
+        })
+        let request = Task { try await consent.request() }
+        while finish == nil { await Task.yield() }
+        request.cancel()
+        finish?.resume(returning: true)
+        do { try await request.value; XCTFail("Cancelled request must not send") }
+        catch { XCTAssertTrue(error is CancellationError) }
+        XCTAssertTrue(consent.isGranted, "The user's explicit permission remains valid for future requests")
+    }
+
+    func testDeclinedContentNeverReachesEitherProvider() async {
+        let consent = AIDataConsent(defaults: isolatedDefaults(), prompt: { false })
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [DirectChatURLProtocol.self]
+        DirectChatURLProtocol.requestHandler = { _ in
+            XCTFail("Denied content must not reach the network")
+            throw URLError(.unsupportedURL)
+        }
+        defer { DirectChatURLProtocol.requestHandler = nil }
+        let service = AIService(supabase: CountingUnavailableBackend(),
+            urlSession: URLSession(configuration: configuration),
+            permission: { try await consent.request() },
+            openRouterKey: { "synthetic-router-key" }, prefersDirectOpenRouter: { true })
+        do {
+            _ = try await service.sendChat(messages: [["role": "user", "content": "synthetic private meal"]], apiKey: "synthetic-key")
+            XCTFail("Permission is required")
+        } catch { XCTAssertTrue(error is CancellationError) }
     }
 }

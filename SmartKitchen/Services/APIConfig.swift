@@ -129,3 +129,100 @@ enum APIConfig {
 #endif
     }
 }
+
+
+#if os(iOS)
+import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
+
+/// Consent is local to this installation; it is never inferred from iCloud,
+/// onboarding completion, a subscription, or permission to use the camera.
+@MainActor
+final class AIDataConsent {
+    static let shared = AIDataConsent()
+    static let preferenceKey = "Savoria.aiDataConsent.v1"
+    private let defaults: UserDefaults
+    private let prompt: @MainActor () async -> Bool?
+    private var pending: Task<Bool?, Never>?
+    private var generation = 0
+
+    init(defaults: UserDefaults = .standard,
+         prompt: @escaping @MainActor () async -> Bool? = { await AIDataConsent.presentPermission() }) {
+        self.defaults = defaults
+        self.prompt = prompt
+    }
+
+    var isGranted: Bool { defaults.integer(forKey: Self.preferenceKey) == 1 }
+
+    func requireGranted() throws {
+        try Task.checkCancellation()
+        guard isGranted else { throw CancellationError() }
+    }
+
+    func revoke() {
+        generation += 1
+        defaults.set(-1, forKey: Self.preferenceKey)
+    }
+
+    func requestAgain() async throws {
+        if !isGranted { defaults.removeObject(forKey: Self.preferenceKey) }
+        try await request()
+    }
+
+    func request() async throws {
+        try Task.checkCancellation()
+        if isGranted { return }
+        guard defaults.integer(forKey: Self.preferenceKey) != -1 else { throw CancellationError() }
+        let revision = generation
+        let task: Task<Bool?, Never>
+        if let pending { task = pending }
+        else {
+            task = Task { await prompt() }
+            pending = task
+        }
+        let decision = await task.value
+        pending = nil
+        guard let accepted = decision else { throw CancellationError() }
+        guard revision == generation else { throw CancellationError() }
+        defaults.set(accepted ? 1 : -1, forKey: Self.preferenceKey)
+        // A cancelled operation never sends its payload, even if permission was granted.
+        try requireGranted()
+    }
+
+    private static func presentPermission() async -> Bool? {
+        let title = String(localized: "Permitir serviços de IA?")
+        let message = String(localized: "Para atender seus pedidos, o Savoria envia mensagens, ingredientes, dados nutricionais e as fotos ou áudios escolhidos aos serviços externos necessários: Supabase, OpenAI, OpenRouter e seus provedores de modelos, e Exa para buscas. O contexto pode incluir itens da despensa e informações do seu perfil nutricional. Autorize somente se concordar com esse envio. Você pode revogar a autorização em Configurações e continuar usando os recursos locais. Consulte a Política de privacidade em Configurações.")
+        let allow = String(localized: "Permitir")
+        let deny = String(localized: "Agora não")
+        #if os(iOS)
+        guard let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene })
+            .first(where: { $0.activationState == .foregroundActive }),
+              var presenter = scene.windows.first(where: { $0.isKeyWindow })?.rootViewController else { return nil }
+        while let presented = presenter.presentedViewController { presenter = presented }
+        guard presenter.viewIfLoaded?.window != nil, !presenter.isBeingDismissed else { return nil }
+        return await withCheckedContinuation { continuation in
+            let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: deny, style: .cancel) { _ in continuation.resume(returning: false) })
+            alert.addAction(UIAlertAction(title: allow, style: .default) { _ in continuation.resume(returning: true) })
+            presenter.present(alert, animated: true)
+        }
+        #elseif os(macOS)
+        guard NSApp.isActive, let window = NSApp.keyWindow, window.attachedSheet == nil else { return nil }
+        return await withCheckedContinuation { continuation in
+            let alert = NSAlert()
+            alert.messageText = title
+            alert.informativeText = message
+            alert.addButton(withTitle: allow)
+            alert.addButton(withTitle: deny)
+            alert.buttons.last?.keyEquivalent = "\u{1b}"
+            alert.beginSheetModal(for: window) { response in
+                continuation.resume(returning: response == .alertFirstButtonReturn)
+            }
+        }
+        #else
+        return nil
+        #endif
+    }
+}

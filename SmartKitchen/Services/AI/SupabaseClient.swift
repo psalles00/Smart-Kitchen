@@ -86,6 +86,7 @@ final class SupabaseClient: SupabaseFunctionInvoking {
         acceptLanguage: String? = nil
     ) async throws -> Data {
         guard let baseURL else { throw SupabaseError.notConfigured }
+        try await AIDataConsent.shared.request()
         let url = baseURL.appendingPathComponent("functions/v1/\(name)")
 
         var request = URLRequest(url: url)
@@ -118,6 +119,7 @@ final class SupabaseClient: SupabaseFunctionInvoking {
         as type: T.Type
     ) async throws -> T {
         guard let baseURL else { throw SupabaseError.notConfigured }
+        try AIDataConsent.shared.requireGranted()
         var components = URLComponents(url: baseURL.appendingPathComponent("/rest/v1/\(table)"), resolvingAgainstBaseURL: false)!
         components.percentEncodedQuery = query
         guard let url = components.url else { throw SupabaseError.invalidResponse }
@@ -147,6 +149,7 @@ final class SupabaseClient: SupabaseFunctionInvoking {
         as type: T.Type = VoidResult.self
     ) async throws -> T {
         guard let baseURL else { throw SupabaseError.notConfigured }
+        try AIDataConsent.shared.requireGranted()
         let url = baseURL.appendingPathComponent("/rest/v1/rpc/\(name)")
 
         var request = URLRequest(url: url)
@@ -177,6 +180,7 @@ final class SupabaseClient: SupabaseFunctionInvoking {
     /// PostgREST insert (`POST /rest/v1/<table>` with a JSON body).
     func restPOST<Body: Encodable>(table: String, body: Body) async throws {
         guard let baseURL else { throw SupabaseError.notConfigured }
+        try AIDataConsent.shared.requireGranted()
         let url = baseURL.appendingPathComponent("/rest/v1/\(table)")
 
         var request = URLRequest(url: url)

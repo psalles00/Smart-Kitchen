@@ -24,17 +24,20 @@ final class AIService: ObservableObject {
     private let defaultModel = "gpt-4.1-mini"
     private let supabase: any SupabaseFunctionInvoking
     private let urlSession: URLSession
+    private let permission: @MainActor () async throws -> Void
     private let openRouterKey: @MainActor () -> String
     private let prefersDirectOpenRouter: @MainActor () -> Bool
 
     init(
         supabase: any SupabaseFunctionInvoking = SupabaseClient(),
         urlSession: URLSession = .shared,
+        permission: @escaping @MainActor () async throws -> Void = { try await AIDataConsent.shared.request() },
         openRouterKey: @escaping @MainActor () -> String = { APIConfig.openRouterAPIKey },
         prefersDirectOpenRouter: @escaping @MainActor () -> Bool = { APIConfig.usesLocalOpenRouter }
     ) {
         self.supabase = supabase
         self.urlSession = urlSession
+        self.permission = permission
         self.openRouterKey = openRouterKey
         self.prefersDirectOpenRouter = prefersDirectOpenRouter
     }
@@ -268,6 +271,7 @@ final class AIService: ObservableObject {
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
         request.timeoutInterval = 60
 
+        try await permission()
         let (data, resp) = try await urlSession.data(for: request)
         try validate(resp: resp, data: data)
         return data
@@ -298,6 +302,7 @@ final class AIService: ObservableObject {
         request.httpBody = try JSONSerialization.data(withJSONObject: openRouterBody)
         request.timeoutInterval = 60
 
+        try await permission()
         let (data, resp) = try await urlSession.data(for: request)
         try validate(resp: resp, data: data)
         return data
@@ -317,6 +322,7 @@ final class AIService: ObservableObject {
         request.timeoutInterval = 120
         request.httpBody = body
 
+        try await permission()
         let (data, resp) = try await urlSession.data(for: request)
         try validate(resp: resp, data: data)
         return data
