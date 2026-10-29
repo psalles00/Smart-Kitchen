@@ -6,12 +6,23 @@ Cadastro Apple, catálogo, prévias e testes estão alinhados. A suíte atual te
 fracionário da Apple permanece documentado em um reproduzidor separado,
 sem alteração artificial da resposta nem relato enviado à Apple.
 
-O IPA descrito abaixo foi exportado sem upload antes da revisão posterior de
-traduções; ele não inclui as correções dessa revisão. Imagens/descrição da loja
-e envio continuam fora do escopo. A captura anual atualizada concluiu o
-processamento na conferência posterior.
+O IPA atualizado após a revisão de traduções foi exportado sem upload.
+Imagens/descrição da loja e envio continuam fora do escopo. A captura anual
+atualizada concluiu o processamento na conferência posterior.
 
-## Pacote final
+## Pacote atualizado após revisão dos idiomas
+
+- Fonte do aplicativo: commit `d8e2a97b`.
+- IPA: `/Volumes/PS-Externo/Coding/Builds/Savoria-AppStore-20261029/LocalizationFinal/Export/Savoria.ipa`.
+- Versão 3.6.2 (3), 64.193.601 bytes, SHA-256
+  `0a4674baffd66a2a81400cdf4e0a5a193aee9fa3f1417961be607174ffc31b2e`.
+- ZIP e assinatura completa verificados; Team `44K57HQAP9`, CloudKit Production,
+  ordem dos containers iCloud preservada, App Group da extensão preservado,
+  `get-task-allow=false`, chaves privadas vazias e sem `.debug.dylib`.
+  As traduções das categorias foram conferidas nos sete catálogos empacotados.
+- Archive e exportação locais concluídos; o IPA não foi enviado à Apple.
+
+## Pacote anterior, preservado para referência
 
 - Fonte de produção: `a971bbcd5256e9876441a3c3fd8648392e9a94f6`, incluindo
   compartilhamento `e658b95b`, relatos de IA `978057a2` e remoção da alegação
