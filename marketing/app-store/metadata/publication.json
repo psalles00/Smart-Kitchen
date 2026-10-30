@@ -1,7 +1,7 @@
 [
   {
     "locale": "ar-SA",
-    "name": "Savoria: وصفات وسعرات",
+    "name": "Savoria: مطبخ ذكي",
     "subtitle": "مخزون وتسوق وتغذية",
     "promotionalText": "مطبخك مترابط: مخزون وتسوق ووصفات ذكية وتسجيل بالصورة أو النص أو الصوت. سجل يوميًا؛ نسيان يوم لا يمحو سجلك. واجهة التطبيق لا تدعم العربية حاليًا.",
     "keywords": "طعام,وجبات,طبخ,بروتين,وزن",
@@ -11,7 +11,7 @@
   },
   {
     "locale": "de-DE",
-    "name": "Savoria: Rezepte & Kalorien",
+    "name": "Savoria: Smarte Küche",
     "subtitle": "Vorräte, Einkauf und Ernährung",
     "promotionalText": "Deine Küche vernetzt: Vorräte, Einkauf, KI-Rezepte und Mahlzeiten per Foto, Text oder Sprache. Einen Tag vergessen? Dein Verlauf bleibt erhalten.",
     "keywords": "zähler,kochen,zutaten,mahlzeiten,protein,makros,gewicht",
@@ -21,7 +21,7 @@
   },
   {
     "locale": "en-US",
-    "name": "Savoria: Recipes & Calories",
+    "name": "Savoria: Smart Kitchen",
     "subtitle": "Pantry, shopping and nutrition",
     "promotionalText": "Smart kitchen management: connected pantry and shopping lists, AI recipes and meal logging by photo, text or voice. Missed a day? Your history still counts.",
     "keywords": "cooking,ingredients,meals,protein,macros,tracker,weight,food",
@@ -31,7 +31,7 @@
   },
   {
     "locale": "es-ES",
-    "name": "Savoria: Recetas y Calorías",
+    "name": "Savoria: Cocina Inteligente",
     "subtitle": "Despensa, compra y nutrición",
     "promotionalText": "Tu cocina conectada: despensa, compras, recetas con IA y comidas por foto, texto o voz. Si olvidas un día, tu historial sigue contando.",
     "keywords": "contador,alimentación,macros,proteína,cocinar,ingredientes,comidas,peso",
@@ -41,7 +41,7 @@
   },
   {
     "locale": "fr-FR",
-    "name": "Savoria: Recettes et Calories",
+    "name": "Savoria : Cuisine Intelligente",
     "subtitle": "Provisions, courses, nutrition",
     "promotionalText": "Votre cuisine connectée : provisions, courses, recettes avec IA et repas par photo, texte ou voix. Un jour oublié ? Votre historique reste utile.",
     "keywords": "compteur,repas,protéines,macros,cuisiner,ingrédients,poids",
@@ -51,7 +51,7 @@
   },
   {
     "locale": "it",
-    "name": "Savoria: Ricette e Calorie",
+    "name": "Savoria: Cucina Intelligente",
     "subtitle": "Dispensa, spesa e nutrizione",
     "promotionalText": "La tua cucina connessa: dispensa, spesa, ricette con IA e pasti con foto, testo o voce. Hai dimenticato un giorno? Il tuo storico resta valido.",
     "keywords": "contatore,alimentazione,macro,proteine,cucinare,ingredienti,pasti,peso",
@@ -61,7 +61,7 @@
   },
   {
     "locale": "ja",
-    "name": "Savoria：レシピとカロリー",
+    "name": "Savoria：スマートキッチン",
     "subtitle": "食材の在庫・買い物・食事を賢く管理",
     "promotionalText": "食材の在庫と買い物を連携。AIのレシピ提案や、写真・テキスト・音声による食事記録も。毎日記録して、たまに忘れても履歴はそのまま活用できます。",
     "keywords": "料理記録,栄養管理,たんぱく質,体重記録,献立作り",
@@ -71,7 +71,7 @@
   },
   {
     "locale": "ko",
-    "name": "Savoria: 레시피와 칼로리",
+    "name": "Savoria: 스마트 키친",
     "subtitle": "식재료, 장보기, 식사 관리",
     "promotionalText": "재고와 장보기 연결, AI 레시피, 사진·글·음성 식사 기록. 매일 기록하고 가끔 잊어도 기존 기록은 그대로 활용하세요. 앱 화면은 한국어 미지원.",
     "keywords": "요리기록,영양관리,단백질,체중기록,식단",
@@ -81,7 +81,7 @@
   },
   {
     "locale": "pt-BR",
-    "name": "Savoria: Receitas e Calorias",
+    "name": "Savoria: Cozinha Inteligente",
     "subtitle": "Despensa, compras e nutrição",
     "promotionalText": "Sua cozinha organizada: despensa, compras, receitas com IA e calorias por foto, texto ou voz. Esqueceu de registrar um dia? Seu histórico continua valendo.",
     "keywords": "contador,alimentação,macros,proteína,cardápio,cozinhar,ingredientes,refeições,peso",
@@ -91,7 +91,7 @@
   },
   {
     "locale": "zh-Hans",
-    "name": "Savoria：食谱与热量",
+    "name": "Savoria：智能厨房",
     "subtitle": "食材库存、购物清单与饮食管理",
     "promotionalText": "连接食材库存与购物清单，通过 AI 发现食谱，用照片、文字或语音记录餐食。坚持每日记录，偶尔漏记也不抹去历史。应用界面暂不支持中文。",
     "keywords": "烹饪记录,营养管理,蛋白质,体重记录,膳食",

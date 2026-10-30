@@ -46,3 +46,9 @@ A incompatibilidade de símbolos reapareceu e foi localizada na configuração d
 A primeira rodada renderizada exibiu textos misturados e o botão Debug na página inicial. Essas capturas não foram enviadas. Os argumentos do processo foram alinhados ao idioma da janela e foram escolhidas as views originais de listas, receitas e nutrição, que não exibem controles de desenvolvimento. A rodada `iPad-localized-*` passou nos sete idiomas, gerando 21 capturas em 2064×2752 sem alpha. Revisão visual e títulos localizados aprovados por OCR local; corrigida a chave do idioma usada pelo reconhecedor japonês, sem mudar as expectativas.
 
 As capturas finais estão em `marketing/app-store/2026-10-29-ipad-localized`. Três arquivos próprios foram enviados por idioma suportado; coreano, chinês e árabe herdam inglês, confirmado no Gerenciador de mídia. A exigência de captura de iPad desapareceu da validação. O processamento foi concluído, o app e o grupo Premium foram incluídos junto aos dois planos, e a submissão dos quatro itens foi confirmada pela Apple às 19:23 BRT. O iPad foi encerrado ao terminar, liberando recursos; coordenação com Rotina concluída.
+
+## Nome da loja atualizado em 30/10/2026
+
+A pedido de Pedro, os dez nomes foram alterados para a proposta de cozinha inteligente. Nome principal: **Savoria: Smart Kitchen**; português: **Savoria: Cozinha Inteligente**. As traduções estão em `marketing/app-store/metadata/*/metadata.json`. Todos respeitam o limite de 30 caracteres.
+
+Os dez valores foram salvos na interface do App Store Connect e conferidos novamente após recarregar a página. A Apple permitiu a edição sem retirar a versão 3.6.2 da revisão: o estado permaneceu **Aguardando revisão**. Não foi necessário gerar/uploadar outro pacote nem reenviar a submissão.
