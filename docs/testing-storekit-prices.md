@@ -5,6 +5,36 @@ Pedro autorizou preços inteiros como solução prática. Cadastro Apple, catál
 e prévias foram de fato alterados; o teste numérico e a apresentação passaram.
 As seções antigas abaixo registram a investigação, não os preços vigentes.
 
+## Catálogo antigo persistente no iPhone físico — 04/11/2026
+
+O paywall real do iPhone 12 Pro mostrava R$ 39,99/ano, R$ 6,99/mês e
+sete dias grátis. Reabrir ou atualizar o app não desativou o catálogo local.
+O diagnóstico dos produtos carregados identificou o grupo local `21484567`,
+enquanto o grupo do App Store Connect é `22478308`. A prévia de Debug usava
+os fallbacks corretos e, portanto, não comprovava a correção do caminho real.
+
+O scheme normal agora fica sem `StoreKitConfigurationFileReference`, também
+no `project.yml`. Os testes locais continuam ativando o catálogo explicitamente
+por `SKTestSession`. Para tirar um aparelho de uma sessão local persistente,
+abrir o projeto no Xcode, conferir **Run > Options > StoreKit Configuration:
+None**, selecionar o aparelho correto e executar o app uma vez pelo Xcode.
+Não desinstalar, limpar transações ou apagar dados para fazer essa troca.
+
+Após essa execução e outra abertura pelo `devicectl`, o mesmo código recebeu
+grupo `22478308`, moeda BRL, preços numéricos `99`/`49`, textos
+`R$ 99,00`/`R$ 49,00` e nenhuma oferta introdutória nos dois produtos.
+Paywall conferido visualmente em **Settings > Current plan > Manage**, pelo
+Device Hub, sem usar a prévia de Debug e sem comprar. Evidência local:
+`artifacts/2026-11-04-pricing/iphone-paywall-corrected.png`.
+
+Em Debug, o argumento opcional `-StoreKitCatalogueDiagnostics` registra somente
+metadados públicos dos produtos já carregados, sem nova consulta, recibos ou
+identificadores de clientes. Não é incluído no código Release.
+
+Referência: [desativar StoreKit Testing no Xcode](https://developer.apple.com/documentation/xcode/setting-up-storekit-testing-in-xcode).
+
+## Histórico anterior
+
 O catálogo `SmartKitchen/Resources/Configuration.storekit` usa valores numéricos
 com ponto decimal: `99.90` no anual e `49.90` no mensal. A configuração brasileira
 permanece `pt_BR` / `BRA`. A apresentação localizada deve vir de

@@ -110,6 +110,15 @@ final class SubscriptionManager {
                 Self.annualProductID,
                 Self.monthlyProductID
             ])
+            #if DEBUG
+            // Opt-in catalogue diagnostics: public product metadata only, never
+            // receipts or customer identifiers. Reuses this request's results.
+            if ProcessInfo.processInfo.arguments.contains("-StoreKitCatalogueDiagnostics") {
+                for product in loaded {
+                    print("[StoreKitCatalogue] id=\(product.id) price=\(product.price) display=\(product.displayPrice) currency=\(product.priceFormatStyle.currencyCode) group=\(product.subscription?.subscriptionGroupID ?? "none") trial=\(product.subscription?.introductoryOffer != nil)")
+                }
+            }
+            #endif
             var dict: [String: Product] = [:]
             for product in loaded { dict[product.id] = product }
             self.products = dict

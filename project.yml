@@ -30,7 +30,8 @@ schemes:
       config: Release
       debugEnabled: false
       executable: Savoria
-      storeKitConfiguration: SmartKitchen/Resources/Configuration.storekit
+      # Real catalogue by default. Unit tests activate Configuration.storekit
+      # explicitly through SKTestSession, so test prices cannot leak into demos.
       simulateLocation:
         allow: true
     profile:
