@@ -217,6 +217,31 @@ enum AppLanguage: String, CaseIterable, Sendable {
     }
 }
 
+#if DEBUG
+struct DebugLanguageOverride {
+    static let key = "debug.temporaryAppLanguage"
+    static let duration: TimeInterval = 24 * 60 * 60
+
+    let language: AppLanguage
+    let expiresAt: Date
+
+    init?(storedValue: String, now: Date = Date()) {
+        let parts = storedValue.split(separator: "|")
+        guard parts.count == 2,
+              let language = AppLanguage(rawValue: String(parts[0])),
+              let timestamp = TimeInterval(parts[1]), timestamp.isFinite else { return nil }
+        let expiresAt = Date(timeIntervalSince1970: timestamp)
+        guard expiresAt > now, expiresAt.timeIntervalSince(now) <= Self.duration else { return nil }
+        self.language = language
+        self.expiresAt = expiresAt
+    }
+
+    static func storedValue(for language: AppLanguage, now: Date = Date()) -> String {
+        "\(language.rawValue)|\(now.addingTimeInterval(duration).timeIntervalSince1970)"
+    }
+}
+#endif
+
 struct AppLocalization: Sendable {
     static let supportedLanguages = AppLanguage.allCases
     private static let languageBundles: [AppLanguage: Bundle] = Dictionary(uniqueKeysWithValues:
@@ -282,8 +307,18 @@ struct AppLocalization: Sendable {
         }.joined(separator: ",")
     }
 
+    static func current() -> AppLocalization {
+        #if DEBUG
+        if let storedValue = UserDefaults.standard.string(forKey: DebugLanguageOverride.key),
+           let override = DebugLanguageOverride(storedValue: storedValue) {
+            return AppLocalization(language: override.language)
+        }
+        #endif
+        return current(preferredLanguages: Locale.preferredLanguages)
+    }
+
     static func current(
-        preferredLanguages: [String] = Locale.preferredLanguages,
+        preferredLanguages: [String],
         bundlePreferredLanguages: [String] = Bundle.main.preferredLocalizations
     ) -> AppLocalization {
         let candidates = (bundlePreferredLanguages + preferredLanguages).uniquePreservingOrder()

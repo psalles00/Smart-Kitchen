@@ -8,6 +8,7 @@ struct SavoriaDebugCenter: View {
     @Environment(SubscriptionManager.self) private var manager
     @State private var gate = FeatureGate.shared
     @State private var previewStep: OnboardingStep?
+    @AppStorage(DebugLanguageOverride.key) private var debugLanguage = ""
     #if os(iOS)
     @State private var openRouterDraft = ""
     @State private var hasLocalOpenRouter = APIConfig.usesLocalOpenRouter
@@ -18,6 +19,26 @@ struct SavoriaDebugCenter: View {
     var body: some View {
         NavigationStack {
             Form {
+                Section {
+                    Picker("Idioma do app por 24 horas", selection: Binding<AppLanguage?>(
+                        get: { DebugLanguageOverride(storedValue: debugLanguage)?.language },
+                        set: { language in
+                            debugLanguage = language.map { DebugLanguageOverride.storedValue(for: $0) } ?? ""
+                        }
+                    )) {
+                        Text("Idioma do sistema").tag(nil as AppLanguage?)
+                        ForEach(AppLanguage.allCases, id: \.self) { language in
+                            Text(verbatim: language.locale.localizedString(forLanguageCode: language.rawValue)
+                                 ?? language.rawValue)
+                                .tag(Optional(language))
+                        }
+                    }
+                    .accessibilityIdentifier("debug-temporary-app-language")
+                    if let override = DebugLanguageOverride(storedValue: debugLanguage) {
+                        Text(override.expiresAt, format: .dateTime.month().day().hour().minute())
+                            .foregroundStyle(.secondary)
+                    }
+                }
                 #if os(iOS)
                 Section {
                     LabeledContent("OpenRouter", value: hasLocalOpenRouter

@@ -188,6 +188,10 @@ struct SmartKitchenApp: App {
     @State private var pendingForegroundResumeTask: Task<Void, Never>?
     @State private var foregroundResumeTraceCounter = 0
 
+    #if DEBUG
+    @AppStorage(DebugLanguageOverride.key) private var debugLanguage = ""
+    #endif
+
     init() {
         // Must be called after all stored properties are initialized
         PerformanceLogger.event(.launch, "SmartKitchenApp.init body begin")
@@ -256,6 +260,29 @@ struct SmartKitchenApp: App {
                         }
                 }
             }
+            #if DEBUG
+            .environment(\.locale, DebugLanguageOverride(storedValue: debugLanguage)?.language.locale ?? .current)
+            .task(id: debugLanguage) {
+                let storedValue = debugLanguage
+                guard !storedValue.isEmpty else { return }
+                if let override = DebugLanguageOverride(storedValue: storedValue) {
+                    do {
+                        try await Task.sleep(for: .seconds(max(0, override.expiresAt.timeIntervalSinceNow)))
+                    } catch {
+                        return
+                    }
+                }
+                if !Task.isCancelled, debugLanguage == storedValue {
+                    debugLanguage = ""
+                }
+            }
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active, !debugLanguage.isEmpty,
+                   DebugLanguageOverride(storedValue: debugLanguage) == nil {
+                    debugLanguage = ""
+                }
+            }
+            #endif
             .preferredColorScheme(launchAppearanceMode.colorScheme)
             .onReceive(NotificationCenter.default.publisher(for: .appearanceModeChanged)) { _ in
                 launchAppearanceMode = .launchPreference
