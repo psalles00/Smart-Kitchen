@@ -8,8 +8,8 @@
 
 Atualização verificada em 15/10/2026: as duas assinaturas já existem como
 rascunhos no App Store Connect, no grupo Savoria Premium (`22478308`), ambas no
-nível 1. Anual: `6822917042`, 1 ano, R$ 99,90 no Brasil. Mensal: `6822949625`,
-1 mês, R$ 49,90 no Brasil. Não recrie os produtos. Os passos abaixo servem para
+nível 1. Anual: `6822917042`, 1 ano, R$ 99,00 no Brasil. Mensal: `6822949625`,
+1 mês, R$ 49,00 no Brasil. Não recrie os produtos. Os passos abaixo servem para
 conferência e conclusão dos metadados. Isso não significa publicação, aprovação
 ou disponibilidade validada via Sandbox. A oferta de teste grátis em produção
 ainda precisa ser conferida; a prévia local não comprova elegibilidade real.
@@ -60,8 +60,8 @@ Use estes valores exatamente como referência durante a configuração:
 | Arquivo de versão/build | `project.yml` |
 | Assinatura anual | `com.pedrosalles.smartkitchen.sync.premium.annual` |
 | Assinatura mensal | `com.pedrosalles.smartkitchen.sync.premium.monthly` |
-| Preço anual no Brasil | R$ 99,90 |
-| Preço mensal no Brasil | R$ 49,90 |
+| Preço anual no Brasil | R$ 99,00 |
+| Preço mensal no Brasil | R$ 49,00 |
 | Trial anual | 7 dias no StoreKit local; oferta de produção ainda não validada |
 | URL de privacidade esperada | `https://psalles00.github.io/Smart-Kitchen/privacy/` |
 | URL de termos esperada | `https://psalles00.github.io/Smart-Kitchen/terms/` |
@@ -254,7 +254,7 @@ Crie a primeira assinatura com estes dados:
 1. Product ID: `com.pedrosalles.smartkitchen.sync.premium.annual`
 2. Reference Name: `Savoria Premium Annual`
 3. Duração: `1 year`
-4. Preço: R$ 99,90 no território Brasil
+4. Preço: R$ 99,00 no território Brasil
 
 Depois configure a oferta introdutória:
 
@@ -269,7 +269,7 @@ Crie a segunda assinatura com estes dados:
 1. Product ID: `com.pedrosalles.smartkitchen.sync.premium.monthly`
 2. Reference Name: `Savoria Premium Monthly`
 3. Duração: `1 month`
-4. Preço: R$ 49,90 no território Brasil
+4. Preço: R$ 49,00 no território Brasil
 
 ### Passo 8.4 — Preencher metadados de cada assinatura
 

@@ -1,6 +1,6 @@
 # Termos de Uso — Savoria
 
-_Última atualização: 15 de outubro de 2026._
+_Última atualização: 4 de novembro de 2026._
 
 Estes Termos regem o uso do aplicativo Savoria (o "App"), publicado por
 **Pedro Salles**. Ao instalar ou usar o App, você concorda com estes Termos.
@@ -21,9 +21,9 @@ segurança da sua Apple ID.
 
 ### 3.1 Planos
 
-- **Premium Anual** — R$ 99,90 a cada 12 meses, com 7 dias de teste
+- **Premium Anual** — R$ 99,00 a cada 12 meses, com 7 dias de teste
   grátis quando a oferta estiver disponível para a conta.
-- **Premium Mensal** — R$ 49,90 a cada 1 mês.
+- **Premium Mensal** — R$ 49,00 a cada 1 mês.
 
 Preços podem variar por região conforme tabelas da App Store.
 

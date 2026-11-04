@@ -11,7 +11,7 @@ Atualizado em: 2026-10-15.
 O archive de maio citado abaixo é um registro histórico, não o candidato atual.
 Gere um novo archive do código atual após concluir as validações pendentes; não
 envie uma versão antiga. Os produtos Premium já estão criados em rascunho, ambos
-no nível 1: anual R$ 99,90 e mensal R$ 49,90 no Brasil. Metadados, oferta
+no nível 1: anual R$ 99,00 e mensal R$ 49,00 no Brasil. Metadados, oferta
 introdutória real, Sandbox e revisão/publicação ainda precisam de validação.
 Consulte também `docs/testing-recipe-discovery.md` para as evidências atuais.
 
