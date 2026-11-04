@@ -63,11 +63,11 @@ enum AppSkeletonKind {
         case .assistant:
             return "Savoria"
         case .lists:
-            return String(localized: "Listas")
+            return String(localized: "Listas", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .recipes:
-            return String(localized: "Receitas")
+            return String(localized: "Receitas", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .nutrition:
-            return String(localized: "Nutrição")
+            return String(localized: "Nutrição", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 

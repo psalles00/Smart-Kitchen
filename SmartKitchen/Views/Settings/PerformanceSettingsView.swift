@@ -15,7 +15,7 @@ struct PerformanceSettingsView: View {
                 Label("A alteração é aplicada imediatamente", systemImage: "switch.2")
             }
         }
-        .settingsNavigationTitle(String(localized: "Performance"))
+        .settingsNavigationTitle(String(localized: "Performance", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif

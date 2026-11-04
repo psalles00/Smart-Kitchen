@@ -146,7 +146,7 @@ struct FoodResultView: View {
             .macModalFormStyle(minWidth: 760, minHeight: 700)
             .savoriaModalBorder(theme: .nutrients)
             .platformScrollDismissesKeyboardInteractively()
-            .modalNavigationTitle(String(localized: "Revisar refeição"))
+            .modalNavigationTitle(String(localized: "Revisar refeição", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancelar") { dismiss() }

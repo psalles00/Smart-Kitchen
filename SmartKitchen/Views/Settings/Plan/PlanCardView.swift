@@ -20,26 +20,26 @@ struct PlanCardView: View {
         }
         #endif
         guard let id = subscriptionManager.activeProductID else {
-            return String(localized: "Básico")
+            return String(localized: "Básico", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
         if id == SubscriptionManager.annualProductID {
-            return String(localized: "Premium Anual")
+            return String(localized: "Premium Anual", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
         if id == SubscriptionManager.monthlyProductID {
-            return String(localized: "Premium Mensal")
+            return String(localized: "Premium Mensal", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
-        return String(localized: "Premium")
+        return String(localized: "Premium", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
     }
 
     private var subtitle: String? {
         #if DEBUG && os(iOS)
-        if subscriptionManager.debugMode != .appStore { return String(localized: "Plano simulado") }
+        if subscriptionManager.debugMode != .appStore { return String(localized: "Plano simulado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) }
         #endif
         guard isPremium, let date = subscriptionManager.expirationDate else { return nil }
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .none
-        return String(format: String(localized: "Renova em %@"), formatter.string(from: date))
+        return String(format: String(localized: "Renova em %@", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), formatter.string(from: date))
     }
 
     var body: some View {

@@ -130,13 +130,13 @@ struct SharedImportItem: Identifiable, Equatable {
     var displayTitle: String {
         switch kind {
         case .url:
-            return url?.host ?? String(localized: "Link compartilhado")
+            return url?.host ?? String(localized: "Link compartilhado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .text:
-            return String(localized: "Texto compartilhado")
+            return String(localized: "Texto compartilhado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .image:
-            return filename ?? String(localized: "Imagem compartilhada")
+            return filename ?? String(localized: "Imagem compartilhada", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .video:
-            return filename ?? mediaFileURL?.lastPathComponent ?? String(localized: "Vídeo compartilhado")
+            return filename ?? mediaFileURL?.lastPathComponent ?? String(localized: "Vídeo compartilhado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 
@@ -147,9 +147,9 @@ struct SharedImportItem: Identifiable, Equatable {
         case .text:
             return RecipeImportLogger.preview(text ?? "", limit: 140)
         case .image:
-            return String(localized: "Escolha se essa imagem deve virar uma receita ou ficar reservada para o módulo de nutrientes.")
+            return String(localized: "Escolha se essa imagem deve virar uma receita ou ficar reservada para o módulo de nutrientes.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .video:
-            return String(localized: "Podemos transcrever o áudio do vídeo e montar uma receita editável antes de salvar. O limite é de \(RecipeImportVideoPolicy.maxSharedVideoDurationMinutes) minutos.")
+            return String(localized: "Podemos transcrever o áudio do vídeo e montar uma receita editável antes de salvar. O limite é de \(RecipeImportVideoPolicy.maxSharedVideoDurationMinutes) minutos.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 
@@ -460,9 +460,9 @@ private enum SharedImportStorageError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .containerUnavailable:
-            return String(localized: "O container compartilhado do app não está disponível.")
+            return String(localized: "O container compartilhado do app não está disponível.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .invalidManifest:
-            return String(localized: "O conteúdo compartilhado está inválido ou incompleto.")
+            return String(localized: "O conteúdo compartilhado está inválido ou incompleto.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 }

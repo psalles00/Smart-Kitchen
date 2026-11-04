@@ -47,9 +47,9 @@ final class SubscriptionManager {
         var id: String { rawValue }
         var title: String {
             switch self {
-            case .appStore: String(localized: "App Store")
-            case .basic: String(localized: "Grátis")
-            case .premium: String(localized: "Premium")
+            case .appStore: String(localized: "App Store", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            case .basic: String(localized: "Grátis", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            case .premium: String(localized: "Premium", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             }
         }
     }
@@ -153,7 +153,7 @@ final class SubscriptionManager {
     func purchase(_ product: Product) async -> Bool {
         #if DEBUG
         guard debugMode == .appStore else {
-            purchaseState = .failed(String(localized: "Volte ao modo App Store para realizar uma compra real."))
+            purchaseState = .failed(String(localized: "Volte ao modo App Store para realizar uma compra real.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
             return false
         }
         #endif
@@ -196,17 +196,17 @@ final class SubscriptionManager {
             try await AppStore.sync()
         } catch {
             isRestoring = false
-            lastRestoreMessage = String(localized: "Não foi possível restaurar agora. Tente novamente.")
+            lastRestoreMessage = String(localized: "Não foi possível restaurar agora. Tente novamente.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             return
         }
         await refreshEntitlements()
         isRestoring = false
         if storeIsSubscribed && !wasSubscribed {
-            lastRestoreMessage = String(localized: "Assinatura restaurada com sucesso.")
+            lastRestoreMessage = String(localized: "Assinatura restaurada com sucesso.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         } else if storeIsSubscribed {
-            lastRestoreMessage = String(localized: "Sua assinatura já estava ativa.")
+            lastRestoreMessage = String(localized: "Sua assinatura já estava ativa.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         } else {
-            lastRestoreMessage = String(localized: "Nenhuma compra anterior encontrada.")
+            lastRestoreMessage = String(localized: "Nenhuma compra anterior encontrada.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 

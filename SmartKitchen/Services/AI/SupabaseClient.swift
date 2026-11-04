@@ -36,11 +36,11 @@ final class SupabaseClient: SupabaseFunctionInvoking {
         var errorDescription: String? {
             switch self {
             case .notConfigured:
-                return String(localized: "Supabase não configurado (SUPABASE_URL/SUPABASE_ANON_KEY).")
+                return String(localized: "Supabase não configurado (SUPABASE_URL/SUPABASE_ANON_KEY).", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             case .invalidResponse:
-                return String(localized: "Resposta inválida do Supabase.")
+                return String(localized: "Resposta inválida do Supabase.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             case .apiError(let code, let msg):
-                return String(localized: "Supabase erro \(code): \(msg)")
+                return String(localized: "Supabase erro \(code): \(msg)", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             }
         }
     }

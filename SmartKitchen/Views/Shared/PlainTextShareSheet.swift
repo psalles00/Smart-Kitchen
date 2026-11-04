@@ -14,7 +14,7 @@ struct PlainTextSharePayload: Identifiable {
 /// Builds a snapshot only when the user asks to share. No media, database writes or network requests.
 @MainActor
 enum SavoriaPlainTextExport {
-    static var attribution: String { String(localized: "Compartilhado com Savoria") }
+    static var attribution: String { String(localized: "Compartilhado com Savoria", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) }
 
     static func list(title: String, items: [UnifiedItem]) -> String {
         let rows = items.map { item in
@@ -36,12 +36,12 @@ enum SavoriaPlainTextExport {
         let multiplier = Double(servingCount) / Double(max(recipe.servings, 1))
         var blocks = [recipe.name]
         if !recipe.descriptionText.isEmpty { blocks.append(recipe.descriptionText) }
-        blocks.append("\(String(localized: "Porções")): \(servingCount)")
-        if recipe.totalTime > 0 { blocks.append("\(String(localized: "Tempo total")): \(recipe.totalTime) min") }
+        blocks.append("\(String(localized: "Porções", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)): \(servingCount)")
+        if recipe.totalTime > 0 { blocks.append("\(String(localized: "Tempo total", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)): \(recipe.totalTime) min") }
         let ingredients = (recipe.ingredients ?? []).sorted { $0.sortOrder < $1.sortOrder }
         let sections = (recipe.ingredientSections ?? []).sorted { $0.sortOrder < $1.sortOrder }
         if !ingredients.isEmpty {
-            var lines = [String(localized: "Ingredientes")]
+            var lines = [String(localized: "Ingredientes", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)]
             func appendIngredient(_ ingredient: RecipeIngredient) {
                 var amountParts: [String] = []
                 if let quantity = ingredient.quantity {
@@ -68,13 +68,13 @@ enum SavoriaPlainTextExport {
         }
         let steps = (recipe.steps ?? []).sorted { $0.order < $1.order }
         if !steps.isEmpty {
-            blocks.append(([String(localized: "Modo de preparo")] + steps.enumerated().map {
+            blocks.append(([String(localized: "Modo de preparo", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)] + steps.enumerated().map {
                 "\($0.offset + 1). \($0.element.instruction)"
             }).joined(separator: "\n"))
         }
         let source = recipe.externalURLString.trimmingCharacters(in: .whitespacesAndNewlines)
         if let url = URL(string: source), ["https", "http"].contains(url.scheme?.lowercased() ?? "") {
-            blocks.append("\(String(localized: "Fonte")): \(source)")
+            blocks.append("\(String(localized: "Fonte", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)): \(source)")
         }
         blocks.append(attribution)
         return blocks.joined(separator: "\n\n")
@@ -110,7 +110,7 @@ struct PlainTextShareSheet: View {
                         #endif
                         copied = true
                     } label: {
-                        Label(copied ? String(localized: "Texto copiado") : String(localized: "Copiar texto"),
+                        Label(copied ? String(localized: "Texto copiado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) : String(localized: "Copiar texto", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                               systemImage: copied ? "checkmark" : "doc.on.doc")
                             .frame(minHeight: 44)
                     }

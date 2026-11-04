@@ -150,7 +150,7 @@ final class CloudSyncService: @unchecked Sendable {
                 } catch {
                     NSLog("Local container failed, falling back to temporary store: %@", String(describing: error))
                     initialContainer = try! Self.makeEphemeralLocalContainer()
-                    initialError = String(localized: "Não foi possível abrir o banco local. O app iniciou em modo temporário; reinicie e tente novamente.")
+                    initialError = String(localized: "Não foi possível abrir o banco local. O app iniciou em modo temporário; reinicie e tente novamente.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
                 }
             }
         } else {
@@ -162,7 +162,7 @@ final class CloudSyncService: @unchecked Sendable {
             } catch {
                 NSLog("Local container failed, falling back to temporary store: %@", String(describing: error))
                 initialContainer = try! Self.makeEphemeralLocalContainer()
-                initialError = String(localized: "Não foi possível abrir o banco local. O app iniciou em modo temporário; reinicie e tente novamente.")
+                initialError = String(localized: "Não foi possível abrir o banco local. O app iniciou em modo temporário; reinicie e tente novamente.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             }
         }
 
@@ -190,7 +190,7 @@ final class CloudSyncService: @unchecked Sendable {
 
         if syncPref && !cloudKitAllowed {
             UserDefaults.standard.set(false, forKey: Self.syncEnabledKey)
-            syncError = String(localized: "Sincronização iCloud indisponível nesta build.")
+            syncError = String(localized: "Sincronização iCloud indisponível nesta build.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             shouldActivateCloudOnLaunch = false
         }
 
@@ -224,7 +224,7 @@ final class CloudSyncService: @unchecked Sendable {
         guard iCloudAvailable else {
             shouldActivateCloudOnLaunch = false
             syncEnabled = false
-            syncError = String(localized: "iCloud não está disponível neste dispositivo. Verifique se está conectado nas Configurações do sistema.")
+            syncError = String(localized: "iCloud não está disponível neste dispositivo. Verifique se está conectado nas Configurações do sistema.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             return
         }
 
@@ -235,7 +235,7 @@ final class CloudSyncService: @unchecked Sendable {
             NSLog("CloudKit container failed after local launch, staying local: %@", String(describing: error))
             shouldActivateCloudOnLaunch = false
             syncEnabled = false
-            syncError = String(localized: "Não foi possível inicializar a sincronização com iCloud neste dispositivo.")
+            syncError = String(localized: "Não foi possível inicializar a sincronização com iCloud neste dispositivo.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             return
         }
 
@@ -287,11 +287,11 @@ final class CloudSyncService: @unchecked Sendable {
     }
 
     var statusDescription: String {
-        if isSyncing { return String(localized: "Sincronizando…") }
+        if isSyncing { return String(localized: "Sincronizando…", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) }
         if syncEnabled && !isUsingCloudKitContainer && shouldActivateCloudOnLaunch {
-            return String(localized: "Preparando iCloud…")
+            return String(localized: "Preparando iCloud…", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
-        return iCloudAvailable ? String(localized: "Conectado") : String(localized: "Indisponível")
+        return iCloudAvailable ? String(localized: "Conectado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) : String(localized: "Indisponível", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
     }
 
     // MARK: - Enable / Disable cloud sync
@@ -300,7 +300,7 @@ final class CloudSyncService: @unchecked Sendable {
     func enableCloudSync() async throws {
         guard !syncEnabled else { return }
         guard Self.canUseCloudKitInCurrentEnvironment() else {
-            syncError = String(localized: "Sincronização iCloud indisponível nesta build.")
+            syncError = String(localized: "Sincronização iCloud indisponível nesta build.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             throw NSError(domain: "CloudSync", code: 2, userInfo: [NSLocalizedDescriptionKey: syncError!])
         }
 
@@ -310,7 +310,7 @@ final class CloudSyncService: @unchecked Sendable {
 
         checkiCloudAvailability()
         guard iCloudAvailable else {
-            syncError = String(localized: "iCloud não está disponível neste dispositivo. Verifique se está conectado nas Configurações do sistema.")
+            syncError = String(localized: "iCloud não está disponível neste dispositivo. Verifique se está conectado nas Configurações do sistema.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             throw NSError(domain: "CloudSync", code: 1, userInfo: [NSLocalizedDescriptionKey: syncError!])
         }
 
@@ -319,7 +319,7 @@ final class CloudSyncService: @unchecked Sendable {
         do {
             newContainer = try Self.makeContainer(usingCloudKit: true)
         } catch {
-            syncError = String(localized: "Não foi possível criar o container iCloud: \(error.localizedDescription)")
+            syncError = String(localized: "Não foi possível criar o container iCloud: \(error.localizedDescription)", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             throw error
         }
 
@@ -366,7 +366,7 @@ final class CloudSyncService: @unchecked Sendable {
         do {
             newContainer = try Self.makeContainer(usingCloudKit: false)
         } catch {
-            syncError = String(localized: "Não foi possível criar o container local: \(error.localizedDescription)")
+            syncError = String(localized: "Não foi possível criar o container local: \(error.localizedDescription)", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             throw error
         }
 
@@ -397,7 +397,7 @@ final class CloudSyncService: @unchecked Sendable {
                 throw NSError(
                     domain: "CloudSync",
                     code: 3,
-                    userInfo: [NSLocalizedDescriptionKey: String(localized: "Apagar os dados do iCloud só está disponível em um device físico com suporte a CloudKit.")]
+                    userInfo: [NSLocalizedDescriptionKey: String(localized: "Apagar os dados do iCloud só está disponível em um device físico com suporte a CloudKit.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)]
                 )
             }
 
@@ -406,7 +406,7 @@ final class CloudSyncService: @unchecked Sendable {
                 throw NSError(
                     domain: "CloudSync",
                     code: 4,
-                    userInfo: [NSLocalizedDescriptionKey: String(localized: "Entre no iCloud neste dispositivo para apagar também os dados sincronizados do app.")]
+                    userInfo: [NSLocalizedDescriptionKey: String(localized: "Entre no iCloud neste dispositivo para apagar também os dados sincronizados do app.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)]
                 )
             }
         }

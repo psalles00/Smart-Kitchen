@@ -73,7 +73,7 @@ struct PaywallStepView: View {
                 }
             }
         }
-        .alert(String(localized: "Erro na compra"), isPresented: $showingErrorAlert) {
+        .alert(String(localized: "Erro na compra", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), isPresented: $showingErrorAlert) {
             Button("OK", role: .cancel) {}
         } message: {
             Text(errorMessage)
@@ -113,7 +113,7 @@ struct PaywallStepView: View {
                 )
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(String(localized: "Fechar"))
+        .accessibilityLabel(String(localized: "Fechar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
     }
 
     // MARK: - Hero
@@ -177,10 +177,10 @@ struct PaywallStepView: View {
             planCard(
                 product: manager.annualProduct,
                 productID: SubscriptionManager.annualProductID,
-                title: String(localized: "Anual"),
-                badge: String(localized: "Mais popular"),
+                title: String(localized: "Anual", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+                badge: String(localized: "Mais popular", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                 fallbackPrice: SubscriptionManager.annualFallbackPrice,
-                period: String(localized: "por ano"),
+                period: String(localized: "por ano", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                 subtitle: annualSubtitle,
                 isAnnual: true
             )
@@ -189,10 +189,10 @@ struct PaywallStepView: View {
                 planCard(
                     product: manager.monthlyProduct,
                     productID: SubscriptionManager.monthlyProductID,
-                    title: String(localized: "Mensal"),
+                    title: String(localized: "Mensal", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                     badge: nil,
                     fallbackPrice: SubscriptionManager.monthlyFallbackPrice,
-                    period: String(localized: "por mês"),
+                    period: String(localized: "por mês", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                     subtitle: nil,
                     isAnnual: false
                 )
@@ -206,8 +206,8 @@ struct PaywallStepView: View {
             } label: {
                 HStack(spacing: 4) {
                     Text(showAllPlans
-                         ? String(localized: "Ocultar planos")
-                         : String(localized: "Mostrar mais planos"))
+                         ? String(localized: "Ocultar planos", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+                         : String(localized: "Mostrar mais planos", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                     Image(systemName: showAllPlans ? "chevron.up" : "chevron.down")
                 }
                 .font(.system(size: 14, weight: .semibold))
@@ -222,7 +222,7 @@ struct PaywallStepView: View {
     /// The full annual charge is on the card; only show a trial when eligible.
     private var annualSubtitle: AttributedString? {
         guard hasFreeTrial else { return nil }
-        var text = AttributedString(String(localized: "7 dias grátis"))
+        var text = AttributedString(String(localized: "7 dias grátis", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
         text.foregroundColor = PlatformColor.white.withAlphaComponent(0.85)
         return text
     }
@@ -306,7 +306,7 @@ struct PaywallStepView: View {
 
     private var benefitsTable: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text(String(localized: "O que você ganha"))
+            Text(String(localized: "O que você ganha", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                 .font(.custom("Bricolage Grotesque", size: 20, relativeTo: .title3).weight(.bold))
                 .foregroundStyle(.white)
 
@@ -338,11 +338,11 @@ struct PaywallStepView: View {
     private var tableHeader: some View {
         HStack(spacing: 8) {
             Spacer()
-            Text(String(localized: "Grátis"))
+            Text(String(localized: "Grátis", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                 .font(.system(size: 12, weight: .bold))
                 .foregroundStyle(.white.opacity(0.65))
                 .frame(width: 60, alignment: .center)
-            Text(String(localized: "Premium"))
+            Text(String(localized: "Premium", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                 .font(.system(size: 12, weight: .bold))
                 .foregroundStyle(primaryGradient)
                 .frame(width: 60, alignment: .center)
@@ -360,22 +360,22 @@ struct PaywallStepView: View {
     private var comparisonRows: [ComparisonRow] {
         [
             .init(icon: "wand.and.stars",
-                  title: String(localized: "IA ilimitada"),
+                  title: String(localized: "IA ilimitada", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                   free: false, premium: true),
             .init(icon: "square.and.arrow.down",
-                  title: String(localized: "Importação ilimitada de receitas"),
+                  title: String(localized: "Importação ilimitada de receitas", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                   free: false, premium: true),
             .init(icon: "icloud.fill",
-                  title: String(localized: "iCloud + backup"),
+                  title: String(localized: "iCloud + backup", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                 free: false, premium: true),
             .init(icon: "person.2.fill",
-                  title: String(localized: "Compartilhamento familiar"),
+                  title: String(localized: "Compartilhamento familiar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                   free: false, premium: true),
             .init(icon: "chart.pie.fill",
-                  title: String(localized: "Nutrição IA sem limites"),
+                  title: String(localized: "Nutrição IA sem limites", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                   free: false, premium: true),
             .init(icon: "bolt.fill",
-                  title: String(localized: "Recursos novos primeiro"),
+                  title: String(localized: "Recursos novos primeiro", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                   free: false, premium: true)
         ]
     }
@@ -453,7 +453,7 @@ struct PaywallStepView: View {
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityIdentifier("savoria.paywall.disclaimer")
-                Button(String(localized: "Restaurar compras"), action: handleRestore)
+                Button(String(localized: "Restaurar compras", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), action: handleRestore)
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(.white.opacity(0.75))
                     .padding(.vertical, 6)
@@ -486,16 +486,16 @@ struct PaywallStepView: View {
 
     private var footerDisclaimer: String {
         if selectedID == SubscriptionManager.monthlyProductID || !hasFreeTrial {
-            return String(localized: "Cancele quando quiser.")
+            return String(localized: "Cancele quando quiser.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
-        return String(localized: "Sem cobrança agora. Cancele quando quiser.")
+        return String(localized: "Sem cobrança agora. Cancele quando quiser.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
     }
 
     private var ctaLabel: String {
         if selectedID == SubscriptionManager.annualProductID && hasFreeTrial {
-            return String(localized: "Iniciar 7 dias grátis")
+            return String(localized: "Iniciar 7 dias grátis", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
-        return String(localized: "Assinar agora")
+        return String(localized: "Assinar agora", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
     }
 
     private func handleBuy() {

@@ -42,7 +42,7 @@ struct SavoriaDebugCenter: View {
                 #if os(iOS)
                 Section {
                     LabeledContent("OpenRouter", value: hasLocalOpenRouter
-                                   ? String(localized: "Chave salva neste iPhone") : String(localized: "Não configurado"))
+                                   ? String(localized: "Chave salva neste iPhone", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) : String(localized: "Não configurado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                     SecureField("Chave OpenRouter", text: $openRouterDraft)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
@@ -54,7 +54,7 @@ struct SavoriaDebugCenter: View {
                             openRouterDraft = ""
                             hasLocalOpenRouter = true
                             credentialFailed = false
-                            credentialMessage = String(localized: "Chave salva. A conexão será validada na próxima solicitação.")
+                            credentialMessage = String(localized: "Chave salva. A conexão será validada na próxima solicitação.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
                         } catch {
                             credentialFailed = true
                             credentialMessage = error.localizedDescription
@@ -87,7 +87,7 @@ struct SavoriaDebugCenter: View {
                     .pickerStyle(.segmented)
                     .accessibilityIdentifier("debug-plan-mode")
                     LabeledContent("Assinatura real", value: manager.storeIsSubscribed
-                                   ? String(localized: "Premium") : String(localized: "Básico"))
+                                   ? String(localized: "Premium", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) : String(localized: "Básico", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                 } header: {
                     Text("Onboarding e planos")
                 } footer: {
@@ -141,7 +141,7 @@ struct SavoriaDebugCenter: View {
                     LabeledContent("Versão", value: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "")
                     LabeledContent("Produtos carregados", value: String(manager.products.count))
                     LabeledContent("iCloud", value: CloudSyncService.shared.syncEnabled
-                                   ? String(localized: "Ativo") : String(localized: "Inativo"))
+                                   ? String(localized: "Ativo", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) : String(localized: "Inativo", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                     Button("Voltar ao estado real") {
                         manager.setDebugMode(.appStore)
                         gate.setDebugUsageMode(.actual)
@@ -231,21 +231,21 @@ enum SettingsDestination: String, CaseIterable, Identifiable, Hashable {
     var title: String {
         switch self {
         case .iCloud:
-            String(localized: "iCloud")
+            String(localized: "iCloud", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .familySharing:
-            String(localized: "Compartilhamento Familiar")
+            String(localized: "Compartilhamento Familiar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .notifications:
-            String(localized: "Notificações")
+            String(localized: "Notificações", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .backup:
-            String(localized: "Backup")
+            String(localized: "Backup", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .appearance:
-            String(localized: "Aparência e Performance")
+            String(localized: "Aparência e Performance", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .lists:
-            String(localized: "Listas e Receitas")
+            String(localized: "Listas e Receitas", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .nutrition:
-            String(localized: "Nutrição")
+            String(localized: "Nutrição", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .data:
-            String(localized: "Gerenciar dados")
+            String(localized: "Gerenciar dados", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 
@@ -315,7 +315,7 @@ struct SettingsView: View {
             #if os(iOS)
             settingsForm
                 .onAppear { traceSettingsPage("settings") }
-                .settingsNavigationTitle(String(localized: "Configurações"))
+                .settingsNavigationTitle(String(localized: "Configurações", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .confirmationAction) {
@@ -491,7 +491,7 @@ struct SettingsView: View {
             }
         }
         .listStyle(.sidebar)
-        .navigationTitle(String(localized: "Configurações"))
+        .navigationTitle(String(localized: "Configurações", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
         .safeAreaInset(edge: .bottom) {
             Text(verbatim: "\(appName) \(appVersion)")
                 .font(.caption2)
@@ -603,7 +603,7 @@ struct DataSettingsView: View {
         }
         .settingsFormStyle()
         .macSettingsContainer()
-        .settingsNavigationTitle(String(localized: "Dados"))
+        .settingsNavigationTitle(String(localized: "Dados", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
@@ -702,7 +702,7 @@ struct MacSettingsExpandedPage: View {
         ExpandedPageLayout(
             pageTheme: .settings,
             header: { isInverted in
-                PageHeader(title: String(localized: "Configurações"), isInverted: isInverted)
+                PageHeader(title: String(localized: "Configurações", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), isInverted: isInverted)
             },
             content: {
                 HStack(spacing: 0) {
@@ -869,12 +869,12 @@ struct AboutSettingsRows: View {
             }
             .buttonStyle(.plain)
         }
-        .alert(String(localized: "Restaurar compras"), isPresented: $showRestoreAlert, presenting: restoreMessage) { _ in
+        .alert(String(localized: "Restaurar compras", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), isPresented: $showRestoreAlert, presenting: restoreMessage) { _ in
             Button("OK", role: .cancel) {}
         } message: { message in
             Text(verbatim: message)
         }
-        .alert(String(localized: "Contatar suporte"), isPresented: $showSupportFallback) {
+        .alert(String(localized: "Contatar suporte", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), isPresented: $showSupportFallback) {
             Button {
                 copySupportEmailToClipboard()
             } label: {
@@ -882,7 +882,7 @@ struct AboutSettingsRows: View {
             }
             Button("OK", role: .cancel) {}
         } message: {
-            Text(String(localized: "Envie um e-mail para \(Self.supportEmail). Nenhum app de e-mail está configurado neste dispositivo."))
+            Text(String(localized: "Envie um e-mail para \(Self.supportEmail). Nenhum app de e-mail está configurado neste dispositivo.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
         }
     }
 
@@ -894,7 +894,7 @@ struct AboutSettingsRows: View {
         isRestoring = true
         await subscriptionManager.restore()
         restoreMessage = subscriptionManager.lastRestoreMessage
-            ?? String(localized: "Nenhuma compra anterior encontrada.")
+            ?? String(localized: "Nenhuma compra anterior encontrada.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         showRestoreAlert = true
         isRestoring = false
     }

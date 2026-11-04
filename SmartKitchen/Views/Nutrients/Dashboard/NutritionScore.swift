@@ -22,11 +22,11 @@ enum NutritionScore: Int, CaseIterable {
 
     var title: String {
         switch self {
-        case .excellent:        return String(localized: "Excelente!")
-        case .good:             return String(localized: "Indo bem!")
-        case .average:          return String(localized: "Na média")
-        case .needsImprovement: return String(localized: "Dá pra melhorar!")
-        case .noData:           return String(localized: "Sem dados")
+        case .excellent:        return String(localized: "Excelente!", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .good:             return String(localized: "Indo bem!", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .average:          return String(localized: "Na média", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .needsImprovement: return String(localized: "Dá pra melhorar!", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .noData:           return String(localized: "Sem dados", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 

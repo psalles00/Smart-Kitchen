@@ -120,7 +120,7 @@ struct RecentsView: View {
 
                 contentList
             }
-            .modalNavigationTitle(String(localized: "Alimentos salvos"))
+            .modalNavigationTitle(String(localized: "Alimentos salvos", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Fechar") { dismiss() }

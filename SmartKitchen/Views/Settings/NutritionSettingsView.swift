@@ -26,7 +26,7 @@ struct NutritionSettingsView: View {
             }
         }
         .settingsFormStyle()
-        .settingsNavigationTitle(String(localized: "Nutrição"))
+        .settingsNavigationTitle(String(localized: "Nutrição", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif

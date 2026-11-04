@@ -22,12 +22,12 @@ enum SidebarItem: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .home: return "Savoria"
-        case .lists: return String(localized: "Listas")
-        case .recipes: return String(localized: "Receitas")
-        case .nutrients: return String(localized: "Nutrição")
-        case .assistant: return String(localized: "Assistente")
-        case .aiMode: return String(localized: "SavorIA")
-        case .settings: return String(localized: "Configurações")
+        case .lists: return String(localized: "Listas", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .recipes: return String(localized: "Receitas", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .nutrients: return String(localized: "Nutrição", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .assistant: return String(localized: "Assistente", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .aiMode: return String(localized: "SavorIA", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .settings: return String(localized: "Configurações", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 
@@ -342,10 +342,10 @@ struct ContentView: View {
     }
 
     private var assistantOverlayTitle: String {
-        searchBarState.mode == .aiChat ? String(localized: "SavorIA") : String(localized: "Assistente")
+        searchBarState.mode == .aiChat ? String(localized: "SavorIA", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) : String(localized: "Assistente", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
     }
     private var assistantOverlaySubtitle: String {
-        String(localized: "Adicione itens, busque na despensa ou pergunte à IA.")
+        String(localized: "Adicione itens, busque na despensa ou pergunte à IA.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
     }
 
     private var fullscreenNutritionEntrySheetBinding: Binding<NutritionEntrySheet?> {
@@ -1257,11 +1257,11 @@ struct ContentView: View {
 
     private func workspaceTabTitle(_ tab: AppTab) -> String {
         switch tab {
-        case .assistant: String(localized: "Savoria")
-        case .lists: String(localized: "Listas")
-        case .recipes: String(localized: "Receitas")
-        case .nutrients: String(localized: "Nutrição")
-        case .commandBar: String(localized: "Buscar")
+        case .assistant: String(localized: "Savoria", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .lists: String(localized: "Listas", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .recipes: String(localized: "Receitas", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .nutrients: String(localized: "Nutrição", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .commandBar: String(localized: "Buscar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 
@@ -1734,63 +1734,63 @@ struct ContentView: View {
                 .padding(.bottom, 4)
 
             // IA — accent .home
-            macSidebarActionRow(title: String(localized: "Pergunte à SavorIA"),
+            macSidebarActionRow(title: String(localized: "Pergunte à SavorIA", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                                 systemImage: "sparkles", tint: .home) {
                 openAIMode(preset: .nutritionCoach)
             }
-            macSidebarActionRow(title: String(localized: "Ideias de receitas"),
+            macSidebarActionRow(title: String(localized: "Ideias de receitas", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                                 systemImage: "fork.knife.circle.fill", tint: .home) {
                 openAIMode(preset: .recipeIdeas)
             }
 
             // Listas — accent .lists
-            macSidebarActionRow(title: String(localized: "Adicionar à Despensa"),
+            macSidebarActionRow(title: String(localized: "Adicionar à Despensa", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                                 systemImage: "shippingbox.fill", tint: .lists) {
                 handleCommandBarAction(.addPantryItem(prefill: ""))
             }
-            macSidebarActionRow(title: String(localized: "Adicionar ao Mercado"),
+            macSidebarActionRow(title: String(localized: "Adicionar ao Mercado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                                 systemImage: "cart.badge.plus", tint: .lists) {
                 handleCommandBarAction(.addGroceryItem(prefill: ""))
             }
             if settingsSnapshot.showUtensils {
-                macSidebarActionRow(title: String(localized: "Adicionar Utensílio"),
+                macSidebarActionRow(title: String(localized: "Adicionar Utensílio", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                                     systemImage: "fork.knife", tint: .lists) {
                     handleCommandBarAction(.addUtensil(prefill: ""))
                 }
             }
 
             // Receitas — accent .recipes
-            macSidebarActionRow(title: String(localized: "Criar Receita"),
+            macSidebarActionRow(title: String(localized: "Criar Receita", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                                 systemImage: "book.badge.plus", tint: .recipes) {
                 handleCommandBarAction(.addRecipe(prefill: ""))
             }
-            macSidebarActionRow(title: String(localized: "Importar da Galeria"),
+            macSidebarActionRow(title: String(localized: "Importar da Galeria", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                                 systemImage: "photo.on.rectangle.angled", tint: .recipes) {
                 openQuickRecipeImport(.gallery)
             }
-            macSidebarActionRow(title: String(localized: "Ler Receita"),
+            macSidebarActionRow(title: String(localized: "Ler Receita", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                                 systemImage: "camera.viewfinder", tint: .recipes) {
                 openQuickRecipeImport(.camera)
             }
-            macSidebarActionRow(title: String(localized: "Importar dos Arquivos"),
+            macSidebarActionRow(title: String(localized: "Importar dos Arquivos", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                                 systemImage: "folder.fill", tint: .recipes) {
                 openQuickRecipeImport(.files)
             }
 
             // Nutrição — accent .nutrients
-            macSidebarActionRow(title: String(localized: "Registrar Alimento"),
+            macSidebarActionRow(title: String(localized: "Registrar Alimento", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                                 systemImage: "fork.knife.circle.fill", tint: .nutrients) {
                 searchBarState.pendingNutritionSheet = .captureText(prefillText: nil, autoAnalyze: false)
             }
-            macSidebarActionRow(title: String(localized: "Registrar com Áudio"),
+            macSidebarActionRow(title: String(localized: "Registrar com Áudio", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                                 systemImage: "mic.fill", tint: .nutrients) {
                 searchBarState.pendingNutritionSheet = .captureVoice
             }
-            macSidebarActionRow(title: String(localized: "Registrar com Galeria"),
+            macSidebarActionRow(title: String(localized: "Registrar com Galeria", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                                 systemImage: "photo.on.rectangle.angled", tint: .nutrients) {
                 openDirectFoodGallery()
             }
-            macSidebarActionRow(title: String(localized: "Rastreio de Peso"),
+            macSidebarActionRow(title: String(localized: "Rastreio de Peso", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                                 systemImage: "scalemass.fill", tint: .nutrients) {
                 handleCommandBarAction(.openWeightTracker)
             }
@@ -2031,7 +2031,7 @@ struct ContentView: View {
                     Text(
                         searchBarState.mode == .aiChat
                             ? searchBarState.aiChatPreset.searchPlaceholder
-                            : String(localized: "Adicione, busque, ou pergunte…")
+                            : String(localized: "Adicione, busque, ou pergunte…", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
                     )
                     .font(.body)
                     .foregroundStyle(Color.white.opacity(0.75))
@@ -3424,8 +3424,8 @@ private struct HomeView: View {
             VStack(alignment: .leading, spacing: spacing) {
                 HStack(alignment: .top, spacing: spacing) {
                     homeShortcutButton(
-                        title: String(localized: "Assistente"),
-                        subtitle: String(localized: "Adicione, busque ou pergunte..."),
+                        title: String(localized: "Assistente", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+                        subtitle: String(localized: "Adicione, busque ou pergunte...", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                         imageName: "assistente",
                         style: .featured,
                         imageSize: 600,
@@ -3437,8 +3437,8 @@ private struct HomeView: View {
 
                     VStack(spacing: spacing) {
                         homeShortcutButton(
-                            title: String(localized: "SavorIA"),
-                            subtitle: String(localized: "AI Mode"),
+                            title: String(localized: "SavorIA", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+                            subtitle: String(localized: "AI Mode", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                             imageName: "savorai",
                             style: .wide,
                             imageSize: 150,
@@ -3450,8 +3450,8 @@ private struct HomeView: View {
                         .frame(height: stackedHeight)
 
                         homeShortcutButton(
-                            title: String(localized: "Ideias"),
-                            subtitle: String(localized: "de receitas"),
+                            title: String(localized: "Ideias", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+                            subtitle: String(localized: "de receitas", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                             imageName: "ideis",
                             style: .wide,
                             imageSize: 135,
@@ -3466,19 +3466,19 @@ private struct HomeView: View {
                 }
 
                 HStack(alignment: .top, spacing: spacing) {
-                    macShortcutAddTile(title: String(localized: "Despensa"), imageName: "despensa", imageSize: 64, tileHeight: quickTileHeight) {
+                    macShortcutAddTile(title: String(localized: "Despensa", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), imageName: "despensa", imageSize: 64, tileHeight: quickTileHeight) {
                         showAddPantry = true
                     }
 
-                    macShortcutAddTile(title: String(localized: "Mercado"), imageName: "mercado", imageSize: 72, tileHeight: quickTileHeight) {
+                    macShortcutAddTile(title: String(localized: "Mercado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), imageName: "mercado", imageSize: 72, tileHeight: quickTileHeight) {
                         showAddGrocery = true
                     }
 
-                    macShortcutAddTileMenu(title: String(localized: "Receitas"), imageName: "receitas", imageSize: 68, tileHeight: quickTileHeight) {
+                    macShortcutAddTileMenu(title: String(localized: "Receitas", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), imageName: "receitas", imageSize: 68, tileHeight: quickTileHeight) {
                         recipeShortcutMenuContent
                     }
 
-                    macShortcutAddTileMenu(title: String(localized: "Alimento"), imageName: "nutrientes", imageSize: 64, tileHeight: quickTileHeight) {
+                    macShortcutAddTileMenu(title: String(localized: "Alimento", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), imageName: "nutrientes", imageSize: 64, tileHeight: quickTileHeight) {
                         foodShortcutMenuContent
                     }
                 }
@@ -3546,8 +3546,8 @@ private struct HomeView: View {
                 // Linha superior: Assistente (featured) + SavorIA / Receitas (wide)
                 HStack(spacing: spacing) {
                     homeShortcutButton(
-                        title: String(localized: "Assistente"),
-                        subtitle: String(localized: "Adicione, busque ou pergunte..."),
+                        title: String(localized: "Assistente", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+                        subtitle: String(localized: "Adicione, busque ou pergunte...", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                         imageName: "assistente",
                         style: .featured,
                         imageSize: 152,
@@ -3559,8 +3559,8 @@ private struct HomeView: View {
 
                     VStack(spacing: spacing) {
                         homeShortcutButton(
-                            title: String(localized: "SavorIA"),
-                            subtitle: String(localized: "AI Mode"),
+                            title: String(localized: "SavorIA", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+                            subtitle: String(localized: "AI Mode", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                             imageName: "savorai",
                             style: .wide,
                             imageSize: 126,
@@ -3571,8 +3571,8 @@ private struct HomeView: View {
                         .frame(height: smallSide)
 
                         homeShortcutButton(
-                            title: String(localized: "Ideias"),
-                            subtitle: String(localized: "de receitas"),
+                            title: String(localized: "Ideias", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+                            subtitle: String(localized: "de receitas", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                             imageName: "ideis",
                             style: .wide,
                             imageSize: 99,
@@ -3592,7 +3592,7 @@ private struct HomeView: View {
                             showAddPantry = true
                         }
                         .frame(height: smallSide)
-                        Text(String(localized: "Despensa"))
+                        Text(String(localized: "Despensa", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                             .font(.caption)
                             .foregroundStyle(.primary)
                     }
@@ -3602,7 +3602,7 @@ private struct HomeView: View {
                             showAddGrocery = true
                         }
                         .frame(height: smallSide)
-                        Text(String(localized: "Mercado"))
+                        Text(String(localized: "Mercado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                             .font(.caption)
                             .foregroundStyle(.primary)
                     }
@@ -3612,7 +3612,7 @@ private struct HomeView: View {
                             recipeShortcutMenuContent
                         }
                         .frame(height: smallSide)
-                        Text(String(localized: "Receitas"))
+                        Text(String(localized: "Receitas", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                             .font(.caption)
                             .foregroundStyle(.primary)
                     }
@@ -3622,7 +3622,7 @@ private struct HomeView: View {
                             foodShortcutMenuContent
                         }
                         .frame(height: smallSide)
-                        Text(String(localized: "Alimento"))
+                        Text(String(localized: "Alimento", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                             .font(.caption)
                             .foregroundStyle(.primary)
                     }
@@ -3883,7 +3883,7 @@ private struct HomeView: View {
     private var compatibleCategoryFilter: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                filterChip(label: String(localized: "Sugestões"), isSelected: selectedCompatibleCategory == nil) {
+                filterChip(label: String(localized: "Sugestões", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), isSelected: selectedCompatibleCategory == nil) {
                     selectedCompatibleCategory = nil
                 }
 
@@ -4224,12 +4224,12 @@ private struct HomeView: View {
     private func relativeExpirationText(for date: Date) -> String {
         let days = expirationDaysUntil(date)
         if days < -1 {
-            return String.localizedStringWithFormat(String(localized: "Expirou há %lld dias"), abs(days))
+            return String.localizedStringWithFormat(String(localized: "Expirou há %lld dias", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), abs(days))
         }
-        if days == -1 { return String(localized: "Expirou há 1 dia") }
-        if days == 0 { return String(localized: "Expira hoje") }
-        if days == 1 { return String(localized: "Expira amanhã") }
-        return String.localizedStringWithFormat(String(localized: "Expira em %lld dias"), days)
+        if days == -1 { return String(localized: "Expirou há 1 dia", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) }
+        if days == 0 { return String(localized: "Expira hoje", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) }
+        if days == 1 { return String(localized: "Expira amanhã", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) }
+        return String.localizedStringWithFormat(String(localized: "Expira em %lld dias", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), days)
     }
 
     private func expirationHighlightColor(for date: Date) -> Color {

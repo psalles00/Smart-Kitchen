@@ -16,13 +16,13 @@ struct SmartCountStepView: View {
     @State private var loopTask: Task<Void, Never>? = nil
 
     private let days: [SmartDayMock] = [
-        .init(label: String(localized: "Seg"), kcal: 1820, logged: true),
-        .init(label: String(localized: "Ter"), kcal: 0,    logged: false),
-        .init(label: String(localized: "Qua"), kcal: 1940, logged: true),
-        .init(label: String(localized: "Qui"), kcal: 1750, logged: true),
-        .init(label: String(localized: "Sex"), kcal: 0,    logged: false),
-        .init(label: String(localized: "Sáb"), kcal: 2010, logged: true),
-        .init(label: String(localized: "Dom"), kcal: 1880, logged: true),
+        .init(label: String(localized: "Seg", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), kcal: 1820, logged: true),
+        .init(label: String(localized: "Ter", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), kcal: 0,    logged: false),
+        .init(label: String(localized: "Qua", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), kcal: 1940, logged: true),
+        .init(label: String(localized: "Qui", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), kcal: 1750, logged: true),
+        .init(label: String(localized: "Sex", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), kcal: 0,    logged: false),
+        .init(label: String(localized: "Sáb", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), kcal: 2010, logged: true),
+        .init(label: String(localized: "Dom", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), kcal: 1880, logged: true),
     ]
 
     private var loggedAverage: Int {
@@ -46,15 +46,15 @@ struct SmartCountStepView: View {
             VStack(spacing: 12) {
                 OnboardingFeatureChip(
                     icon: "flame.fill",
-                    title: String(localized: "Calorias e macros"),
+                    title: String(localized: "Calorias e macros", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                     tint: Color(red: 0.55, green: 0.50, blue: 0.96)
                 )
                 .opacity(showHeader ? 1 : 0)
                 .animation(.spring(response: 0.7, dampingFraction: 0.86), value: showHeader)
 
                 OnboardingHeader(
-                    title: String(localized: "Esqueceu de registrar um dia? Sem drama."),
-                    subtitle: String(localized: "Calculamos sua média só com os dias que você logou.")
+                    title: String(localized: "Esqueceu de registrar um dia? Sem drama.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+                    subtitle: String(localized: "Calculamos sua média só com os dias que você logou.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
                 )
                 .opacity(showHeader ? 1 : 0)
                 .offset(y: showHeader ? 0 : 14)
@@ -64,7 +64,7 @@ struct SmartCountStepView: View {
                 Spacer(minLength: 14)
 
                 OnboardingPrimaryButton(
-                    title: String(localized: "Continuar"),
+                    title: String(localized: "Continuar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                     action: onContinue
                 )
                 .padding(.horizontal, 24)
@@ -91,7 +91,7 @@ struct SmartCountStepView: View {
 
             VStack(alignment: .leading, spacing: 14) {
                 HStack {
-                    Text(String(localized: "Última semana"))
+                    Text(String(localized: "Última semana", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(.secondary)
                     Spacer()
@@ -148,7 +148,7 @@ struct SmartCountStepView: View {
                 HStack(spacing: 4) {
                     Image(systemName: "chart.line.uptrend.xyaxis")
                         .font(.system(size: 9, weight: .bold))
-                    Text("\(loggedAverage) kcal · " + String(localized: "média"))
+                    Text("\(loggedAverage) kcal · " + String(localized: "média", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                         .font(.system(size: 10, weight: .bold))
                 }
                 .foregroundStyle(.white)
@@ -166,9 +166,9 @@ struct SmartCountStepView: View {
                 .font(.system(size: 22, weight: .bold))
                 .foregroundStyle(.green)
             VStack(alignment: .leading, spacing: 2) {
-                Text(String(localized: "Sua média não cai por dias em branco"))
+                Text(String(localized: "Sua média não cai por dias em branco", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                     .font(.system(size: 12, weight: .semibold))
-                Text(String(localized: "Contamos apenas os dias com registro real."))
+                Text(String(localized: "Contamos apenas os dias com registro real.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
@@ -186,7 +186,7 @@ struct SmartCountStepView: View {
         HStack(spacing: 4) {
             Image(systemName: "sparkles")
                 .font(.system(size: 9, weight: .bold))
-            Text(String(localized: "Contagem inteligente"))
+            Text(String(localized: "Contagem inteligente", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                 .font(.system(size: 10, weight: .bold))
         }
         .foregroundStyle(.white)

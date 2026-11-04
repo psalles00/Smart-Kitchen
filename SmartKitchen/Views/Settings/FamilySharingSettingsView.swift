@@ -168,10 +168,10 @@ struct FamilySharingSettingsView: View {
             // MARK: - Info
             Section {
                 VStack(alignment: .leading, spacing: 8) {
-                    infoRow(icon: "person.2", text: String(localized: "Ideal para casais e famílias que compartilham a mesma cozinha."))
-                    infoRow(icon: "pencil.and.outline", text: String(localized: "Todos os participantes podem adicionar, editar e remover itens."))
-                    infoRow(icon: "icloud", text: String(localized: "Requer que todos os participantes tenham iCloud ativado."))
-                    infoRow(icon: "lock.shield", text: String(localized: "Configurações pessoais e histórico da IA nunca são compartilhados."))
+                    infoRow(icon: "person.2", text: String(localized: "Ideal para casais e famílias que compartilham a mesma cozinha.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
+                    infoRow(icon: "pencil.and.outline", text: String(localized: "Todos os participantes podem adicionar, editar e remover itens.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
+                    infoRow(icon: "icloud", text: String(localized: "Requer que todos os participantes tenham iCloud ativado.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
+                    infoRow(icon: "lock.shield", text: String(localized: "Configurações pessoais e histórico da IA nunca são compartilhados.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                 }
                 .padding(.vertical, 4)
             } header: {
@@ -180,7 +180,7 @@ struct FamilySharingSettingsView: View {
         }
         .settingsFormStyle()
         .macSettingsContainer()
-        .settingsNavigationTitle(String(localized: "Compartilhamento Familiar"))
+        .settingsNavigationTitle(String(localized: "Compartilhamento Familiar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
@@ -319,16 +319,16 @@ struct ParticipantRowView: View {
         }
         return participant.userIdentity.lookupInfo?.emailAddress
             ?? participant.userIdentity.lookupInfo?.phoneNumber
-            ?? String(localized: "Participante")
+            ?? String(localized: "Participante", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
     }
 
     private var statusText: String {
         switch participant.acceptanceStatus {
-        case .accepted: String(localized: "Aceito")
-        case .pending: String(localized: "Pendente")
-        case .removed: String(localized: "Removido")
-        case .unknown: String(localized: "Desconhecido")
-        @unknown default: String(localized: "Desconhecido")
+        case .accepted: String(localized: "Aceito", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .pending: String(localized: "Pendente", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .removed: String(localized: "Removido", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .unknown: String(localized: "Desconhecido", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        @unknown default: String(localized: "Desconhecido", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 

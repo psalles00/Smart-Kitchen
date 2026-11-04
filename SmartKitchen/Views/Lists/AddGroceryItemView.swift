@@ -46,7 +46,7 @@ struct AddGroceryItemView: View {
                 }
 
                 CategorySelectionRow(
-                    title: String(localized: "Categoria"),
+                    title: String(localized: "Categoria", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                     categories: CategoryDatabase.shared.allCategories,
                     selection: $selectedCategory
                 )
@@ -148,7 +148,7 @@ struct AddGroceryItemView: View {
         .padding(.bottom, 20)
         .frame(minWidth: 500, minHeight: 600)
         #endif
-        .modalNavigationTitle(String(localized: "Novo Item"))
+        .modalNavigationTitle(String(localized: "Novo Item", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
@@ -315,7 +315,7 @@ struct EditGroceryItemView: View {
                 }
 
                 CategorySelectionRow(
-                    title: String(localized: "Categoria"),
+                    title: String(localized: "Categoria", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                     categories: categories,
                     selection: $item.category
                 )
@@ -425,7 +425,7 @@ struct EditGroceryItemView: View {
         .padding(.bottom, 20)
         .frame(minWidth: 500, minHeight: 600)
         #endif
-        .modalNavigationTitle(String(localized: "Editar Item"))
+        .modalNavigationTitle(String(localized: "Editar Item", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif

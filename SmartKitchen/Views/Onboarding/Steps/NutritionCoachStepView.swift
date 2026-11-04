@@ -17,13 +17,13 @@ struct NutritionCoachStepView: View {
     @State private var entranceTask: Task<Void, Never>? = nil
     @State private var loopTask: Task<Void, Never>? = nil
 
-    private let userPrompt = String(localized: "Tô comendo muito pão")
+    private let userPrompt = String(localized: "Tô comendo muito pão", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
 
     private let chips: [String] = [
-        String(localized: "Como bater minha meta de proteína?"),
-        String(localized: "Substituições saudáveis para arroz branco"),
-        String(localized: "Cardápio fit pra essa semana"),
-        String(localized: "O que cozinhar com a despensa de hoje?"),
+        String(localized: "Como bater minha meta de proteína?", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+        String(localized: "Substituições saudáveis para arroz branco", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+        String(localized: "Cardápio fit pra essa semana", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+        String(localized: "O que cozinhar com a despensa de hoje?", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
     ]
 
     var body: some View {
@@ -38,10 +38,10 @@ struct NutritionCoachStepView: View {
                         .scaleEffect(showHero ? 1 : 0.94)
                         .animation(.spring(response: 0.85, dampingFraction: 0.84), value: showHero)
                     VStack(spacing: 12) {
-                        OnboardingFeatureChip(icon: "sparkles", title: String(localized: "Coach de IA"),
+                        OnboardingFeatureChip(icon: "sparkles", title: String(localized: "Coach de IA", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                             tint: Color(red: 0.55, green: 0.50, blue: 0.96))
-                        OnboardingHeader(title: String(localized: "Tenha sempre um Nutrition Coach com você"),
-                            subtitle: String(localized: "IA que entende sua rotina e sugere ajustes inteligentes."))
+                        OnboardingHeader(title: String(localized: "Tenha sempre um Nutrition Coach com você", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+                            subtitle: String(localized: "IA que entende sua rotina e sugere ajustes inteligentes.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                     }
                     .opacity(showHeader ? 1 : 0)
                     .offset(y: showHeader ? 0 : 14)
@@ -51,7 +51,7 @@ struct NutritionCoachStepView: View {
                 .padding(.vertical, 8)
             }
             .safeAreaInset(edge: .bottom, spacing: 0) {
-                OnboardingPrimaryButton(title: String(localized: "Continuar"), action: onContinue)
+                OnboardingPrimaryButton(title: String(localized: "Continuar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), action: onContinue)
                     .padding(.horizontal, 24)
                     .padding(.top, 8)
                     .padding(.bottom, 12)
@@ -102,7 +102,7 @@ struct NutritionCoachStepView: View {
                     HStack(spacing: 8) {
                         ZStack(alignment: .leading) {
                             if typedUserText.isEmpty {
-                                Text(String(localized: "Pergunte ao Coach…"))
+                                Text(String(localized: "Pergunte ao Coach…", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                                     .font(.system(size: 13))
                                     .foregroundStyle(.secondary.opacity(0.55))
                             }
@@ -145,11 +145,11 @@ struct NutritionCoachStepView: View {
             .frame(width: 32, height: 32)
 
             VStack(alignment: .leading, spacing: 1) {
-                Text(String(localized: "Nutrition Coach"))
+                Text(String(localized: "Nutrition Coach", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                     .font(.system(size: 13, weight: .bold))
                 HStack(spacing: 4) {
                     Circle().fill(Color.green).frame(width: 6, height: 6)
-                    Text(String(localized: "Online"))
+                    Text(String(localized: "Online", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                         .font(.system(size: 10))
                         .foregroundStyle(.secondary)
                 }
@@ -250,7 +250,7 @@ struct NutritionCoachStepView: View {
                 messages.append(ChatMessageMock(
                     id: UUID().uuidString,
                     isUser: false,
-                    text: String(localized: "Que tal alternar com aveia ou tapioca no café? Mantém a saciedade e diversifica os carboidratos.")
+                    text: String(localized: "Que tal alternar com aveia ou tapioca no café? Mantém a saciedade e diversifica os carboidratos.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
                 ))
             }
 

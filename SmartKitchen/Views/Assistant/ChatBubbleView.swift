@@ -175,11 +175,11 @@ enum AssistantResponseReport {
     static let email = "pedrosalles00@gmail.com"
 
     static func body(note: String, response: String, includeResponse: Bool) -> String {
-        var parts = [String(localized: "Relato sobre uma resposta da IA do Savoria.")]
+        var parts = [String(localized: "Relato sobre uma resposta da IA do Savoria.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)]
         let reason = String(note.prefix(1_000)).trimmingCharacters(in: .whitespacesAndNewlines)
         if !reason.isEmpty { parts.append(reason) }
         if includeResponse {
-            parts.append(String(localized: "Resposta selecionada:") + "\n" + String(response.prefix(2_000)))
+            parts.append(String(localized: "Resposta selecionada:", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) + "\n" + String(response.prefix(2_000)))
         }
         return parts.joined(separator: "\n\n")
     }
@@ -189,7 +189,7 @@ enum AssistantResponseReport {
         components.scheme = "mailto"
         components.path = email
         components.queryItems = [
-            URLQueryItem(name: "subject", value: String(localized: "Reportar resposta — Savoria")),
+            URLQueryItem(name: "subject", value: String(localized: "Reportar resposta — Savoria", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)),
             URLQueryItem(name: "body", value: body)
         ]
         return components.url

@@ -24,8 +24,8 @@ enum AIModeSuggestions {
         AIModeSuggestion(
             id: id,
             emoji: emoji,
-            label: String(localized: label),
-            prompt: String(localized: prompt)
+            label: String(localized: label, bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+            prompt: String(localized: prompt, bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         )
     }
 

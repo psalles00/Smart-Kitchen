@@ -61,7 +61,7 @@ enum NutritionCalculator {
         let emoji = items.first?.per100g.emoji
         let reviewNotes = items.compactMap { entry -> String? in
             guard entry.item.quantity == nil else { return nil }
-            return String(format: String(localized: "Quantidade não informada para %@: estimativa de %@ g. Revise antes de registrar."), entry.item.name, String(format: "%.0f", grams(for: entry.item, nutrition: entry.per100g)))
+            return String(format: String(localized: "Quantidade não informada para %@: estimativa de %@ g. Revise antes de registrar.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), entry.item.name, String(format: "%.0f", grams(for: entry.item, nutrition: entry.per100g)))
         }
         let hasLemonJuice = items.contains { ["suco de limao", "suco de limao sem acucar", "lemon juice", "lime juice"].contains(FoodCache.canonicalize($0.item.name)) }
 
@@ -84,8 +84,8 @@ enum NutritionCalculator {
             sodiumMg:            hasSodium        ? round1(sodium)      : nil,
             potassiumMg:         hasPotassium     ? round1(potassium)   : nil,
             reviewNotes: reviewNotes
-                + (hasLemonJuice ? [String(localized: "Suco estimado sem diluição. Medidas caseiras são aproximadas; revise a quantidade e o preparo.")] : [])
-                + (items.contains(where: { $0.per100g.source == "llm" }) ? [String(localized: "Valores estimados pela IA, sem rótulo confirmado. Confira marca, variante, país e porção antes de registrar.")] : [])
+                + (hasLemonJuice ? [String(localized: "Suco estimado sem diluição. Medidas caseiras são aproximadas; revise a quantidade e o preparo.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)] : [])
+                + (items.contains(where: { $0.per100g.source == "llm" }) ? [String(localized: "Valores estimados pela IA, sem rótulo confirmado. Confira marca, variante, país e porção antes de registrar.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)] : [])
         )
     }
 

@@ -9,7 +9,7 @@ struct NutrientsPlaceholderView: View {
         ExpandedPageLayout(
             pageTheme: .nutrients,
             header: { isInverted in
-                PageHeader(title: String(localized: "Nutrição"), isInverted: isInverted) {
+                PageHeader(title: String(localized: "Nutrição", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), isInverted: isInverted) {
                     #if !os(macOS)
                     SettingsButton()
                     #else
@@ -43,9 +43,9 @@ struct NutrientsPlaceholderView: View {
                         .background(.tint, in: .capsule)
 
                     VStack(alignment: .leading, spacing: 16) {
-                        featureRow(icon: "flame", title: String(localized: "Calorias diárias"), description: String(localized: "Acompanhe sua ingestão calórica"))
-                        featureRow(icon: "chart.pie", title: String(localized: "Macronutrientes"), description: String(localized: "Carboidratos, proteínas e gorduras"))
-                        featureRow(icon: "bell.badge", title: String(localized: "Metas e alertas"), description: String(localized: "Defina metas nutricionais personalizadas"))
+                        featureRow(icon: "flame", title: String(localized: "Calorias diárias", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), description: String(localized: "Acompanhe sua ingestão calórica", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
+                        featureRow(icon: "chart.pie", title: String(localized: "Macronutrientes", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), description: String(localized: "Carboidratos, proteínas e gorduras", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
+                        featureRow(icon: "bell.badge", title: String(localized: "Metas e alertas", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), description: String(localized: "Defina metas nutricionais personalizadas", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                     }
                     .padding(.horizontal, 32)
                     .padding(.top, 16)

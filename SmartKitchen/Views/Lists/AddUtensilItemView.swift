@@ -36,7 +36,7 @@ struct AddUtensilItemView: View {
                     applySelectedEntry(entry)
                 }
 
-                Picker(String(localized: "Categoria"), selection: $selectedCategory) {
+                Picker(String(localized: "Categoria", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), selection: $selectedCategory) {
                     ForEach(categories) { cat in
                         Text(cat.localizedDisplayName).tag(cat.name)
                     }
@@ -93,7 +93,7 @@ struct AddUtensilItemView: View {
         .padding(.bottom, 20)
         .frame(minWidth: 500, minHeight: 450)
         #endif
-        .modalNavigationTitle(String(localized: "Novo Utensílio"))
+        .modalNavigationTitle(String(localized: "Novo Utensílio", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
@@ -227,7 +227,7 @@ struct EditUtensilItemView: View {
                 }
 
                 CategorySelectionRow(
-                    title: String(localized: "Categoria"),
+                    title: String(localized: "Categoria", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                     categories: categories,
                     selection: $item.category
                 )
@@ -270,7 +270,7 @@ struct EditUtensilItemView: View {
         .padding(.bottom, 20)
         .frame(minWidth: 500, minHeight: 450)
         #endif
-        .modalNavigationTitle(String(localized: "Editar Utensílio"))
+        .modalNavigationTitle(String(localized: "Editar Utensílio", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif

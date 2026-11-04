@@ -179,9 +179,9 @@ struct ConversationHistoryView: View {
             .locale(AppLocalization.current().formattingLocale)
         let formattedTime = date.formatted(timeStyle)
         if calendar.isDateInToday(date) {
-            return String(localized: "Hoje, \(formattedTime)")
+            return String(localized: "Hoje, \(formattedTime)", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         } else if calendar.isDateInYesterday(date) {
-            return String(localized: "Ontem, \(formattedTime)")
+            return String(localized: "Ontem, \(formattedTime)", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         } else {
             return date.formatted(
                 Date.FormatStyle(date: .abbreviated, time: .shortened)
@@ -253,7 +253,7 @@ private struct ConversationHistoryRow: View {
                 .background(Color.blue.opacity(0.1), in: .rect(cornerRadius: 8))
 
             VStack(alignment: .leading, spacing: 3) {
-                Text(conversation.title ?? String(localized: "Nova conversa"))
+                Text(conversation.title ?? String(localized: "Nova conversa", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                     .font(.subheadline.weight(.medium))
                     .lineLimit(1)
                     .foregroundStyle(.primary)

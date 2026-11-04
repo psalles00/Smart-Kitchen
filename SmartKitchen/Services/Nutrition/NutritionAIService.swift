@@ -19,9 +19,9 @@ final class NutritionAIService {
             case .missingAPIKey:
                 return APIConfig.missingAIConfigurationMessage
             case .emptyResponse:
-                return String(localized: "Resposta vazia da IA.")
+                return String(localized: "Resposta vazia da IA.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             case .invalidJSON(let msg):
-                return String(localized: "Não foi possível entender a resposta da IA: \(msg)")
+                return String(localized: "Não foi possível entender a resposta da IA: \(msg)", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             }
         }
     }
@@ -447,7 +447,7 @@ final class NutritionAIService {
         do {
             let raw = try await callText(prompt: prompt)
             var estimate = try Self.parseFoodAnalysis(from: raw)
-            estimate.reviewNotes.append(String(localized: "Valores estimados pela IA, sem rótulo confirmado. Confira marca, variante, país e porção antes de registrar."))
+            estimate.reviewNotes.append(String(localized: "Valores estimados pela IA, sem rótulo confirmado. Confira marca, variante, país e porção antes de registrar.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
             return estimate
         } catch {
             if let local = LocalNutritionFallback.analyzeText(description) {

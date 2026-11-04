@@ -56,7 +56,7 @@ struct EditRecipeView: View {
 
     private var editorScaffold: some View {
         recipeForm
-            .modalNavigationTitle(String(localized: "Editar Receita"))
+            .modalNavigationTitle(String(localized: "Editar Receita", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif

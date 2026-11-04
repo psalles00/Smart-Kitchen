@@ -17,8 +17,8 @@ struct SelectRecipesStepView: View {
     var body: some View {
         VStack(spacing: 12) {
             OnboardingHeader(
-                title: String(localized: "O que você gosta de cozinhar?"),
-                subtitle: String(localized: "Escolha pelo menos 2 receitas para começar sua coleção.")
+                title: String(localized: "O que você gosta de cozinhar?", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+                subtitle: String(localized: "Escolha pelo menos 2 receitas para começar sua coleção.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             )
             .padding(.top, 8)
 
@@ -43,7 +43,7 @@ struct SelectRecipesStepView: View {
                     .animation(.easeOut(duration: 0.2), value: state.selectedRecipeTemplateIDs.count)
 
                 OnboardingPrimaryButton(
-                    title: String(localized: "Continuar"),
+                    title: String(localized: "Continuar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                     isEnabled: state.canAdvanceRecipeSelection,
                     action: onContinue
                 )
@@ -68,12 +68,12 @@ struct SelectRecipesStepView: View {
         let count = state.selectedRecipeTemplateIDs.count
         return count >= 2
             ? String(
-                format: String(localized: "%lld selecionadas"),
+                format: String(localized: "%lld selecionadas", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                 locale: Locale.current,
                 count
             )
             : String(
-                format: String(localized: "Selecione mais %lld para continuar"),
+                format: String(localized: "Selecione mais %lld para continuar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                 locale: Locale.current,
                 2 - count
             )

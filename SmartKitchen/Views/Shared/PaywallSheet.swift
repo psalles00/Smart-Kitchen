@@ -28,11 +28,11 @@ struct PaywallSheet: View {
         var title: String {
             switch self {
             case .limitReached(let f):
-                return String(format: String(localized: "Você atingiu o limite diário de %@."), f.displayName)
+                return String(format: String(localized: "Você atingiu o limite diário de %@.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), f.displayName)
             case .hardGate(let label):
                 return label
             case .manual:
-                return String(localized: "Desbloqueie tudo no Savoria")
+                return String(localized: "Desbloqueie tudo no Savoria", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             }
         }
     }

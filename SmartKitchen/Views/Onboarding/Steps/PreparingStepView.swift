@@ -16,10 +16,10 @@ struct PreparingStepView: View {
     @State private var fireConfetti = 0
 
     private let phases: [(String, String)] = [
-        ("flame.fill",          String(localized: "Calculando suas calorias")),
-        ("chart.pie.fill",      String(localized: "Ajustando macros")),
-        ("cabinet.fill",        String(localized: "Preparando despensa")),
-        ("book.closed.fill",    String(localized: "Salvando receitas")),
+        ("flame.fill",          String(localized: "Calculando suas calorias", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)),
+        ("chart.pie.fill",      String(localized: "Ajustando macros", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)),
+        ("cabinet.fill",        String(localized: "Preparando despensa", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)),
+        ("book.closed.fill",    String(localized: "Salvando receitas", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)),
     ]
     private let totalDuration: Double = 3.6
     private let finaleDuration: Double = 1.6
@@ -70,11 +70,11 @@ struct PreparingStepView: View {
 
                 VStack(spacing: 8) {
                     if showFinale {
-                        Text(String(localized: "Tudo pronto!"))
+                        Text(String(localized: "Tudo pronto!", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                             .font(.system(size: 24, weight: .bold))
                             .multilineTextAlignment(.center)
                             .transition(.opacity)
-                        Text(String(localized: "Recebemos seus dados. Seu Savoria está pronto pra usar."))
+                        Text(String(localized: "Recebemos seus dados. Seu Savoria está pronto pra usar.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                             .font(.system(size: 14, weight: .medium))
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
@@ -86,7 +86,7 @@ struct PreparingStepView: View {
                             .transition(.opacity.combined(with: .move(edge: .bottom)))
                             .id(phaseIndex)
 
-                        Text(String(localized: "Personalizando sua experiência…"))
+                        Text(String(localized: "Personalizando sua experiência…", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                             .font(.system(size: 14, weight: .medium))
                             .foregroundStyle(.secondary)
                     }

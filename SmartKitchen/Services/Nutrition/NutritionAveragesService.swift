@@ -183,13 +183,13 @@ extension NutritionAverageBasis {
     var shortDescription: String {
         switch self {
         case .perWeekday(let weekday, _):
-            return String(localized: "Média de \(Self.weekdayName(weekday).lowercased())")
+            return String(localized: "Média de \(Self.weekdayName(weekday).lowercased())", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .group(let isWeekend, _):
-            return isWeekend ? String(localized: "Média de fim de semana") : String(localized: "Média de dias úteis")
+            return isWeekend ? String(localized: "Média de fim de semana", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) : String(localized: "Média de dias úteis", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .overall:
-            return String(localized: "Média geral")
+            return String(localized: "Média geral", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .none:
-            return String(localized: "Sem dados")
+            return String(localized: "Sem dados", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 
@@ -203,14 +203,14 @@ extension NutritionAverageBasis {
     private static func weekdayName(_ weekday: Int) -> String {
         // Plural: "domingos", "segundas-feiras", etc.
         switch weekday {
-        case 1: return String(localized: "domingos")
-        case 2: return String(localized: "segundas-feiras")
-        case 3: return String(localized: "terças-feiras")
-        case 4: return String(localized: "quartas-feiras")
-        case 5: return String(localized: "quintas-feiras")
-        case 6: return String(localized: "sextas-feiras")
-        case 7: return String(localized: "sábados")
-        default: return String(localized: "dias")
+        case 1: return String(localized: "domingos", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case 2: return String(localized: "segundas-feiras", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case 3: return String(localized: "terças-feiras", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case 4: return String(localized: "quartas-feiras", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case 5: return String(localized: "quintas-feiras", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case 6: return String(localized: "sextas-feiras", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case 7: return String(localized: "sábados", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        default: return String(localized: "dias", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 }

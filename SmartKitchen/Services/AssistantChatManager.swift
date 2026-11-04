@@ -38,10 +38,10 @@ final class AssistantChatManager: ObservableObject {
         if pendingToolExecution != nil {
             context.insert(ChatMessage(
                 role: .assistant,
-                content: String(localized: "Tenho uma alteração pendente. Confirme ou cancele antes de continuar."),
+                content: String(localized: "Tenho uma alteração pendente. Confirme ou cancele antes de continuar.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                 quickActions: [
-                    QuickAction(label: String(localized: "Confirmar"), prompt: confirmPrompt),
-                    QuickAction(label: String(localized: "Cancelar"), prompt: cancelPrompt)
+                    QuickAction(label: String(localized: "Confirmar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), prompt: confirmPrompt),
+                    QuickAction(label: String(localized: "Cancelar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), prompt: cancelPrompt)
                 ]
             ))
             return
@@ -180,8 +180,8 @@ final class AssistantChatManager: ObservableObject {
                     role: .assistant,
                     content: confirmationMessage(for: response.toolCalls),
                     quickActions: [
-                        QuickAction(label: String(localized: "Confirmar"), prompt: confirmPrompt),
-                        QuickAction(label: String(localized: "Cancelar"), prompt: cancelPrompt)
+                        QuickAction(label: String(localized: "Confirmar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), prompt: confirmPrompt),
+                        QuickAction(label: String(localized: "Cancelar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), prompt: cancelPrompt)
                     ]
                 ))
                 return
@@ -201,7 +201,7 @@ final class AssistantChatManager: ObservableObject {
             return
         }
 
-        let content = response.content ?? String(localized: "Desculpe, não consegui gerar uma resposta.")
+        let content = response.content ?? String(localized: "Desculpe, não consegui gerar uma resposta.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         let recipeIds = extractRecipeIds(from: content, allRecipes: allRecipes)
         context.insert(ChatMessage(
             role: .assistant,
@@ -215,7 +215,7 @@ final class AssistantChatManager: ObservableObject {
 
         var apiMessages = pending.messages
         self.pendingToolExecution = nil
-        context.insert(ChatMessage(role: .user, content: String(localized: "Confirmar alteração")))
+        context.insert(ChatMessage(role: .user, content: String(localized: "Confirmar alteração", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)))
 
         do {
             for toolCall in pending.toolCalls {
@@ -234,17 +234,17 @@ final class AssistantChatManager: ObservableObject {
             errorMessage = error.localizedDescription
             context.insert(ChatMessage(
                 role: .assistant,
-                content: String(localized: "Desculpe, ocorreu um erro ao aplicar a alteração: \(error.localizedDescription)")
+                content: String(localized: "Desculpe, ocorreu um erro ao aplicar a alteração: \(error.localizedDescription)", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             ))
         }
     }
 
     private func cancelPendingToolExecution(context: ModelContext) {
         pendingToolExecution = nil
-        context.insert(ChatMessage(role: .user, content: String(localized: "Cancelar alteração")))
+        context.insert(ChatMessage(role: .user, content: String(localized: "Cancelar alteração", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)))
         context.insert(ChatMessage(
             role: .assistant,
-            content: String(localized: "Alteração cancelada. Nenhuma informação foi modificada.")
+            content: String(localized: "Alteração cancelada. Nenhuma informação foi modificada.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         ))
     }
 
@@ -542,24 +542,24 @@ final class AssistantChatManager: ObservableObject {
     private func confirmationMessage(for toolCalls: [ToolCallRequest]) -> String {
         let summary = toolCalls.map { toolCall in
             switch toolCall.name {
-            case "create_recipe": String(localized: "criar receita")
-            case "update_recipe": String(localized: "editar receita")
-            case "delete_recipe": String(localized: "excluir receita")
-            case "add_pantry_item": String(localized: "adicionar item na despensa")
-            case "remove_pantry_item": String(localized: "remover item da despensa")
-            case "add_grocery_item": String(localized: "adicionar item no mercado")
-            case "create_category": String(localized: "criar categoria")
-            case "rename_category": String(localized: "renomear categoria")
-            case "delete_category": String(localized: "excluir categoria")
-            case "move_category": String(localized: "reordenar categoria")
-            case "log_food_manual": String(localized: "registrar refeição")
-            case "delete_food_entry": String(localized: "remover refeição registrada")
-            default: String(localized: "alterar informações")
+            case "create_recipe": String(localized: "criar receita", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            case "update_recipe": String(localized: "editar receita", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            case "delete_recipe": String(localized: "excluir receita", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            case "add_pantry_item": String(localized: "adicionar item na despensa", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            case "remove_pantry_item": String(localized: "remover item da despensa", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            case "add_grocery_item": String(localized: "adicionar item no mercado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            case "create_category": String(localized: "criar categoria", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            case "rename_category": String(localized: "renomear categoria", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            case "delete_category": String(localized: "excluir categoria", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            case "move_category": String(localized: "reordenar categoria", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            case "log_food_manual": String(localized: "registrar refeição", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            case "delete_food_entry": String(localized: "remover refeição registrada", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            default: String(localized: "alterar informações", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             }
         }
         .joined(separator: ", ")
 
-        return String(localized: "Confirma esta alteração no app?\n\nAção pendente: \(summary).")
+        return String(localized: "Confirma esta alteração no app?\n\nAção pendente: \(summary).", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
     }
 
     // MARK: - Nutrition prompt section

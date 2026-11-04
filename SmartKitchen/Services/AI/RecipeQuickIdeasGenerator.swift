@@ -139,9 +139,9 @@ enum RecipeIdeaCategory: String, Codable, CaseIterable, Identifiable {
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .quick: String(localized: "Ideias Rápidas")
-        case .unique: String(localized: "Ideias únicas")
-        case .pantry: String(localized: "Aproveite a despensa")
+        case .quick: String(localized: "Ideias Rápidas", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .unique: String(localized: "Ideias únicas", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .pantry: String(localized: "Aproveite a despensa", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
     var icon: String {

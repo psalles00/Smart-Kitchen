@@ -191,7 +191,7 @@ struct FoodCaptureHostView: View {
         .sheet(item: $pendingPaywallReason) { reason in
             PaywallSheet(reason: reason)
         }
-        .alert(showCameraUnavailable ? String(localized: "Câmera indisponível") : String(localized: "Contatar suporte"),
+        .alert(showCameraUnavailable ? String(localized: "Câmera indisponível", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) : String(localized: "Contatar suporte", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                isPresented: Binding(
                 get: { showCameraUnavailable || showAnalysisSupportFallback },
                 set: { if !$0 { showCameraUnavailable = false; showAnalysisSupportFallback = false } }
@@ -208,7 +208,7 @@ struct FoodCaptureHostView: View {
             if showCameraUnavailable {
                 Text("A câmera não está disponível neste dispositivo. Escolha uma imagem da galeria.")
             } else {
-                Text(String(localized: "Envie um e-mail para \(Self.supportEmail). Nenhum app de e-mail está configurado neste dispositivo."))
+                Text(String(localized: "Envie um e-mail para \(Self.supportEmail). Nenhum app de e-mail está configurado neste dispositivo.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
             }
         }
     }
@@ -267,9 +267,9 @@ struct FoodCaptureHostView: View {
                         }
 
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(mode == .photo ? String(localized: "Registrar por foto") : String(localized: "Registrar por rótulo"))
+                            Text(mode == .photo ? String(localized: "Registrar por foto", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) : String(localized: "Registrar por rótulo", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                                 .font(.title3.weight(.semibold))
-                            Text(mode == .photo ? String(localized: "IA visual") : String(localized: "Leitura assistida"))
+                            Text(mode == .photo ? String(localized: "IA visual", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) : String(localized: "Leitura assistida", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(.secondary)
                         }
@@ -479,7 +479,7 @@ struct FoodCaptureHostView: View {
         .padding(.bottom, 14)
         .background(appPrimaryBackground)
         .scrollDismissesKeyboard(.interactively)
-        .modalNavigationTitle(String(localized: "Registrar por texto"))
+        .modalNavigationTitle(String(localized: "Registrar por texto", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancelar") { dismiss() }
@@ -678,13 +678,13 @@ struct FoodCaptureHostView: View {
     private var analysisAccessibilityLabel: String {
         switch analysisButtonState {
         case .idle:
-            String(localized: "Analisar")
+            String(localized: "Analisar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .loading:
-            String(localized: "Analisando…")
+            String(localized: "Analisando…", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .success:
-            String(localized: "Análise concluída")
+            String(localized: "Análise concluída", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .failure:
-            String(localized: "Não consegui analisar")
+            String(localized: "Não consegui analisar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 
@@ -724,8 +724,8 @@ struct FoodCaptureHostView: View {
                         minimalCaptureHeader(
                             systemImage: speech.state == .recording ? "waveform.circle.fill" : "mic.fill",
                             tint: speech.state == .recording ? .red : neutralCaptureAccent,
-                            title: speech.state == .recording ? String(localized: "Ouvindo agora") : (speech.transcript.isEmpty ? String(localized: "Ditado") : String(localized: "Transcrição pronta")),
-                            subtitle: speech.state == .recording ? String(localized: "Fale normalmente. A transcrição aparece em tempo real.") : String(localized: "Revise a transcrição e analise quando estiver pronto."),
+                            title: speech.state == .recording ? String(localized: "Ouvindo agora", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) : (speech.transcript.isEmpty ? String(localized: "Ditado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) : String(localized: "Transcrição pronta", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)),
+                            subtitle: speech.state == .recording ? String(localized: "Fale normalmente. A transcrição aparece em tempo real.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) : String(localized: "Revise a transcrição e analise quando estiver pronto.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                             trailingCount: speech.transcript.isEmpty ? nil : speech.transcript.count,
                             showsLiveDot: speech.state == .recording
                         )
@@ -803,7 +803,7 @@ struct FoodCaptureHostView: View {
             .padding(.bottom, 12)
             .background(appPrimaryBackground)
         }
-        .modalNavigationTitle(String(localized: "Registrar por voz"))
+        .modalNavigationTitle(String(localized: "Registrar por voz", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancelar") { speech.stop(); dismiss() }
@@ -857,10 +857,10 @@ struct FoodCaptureHostView: View {
 
     private var captureModalTitle: String {
         switch mode {
-        case .photo:          String(localized: "Registrar por foto")
-        case .nutritionLabel: String(localized: "Registrar por rótulo")
-        case .text:           String(localized: "Registrar por texto")
-        case .voice:          String(localized: "Registrar por voz")
+        case .photo:          String(localized: "Registrar por foto", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .nutritionLabel: String(localized: "Registrar por rótulo", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .text:           String(localized: "Registrar por texto", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .voice:          String(localized: "Registrar por voz", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 
@@ -1203,24 +1203,24 @@ struct FoodCaptureHostView: View {
                 return enteredText
             }
             if capturedImage != nil {
-                return String(localized: "Imagem selecionada")
+                return String(localized: "Imagem selecionada", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             }
-            return String(localized: "Entrada vazia")
+            return String(localized: "Entrada vazia", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }()
         components.queryItems = [
-            URLQueryItem(name: "subject", value: String(localized: "Erro no registro de refeição - Savoria")),
+            URLQueryItem(name: "subject", value: String(localized: "Erro no registro de refeição - Savoria", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)),
             URLQueryItem(
                 name: "body",
                 value: """
-                \(String(localized: "Erro ao analisar refeição."))
+                \(String(localized: "Erro ao analisar refeição.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
 
-                \(String(localized: "Modo:"))
+                \(String(localized: "Modo:", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                 \(modeDescription)
 
-                \(String(localized: "Entrada:"))
+                \(String(localized: "Entrada:", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                 \(inputDescription)
 
-                \(String(localized: "Erro:"))
+                \(String(localized: "Erro:", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                 \(message)
                 """
             )

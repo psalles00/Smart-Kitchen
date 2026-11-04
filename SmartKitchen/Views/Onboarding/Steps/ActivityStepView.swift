@@ -8,8 +8,8 @@ struct ActivityStepView: View {
     var body: some View {
         VStack(spacing: 18) {
             OnboardingHeader(
-                title: String(localized: "Como é sua rotina?"),
-                subtitle: String(localized: "Inclui exercício e movimentação do dia a dia.")
+                title: String(localized: "Como é sua rotina?", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+                subtitle: String(localized: "Inclui exercício e movimentação do dia a dia.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             )
 
             ScrollView(showsIndicators: false) {
@@ -33,7 +33,7 @@ struct ActivityStepView: View {
             }
 
             OnboardingPrimaryButton(
-                title: String(localized: "Continuar"),
+                title: String(localized: "Continuar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                 isEnabled: state.nutritionActivityRaw != nil,
                 action: onContinue
             )
@@ -44,23 +44,23 @@ struct ActivityStepView: View {
 
     private func levelTitle(_ level: ActivityLevel) -> String {
         switch level {
-        case .sedentary:   return String(localized: "Sedentário")
-        case .light:       return String(localized: "Leve")
-        case .moderate:    return String(localized: "Moderado")
-        case .active:      return String(localized: "Ativo")
-        case .veryActive:  return String(localized: "Muito ativo")
-        case .extraActive: return String(localized: "Extremamente ativo")
+        case .sedentary:   return String(localized: "Sedentário", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .light:       return String(localized: "Leve", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .moderate:    return String(localized: "Moderado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .active:      return String(localized: "Ativo", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .veryActive:  return String(localized: "Muito ativo", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .extraActive: return String(localized: "Extremamente ativo", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 
     private func levelSubtitle(_ level: ActivityLevel) -> String {
         switch level {
-        case .sedentary:   return String(localized: "Pouco ou nenhum exercício")
-        case .light:       return String(localized: "Exercício leve 1–3x por semana")
-        case .moderate:    return String(localized: "Exercício moderado 3–5x por semana")
-        case .active:      return String(localized: "Exercício intenso 6–7x por semana")
-        case .veryActive:  return String(localized: "Exercício muito intenso diário")
-        case .extraActive: return String(localized: "Treino físico pesado ou trabalho manual")
+        case .sedentary:   return String(localized: "Pouco ou nenhum exercício", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .light:       return String(localized: "Exercício leve 1–3x por semana", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .moderate:    return String(localized: "Exercício moderado 3–5x por semana", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .active:      return String(localized: "Exercício intenso 6–7x por semana", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .veryActive:  return String(localized: "Exercício muito intenso diário", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .extraActive: return String(localized: "Treino físico pesado ou trabalho manual", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 

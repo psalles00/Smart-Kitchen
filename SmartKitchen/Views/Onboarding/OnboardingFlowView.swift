@@ -89,7 +89,7 @@ struct OnboardingFlowView: View {
             if !isPreview { recovery.refreshAvailableSummary() }
         }
         .alert(restorePromptTitle, isPresented: $showRestorePrompt) {
-            Button(String(localized: "Continuar"), role: .cancel) {}
+            Button(String(localized: "Continuar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), role: .cancel) {}
             Button(restorePromptButtonTitle) {
                 finishOnboarding(
                     subscribed: true,
@@ -100,7 +100,7 @@ struct OnboardingFlowView: View {
         } message: {
             Text(restorePromptMessage)
         }
-        .alert(String(localized: "Restaurar compras"), isPresented: $showRestoreFeedbackAlert) {
+        .alert(String(localized: "Restaurar compras", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), isPresented: $showRestoreFeedbackAlert) {
             Button("OK", role: .cancel) {}
         } message: {
             Text(restoreFeedbackMessage)
@@ -211,14 +211,14 @@ struct OnboardingFlowView: View {
 
     private var restorePromptButtonTitle: String {
         cloudSync.syncEnabled
-            ? String(localized: "Pular onboarding")
-            : String(localized: "Configurar iCloud e pular")
+            ? String(localized: "Pular onboarding", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            : String(localized: "Configurar iCloud e pular", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
     }
 
     private var restorePromptMessage: String {
         cloudSync.syncEnabled
-            ? String(localized: "Sua assinatura Premium já está ativa. Você pode pular o restante do onboarding agora.")
-            : String(localized: "Sua assinatura Premium já está ativa. Você pode configurar o iCloud agora e pular o restante do onboarding.")
+            ? String(localized: "Sua assinatura Premium já está ativa. Você pode pular o restante do onboarding agora.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            : String(localized: "Sua assinatura Premium já está ativa. Você pode configurar o iCloud agora e pular o restante do onboarding.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
     }
 
     private func advance() {
@@ -247,7 +247,7 @@ struct OnboardingFlowView: View {
             await subscriptionManager.restore()
 
             let message = subscriptionManager.lastRestoreMessage
-                ?? String(localized: "Nenhuma compra anterior encontrada.")
+                ?? String(localized: "Nenhuma compra anterior encontrada.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
 
             if subscriptionManager.isSubscribed {
                 restorePromptTitle = message
@@ -493,13 +493,13 @@ private struct ICloudRecoveryWelcomeView: View {
                     case .checking, .waiting:
                         HStack(spacing: 12) {
                             ProgressView()
-                            Text(recovery.phase == .checking ? String(localized: "Verificando o iCloud…") : String(localized: "Aguardando seus dados…"))
+                            Text(recovery.phase == .checking ? String(localized: "Verificando o iCloud…", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) : String(localized: "Aguardando seus dados…", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                         }
                         .accessibilityIdentifier("icloud-recovery-progress")
                     case .available:
                         Label("Seus dados estão disponíveis", systemImage: "checkmark.icloud")
                             .font(.headline)
-                        Text(String(format: String(localized: "%lld itens · %lld receitas · %lld registros de alimentação"),
+                        Text(String(format: String(localized: "%lld itens · %lld receitas · %lld registros de alimentação", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                                     recovery.summary.items, recovery.summary.recipes, recovery.summary.foodEntries))
                         Text("A sincronização pode continuar em segundo plano. Suas configurações existentes serão mantidas.")
                             .font(.footnote).foregroundStyle(.secondary)
@@ -518,7 +518,7 @@ private struct ICloudRecoveryWelcomeView: View {
                         .buttonStyle(.borderedProminent)
                         .accessibilityIdentifier("icloud-recovery-open")
                 } else {
-                    Button(recovery.phase == .idle || isPreview ? String(localized: "Buscar meus dados") : String(localized: "Tentar novamente")) {
+                    Button(recovery.phase == .idle || isPreview ? String(localized: "Buscar meus dados", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) : String(localized: "Tentar novamente", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)) {
                         if !isPreview { recovery.start() }
                     }
                     .buttonStyle(.borderedProminent)
@@ -656,8 +656,8 @@ private struct OnboardingPlaceholderStepView: View {
             VStack(spacing: 12) {
                 OnboardingPrimaryButton(
                     title: step.isLast
-                        ? String(localized: "Continuar com versão grátis")
-                        : String(localized: "Continuar"),
+                        ? String(localized: "Continuar com versão grátis", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+                        : String(localized: "Continuar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                     action: {
                         if step.isLast {
                             onFinish(false)
@@ -782,7 +782,7 @@ private struct AppReviewStepView: View {
 
             OnboardingFeatureChip(
                 icon: "star.fill",
-                title: String(localized: "App Store"),
+                title: String(localized: "App Store", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                 tint: chipTint
             )
             .padding(.bottom, 18)
@@ -791,8 +791,8 @@ private struct AppReviewStepView: View {
             .animation(.spring(response: 0.55, dampingFraction: 0.82), value: showContent)
 
             OnboardingHeader(
-                title: String(localized: "Avaliar na App Store"),
-                subtitle: String(localized: "Sua opinião ajuda outras pessoas a descobrirem o app.")
+                title: String(localized: "Avaliar na App Store", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+                subtitle: String(localized: "Sua opinião ajuda outras pessoas a descobrirem o app.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             )
             .opacity(showContent ? 1 : 0)
             .offset(y: showContent ? 0 : 10)
@@ -802,7 +802,7 @@ private struct AppReviewStepView: View {
                 .padding(.horizontal, 24)
                 .padding(.top, 28)
 
-            Text(String(localized: "Se o sistema permitir, o pedido aparece agora. Se não, você pode avaliar depois em Configurações."))
+            Text(String(localized: "Se o sistema permitir, o pedido aparece agora. Se não, você pode avaliar depois em Configurações.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -815,7 +815,7 @@ private struct AppReviewStepView: View {
             Spacer(minLength: 16)
 
             OnboardingPrimaryButton(
-                title: String(localized: "Continuar"),
+                title: String(localized: "Continuar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                 isEnabled: true,
                 action: onContinue
             )
@@ -879,7 +879,7 @@ private struct AppReviewStepView: View {
                     .foregroundStyle(.primary)
                     .lineLimit(1)
 
-                Text(String(localized: "Avaliar na App Store"))
+                Text(String(localized: "Avaliar na App Store", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(.secondary)
 
@@ -949,8 +949,8 @@ private struct DiscoverySourceStepView: View {
     var body: some View {
         VStack(spacing: 16) {
             OnboardingHeader(
-                title: String(localized: "Como você conheceu o Savoria?"),
-                subtitle: String(localized: "Isso nos ajuda a entender o que fez sentido pra você.")
+                title: String(localized: "Como você conheceu o Savoria?", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+                subtitle: String(localized: "Isso nos ajuda a entender o que fez sentido pra você.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             )
             .padding(.top, 8)
 
@@ -983,12 +983,12 @@ private struct DiscoverySourceStepView: View {
             }
 
             VStack(spacing: 8) {
-                Text(String(localized: "Você pode alterar isso depois nas configurações."))
+                Text(String(localized: "Você pode alterar isso depois nas configurações.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(.secondary)
 
                 OnboardingPrimaryButton(
-                    title: String(localized: "Continuar"),
+                    title: String(localized: "Continuar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                     isEnabled: state.canAdvanceDiscoverySource,
                     action: onContinue
                 )
@@ -1012,34 +1012,34 @@ private enum DiscoverySourceOption: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .tiktok:
-            return String(localized: "TikTok")
+            return String(localized: "TikTok", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .instagram:
-            return String(localized: "Instagram")
+            return String(localized: "Instagram", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .youtube:
-            return String(localized: "YouTube")
+            return String(localized: "YouTube", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .appStore:
-            return String(localized: "App Store")
+            return String(localized: "App Store", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .friend:
-            return String(localized: "Indicação")
+            return String(localized: "Indicação", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .other:
-            return String(localized: "Outro")
+            return String(localized: "Outro", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 
     var subtitle: String {
         switch self {
         case .tiktok:
-            return String(localized: "Vi um vídeo curto mostrando o app.")
+            return String(localized: "Vi um vídeo curto mostrando o app.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .instagram:
-            return String(localized: "Vi um post, story ou reels.")
+            return String(localized: "Vi um post, story ou reels.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .youtube:
-            return String(localized: "Vi um vídeo ou review mais completo.")
+            return String(localized: "Vi um vídeo ou review mais completo.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .appStore:
-            return String(localized: "Encontrei pesquisando por apps.")
+            return String(localized: "Encontrei pesquisando por apps.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .friend:
-            return String(localized: "Alguém me recomendou o Savoria.")
+            return String(localized: "Alguém me recomendou o Savoria.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .other:
-            return String(localized: "Cheguei por outro caminho.")
+            return String(localized: "Cheguei por outro caminho.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 

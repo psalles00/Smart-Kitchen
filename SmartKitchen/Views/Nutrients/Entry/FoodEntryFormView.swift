@@ -97,7 +97,7 @@ struct FoodEntryFormView: View {
             .macModalFormStyle(minWidth: 680, minHeight: 620)
             .savoriaModalBorder(theme: .nutrients)
             .platformScrollDismissesKeyboardInteractively()
-            .modalNavigationTitle(isEdit ? String(localized: "Editar registro") : String(localized: "Salvar Alimento"))
+            .modalNavigationTitle(isEdit ? String(localized: "Editar registro", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) : String(localized: "Salvar Alimento", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancelar") { dismiss() }
@@ -146,7 +146,7 @@ struct FoodEntryFormView: View {
                 .buttonStyle(.bordered)
                 .tint(speech.state == .recording ? .red : PageTheme.nutrients.accentColor)
                 .disabled(isAnalyzing)
-                .accessibilityLabel(speech.state == .recording ? String(localized: "Parar") : String(localized: "Ditar"))
+                .accessibilityLabel(speech.state == .recording ? String(localized: "Parar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) : String(localized: "Ditar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
 
                 Button {
                     Task { await runAI() }

@@ -173,7 +173,7 @@ enum ListSubtab: String, CaseIterable, Codable {
     var newItemTitle: String {
         switch self {
         case .pantry: "Novo Item da Despensa"
-        case .reserve: String(localized: "Novo item para depois")
+        case .reserve: String(localized: "Novo item para depois", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .grocery: "Novo Item do Mercado"
         case .utensils: "Novo Utensílio"
         }
@@ -281,7 +281,7 @@ private struct ListsSkeletonPage: View {
         ExpandedPageLayout(
             pageTheme: .lists,
             header: { isInverted in
-                PageHeader(title: String(localized: "Listas"), isInverted: isInverted) {
+                PageHeader(title: String(localized: "Listas", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), isInverted: isInverted) {
                     HStack(spacing: 6) {
                         GlassButtonGroup {
                             GlassGroupButton(systemImage: "plus") {}
@@ -375,7 +375,7 @@ private struct ListsLoadedTabView: View {
                 )))
             },
             header: { isInverted in
-                PageHeader(title: String(localized: "Listas"), isInverted: isInverted) {
+                PageHeader(title: String(localized: "Listas", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), isInverted: isInverted) {
                     HStack(spacing: 6) {
                         GlassButtonGroup {
                             GlassGroupButton(systemImage: "plus") {
@@ -595,7 +595,7 @@ private struct ListsLoadedTabView: View {
             Button("Compartilhar lista atual", systemImage: "square.and.arrow.up") { prepareListTextExport() }
                 .accessibilityIdentifier("savoria.lists.share-text")
             Divider()
-            Button(isSelectingItems ? String(localized: "Cancelar") : String(localized: "Selecionar itens"), systemImage: "checkmark.circle") {
+            Button(isSelectingItems ? String(localized: "Cancelar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) : String(localized: "Selecionar itens", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), systemImage: "checkmark.circle") {
                 if isSelectingItems { finishItemSelection() }
                 else { isSelectingItems = true }
             }
@@ -753,10 +753,10 @@ private struct ListsLoadedTabView: View {
             }
             let title: String
             switch selectedSubtab {
-            case .pantry: title = String(localized: "Despensa")
-            case .reserve: title = String(localized: "Para depois")
-            case .grocery: title = String(localized: "Mercado")
-            case .utensils: title = String(localized: "Utensílios")
+            case .pantry: title = String(localized: "Despensa", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            case .reserve: title = String(localized: "Para depois", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            case .grocery: title = String(localized: "Mercado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            case .utensils: title = String(localized: "Utensílios", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             }
             textExport = PlainTextSharePayload(title: title, text: SavoriaPlainTextExport.list(title: title, items: sorted))
         } catch { showsTextExportError = true }

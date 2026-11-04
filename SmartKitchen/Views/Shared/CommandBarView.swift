@@ -737,15 +737,15 @@ enum CommandBarHelpers {
         let title = truncate ? limitedSuggestionText(item.title, limit: 40) : item.title
         switch item.id {
         case "ask-assistant":
-            return String(format: String(localized: "Perguntar \"%@\" à IA"), title)
+            return String(format: String(localized: "Perguntar \"%@\" à IA", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), title)
         case "add-pantry":
-            return String(format: String(localized: "Adicionar \"%@\" à Despensa"), title)
+            return String(format: String(localized: "Adicionar \"%@\" à Despensa", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), title)
         case "add-grocery":
-            return String(format: String(localized: "Adicionar \"%@\" ao Mercado"), title)
+            return String(format: String(localized: "Adicionar \"%@\" ao Mercado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), title)
         case "create-recipe":
-            return String(format: String(localized: "Criar receita \"%@\""), title)
+            return String(format: String(localized: "Criar receita \"%@\"", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), title)
         case "register-food-text":
-            return String(format: String(localized: "Registrar alimento \"%@\""), title)
+            return String(format: String(localized: "Registrar alimento \"%@\"", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), title)
         default:
             return item.title
         }
@@ -986,7 +986,7 @@ enum CommandBarHelpers {
     static func recentTypeLabel(for type: String) -> String {
         switch type {
         case "pantryItem":  "Despensa"
-        case "reserveItem": String(localized: "Para depois")
+        case "reserveItem": String(localized: "Para depois", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case "groceryItem": "Mercado"
         case "recipe":      "Receita"
         case "utensil":     "Utensílio"

@@ -43,9 +43,9 @@ enum DebugOpenRouterCredential {
         var errorDescription: String? {
             switch self {
             case .invalidKey:
-                String(localized: "Insira uma chave OpenRouter válida, começando com sk-or-.")
+                String(localized: "Insira uma chave OpenRouter válida, começando com sk-or-.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             case .keychain(let status):
-                String(format: String(localized: "Não foi possível salvar a chave (%@)."), String(status))
+                String(format: String(localized: "Não foi possível salvar a chave (%@).", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(status))
             }
         }
     }
@@ -76,9 +76,9 @@ enum APIConfig {
 
     static var missingAIConfigurationMessage: String {
         #if DEBUG && os(iOS)
-        String(localized: "Nenhum provedor de IA está disponível. Configure o OpenRouter em Configurações > Central de Debug > IA.")
+        String(localized: "Nenhum provedor de IA está disponível. Configure o OpenRouter em Configurações > Central de Debug > IA.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         #else
-        String(localized: "O serviço de IA está indisponível. Tente novamente ou contate o suporte.")
+        String(localized: "O serviço de IA está indisponível. Tente novamente ou contate o suporte.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         #endif
     }
 
@@ -192,10 +192,10 @@ final class AIDataConsent {
     }
 
     private static func presentPermission() async -> Bool? {
-        let title = String(localized: "Permitir serviços de IA?")
-        let message = String(localized: "Para atender seus pedidos, o Savoria envia mensagens, ingredientes, dados nutricionais e as fotos ou áudios escolhidos aos serviços externos necessários: Supabase, OpenAI, OpenRouter e seus provedores de modelos, e Exa para buscas. Avaliações de alimentos também enviam ao Supabase um identificador guardado nesta instalação, para evitar votos duplicados. O contexto pode incluir itens da despensa e informações do seu perfil nutricional. Autorize somente se concordar com esse envio. Você pode revogar a autorização em Configurações e continuar usando os recursos locais. Consulte a Política de privacidade em Configurações.")
-        let allow = String(localized: "Permitir")
-        let deny = String(localized: "Agora não")
+        let title = String(localized: "Permitir serviços de IA?", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        let message = String(localized: "Para atender seus pedidos, o Savoria envia mensagens, ingredientes, dados nutricionais e as fotos ou áudios escolhidos aos serviços externos necessários: Supabase, OpenAI, OpenRouter e seus provedores de modelos, e Exa para buscas. Avaliações de alimentos também enviam ao Supabase um identificador guardado nesta instalação, para evitar votos duplicados. O contexto pode incluir itens da despensa e informações do seu perfil nutricional. Autorize somente se concordar com esse envio. Você pode revogar a autorização em Configurações e continuar usando os recursos locais. Consulte a Política de privacidade em Configurações.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        let allow = String(localized: "Permitir", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        let deny = String(localized: "Agora não", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         #if os(iOS)
         guard let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene })
             .first(where: { $0.activationState == .foregroundActive }),

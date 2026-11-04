@@ -156,13 +156,13 @@ struct RecipeCardMessage: View {
                 .foregroundStyle(.white.opacity(0.85))
 
                 if showMissingIngredients {
-                    Label(String(format: String(localized: "%lld de %lld ingredientes disponíveis"), stock.available.count, stock.total),
+                    Label(String(format: String(localized: "%lld de %lld ingredientes disponíveis", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), stock.available.count, stock.total),
                           systemImage: stock.missing.isEmpty ? "checkmark.seal.fill" : "checklist")
                         .font(.caption2.weight(.semibold))
                         .foregroundStyle(.white)
                     Text(stock.missing.isEmpty
-                         ? String(localized: "Todos os ingredientes disponíveis")
-                         : String(format: String(localized: "Faltam: %@"), stock.missing.joined(separator: ", ")))
+                         ? String(localized: "Todos os ingredientes disponíveis", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+                         : String(format: String(localized: "Faltam: %@", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), stock.missing.joined(separator: ", ")))
                         .font(.caption2)
                         .foregroundStyle(.white.opacity(0.92))
                         .lineLimit(2)

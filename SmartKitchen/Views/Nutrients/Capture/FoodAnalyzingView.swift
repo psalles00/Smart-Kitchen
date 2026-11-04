@@ -3,7 +3,7 @@ import SwiftUI
 /// Tela de loading enquanto a IA analisa texto, foto ou rótulo.
 struct FoodAnalyzingView: View {
     var image: PlatformImage? = nil
-    var message: String = String(localized: "Analisando sua refeição…")
+    var message: String = String(localized: "Analisando sua refeição…", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
 
     @State private var pulse = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion

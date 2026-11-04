@@ -9,22 +9,22 @@ struct SuggestionChipsView: View {
 
     private var baseSuggestions: [(label: String, prompt: String)] {
         [
-            (String(localized: "🍳 O que posso cozinhar?"), String(localized: "Com base nos ingredientes da minha despensa, o que posso cozinhar?")),
-            (String(localized: "➕ Criar receita"), String(localized: "Quero adicionar uma nova receita.")),
-            (String(localized: "✏️ Editar receita"), String(localized: "Quero editar uma receita existente.")),
-            (String(localized: "📚 Minhas receitas"), String(localized: "Mostre minhas receitas salvas.")),
-            (String(localized: "🛒 Lista de mercado"), String(localized: "Mostre minha lista de mercado atual.")),
-            (String(localized: "🧊 O que tem na despensa?"), String(localized: "O que eu tenho na despensa agora?")),
-            (String(localized: "🏷️ Categorias"), String(localized: "Mostre e gerencie minhas categorias.")),
-            (String(localized: "🥗 Receita saudável"), String(localized: "Sugira uma receita saudável e rápida.")),
+            (String(localized: "🍳 O que posso cozinhar?", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Com base nos ingredientes da minha despensa, o que posso cozinhar?", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)),
+            (String(localized: "➕ Criar receita", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Quero adicionar uma nova receita.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)),
+            (String(localized: "✏️ Editar receita", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Quero editar uma receita existente.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)),
+            (String(localized: "📚 Minhas receitas", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Mostre minhas receitas salvas.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)),
+            (String(localized: "🛒 Lista de mercado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Mostre minha lista de mercado atual.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)),
+            (String(localized: "🧊 O que tem na despensa?", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "O que eu tenho na despensa agora?", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)),
+            (String(localized: "🏷️ Categorias", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Mostre e gerencie minhas categorias.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)),
+            (String(localized: "🥗 Receita saudável", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Sugira uma receita saudável e rápida.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)),
         ]
     }
 
     private var nutritionSuggestions: [(label: String, prompt: String)] {
         [
-            (String(localized: "🥗 O que comi hoje?"), String(localized: "Mostre meu consumo de hoje e como está em relação às metas.")),
-            (String(localized: "📝 Registrar refeição"), String(localized: "Quero registrar uma refeição que acabei de comer.")),
-            (String(localized: "🎯 Estou na meta?"), String(localized: "Estou dentro das minhas metas de calorias e macros hoje?")),
+            (String(localized: "🥗 O que comi hoje?", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Mostre meu consumo de hoje e como está em relação às metas.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)),
+            (String(localized: "📝 Registrar refeição", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Quero registrar uma refeição que acabei de comer.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)),
+            (String(localized: "🎯 Estou na meta?", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Estou dentro das minhas metas de calorias e macros hoje?", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)),
         ]
     }
 

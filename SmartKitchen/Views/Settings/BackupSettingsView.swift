@@ -205,7 +205,7 @@ struct BackupSettingsView: View {
         }
         .settingsFormStyle()
         .macSettingsContainer()
-        .settingsNavigationTitle(String(localized: "Backup"))
+        .settingsNavigationTitle(String(localized: "Backup", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
@@ -222,9 +222,9 @@ struct BackupSettingsView: View {
                 Task {
                     let success = await backupManager.restore(from: target, context: modelContext)
                     if success {
-                        presentAlert(title: String(localized: "Backup restaurado"), message: String(localized: "Os dados foram restaurados com sucesso."))
+                        presentAlert(title: String(localized: "Backup restaurado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), message: String(localized: "Os dados foram restaurados com sucesso.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                     } else {
-                        presentAlert(title: String(localized: "Falha"), message: String(localized: "Não foi possível restaurar o backup."))
+                        presentAlert(title: String(localized: "Falha", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), message: String(localized: "Não foi possível restaurar o backup.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                     }
                 }
             }
@@ -243,7 +243,7 @@ struct BackupSettingsView: View {
             defaultFilename: exportFileName
         ) { result in
             if case .failure(let error) = result {
-                presentAlert(title: String(localized: "Falha ao exportar"), message: error.localizedDescription)
+                presentAlert(title: String(localized: "Falha ao exportar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), message: error.localizedDescription)
             }
         }
         #if os(iOS)
@@ -265,7 +265,7 @@ struct BackupSettingsView: View {
             case .success(let url):
                 importBackup(from: url)
             case .failure(let error):
-                presentAlert(title: String(localized: "Falha ao importar"), message: error.localizedDescription)
+                presentAlert(title: String(localized: "Falha ao importar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), message: error.localizedDescription)
             }
         }
         .fileImporter(
@@ -279,7 +279,7 @@ struct BackupSettingsView: View {
                 if let settings, settings.autoBackupBookmarkData == nil {
                     settings.autoDailyBackupEnabled = false
                 }
-                presentAlert(title: String(localized: "Falha ao escolher pasta"), message: error.localizedDescription)
+                presentAlert(title: String(localized: "Falha ao escolher pasta", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), message: error.localizedDescription)
             }
         }
         #endif
@@ -327,7 +327,7 @@ struct BackupSettingsView: View {
             exportDocument = BackupZipDocument(data: try backupManager.exportCurrentData(context: modelContext))
             isExporting = true
         } catch {
-            presentAlert(title: String(localized: "Falha ao exportar"), message: error.localizedDescription)
+            presentAlert(title: String(localized: "Falha ao exportar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), message: error.localizedDescription)
         }
     }
 
@@ -390,9 +390,9 @@ struct BackupSettingsView: View {
         do {
             let data = try Data(contentsOf: url)
             try backupManager.importBackup(from: data, context: modelContext)
-            presentAlert(title: String(localized: "Backup importado"), message: String(localized: "Os dados do aplicativo foram restaurados com sucesso."))
+            presentAlert(title: String(localized: "Backup importado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), message: String(localized: "Os dados do aplicativo foram restaurados com sucesso.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
         } catch {
-            presentAlert(title: String(localized: "Falha ao importar"), message: error.localizedDescription)
+            presentAlert(title: String(localized: "Falha ao importar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), message: error.localizedDescription)
         }
     }
 
@@ -416,7 +416,7 @@ struct BackupSettingsView: View {
             settings.autoDailyBackupEnabled = true
         } catch {
             settings.autoDailyBackupEnabled = false
-            presentAlert(title: String(localized: "Falha ao salvar pasta"), message: error.localizedDescription)
+            presentAlert(title: String(localized: "Falha ao salvar pasta", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), message: error.localizedDescription)
         }
     }
 
@@ -433,12 +433,12 @@ struct BackupSettingsView: View {
         case .failure(let error):
             switch request {
             case .importArchive:
-                presentAlert(title: String(localized: "Falha ao importar"), message: error.localizedDescription)
+                presentAlert(title: String(localized: "Falha ao importar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), message: error.localizedDescription)
             case .chooseFolder:
                 if let settings, settings.autoBackupBookmarkData == nil {
                     settings.autoDailyBackupEnabled = false
                 }
-                presentAlert(title: String(localized: "Falha ao escolher pasta"), message: error.localizedDescription)
+                presentAlert(title: String(localized: "Falha ao escolher pasta", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), message: error.localizedDescription)
             }
         }
     }

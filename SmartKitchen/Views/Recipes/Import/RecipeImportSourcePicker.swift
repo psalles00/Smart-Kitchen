@@ -32,8 +32,8 @@ struct RecipeImportSourcePicker: View {
 
                         card(
                             icon: "photo.on.rectangle.angled",
-                            title: String(localized: "Importar da galeria"),
-                            subtitle: String(localized: "Foto ou screenshot da receita"),
+                            title: String(localized: "Importar da galeria", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+                            subtitle: String(localized: "Foto ou screenshot da receita", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                             accent: .orange
                         ) {
                             onPickImage()
@@ -41,8 +41,8 @@ struct RecipeImportSourcePicker: View {
 
                         card(
                             icon: "camera.viewfinder",
-                            title: String(localized: "Ler com câmera"),
-                            subtitle: String(localized: "Fotografe a receita impressa ou na tela"),
+                            title: String(localized: "Ler com câmera", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+                            subtitle: String(localized: "Fotografe a receita impressa ou na tela", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                             accent: .green
                         ) {
                             onPickCamera()
@@ -52,8 +52,8 @@ struct RecipeImportSourcePicker: View {
                         if let onPickFiles {
                             card(
                                 icon: "folder.fill",
-                                title: String(localized: "Importar dos arquivos"),
-                                subtitle: String(localized: "Abrir uma imagem salva no Mac"),
+                                title: String(localized: "Importar dos arquivos", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+                                subtitle: String(localized: "Abrir uma imagem salva no Mac", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                                 accent: .indigo
                             ) {
                                 onPickFiles()
@@ -63,8 +63,8 @@ struct RecipeImportSourcePicker: View {
 
                         card(
                             icon: "video.fill",
-                            title: String(localized: "Importar vídeo"),
-                            subtitle: String(localized: "Reels, TikTok, YouTube — em breve"),
+                            title: String(localized: "Importar vídeo", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+                            subtitle: String(localized: "Reels, TikTok, YouTube — em breve", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                             accent: .pink,
                             disabled: true
                         ) {
@@ -73,8 +73,8 @@ struct RecipeImportSourcePicker: View {
 
                         card(
                             icon: "text.alignleft",
-                            title: String(localized: "Colar texto"),
-                            subtitle: String(localized: "Texto bruto de uma receita"),
+                            title: String(localized: "Colar texto", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+                            subtitle: String(localized: "Texto bruto de uma receita", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                             accent: .purple
                         ) {
                             onPickText()
@@ -103,7 +103,7 @@ struct RecipeImportSourcePicker: View {
                 .padding(.top, 6)
                 .padding(.bottom, 24)
             }
-            .modalNavigationTitle(String(localized: "Adicionar receita"))
+            .modalNavigationTitle(String(localized: "Adicionar receita", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif

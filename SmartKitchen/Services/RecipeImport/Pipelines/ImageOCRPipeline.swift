@@ -50,7 +50,7 @@ struct ImageOCRPipeline: RecipeImportPipeline {
         let structurer = RecipeStructurer()
         var draft = try await structurer.structure(
             text: trimmed,
-            hints: RecipeStructurer.Hints(sourceLabel: String(localized: "Imagem"))
+            hints: RecipeStructurer.Hints(sourceLabel: String(localized: "Imagem", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
         )
         RecipeImportLogger.info("ocr structured \(RecipeImportLogger.draftSummary(draft))")
 
@@ -74,7 +74,7 @@ struct ImageOCRPipeline: RecipeImportPipeline {
 
         onStage(.finalizing)
         RecipeImportLogger.debug("stage=\(RecipeImportStage.finalizing.title)")
-        if draft.sourceLabel.isEmpty { draft.sourceLabel = String(localized: "Imagem") }
+        if draft.sourceLabel.isEmpty { draft.sourceLabel = String(localized: "Imagem", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) }
         RecipeImportLogger.info("image OCR pipeline completed sourceLabel=\(draft.sourceLabel)")
         return draft
     }

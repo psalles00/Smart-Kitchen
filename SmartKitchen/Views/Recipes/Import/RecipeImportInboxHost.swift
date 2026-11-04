@@ -268,8 +268,8 @@ struct SharedImportActionView: View {
                         if let onRegisterFood {
                             actionCard(
                                 icon: "fork.knife.circle.fill",
-                                title: String(localized: "Salvar alimento"),
-                                subtitle: String(localized: "Guarde esta imagem como referência para o módulo de Nutrientes."),
+                                title: String(localized: "Salvar alimento", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+                                subtitle: String(localized: "Guarde esta imagem como referência para o módulo de Nutrientes.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                                 accent: PageTheme.nutrients.accentColor,
                                 action: onRegisterFood
                             )
@@ -278,8 +278,8 @@ struct SharedImportActionView: View {
                         if let onAskAssistant {
                             actionCard(
                                 icon: "sparkles",
-                                title: String(localized: "Abrir no assistente"),
-                                subtitle: String(localized: "Usar o conteúdo compartilhado como contexto na conversa com a IA."),
+                                title: String(localized: "Abrir no assistente", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+                                subtitle: String(localized: "Usar o conteúdo compartilhado como contexto na conversa com a IA.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                                 accent: PageTheme.home.accentColor,
                                 action: onAskAssistant
                             )
@@ -290,7 +290,7 @@ struct SharedImportActionView: View {
                 .padding(.top, 10)
                 .padding(.bottom, 24)
             }
-            .modalNavigationTitle(String(localized: "O que você quer fazer?"))
+            .modalNavigationTitle(String(localized: "O que você quer fazer?", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -354,37 +354,37 @@ struct SharedImportActionView: View {
             }
 
         case .video:
-            infoCard(icon: "video.fill", title: String(localized: "Vídeo recebido"), subtitle: item.filename ?? item.mediaFileURL?.lastPathComponent ?? String(localized: "Vídeo compartilhado"))
+            infoCard(icon: "video.fill", title: String(localized: "Vídeo recebido", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), subtitle: item.filename ?? item.mediaFileURL?.lastPathComponent ?? String(localized: "Vídeo compartilhado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
 
         case .url:
-            infoCard(icon: "link", title: String(localized: "Link recebido"), subtitle: item.url?.absoluteString ?? "")
+            infoCard(icon: "link", title: String(localized: "Link recebido", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), subtitle: item.url?.absoluteString ?? "")
 
         case .text:
-            infoCard(icon: "text.alignleft", title: String(localized: "Texto recebido"), subtitle: item.text ?? "")
+            infoCard(icon: "text.alignleft", title: String(localized: "Texto recebido", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), subtitle: item.text ?? "")
         }
     }
 
     private var recipeActionTitle: String {
         switch item.kind {
         case .image:
-            return String(localized: "Identificar receita")
+            return String(localized: "Identificar receita", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .video:
-            return String(localized: "Revisar receita do vídeo")
+            return String(localized: "Revisar receita do vídeo", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .url, .text:
-            return String(localized: "Revisar como receita")
+            return String(localized: "Revisar como receita", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 
     private var recipeActionSubtitle: String {
         switch item.kind {
         case .image:
-            return String(localized: "Extrair ingredientes e etapas da imagem e abrir a revisão antes de salvar.")
+            return String(localized: "Extrair ingredientes e etapas da imagem e abrir a revisão antes de salvar.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .video:
-            return String(localized: "Transcrever o vídeo, estruturar a receita e abrir a revisão antes de salvar.")
+            return String(localized: "Transcrever o vídeo, estruturar a receita e abrir a revisão antes de salvar.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .url:
-            return String(localized: "Importar o link compartilhado e abrir a revisão da receita.")
+            return String(localized: "Importar o link compartilhado e abrir a revisão da receita.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .text:
-            return String(localized: "Organizar o texto compartilhado em ingredientes e modo de preparo.")
+            return String(localized: "Organizar o texto compartilhado em ingredientes e modo de preparo.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 

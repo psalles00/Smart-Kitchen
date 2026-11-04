@@ -9,8 +9,8 @@ struct SelectGroceryStepView: View {
     var body: some View {
         VStack(spacing: 12) {
             OnboardingHeader(
-                title: String(localized: "O que precisa comprar?"),
-                subtitle: String(localized: "Escolha pelo menos 3 itens. Arraste para descobrir mais.")
+                title: String(localized: "O que precisa comprar?", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+                subtitle: String(localized: "Escolha pelo menos 3 itens. Arraste para descobrir mais.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             )
             .padding(.top, 8)
 
@@ -31,7 +31,7 @@ struct SelectGroceryStepView: View {
                     .animation(.easeOut(duration: 0.2), value: state.selectedGroceryItemIDs.count)
 
                 OnboardingPrimaryButton(
-                    title: String(localized: "Continuar"),
+                    title: String(localized: "Continuar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                     isEnabled: state.canAdvanceGrocerySelection,
                     action: onContinue
                 )
@@ -55,12 +55,12 @@ struct SelectGroceryStepView: View {
         let count = state.selectedGroceryItemIDs.count
         return count >= 3
             ? String(
-                format: String(localized: "%lld selecionados"),
+                format: String(localized: "%lld selecionados", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                 locale: Locale.current,
                 count
             )
             : String(
-                format: String(localized: "Selecione mais %lld para continuar"),
+                format: String(localized: "Selecione mais %lld para continuar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                 locale: Locale.current,
                 3 - count
             )

@@ -564,7 +564,7 @@ struct PantryItemRow: View {
                         color: PageTheme.lists.accentColor,
                         action: onSendToGrocery
                     )
-                    .accessibilityLabel(destination == .reserve ? String(localized: "Para depois") : String(localized: "Enviar ao Mercado"))
+                    .accessibilityLabel(destination == .reserve ? String(localized: "Para depois", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) : String(localized: "Enviar ao Mercado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                     .accessibilityIdentifier("savoria.item.complete." + item.id.uuidString)
                 }
             }

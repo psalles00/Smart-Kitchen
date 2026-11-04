@@ -109,11 +109,11 @@ enum CategoryMutationError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidName:
-            return String(localized: "Nome de categoria inválido.")
+            return String(localized: "Nome de categoria inválido.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .duplicateName:
-            return String(localized: "Essa categoria já existe.")
+            return String(localized: "Essa categoria já existe.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .categoryNotFound:
-            return String(localized: "Categoria não encontrada.")
+            return String(localized: "Categoria não encontrada.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 }

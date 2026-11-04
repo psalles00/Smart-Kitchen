@@ -17,14 +17,14 @@ struct PantryGrocerySyncStepView: View {
     @State private var loopTask: Task<Void, Never>? = nil
 
     private let initialPantry: [SyncItemMock] = [
-        .init(id: "milk",   name: String(localized: "Leite"),  icon: "🥛", color: Color(red: 0.55, green: 0.78, blue: 0.96), badge: nil),
-        .init(id: "rice",   name: String(localized: "Arroz"),  icon: "🍚", color: Color(red: 0.96, green: 0.85, blue: 0.55), badge: String(localized: "Validade 30 dias")),
-        .init(id: "tomato", name: String(localized: "Tomate"), icon: "🍅", color: Color(red: 0.96, green: 0.55, blue: 0.55), badge: nil),
+        .init(id: "milk",   name: String(localized: "Leite", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),  icon: "🥛", color: Color(red: 0.55, green: 0.78, blue: 0.96), badge: nil),
+        .init(id: "rice",   name: String(localized: "Arroz", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),  icon: "🍚", color: Color(red: 0.96, green: 0.85, blue: 0.55), badge: String(localized: "Validade 30 dias", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)),
+        .init(id: "tomato", name: String(localized: "Tomate", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), icon: "🍅", color: Color(red: 0.96, green: 0.55, blue: 0.55), badge: nil),
     ]
 
     private let initialGrocery: [SyncItemMock] = [
-        .init(id: "bread",  name: String(localized: "Pão"),    icon: "🍞", color: Color(red: 0.96, green: 0.78, blue: 0.55), badge: nil),
-        .init(id: "eggs",   name: String(localized: "Ovos"),   icon: "🥚", color: Color(red: 0.98, green: 0.92, blue: 0.62), badge: nil),
+        .init(id: "bread",  name: String(localized: "Pão", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),    icon: "🍞", color: Color(red: 0.96, green: 0.78, blue: 0.55), badge: nil),
+        .init(id: "eggs",   name: String(localized: "Ovos", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),   icon: "🥚", color: Color(red: 0.98, green: 0.92, blue: 0.62), badge: nil),
     ]
 
     var body: some View {
@@ -42,15 +42,15 @@ struct PantryGrocerySyncStepView: View {
             VStack(spacing: 12) {
                 OnboardingFeatureChip(
                     icon: "arrow.left.arrow.right",
-                    title: String(localized: "Despensa & Mercado"),
+                    title: String(localized: "Despensa & Mercado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                     tint: Color(red: 0.98, green: 0.72, blue: 0.34)
                 )
                 .opacity(showHeader ? 1 : 0)
                 .animation(.spring(response: 0.7, dampingFraction: 0.86), value: showHeader)
 
                 OnboardingHeader(
-                    title: String(localized: "Despensa e mercado, sempre em sincronia"),
-                    subtitle: String(localized: "Acabou? Vai pro mercado. Comprou? Volta pra despensa.")
+                    title: String(localized: "Despensa e mercado, sempre em sincronia", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+                    subtitle: String(localized: "Acabou? Vai pro mercado. Comprou? Volta pra despensa.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
                 )
                 .opacity(showHeader ? 1 : 0)
                 .offset(y: showHeader ? 0 : 14)
@@ -60,7 +60,7 @@ struct PantryGrocerySyncStepView: View {
                 Spacer(minLength: 14)
 
                 OnboardingPrimaryButton(
-                    title: String(localized: "Continuar"),
+                    title: String(localized: "Continuar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                     action: onContinue
                 )
                 .padding(.horizontal, 24)
@@ -92,14 +92,14 @@ struct PantryGrocerySyncStepView: View {
                     // Two columns
                     HStack(spacing: 16) {
                         column(
-                            title: String(localized: "Despensa"),
+                            title: String(localized: "Despensa", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                             icon: "cabinet.fill",
                             tint: Color(red: 0.42, green: 0.78, blue: 0.55),
                             items: pantryItems,
                             width: halfWidth
                         )
                         column(
-                            title: String(localized: "Mercado"),
+                            title: String(localized: "Mercado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                             icon: "cart.fill",
                             tint: Color(red: 0.98, green: 0.72, blue: 0.34),
                             items: groceryItems,
@@ -176,7 +176,7 @@ struct PantryGrocerySyncStepView: View {
         HStack(spacing: 5) {
             Image(systemName: "arrow.triangle.2.circlepath")
                 .font(.system(size: 10, weight: .bold))
-            Text(String(localized: "Sempre em sincronia"))
+            Text(String(localized: "Sempre em sincronia", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                 .font(.system(size: 11, weight: .bold))
         }
         .foregroundStyle(.white)
@@ -252,7 +252,7 @@ struct PantryGrocerySyncStepView: View {
             // 2) Grocery → Pantry: Pão comprado, com validade
             HapticManager.impact(style: .light)
             var bread = initialGrocery[0]
-            bread = SyncItemMock(id: bread.id, name: bread.name, icon: bread.icon, color: bread.color, badge: String(localized: "Validade 5 dias"))
+            bread = SyncItemMock(id: bread.id, name: bread.name, icon: bread.icon, color: bread.color, badge: String(localized: "Validade 5 dias", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
             withAnimation(.easeInOut(duration: 0.3)) {
                 groceryItems.removeAll { $0.id == bread.id }
             }

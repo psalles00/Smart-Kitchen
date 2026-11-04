@@ -31,12 +31,12 @@ struct SearchResult: Identifiable {
     /// Section label displayed as a badge next to the result.
     var typeLabel: String {
         switch type {
-        case .pantryItem:  String(localized: "Despensa")
-        case .reserveItem: String(localized: "Para depois")
-        case .groceryItem: String(localized: "Mercado")
-        case .recipe:      String(localized: "Receita")
-        case .utensil:     String(localized: "Utensílio")
-        case .suggestion:  String(localized: "Sugestão")
+        case .pantryItem:  String(localized: "Despensa", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .reserveItem: String(localized: "Para depois", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .groceryItem: String(localized: "Mercado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .recipe:      String(localized: "Receita", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .utensil:     String(localized: "Utensílio", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .suggestion:  String(localized: "Sugestão", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .action:      ""
         }
     }
@@ -45,8 +45,8 @@ struct SearchResult: Identifiable {
     var secondaryTypeLabel: String? {
         guard isAlsoInOtherList else { return nil }
         switch type {
-        case .pantryItem: return String(localized: "Mercado")
-        case .groceryItem: return String(localized: "Despensa")
+        case .pantryItem: return String(localized: "Mercado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .groceryItem: return String(localized: "Despensa", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         default: return nil
         }
     }

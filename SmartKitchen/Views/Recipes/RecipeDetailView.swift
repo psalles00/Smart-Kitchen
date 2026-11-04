@@ -92,13 +92,13 @@ struct RecipeDetailView: View {
     }
 
     private var mediaHeroActionAccessibilityLabel: String {
-        String(localized: "Mídias da Receita")
+        String(localized: "Mídias da Receita", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
     }
 
     private var favoriteHeroActionAccessibilityLabel: String {
         recipe.isFavorite
-            ? String(localized: "Desfavoritar receita")
-            : String(localized: "Favoritar receita")
+            ? String(localized: "Desfavoritar receita", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            : String(localized: "Favoritar receita", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
     }
 
     private var heroActionCount: Int {
@@ -165,8 +165,8 @@ struct RecipeDetailView: View {
         items.append(HeroMetadataItem(systemImage: recipe.difficulty.icon, text: recipe.difficulty.displayName))
 
         if recipe.servings > 0 {
-            let label = recipe.servings == 1 ? String(localized: "porção") : String(localized: "porções")
-            items.append(HeroMetadataItem(systemImage: "person.2", text: String(format: String(localized: "%lld %@"), recipe.servings, label)))
+            let label = recipe.servings == 1 ? String(localized: "porção", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) : String(localized: "porções", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            items.append(HeroMetadataItem(systemImage: "person.2", text: String(format: String(localized: "%lld %@", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), recipe.servings, label)))
         }
 
         if let calories = recipe.calories {
@@ -752,7 +752,7 @@ struct RecipeDetailView: View {
                                 .background(.ultraThinMaterial, in: Circle())
                         }
                     }
-                    .accessibilityLabel(String(localized: "Abrir receita na web"))
+                    .accessibilityLabel(String(localized: "Abrir receita na web", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                 }
 
                 Button {
@@ -1592,11 +1592,11 @@ private enum IngredientReplacementSourceFilter: String, CaseIterable, Identifiab
     var title: String {
         switch self {
         case .all:
-            return String(localized: "Ambos")
+            return String(localized: "Ambos", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .grocery:
-            return String(localized: "Mercado")
+            return String(localized: "Mercado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .pantry:
-            return String(localized: "Despensa")
+            return String(localized: "Despensa", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 
@@ -1721,7 +1721,7 @@ private struct IngredientReplacementSheet: View {
                     .listStyle(.plain)
                 }
             }
-            .modalNavigationTitle(String(localized: "Trocar ingrediente"))
+            .modalNavigationTitle(String(localized: "Trocar ingrediente", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             .searchable(
@@ -1818,7 +1818,7 @@ private struct IngredientQuantitySheet: View {
                     }
                 }
             }
-            .modalNavigationTitle(String(localized: "Alterar quantidade"))
+            .modalNavigationTitle(String(localized: "Alterar quantidade", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -1902,7 +1902,7 @@ private struct IngredientStateSheet: View {
                     .buttonStyle(.plain)
                 }
             }
-            .modalNavigationTitle(String(localized: "Alterar estado"))
+            .modalNavigationTitle(String(localized: "Alterar estado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -1931,11 +1931,11 @@ private struct IngredientListTag: View {
     private var title: String {
         switch type {
         case .pantryItem:
-            return String(localized: "Despensa")
+            return String(localized: "Despensa", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .groceryItem:
-            return String(localized: "Mercado")
+            return String(localized: "Mercado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         default:
-            return String(localized: "Lista")
+            return String(localized: "Lista", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 

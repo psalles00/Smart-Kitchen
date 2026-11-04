@@ -25,7 +25,7 @@ private struct NutrientsSkeletonPage: View {
         ExpandedPageLayout(
             pageTheme: .nutrients,
             header: { isInverted in
-                PageHeader(title: String(localized: "Nutrição"), isInverted: isInverted) {
+                PageHeader(title: String(localized: "Nutrição", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), isInverted: isInverted) {
                     HStack(spacing: 6) {
                         GlassButtonGroup {
                             GlassGroupButton(systemImage: "plus") {}
@@ -100,7 +100,7 @@ private struct NutrientsLoadedView: View {
     var body: some View {
         ExpandedPageLayout(
             pageTheme: .nutrients,
-            companionTitle: String(localized: "Refeições do dia"),
+            companionTitle: String(localized: "Refeições do dia", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
             companionSubtitle: selectedDate.formatted(date: .complete, time: .omitted),
             companion: {
                 if let profile, profile.hasCompletedOnboarding {
@@ -114,7 +114,7 @@ private struct NutrientsLoadedView: View {
                 } else { AnyView(emptyState) }
             },
             header: { isInverted in
-                PageHeader(title: String(localized: "Nutrição"), isInverted: isInverted) {
+                PageHeader(title: String(localized: "Nutrição", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), isInverted: isInverted) {
                     HStack(spacing: 6) {
                         GlassButtonGroup {
                             GlassGroupMenu(systemImage: "plus") {

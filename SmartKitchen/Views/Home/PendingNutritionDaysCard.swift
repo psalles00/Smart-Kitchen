@@ -227,8 +227,8 @@ private struct PendingNutritionDaysCardContent: View {
                     ) { request in
                         Button(
                             request.action == .complete
-                                ? String(localized: "Concluir dia")
-                                : String(localized: "Desistir do dia"),
+                                ? String(localized: "Concluir dia", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+                                : String(localized: "Desistir do dia", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                             role: request.action == .cancel ? .destructive : nil
                         ) {
                             switch request.action {
@@ -258,23 +258,23 @@ private struct PendingNutritionDaysCardContent: View {
     private func confirmationTitle(for request: PendingActionRequest?) -> String {
         guard let request else { return "" }
         return request.action == .complete
-            ? String(localized: "Concluir este dia?")
-            : String(localized: "Desistir deste dia?")
+            ? String(localized: "Concluir este dia?", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            : String(localized: "Desistir deste dia?", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
     }
 
     private func confirmationMessage(for request: PendingActionRequest) -> String {
         let label = titleLabel(for: request.day.date).lowercased()
         switch request.action {
         case .complete:
-            return String(localized: "Os registros de \(label) entrarão no cálculo da sua média e o dia sairá desta lista.")
+            return String(localized: "Os registros de \(label) entrarão no cálculo da sua média e o dia sairá desta lista.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .cancel:
-            return String(localized: "Os registros de \(label) serão descartados do cálculo da média e o dia sairá desta lista. Você poderá reabrir mais tarde, se quiser.")
+            return String(localized: "Os registros de \(label) serão descartados do cálculo da média e o dia sairá desta lista. Você poderá reabrir mais tarde, se quiser.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 
     private func titleLabel(for date: Date) -> String {
-        if calendar.isDateInToday(date) { return String(localized: "Hoje") }
-        if calendar.isDateInYesterday(date) { return String(localized: "Ontem") }
+        if calendar.isDateInToday(date) { return String(localized: "Hoje", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) }
+        if calendar.isDateInYesterday(date) { return String(localized: "Ontem", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) }
         let formatter = DateFormatter()
         formatter.locale = AppLocalization.current().formattingLocale
         formatter.setLocalizedDateFormatFromTemplate("EEEE d MMMM")

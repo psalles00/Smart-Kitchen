@@ -1142,15 +1142,15 @@ enum BackupTransferError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidFileName:
-            String(localized: "Nome do arquivo de backup inválido.")
+            String(localized: "Nome do arquivo de backup inválido.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .payloadTooLarge:
-            String(localized: "O backup é grande demais para ser compactado neste formato.")
+            String(localized: "O backup é grande demais para ser compactado neste formato.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .invalidArchive:
-            String(localized: "O arquivo .zip selecionado é inválido.")
+            String(localized: "O arquivo .zip selecionado é inválido.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .unsupportedZipCompression:
-            String(localized: "O arquivo .zip usa um tipo de compactação não suportado por este app.")
+            String(localized: "O arquivo .zip usa um tipo de compactação não suportado por este app.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .missingBackupPayload:
-            String(localized: "O arquivo .zip não contém um backup válido do Savoria.")
+            String(localized: "O arquivo .zip não contém um backup válido do Savoria.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 }

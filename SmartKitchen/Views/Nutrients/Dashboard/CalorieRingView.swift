@@ -96,7 +96,7 @@ struct CalorieRingView: View {
 
     @ViewBuilder
     private var remainingCaption: some View {
-        let format = String(localized: "de **%lld kcal** restantes")
+        let format = String(localized: "de **%lld kcal** restantes", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         let localizedText = String.localizedStringWithFormat(format, goal)
         if let attributed = try? AttributedString(
             markdown: localizedText,

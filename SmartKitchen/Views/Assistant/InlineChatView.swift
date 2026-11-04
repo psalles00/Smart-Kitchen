@@ -108,9 +108,9 @@ struct InlineChatView: View {
     private var aiModeDescription: String {
         switch aiChatPreset {
         case .nutritionCoach:
-            return String(localized: "Seu coach pode ver seu histórico de peso, consumo diário e metas. Pergunte sobre peso esperado, o que comer ou como atingir seu objetivo.")
+            return String(localized: "Seu coach pode ver seu histórico de peso, consumo diário e metas. Pergunte sobre peso esperado, o que comer ou como atingir seu objetivo.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .recipeIdeas:
-            return String(localized: "Crie ideias novas partindo do zero ou com os ingredientes que você quiser usar.")
+            return String(localized: "Crie ideias novas partindo do zero ou com os ingredientes que você quiser usar.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 
@@ -725,7 +725,7 @@ struct InlineChatView: View {
             try ChatConversation.persist(message, in: modelContext)
         } catch {
             // Keep unsaved records in memory; never discard them on save failure.
-            errorMessage = String(localized: "Não foi possível salvar a conversa. Tente novamente.")
+            errorMessage = String(localized: "Não foi possível salvar a conversa. Tente novamente.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 
@@ -754,10 +754,10 @@ struct InlineChatView: View {
             let convId = ensureConversation()
             insertMessage(ChatMessage(
                 role: .assistant,
-                content: String(localized: "Tenho uma alteração pendente. Confirme ou cancele antes de continuar."),
+                content: String(localized: "Tenho uma alteração pendente. Confirme ou cancele antes de continuar.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                 quickActions: [
-                    QuickAction(label: String(localized: "Confirmar"), prompt: confirmPrompt),
-                    QuickAction(label: String(localized: "Cancelar"), prompt: cancelPrompt)
+                    QuickAction(label: String(localized: "Confirmar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), prompt: confirmPrompt),
+                    QuickAction(label: String(localized: "Cancelar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), prompt: cancelPrompt)
                 ],
                 conversationId: convId
             ))
@@ -933,7 +933,7 @@ struct InlineChatView: View {
             errorMessage = error.localizedDescription
             insertMessage(ChatMessage(
                 role: .assistant,
-                content: "\(String(localized: "Desculpe, ocorreu um erro:")) \(error.localizedDescription)",
+                content: "\(String(localized: "Desculpe, ocorreu um erro:", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)) \(error.localizedDescription)",
                 conversationId: conversationId
             ))
         }
@@ -954,7 +954,7 @@ struct InlineChatView: View {
             let convId = ensureConversation()
             insertMessage(ChatMessage(
                 role: .assistant,
-                content: "\(String(localized: "Desculpe, ocorreu um erro:")) \(error.localizedDescription)",
+                content: "\(String(localized: "Desculpe, ocorreu um erro:", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)) \(error.localizedDescription)",
                 conversationId: convId
             ))
         }
@@ -1022,8 +1022,8 @@ struct InlineChatView: View {
                     role: .assistant,
                     content: confirmationMessage(for: response.toolCalls),
                     quickActions: [
-                        QuickAction(label: String(localized: "Confirmar"), prompt: confirmPrompt),
-                        QuickAction(label: String(localized: "Cancelar"), prompt: cancelPrompt)
+                        QuickAction(label: String(localized: "Confirmar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), prompt: confirmPrompt),
+                        QuickAction(label: String(localized: "Cancelar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), prompt: cancelPrompt)
                     ],
                     conversationId: convId
                 ))
@@ -1044,7 +1044,7 @@ struct InlineChatView: View {
             return
         }
 
-        let content = response.content ?? String(localized: "Desculpe, não consegui gerar uma resposta.")
+        let content = response.content ?? String(localized: "Desculpe, não consegui gerar uma resposta.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         let recipeIds = extractRecipeIds(from: content)
         let convId = ensureConversation()
         insertMessage(ChatMessage(
@@ -1061,7 +1061,7 @@ struct InlineChatView: View {
         var apiMessages = pending.messages
         self.pendingToolExecution = nil
         let convId = ensureConversation()
-        let confirmationMessage = ChatMessage(role: .user, content: String(localized: "Confirmar alteração"), conversationId: convId)
+        let confirmationMessage = ChatMessage(role: .user, content: String(localized: "Confirmar alteração", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), conversationId: convId)
         insertMessage(confirmationMessage)
         pinnedUserMessageID = confirmationMessage.id
 
@@ -1081,7 +1081,7 @@ struct InlineChatView: View {
             errorMessage = error.localizedDescription
             insertMessage(ChatMessage(
                 role: .assistant,
-                content: String(localized: "Desculpe, ocorreu um erro ao aplicar a alteração: \(error.localizedDescription)"),
+                content: String(localized: "Desculpe, ocorreu um erro ao aplicar a alteração: \(error.localizedDescription)", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                 conversationId: convId
             ))
         }
@@ -1090,12 +1090,12 @@ struct InlineChatView: View {
     private func cancelPendingToolExecution() {
         pendingToolExecution = nil
         let convId = ensureConversation()
-        let cancellationMessage = ChatMessage(role: .user, content: String(localized: "Cancelar alteração"), conversationId: convId)
+        let cancellationMessage = ChatMessage(role: .user, content: String(localized: "Cancelar alteração", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), conversationId: convId)
         insertMessage(cancellationMessage)
         pinnedUserMessageID = cancellationMessage.id
         insertMessage(ChatMessage(
             role: .assistant,
-            content: String(localized: "Alteração cancelada. Nenhuma informação foi modificada."),
+            content: String(localized: "Alteração cancelada. Nenhuma informação foi modificada.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
             conversationId: convId
         ))
     }
@@ -1291,23 +1291,23 @@ struct InlineChatView: View {
         let recipesToShow = thresholdRecipes.isEmpty ? rankedRecipes : thresholdRecipes
 
         if recipesToShow.isEmpty {
-            let noResultLabel = wantsDessert ? String(localized: "sobremesa") : String(localized: "receita")
+            let noResultLabel = wantsDessert ? String(localized: "sobremesa", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) : String(localized: "receita", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             let newRecipePrompt: String
             if pantryItems.count >= 3 {
                 newRecipePrompt = wantsDessert
-                    ? String(localized: "Sugira novas receitas de sobremesa com base na minha despensa.")
-                    : String(localized: "Sugira novas receitas com base na minha despensa.")
+                    ? String(localized: "Sugira novas receitas de sobremesa com base na minha despensa.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+                    : String(localized: "Sugira novas receitas com base na minha despensa.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             } else {
                 newRecipePrompt = wantsDessert
-                    ? String(localized: "Sugira novas receitas de sobremesa.")
-                    : String(localized: "Sugira novas receitas.")
+                    ? String(localized: "Sugira novas receitas de sobremesa.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+                    : String(localized: "Sugira novas receitas.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             }
             return RecipeDiscoveryResponse(
-                content: "\(String(localized: "Não encontrei nenhuma")) \(noResultLabel) \(String(localized: "compatível com o que você tem na despensa e nas suas receitas salvas."))",
+                content: "\(String(localized: "Não encontrei nenhuma", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)) \(noResultLabel) \(String(localized: "compatível com o que você tem na despensa e nas suas receitas salvas.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))",
                 recipeIds: [],
                 quickActions: [
                     QuickAction(
-                        label: String(localized: "🍳 Criar novas receitas"),
+                        label: String(localized: "🍳 Criar novas receitas", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                         prompt: newRecipePrompt
                     )
                 ]
@@ -1318,29 +1318,29 @@ struct InlineChatView: View {
         let intro: String
         if thresholdRecipes.isEmpty {
             intro = wantsDessert
-                ? String(localized: "Não encontrei sobremesas com compatibilidade ideal, mas estas são as melhores opções com o que você tem:")
-                : String(localized: "Não encontrei receitas com compatibilidade ideal, mas estas são as melhores opções com o que você tem:")
+                ? String(localized: "Não encontrei sobremesas com compatibilidade ideal, mas estas são as melhores opções com o que você tem:", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+                : String(localized: "Não encontrei receitas com compatibilidade ideal, mas estas são as melhores opções com o que você tem:", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         } else {
             intro = wantsDessert
-                ? String(localized: "A partir dos itens da sua despensa, essas são as sobremesas compatíveis:")
-                : String(localized: "A partir dos itens da sua despensa, essas são as receitas compatíveis:")
+                ? String(localized: "A partir dos itens da sua despensa, essas são as sobremesas compatíveis:", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+                : String(localized: "A partir dos itens da sua despensa, essas são as receitas compatíveis:", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
 
         // Always offer to create new recipes
         let newRecipePrompt: String
         if pantryItems.count >= 3 {
             newRecipePrompt = wantsDessert
-                ? String(localized: "Sugira novas receitas de sobremesa com base na minha despensa.")
-                : String(localized: "Sugira novas receitas com base na minha despensa.")
+                ? String(localized: "Sugira novas receitas de sobremesa com base na minha despensa.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+                : String(localized: "Sugira novas receitas com base na minha despensa.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         } else {
             newRecipePrompt = wantsDessert
-                ? String(localized: "Sugira novas receitas de sobremesa.")
-                : String(localized: "Sugira novas receitas.")
+                ? String(localized: "Sugira novas receitas de sobremesa.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+                : String(localized: "Sugira novas receitas.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
 
         let quickActions = [
             QuickAction(
-                label: String(localized: "🍳 Criar novas receitas"),
+                label: String(localized: "🍳 Criar novas receitas", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                 prompt: newRecipePrompt
             )
         ]
@@ -1905,21 +1905,21 @@ struct InlineChatView: View {
     private func confirmationMessage(for toolCalls: [ToolCallRequest]) -> String {
         let summary = toolCalls.map { toolCall in
             switch toolCall.name {
-            case "create_recipe": String(localized: "criar receita")
-            case "update_recipe": String(localized: "editar receita")
-            case "delete_recipe": String(localized: "excluir receita")
-            case "add_pantry_item": String(localized: "adicionar item na despensa")
-            case "remove_pantry_item": String(localized: "remover item da despensa")
-            case "add_grocery_item": String(localized: "adicionar item no mercado")
-            case "create_category": String(localized: "criar categoria")
-            case "rename_category": String(localized: "renomear categoria")
-            case "delete_category": String(localized: "excluir categoria")
-            case "move_category": String(localized: "reordenar categoria")
-            default: String(localized: "alterar informações")
+            case "create_recipe": String(localized: "criar receita", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            case "update_recipe": String(localized: "editar receita", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            case "delete_recipe": String(localized: "excluir receita", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            case "add_pantry_item": String(localized: "adicionar item na despensa", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            case "remove_pantry_item": String(localized: "remover item da despensa", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            case "add_grocery_item": String(localized: "adicionar item no mercado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            case "create_category": String(localized: "criar categoria", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            case "rename_category": String(localized: "renomear categoria", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            case "delete_category": String(localized: "excluir categoria", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            case "move_category": String(localized: "reordenar categoria", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            default: String(localized: "alterar informações", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             }
         }
         .joined(separator: ", ")
-        return String(localized: "Confirma esta alteração no app?\n\nAção pendente: \(summary).")
+        return String(localized: "Confirma esta alteração no app?\n\nAção pendente: \(summary).", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
     }
 
     // MARK: - Display Helpers
@@ -2029,7 +2029,7 @@ struct InlineChatView: View {
 
             insertMessage(ChatMessage(
                 role: .assistant,
-                content: "✅ \(String(localized: "Receita")) \"\(recipe.name)\" \(String(localized: "adicionada às suas receitas!"))",
+                content: "✅ \(String(localized: "Receita", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)) \"\(recipe.name)\" \(String(localized: "adicionada às suas receitas!", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))",
                 conversationId: convId
             ))
 
@@ -2077,8 +2077,8 @@ struct InlineChatView: View {
         insertMessage(ChatMessage(
             role: .assistant,
             content: success
-                ? "✅ \(String(localized: "Receita")) \"\(card.title)\" \(String(localized: "adicionada às suas receitas!"))"
-                : "\(String(localized: "Não foi possível adicionar a receita:")) \(result)",
+                ? "✅ \(String(localized: "Receita", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)) \"\(card.title)\" \(String(localized: "adicionada às suas receitas!", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))"
+                : "\(String(localized: "Não foi possível adicionar a receita:", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)) \(result)",
             conversationId: convId
         ))
 
@@ -2255,7 +2255,7 @@ struct InlineChatView: View {
 
         guard let pantryItems = try? modelContext.fetch(FetchDescriptor<UnifiedItem>()) else {
             insertMessage(ChatMessage(role: .assistant,
-                content: String(localized: "Não consegui buscar ideias agora. Tente novamente."), conversationId: conversationId))
+                content: String(localized: "Não consegui buscar ideias agora. Tente novamente.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), conversationId: conversationId))
             return
         }
         let pantryContext = RecipePantryContext(items: pantryItems)
@@ -2295,7 +2295,7 @@ struct InlineChatView: View {
             if let message = resultMessage {
                 message.content = payload.encoded()
                 do { try ChatConversation.persist(message, in: modelContext) }
-                catch { errorMessage = String(localized: "Não foi possível salvar a conversa. Tente novamente.") }
+                catch { errorMessage = String(localized: "Não foi possível salvar a conversa. Tente novamente.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) }
             } else {
                 insertMessage(ChatMessage(role: .assistant, content: payload.encoded(),
                     quickActions: [QuickAction(label: "_wizard", prompt: RecipeIdeasSentinel.resultsPrefix)], conversationId: conversationId))
@@ -2303,10 +2303,10 @@ struct InlineChatView: View {
         } else if resultMessage == nil {
             if filterEnabled && pantryNames.count <= 2 {
                 insertMessage(ChatMessage(role: .assistant,
-                    content: String(localized: "Não encontrei ideias usando só itens da despensa. Quer buscar sem essa restrição?"),
+                    content: String(localized: "Não encontrei ideias usando só itens da despensa. Quer buscar sem essa restrição?", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                     quickActions: [QuickAction(label: "_wizard", prompt: RecipeIdeasSentinel.pantryBannerPrefix)], conversationId: conversationId))
             } else {
-                insertMessage(ChatMessage(role: .assistant, content: String(localized: "Não consegui buscar ideias agora. Tente novamente."), conversationId: conversationId))
+                insertMessage(ChatMessage(role: .assistant, content: String(localized: "Não consegui buscar ideias agora. Tente novamente.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), conversationId: conversationId))
             }
         }
     }
@@ -2367,7 +2367,7 @@ struct InlineChatView: View {
             }
 
             if !payload.localRecipeIDs.isEmpty {
-                recipeIdeasSection(title: String(localized: "Suas Receitas"), icon: "books.vertical.fill") {
+                recipeIdeasSection(title: String(localized: "Suas Receitas", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), icon: "books.vertical.fill") {
                     Text("Mais ingredientes disponíveis primeiro. Confira o que falta em cada receita.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -2399,7 +2399,7 @@ struct InlineChatView: View {
             }
 
             if !payload.ideas.isEmpty {
-                recipeIdeasSection(title: String(localized: "Receitas da Web"), icon: "globe") {
+                recipeIdeasSection(title: String(localized: "Receitas da Web", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), icon: "globe") {
                     VStack(spacing: 6) {
                         ForEach(payload.ideas) { idea in
                             RecipeIdeaSuggestionCard(
@@ -2438,7 +2438,7 @@ struct InlineChatView: View {
             }
 
             if payload.answer == nil && payload.localRecipeIDs.isEmpty && payload.quickIdeas.isEmpty && payload.ideas.isEmpty {
-                Text(payload.request.onlySavedRecipes ? String(localized: "Nenhum resultado encontrado") : String(localized: "Não encontrei nenhuma ideia agora."))
+                Text(payload.request.onlySavedRecipes ? String(localized: "Nenhum resultado encontrado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) : String(localized: "Não encontrei nenhuma ideia agora.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 16)
@@ -2454,7 +2454,7 @@ struct InlineChatView: View {
             return nil
         }
 
-        return String(localized: "Não encontrei nenhuma receita salva que corresponda ao seu pedido, mas separei ideias novas e receitas da web para você.")
+        return String(localized: "Não encontrei nenhuma receita salva que corresponda ao seu pedido, mas separei ideias novas e receitas da web para você.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
     }
 
     /// Cabeçalho compacto reutilizado pelas três seções de resultado.
@@ -2588,7 +2588,7 @@ struct InlineChatView: View {
         let pantryNames = RecipePantryContext(items: pantryItems).availableNames
         let filterByPantry = payload.filterByPantry ?? true
         let ingredientPrompt = request.ingredientPrompt(pantryItems: pantryNames, filterByPantry: filterByPantry) + "\n" + RecipePantryContext(items: pantryItems).prompt
-        let loadingId = beginRecipeCreation(title: idea.title, sourceLabel: String(localized: "Receitas da Web"))
+        let loadingId = beginRecipeCreation(title: idea.title, sourceLabel: String(localized: "Receitas da Web", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
 
         Task {
             let baseText: String = {
@@ -2624,7 +2624,7 @@ struct InlineChatView: View {
                 guard var draft = draftOpt, !draft.name.isEmpty else {
                     let message = ChatMessage(
                         role: .assistant,
-                        content: String(localized: "Não consegui estruturar essa receita agora. Tente outra ideia."),
+                        content: String(localized: "Não consegui estruturar essa receita agora. Tente outra ideia.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                         conversationId: convId
                     )
                     pendingRecipeResultMessageID = message.id
@@ -2718,7 +2718,7 @@ struct InlineChatView: View {
                 guard !content.isEmpty else {
                     let message = ChatMessage(
                         role: .assistant,
-                        content: String(localized: "Não consegui montar essa receita agora. Tente outra ideia."),
+                        content: String(localized: "Não consegui montar essa receita agora. Tente outra ideia.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                         conversationId: conversationId
                     )
                     pendingRecipeResultMessageID = message.id
@@ -2759,7 +2759,7 @@ struct InlineChatView: View {
 
     private func insertRecipeRestrictionError(conversationId: UUID) {
         let message = ChatMessage(role: .assistant,
-                                  content: String(localized: "Esta receita não atende às restrições solicitadas. Tente outra ideia."),
+                                  content: String(localized: "Esta receita não atende às restrições solicitadas. Tente outra ideia.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                                   conversationId: conversationId)
         pendingRecipeResultMessageID = message.id
         insertMessage(message)
@@ -2775,7 +2775,7 @@ struct InlineChatView: View {
             finishRecipeCreation(id: loadingId)
             let message = ChatMessage(
                 role: .assistant,
-                content: String(localized: "Não consegui montar essa receita agora. Tente outra ideia."),
+                content: String(localized: "Não consegui montar essa receita agora. Tente outra ideia.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                 conversationId: conversationId
             )
             pendingRecipeResultMessageID = message.id
@@ -3112,7 +3112,7 @@ private struct RecipeCreationProgressField: View {
                 .frame(width: 42, height: 42)
 
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(String(localized: "Criando a receita"))
+                    Text(String(localized: "Criando a receita", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(Color.accentColor)
 

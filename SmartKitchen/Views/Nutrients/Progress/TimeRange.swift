@@ -12,11 +12,11 @@ enum NutritionTimeRange: String, CaseIterable, Identifiable {
 
     var displayLabel: String {
         switch self {
-        case .week: String(localized: "1S")
-        case .month: String(localized: "1M")
-        case .threeMonths: String(localized: "3M")
-        case .sixMonths: String(localized: "6M")
-        case .year: String(localized: "1A")
+        case .week: String(localized: "1S", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .month: String(localized: "1M", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .threeMonths: String(localized: "3M", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .sixMonths: String(localized: "6M", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .year: String(localized: "1A", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 

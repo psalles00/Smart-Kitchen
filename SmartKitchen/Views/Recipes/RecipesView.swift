@@ -50,7 +50,7 @@ private struct RecipesSkeletonPage: View {
         ExpandedPageLayout(
             pageTheme: .recipes,
             header: { isInverted in
-                PageHeader(title: String(localized: "Receitas"), isInverted: isInverted) {
+                PageHeader(title: String(localized: "Receitas", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), isInverted: isInverted) {
                     HStack(spacing: 6) {
                         GlassButtonGroup {
                             GlassGroupButton(systemImage: "plus") {}
@@ -388,8 +388,8 @@ private struct RecipesLoadedView: View {
     private var pageLayout: some View {
         ExpandedPageLayout(
             pageTheme: .recipes,
-            companionTitle: String(localized: "Receita"),
-            companionSubtitle: String(localized: "Ingredientes e preparo"),
+            companionTitle: String(localized: "Receita", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+            companionSubtitle: String(localized: "Ingredientes e preparo", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
             companion: {
                 if let id = selectedRecipeID, let recipe = allRecipes.first(where: { $0.id == id }) {
                     AnyView(RecipeDetailView(recipe: recipe).id(id)
@@ -632,7 +632,7 @@ private struct RecipesLoadedView: View {
 
     @ViewBuilder
     private func recipesListHeader(isInverted: Bool) -> some View {
-        PageHeader(title: isShowingCadernos && !workspaceExpanded ? String(localized: "Cadernos") : String(localized: "Receitas"), isInverted: isInverted) {
+        PageHeader(title: isShowingCadernos && !workspaceExpanded ? String(localized: "Cadernos", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) : String(localized: "Receitas", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), isInverted: isInverted) {
             HStack(spacing: 6) {
                 if !isShowingCadernos {
                     GlassButtonGroup {
@@ -1133,7 +1133,7 @@ private struct RecipesLoadedView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 0) {
                     filterChip(
-                        label: String(localized: "Todos"),
+                        label: String(localized: "Todos", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                         iconFileName: "recipe.png",
                         fallbackSymbol: "square.grid.2x2",
                         isSelected: selectedCategory == nil
@@ -2328,7 +2328,7 @@ private struct RecipeNotebookManagerSheet: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .modalNavigationTitle(String(localized: "Gerenciar cadernos"))
+        .modalNavigationTitle(String(localized: "Gerenciar cadernos", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
         .toolbar {
             #if os(iOS)
             ToolbarItem(placement: .topBarLeading) {
@@ -2446,7 +2446,7 @@ private struct RecipeNotebookManagerSheet: View {
                         }
                     }
                 }
-                .modalNavigationTitle(String(localized: "Mover receitas"))
+                .modalNavigationTitle(String(localized: "Mover receitas", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                 .toolbar {
                     #if os(iOS)
                     ToolbarItem(placement: .topBarTrailing) {

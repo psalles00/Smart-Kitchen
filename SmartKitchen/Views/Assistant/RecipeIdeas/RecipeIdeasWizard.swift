@@ -17,14 +17,14 @@ enum RecipeIdeaOccasion: String, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .cafeDaManha: return String(localized: "Café da manhã")
-        case .almoco: return String(localized: "Almoço")
-        case .jantar: return String(localized: "Jantar")
-        case .lancheRapido: return String(localized: "Lanche rápido")
-        case .drinks: return String(localized: "Drinks")
-        case .bebidas: return String(localized: "Bebidas")
-        case .sobremesa: return String(localized: "Sobremesa")
-        case .outro: return String(localized: "Outro")
+        case .cafeDaManha: return String(localized: "Café da manhã", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .almoco: return String(localized: "Almoço", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .jantar: return String(localized: "Jantar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .lancheRapido: return String(localized: "Lanche rápido", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .drinks: return String(localized: "Drinks", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .bebidas: return String(localized: "Bebidas", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .sobremesa: return String(localized: "Sobremesa", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .outro: return String(localized: "Outro", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 
@@ -61,13 +61,13 @@ enum RecipeIdeaOccasion: String, CaseIterable, Identifiable {
     /// Texto da pergunta de refinamento.
     var refinementQuestion: String {
         switch self {
-        case .cafeDaManha: return String(localized: "Como você quer seu café da manhã?")
-        case .almoco: return String(localized: "Que tipo de almoço você quer?")
-        case .jantar: return String(localized: "Como deve ser seu jantar?")
-        case .lancheRapido: return String(localized: "Que lanche combina agora?")
-        case .drinks: return String(localized: "Qual vibe do drink?")
-        case .bebidas: return String(localized: "Que bebida você quer?")
-        case .sobremesa: return String(localized: "Como você quer a sobremesa?")
+        case .cafeDaManha: return String(localized: "Como você quer seu café da manhã?", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .almoco: return String(localized: "Que tipo de almoço você quer?", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .jantar: return String(localized: "Como deve ser seu jantar?", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .lancheRapido: return String(localized: "Que lanche combina agora?", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .drinks: return String(localized: "Qual vibe do drink?", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .bebidas: return String(localized: "Que bebida você quer?", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .sobremesa: return String(localized: "Como você quer a sobremesa?", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .outro: return ""
         }
     }
@@ -75,13 +75,13 @@ enum RecipeIdeaOccasion: String, CaseIterable, Identifiable {
     /// Refinamentos disponíveis (último é sempre "Outro" → texto livre).
     var refinements: [String] {
         switch self {
-        case .cafeDaManha: return [String(localized: "Rápido"), String(localized: "Saudável"), String(localized: "Doce"), String(localized: "Proteico"), String(localized: "Outro")]
-        case .almoco: return [String(localized: "Rápido"), String(localized: "Saudável"), String(localized: "Refeição completa"), String(localized: "Econômico"), String(localized: "Outro")]
-        case .jantar: return [String(localized: "Leve"), String(localized: "Rápido"), String(localized: "Saudável"), String(localized: "Caprichado"), String(localized: "Outro")]
-        case .lancheRapido: return [String(localized: "Salgado"), String(localized: "Doce"), String(localized: "Fit"), String(localized: "Muito rápido"), String(localized: "Com poucos ingredientes"), String(localized: "Outro")]
-        case .drinks: return [String(localized: "Refrescante"), String(localized: "Forte"), String(localized: "Doce"), String(localized: "Sem álcool"), String(localized: "Outro")]
-        case .bebidas: return [String(localized: "Gelada"), String(localized: "Quente"), String(localized: "Energizante"), String(localized: "Saudável"), String(localized: "Cremosa"), String(localized: "Outro")]
-        case .sobremesa: return [String(localized: "Rápida"), String(localized: "Gelada"), String(localized: "Chocolate"), String(localized: "Frutas"), String(localized: "Poucos ingredientes"), String(localized: "Outro")]
+        case .cafeDaManha: return [String(localized: "Rápido", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Saudável", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Doce", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Proteico", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Outro", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)]
+        case .almoco: return [String(localized: "Rápido", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Saudável", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Refeição completa", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Econômico", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Outro", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)]
+        case .jantar: return [String(localized: "Leve", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Rápido", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Saudável", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Caprichado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Outro", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)]
+        case .lancheRapido: return [String(localized: "Salgado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Doce", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Fit", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Muito rápido", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Com poucos ingredientes", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Outro", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)]
+        case .drinks: return [String(localized: "Refrescante", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Forte", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Doce", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Sem álcool", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Outro", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)]
+        case .bebidas: return [String(localized: "Gelada", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Quente", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Energizante", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Saudável", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Cremosa", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Outro", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)]
+        case .sobremesa: return [String(localized: "Rápida", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Gelada", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Chocolate", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Frutas", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Poucos ingredientes", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), String(localized: "Outro", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)]
         case .outro: return []
         }
     }

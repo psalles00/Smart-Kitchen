@@ -128,14 +128,14 @@ struct MacNewItemCommands: Commands {
 
     var body: some Commands {
         CommandGroup(replacing: .newItem) {
-            Button(String(localized: "Buscar e Adicionar…")) {
+            Button(String(localized: "Buscar e Adicionar…", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)) {
                 openCommandBarAction?()
             }
             .keyboardShortcut("k", modifiers: .command)
 
             Divider()
 
-            Button(newItemCommandAction?.title ?? String(localized: "Novo")) {
+            Button(newItemCommandAction?.title ?? String(localized: "Novo", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)) {
                 newItemCommandAction?.perform()
             }
             .keyboardShortcut("n", modifiers: .command)
@@ -242,6 +242,9 @@ struct SmartKitchenApp: App {
                     ContentView(isLaunchReady: isAppReady)
                         .modelContainer(cloudSync.container)
                         .id(cloudSync.containerID)
+                        #if DEBUG
+                        .id(DebugLanguageOverride(storedValue: debugLanguage)?.language)
+                        #endif
                         .environment(subscriptionManager)
                         .opacity(isAppReady ? 1 : 0)
                         .allowsHitTesting(isAppReady)
@@ -400,6 +403,9 @@ struct SmartKitchenApp: App {
             SettingsView()
                 .modelContainer(cloudSync.container)
                 .environment(subscriptionManager)
+                #if DEBUG
+                .environment(\.locale, DebugLanguageOverride(storedValue: debugLanguage)?.language.locale ?? .current)
+                #endif
                 .frame(
                     minWidth: Self.macSettingsWindowSize.width,
                     minHeight: Self.macSettingsWindowSize.height

@@ -44,7 +44,7 @@ struct RateStepView: View {
             Spacer(minLength: 0)
 
             OnboardingPrimaryButton(
-                title: String(localized: "Continuar"),
+                title: String(localized: "Continuar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                 isEnabled: true,
                 action: {
                     if goal == .maintain { state.nutritionWeeklyChangeKg = 0 }
@@ -61,8 +61,8 @@ struct RateStepView: View {
 
     private var modeToggle: some View {
         Picker("", selection: $state.nutritionRateMode) {
-            Text(String(localized: "Por meta")).tag(RateInputMode.targetWeight)
-            Text(String(localized: "Por semana")).tag(RateInputMode.perWeek)
+            Text(String(localized: "Por meta", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)).tag(RateInputMode.targetWeight)
+            Text(String(localized: "Por semana", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)).tag(RateInputMode.perWeek)
         }
         .pickerStyle(.segmented)
         .onChange(of: state.nutritionRateMode) { _, newMode in
@@ -84,7 +84,7 @@ struct RateStepView: View {
         VStack(spacing: 16) {
             // Target weight stepper row
             VStack(spacing: 8) {
-                Text(String(localized: "Quero chegar a"))
+                Text(String(localized: "Quero chegar a", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(.secondary)
 
@@ -114,7 +114,7 @@ struct RateStepView: View {
 
             // Months stepper row
             VStack(spacing: 8) {
-                Text(String(localized: "Em quantos meses"))
+                Text(String(localized: "Em quantos meses", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(.secondary)
 
@@ -125,8 +125,8 @@ struct RateStepView: View {
                         .animation(.spring(response: 0.25, dampingFraction: 0.85),
                                    value: state.nutritionTargetMonths)
                     Text(state.nutritionTargetMonths == 1
-                         ? String(localized: "mês")
-                         : String(localized: "meses"))
+                         ? String(localized: "mês", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+                         : String(localized: "meses", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundStyle(.secondary)
                 }
@@ -149,7 +149,7 @@ struct RateStepView: View {
             HStack(spacing: 6) {
                 Image(systemName: "chart.line.uptrend.xyaxis")
                     .font(.system(size: 11, weight: .bold))
-                Text(String(format: String(localized: "Equivale a %.2f kg/semana"),
+                Text(String(format: String(localized: "Equivale a %.2f kg/semana", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                             state.nutritionWeeklyChangeKg))
                     .font(.system(size: 12, weight: .semibold))
             }
@@ -174,7 +174,7 @@ struct RateStepView: View {
                     .contentTransition(.numericText())
                     .animation(.spring(response: 0.25, dampingFraction: 0.85),
                                value: state.nutritionWeeklyChangeKg)
-                Text(String(localized: "kg/semana"))
+                Text(String(localized: "kg/semana", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(.secondary)
             }
@@ -187,9 +187,9 @@ struct RateStepView: View {
                 }
 
             HStack {
-                Text(String(localized: "Devagar"))
+                Text(String(localized: "Devagar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                 Spacer()
-                Text(String(localized: "Agressivo"))
+                Text(String(localized: "Agressivo", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
             }
             .font(.system(size: 11, weight: .medium))
             .foregroundStyle(.tertiary)
@@ -211,7 +211,7 @@ struct RateStepView: View {
             Image(systemName: "checkmark.seal.fill")
                 .font(.system(size: 56, weight: .bold))
                 .foregroundStyle(.primary)
-            Text(String(localized: "Vamos manter seu peso atual com calorias equilibradas."))
+            Text(String(localized: "Vamos manter seu peso atual com calorias equilibradas.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 32)
@@ -228,7 +228,7 @@ struct RateStepView: View {
     @ViewBuilder
     private var warningIfNeeded: some View {
         if state.nutritionWeeklyChangeKg > 0.75 {
-            Label(String(localized: "Ritmos acima de 0,75 kg/semana podem ser difíceis de manter."),
+            Label(String(localized: "Ritmos acima de 0,75 kg/semana podem ser difíceis de manter.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                   systemImage: "exclamationmark.triangle.fill")
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(Color.orange)
@@ -290,18 +290,18 @@ struct RateStepView: View {
 
     private var title: String {
         switch goal {
-        case .lose:     return String(localized: "Qual seu plano de perda?")
-        case .gain:     return String(localized: "Qual seu plano de ganho?")
-        case .maintain: return String(localized: "Tudo certo!")
+        case .lose:     return String(localized: "Qual seu plano de perda?", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .gain:     return String(localized: "Qual seu plano de ganho?", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .maintain: return String(localized: "Tudo certo!", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 
     private var subtitle: String {
         switch goal {
         case .lose, .gain:
-            return String(localized: "Defina o peso-alvo e o prazo. Você pode ajustar pra kg/semana se preferir.")
+            return String(localized: "Defina o peso-alvo e o prazo. Você pode ajustar pra kg/semana se preferir.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .maintain:
-            return String(localized: "Sem necessidade de definir um ritmo de mudança.")
+            return String(localized: "Sem necessidade de definir um ritmo de mudança.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 }

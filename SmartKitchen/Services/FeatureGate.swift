@@ -44,9 +44,9 @@ final class FeatureGate {
 
         var displayName: String {
             switch self {
-            case .ai:          return String(localized: "IA")
-            case .imports:     return String(localized: "Importações")
-            case .nutritionAI: return String(localized: "IA Nutricional")
+            case .ai:          return String(localized: "IA", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            case .imports:     return String(localized: "Importações", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            case .nutritionAI: return String(localized: "IA Nutricional", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             }
         }
     }
@@ -59,9 +59,9 @@ final class FeatureGate {
 
         var displayName: String {
             switch self {
-            case .iCloudSync:      return String(localized: "Sincronização iCloud")
-            case .familyShare:     return String(localized: "Compartilhamento Familiar")
-            case .externalBackup:  return String(localized: "Backup")
+            case .iCloudSync:      return String(localized: "Sincronização iCloud", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            case .familyShare:     return String(localized: "Compartilhamento Familiar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            case .externalBackup:  return String(localized: "Backup", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             }
         }
     }
@@ -78,9 +78,9 @@ final class FeatureGate {
         var id: String { rawValue }
         var title: String {
             switch self {
-            case .actual: String(localized: "Reais")
-            case .available: String(localized: "Disponíveis")
-            case .exhausted: String(localized: "Esgotados")
+            case .actual: String(localized: "Reais", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            case .available: String(localized: "Disponíveis", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            case .exhausted: String(localized: "Esgotados", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             }
         }
     }
@@ -147,12 +147,12 @@ final class FeatureGate {
 
     /// Localized "Hoje: X / Y" label.
     func counterLabelToday(_ feature: Feature) -> String {
-        String(format: String(localized: "Hoje: %@"), counterLabel(feature))
+        String(format: String(localized: "Hoje: %@", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), counterLabel(feature))
     }
 
     /// Localized description of when the counter resets.
     var resetDescription: String {
-        String(localized: "Renova à meia-noite")
+        String(localized: "Renova à meia-noite", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
     }
 
     // MARK: - Hard gates

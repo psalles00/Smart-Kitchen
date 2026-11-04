@@ -64,7 +64,7 @@ struct UnifiedSearchBar: View {
     }
 
     private var searchPrompt: Text {
-        let prompt = Text(state.mode == .aiChat ? state.aiChatPreset.searchPlaceholder : String(localized: "Assistente"))
+        let prompt = Text(state.mode == .aiChat ? state.aiChatPreset.searchPlaceholder : String(localized: "Assistente", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
         return prompt.foregroundStyle(searchPromptColor)
     }
 

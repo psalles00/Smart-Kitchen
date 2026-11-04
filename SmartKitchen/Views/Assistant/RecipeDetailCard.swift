@@ -34,10 +34,10 @@ struct RecipeDetailCard: View {
                 if recipe.totalMinutes != nil || recipe.servings != nil {
                     HStack(spacing: 12) {
                         if let minutes = recipe.totalMinutes {
-                            Label("\(minutes) \(String(localized: "min"))", systemImage: "clock")
+                            Label("\(minutes) \(String(localized: "min", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))", systemImage: "clock")
                         }
                         if let servings = recipe.servings {
-                            Label("\(String(localized: "Porções")): \(servings)", systemImage: "person.2")
+                            Label("\(String(localized: "Porções", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)): \(servings)", systemImage: "person.2")
                         }
                     }
                     .font(.caption)
@@ -53,7 +53,7 @@ struct RecipeDetailCard: View {
 
             // Ingredients
             VStack(alignment: .leading, spacing: 8) {
-                Label(String(localized: "Ingredientes"), systemImage: "basket")
+                Label(String(localized: "Ingredientes", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), systemImage: "basket")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondary)
 
@@ -87,7 +87,7 @@ struct RecipeDetailCard: View {
 
             // Steps
             VStack(alignment: .leading, spacing: 8) {
-                Label(String(localized: "Modo de Preparo"), systemImage: "list.number")
+                Label(String(localized: "Modo de Preparo", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), systemImage: "list.number")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondary)
 
@@ -121,7 +121,7 @@ struct RecipeDetailCard: View {
                 HStack(spacing: 6) {
                     Image(systemName: "plus.circle")
                         .font(.caption.weight(.medium))
-                    Text(String(localized: "Criar receita no app"))
+                    Text(String(localized: "Criar receita no app", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                         .font(.caption.weight(.medium))
                 }
                 .foregroundStyle(Color.accentColor)

@@ -99,14 +99,14 @@ struct RecipeImportPreviewView: View {
                 }
             }
 
-            Section(String(localized: "Categoria")) {
-                Picker(String(localized: "Categoria"), selection: $draft.category) {
+            Section(String(localized: "Categoria", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)) {
+                Picker(String(localized: "Categoria", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), selection: $draft.category) {
                     ForEach(allCategoryOptions, id: \.self) { name in
                         Text(CategoryMutationService.localizedDisplayName(for: name, type: .recipe)).tag(name)
                     }
                 }
                 .pickerStyle(.menu)
-                confidenceHint(draft.categoryConfidence, label: String(localized: "Categoria"))
+                confidenceHint(draft.categoryConfidence, label: String(localized: "Categoria", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
             }
 
             Section("Tempo e porções") {
@@ -226,7 +226,7 @@ struct RecipeImportPreviewView: View {
             }
         }
         .formStyle(.grouped)
-        .modalNavigationTitle(String(localized: "Revisar receita"))
+        .modalNavigationTitle(String(localized: "Revisar receita", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif

@@ -56,7 +56,7 @@ struct iCloudSettingsView: View {
                                 .fill(cloudSync.iCloudAvailable ? .green : .orange)
                                 .frame(width: 8, height: 8)
                         }
-                        Text(isTransitioning ? String(localized: "Configurando…") : cloudSync.statusDescription)
+                        Text(isTransitioning ? String(localized: "Configurando…", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) : cloudSync.statusDescription)
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -100,12 +100,12 @@ struct iCloudSettingsView: View {
             if cloudSync.syncEnabled {
                 Section {
                     VStack(alignment: .leading, spacing: 12) {
-                        infoRow(icon: "checkmark.icloud", text: String(localized: "Receitas, ingredientes e passos"))
-                        infoRow(icon: "checkmark.icloud", text: String(localized: "Itens da despensa"))
-                        infoRow(icon: "checkmark.icloud", text: String(localized: "Lista de compras"))
-                        infoRow(icon: "checkmark.icloud", text: String(localized: "Categorias personalizadas"))
-                        infoRow(icon: "checkmark.icloud", text: String(localized: "Histórico da IA"))
-                        infoRow(icon: "checkmark.icloud", text: String(localized: "Configurações do app"))
+                        infoRow(icon: "checkmark.icloud", text: String(localized: "Receitas, ingredientes e passos", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
+                        infoRow(icon: "checkmark.icloud", text: String(localized: "Itens da despensa", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
+                        infoRow(icon: "checkmark.icloud", text: String(localized: "Lista de compras", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
+                        infoRow(icon: "checkmark.icloud", text: String(localized: "Categorias personalizadas", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
+                        infoRow(icon: "checkmark.icloud", text: String(localized: "Histórico da IA", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
+                        infoRow(icon: "checkmark.icloud", text: String(localized: "Configurações do app", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                     }
                     .padding(.vertical, 4)
                 } header: {
@@ -164,7 +164,7 @@ struct iCloudSettingsView: View {
         }
         .settingsFormStyle()
         .macSettingsContainer()
-        .settingsNavigationTitle(String(localized: "iCloud"))
+        .settingsNavigationTitle(String(localized: "iCloud", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif

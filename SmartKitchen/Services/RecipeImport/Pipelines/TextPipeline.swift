@@ -33,13 +33,13 @@ struct TextPipeline: RecipeImportPipeline {
         let structurer = RecipeStructurer()
         var draft = try await structurer.structure(
             text: trimmed,
-            hints: RecipeStructurer.Hints(sourceLabel: String(localized: "Texto colado"))
+            hints: RecipeStructurer.Hints(sourceLabel: String(localized: "Texto colado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
         )
         RecipeImportLogger.info("text pipeline structured \(RecipeImportLogger.draftSummary(draft))")
 
         onStage(.finalizing)
         RecipeImportLogger.debug("stage=\(RecipeImportStage.finalizing.title)")
-        if draft.sourceLabel.isEmpty { draft.sourceLabel = String(localized: "Texto colado") }
+        if draft.sourceLabel.isEmpty { draft.sourceLabel = String(localized: "Texto colado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) }
         RecipeImportLogger.info("text pipeline completed sourceLabel=\(draft.sourceLabel)")
         return draft
     }

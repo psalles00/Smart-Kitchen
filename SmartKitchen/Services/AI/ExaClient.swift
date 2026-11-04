@@ -17,9 +17,9 @@ final class ExaClient {
 
         var errorDescription: String? {
             switch self {
-            case .missingAPIKey: return String(localized: "Chave Exa não configurada.")
-            case .invalidResponse: return String(localized: "Resposta inválida do Exa.")
-            case .apiError(let code, let msg): return String(localized: "Exa API erro \(code): \(msg)")
+            case .missingAPIKey: return String(localized: "Chave Exa não configurada.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            case .invalidResponse: return String(localized: "Resposta inválida do Exa.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            case .apiError(let code, let msg): return String(localized: "Exa API erro \(code): \(msg)", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             }
         }
     }

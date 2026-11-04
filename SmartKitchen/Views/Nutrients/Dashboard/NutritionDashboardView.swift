@@ -206,7 +206,7 @@ struct NutritionDashboardView: View {
     private var macroPageMain: some View {
         HStack(spacing: 10) {
             MacroCard(
-                label: String(localized: "Proteína"),
+                label: String(localized: "Proteína", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                 current: Double(proteinConsumed),
                 goal: Double(profile.effectiveProteinG),
                 unit: "g",
@@ -215,7 +215,7 @@ struct NutritionDashboardView: View {
                 tint: Color(red: 0.24, green: 0.64, blue: 0.72)
             )
             MacroCard(
-                label: String(localized: "Carbos"),
+                label: String(localized: "Carbos", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                 current: Double(carbsConsumed),
                 goal: Double(profile.effectiveCarbsG),
                 unit: "g",
@@ -225,7 +225,7 @@ struct NutritionDashboardView: View {
                 tint: Color(red: 0.96, green: 0.52, blue: 0.18)
             )
             MacroCard(
-                label: String(localized: "Gordura"),
+                label: String(localized: "Gordura", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                 current: Double(fatConsumed),
                 goal: Double(profile.effectiveFatG),
                 unit: "g",
@@ -246,7 +246,7 @@ struct NutritionDashboardView: View {
     private var macroPageMicros1: some View {
         HStack(spacing: 10) {
             MacroCard(
-                label: String(localized: "Fibra"),
+                label: String(localized: "Fibra", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                 current: fiberConsumed,
                 goal: 25,
                 unit: "g",
@@ -255,7 +255,7 @@ struct NutritionDashboardView: View {
                 tint: Color(red: 0.24, green: 0.58, blue: 0.40)
             )
             MacroCard(
-                label: String(localized: "Açúcar"),
+                label: String(localized: "Açúcar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                 current: sugarConsumed,
                 goal: 50,
                 unit: "g",
@@ -265,7 +265,7 @@ struct NutritionDashboardView: View {
                 tint: Color(red: 0.63, green: 0.48, blue: 0.86)
             )
             MacroCard(
-                label: String(localized: "Sódio"),
+                label: String(localized: "Sódio", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                 current: sodiumConsumed,
                 goal: 2300,
                 unit: "mg",
@@ -283,7 +283,7 @@ struct NutritionDashboardView: View {
     private var macroPageMicros2: some View {
         HStack(spacing: 10) {
             MacroCard(
-                label: String(localized: "Saturada"),
+                label: String(localized: "Saturada", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                 current: saturatedFatConsumed,
                 goal: 20,
                 unit: "g",
@@ -292,7 +292,7 @@ struct NutritionDashboardView: View {
                 tint: Color(red: 0.86, green: 0.48, blue: 0.26)
             )
             MacroCard(
-                label: String(localized: "Colesterol"),
+                label: String(localized: "Colesterol", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                 current: cholesterolConsumed,
                 goal: 300,
                 unit: "mg",
@@ -302,7 +302,7 @@ struct NutritionDashboardView: View {
                 tint: Color(red: 0.86, green: 0.30, blue: 0.46)
             )
             MacroCard(
-                label: String(localized: "Potássio"),
+                label: String(localized: "Potássio", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                 current: potassiumConsumed,
                 goal: 3500,
                 unit: "mg",
@@ -333,7 +333,7 @@ struct NutritionDashboardView: View {
         return VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
                 HStack(spacing: 4) {
-                    Text(String(localized: "Refeições do dia"))
+                    Text(String(localized: "Refeições do dia", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                         .font(.headline.weight(.semibold))
                     SectionInfoButton(
                         title: "Refeições do dia",
@@ -378,7 +378,7 @@ struct NutritionDashboardView: View {
             .padding(.bottom, 2)
 
             if rows.isEmpty {
-                Text(String(localized: "Nenhum registro"))
+                Text(String(localized: "Nenhum registro", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                     .font(.footnote)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -422,7 +422,7 @@ struct NutritionDashboardView: View {
         Menu {
             entryPickerMenuContent(prefilledMeal: nil)
         } label: {
-            Label(String(localized: "Adicionar"), systemImage: "plus")
+            Label(String(localized: "Adicionar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), systemImage: "plus")
                 .font(.caption.weight(.semibold))
                 .padding(.horizontal, 12)
                 .padding(.vertical, 7)
@@ -457,59 +457,59 @@ struct NutritionDashboardView: View {
             Button {
                 onPickEntry(.manual(prefillName: nil, prefillMealType: prefilledMeal))
             } label: {
-                Label(String(localized: "Salvar alimento"), systemImage: "fork.knife")
+                Label(String(localized: "Salvar alimento", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), systemImage: "fork.knife")
             }
             Button {
                 onPickEntry(.recents)
             } label: {
-                Label(String(localized: "Alimentos salvos"), systemImage: "clock.arrow.circlepath")
+                Label(String(localized: "Alimentos salvos", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), systemImage: "clock.arrow.circlepath")
             }
         }
         Section("Registros Manuais") {
             Button {
                 onPickEntry(.manual(prefillName: nil, prefillMealType: prefilledMeal))
             } label: {
-                Label(String(localized: "Registrar manualmente"), systemImage: "square.and.pencil")
+                Label(String(localized: "Registrar manualmente", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), systemImage: "square.and.pencil")
             }
         }
         Section("Registrar por…") {
             Button {
                 onPickEntry(.captureLabel)
             } label: {
-                Label(String(localized: "Rótulo"), systemImage: "doc.text.viewfinder")
+                Label(String(localized: "Rótulo", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), systemImage: "doc.text.viewfinder")
             }
             Button {
                 onPickEntry(.capturePhotoGallery)
             } label: {
-                Label(String(localized: "Galeria"), systemImage: "photo")
+                Label(String(localized: "Galeria", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), systemImage: "photo")
             }
             #if os(iOS)
             Button {
                 onPickEntry(.capturePhotoCamera)
             } label: {
-                Label(String(localized: "Câmera"), systemImage: "camera")
+                Label(String(localized: "Câmera", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), systemImage: "camera")
             }
             #endif
             Button {
                 onPickEntry(.captureVoice)
             } label: {
-                Label(String(localized: "Voz"), systemImage: "waveform")
+                Label(String(localized: "Voz", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), systemImage: "waveform")
             }
             Button {
                 onPickEntry(.captureText(prefillText: nil, autoAnalyze: false))
             } label: {
-                Label(String(localized: "Texto"), systemImage: "character.cursor.ibeam")
+                Label(String(localized: "Texto", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), systemImage: "character.cursor.ibeam")
             }
         }
     }
 
     private func localizedDisplayName(_ meal: MealType) -> String {
         switch meal {
-        case .breakfast: String(localized: "Café da manhã")
-        case .lunch:     String(localized: "Almoço")
-        case .dinner:    String(localized: "Jantar")
-        case .snack:     String(localized: "Lanche")
-        case .other:     String(localized: "Outras")
+        case .breakfast: String(localized: "Café da manhã", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .lunch:     String(localized: "Almoço", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .dinner:    String(localized: "Jantar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .snack:     String(localized: "Lanche", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .other:     String(localized: "Outras", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 
@@ -525,9 +525,9 @@ struct NutritionDashboardView: View {
         let state = selectedDayState
         switch state {
         case .completed, .canceled:
-            actionPill(String(localized: "Reabrir dia"), style: .secondary, icon: "arrow.uturn.backward.circle") { reopenSelectedDay() }
+            actionPill(String(localized: "Reabrir dia", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), style: .secondary, icon: "arrow.uturn.backward.circle") { reopenSelectedDay() }
         case .todayInProgress, .pastInProgress:
-            actionPill(String(localized: "Concluir dia"), style: .primary, icon: "checkmark.circle.fill") { completeSelectedDay() }
+            actionPill(String(localized: "Concluir dia", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), style: .primary, icon: "checkmark.circle.fill") { completeSelectedDay() }
         case .future, .todayEmpty, .pastEmpty:
             EmptyView()
         }
@@ -541,20 +541,20 @@ struct NutritionDashboardView: View {
         switch selectedDayState {
         case .completed, .canceled:
             floatingActionButton(
-                title: String(localized: "Reabrir dia"),
+                title: String(localized: "Reabrir dia", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                 icon: "arrow.uturn.backward",
                 tint: Color.orange,
                 action: reopenSelectedDay
             )
         case .todayInProgress, .pastInProgress:
             floatingActionButton(
-                title: String(localized: "Concluir dia"),
+                title: String(localized: "Concluir dia", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                 icon: "checkmark.circle.fill",
                 tint: Color(red: 0.15, green: 0.45, blue: 0.25),
                 action: completeSelectedDay
             )
         case .todayEmpty, .pastEmpty:
-            floatingEntryMenuButton(title: String(localized: "Iniciar dia"), icon: "plus")
+            floatingEntryMenuButton(title: String(localized: "Iniciar dia", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), icon: "plus")
         case .future:
             EmptyView()
         }

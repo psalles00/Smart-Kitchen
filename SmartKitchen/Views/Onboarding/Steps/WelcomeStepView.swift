@@ -89,7 +89,7 @@ struct WelcomeStepView: View {
 
                 VStack(spacing: 12) {
                     WelcomeLiquidGlassButton(
-                        title: String(localized: "Começar"),
+                        title: String(localized: "Começar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                         action: onContinue
                     )
 
@@ -112,7 +112,7 @@ struct WelcomeStepView: View {
                                     .tint(.white.opacity(0.82))
                             }
 
-                            Text(String(localized: "Restaurar compras"))
+                            Text(String(localized: "Restaurar compras", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                                 .font(.system(size: 15, weight: .semibold, design: .rounded))
                         }
                         .foregroundStyle(.white.opacity(isRestoring ? 0.7 : 0.82))
@@ -154,7 +154,7 @@ struct WelcomeStepView: View {
     }
 
     private var localizedTitle: Text {
-        let localized = String(localized: "Organizar sua cozinha e comer bem não precisa ser difícil")
+        let localized = String(localized: "Organizar sua cozinha e comer bem não precisa ser difícil", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
 
         let segments = titleSegments(from: localized)
         if segments.isEmpty {
@@ -226,7 +226,7 @@ struct WelcomeStepView: View {
     }
 
     private var localizedSubtitle: Text {
-        let full = String(localized: "Boas-vindas ao Savoria")
+        let full = String(localized: "Boas-vindas ao Savoria", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         let accent = LinearGradient(
             colors: [
                 Color(red: 0.98, green: 0.83, blue: 0.43),

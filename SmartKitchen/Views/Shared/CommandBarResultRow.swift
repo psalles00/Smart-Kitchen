@@ -286,12 +286,12 @@ struct CommandBarResultRow: View {
 
     private func tagLabel(for type: SearchResultType) -> String {
         switch type {
-        case .pantryItem:  return String(localized: "Despensa")
-        case .reserveItem: return String(localized: "Para depois")
-        case .groceryItem: return String(localized: "Mercado")
-        case .recipe:      return String(localized: "Receita")
-        case .utensil:     return String(localized: "Utensílio")
-        case .suggestion:  return String(localized: "Sugestão")
+        case .pantryItem:  return String(localized: "Despensa", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .reserveItem: return String(localized: "Para depois", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .groceryItem: return String(localized: "Mercado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .recipe:      return String(localized: "Receita", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .utensil:     return String(localized: "Utensílio", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .suggestion:  return String(localized: "Sugestão", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .action:      return ""
         }
     }

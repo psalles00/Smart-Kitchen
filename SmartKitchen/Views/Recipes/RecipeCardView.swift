@@ -154,6 +154,6 @@ struct RecipeCardView: View, Equatable {
     }
 
     private func availableIngredientsText(for compatibility: RecipeCompatibility) -> String {
-        String(format: String(localized: "%lld de %lld"), Int64(compatibility.matchedIngredients), Int64(compatibility.totalIngredients))
+        String(format: String(localized: "%lld de %lld", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), Int64(compatibility.matchedIngredients), Int64(compatibility.totalIngredients))
     }
 }

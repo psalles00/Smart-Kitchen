@@ -102,7 +102,7 @@ struct LogWeightSheet: View {
             }
             .padding()
             .savoriaModalBorder(theme: .nutrients)
-            .modalNavigationTitle(String(localized: "Registrar peso"))
+            .modalNavigationTitle(String(localized: "Registrar peso", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancelar") { dismiss() }

@@ -15,12 +15,12 @@ struct RecipeIdeasStepView: View {
     @State private var loopTask: Task<Void, Never>? = nil
     @State private var entranceTask: Task<Void, Never>? = nil
 
-    private let queryText = String(localized: "Lanche fit, sem glúten")
+    private let queryText = String(localized: "Lanche fit, sem glúten", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
 
     private let suggestions: [RecipeSuggestionMock] = [
-        .init(id: "wrap",      title: String(localized: "Wrap de frango com homus"),       minutes: 15, badge: String(localized: "Compatível com sua despensa"), badgeIsMatch: true,  iconColor: Color(red: 0.96, green: 0.55, blue: 0.40), imageFileName: "onboarding-chicken-wrap-hummus.jpg"),
-        .init(id: "smoothie",  title: String(localized: "Smoothie de morango e aveia"),    minutes: 5,  badge: String(localized: "Sem glúten"), badgeIsMatch: false, iconColor: Color(red: 0.86, green: 0.40, blue: 0.86), imageFileName: "onboarding-strawberry-oat-smoothie.jpg"),
-        .init(id: "tuna-bowl", title: String(localized: "Bowl de atum com quinoa"),        minutes: 12, badge: String(localized: "Alta proteína"), badgeIsMatch: false, iconColor: Color(red: 0.55, green: 0.50, blue: 0.96), imageFileName: "onboarding-tuna-quinoa-bowl.jpg"),
+        .init(id: "wrap",      title: String(localized: "Wrap de frango com homus", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),       minutes: 15, badge: String(localized: "Compatível com sua despensa", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), badgeIsMatch: true,  iconColor: Color(red: 0.96, green: 0.55, blue: 0.40), imageFileName: "onboarding-chicken-wrap-hummus.jpg"),
+        .init(id: "smoothie",  title: String(localized: "Smoothie de morango e aveia", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),    minutes: 5,  badge: String(localized: "Sem glúten", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), badgeIsMatch: false, iconColor: Color(red: 0.86, green: 0.40, blue: 0.86), imageFileName: "onboarding-strawberry-oat-smoothie.jpg"),
+        .init(id: "tuna-bowl", title: String(localized: "Bowl de atum com quinoa", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),        minutes: 12, badge: String(localized: "Alta proteína", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), badgeIsMatch: false, iconColor: Color(red: 0.55, green: 0.50, blue: 0.96), imageFileName: "onboarding-tuna-quinoa-bowl.jpg"),
     ]
 
     var body: some View {
@@ -38,15 +38,15 @@ struct RecipeIdeasStepView: View {
             VStack(spacing: 12) {
                 OnboardingFeatureChip(
                     icon: "sparkle.magnifyingglass",
-                    title: String(localized: "Ideias de receitas"),
+                    title: String(localized: "Ideias de receitas", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                     tint: Color(red: 0.96, green: 0.55, blue: 0.40)
                 )
                 .opacity(showHeader ? 1 : 0)
                 .animation(.spring(response: 0.7, dampingFraction: 0.86), value: showHeader)
 
                 OnboardingHeader(
-                    title: String(localized: "Chega de travar na hora de cozinhar"),
-                    subtitle: String(localized: "Receba ideias compatíveis com o que tem na despensa.")
+                    title: String(localized: "Chega de travar na hora de cozinhar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+                    subtitle: String(localized: "Receba ideias compatíveis com o que tem na despensa.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
                 )
                 .opacity(showHeader ? 1 : 0)
                 .offset(y: showHeader ? 0 : 14)
@@ -56,7 +56,7 @@ struct RecipeIdeasStepView: View {
                 Spacer(minLength: 14)
 
                 OnboardingPrimaryButton(
-                    title: String(localized: "Continuar"),
+                    title: String(localized: "Continuar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                     action: onContinue
                 )
                 .padding(.horizontal, 24)
@@ -110,7 +110,7 @@ struct RecipeIdeasStepView: View {
 
             ZStack(alignment: .leading) {
                 if typedQuery.isEmpty {
-                    Text(String(localized: "Descreva o que está com vontade…"))
+                    Text(String(localized: "Descreva o que está com vontade…", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                         .font(.system(size: 14))
                         .foregroundStyle(.secondary.opacity(0.6))
                 }
@@ -307,7 +307,7 @@ private struct RecipeDetailMock: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(suggestion.title)
                         .font(.system(size: 14, weight: .bold))
-                    Text("\(suggestion.minutes) min · " + String(localized: "2 porções"))
+                    Text("\(suggestion.minutes) min · " + String(localized: "2 porções", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(.secondary)
                 }
@@ -317,13 +317,13 @@ private struct RecipeDetailMock: View {
             Divider().opacity(0.4)
 
             VStack(alignment: .leading, spacing: 6) {
-                Text(String(localized: "Ingredientes"))
+                Text(String(localized: "Ingredientes", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                     .font(.system(size: 11, weight: .bold))
                     .foregroundStyle(.secondary)
                 ForEach([
-                    String(localized: "1 wrap sem glúten"),
-                    String(localized: "120 g de frango grelhado"),
-                    String(localized: "2 colheres de homus")
+                    String(localized: "1 wrap sem glúten", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+                    String(localized: "120 g de frango grelhado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+                    String(localized: "2 colheres de homus", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
                 ], id: \.self) { line in
                     HStack(spacing: 8) {
                         Circle().fill(Color.primary.opacity(0.4)).frame(width: 4, height: 4)
@@ -335,12 +335,12 @@ private struct RecipeDetailMock: View {
             }
 
             VStack(alignment: .leading, spacing: 6) {
-                Text(String(localized: "Passos"))
+                Text(String(localized: "Passos", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                     .font(.system(size: 11, weight: .bold))
                     .foregroundStyle(.secondary)
                 ForEach(Array([
-                    String(localized: "Aqueça o wrap rapidamente."),
-                    String(localized: "Espalhe o homus e monte com o frango."),
+                    String(localized: "Aqueça o wrap rapidamente.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+                    String(localized: "Espalhe o homus e monte com o frango.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                 ].enumerated()), id: \.offset) { index, line in
                     HStack(alignment: .top, spacing: 8) {
                         Text("\(index + 1)")

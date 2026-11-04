@@ -281,10 +281,10 @@ struct FullscreenAssistantView: View {
                         .contentShape(Circle())
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(Text(String(localized: "Voltar")))
+                .accessibilityLabel(Text(String(localized: "Voltar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)))
             }
 
-            Text(searchBarState.mode == .aiChat ? String(localized: "SavorIA") : String(localized: "Assistente"))
+            Text(searchBarState.mode == .aiChat ? String(localized: "SavorIA", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) : String(localized: "Assistente", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                 .font(assistantHeaderTitleFont)
                 .foregroundStyle(usesHomeHeaderPalette ? AnyShapeStyle(PageHeaderPalette.title) : AnyShapeStyle(Color.primary))
                 .lineLimit(1)
@@ -462,7 +462,7 @@ struct FullscreenAssistantView: View {
 
                     LazyVGrid(columns: assistantActionColumns, alignment: .leading, spacing: 6) {
                         assistantActionButton(
-                            title: String(localized: "Pergunte à SavorIA"),
+                            title: String(localized: "Pergunte à SavorIA", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                             icon: "sparkles",
                             tint: assistantIAAccent,
                             imageName: "savorai",
@@ -481,7 +481,7 @@ struct FullscreenAssistantView: View {
                         }
 
                         assistantActionButton(
-                            title: String(localized: "Ideias de receitas"),
+                            title: String(localized: "Ideias de receitas", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                             icon: "fork.knife.circle.fill",
                             tint: assistantIAAccent,
                             imageName: "ideis",
@@ -500,7 +500,7 @@ struct FullscreenAssistantView: View {
                         }
 
                         assistantActionButton(
-                            title: String(localized: "Adicionar à Despensa"),
+                            title: String(localized: "Adicionar à Despensa", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                             icon: "shippingbox.fill",
                             tint: assistantListsAccent,
                             imageName: "despensa",
@@ -511,7 +511,7 @@ struct FullscreenAssistantView: View {
                         }
 
                         assistantActionButton(
-                            title: String(localized: "Adicionar ao Mercado"),
+                            title: String(localized: "Adicionar ao Mercado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                             icon: "cart.badge.plus",
                             tint: assistantListsAccent,
                             imageName: "mercado",
@@ -523,7 +523,7 @@ struct FullscreenAssistantView: View {
 
                         if settings?.showUtensils == true {
                             assistantActionButton(
-                                title: String(localized: "Adicionar Utensílio"),
+                                title: String(localized: "Adicionar Utensílio", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                                 icon: "fork.knife",
                                 tint: assistantListsAccent,
                                 imageName: "listas-utensilio",
@@ -535,7 +535,7 @@ struct FullscreenAssistantView: View {
                         }
 
                         assistantActionButton(
-                            title: String(localized: "Criar Receita"),
+                            title: String(localized: "Criar Receita", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                             icon: "book.badge.plus",
                             tint: assistantRecipesAccent,
                             imageName: "receitas",
@@ -546,7 +546,7 @@ struct FullscreenAssistantView: View {
                         }
 
                         assistantActionButton(
-                            title: String(localized: "Importar da Galeria"),
+                            title: String(localized: "Importar da Galeria", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                             icon: "photo.on.rectangle.angled",
                             tint: assistantRecipesAccent,
                             imageName: "receitas-importar",
@@ -557,7 +557,7 @@ struct FullscreenAssistantView: View {
                         }
 
                         assistantActionButton(
-                            title: String(localized: "Ler Receita"),
+                            title: String(localized: "Ler Receita", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                             icon: "camera.viewfinder",
                             tint: assistantRecipesAccent,
                             imageName: "receitas-ler",
@@ -569,7 +569,7 @@ struct FullscreenAssistantView: View {
 
                         #if os(macOS)
                         assistantActionButton(
-                            title: String(localized: "Importar dos Arquivos"),
+                            title: String(localized: "Importar dos Arquivos", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                             icon: "folder.fill",
                             tint: assistantRecipesAccent,
                             imageName: "receitas-importar",
@@ -581,7 +581,7 @@ struct FullscreenAssistantView: View {
                         #endif
 
                         assistantActionButton(
-                            title: String(localized: "Registrar Alimento"),
+                            title: String(localized: "Registrar Alimento", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                             icon: "fork.knife.circle.fill",
                             tint: assistantNutrientsAccent,
                             imageName: "nutrientes",
@@ -592,7 +592,7 @@ struct FullscreenAssistantView: View {
                         }
 
                         assistantActionButton(
-                            title: String(localized: "Registrar com Áudio"),
+                            title: String(localized: "Registrar com Áudio", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                             icon: "mic.fill",
                             tint: assistantNutrientsAccent,
                             imageName: "nutrientes-audio",
@@ -603,7 +603,7 @@ struct FullscreenAssistantView: View {
                         }
 
                         assistantActionButton(
-                            title: String(localized: "Registrar com Galeria"),
+                            title: String(localized: "Registrar com Galeria", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                             icon: "photo.on.rectangle.angled",
                             tint: assistantNutrientsAccent,
                             imageName: "nutrientes-galeria",
@@ -614,7 +614,7 @@ struct FullscreenAssistantView: View {
                         }
 
                         assistantActionButton(
-                            title: String(localized: "Registrar com Câmera"),
+                            title: String(localized: "Registrar com Câmera", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                             icon: "camera.fill",
                             tint: assistantNutrientsAccent,
                             imageName: "nutrientes-camera",
@@ -625,7 +625,7 @@ struct FullscreenAssistantView: View {
                         }
 
                         assistantActionButton(
-                            title: String(localized: "Rastreio de Peso"),
+                            title: String(localized: "Rastreio de Peso", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                             icon: "scalemass.fill",
                             tint: assistantNutrientsAccent,
                             imageName: "peso",
@@ -857,9 +857,9 @@ struct MacAssistantExpandedPage: View {
         var title: String {
             switch self {
             case .assistant:
-                return String(localized: "Assistente")
+                return String(localized: "Assistente", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             case .aiMode:
-                return String(localized: "SavorIA")
+                return String(localized: "SavorIA", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             }
         }
     }

@@ -19,7 +19,7 @@ struct MultimodalLoggingStepView: View {
     @State private var entranceTask: Task<Void, Never>? = nil
     @State private var loopTask: Task<Void, Never>? = nil
 
-    private let textPrompt = String(localized: "2 fatias de pizza")
+    private let textPrompt = String(localized: "2 fatias de pizza", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
 
     var body: some View {
         VStack(spacing: 16) {
@@ -36,15 +36,15 @@ struct MultimodalLoggingStepView: View {
             VStack(spacing: 12) {
                 OnboardingFeatureChip(
                     icon: "square.and.pencil",
-                    title: String(localized: "Registro de refeições"),
+                    title: String(localized: "Registro de refeições", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                     tint: Color(red: 0.42, green: 0.78, blue: 0.55)
                 )
                 .opacity(showHeader ? 1 : 0)
                 .animation(.spring(response: 0.7, dampingFraction: 0.86), value: showHeader)
 
                 OnboardingHeader(
-                    title: String(localized: "Registre do jeito mais fácil pra você"),
-                    subtitle: String(localized: "Foto, voz, texto ou rótulo — a IA cuida do resto.")
+                    title: String(localized: "Registre do jeito mais fácil pra você", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+                    subtitle: String(localized: "Foto, voz, texto ou rótulo — a IA cuida do resto.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
                 )
                 .opacity(showHeader ? 1 : 0)
                 .offset(y: showHeader ? 0 : 14)
@@ -54,7 +54,7 @@ struct MultimodalLoggingStepView: View {
                 Spacer(minLength: 14)
 
                 OnboardingPrimaryButton(
-                    title: String(localized: "Continuar"),
+                    title: String(localized: "Continuar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                     action: onContinue
                 )
                 .padding(.horizontal, 24)
@@ -104,9 +104,9 @@ struct MultimodalLoggingStepView: View {
     private var allModesGrid: some View {
         VStack(spacing: 12) {
             HStack(spacing: 10) {
-                miniCard(icon: "camera.fill", title: String(localized: "Foto"), tint: Color(red: 0.96, green: 0.55, blue: 0.40))
-                miniCard(icon: "text.cursor", title: String(localized: "Texto"), tint: Color(red: 0.42, green: 0.78, blue: 0.55))
-                miniCard(icon: "mic.fill", title: String(localized: "Voz"), tint: Color(red: 0.55, green: 0.50, blue: 0.96))
+                miniCard(icon: "camera.fill", title: String(localized: "Foto", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), tint: Color(red: 0.96, green: 0.55, blue: 0.40))
+                miniCard(icon: "text.cursor", title: String(localized: "Texto", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), tint: Color(red: 0.42, green: 0.78, blue: 0.55))
+                miniCard(icon: "mic.fill", title: String(localized: "Voz", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), tint: Color(red: 0.55, green: 0.50, blue: 0.96))
             }
 
             VStack(spacing: 6) {
@@ -114,7 +114,7 @@ struct MultimodalLoggingStepView: View {
                     Image(systemName: "sparkles")
                         .font(.system(size: 12, weight: .bold))
                         .foregroundStyle(.white)
-                    Text(String(localized: "A IA reconhece, calcula e organiza"))
+                    Text(String(localized: "A IA reconhece, calcula e organiza", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                         .font(.system(size: 12, weight: .bold))
                         .foregroundStyle(.white)
                 }
@@ -131,9 +131,9 @@ struct MultimodalLoggingStepView: View {
             }
 
             VStack(alignment: .leading, spacing: 6) {
-                detectedRow(name: String(localized: "Pizza · 2 fatias"), kcal: 540)
-                detectedRow(name: String(localized: "Salada verde"), kcal: 80)
-                detectedRow(name: String(localized: "Suco natural"), kcal: 110)
+                detectedRow(name: String(localized: "Pizza · 2 fatias", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), kcal: 540)
+                detectedRow(name: String(localized: "Salada verde", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), kcal: 80)
+                detectedRow(name: String(localized: "Suco natural", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), kcal: 110)
             }
         }
     }
@@ -182,7 +182,7 @@ struct MultimodalLoggingStepView: View {
 
     private var photoMode: some View {
         VStack(spacing: 12) {
-            modeHeader(icon: "camera.fill", title: String(localized: "Foto"), tint: Color(red: 0.96, green: 0.55, blue: 0.40))
+            modeHeader(icon: "camera.fill", title: String(localized: "Foto", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), tint: Color(red: 0.96, green: 0.55, blue: 0.40))
 
             ZStack {
                 BundledOnboardingImage(filename: "onboarding-pizza-slices.png")
@@ -207,7 +207,7 @@ struct MultimodalLoggingStepView: View {
 
             HStack(spacing: 4) {
                 Image(systemName: "sparkles").font(.system(size: 10, weight: .bold))
-                Text(String(localized: "Reconhecido: prato com proteína e carboidrato"))
+                Text(String(localized: "Reconhecido: prato com proteína e carboidrato", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                     .font(.system(size: 11, weight: .semibold))
                     .lineLimit(1)
             }
@@ -239,10 +239,10 @@ struct MultimodalLoggingStepView: View {
 
     private var textMode: some View {
         VStack(spacing: 12) {
-            modeHeader(icon: "text.cursor", title: String(localized: "Texto"), tint: Color(red: 0.42, green: 0.78, blue: 0.55))
+            modeHeader(icon: "text.cursor", title: String(localized: "Texto", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), tint: Color(red: 0.42, green: 0.78, blue: 0.55))
 
             VStack(alignment: .leading, spacing: 10) {
-                Text(String(localized: "O que você comeu?"))
+                Text(String(localized: "O que você comeu?", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(.secondary)
 
@@ -266,7 +266,7 @@ struct MultimodalLoggingStepView: View {
             )
 
             if typedText.count >= textPrompt.count {
-                detectedRow(name: String(localized: "Pizza · 2 fatias"), kcal: 540)
+                detectedRow(name: String(localized: "Pizza · 2 fatias", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), kcal: 540)
                     .transition(.opacity.combined(with: .move(edge: .bottom)))
             }
         }
@@ -276,7 +276,7 @@ struct MultimodalLoggingStepView: View {
 
     private var voiceMode: some View {
         VStack(spacing: 12) {
-            modeHeader(icon: "mic.fill", title: String(localized: "Voz"), tint: Color(red: 0.55, green: 0.50, blue: 0.96))
+            modeHeader(icon: "mic.fill", title: String(localized: "Voz", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), tint: Color(red: 0.55, green: 0.50, blue: 0.96))
 
             ZStack {
                 Circle()
@@ -300,12 +300,12 @@ struct MultimodalLoggingStepView: View {
                     Image(systemName: "waveform")
                         .font(.system(size: 10, weight: .semibold))
                         .symbolEffect(.variableColor)
-                    Text(String(localized: "Transcrevendo…"))
+                    Text(String(localized: "Transcrevendo…", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                         .font(.system(size: 10, weight: .semibold))
                 }
                 .foregroundStyle(.secondary)
 
-                Text("\u{201C}" + String(localized: "Almoço: arroz, feijão, frango grelhado") + "\u{201D}")
+                Text("\u{201C}" + String(localized: "Almoço: arroz, feijão, frango grelhado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) + "\u{201D}")
                     .font(.system(size: 13, weight: .semibold))
                     .lineLimit(2)
             }

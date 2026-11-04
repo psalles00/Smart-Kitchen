@@ -610,8 +610,8 @@ enum RecipePreparationMediaType: String, Codable, CaseIterable {
 
     var label: String {
         switch self {
-        case .photo: String(localized: "Foto")
-        case .video: String(localized: "Vídeo")
+        case .photo: String(localized: "Foto", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .video: String(localized: "Vídeo", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 }
@@ -656,7 +656,7 @@ struct RecipeCompatibility: Equatable {
     var ratio: Double { Double(matchedIngredients) / Double(totalIngredients) }
     var compactText: String { "\(matchedIngredients)/\(totalIngredients)" }
     var longText: String {
-        String(format: String(localized: "%lld de %lld ingredientes"), Int64(matchedIngredients), Int64(totalIngredients))
+        String(format: String(localized: "%lld de %lld ingredientes", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), Int64(matchedIngredients), Int64(totalIngredients))
     }
 }
 
@@ -671,9 +671,9 @@ enum Difficulty: String, Codable, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .easy:   String(localized: "Fácil")
-        case .medium: String(localized: "Médio")
-        case .hard:   String(localized: "Difícil")
+        case .easy:   String(localized: "Fácil", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .medium: String(localized: "Médio", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .hard:   String(localized: "Difícil", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 

@@ -230,10 +230,10 @@ struct AssistantView: View {
         if pendingToolExecution != nil {
             modelContext.insert(ChatMessage(
                 role: .assistant,
-                content: String(localized: "Tenho uma alteração pendente. Confirme ou cancele antes de continuar."),
+                content: String(localized: "Tenho uma alteração pendente. Confirme ou cancele antes de continuar.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                 quickActions: [
-                    QuickAction(label: String(localized: "Confirmar"), prompt: confirmPrompt),
-                    QuickAction(label: String(localized: "Cancelar"), prompt: cancelPrompt)
+                    QuickAction(label: String(localized: "Confirmar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), prompt: confirmPrompt),
+                    QuickAction(label: String(localized: "Cancelar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), prompt: cancelPrompt)
                 ]
             ))
             return
@@ -282,7 +282,7 @@ struct AssistantView: View {
             errorMessage = error.localizedDescription
             let errorMsg = ChatMessage(
                 role: .assistant,
-                content: "\(String(localized: "Desculpe, ocorreu um erro:")) \(error.localizedDescription)"
+                content: "\(String(localized: "Desculpe, ocorreu um erro:", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)) \(error.localizedDescription)"
             )
             modelContext.insert(errorMsg)
         }
@@ -341,8 +341,8 @@ struct AssistantView: View {
                     role: .assistant,
                     content: confirmationMessage(for: response.toolCalls),
                     quickActions: [
-                        QuickAction(label: String(localized: "Confirmar"), prompt: confirmPrompt),
-                        QuickAction(label: String(localized: "Cancelar"), prompt: cancelPrompt)
+                        QuickAction(label: String(localized: "Confirmar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), prompt: confirmPrompt),
+                        QuickAction(label: String(localized: "Cancelar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), prompt: cancelPrompt)
                     ]
                 ))
                 return
@@ -363,7 +363,7 @@ struct AssistantView: View {
             return
         }
 
-        let content = response.content ?? String(localized: "Desculpe, não consegui gerar uma resposta.")
+        let content = response.content ?? String(localized: "Desculpe, não consegui gerar uma resposta.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         let recipeIds = extractRecipeIds(from: content)
         modelContext.insert(ChatMessage(
             role: .assistant,
@@ -377,7 +377,7 @@ struct AssistantView: View {
 
         var apiMessages = pendingToolExecution.messages
         self.pendingToolExecution = nil
-        modelContext.insert(ChatMessage(role: .user, content: String(localized: "Confirmar alteração")))
+        modelContext.insert(ChatMessage(role: .user, content: String(localized: "Confirmar alteração", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)))
 
         do {
             for toolCall in pendingToolExecution.toolCalls {
@@ -396,17 +396,17 @@ struct AssistantView: View {
             errorMessage = error.localizedDescription
             modelContext.insert(ChatMessage(
                 role: .assistant,
-                content: String(localized: "Desculpe, ocorreu um erro ao aplicar a alteração: \(error.localizedDescription)")
+                content: String(localized: "Desculpe, ocorreu um erro ao aplicar a alteração: \(error.localizedDescription)", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             ))
         }
     }
 
     private func cancelPendingToolExecution() {
         pendingToolExecution = nil
-        modelContext.insert(ChatMessage(role: .user, content: String(localized: "Cancelar alteração")))
+        modelContext.insert(ChatMessage(role: .user, content: String(localized: "Cancelar alteração", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)))
         modelContext.insert(ChatMessage(
             role: .assistant,
-            content: String(localized: "Alteração cancelada. Nenhuma informação foi modificada.")
+            content: String(localized: "Alteração cancelada. Nenhuma informação foi modificada.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         ))
     }
 
@@ -555,15 +555,15 @@ struct AssistantView: View {
         if rankedRecipes.isEmpty {
             return RecipeDiscoveryResponse(
                 content: wantsDessert
-                    ? String(localized: "Não encontrei uma sobremesa compatível com o que você tem salvo na despensa e nas suas receitas. Se quiser, posso sugerir outras receitas baseadas no que você tem agora.")
-                    : String(localized: "Não encontrei receitas compatíveis com o que você tem salvo na despensa e nas suas receitas. Se quiser, posso sugerir outras opções baseadas no que você tem agora."),
+                    ? String(localized: "Não encontrei uma sobremesa compatível com o que você tem salvo na despensa e nas suas receitas. Se quiser, posso sugerir outras receitas baseadas no que você tem agora.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+                    : String(localized: "Não encontrei receitas compatíveis com o que você tem salvo na despensa e nas suas receitas. Se quiser, posso sugerir outras opções baseadas no que você tem agora.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                 recipeIds: [],
                 quickActions: [
                     QuickAction(
-                        label: wantsDessert ? String(localized: "Sugerir outras sobremesas") : String(localized: "Sugerir outras receitas"),
+                        label: wantsDessert ? String(localized: "Sugerir outras sobremesas", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) : String(localized: "Sugerir outras receitas", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                         prompt: wantsDessert
-                            ? String(localized: "Sugira outras sobremesas com base na minha despensa.")
-                            : String(localized: "Sugira outras receitas com base na minha despensa.")
+                            ? String(localized: "Sugira outras sobremesas com base na minha despensa.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+                            : String(localized: "Sugira outras receitas com base na minha despensa.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
                     )
                 ]
             )
@@ -571,18 +571,18 @@ struct AssistantView: View {
 
         let recipes = rankedRecipes.prefix(6).map(\.0)
         let intro = wantsDessert
-            ? String(localized: "A partir dos itens da sua despensa e da sua lista de receitas, essas são as opções de sobremesa disponíveis:")
-            : String(localized: "A partir dos itens da sua despensa e da sua lista de receitas, essas são as opções disponíveis:")
+            ? String(localized: "A partir dos itens da sua despensa e da sua lista de receitas, essas são as opções de sobremesa disponíveis:", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            : String(localized: "A partir dos itens da sua despensa e da sua lista de receitas, essas são as opções disponíveis:", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
 
         return RecipeDiscoveryResponse(
-            content: "\(intro)\n\n\(String(localized: "Se quiser, posso sugerir outras receitas com base na sua despensa."))",
+            content: "\(intro)\n\n\(String(localized: "Se quiser, posso sugerir outras receitas com base na sua despensa.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))",
             recipeIds: recipes.map(\.id),
             quickActions: [
                 QuickAction(
-                    label: wantsDessert ? String(localized: "Sugerir outras sobremesas") : String(localized: "Sugerir outras receitas"),
+                    label: wantsDessert ? String(localized: "Sugerir outras sobremesas", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) : String(localized: "Sugerir outras receitas", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                     prompt: wantsDessert
-                        ? String(localized: "Sugira outras sobremesas com base na minha despensa.")
-                        : String(localized: "Sugira outras receitas com base na minha despensa.")
+                        ? String(localized: "Sugira outras sobremesas com base na minha despensa.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+                        : String(localized: "Sugira outras receitas com base na minha despensa.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
                 )
             ]
         )
@@ -757,6 +757,6 @@ struct AssistantView: View {
         }
         .joined(separator: ", ")
 
-        return String(localized: "Confirma esta alteração no app?\n\nAção pendente: \(summary).")
+        return String(localized: "Confirma esta alteração no app?\n\nAção pendente: \(summary).", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
     }
 }

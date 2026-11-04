@@ -11,10 +11,10 @@ enum AddItemDestination: String, CaseIterable {
 
     var label: String {
         switch self {
-        case .pantry:   String(localized: "Despensa")
-        case .reserve: String(localized: "Para depois")
-        case .grocery:  String(localized: "Mercado")
-        case .utensil:  String(localized: "Utensílios")
+        case .pantry:   String(localized: "Despensa", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .reserve: String(localized: "Para depois", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .grocery:  String(localized: "Mercado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .utensil:  String(localized: "Utensílios", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 }
@@ -83,7 +83,7 @@ struct AddItemView: View {
                 }
 
                 CategorySelectionRow(
-                    title: String(localized: "Categoria"),
+                    title: String(localized: "Categoria", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                     categories: CategoryDatabase.shared.allCategories,
                     selection: $selectedCategory
                 )
@@ -158,7 +158,7 @@ struct AddItemView: View {
         .padding(.bottom, 20)
         .frame(minWidth: 500, minHeight: 500)
         #endif
-        .modalNavigationTitle(String(localized: "Novo Item"))
+        .modalNavigationTitle(String(localized: "Novo Item", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif

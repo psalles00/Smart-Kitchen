@@ -88,7 +88,7 @@ struct ListsSettingsView: View {
         }
         .settingsFormStyle()
         .macSettingsContainer()
-        .settingsNavigationTitle(String(localized: "Listas e Receitas"))
+        .settingsNavigationTitle(String(localized: "Listas e Receitas", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif

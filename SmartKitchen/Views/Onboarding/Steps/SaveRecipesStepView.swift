@@ -25,10 +25,10 @@ struct SaveRecipesStepView: View {
     @State private var loopTask: Task<Void, Never>? = nil
 
     private let processingSteps: [String] = [
-        String(localized: "Analisando"),
-        String(localized: "Extraindo ingredientes"),
-        String(localized: "Organizando passos"),
-        String(localized: "Pronto"),
+        String(localized: "Analisando", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+        String(localized: "Extraindo ingredientes", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+        String(localized: "Organizando passos", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+        String(localized: "Pronto", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
     ]
 
     var body: some View {
@@ -45,15 +45,15 @@ struct SaveRecipesStepView: View {
                 VStack(spacing: 12) {
                     OnboardingFeatureChip(
                         icon: "square.and.arrow.down.fill",
-                        title: String(localized: "Importar receitas"),
+                        title: String(localized: "Importar receitas", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                         tint: Color(red: 0.86, green: 0.40, blue: 0.86)
                     )
                     .opacity(showHeader ? 1 : 0)
                     .animation(.spring(response: 0.7, dampingFraction: 0.86), value: showHeader)
 
                     OnboardingHeader(
-                        title: String(localized: "Salve qualquer receita em segundos"),
-                        subtitle: String(localized: "Compartilhe um link de Instagram, TikTok ou site — pronto.")
+                        title: String(localized: "Salve qualquer receita em segundos", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+                        subtitle: String(localized: "Compartilhe um link de Instagram, TikTok ou site — pronto.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
                     )
                     .opacity(showHeader ? 1 : 0)
                     .offset(y: showHeader ? 0 : 14)
@@ -63,7 +63,7 @@ struct SaveRecipesStepView: View {
                 Spacer(minLength: 14)
 
                 OnboardingPrimaryButton(
-                    title: String(localized: "Continuar"),
+                    title: String(localized: "Continuar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                     action: onContinue
                 )
                 .padding(.horizontal, 24)
@@ -162,7 +162,7 @@ struct SaveRecipesStepView: View {
                     reelsAction(icon: "heart.fill", label: "12k", highlighted: false)
                     reelsAction(icon: "bubble.right.fill", label: "284", highlighted: false)
                     ZStack {
-                        reelsAction(icon: "arrowshape.turn.up.right.fill", label: String(localized: "Compartilhar"), highlighted: stage == .shareSheet)
+                        reelsAction(icon: "arrowshape.turn.up.right.fill", label: String(localized: "Compartilhar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), highlighted: stage == .shareSheet)
                         if stage == .shareSheet {
                             Circle()
                                 .strokeBorder(Color.white, lineWidth: 2)
@@ -187,14 +187,14 @@ struct SaveRecipesStepView: View {
                             .foregroundStyle(.white)
                     }
                     .lineLimit(1)
-                    Text("\u{1F525} " + String(localized: "Massa cremosa em 15 minutos…"))
+                    Text("\u{1F525} " + String(localized: "Massa cremosa em 15 minutos…", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                         .font(.system(size: 10, weight: .semibold))
                         .foregroundStyle(.white.opacity(0.95))
                         .lineLimit(2)
                     HStack(spacing: 4) {
                         Image(systemName: "music.note")
                             .font(.system(size: 8, weight: .bold))
-                        Text(String(localized: "Som original · chef.savoria"))
+                        Text(String(localized: "Som original · chef.savoria", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                             .font(.system(size: 9))
                     }
                     .foregroundStyle(.white.opacity(0.85))
@@ -335,7 +335,7 @@ struct SaveRecipesStepView: View {
     private var shareSheetView: some View {
         VStack(spacing: 8) {
             Capsule().fill(Color.gray.opacity(0.4)).frame(width: 32, height: 4).padding(.top, 6)
-            Text(String(localized: "Compartilhar"))
+            Text(String(localized: "Compartilhar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(.secondary)
 
@@ -470,7 +470,7 @@ struct SaveRecipesStepView: View {
                         HStack(spacing: 3) {
                             Image(systemName: "checkmark.seal.fill")
                                 .font(.system(size: 9, weight: .bold))
-                            Text(String(localized: "Salva"))
+                            Text(String(localized: "Salva", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                                 .font(.system(size: 9, weight: .bold))
                         }
                         .foregroundStyle(.white)
@@ -485,21 +485,21 @@ struct SaveRecipesStepView: View {
             .frame(height: 86)
             .clipShape(RoundedRectangle(cornerRadius: 8))
 
-            Text(String(localized: "Massa cremosa em 15 min"))
+            Text(String(localized: "Massa cremosa em 15 min", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                 .font(.system(size: 11, weight: .bold))
 
             HStack(spacing: 4) {
                 miniTag(icon: "clock", text: "15 min")
-                miniTag(icon: "person.2", text: String(localized: "2 porções"))
+                miniTag(icon: "person.2", text: String(localized: "2 porções", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
             }
 
             VStack(alignment: .leading, spacing: 3) {
-                Text(String(localized: "Ingredientes"))
+                Text(String(localized: "Ingredientes", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                     .font(.system(size: 8, weight: .bold))
                     .foregroundStyle(.secondary)
-                ForEach(["• " + String(localized: "200 g de massa"),
-                         "• " + String(localized: "1 col. creme"),
-                         "• " + String(localized: "Parmesão a gosto")], id: \.self) { line in
+                ForEach(["• " + String(localized: "200 g de massa", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+                         "• " + String(localized: "1 col. creme", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+                         "• " + String(localized: "Parmesão a gosto", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)], id: \.self) { line in
                     Text(line)
                         .font(.system(size: 9))
                         .foregroundStyle(.primary.opacity(0.85))

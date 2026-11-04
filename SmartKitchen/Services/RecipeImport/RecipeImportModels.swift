@@ -185,12 +185,12 @@ enum RecipeImportStage: Equatable {
 
     var title: String {
         switch self {
-        case .analyzing:            return String(localized: "Analisando conteúdo")
-        case .fetching:             return String(localized: "Buscando a receita")
-        case .extractingText:       return String(localized: "Extraindo receita")
-        case .readingVideo:         return String(localized: "Lendo vídeo")
-        case .organizingIngredients: return String(localized: "Organizando ingredientes")
-        case .finalizing:           return String(localized: "Finalizando receita")
+        case .analyzing:            return String(localized: "Analisando conteúdo", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .fetching:             return String(localized: "Buscando a receita", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .extractingText:       return String(localized: "Extraindo receita", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .readingVideo:         return String(localized: "Lendo vídeo", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .organizingIngredients: return String(localized: "Organizando ingredientes", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .finalizing:           return String(localized: "Finalizando receita", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 
@@ -228,12 +228,12 @@ enum RecipeImportImprovementStage: CaseIterable, Equatable, Hashable {
 
     var title: String {
         switch self {
-        case .locatingVideo:     return String(localized: "Localizando o vídeo")
-        case .downloadingVideo:  return String(localized: "Baixando o vídeo")
-        case .extractingAudio:   return String(localized: "Extraindo o áudio")
-        case .transcribingAudio: return String(localized: "Transcrevendo o vídeo")
-        case .restructuringDraft: return String(localized: "Reorganizando a receita")
-        case .finalizing:        return String(localized: "Finalizando o refino")
+        case .locatingVideo:     return String(localized: "Localizando o vídeo", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .downloadingVideo:  return String(localized: "Baixando o vídeo", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .extractingAudio:   return String(localized: "Extraindo o áudio", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .transcribingAudio: return String(localized: "Transcrevendo o vídeo", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .restructuringDraft: return String(localized: "Reorganizando a receita", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .finalizing:        return String(localized: "Finalizando o refino", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 
@@ -266,27 +266,27 @@ struct RecipeDraftMediaSaveSummary: Equatable {
 
     var title: String {
         if totalCount == 0 {
-            return String(localized: "Nenhuma mídia adicional será salva")
+            return String(localized: "Nenhuma mídia adicional será salva", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
         if usesCoverFallback && videoCount == 0 && photoCount == 1 {
-            return String(localized: "A capa será salva com a receita")
+            return String(localized: "A capa será salva com a receita", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
-        return String(localized: "A revisão vai salvar mídia")
+        return String(localized: "A revisão vai salvar mídia", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
     }
 
     var detail: String {
         if totalCount == 0 {
-            return String(localized: "Este rascunho não tem fotos ou vídeos extras para persistir.")
+            return String(localized: "Este rascunho não tem fotos ou vídeos extras para persistir.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
 
         var sentences: [String] = []
         if !breakdown.isEmpty {
-            sentences.append(String(localized: "Serão salvos \(breakdown)."))
+            sentences.append(String(localized: "Serão salvos \(breakdown).", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
         }
         if includesSourceOriginalMedia {
-            sentences.append(String(localized: "Inclui mídia original da importação."))
+            sentences.append(String(localized: "Inclui mídia original da importação.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
         } else if usesCoverFallback {
-            sentences.append(String(localized: "A capa será preservada como mídia de apoio."))
+            sentences.append(String(localized: "A capa será preservada como mídia de apoio.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
         }
         return sentences.joined(separator: " ")
     }
@@ -378,23 +378,23 @@ enum RecipeImportError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidURL:
-            return String(localized: "URL inválida.")
+            return String(localized: "URL inválida.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .invalidImage:
-            return String(localized: "Imagem inválida ou ilegível.")
+            return String(localized: "Imagem inválida ou ilegível.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .emptyContent:
-            return String(localized: "Conteúdo vazio. Cole um link, texto ou envie uma imagem ou vídeo.")
+            return String(localized: "Conteúdo vazio. Cole um link, texto ou envie uma imagem ou vídeo.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .fetchFailed(let msg):
-            return String(localized: "Não foi possível buscar o conteúdo: \(msg)")
+            return String(localized: "Não foi possível buscar o conteúdo: \(msg)", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .unsupportedSource(let msg):
-            return String(localized: "Fonte não suportada: \(msg)")
+            return String(localized: "Fonte não suportada: \(msg)", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .insufficientContent(let suggestion):
-            return String(localized: "Não encontramos informação suficiente. \(suggestion)")
+            return String(localized: "Não encontramos informação suficiente. \(suggestion)", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .aiFailed(let msg):
-            return String(localized: "Falha ao estruturar a receita: \(msg)")
+            return String(localized: "Falha ao estruturar a receita: \(msg)", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .cancelled:
-            return String(localized: "Importação cancelada.")
+            return String(localized: "Importação cancelada.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .dailyLimitReached(let usage, let limit):
-            return String(format: String(localized: "Você atingiu o limite diário de importações (%d/%d). Assine Premium para importar receitas ilimitadas."), usage, limit)
+            return String(format: String(localized: "Você atingiu o limite diário de importações (%d/%d). Assine Premium para importar receitas ilimitadas.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), usage, limit)
         }
     }
 }

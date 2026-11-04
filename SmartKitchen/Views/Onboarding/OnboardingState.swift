@@ -109,10 +109,10 @@ final class ICloudOnboardingRecovery {
         static var live: Self {
             Actions(checkAccount: {
                 #if targetEnvironment(simulator)
-                throw NSError(domain: "CloudRecovery", code: 1, userInfo: [NSLocalizedDescriptionKey: String(localized: "A recuperação do iCloud precisa ser validada em um dispositivo Apple real.")])
+                throw NSError(domain: "CloudRecovery", code: 1, userInfo: [NSLocalizedDescriptionKey: String(localized: "A recuperação do iCloud precisa ser validada em um dispositivo Apple real.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)])
                 #else
                 guard try await CKContainer(identifier: CloudSyncService.cloudKitContainerID).accountStatus() == .available else {
-                    throw NSError(domain: "CloudRecovery", code: 2, userInfo: [NSLocalizedDescriptionKey: String(localized: "iCloud não está disponível neste dispositivo. Verifique se está conectado nas Configurações do sistema.")])
+                    throw NSError(domain: "CloudRecovery", code: 2, userInfo: [NSLocalizedDescriptionKey: String(localized: "iCloud não está disponível neste dispositivo. Verifique se está conectado nas Configurações do sistema.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)])
                 }
                 #endif
             }, enable: {
@@ -123,7 +123,7 @@ final class ICloudOnboardingRecovery {
                     try await sync.enableCloudSync()
                 }
                 guard sync.isUsingCloudKitContainer else {
-                    throw NSError(domain: "CloudRecovery", code: 3, userInfo: [NSLocalizedDescriptionKey: String(localized: "Não foi possível inicializar a sincronização com iCloud neste dispositivo.")])
+                    throw NSError(domain: "CloudRecovery", code: 3, userInfo: [NSLocalizedDescriptionKey: String(localized: "Não foi possível inicializar a sincronização com iCloud neste dispositivo.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)])
                 }
                 sync.syncNow()
             }, read: {
@@ -144,8 +144,8 @@ final class ICloudOnboardingRecovery {
         case noData, storesUnavailable
         var errorDescription: String? {
             switch self {
-            case .noData: String(localized: "Seus dados ainda não estão disponíveis. Tente novamente.")
-            case .storesUnavailable: String(localized: "Não foi possível proteger os bancos locais. A recuperação não foi iniciada.")
+            case .noData: String(localized: "Seus dados ainda não estão disponíveis. Tente novamente.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            case .storesUnavailable: String(localized: "Não foi possível proteger os bancos locais. A recuperação não foi iniciada.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             }
         }
     }

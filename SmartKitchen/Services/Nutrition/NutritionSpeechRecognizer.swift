@@ -47,7 +47,7 @@ final class NutritionSpeechRecognizer {
             guard let self else { return }
             guard speechAuth == .authorized else {
                 self.isStarting = false
-                self.state = .error(String(localized: "Permissão de reconhecimento de voz negada. Habilite em Ajustes."))
+                self.state = .error(String(localized: "Permissão de reconhecimento de voz negada. Habilite em Ajustes.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                 return
             }
 
@@ -55,7 +55,7 @@ final class NutritionSpeechRecognizer {
             guard !Task.isCancelled else { return }
             guard micAllowed else {
                 self.isStarting = false
-                self.state = .error(String(localized: "Permissão de microfone negada. Habilite em Ajustes."))
+                self.state = .error(String(localized: "Permissão de microfone negada. Habilite em Ajustes.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                 return
             }
 
@@ -107,7 +107,7 @@ final class NutritionSpeechRecognizer {
 
     private func beginSession() {
         guard let recognizer, recognizer.isAvailable else {
-            state = .error(String(localized: "Reconhecimento de voz indisponível neste dispositivo."))
+            state = .error(String(localized: "Reconhecimento de voz indisponível neste dispositivo.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
             return
         }
         task?.cancel()
@@ -118,7 +118,7 @@ final class NutritionSpeechRecognizer {
             try session.setCategory(.record, mode: .measurement, options: .duckOthers)
             try session.setActive(true, options: .notifyOthersOnDeactivation)
         } catch {
-            state = .error(String(localized: "Falha ao configurar áudio."))
+            state = .error(String(localized: "Falha ao configurar áudio.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
             return
         }
 
@@ -133,7 +133,7 @@ final class NutritionSpeechRecognizer {
         guard format.sampleRate > 0, format.channelCount > 0 else {
             request = nil
             try? session.setActive(false, options: .notifyOthersOnDeactivation)
-            state = .error(String(localized: "Entrada de áudio indisponível. Verifique o microfone do dispositivo."))
+            state = .error(String(localized: "Entrada de áudio indisponível. Verifique o microfone do dispositivo.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
             return
         }
         // O bloco do tap é executado na thread real-time de áudio. Encaminhamos
@@ -148,7 +148,7 @@ final class NutritionSpeechRecognizer {
             input.removeTap(onBus: 0)
             request = nil
             try? session.setActive(false, options: .notifyOthersOnDeactivation)
-            state = .error(String(localized: "Falha ao iniciar gravação."))
+            state = .error(String(localized: "Falha ao iniciar gravação.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
             return
         }
 
@@ -211,7 +211,7 @@ final class NutritionSpeechRecognizer {
     }
 
     func start() {
-        state = .error(String(localized: "Reconhecimento de voz ainda não está disponível no macOS."))
+        state = .error(String(localized: "Reconhecimento de voz ainda não está disponível no macOS.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
     }
 
     func stop() {

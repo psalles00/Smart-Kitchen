@@ -8,13 +8,13 @@ struct BodyStepView: View {
     var body: some View {
         VStack(spacing: 18) {
             OnboardingHeader(
-                title: String(localized: "Sua altura e peso"),
-                subtitle: String(localized: "Não se preocupe — você pode atualizar quando quiser.")
+                title: String(localized: "Sua altura e peso", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+                subtitle: String(localized: "Não se preocupe — você pode atualizar quando quiser.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             )
 
             VStack(spacing: 16) {
                 metricCard(
-                    title: String(localized: "Altura"),
+                    title: String(localized: "Altura", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                     icon: "ruler",
                     value: "\(Int(state.nutritionHeightCm))",
                     unit: "cm",
@@ -23,7 +23,7 @@ struct BodyStepView: View {
                     step: 1
                 )
                 metricCard(
-                    title: String(localized: "Peso atual"),
+                    title: String(localized: "Peso atual", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                     icon: "scalemass",
                     value: String(format: "%.1f", state.nutritionWeightKg),
                     unit: "kg",
@@ -37,7 +37,7 @@ struct BodyStepView: View {
             Spacer()
 
             OnboardingPrimaryButton(
-                title: String(localized: "Continuar"),
+                title: String(localized: "Continuar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                 isEnabled: true,
                 action: onContinue
             )

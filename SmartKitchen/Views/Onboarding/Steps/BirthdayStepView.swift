@@ -13,8 +13,8 @@ struct BirthdayStepView: View {
     var body: some View {
         VStack(spacing: 18) {
             OnboardingHeader(
-                title: String(localized: "Quando você nasceu?"),
-                subtitle: String(localized: "Sua idade afeta a quantidade de calorias que seu corpo precisa.")
+                title: String(localized: "Quando você nasceu?", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+                subtitle: String(localized: "Sua idade afeta a quantidade de calorias que seu corpo precisa.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             )
 
             DatePicker(
@@ -37,7 +37,7 @@ struct BirthdayStepView: View {
             Spacer()
 
             OnboardingPrimaryButton(
-                title: String(localized: "Continuar"),
+                title: String(localized: "Continuar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                 isEnabled: true,
                 action: {
                     if state.nutritionBirthday == nil {

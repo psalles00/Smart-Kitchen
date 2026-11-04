@@ -14,10 +14,10 @@ enum ItemListType: String, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .pantry:  String(localized: "Despensa")
-        case .reserve: String(localized: "Para depois")
-        case .grocery: String(localized: "Mercado")
-        case .utensil: String(localized: "Utensílio")
+        case .pantry:  String(localized: "Despensa", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .reserve: String(localized: "Para depois", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .grocery: String(localized: "Mercado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .utensil: String(localized: "Utensílio", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 
@@ -41,24 +41,24 @@ enum ItemListType: String, CaseIterable, Identifiable {
 
     var listName: String {
         switch self {
-        case .pantry:  String(localized: "Despensa")
-        case .reserve: String(localized: "Para depois")
-        case .grocery: String(localized: "Mercado")
-        case .utensil: String(localized: "Utensílios")
+        case .pantry:  String(localized: "Despensa", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .reserve: String(localized: "Para depois", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .grocery: String(localized: "Mercado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .utensil: String(localized: "Utensílios", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 
     var removalDestinationLabel: String {
         switch self {
         case .pantry:  "da Despensa"
-        case .reserve: String(localized: "de Para depois")
+        case .reserve: String(localized: "de Para depois", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case .grocery: "do Mercado"
         case .utensil: "dos Utensílios"
         }
     }
 
     var removalButtonTitle: String {
-        self == .reserve ? String(localized: "Remover de Para depois") : "Remover \(removalDestinationLabel)"
+        self == .reserve ? String(localized: "Remover de Para depois", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) : "Remover \(removalDestinationLabel)"
     }
 }
 

@@ -225,6 +225,11 @@ struct DebugLanguageOverride {
     let language: AppLanguage
     let expiresAt: Date
 
+    static var current: Self? {
+        guard let value = UserDefaults.standard.string(forKey: key) else { return nil }
+        return Self(storedValue: value)
+    }
+
     init?(storedValue: String, now: Date = Date()) {
         let parts = storedValue.split(separator: "|")
         guard parts.count == 2,
@@ -252,6 +257,25 @@ struct AppLocalization: Sendable {
         })
 
     let language: AppLanguage
+
+    static var stringBundle: Bundle {
+        #if DEBUG
+        if let override = DebugLanguageOverride.current,
+           let bundle = languageBundles[override.language] {
+            return bundle
+        }
+        #endif
+        return .main
+    }
+
+    static var stringLocale: Locale {
+        #if DEBUG
+        if let override = DebugLanguageOverride.current {
+            return override.language.locale
+        }
+        #endif
+        return .current
+    }
 
     /// Resolves built-in labels for the selected language without changing
     /// persisted category identifiers or translating user-defined names.
@@ -309,8 +333,7 @@ struct AppLocalization: Sendable {
 
     static func current() -> AppLocalization {
         #if DEBUG
-        if let storedValue = UserDefaults.standard.string(forKey: DebugLanguageOverride.key),
-           let override = DebugLanguageOverride(storedValue: storedValue) {
+        if let override = DebugLanguageOverride.current {
             return AppLocalization(language: override.language)
         }
         #endif

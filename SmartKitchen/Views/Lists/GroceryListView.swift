@@ -309,7 +309,7 @@ struct GroceryListView: View {
             Button("Editar", systemImage: "pencil") {
                 editingItem = UnifiedItemSelection(id: item.id)
             }
-            Button(listType == .reserve ? String(localized: "Enviar ao Mercado") : String(localized: "Mover à Despensa"), systemImage: nextDestination.icon) {
+            Button(listType == .reserve ? String(localized: "Enviar ao Mercado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) : String(localized: "Mover à Despensa", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), systemImage: nextDestination.icon) {
                 acquireItem(item)
             }
             if listType != .reserve && !item.isPantry {
@@ -334,9 +334,9 @@ struct GroceryListView: View {
 
     private var emptyState: some View {
         ContentUnavailableView {
-            Label(listType == .reserve ? String(localized: "Para depois") : String(localized: "Lista Vazia"), systemImage: listType.icon)
+            Label(listType == .reserve ? String(localized: "Para depois", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) : String(localized: "Lista Vazia", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), systemImage: listType.icon)
         } description: {
-            Text(listType == .reserve ? String(localized: "Guarde aqui o que acabou. Marque um item quando decidir comprá-lo novamente.") : String(localized: "Adicione itens à lista de mercado para suas próximas compras."))
+            Text(listType == .reserve ? String(localized: "Guarde aqui o que acabou. Marque um item quando decidir comprá-lo novamente.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) : String(localized: "Adicione itens à lista de mercado para suas próximas compras.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
         }
     }
 
@@ -498,7 +498,7 @@ struct GroceryItemRow: View {
                         color: PageTheme.lists.accentColor,
                         action: onAcquire
                     )
-                    .accessibilityLabel(destination == .grocery ? String(localized: "Enviar ao Mercado") : String(localized: "Mover à Despensa"))
+                    .accessibilityLabel(destination == .grocery ? String(localized: "Enviar ao Mercado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) : String(localized: "Mover à Despensa", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                     .accessibilityIdentifier("savoria.item.complete." + item.id.uuidString)
                 }
             }

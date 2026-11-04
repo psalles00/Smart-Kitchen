@@ -8,8 +8,8 @@ struct SexStepView: View {
     var body: some View {
         VStack(spacing: 18) {
             OnboardingHeader(
-                title: String(localized: "Qual é o seu sexo biológico?"),
-                subtitle: String(localized: "Usamos isso pra calcular sua taxa metabólica basal com precisão.")
+                title: String(localized: "Qual é o seu sexo biológico?", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+                subtitle: String(localized: "Usamos isso pra calcular sua taxa metabólica basal com precisão.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             )
 
             VStack(spacing: 12) {
@@ -32,7 +32,7 @@ struct SexStepView: View {
             Spacer()
 
             OnboardingPrimaryButton(
-                title: String(localized: "Continuar"),
+                title: String(localized: "Continuar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                 isEnabled: state.nutritionSexRaw != nil,
                 action: onContinue
             )
@@ -43,9 +43,9 @@ struct SexStepView: View {
 
     private func sexTitle(_ sex: NutritionSex) -> String {
         switch sex {
-        case .male:   return String(localized: "Masculino")
-        case .female: return String(localized: "Feminino")
-        case .other:  return String(localized: "Outro")
+        case .male:   return String(localized: "Masculino", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .female: return String(localized: "Feminino", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .other:  return String(localized: "Outro", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 }

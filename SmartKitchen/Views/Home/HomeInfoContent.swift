@@ -145,21 +145,21 @@ private struct HomeInfoContentLive: View {
         + Text(Image(systemName: "checkmark.circle"))
             .foregroundColor(.white)
         + Text(" ")
-        + Text(String(localized: "Tudo certo"))
+        + Text(String(localized: "Tudo certo", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
             .fontWeight(.bold)
             .foregroundColor(.white)
-        + Text(" " + String(localized: "na sua cozinha!"))
+        + Text(" " + String(localized: "na sua cozinha!", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
             .foregroundColor(.white.opacity(0.55))
     }
 
     private var statusPhraseText: Text {
         statusFacts.enumerated().reduce(
-            Text(greetingText + " " + String(localized: "Você possui") + " ")
+            Text(greetingText + " " + String(localized: "Você possui", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) + " ")
                 .foregroundColor(.white.opacity(0.55))
         ) { partial, indexedFact in
             let prefix: Text = indexedFact.offset == 0
                 ? Text("")
-                : Text(" " + String(localized: "e") + " ")
+                : Text(" " + String(localized: "e", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) + " ")
                     .font(.system(size: statusTextSize, weight: .semibold, design: .rounded))
                     .foregroundColor(.white.opacity(0.55))
 
@@ -235,7 +235,7 @@ private struct HomeInfoContentLive: View {
             ? [.connector(greetingText)]
             : [
                 .connector(greetingText),
-                .connector(String(localized: "Você possui"))
+                .connector(String(localized: "Você possui", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
             ]
         var secondLineTokens: [KitchenStatusToken] = []
 
@@ -243,7 +243,7 @@ private struct HomeInfoContentLive: View {
 
         for (index, fact) in visibleFacts.enumerated() {
             if index > 0 {
-                secondLineTokens.append(.connector(String(localized: "e")))
+                secondLineTokens.append(.connector(String(localized: "e", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)))
             }
             secondLineTokens.append(.fact(fact))
         }
@@ -262,8 +262,8 @@ private struct HomeInfoContentLive: View {
                 KitchenStatusFact(
                     icon: "clock.badge.exclamationmark",
                     text: expiringSoonCount == 1
-                        ? String(localized: "1 item expirando")
-                        : String(localized: "\(expiringSoonCount) itens expirando")
+                        ? String(localized: "1 item expirando", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+                        : String(localized: "\(expiringSoonCount) itens expirando", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
                 )
             )
         }
@@ -273,8 +273,8 @@ private struct HomeInfoContentLive: View {
                 KitchenStatusFact(
                     icon: "chart.bar.doc.horizontal",
                     text: pendingNutritionDaysCount == 1
-                        ? String(localized: "1 dia incompleto")
-                        : String(localized: "\(pendingNutritionDaysCount) dias incompletos")
+                        ? String(localized: "1 dia incompleto", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+                        : String(localized: "\(pendingNutritionDaysCount) dias incompletos", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
                 )
             )
         }
@@ -282,7 +282,7 @@ private struct HomeInfoContentLive: View {
         if calorieGoal > 0 {
             facts.append(KitchenStatusFact(
                 icon: "flame",
-                text: String(localized: "\(caloriesRemaining) kcal restantes hoje")))
+                text: String(localized: "\(caloriesRemaining) kcal restantes hoje", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)))
         }
 
         return facts
@@ -291,7 +291,7 @@ private struct HomeInfoContentLive: View {
     private var kitchenReadyFact: KitchenStatusFact {
         KitchenStatusFact(
             icon: "checkmark.circle",
-            text: String(localized: "Tudo certo na sua cozinha!")
+            text: String(localized: "Tudo certo na sua cozinha!", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         )
     }
 
@@ -299,11 +299,11 @@ private struct HomeInfoContentLive: View {
         let hour = calendar.component(.hour, from: .now)
         switch hour {
         case 5..<12:
-            return String(localized: "Bom dia.")
+            return String(localized: "Bom dia.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case 12..<18:
-            return String(localized: "Boa tarde.")
+            return String(localized: "Boa tarde.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         default:
-            return String(localized: "Boa noite.")
+            return String(localized: "Boa noite.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 
@@ -351,7 +351,7 @@ private struct HomeInfoContentLive: View {
                 }
             }
             .frame(width: 46, height: 46)
-            .accessibilityLabel(Text(String(localized: "\(caloriesRemaining) kcal restantes hoje")))
+            .accessibilityLabel(Text(String(localized: "\(caloriesRemaining) kcal restantes hoje", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)))
         } else {
             VStack(alignment: .trailing, spacing: 2) {
                 Image(systemName: "fork.knife.circle")
@@ -444,21 +444,21 @@ private struct HomeInfoContentStatic: View {
         + Text(Image(systemName: "checkmark.circle"))
             .foregroundColor(.white)
         + Text(" ")
-        + Text(String(localized: "Tudo certo"))
+        + Text(String(localized: "Tudo certo", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
             .fontWeight(.bold)
             .foregroundColor(.white)
-        + Text(" " + String(localized: "na sua cozinha!"))
+        + Text(" " + String(localized: "na sua cozinha!", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
             .foregroundColor(.white.opacity(0.55))
     }
 
     private var statusPhraseText: Text {
         statusFacts.enumerated().reduce(
-            Text(greetingText + " " + String(localized: "Você possui") + " ")
+            Text(greetingText + " " + String(localized: "Você possui", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) + " ")
                 .foregroundColor(.white.opacity(0.55))
         ) { partial, indexedFact in
             let prefix: Text = indexedFact.offset == 0
                 ? Text("")
-                : Text(" " + String(localized: "e") + " ")
+                : Text(" " + String(localized: "e", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) + " ")
                     .font(.system(size: statusTextSize, weight: .semibold, design: .rounded))
                     .foregroundColor(.white.opacity(0.55))
 
@@ -483,8 +483,8 @@ private struct HomeInfoContentStatic: View {
                 KitchenStatusFact(
                     icon: "clock.badge.exclamationmark",
                     text: expiringSoonCount == 1
-                        ? String(localized: "1 item expirando")
-                        : String(localized: "\(expiringSoonCount) itens expirando")
+                        ? String(localized: "1 item expirando", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+                        : String(localized: "\(expiringSoonCount) itens expirando", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
                 )
             )
         }
@@ -494,8 +494,8 @@ private struct HomeInfoContentStatic: View {
                 KitchenStatusFact(
                     icon: "chart.bar.doc.horizontal",
                     text: pendingNutritionDaysCount == 1
-                        ? String(localized: "1 dia incompleto")
-                        : String(localized: "\(pendingNutritionDaysCount) dias incompletos")
+                        ? String(localized: "1 dia incompleto", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+                        : String(localized: "\(pendingNutritionDaysCount) dias incompletos", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
                 )
             )
         }
@@ -503,7 +503,7 @@ private struct HomeInfoContentStatic: View {
         if calorieGoal > 0 {
             facts.append(KitchenStatusFact(
                 icon: "flame",
-                text: String(localized: "\(caloriesRemaining) kcal restantes hoje")))
+                text: String(localized: "\(caloriesRemaining) kcal restantes hoje", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)))
         }
 
         return facts
@@ -513,11 +513,11 @@ private struct HomeInfoContentStatic: View {
         let hour = calendar.component(.hour, from: .now)
         switch hour {
         case 5..<12:
-            return String(localized: "Bom dia.")
+            return String(localized: "Bom dia.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         case 12..<18:
-            return String(localized: "Boa tarde.")
+            return String(localized: "Boa tarde.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         default:
-            return String(localized: "Boa noite.")
+            return String(localized: "Boa noite.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 
@@ -546,7 +546,7 @@ private struct HomeInfoContentStatic: View {
                 }
             }
             .frame(width: 46, height: 46)
-            .accessibilityLabel(Text(String(localized: "\(caloriesRemaining) kcal restantes hoje")))
+            .accessibilityLabel(Text(String(localized: "\(caloriesRemaining) kcal restantes hoje", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)))
         } else {
             VStack(alignment: .trailing, spacing: 2) {
                 Image(systemName: "fork.knife.circle")

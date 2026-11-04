@@ -87,7 +87,7 @@ struct GoalProjectionStepView: View {
               .padding(.bottom, 16)
             }
             .safeAreaInset(edge: .bottom, spacing: 0) {
-                OnboardingPrimaryButton(title: String(localized: "Continuar"), action: onContinue)
+                OnboardingPrimaryButton(title: String(localized: "Continuar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), action: onContinue)
                     .padding(.horizontal, 24)
                     .padding(.vertical, 12)
                     .background(.regularMaterial)
@@ -151,20 +151,20 @@ struct GoalProjectionStepView: View {
 
     private var headlineTopText: String {
         let format = state.nutritionTargetMonths == 1
-            ? String(localized: "Prazo escolhido: %lld mês")
-            : String(localized: "Prazo escolhido: %lld meses")
+            ? String(localized: "Prazo escolhido: %lld mês", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            : String(localized: "Prazo escolhido: %lld meses", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         return String(format: format, state.nutritionTargetMonths)
     }
 
     private var monthsWord: String {
         state.nutritionTargetMonths == 1
-            ? String(localized: "mês")
-            : String(localized: "meses")
+            ? String(localized: "mês", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+            : String(localized: "meses", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
     }
 
     /// Show the user's chosen target, without promising a future result.
     private var headlineHero: Text {
-        let prefix = String(localized: "Sua meta: ")
+        let prefix = String(localized: "Sua meta: ", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         let target = String(format: "%.0f kg", animatedWeight)
         return Text(prefix).foregroundStyle(.primary)
             + Text(target).foregroundStyle(primaryGradient)
@@ -175,8 +175,8 @@ struct GoalProjectionStepView: View {
     private var chartCard: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 14) {
-                legendDot(color: .secondary.opacity(0.7), label: String(localized: "Peso atual"))
-                legendDot(gradient: primaryGradient, label: String(localized: "Trajetória ilustrativa"))
+                legendDot(color: .secondary.opacity(0.7), label: String(localized: "Peso atual", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
+                legendDot(gradient: primaryGradient, label: String(localized: "Trajetória ilustrativa", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
             }
 
             ZStack {
@@ -318,7 +318,7 @@ struct GoalProjectionStepView: View {
             summaryChip(
                 icon: "calendar",
                 title: monthsLabel,
-                subtitle: String(localized: "Prazo")
+                subtitle: String(localized: "Prazo", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             )
             .opacity(showSummary1 ? 1 : 0)
             .offset(y: showSummary1 ? 0 : 10)
@@ -381,9 +381,9 @@ struct GoalProjectionStepView: View {
 
     private var goalLabel: String {
         switch goal {
-        case .lose: return String(localized: "Meta")
-        case .gain: return String(localized: "Meta")
-        case .maintain: return String(localized: "Manter")
+        case .lose: return String(localized: "Meta", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .gain: return String(localized: "Meta", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .maintain: return String(localized: "Manter", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 
@@ -465,7 +465,7 @@ struct GoalProjectionStepView: View {
     }
 
     private func monthLabel(_ value: Int) -> String {
-        if value == 0 { return String(localized: "Hoje") }
+        if value == 0 { return String(localized: "Hoje", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale) }
         return "\(value)" + (value == 1 ? "m" : "m")
     }
 

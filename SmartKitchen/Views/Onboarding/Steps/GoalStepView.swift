@@ -8,8 +8,8 @@ struct GoalStepView: View {
     var body: some View {
         VStack(spacing: 18) {
             OnboardingHeader(
-                title: String(localized: "Qual é o seu objetivo?"),
-                subtitle: String(localized: "Vamos ajustar suas metas de calorias e macros pra você.")
+                title: String(localized: "Qual é o seu objetivo?", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+                subtitle: String(localized: "Vamos ajustar suas metas de calorias e macros pra você.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
             )
 
             VStack(spacing: 12) {
@@ -32,7 +32,7 @@ struct GoalStepView: View {
             Spacer()
 
             OnboardingPrimaryButton(
-                title: String(localized: "Continuar"),
+                title: String(localized: "Continuar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                 isEnabled: state.nutritionGoalRaw != nil,
                 action: onContinue
             )
@@ -43,17 +43,17 @@ struct GoalStepView: View {
 
     private func goalTitle(_ goal: WeightGoal) -> String {
         switch goal {
-        case .lose:     return String(localized: "Perder peso")
-        case .maintain: return String(localized: "Manter peso")
-        case .gain:     return String(localized: "Ganhar peso")
+        case .lose:     return String(localized: "Perder peso", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .maintain: return String(localized: "Manter peso", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .gain:     return String(localized: "Ganhar peso", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 
     private func goalSubtitle(_ goal: WeightGoal) -> String {
         switch goal {
-        case .lose:     return String(localized: "Reduzir calorias com déficit saudável")
-        case .maintain: return String(localized: "Equilibrar consumo e gasto energético")
-        case .gain:     return String(localized: "Ganhar massa com superávit calórico")
+        case .lose:     return String(localized: "Reduzir calorias com déficit saudável", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .maintain: return String(localized: "Equilibrar consumo e gasto energético", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
+        case .gain:     return String(localized: "Ganhar massa com superávit calórico", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale)
         }
     }
 }

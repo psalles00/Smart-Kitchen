@@ -82,7 +82,7 @@ struct WeightTrackerView: View {
         }
         .scrollIndicators(.hidden)
         .background(Color(PlatformColor.systemBackground).ignoresSafeArea())
-        .navigationTitle(String(localized: "Rastreio de peso"))
+        .navigationTitle(String(localized: "Rastreio de peso", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
         #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
         #endif
@@ -97,7 +97,7 @@ struct WeightTrackerView: View {
                 Button {
                     showLogSheet = true
                 } label: {
-                    Label(String(localized: "Registrar"), systemImage: "plus")
+                    Label(String(localized: "Registrar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), systemImage: "plus")
                 }
             }
         }
@@ -124,23 +124,23 @@ struct WeightTrackerView: View {
         card {
             HStack(alignment: .top, spacing: 12) {
                 if let current = currentWeightKg {
-                    metric(label: String(localized: "Atual"), value: formatWeight(current))
+                    metric(label: String(localized: "Atual", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), value: formatWeight(current))
                 }
                 if let goal = profile?.targetWeightKg {
-                    metric(label: String(localized: "Meta"), value: formatWeight(goal))
+                    metric(label: String(localized: "Meta", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), value: formatWeight(goal))
                 }
                 if let current = currentWeightKg,
                    let goal = profile?.targetWeightKg,
                    abs(goal - current) > 0.05 {
                     metric(
-                        label: String(localized: "Faltam"),
+                        label: String(localized: "Faltam", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                         value: String(format: "%.1f %@", abs(displayWeight(goal) - displayWeight(current)), unit)
                     )
                 } else if let first = firstWeightKg, let current = currentWeightKg, first != current {
                     let delta = displayWeight(current) - displayWeight(first)
                     let sign = delta >= 0 ? "+" : "−"
                     metric(
-                        label: String(localized: "Variação"),
+                        label: String(localized: "Variação", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
                         value: String(format: "%@%.1f %@", sign, abs(delta), unit)
                     )
                 }
@@ -165,7 +165,7 @@ struct WeightTrackerView: View {
     private var chartCard: some View {
         card {
             HStack {
-                Text(String(localized: "Evolução"))
+                Text(String(localized: "Evolução", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                     .font(.cardTitle)
                 Spacer()
                 Text(entryCountLabel(allEntries.count))
@@ -174,15 +174,15 @@ struct WeightTrackerView: View {
             }
 
             if sortedAscending.isEmpty {
-                emptyMessage(String(localized: "Nenhum registro ainda. Toque em + para começar."))
+                emptyMessage(String(localized: "Nenhum registro ainda. Toque em + para começar.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
             } else {
                 let baseline = yDomain.lowerBound
                 Chart {
                     ForEach(sortedAscending) { entry in
                         AreaMark(
-                            x: .value(String(localized: "Data"), entry.date),
-                            yStart: .value(String(localized: "Base"), baseline),
-                            yEnd: .value(String(localized: "Peso"), displayWeight(entry.weightKg))
+                            x: .value(String(localized: "Data", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), entry.date),
+                            yStart: .value(String(localized: "Base", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), baseline),
+                            yEnd: .value(String(localized: "Peso", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), displayWeight(entry.weightKg))
                         )
                         .foregroundStyle(
                             LinearGradient(
@@ -198,27 +198,27 @@ struct WeightTrackerView: View {
                         .interpolationMethod(.catmullRom)
 
                         LineMark(
-                            x: .value(String(localized: "Data"), entry.date),
-                            y: .value(String(localized: "Peso"), displayWeight(entry.weightKg))
+                            x: .value(String(localized: "Data", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), entry.date),
+                            y: .value(String(localized: "Peso", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), displayWeight(entry.weightKg))
                         )
                         .foregroundStyle(accent)
                         .interpolationMethod(.catmullRom)
                         .lineStyle(StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
 
                         PointMark(
-                            x: .value(String(localized: "Data"), entry.date),
-                            y: .value(String(localized: "Peso"), displayWeight(entry.weightKg))
+                            x: .value(String(localized: "Data", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), entry.date),
+                            y: .value(String(localized: "Peso", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), displayWeight(entry.weightKg))
                         )
                         .foregroundStyle(accent)
                         .symbolSize(28)
                     }
 
                     if let goalKg = profile?.targetWeightKg {
-                        RuleMark(y: .value(String(localized: "Meta"), displayWeight(goalKg)))
+                        RuleMark(y: .value(String(localized: "Meta", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), displayWeight(goalKg)))
                             .foregroundStyle(.green.opacity(0.8))
                             .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
                             .annotation(position: .top, alignment: .trailing) {
-                                Text(String(localized: "Meta"))
+                                Text(String(localized: "Meta", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                                     .font(.caption2.weight(.semibold))
                                     .foregroundStyle(.green)
                                     .padding(.horizontal, 6)
@@ -244,13 +244,13 @@ struct WeightTrackerView: View {
     private var historyCard: some View {
         card {
             HStack {
-                Text(String(localized: "Histórico"))
+                Text(String(localized: "Histórico", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                     .font(.cardTitle)
                 Spacer()
             }
 
             if allEntries.isEmpty {
-                emptyMessage(String(localized: "Sem registros ainda."))
+                emptyMessage(String(localized: "Sem registros ainda.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
             } else {
                 VStack(spacing: 16) {
                     ForEach(entriesByYear, id: \.year) { group in
@@ -332,8 +332,8 @@ struct WeightTrackerView: View {
 
     private func entryCountLabel(_ count: Int) -> String {
         count == 1
-            ? "1 \(String(localized: "registro"))"
-            : "\(count) \(String(localized: "registros"))"
+            ? "1 \(String(localized: "registro", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))"
+            : "\(count) \(String(localized: "registros", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))"
     }
 
     // MARK: - Mutations
@@ -469,7 +469,7 @@ private struct EditWeightSheet: View {
                 }
             }
             .macModalFormStyle(minWidth: 520, minHeight: 420)
-            .modalNavigationTitle(String(localized: "Editar registro"))
+            .modalNavigationTitle(String(localized: "Editar registro", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancelar") { dismiss() }

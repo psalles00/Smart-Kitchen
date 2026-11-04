@@ -18,12 +18,12 @@ struct OverviewStepView: View {
     @State private var entranceTask: Task<Void, Never>? = nil
 
     private let planets: [OverviewPlanet] = [
-        OverviewPlanet(id: "recipes",   icon: "book.closed.fill",       label: String(localized: "Receitas"),   color: Color(red: 0.96, green: 0.55, blue: 0.40), angle: -90),
-        OverviewPlanet(id: "pantry",    icon: "cabinet.fill",           label: String(localized: "Despensa"),   color: Color(red: 0.42, green: 0.78, blue: 0.55), angle: -28),
-        OverviewPlanet(id: "grocery",   icon: "cart.fill",              label: String(localized: "Mercado"),    color: Color(red: 0.98, green: 0.72, blue: 0.34), angle: 36),
-        OverviewPlanet(id: "nutrition", icon: "chart.bar.doc.horizontal.fill", label: String(localized: "Nutrição"), color: Color(red: 0.55, green: 0.50, blue: 0.96), angle: 100),
-        OverviewPlanet(id: "ai",        icon: "sparkles",               label: String(localized: "IA"),         color: Color(red: 0.86, green: 0.40, blue: 0.86), angle: 164),
-        OverviewPlanet(id: "utensils",  icon: "fork.knife",             label: String(localized: "Utensílios"), color: Color(red: 0.44, green: 0.70, blue: 0.92), angle: 228),
+        OverviewPlanet(id: "recipes",   icon: "book.closed.fill",       label: String(localized: "Receitas", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),   color: Color(red: 0.96, green: 0.55, blue: 0.40), angle: -90),
+        OverviewPlanet(id: "pantry",    icon: "cabinet.fill",           label: String(localized: "Despensa", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),   color: Color(red: 0.42, green: 0.78, blue: 0.55), angle: -28),
+        OverviewPlanet(id: "grocery",   icon: "cart.fill",              label: String(localized: "Mercado", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),    color: Color(red: 0.98, green: 0.72, blue: 0.34), angle: 36),
+        OverviewPlanet(id: "nutrition", icon: "chart.bar.doc.horizontal.fill", label: String(localized: "Nutrição", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), color: Color(red: 0.55, green: 0.50, blue: 0.96), angle: 100),
+        OverviewPlanet(id: "ai",        icon: "sparkles",               label: String(localized: "IA", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),         color: Color(red: 0.86, green: 0.40, blue: 0.86), angle: 164),
+        OverviewPlanet(id: "utensils",  icon: "fork.knife",             label: String(localized: "Utensílios", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), color: Color(red: 0.44, green: 0.70, blue: 0.92), angle: 228),
     ]
 
     private var revealOrder: [String] { planets.map(\.id) }
@@ -39,9 +39,9 @@ struct OverviewStepView: View {
                         .scaleEffect(showHero ? 1 : 0.92)
                         .animation(.spring(response: 0.85, dampingFraction: 0.84), value: showHero)
                     VStack(spacing: 12) {
-                        OnboardingFeatureChip(icon: "square.grid.2x2.fill", title: String(localized: "Visão geral"))
-                        OnboardingHeader(title: String(localized: "Toda a sua cozinha em um só lugar"),
-                            subtitle: String(localized: "Receitas, despensa, mercado e nutrição que conversam entre si."))
+                        OnboardingFeatureChip(icon: "square.grid.2x2.fill", title: String(localized: "Visão geral", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
+                        OnboardingHeader(title: String(localized: "Toda a sua cozinha em um só lugar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale),
+                            subtitle: String(localized: "Receitas, despensa, mercado e nutrição que conversam entre si.", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale))
                     }
                     .opacity(showHeader ? 1 : 0)
                     .offset(y: showHeader ? 0 : 14)
@@ -51,7 +51,7 @@ struct OverviewStepView: View {
                 .padding(.vertical, 8)
             }
             .safeAreaInset(edge: .bottom, spacing: 0) {
-                OnboardingPrimaryButton(title: String(localized: "Continuar"), action: onContinue)
+                OnboardingPrimaryButton(title: String(localized: "Continuar", bundle: AppLocalization.stringBundle, locale: AppLocalization.stringLocale), action: onContinue)
                     .padding(.horizontal, 24)
                     .padding(.top, 8)
                     .padding(.bottom, 12)
